@@ -1,0 +1,128 @@
+
+version: "3.1"
+
+volumes:
+  redis-data:
+  mongo-data:
+
+services:
+  meta-entry-point:
+    image: gasless-meta-entry-point:latest
+    container_name: meta-entry-point
+    command: /bin/sh -c "yarn run dev"
+    env_file: 
+      - ./envs/.common.env
+      - ./envs/.meta-entry-point.env
+    ports:
+      - "0.0.0.0:3000:3000"
+    depends_on:
+      - mongo
+      - redis
+      - centrifugo
+    volumes:
+      - ../meta-entry-point:/app/
+      - /app/node_modules
+    restart: always
+  
+  utils-service:
+    image: gasless-utils-service:latest
+    container_name: utils-service
+    command: /bin/sh -c "yarn run dev"
+    env_file: 
+      - ./envs/.common.env
+      - ./envs/.utils-service.env
+    ports:
+      - "0.0.0.0:3001:3000"
+    depends_on:
+      - mongo
+      - redis
+      - centrifugo
+    volumes:
+      - ../utils-service:/app/
+      - /app/node_modules
+    restart: always
+
+  transaction-listener:
+    image: gasless-transaction-listener:latest
+    container_name: transaction-listener
+    command: /bin/sh -c "yarn run dev"
+    env_file: 
+      - ./envs/.common.env
+      - ./envs/.transaction-listener.env
+    ports:
+      - "0.0.0.0:3001:3000"
+    depends_on:
+      - mongo
+      - redis
+      - centrifugo
+    volumes:
+      - ../gasless-transaction-listener:/app/
+      - /app/node_modules
+    restart: always
+  
+  transaction-handler:
+    image: gasless-transaction-handler:latest
+    container_name: transaction-handler
+    command: /bin/sh -c "yarn run dev"
+    env_file: 
+      - ./envs/.common.env
+      - ./envs/.transaction-handler.env
+    ports:
+      - "0.0.0.0:3001:3000"
+    depends_on:
+      - mongo
+      - redis
+      - centrifugo
+      - transaction-listener
+    volumes:
+      - ../transaction-handler:/app/
+      - /app/node_modules
+    restart: always
+  
+  relayers-service:
+    image: gasless-relayers-service:latest
+    container_name: relayers-service
+    command: /bin/sh -c "yarn run dev"
+    env_file: 
+      - ./envs/.common.env
+      - ./envs/.relayers-service.env
+    depends_on:
+      - mongo
+      - redis
+      - centrifugo
+      - transaction-handler
+    volumes:
+      - ../relayers-service:/app/
+      - /app/node_modules
+    restart: always
+
+  redis:
+    image: redis:6.0
+    container_name: redis
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    restart: always
+
+  centrifugo:
+    container_name: centrifugo
+    image: centrifugo/centrifugo:latest
+    volumes:
+      - ./config.json:/centrifugo/config.json
+    command: centrifugo -c config.json
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    environment:
+      MONGO_INITDB_DATABASE: biconomy
+      MONGO_INITDB_ROOT_PASSWORD: biconomy
+      MONGO_INITDB_ROOT_USERNAME: biconomy
+    restart: always
+    volumes:
+      - ./setup/users.js:/docker-entrypoint-initdb.d/001_users.js:ro
+      - mongo-data:/data/db
