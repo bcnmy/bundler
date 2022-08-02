@@ -1,5 +1,5 @@
+import { NextFunction, Request, Response } from 'express';
 import { AnySchema } from 'yup';
-import { Request, Response, NextFunction } from 'express';
 import { logger } from '../../../common/log-config';
 
 const log = logger(module);

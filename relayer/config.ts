@@ -80,5 +80,4 @@ const setupConfig = async () => {
 export {
   setupConfig,
   config,
-  tracer,
 };

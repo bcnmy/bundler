@@ -59,7 +59,6 @@ app.use('/api/v1', routes);
 
 app.route('/health')
   .get((req, res) => {
-    console.log('Inside /health route');
     res.send('ok');
   });
 

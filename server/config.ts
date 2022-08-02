@@ -1,5 +1,3 @@
-import _ from 'lodash';
-
 import {
   biconomyForwarderAddressMap,
   biconomyForwarderAddressesMap,
@@ -24,8 +22,6 @@ import {
   entryPointAddressMap,
   handlerAddressMap,
 } from './contract-map-config';
-import { getMetaEntryServiceConfiguration } from './src/utils/cache-utils';
-import { redisClient } from '../common/db';
 
 interface LooseObject {
   [key: string]: any

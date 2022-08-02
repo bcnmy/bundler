@@ -1,5 +1,5 @@
 import amqp from 'amqplib';
-import { logger } from '../../log-config';
+import { logger } from '../../../common/log-config';
 
 const log = logger(module);
 

@@ -1,11 +1,7 @@
-import { validateRequest } from './validate-request';
 import {
-  sendOne,
-  STATUSES,
-  DB_ERRORS,
-  sendResponse,
-  createResponseBody,
+  createResponseBody, DB_ERRORS, sendOne, sendResponse, STATUSES,
 } from './requests-helpers';
+import { validateRequest } from './validate-request';
 
 export {
   validateRequest,

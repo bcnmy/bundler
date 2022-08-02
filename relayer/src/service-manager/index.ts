@@ -1,5 +1,5 @@
 import { Network } from 'network-sdk';
-import { RelayerManagerMessenger } from '@biconomy/gasless-messaging-sdk';
+import { RelayerManagerMessenger } from 'gasless-messaging-sdk';
 import amqp from 'amqplib/callback_api';
 import { config } from '../../config';
 import { logger } from '../../../common/log-config';
@@ -44,10 +44,6 @@ export const init = async () => {
       connectionHttp,
       secret,
       apiKey,
-      {
-        url: queueUrl,
-        name: 'transaction_listener_queue',
-      },
     );
 
     await relayerManagerMessenger.connect();

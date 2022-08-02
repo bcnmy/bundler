@@ -5,6 +5,6 @@ import {
 
 export const relaySchema = object({
   query: object({
-    networkId: string().matches(/^\d+$/).required('Network Id is required and must be a number'),
+    networkId: string().matches(/^\d+$/).required('Network Id is required'),
   }),
 });

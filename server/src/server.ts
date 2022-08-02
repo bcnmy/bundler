@@ -1,5 +1,4 @@
 import http from 'http';
-import { config } from '../config';
 import app from './app';
 
 let server: any;
@@ -38,12 +37,10 @@ function onError(error: any) {
   switch (error.code) {
     case 'EACCES':
       console.error(`${bind} requires elevated privileges`);
-      process.exit(1);
-      break;
+      return process.exit(1);
     case 'EADDRINUSE':
       console.error(`${bind} is already in use`);
-      process.exit(1);
-      break;
+      return process.exit(1);
     default:
       throw error;
   }
@@ -58,7 +55,7 @@ function onListening() {
   const bind = typeof addr === 'string'
     ? `pipe ${addr}`
     : `port ${addr.port}`;
-  console.log(`Listening on ${bind}`);
+  console.log(`App listening on ${bind}`);
 }
 
 const init = async () => {
@@ -74,7 +71,6 @@ const init = async () => {
     try {
       server.listen(port);
       server.on('listening', () => onListening());
-      console.log(`App listening on port ${port}`);
     } catch (error) {
       server.on('error', onError(error));
       console.log(error);
