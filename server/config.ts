@@ -25,7 +25,7 @@ import {
   handlerAddressMap,
 } from './contract-map-config';
 import { getMetaEntryServiceConfiguration } from './src/utils/cache-utils';
-import { redisClient } from './src/db';
+import { redisClient } from '../common/db';
 
 interface LooseObject {
   [key: string]: any
@@ -163,8 +163,7 @@ try {
 envConfig.supportedNetworks = supportedNetworks;
 
 const setupConfig = async () => {
-  const staticConfig = await redisClient.get(getMetaEntryServiceConfiguration()) || '';
-  config = _.merge(envConfig, JSON.parse(staticConfig));
+  config = envConfig;
   return 'done';
 };
 

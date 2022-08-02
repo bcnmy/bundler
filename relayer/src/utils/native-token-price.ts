@@ -1,6 +1,5 @@
-import { config } from '../../config';
-import { logger } from '../../log-config';
-import { redisClient } from '../db';
+import { redisClient } from '../../../common/db';
+import { logger } from '../../../common/log-config';
 import { getNetworkFiatPricingKey } from './cache-utils';
 
 const log = logger(module);

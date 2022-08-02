@@ -1,15 +1,14 @@
 import { createClient } from 'redis';
-import { logger } from '../../log-config';
+import { logger } from '../log-config';
 
 const log = logger(module);
-const REDIS_CONN_URL = `redis://${process.env.REDIS_USERNAME}${process.env.REDIS_PASSWORD ? ':' : ''}${process.env.REDIS_PASSWORD}${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`;
 
 const redisClient = createClient({
-  url: REDIS_CONN_URL,
+  url: process.env.REDIS_URL,
 });
 
 const redisPubSub = createClient({
-  url: REDIS_CONN_URL,
+  url: process.env.REDIS_URL,
 });
 
 (async () => {

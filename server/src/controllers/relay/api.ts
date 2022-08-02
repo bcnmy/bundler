@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { logger } from '../../../log-config';
+import { logger } from '../../../../common/log-config';
 
 const log = logger(module);
 

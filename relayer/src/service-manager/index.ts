@@ -1,13 +1,10 @@
-import { Network } from '@bcnmy/network-sdk';
-import { Slack } from '@bcnmy/notify-sdk';
+import { Network } from 'network-sdk';
 import { RelayerManagerMessenger } from '@biconomy/gasless-messaging-sdk';
 import amqp from 'amqplib/callback_api';
-import { hostname } from 'os';
 import { config } from '../../config';
-import { logger } from '../../log-config';
+import { logger } from '../../../common/log-config';
 import { DaoUtils } from '../dao-utils';
-import { redisClient } from '../db';
-import { Mongo } from '../db/mongo';
+import { Mongo } from '../../../common/db/mongo';
 import { RelayerManager } from '../services/relayers-manager';
 
 const log = logger(module);
@@ -30,10 +27,7 @@ let connection: any;
 if (!supportedNetworks) {
   throw new Error('supportedNetworks is undefined');
 }
-const slackInstance = new Slack({
-  token: config.slack.token,
-  channel: config.slack.channel,
-});
+
 const dbInstance = new Mongo(config.supportedNetworks);
 const daoUtilsInstance = new DaoUtils(dbInstance);
 

@@ -1,6 +1,6 @@
-import { logger } from '../../log-config';
-import { Mongo } from '../db/mongo';
-import { IDaoUtils, TransactionDataType } from './interface/dao-utils';
+import { Mongo } from '../../../common/db/mongo';
+import { logger } from '../../../common/log-config';
+import { IDaoUtils } from './interface/dao-utils';
 
 const log = logger(module);
 export class DaoUtils implements IDaoUtils {

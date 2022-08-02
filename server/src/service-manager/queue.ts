@@ -1,5 +1,4 @@
 import amqp from 'amqplib';
-import { tracer } from '.';
 import { logger } from '../../log-config';
 
 const log = logger(module);
@@ -17,15 +16,8 @@ let channel: any;
 const queue = 'raw_transaction_queue';
 
 export const sendToQueue = async (data: object) => {
-  const enqueueSpan = tracer.startSpan('publish to transaction handler', {
-    kind: SpanKind.PRODUCER,
+  const msg = channel.sendToQueue(queue, Buffer.from(JSON.stringify(data)), {
+    persistent: true,
   });
-  context.with(trace.setSpanContext(context.active(), enqueueSpan.spanContext()), async () => {
-    const msg = channel.sendToQueue(queue, Buffer.from(JSON.stringify(data)), {
-      persistent: true,
-    });
-    log.info(` [x] Sent ${msg}`);
-  });
-
-  enqueueSpan.end();
+  log.info(` [x] Sent ${msg}`);
 };

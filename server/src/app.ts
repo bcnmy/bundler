@@ -1,11 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import rTracer from 'cls-rtracer';
 import cors from 'cors';
 import express, {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   NextFunction, Request, Response, ErrorRequestHandler,
 } from 'express';
 
-import { routes, routesV2 } from './routes';
+import { routes } from './routes';
 
 const app = express();
 
@@ -55,9 +55,7 @@ app.use(express.json());
 
 app.use(express.urlencoded({ extended: false }));
 
-// mongoManager.connect();
 app.use('/api/v1', routes);
-app.use('/api/v2', routesV2);
 
 app.route('/health')
   .get((req, res) => {
@@ -70,6 +68,7 @@ app.use((
   err: any,
   req: Request,
   res: Response,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   next: NextFunction,
 ) => res.status(300).json(err.message));
 

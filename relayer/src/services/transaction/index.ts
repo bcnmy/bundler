@@ -1,11 +1,10 @@
-import { Network } from '@bcnmy/network-sdk';
 import { ethers } from 'ethers';
+import { Network } from 'network-sdk';
+import { redisClient } from '../../../../common/db';
+import { logger } from '../../../../common/log-config';
 import { config } from '../../../config';
-import { logger } from '../../../log-config';
 import { IRetryPolicy } from '../../common/types';
-import { redisClient } from '../../db';
 import { getNetworkRpcUrlsKey } from '../../utils/cache-utils';
-import { stringify } from '../../utils/util';
 
 const log = logger(module);
 
@@ -121,14 +120,6 @@ export class Transaction implements IRetryPolicy {
       log.info('transaction not being retried');
       return false;
     }
-
-    /**
-   * Runtime Insufficient funds error catched in execute transaction for relayer funding
-   * take relayer out of queue  and mark it inactive and stop consuming
-   * call relayer manager to request funds (onRelayerRequestingFunds)
-   * listener setup on relayer manager itself, on confirmation , add back to queue and mark active
-   *  and set balance
-   */
     return true;
   };
 

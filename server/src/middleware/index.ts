@@ -3,7 +3,8 @@ import {
   sendOne,
   STATUSES,
   DB_ERRORS,
-  sendResponse, createResponseBody, createResponseBodyV2,
+  sendResponse,
+  createResponseBody,
 } from './requests-helpers';
 
 export {
@@ -11,5 +12,6 @@ export {
   sendOne,
   STATUSES,
   DB_ERRORS,
-  sendResponse, createResponseBody, createResponseBodyV2,
+  sendResponse,
+  createResponseBody,
 };

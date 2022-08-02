@@ -1,15 +1,14 @@
-import { Network } from '@bcnmy/network-sdk';
-import { context, defaultTextMapGetter, propagation } from '@opentelemetry/api';
+import { Network } from 'network-sdk';
 import { privateToPublic, publicToAddress, toChecksumAddress } from 'ethereumjs-util';
 import { ethers } from 'ethers';
-import { RelayerManagerMessenger } from '@biconomy/gasless-messaging-sdk';
+import { RelayerManagerMessenger } from 'gasless-messaging-sdk';
 import hdkey from 'hdkey';
 import { hostname } from 'os';
 import { config, tracer } from '../../../config';
-import { logger } from '../../../log-config';
+import { logger } from '../../../../common/log-config';
 import { TransactionStatus } from '../../common/types';
 import { DaoUtils } from '../../dao-utils';
-import { redisClient } from '../../db';
+import { redisClient } from '../../../../common/db';
 import {
   getGasPriceKey, getTransactionDataKey, getTransactionKey,
 } from '../../utils/cache-utils';

@@ -1,11 +1,3 @@
-export type MongoConfigType = {
-  hostname: string,
-  username: string,
-  password: string,
-  port: number,
-  dbName: string,
-};
-
 export interface IRetryPolicy {
   maxTries: number;
   shouldRetry: (err: any) => Promise<boolean>;

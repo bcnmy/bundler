@@ -1,7 +1,4 @@
-import debug from 'debug';
-import fs from 'fs';
 import http from 'http';
-import https from 'https';
 import { config } from '../config';
 import app from './app';
 
@@ -61,39 +58,17 @@ function onListening() {
   const bind = typeof addr === 'string'
     ? `pipe ${addr}`
     : `port ${addr.port}`;
-  debug(`Listening on ${bind}`);
+  console.log(`Listening on ${bind}`);
 }
 
 const init = async () => {
-  const enableHttps = config.enableHttps === 'true';
-
   /**
    * Get port from environment and store in Express.
    */
 
   app.set('port', port);
 
-  const options = {
-    key: fs.readFileSync('./server.key'),
-    cert: fs.readFileSync('./server.cert'),
-    requestCert: false,
-    rejectUnauthorized: false,
-  };
-
-  /**
-   * Create HTTPS server.
-   * For localhost generate key using command
-   * openssl req -nodes -new -x509 -keyout server.key -out server.cert
-   */
-  if (!enableHttps) {
-    server = http.createServer(app);
-  } else {
-    server = https.createServer(options, app);
-  }
-
-  /**
-   * Listen on provided port, on all network interfaces.
-   */
+  server = http.createServer(app);
 
   (async () => {
     try {

@@ -1,13 +1,12 @@
-import { Network } from '@bcnmy/network-sdk';
-import { RawTransactionType } from '@bcnmy/network-sdk/dist/types';
-import { Slack } from '@bcnmy/notify-sdk';
+import { Network } from 'network-sdk';
+import { RawTransactionType } from 'network-sdk/dist/types';
 import { Mutex } from 'async-mutex';
 import { BigNumber, ethers } from 'ethers';
-import { RelayerManagerMessenger } from '@biconomy/gasless-messaging-sdk';
+import { RelayerManagerMessenger } from 'gasless-messaging-sdk';
 import { config, configChangeListeners } from '../../../config';
-import { logger } from '../../../log-config';
+import { logger } from '../../../../common/log-config';
 import { DaoUtils } from '../../dao-utils';
-import { redisClient } from '../../db';
+import { redisClient } from '../../../../common/db';
 import { getTransactionDataKey } from '../../utils/cache-utils';
 import { stringify } from '../../utils/util';
 import { Relayer } from '../relayers';
@@ -54,8 +53,6 @@ export class RelayerManager {
 
   connection: any;
 
-  slackInstance: Slack;
-
   daoUtilsInstance: DaoUtils;
 
   constructor(
@@ -64,14 +61,12 @@ export class RelayerManager {
     messenger: RelayerManagerMessenger,
     connection: any,
     daoUtilsInstance: DaoUtils,
-    slackInstance: Slack,
   ) {
     this.network = network;
     this.networkId = networkId;
     this.messenger = messenger;
     this.connection = connection;
     this.daoUtilsInstance = daoUtilsInstance;
-    this.slackInstance = slackInstance;
     startPendingTransactionListener(this.networkId, this.retryTransaction.bind(this));
 
     configChangeListeners.relayerManagerService.push(this.onConfigChange.bind(this));
@@ -313,8 +308,6 @@ export class RelayerManager {
           try {
             // delete data key
             await redisClient.del(getTransactionDataKey(transactionId));
-            // notify transaction failed after 5 retries
-            this.slackInstance.send(`Transaction Id:- ${transactionId} failed after 5 retries on relayer address ${transactionData.relayerAddress} having raw transaction as ${stringify(transactionData)} on network id ${this.networkId}`);
           } catch (err) {
             log.error(`error occured in slack notify or redis cache delete ${stringify(err)} on network id ${this.networkId}`);
           }

@@ -48,15 +48,8 @@ export const sendOne = curry((res: any, entity: any) => {
   if (!entity) {
     throw new NotFoundError();
   }
-
   return sendResponse(res, entity);
 });
-
-export const createResponseBodyV2 = (
-  code: any,
-  message: any,
-  responseCode?: any,
-) => ({ code, message, responseCode });
 
 export const createResponseBody = (message: string, code: number, data?: string | undefined) => {
   const response: any = {};
