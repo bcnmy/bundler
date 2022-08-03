@@ -13,7 +13,7 @@ interface IDataToPushInQueue {
   to: string;
   gasLimit: string;
   value: string;
-  destinationData: string;
+  data: string;
   chainId: number;
 }
 
