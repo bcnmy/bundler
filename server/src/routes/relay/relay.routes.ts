@@ -5,4 +5,4 @@ import { relaySchema } from './relay.schema';
 
 export const relayApiRouter = Router();
 
-relayApiRouter.get('/', validateRequest(relaySchema), relayApi);
+relayApiRouter.post('/', validateRequest(relaySchema), relayApi);
