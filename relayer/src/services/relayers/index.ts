@@ -1,16 +1,16 @@
-import { Network } from 'network-sdk';
 import { privateToPublic, publicToAddress, toChecksumAddress } from 'ethereumjs-util';
 import { ethers } from 'ethers';
 import { RelayerManagerMessenger } from 'gasless-messaging-sdk';
 import hdkey from 'hdkey';
+import { Network } from 'network-sdk';
 import { hostname } from 'os';
-import { config, tracer } from '../../../config';
+import { redisClient } from '../../../../common/db';
 import { logger } from '../../../../common/log-config';
+import { config } from '../../../config';
 import { TransactionStatus } from '../../common/types';
 import { DaoUtils } from '../../dao-utils';
-import { redisClient } from '../../../../common/db';
 import {
-  getGasPriceKey, getTransactionDataKey, getTransactionKey,
+  getGasPriceKey, getTransactionDataKey, getTransactionKey
 } from '../../utils/cache-utils';
 import { getNativeTokenPriceInUSD } from '../../utils/native-token-price';
 import { stringify } from '../../utils/util';
@@ -126,6 +126,7 @@ export class Relayer {
     const ethRoot = hdkey.fromMasterSeed(seedInBuffer);
 
     const { nodePathIndex } = config.relayerService;
+
     const nodePath = `${nodePathRoot + nodePathIndex}/`;
     const ethNodePath: any = ethRoot.derive(nodePath + this.id);
     const privateKey = ethNodePath._privateKey.toString('hex');
@@ -480,14 +481,6 @@ export class Relayer {
     let response = { error: 'something went wrong' };
     await this.channel.consume(this.queue.queue, async (msg: any) => {
       const data = JSON.parse(msg.content.toString());
-      const traceHeaders = msg.properties.headers;
-      const propagatedContext = propagation.extract(
-        context.active(),
-        traceHeaders,
-        defaultTextMapGetter,
-      );
-
-      const span = tracer.startSpan('consume in relayer', undefined, propagatedContext);
 
       this.consumerTag = msg.fields.consumerTag;
       log.info(`received a transaction to process on network id ${this.networkId}`);
@@ -508,7 +501,6 @@ export class Relayer {
       } else {
         this.channel.ack(msg);
       }
-      span.end();
     });
     return response;
   }

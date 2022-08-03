@@ -7,7 +7,7 @@ export class DaoUtils implements IDaoUtils {
   private _db;
 
   constructor(dbInstance: Mongo) {
-    this._db = dbInstance.db;
+    this._db = dbInstance;
   }
 
   async findPendingTransactions(networkId: number) {

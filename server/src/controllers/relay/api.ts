@@ -9,7 +9,7 @@ export const relayApi = async (req: Request, res: Response) => {
   try {
     const { data } = req.body;
     const transactionId = generateTransactionId(data);
-    const queueData = { transactionId, value: '0x0', ...data };
+    const queueData = { transactionId, ...data };
     const response = await sendToQueue(queueData);
     if (response.error) {
       return res.status(400).json({

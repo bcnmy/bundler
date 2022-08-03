@@ -27,8 +27,9 @@ let connection: any;
 if (!supportedNetworks) {
   throw new Error('supportedNetworks is undefined');
 }
+console.log('mongo url ', process.env.MONGO_URL);
 
-const dbInstance = new Mongo(config.supportedNetworks);
+const dbInstance = new Mongo(process.env.MONGO_URL || '');
 const daoUtilsInstance = new DaoUtils(dbInstance);
 
 export const init = async () => {
@@ -62,7 +63,6 @@ export const init = async () => {
         relayerManagerMessenger,
         connection,
         daoUtilsInstance,
-        slackInstance,
       );
       log.info(`Setting up ${numberOfRelayersPerNetwork[networkId]} relayer for network id ${networkId}`);
 

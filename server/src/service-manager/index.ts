@@ -8,7 +8,7 @@ if (!supportedNetworks) {
   throw new Error('supportedNetworks is undefined');
 }
 
-const dbInstance = new Mongo(config.supportedNetworks);
+const dbInstance = new Mongo(process.env.MONGO_URL);
 const daoUtilsInstance = new DaoUtils(dbInstance);
 
 (async () => {

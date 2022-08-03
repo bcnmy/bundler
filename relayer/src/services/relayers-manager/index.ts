@@ -154,7 +154,8 @@ export class RelayerManager {
         await this.relayersMap[relayerAddress].createChannel();
       });
     } catch (error) {
-      log.error(`failed to created relayers ${stringify(error)} on network id ${this.networkId}`);
+      console.log(error);
+      log.error(`failed to create relayers ${stringify(error)} on network id ${this.networkId}`);
     }
 
     release();
