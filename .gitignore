@@ -1,3 +1,6 @@
 node_modules
 .env
 yarn-error.log
+centrifugo_config.json
+relayer/dist
+server/dist

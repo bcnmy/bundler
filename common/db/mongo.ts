@@ -12,7 +12,9 @@ export class Mongo {
 
   connect = async () => {
     try {
-      await mongoose.connect(this.dbUrl);
+      await mongoose.connect(this.dbUrl, {
+        dbName: 'relayer-node-service',
+      });
       console.log('connected to db');
     } catch (error) {
       console.log('error while connecting to mongo db');

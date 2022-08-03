@@ -21,10 +21,13 @@ const { RELAYER_QUEUE_URL = '', RELAYER_QUEUE_EXCHANGE = 'relayer_queue_exchange
 
 let channel: any;
 (async () => {
-  const connection = await amqp.connect(RELAYER_QUEUE_URL);
-  channel = await connection.createChannel();
-  channel.assertExchange(RELAYER_QUEUE_EXCHANGE, 'topic', {
-    durable: true,
+  console.log('connecting to amqp on api-server', RELAYER_QUEUE_URL);
+  amqp.connect(RELAYER_QUEUE_URL, async (err: any, connection: any) => {
+    console.log('[AMQP] connected on api-server');
+    channel = await connection.createChannel();
+    channel.assertExchange(RELAYER_QUEUE_EXCHANGE, 'topic', {
+      durable: true,
+    });
   });
 })();
 

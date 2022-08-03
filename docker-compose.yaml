@@ -4,40 +4,30 @@ version: "3.1"
 volumes:
   redis-data:
   mongo-data:
+  rabbitmq-data:
 
 services:
   server:
-    image: relayer-entry-service:latest
-    container_name: entry-service
-    command: /bin/sh -c "yarn run dev"
-    env_file: 
-      - ./envs/.common.env
-      - ./envs/.meta-entry-point.env
+    container_name: api-service
     ports:
       - "0.0.0.0:3000:3000"
     depends_on:
       - mongo
       - redis
-      - centrifugo
-    volumes:
-      - ../meta-entry-point:/app/
-      - /app/node_modules
+      - rabbitmq
+    build:
+      dockerfile: server.Dockerfile
     restart: always
 
   relayers-service:
-    image: gasless-relayers-service:latest
-    container_name: relayers-service
-    command: /bin/sh -c "yarn run dev"
-    env_file: 
-      - ./envs/.common.env
-      - ./envs/.relayers-service.env
+    container_name: relayer-service
+    build:
+      dockerfile: relayer.Dockerfile
     depends_on:
       - mongo
       - redis
       - centrifugo
-    volumes:
-      - ../relayers-service:/app/
-      - /app/node_modules
+      - rabbitmq
     restart: always
 
   redis:
@@ -52,21 +42,30 @@ services:
     container_name: centrifugo
     image: centrifugo/centrifugo:latest
     volumes:
-      - ./config.json:/centrifugo/config.json
+      - ./centrifugo_config.json:/centrifugo/config.json
     command: centrifugo -c config.json
     ulimits:
       nofile:
         soft: 65535
         hard: 65535
+    ports:
+      - "8000:8000"
 
   mongo:
     image: mongo:latest
     container_name: mongo
-    environment:
-      MONGO_INITDB_DATABASE: biconomy
-      MONGO_INITDB_ROOT_PASSWORD: biconomy
-      MONGO_INITDB_ROOT_USERNAME: biconomy
     restart: always
+    ports:
+      - "27017:27017"
     volumes:
-      - ./setup/users.js:/docker-entrypoint-initdb.d/001_users.js:ro
       - mongo-data:/data/db
+
+  rabbitmq:
+    image: rabbitmq:3.8-management-alpine
+    container_name: 'rabbitmq'
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq/
+      - rabbitmq-data:/var/log/rabbitmq

@@ -4,8 +4,13 @@
     "format:common": "eslint 'common/**' --ext .ts --fix",
     "format:server": "eslint 'server/src/**' --ext .ts --fix",
     "format:relayer": "eslint 'relayer/src/**' --ext .ts --fix",
-    "start:server": "ts-node server/src/index.ts",
-    "start:relayer": "ts-node relayer/src/index.ts"
+    "dev:server": "ts-node server/src/index.ts",
+    "dev:relayer": "ts-node relayer/src/index.ts",
+    "build:relayer": "tsc -p relayer",
+    "build:server": "tsc -p server",
+    "build": "tsc",
+    "start:relayer": "node relayer/dist/relayer/src/index.js",
+    "start:server": "node server/dist/server/src/index.js"
   },
   "dependencies": {
     "amqplib": "^0.10.1",
@@ -28,7 +33,8 @@
     "serialize-error": "8.1.0",
     "winston": "^3.8.1",
     "ws": "^8.8.1",
-    "yup": "^0.32.11"
+    "yup": "^0.32.11",
+    "typescript": "^4.7.4"
   },
   "devDependencies": {
     "@types/cors": "^2.8.12",
@@ -40,7 +46,6 @@
     "eslint": "^8.21.0",
     "eslint-config-airbnb-typescript": "^17.0.0",
     "eslint-plugin-import": "^2.26.0",
-    "husky": "^8.0.1",
-    "typescript": "^4.7.4"
+    "husky": "^8.0.1"
   }
 }

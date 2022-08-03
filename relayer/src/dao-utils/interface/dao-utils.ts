@@ -6,8 +6,6 @@ export type TransactionDataType = {
   metaTxData: object;
   metaTxApproach: string;
   rawTransaction: object;
-  apiId: string;
-  apiName: string;
   networkId: string;
   gasPrice: string;
   dappId: string;
