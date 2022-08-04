@@ -4,7 +4,8 @@ version: "3.1"
 volumes:
   redis-data:
   mongo-data:
-  rabbitmq-data:
+  rabbitmq_log:
+  rabbitmq_data:
 
 services:
   server:
@@ -49,7 +50,7 @@ services:
         soft: 65535
         hard: 65535
     ports:
-      - "8000:8000"
+      - "0.0.0.0:8000:8000"
 
   mongo:
     image: mongo:latest
@@ -63,9 +64,14 @@ services:
   rabbitmq:
     image: rabbitmq:3.8-management-alpine
     container_name: 'rabbitmq'
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:15672"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     ports:
-      - 5672:5672
-      - 15672:15672
+      - "0.0.0.0:5672:5672"
+      - "0.0.0.0:15672:15672"
     volumes:
-      - rabbitmq-data:/var/lib/rabbitmq/
-      - rabbitmq-data:/var/log/rabbitmq
+      - rabbitmq_log:/var/log/rabbitmq
+      - rabbitmq_data:/var/lib/rabbitmq

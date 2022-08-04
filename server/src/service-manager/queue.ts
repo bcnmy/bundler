@@ -22,13 +22,19 @@ const { RELAYER_QUEUE_URL = '', RELAYER_QUEUE_EXCHANGE = 'relayer_queue_exchange
 let channel: any;
 (async () => {
   console.log('connecting to amqp on api-server', RELAYER_QUEUE_URL);
-  amqp.connect(RELAYER_QUEUE_URL, async (err: any, connection: any) => {
-    console.log('[AMQP] connected on api-server');
+  try {
+    const connection = await amqp.connect(RELAYER_QUEUE_URL);
+    console.log('[AMQP] connected to amqp on api-server');
     channel = await connection.createChannel();
     channel.assertExchange(RELAYER_QUEUE_EXCHANGE, 'topic', {
       durable: true,
     });
-  });
+  } catch (error) {
+    console.log('error in connecting to amqp', error);
+    // eslint-disable-next-line no-promise-executor-return
+    await new Promise((r) => setTimeout(r, 5000));
+    process.exit(1);
+  }
 })();
 
 export const sendToQueue = async (data: IDataToPushInQueue) => {
