@@ -6,7 +6,7 @@ RUN apk update
 RUN mkdir -p /relayer
 WORKDIR /relayer
 
-COPY package.json yarn.lock ./
+COPY package.json yarn.lock .env ./
 
 # install packages
 RUN yarn install

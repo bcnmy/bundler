@@ -49,7 +49,7 @@ export const init = async () => {
 
     try {
       await relayerManagerMessenger.connect();
-    } catch(error) {
+    } catch (error) {
       log.error(error);
     }
 
