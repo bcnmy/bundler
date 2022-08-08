@@ -8,11 +8,11 @@ const log = logger(module);
 export const relayApi = async (req: Request, res: Response) => {
   try {
     const {
-      type, from, to, data, gasLimit, chainId, value,
+      type, to, data, gasLimit, chainId, value,
     } = req.body;
     const transactionId = generateTransactionId(data);
     const queueData = {
-      transactionId, type, from, to, data, gasLimit, chainId, value,
+      transactionId, type, to, data, gasLimit, chainId, value,
     };
     const response = await sendToQueue(queueData);
     if (response.error) {

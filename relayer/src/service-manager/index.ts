@@ -47,7 +47,11 @@ export const init = async () => {
       apiKey,
     );
 
-    await relayerManagerMessenger.connect();
+    try {
+      await relayerManagerMessenger.connect();
+    } catch(error) {
+      log.error(error);
+    }
 
     for (const networkId of supportedNetworks) {
       log.info(`Creating new Network instance for network id ${networkId}`);

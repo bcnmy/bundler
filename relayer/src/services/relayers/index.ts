@@ -215,7 +215,7 @@ export class Relayer {
     let transactionResponse: any;
     const retryTransaction: boolean = retryCount > 0;
     const {
-      gasLimit, to, destinationData: data, transactionId, value,
+      gasLimit, to, data, transactionId, value,
     } = rawTransactionData;
 
     let gasPriceToUse;
@@ -239,9 +239,10 @@ export class Relayer {
 
     const nonceForTransaction = ethers.BigNumber.from(nonceToUse).toHexString();
     try {
+
       const transactionData = {
         gasPrice: gasPriceToUse,
-        gasLimit,
+        gasLimit: gasLimit.hex || '0x493E0',
         to,
         value: ethers.BigNumber.from('0').toHexString(),
         data,
@@ -484,6 +485,7 @@ export class Relayer {
 
       this.consumerTag = msg.fields.consumerTag;
       log.info(`received a transaction to process on network id ${this.networkId}`);
+      log.info(`Transaction data received: ${JSON.stringify(data)}`);
       try {
         response = await this.sendTransaction(data);
       } catch (error) {

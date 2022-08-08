@@ -6,9 +6,12 @@ import {
 
 export const relaySchema = object({
   body: object({
-    from: string().matches(/^0x[a-fA-F0-9]{40}$/).required('from address is required'),
+    value: number(),
     to: string().matches(/^0x[a-fA-F0-9]{40}$/).required('to address is required'),
-    gasLimit: string(),
+    gasLimit: object().shape({
+      hex: string(),
+      type: string()
+    }),
     data: string().required('data is required'),
     chainId: number().required('chain id (network id) is required'),
   }),
