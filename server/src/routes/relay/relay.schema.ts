@@ -17,6 +17,13 @@ export const relaySchema = object({
   }),
 });
 
+export const simulateOptionsSchema = object({
+  body: object({
+    wallet: string(),
+    data: string(),
+  }),
+});
+
 export const feeOptionsSchema = object({
   body: object({
     wallet: string(),

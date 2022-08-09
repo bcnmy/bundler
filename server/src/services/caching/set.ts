@@ -1,5 +1,5 @@
-import { logger } from '../../../log-config';
-import { redisClient } from '../../db';
+import { logger } from '../../../../common/log-config';
+import { redisClient } from '../../../../common/db';
 import { parseError } from '../../utils/util';
 
 const log = logger(module);

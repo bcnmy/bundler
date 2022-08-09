@@ -9,7 +9,7 @@
     "build:relayer": "tsc -p relayer",
     "build:server": "tsc -p server",
     "build": "tsc",
-    "start:relayer": "node relayer/dist/relayer/src/index.js",
+    "start:relayer": "tsc -p server && node relayer/dist/relayer/src/index.js",
     "start:server": "node server/dist/server/src/index.js"
   },
   "dependencies": {

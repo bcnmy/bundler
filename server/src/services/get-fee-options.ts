@@ -1,6 +1,6 @@
 import { logger } from '../../../common/log-config';
 import { getGasUsedInSimulationKey } from '../utils/cache-utils';
-import cache from './caching';
+import { cache } from './caching';
 
 const log = logger(module);
 
