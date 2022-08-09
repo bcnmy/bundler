@@ -10,7 +10,7 @@ import { config } from '../../../config';
 import { TransactionStatus } from '../../common/types';
 import { DaoUtils } from '../../dao-utils';
 import {
-  getGasPriceKey, getTransactionDataKey, getTransactionKey
+  getGasPriceKey, getTransactionDataKey, getTransactionKey,
 } from '../../utils/cache-utils';
 import { getNativeTokenPriceInUSD } from '../../utils/native-token-price';
 import { stringify } from '../../utils/util';
@@ -239,7 +239,6 @@ export class Relayer {
 
     const nonceForTransaction = ethers.BigNumber.from(nonceToUse).toHexString();
     try {
-
       const transactionData = {
         gasPrice: gasPriceToUse,
         gasLimit: gasLimit.hex || '0x493E0',
