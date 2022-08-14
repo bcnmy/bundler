@@ -10,7 +10,7 @@ import { config } from '../../../config';
 import { TransactionStatus } from '../../common/types';
 import { DaoUtils } from '../../dao-utils';
 import {
-  getGasPriceKey, getTransactionDataKey, getTransactionKey
+  getGasPriceKey, getTransactionDataKey, getTransactionKey,
 } from '../../utils/cache-utils';
 import { getNativeTokenPriceInUSD } from '../../utils/native-token-price';
 import { stringify } from '../../utils/util';
@@ -187,15 +187,10 @@ export class Relayer {
   }
 
   async getGasPrice() {
-    let gasPrice;
+    // TODO get it from gasPriceMap instance
     const gasPriceFromCache = await redisClient.get(getGasPriceKey(this.networkId));
     log.info(`Gas price for ${this.networkId} in cache is ${gasPriceFromCache} on network id ${this.networkId}`);
-    if (gasPriceFromCache) {
-      gasPrice = ethers.utils.hexValue(Number(gasPriceFromCache));
-    } else {
-      gasPrice = (await this.network.getGasPrice()).gasPrice;
-      log.info(`Gas price for ${this.networkId} from network is ${gasPriceFromCache} on network id ${this.networkId}`);
-    }
+    const gasPrice = ethers.utils.hexValue(Number(gasPriceFromCache));
     return gasPrice;
   }
 
@@ -239,7 +234,6 @@ export class Relayer {
 
     const nonceForTransaction = ethers.BigNumber.from(nonceToUse).toHexString();
     try {
-
       const transactionData = {
         gasPrice: gasPriceToUse,
         gasLimit: gasLimit.hex || '0x493E0',

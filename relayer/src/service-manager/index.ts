@@ -96,4 +96,5 @@ process.on('SIGTERM', async () => {
 export {
   relayerManagerMap,
   daoUtilsInstance,
+  gasPriceMap,
 };
