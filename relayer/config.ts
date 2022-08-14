@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import { hostname } from 'os';
-import { redisClient } from '../common/db';
 
 interface LooseObject {
   [key: string]: any
@@ -28,6 +27,32 @@ const envConfig: LooseObject = {
     queueUrl: process.env.RELAYER_QUEUE_URL,
     queueExchange: process.env.RELAYER_QUEUE_EXCHANGE,
     masterSeed: process.env.RELAYERS_MASTER_SEED,
+  },
+  gasPriceService: {
+    updateFrequencyInSecond: {
+      0: 600, // default
+      1: 12,
+      3: 12,
+      4: 12,
+      5: 12,
+      31: 600,
+      42: 600,
+      56: 20,
+      77: 20,
+      97: 100,
+      100: 600,
+      137: 8,
+      1285: 600,
+      1287: 600,
+      2021: 100,
+      8995: 600,
+      15001: 600,
+      16110: 600,
+      43113: 200,
+      43114: 200,
+      80001: 600,
+      421611: 600,
+    },
   },
 };
 
