@@ -10,7 +10,7 @@ import { config } from '../../../config';
 import { TransactionStatus } from '../../common/types';
 import { DaoUtils } from '../../dao-utils';
 import {
-  getGasPriceKey, getTransactionDataKey, getTransactionKey
+  getGasPriceKey, getTransactionDataKey, getTransactionKey,
 } from '../../utils/cache-utils';
 import { getNativeTokenPriceInUSD } from '../../utils/native-token-price';
 import { stringify } from '../../utils/util';
@@ -239,7 +239,6 @@ export class Relayer {
 
     const nonceForTransaction = ethers.BigNumber.from(nonceToUse).toHexString();
     try {
-
       const transactionData = {
         gasPrice: gasPriceToUse,
         gasLimit: gasLimit.hex || '0x493E0',
@@ -439,42 +438,32 @@ export class Relayer {
   ) {
     if (retry) {
       log.info(`Transaction Id:- ${transactionId} with new transaction hash ${transactionResponse.hash} and previous transaction hash ${previousTransactionHash} on network id ${this.networkId}`);
-      try {
-        await this.messenger.sendTransactionHashChanged(
-          transactionId,
-          transactionResponse.hash,
-          this.networkId,
-          {
-            onDropped: async (transactionData:any) => {
-              await this.onTransactionDropped(transactionData);
-            },
-            onMined: async (transactionData:any) => {
-              await this.onTransactionMined(transactionData);
-            },
-          },
-        );
-      } catch (error) {
-        log.error(`failed to sendTransactionHashChanged to socket server ${error}`);
-      }
     } else {
       log.info(`Transaction Id:- ${transactionId} and transaction hash is ${transactionResponse.hash} on network id ${this.networkId}`);
-      try {
-        await this.messenger.sendTransactionHashGenerated(
+    }
+    try {
+      const receipt = await this.network.waitForTransaction(transactionResponse.hash);
+      if (!receipt) {
+        this.onTransactionDropped({
           transactionId,
-          transactionResponse.hash,
-          this.networkId,
-          {
-            onDropped: async (transactionData:any) => {
-              await this.onTransactionDropped(transactionData);
-            },
-            onMined: async (transactionData:any) => {
-              await this.onTransactionMined(transactionData);
-            },
-          },
-        );
-      } catch (error) {
-        log.error(`failed to sendTransactionHashGenerated to socket server ${error}`);
+          transactionHash: transactionResponse.hash,
+          relayerAddress: transactionResponse.from,
+          networkId: transactionResponse.networkId,
+        });
+      } else {
+        this.onTransactionMined({
+          transactionHash: transactionResponse.hash,
+          receipt,
+        });
       }
+    } catch (error) {
+      log.error(`failed to sendTransactionHashGenerated to socket server ${error}`);
+      this.onTransactionDropped({
+        transactionId,
+        transactionHash: transactionResponse.hash,
+        relayerAddress: transactionResponse.from,
+        networkId: transactionResponse.networkId,
+      });
     }
   }
 
