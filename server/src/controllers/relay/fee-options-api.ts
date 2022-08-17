@@ -7,10 +7,12 @@ const log = logger(module);
 export const feeOptionsApi = async (req: Request, res: Response) => {
   try {
     const {
-      wallet, to, data,
+      wallet, to, data, chainId,
     } = req.body;
 
-    const result = await feeOptionsService(wallet, to, data);
+    const result = await feeOptionsService({
+      wallet, to, data, chainId,
+    });
 
     if (result.error) {
       return res.status(result.code).json({
