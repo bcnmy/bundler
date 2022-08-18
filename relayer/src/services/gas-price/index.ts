@@ -1,5 +1,4 @@
 import { Network } from 'network-sdk';
-import { schedule } from 'node-cron';
 import { redisClient } from '../../../../common/db';
 import { logger } from '../../../../common/log-config';
 import { getGasPriceKey } from '../../utils/cache-utils';
@@ -35,8 +34,8 @@ export class GasPrice {
   }
 
   scheduleForUpdate(frequencyInSeconds: number = 30) {
-    schedule(`*/${frequencyInSeconds} * * * * *`, () => {
+    setInterval(() => {
       this.setGasPrice();
-    });
+    }, frequencyInSeconds * 1000);
   }
 }

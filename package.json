@@ -28,7 +28,6 @@
     "lodash": "^4.17.21",
     "mongoose": "^6.5.0",
     "network-sdk": "^1.0.1",
-    "node-cron": "^3.0.1",
     "redis": "^4.2.0",
     "rest-api-errors": "^1.2.5",
     "serialize-error": "8.1.0",
