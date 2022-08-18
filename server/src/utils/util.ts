@@ -1,4 +1,3 @@
-import { serializeError } from 'serialize-error';
 
 export const stringify = (data: any) => {
   let dataString = data;
@@ -6,14 +5,6 @@ export const stringify = (data: any) => {
     dataString = JSON.stringify(data);
   }
   return dataString;
-};
-
-export const parseError = (error: any) => {
-  const result = serializeError(error);
-  if (result.message) {
-    return result.message;
-  }
-  return result;
 };
 
 export const sanitizeParams = (params:Array<any>) => {

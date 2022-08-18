@@ -1,6 +1,6 @@
-import { logger } from '../../../../common/log-config';
-import { redisClient } from '../../../../common/db';
-import { parseError } from '../../utils/util';
+import { logger } from '../log-config';
+import { redisClient } from '../db';
+import { parseError } from '../utils';
 
 const log = logger(module);
 

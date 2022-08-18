@@ -25,10 +25,7 @@ export const simulateOptionsSchema = object({
 });
 
 export const feeOptionsSchema = object({
-  body: object({
-    wallet: string(),
-    to: string(),
-    data: string(),
-    chainId: number().required('chain id (network id) is required'),
+  query: object({
+    chainId: string().oneOf(['5', '80001']),
   }),
 });

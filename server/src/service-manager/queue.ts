@@ -1,6 +1,6 @@
 import amqp from 'amqplib';
 import { logger } from '../../../common/log-config';
-import { parseError, stringify } from '../utils/util';
+import { parseError, stringify } from '../../../common/utils';
 
 const log = logger(module);
 

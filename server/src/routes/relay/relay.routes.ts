@@ -5,6 +5,6 @@ import { relaySchema, simulateOptionsSchema, feeOptionsSchema } from './relay.sc
 
 export const relayApiRouter = Router();
 
+relayApiRouter.get('/feeOptions', validateRequest(feeOptionsSchema), feeOptionsApi);
 relayApiRouter.post('/simulate', validateRequest(simulateOptionsSchema), simulateApi);
-relayApiRouter.post('/feeOptions', validateRequest(feeOptionsSchema), feeOptionsApi);
 relayApiRouter.post('/', validateRequest(relaySchema), simulateApi, relayApi);
