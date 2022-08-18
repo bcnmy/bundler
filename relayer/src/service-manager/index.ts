@@ -47,11 +47,11 @@ export const init = async () => {
       apiKey,
     );
 
-    try {
-      await relayerManagerMessenger.connect();
-    } catch (error) {
-      log.error(error);
-    }
+    // try {
+    //   await relayerManagerMessenger.connect();
+    // } catch (error) {
+    //   log.error(error);
+    // }
 
     for (const networkId of supportedNetworks) {
       log.info(`Creating new Network instance for network id ${networkId}`);

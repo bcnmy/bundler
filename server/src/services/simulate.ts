@@ -21,11 +21,12 @@ export const simulateService = async (wallet: string, data: string, chainId: str
     const body = {
       // standard TX fields
       network_id: chainId,
-      from: wallet,
+      from: '0xb3d1f43ec5249538c6c0fd4fd6e06b4215ce3000',
       input: data,
       gas: 8000000,
       gas_price: '0',
       value: '0',
+      to: wallet,
       // simulation config (tenderly specific)
       save: true,
     };
