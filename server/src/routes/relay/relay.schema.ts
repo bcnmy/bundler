@@ -29,5 +29,6 @@ export const feeOptionsSchema = object({
     wallet: string(),
     to: string(),
     data: string(),
+    chainId: number().required('chain id (network id) is required'),
   }),
 });
