@@ -5,8 +5,8 @@ import { GasPrice } from '../../../common/gas-price';
 import { initSetERC20TokenPrices } from '../../../common/network-price/coin-market-cap';
 import { config } from '../../config';
 
-const { supportedNetworks } = config;
-
+let { supportedNetworks } = config;
+supportedNetworks = JSON.parse(supportedNetworks);
 const dbInstance = new Mongo(process.env.MONGO_URL || '');
 const daoUtilsInstance = new DaoUtils(dbInstance);
 const gasPriceMap: Record<number, GasPrice> = {};

@@ -9,7 +9,6 @@ const log = logger(module);
 const setERC20TokenPrices = async () => {
   try {
     const { networkSymbolsCategories } = config;
-    console.log('networkSymbolsCategories', networkSymbolsCategories);
     if (networkSymbolsCategories) {
       const networkSymbolsCategoriesKeys = Object.keys(networkSymbolsCategories);
 

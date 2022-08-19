@@ -101,32 +101,39 @@ const envConfig: LooseObject = {
   coinMarketCapApiUrl: 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest',
   coinMarketCapApiKey: process.env.COINMARKETCAP_API_KEY,
   supportedFeeTokens: {
-    5: ['USDC', 'USDT', 'WETH'],
-    80001: ['USDC', 'USDT', 'WETH'],
+    5: ['ETH', 'USDC', 'USDT', 'WETH'],
+    80001: ['MATIC', 'USDC', 'USDT', 'WETH'],
+  },
+  wrappedTokens: {
+    WETH: 1,
+    WMATIC: 137,
+  },
+  logoUrl: {
+    ETH: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png',
+    WETH: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png',
+    MATIC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png',
+    WMATIC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png',
+    USDC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdc.png',
+    USDT: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png',
+  },
+  similarTokens: {
+    1: ['ETH', 'WETH'],
+    5: ['ETH', 'WETH'],
+    137: ['MATIC', 'WMATIC'],
+    80001: ['MATIC', 'WMATIC'],
   },
   tokenContractAddress: {
     5: {
-      USDC: '0x',
-      USDT: '0x',
-      WETH: '0x',
+      ETH: '0X',
+      USDC: '0x5FfbaC75EFc9547FBc822166feD19B05Cd5890bb',
+      USDT: '0xb1f79Eb4fb3BD4DD516033FA9ab3037874A905E4',
+      WETH: '0xb7e94Cce902E34e618A23Cb82432B95d03096146',
     },
     80001: {
-      USDC: '0x',
-      USDT: '0x',
-      WETH: '0x',
-    },
-  },
-  // 1 - multiply, 0 - nothing, 2 - convert
-  networkPriceMap: {
-    5: {
-      USDC: 1,
-      USDT: 1,
-      WETH: 0,
-    },
-    80001: {
-      USDC: 1,
-      USDT: 1,
-      WETH: 2,
+      MATIC: '0X',
+      USDC: '0xe6b8a5CF854791412c1f6EFC7CAf629f5Df1c747',
+      USDT: '0x51261AA98e932737a8F159B15d246d32978EB42e',
+      WETH: '0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa',
     },
   },
 };
