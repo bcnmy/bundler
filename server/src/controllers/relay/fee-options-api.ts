@@ -15,8 +15,9 @@ const convertGasPriceToUSD = async (
 ) => {
   const decimal = config.decimal[nativeChainId];
   const usdc = new Big(gasPrice)
-    .div(new Big(10 ** decimal))
     .mul(new Big(chainPriceDataInUSD))
+    .div(new Big(10 ** decimal))
+    .toFixed(16)
     .toString();
   return usdc;
 };
@@ -48,7 +49,7 @@ export const feeOptionsApi = async (req: Request, res: Response) => {
       if (crossChainId) {
         const gasPriceInUSD = await convertGasPriceToUSD(chainId, gasPrice, chainPriceDataInUSD);
         const crossChainPrice = networkPriceData[crossChainId];
-        tokenGasPrice = new Big(gasPriceInUSD).div(new Big(crossChainPrice)).toString();
+        tokenGasPrice = new Big(gasPriceInUSD).div(new Big(crossChainPrice)).toFixed(16).toString();
         decimal = config.decimal[crossChainId];
       }
     }
