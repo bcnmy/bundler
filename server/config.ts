@@ -102,7 +102,7 @@ const envConfig: LooseObject = {
   coinMarketCapApiKey: process.env.COINMARKETCAP_API_KEY,
   supportedFeeTokens: {
     5: ['ETH', 'USDC', 'USDT', 'WETH'],
-    80001: ['MATIC', 'USDC', 'USDT', 'WETH'],
+    80001: ['MATIC', 'USDC', 'USDT', 'XDAI', 'WETH'],
   },
   wrappedTokens: {
     WETH: 1,
@@ -115,12 +115,20 @@ const envConfig: LooseObject = {
     WMATIC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png',
     USDC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdc.png',
     USDT: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png',
+    XDAI: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xdai.png',
   },
   similarTokens: {
     1: ['ETH', 'WETH'],
     5: ['ETH', 'WETH'],
     137: ['MATIC', 'WMATIC'],
     80001: ['MATIC', 'WMATIC'],
+  },
+  offset: {
+    USDC: 1000000,
+    USDT: 1000000,
+    WETH: 1,
+    XDAI: 1,
+    MATIC: 1,
   },
   tokenContractAddress: {
     5: {
@@ -134,6 +142,7 @@ const envConfig: LooseObject = {
       USDC: '0xe6b8a5CF854791412c1f6EFC7CAf629f5Df1c747',
       USDT: '0x51261AA98e932737a8F159B15d246d32978EB42e',
       WETH: '0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa',
+      XDAI: '0xf61cBcaC6C5E4F27543495890536B799D18f7178',
     },
   },
 };

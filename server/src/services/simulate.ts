@@ -31,7 +31,6 @@ export const simulateService = async (wallet: string, data: string, chainId: str
       save: true,
     };
     const response = await tAxios.post(SIMULATE_URL, body);
-    console.log(response.data.transaction);
 
     if (!response?.data?.transaction?.status) {
       return {

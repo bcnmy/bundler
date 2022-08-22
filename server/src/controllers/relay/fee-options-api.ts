@@ -12,12 +12,13 @@ const convertGasPriceToUSD = async (
   nativeChainId: number,
   gasPrice: number,
   chainPriceDataInUSD: number,
+  token: string,
 ) => {
   const decimal = config.decimal[nativeChainId];
   const usdc = new Big(gasPrice)
     .mul(new Big(chainPriceDataInUSD))
     .div(new Big(10 ** decimal))
-    .toFixed(16)
+    .mul(new Big(config.offset[token]))
     .toString();
   return usdc;
 };
@@ -37,28 +38,40 @@ export const feeOptionsApi = async (req: Request, res: Response) => {
   for (const token of feeTokens) {
     let tokenGasPrice;
     let decimal;
-    if (config.similarTokens[chainId].includes(token)) {
+    if (config.similarTokens[chainId].includes(token)) { // check if same token
       tokenGasPrice = gasPrice;
       decimal = config.decimal[chainId];
     } else if (token === 'USDC' || token === 'USDT') {
-      tokenGasPrice = await convertGasPriceToUSD(chainId, gasPrice, chainPriceDataInUSD);
       decimal = 6;
+      tokenGasPrice = await convertGasPriceToUSD(chainId, gasPrice, chainPriceDataInUSD, token);
+      tokenGasPrice = new Big(tokenGasPrice).mul(10 ** decimal).toFixed(0).toString();
+    } else if (token === 'XDAI') {
+      decimal = 18;
+      tokenGasPrice = await convertGasPriceToUSD(chainId, gasPrice, chainPriceDataInUSD, token);
+      tokenGasPrice = new Big(tokenGasPrice).mul(10 ** decimal).toFixed(0).toString();
     } else {
       // calculate for cross chain
       const crossChainId = config.wrappedTokens[token];
       if (crossChainId) {
-        const gasPriceInUSD = await convertGasPriceToUSD(chainId, gasPrice, chainPriceDataInUSD);
+        const gasPriceInUSD = await convertGasPriceToUSD(
+          chainId,
+          gasPrice,
+          chainPriceDataInUSD,
+          token,
+        );
         const crossChainPrice = networkPriceData[crossChainId];
-        tokenGasPrice = new Big(gasPriceInUSD).div(new Big(crossChainPrice)).toFixed(16).toString();
+        tokenGasPrice = new Big(gasPriceInUSD).div(new Big(crossChainPrice));
         decimal = config.decimal[crossChainId];
+        tokenGasPrice = new Big(tokenGasPrice).mul(10 ** decimal).toFixed(0).toString();
       }
     }
     response.push({
-      tokenGasPrice,
+      tokenGasPrice: Number(tokenGasPrice),
       symbol: token,
       address: config.tokenContractAddress[chainId][token],
       decimal,
       logoUrl: config.logoUrl[token],
+      offset: config.offset[token],
     });
   }
   try {
