@@ -101,7 +101,7 @@ const envConfig: LooseObject = {
   coinMarketCapApiUrl: 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest',
   coinMarketCapApiKey: process.env.COINMARKETCAP_API_KEY,
   supportedFeeTokens: {
-    5: ['ETH', 'USDC', 'USDT', 'WETH'],
+    5: ['ETH', 'USDC', 'USDT', 'XDAI', 'WETH'],
     80001: ['MATIC', 'USDC', 'USDT', 'XDAI', 'WETH'],
   },
   wrappedTokens: {
@@ -136,6 +136,7 @@ const envConfig: LooseObject = {
       USDC: '0x5FfbaC75EFc9547FBc822166feD19B05Cd5890bb',
       USDT: '0xb1f79Eb4fb3BD4DD516033FA9ab3037874A905E4',
       WETH: '0xb7e94Cce902E34e618A23Cb82432B95d03096146',
+      XDAI: '0xE68104D83e647b7c1C15a91a8D8aAD21a51B3B3E',
     },
     80001: {
       MATIC: '0X',
