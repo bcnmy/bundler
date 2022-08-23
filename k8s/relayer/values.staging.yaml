@@ -37,7 +37,7 @@ config:
   WEB_SOCKET_API_URL: "https://sdk-testing-ws.staging.biconomy.io/api"
   WEB_SOCKET_URL: "wss://sdk-testing-ws.staging.biconomy.io/connection/websocket"
   REDIS_URL: "redis://redis:6379"
-  SUPPORTED_NETWORKS: "[80001]"
+  SUPPORTED_NETWORKS: "[5, 80001]"
   TENDERLY_USER: "yashasvi_yc7"
   TENDERLY_PROJECT: "project"
 
