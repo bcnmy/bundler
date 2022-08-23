@@ -371,6 +371,7 @@ export class Relayer {
         );
       }
     } catch (error: any) {
+      console.log(error);
       log.error(error);
     }
     return transactionResponse;
@@ -433,42 +434,32 @@ export class Relayer {
   ) {
     if (retry) {
       log.info(`Transaction Id:- ${transactionId} with new transaction hash ${transactionResponse.hash} and previous transaction hash ${previousTransactionHash} on network id ${this.networkId}`);
-      try {
-        await this.messenger.sendTransactionHashChanged(
-          transactionId,
-          transactionResponse.hash,
-          this.networkId,
-          {
-            onDropped: async (transactionData:any) => {
-              await this.onTransactionDropped(transactionData);
-            },
-            onMined: async (transactionData:any) => {
-              await this.onTransactionMined(transactionData);
-            },
-          },
-        );
-      } catch (error) {
-        log.error(`failed to sendTransactionHashChanged to socket server ${error}`);
-      }
     } else {
       log.info(`Transaction Id:- ${transactionId} and transaction hash is ${transactionResponse.hash} on network id ${this.networkId}`);
-      try {
-        await this.messenger.sendTransactionHashGenerated(
+    }
+    try {
+      const receipt = await this.network.waitForTransaction(transactionResponse.hash);
+      if (!receipt) {
+        this.onTransactionDropped({
           transactionId,
-          transactionResponse.hash,
-          this.networkId,
-          {
-            onDropped: async (transactionData:any) => {
-              await this.onTransactionDropped(transactionData);
-            },
-            onMined: async (transactionData:any) => {
-              await this.onTransactionMined(transactionData);
-            },
-          },
-        );
-      } catch (error) {
-        log.error(`failed to sendTransactionHashGenerated to socket server ${error}`);
+          transactionHash: transactionResponse.hash,
+          relayerAddress: transactionResponse.from,
+          networkId: transactionResponse.networkId,
+        });
+      } else {
+        this.onTransactionMined({
+          transactionHash: transactionResponse.hash,
+          receipt,
+        });
       }
+    } catch (error) {
+      log.error(`failed to sendTransactionHashGenerated to socket server ${error}`);
+      this.onTransactionDropped({
+        transactionId,
+        transactionHash: transactionResponse.hash,
+        relayerAddress: transactionResponse.from,
+        networkId: transactionResponse.networkId,
+      });
     }
   }
 
@@ -486,7 +477,7 @@ export class Relayer {
         log.error(`Error in sendTransaction ${stringify(error)} on network id ${this.networkId}`);
       }
       log.info(`Response from relayer ${stringify(response)}`);
-      if (!response.error) {
+      if (!response || (response && response.error)) {
         try {
           this.channel.ack(msg);
           this.pendingTransactionCount += 1;

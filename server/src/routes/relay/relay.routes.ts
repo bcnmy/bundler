@@ -1,8 +1,10 @@
 import { Router } from 'express';
-import { relayApi } from '../../controllers/relay';
+import { relayApi, feeOptionsApi, simulateApi } from '../../controllers';
 import { validateRequest } from '../../middleware';
-import { relaySchema } from './relay.schema';
+import { relaySchema, simulateOptionsSchema, feeOptionsSchema } from './relay.schema';
 
 export const relayApiRouter = Router();
 
-relayApiRouter.post('/', validateRequest(relaySchema), relayApi);
+relayApiRouter.get('/feeOptions', validateRequest(feeOptionsSchema), feeOptionsApi);
+relayApiRouter.post('/simulate', validateRequest(simulateOptionsSchema), simulateApi);
+relayApiRouter.post('/', validateRequest(relaySchema), simulateApi, relayApi);

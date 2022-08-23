@@ -1,25 +1,13 @@
-export const getDappByApiKey = (apiKey: string): string => `DAppByAPIKey_${apiKey}`;
+import crypto from 'crypto';
 
-export const getMethodAPIKey = (apiId: string) => `ContractMethodAPI_${apiId}`;
+const randomInteger = (
+  min: number,
+  max: number,
+): number => Math.floor(Math.random() * (max - min + 1)) + min;
 
-export const getDappConfigKey = (dappId: string) => `DAppConfig_${dappId}`;
+export const generateTransactionId = (data: string) => {
+  const hashData = `0x${crypto.createHash('sha256').update(data + Date.now() + randomInteger(1, 1000)).digest('hex')}`;
+  return hashData;
+};
 
-export const getGasManagerEnableFlagKey = () => 'isGasManagerEnabled';
-
-export const getSmartContractKey = (contractId: string) => `DAppContract_${contractId}`;
-
-export const getForwarderDefaultDomainDataKey = (forwarder:string, networkId:string) => `domainData_${forwarder}_${networkId}`;
-
-export const getGasPriceKey = (networkId:string, gasType:string) => `GasPrice_${networkId}_${gasType}`;
-
-export const getDappByDappIdKey = (dappId: string) => `Dapp_${dappId}`;
-
-export const getDappByApiIdKey = (apiId: string) => `ApiId_${apiId}`;
-
-export const getSmartContractListKey = (dappId: string): string => `SmartContractList_${dappId}`;
-
-export const getMetaApiListPerDappKey = (dappId: string): string => `MetaApiListPerDapp_${dappId}`;
-
-export const getMetaEntryServiceConfiguration = (): string => 'META_ENTRY_CONFIGURATION';
-
-export const getUserDappDataByDappId = (dappId: string): string => `UserDappDataPerDapp_${dappId}`;
+export const getGasUsedInSimulationKey = (wallet: string, to: string, data: string) => generateTransactionId(`GasUsed_${wallet}_${to}_${data}`);

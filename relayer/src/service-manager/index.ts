@@ -6,7 +6,7 @@ import { logger } from '../../../common/log-config';
 import { DaoUtils } from '../dao-utils';
 import { Mongo } from '../../../common/db/mongo';
 import { RelayerManager } from '../services/relayers-manager';
-import { GasPrice } from '../services/gas-price';
+import { GasPrice } from '../../../common/gas-price';
 
 const log = logger(module);
 const {
