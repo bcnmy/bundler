@@ -11,6 +11,7 @@ export const simulateApi = async (req: Request, res: Response, next: NextFunctio
     } = req.body;
     const result = await simulateService(to, data, chainId, refundInfo);
 
+
     if (result.error) {
       return res.status(result.code).json({
         msg: 'bad request',
