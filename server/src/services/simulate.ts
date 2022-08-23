@@ -16,6 +16,7 @@ const tenderlyInstance = () => axios.create({
 
 const checkIfRelayerIsPaidFully = async (transactionLogs: any, gasUsedInSimulation: number, chainId: number, refundInfo: { tokenGasPrice: string, gasToken: string }) => {
   try {
+    log.info(`Refund info received: ${refundInfo}`);
     const executionSuccessLog = transactionLogs.find((transactionLog: any) => transactionLog.name === 'ExecutionSuccess');
     if (!executionSuccessLog) {
       return {
@@ -49,6 +50,8 @@ const checkIfRelayerIsPaidFully = async (transactionLogs: any, gasUsedInSimulati
     if (refundInfo.gasToken === '0x0000000000000000000000000000000000000000') {
       refundToRelayer = paymentValue * nativeTokenGasPrice;
     } else {
+      // decimals
+      // paymentValue is in smallest unit?
       refundToRelayer = paymentValue * erc20TokenGasPrice;
     }
 
@@ -66,6 +69,7 @@ const checkIfRelayerIsPaidFully = async (transactionLogs: any, gasUsedInSimulati
       successOrRevertMsg: `Refund to relayer: ${refundToRelayer} is sufficient to send the transaction`,
     };
   } catch (error) {
+    log.info(error);
     return {
       isRelayerPaidFully: false,
       successOrRevertMsg: `Something went wrong with error: ${error}`,
