@@ -14,3 +14,6 @@ data:
   WEB_SOCKET_API_URL: {{ .Values.config.WEB_SOCKET_API_URL }}
   WEB_SOCKET_URL: {{ .Values.config.WEB_SOCKET_URL }}
   SUPPORTED_NETWORKS: "{{ .Values.config.SUPPORTED_NETWORKS }}"
+  TENDERLY_ACCESS_KEY: "{{ .Values.config.TENDERLY_ACCESS_KEY }}"
+  TENDERLY_USER: "{{ .Values.config.TENDERLY_USER }}"
+  TENDERLY_PROJECT: "{{ .Values.config.TENDERLY_PROJECT }}"

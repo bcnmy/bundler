@@ -9,8 +9,8 @@
     "build:relayer": "tsc -p relayer",
     "build:server": "tsc -p server",
     "build": "tsc",
-    "start:relayer": "tsc -p relayer && node relayer/dist/relayer/src/index.js",
-    "start:server": "tsc -p server && node server/dist/server/src/index.js"
+    "start:relayer": "node relayer/dist/relayer/src/index.js",
+    "start:server": "node server/dist/server/src/index.js"
   },
   "dependencies": {
     "amqplib": "^0.10.1",
