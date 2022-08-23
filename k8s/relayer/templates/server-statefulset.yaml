@@ -7,6 +7,7 @@ metadata:
     app: {{ .Values.server.name }}
     {{- include "relayers-service.labels" . | nindent 4 }}
 spec:
+  serviceName: {{ .Values.name }}
   replicas: {{ .Values.server.replicaCount }}
   selector:
     matchLabels:
