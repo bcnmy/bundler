@@ -7,10 +7,9 @@ const log = logger(module);
 export const simulateApi = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const {
-      to, data, chainId,
+      to, data, chainId, refundInfo,
     } = req.body;
-
-    const result = await simulateService(to, data, chainId);
+    const result = await simulateService(to, data, chainId, refundInfo);
 
     if (result.error) {
       return res.status(result.code).json({
