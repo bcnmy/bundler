@@ -187,15 +187,10 @@ export class Relayer {
   }
 
   async getGasPrice() {
-    let gasPrice;
+    // TODO get it from gasPriceMap instance
     const gasPriceFromCache = await redisClient.get(getGasPriceKey(this.networkId));
     log.info(`Gas price for ${this.networkId} in cache is ${gasPriceFromCache} on network id ${this.networkId}`);
-    if (gasPriceFromCache) {
-      gasPrice = ethers.utils.hexValue(Number(gasPriceFromCache));
-    } else {
-      gasPrice = (await this.network.getGasPrice()).gasPrice;
-      log.info(`Gas price for ${this.networkId} from network is ${gasPriceFromCache} on network id ${this.networkId}`);
-    }
+    const gasPrice = ethers.utils.hexValue(Number(gasPriceFromCache));
     return gasPrice;
   }
 

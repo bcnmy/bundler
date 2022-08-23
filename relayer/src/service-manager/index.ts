@@ -10,7 +10,7 @@ import { GasPrice } from '../../../common/gas-price';
 
 const log = logger(module);
 const {
-  supportedNetworks, socketService, relayerService,
+  supportedNetworks, socketService, relayerService, gasPriceService,
 } = config;
 
 const {
@@ -22,6 +22,8 @@ const {
 } = relayerService;
 
 const relayerManagerMap: Record<number, RelayerManager> = {};
+
+const gasPriceMap: Record<number, GasPrice> = {};
 
 let connection: any;
 
@@ -48,11 +50,11 @@ export const init = async () => {
       apiKey,
     );
 
-    // try {
-    //   await relayerManagerMessenger.connect();
-    // } catch (error) {
-    //   log.error(error);
-    // }
+    try {
+      await relayerManagerMessenger.connect();
+    } catch (error) {
+      log.error(error);
+    }
 
     for (const networkId of supportedNetworks) {
       log.info(`Creating new Network instance for network id ${networkId}`);
@@ -73,8 +75,8 @@ export const init = async () => {
 
       relayerManagerMap[networkId].createRelayers(numberOfRelayersPerNetwork[networkId]);
 
-      // gasPriceMap[networkId] = new GasPrice(networkId, network);
-      // gasPriceMap[networkId].scheduleForUpdate(gasPriceService.updateFrequencyInSecond);
+      gasPriceMap[networkId] = new GasPrice(networkId, network);
+      gasPriceMap[networkId].scheduleForUpdate(gasPriceService.updateFrequencyInSecond);
     }
   });
 };
@@ -94,4 +96,5 @@ process.on('SIGTERM', async () => {
 export {
   relayerManagerMap,
   daoUtilsInstance,
+  gasPriceMap,
 };
