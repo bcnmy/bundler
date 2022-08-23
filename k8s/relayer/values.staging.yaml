@@ -81,18 +81,6 @@ secret:
     name: TENDERLY_ACCESS_KEY
     version: latest
     property: TENDERLY_ACCESS_KEY
-<<<<<<< HEAD
-
-=======
-  TENDERLY_USER:
-    name: TENDERLY_USER
-    version: latest
-    property: TENDERLY_USER
-  TENDERLY_PROJECT:
-    name: TENDERLY_PROJECT
-    version: latest
-    property: TENDERLY_PROJECT
->>>>>>> 1c5d45122376198edb9dec7e5826a4930b0d9f21
 
 ingress:
   host: sdk-relayer.staging.biconomy.io
