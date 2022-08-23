@@ -75,6 +75,18 @@ secret:
     name: RELAYERS_MASTER_SEED
     version: latest
     property: RELAYERS_MASTER_SEED
+  TENDERLY_ACCESS_KEY:
+    name: TENDERLY_ACCESS_KEY
+    version: latest
+    property: TENDERLY_ACCESS_KEY
+  TENDERLY_USER:
+    name: TENDERLY_USER
+    version: latest
+    property: TENDERLY_USER
+  TENDERLY_PROJECT:
+    name: TENDERLY_PROJECT
+    version: latest
+    property: TENDERLY_PROJECT
 
 ingress:
   host: sdk-relayer.staging.biconomy.io
