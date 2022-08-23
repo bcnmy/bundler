@@ -54,7 +54,7 @@ export const relayApi = async (req: Request, res: Response) => {
           return res.json(
             {
               code: 200,
-              log: 'Meta transaction sent to blockchain',
+              message: 'Meta transaction sent to blockchain',
               transactionId: txId,
               transactionHash: txHash,
               connectionUrl: websocketUrl,
