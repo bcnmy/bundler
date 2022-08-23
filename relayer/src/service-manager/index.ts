@@ -6,11 +6,10 @@ import { logger } from '../../../common/log-config';
 import { DaoUtils } from '../dao-utils';
 import { Mongo } from '../../../common/db/mongo';
 import { RelayerManager } from '../services/relayers-manager';
-import { GasPrice } from '../../../common/gas-price';
 
 const log = logger(module);
 const {
-  supportedNetworks, socketService, relayerService, gasPriceService,
+  supportedNetworks, socketService, relayerService,
 } = config;
 
 const {
@@ -22,8 +21,6 @@ const {
 } = relayerService;
 
 const relayerManagerMap: Record<number, RelayerManager> = {};
-
-const gasPriceMap: Record<number, GasPrice> = {};
 
 let connection: any;
 
@@ -74,9 +71,6 @@ export const init = async () => {
       log.info(`Setting up ${numberOfRelayersPerNetwork[networkId]} relayer for network id ${networkId}`);
 
       relayerManagerMap[networkId].createRelayers(numberOfRelayersPerNetwork[networkId]);
-
-      gasPriceMap[networkId] = new GasPrice(networkId, network);
-      gasPriceMap[networkId].scheduleForUpdate(gasPriceService.updateFrequencyInSecond);
     }
   });
 };
@@ -96,5 +90,4 @@ process.on('SIGTERM', async () => {
 export {
   relayerManagerMap,
   daoUtilsInstance,
-  gasPriceMap,
 };

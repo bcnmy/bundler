@@ -29,5 +29,4 @@ export {
   daoUtilsInstance,
   dbInstance,
   gasPriceMap,
-
 };
