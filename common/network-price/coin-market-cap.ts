@@ -44,10 +44,7 @@ const setERC20TokenPrices = async () => {
       log.info('Network Symbol Categories object is not defined');
     }
   } catch (error) {
-    console.log(error);
-
-    // log.error(JSON.stringify(error));
-    // throw new Error(error);
+    log.error(error);
   }
 };
 
