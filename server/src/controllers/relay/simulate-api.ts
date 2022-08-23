@@ -9,9 +9,7 @@ export const simulateApi = async (req: Request, res: Response, next: NextFunctio
     const {
       to, data, chainId,
     } = req.body;
-    console.log('to', to);
-    console.log('data', data);
-    console.log('chainId', chainId);
+
     const result = await simulateService(to, data, chainId);
 
     if (result.error) {
