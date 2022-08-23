@@ -38,6 +38,8 @@ config:
   WEB_SOCKET_URL: "wss://sdk-testing-ws.staging.biconomy.io/connection/websocket"
   REDIS_URL: "redis://redis:6379"
   SUPPORTED_NETWORKS: "[80001]"
+  TENDERLY_USER: "yashasvi_yc7"
+  TENDERLY_PROJECT: "project"
 
 
 secret:
@@ -79,6 +81,9 @@ secret:
     name: TENDERLY_ACCESS_KEY
     version: latest
     property: TENDERLY_ACCESS_KEY
+<<<<<<< HEAD
+
+=======
   TENDERLY_USER:
     name: TENDERLY_USER
     version: latest
@@ -87,6 +92,7 @@ secret:
     name: TENDERLY_PROJECT
     version: latest
     property: TENDERLY_PROJECT
+>>>>>>> 1c5d45122376198edb9dec7e5826a4930b0d9f21
 
 ingress:
   host: sdk-relayer.staging.biconomy.io
