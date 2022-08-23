@@ -14,7 +14,7 @@ const envConfig: LooseObject = {
   },
   provider: {
     5: 'https://goerli.infura.io/v3/30125eccc47e475b9a9421f0eaf1e19c',
-    80001: 'https://polygon-mumbai.infura.io/v3/113843749d494bc39ff60007ac6d121d',
+    80001: 'https://polygon-mumbai.g.alchemy.com/v2/OcZ3-nUEz5Pnk-y0FzLikmD6Ky_ompOf',
   },
   currency: {
     8995: 'MATIC',
