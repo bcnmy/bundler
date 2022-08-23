@@ -1,28 +1,3 @@
-import {
-  biconomyForwarderAddressMap,
-  biconomyForwarderAddressesMap,
-  erc20ForwarderAddressMap,
-  oracleAggregatorAddressMap,
-  transferHandlerAddressMap,
-  daiTokenAddressMap,
-  usdtTokenAddressMap,
-  usdcTokenAddressMap,
-  sandTokenAddressMap,
-  biconomyForwarderAbiMap,
-  erc20ForwarderAbiMap,
-  erc20ForwarderV2AbiMap,
-  oracleAggregatorAbiMap,
-  transferHandlerAbiMap,
-  daiTokenAbiMap,
-  usdtTokenAbiMap,
-  sandTokenAbiMap,
-  usdcTokenAbiMap,
-  walletFactoryAddressMap,
-  baseWalletAddressMap,
-  entryPointAddressMap,
-  handlerAddressMap,
-} from './contract-map-config';
-
 interface LooseObject {
   [key: string]: any
 }
@@ -30,43 +5,16 @@ interface LooseObject {
 // eslint-disable-next-line import/no-mutable-exports
 let config: LooseObject = {};
 
-// const transaction_handler_config: LooseObject = {}; // Read from file and assign
-// Define config for all services and export
-// Read from file/redis + process.env
-
 const envConfig: LooseObject = {
-  native: {
-    '/api/v2/meta-tx/custom': ['1', '100', '137'],
-    '/api/v2/meta-tx/native': [],
+  supportedNetworks: process.env.SUPPORTED_NETWORKS,
+  erc20TokenGasPriceInterval: process.env.ERC20_TOKEN_GAS_PRICE_INTERVAL,
+  networkSymbolsCategories: {
+    ETH: [1, 5, 4],
+    MATIC: [80001, 137],
   },
-  contractType: {
-    smartContractWallet: 'SCW',
-    smartContract: 'SC',
-    smartContractForwarder: 'SCF',
-  },
-  system_info_config: {
-    biconomyForwarderAddressMap,
-    biconomyForwarderAddressesMap,
-    erc20ForwarderAddressMap,
-    oracleAggregatorAddressMap,
-    transferHandlerAddressMap,
-    daiTokenAddressMap,
-    usdtTokenAddressMap,
-    usdcTokenAddressMap,
-    sandTokenAddressMap,
-    biconomyForwarderAbiMap,
-    erc20ForwarderAbiMap,
-    erc20ForwarderV2AbiMap,
-    oracleAggregatorAbiMap,
-    transferHandlerAbiMap,
-    daiTokenAbiMap,
-    usdtTokenAbiMap,
-    sandTokenAbiMap,
-    usdcTokenAbiMap,
-    walletFactoryAddressMap,
-    baseWalletAddressMap,
-    entryPointAddressMap,
-    handlerAddressMap,
+  provider: {
+    5: 'https://goerli.infura.io/v3/30125eccc47e475b9a9421f0eaf1e19c',
+    80001: 'https://polygon-mumbai.g.alchemy.com/v2/OcZ3-nUEz5Pnk-y0FzLikmD6Ky_ompOf',
   },
   currency: {
     8995: 'MATIC',
@@ -124,39 +72,81 @@ const envConfig: LooseObject = {
     250: 18,
     4002: 18,
   },
-  signatureType: {
-    PERSONAL_SIGNATURE: 'PERSONAL_SIGN',
-    EIP712_SIGNATURE: 'EIP712_SIGN',
+  gasPriceService: {
+    updateFrequencyInSecond: {
+      0: 600, // default
+      1: 12,
+      3: 12,
+      4: 12,
+      5: 12,
+      31: 60,
+      42: 60,
+      56: 20,
+      77: 20,
+      97: 100,
+      100: 60,
+      137: 8,
+      1285: 60,
+      1287: 60,
+      2021: 10,
+      8995: 60,
+      15001: 60,
+      16110: 60,
+      43113: 20,
+      43114: 20,
+      80001: 60,
+      421611: 60,
+    },
   },
-  permitType: {
-    DAI: 'DAI_Permit',
-    EIP2612: 'EIP2612_Permit',
+  coinMarketCapApiUrl: 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest',
+  coinMarketCapApiKey: process.env.COINMARKETCAP_API_KEY,
+  supportedFeeTokens: {
+    5: ['ETH', 'USDC', 'USDT', 'XDAI', 'WETH'],
+    80001: ['MATIC', 'USDC', 'USDT', 'XDAI', 'WETH'],
   },
-  TOKEN_GAS_PRICE_THRESHOLD_PERCENTAGE: 95,
-  forwarderDomainName: 'Biconomy Forwarder', // Default
-  forwarderVersion: '1',
-  connectionUrl: process.env.WEB_SOCKET_URL,
-  timeZoneOffsetInMs: new Date().getTimezoneOffset() * 60 * 1000,
-  conditionalProvider: {
-    1: 'https://eth-mainnet.alchemyapi.io/v2/8vLFyF65nIpyd1CrfhqHd7kYtetw3Y7y',
-    4: 'https://eth-rinkeby.alchemyapi.io/v2/uS9dgQomYwQrzwGHlErrn71mO3N6go9C',
-    5: 'https://eth-goerli.g.alchemy.com/v2/tHph5L3QWvujUl7NiQGAqw8jE3qySzJG',
-    137: 'https://polygon-mainnet.g.alchemy.com/v2/s6bOKN9QDGXpVbsqzJMl_AHeZHNOCTcM',
-    80001: 'https://polygon-mumbai.g.alchemy.com/v2/s6bOKN9QDGXpVbsqzJMl_AHeZHNOCTcM',
+  wrappedTokens: {
+    WETH: 1,
+    WMATIC: 137,
+  },
+  logoUrl: {
+    ETH: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png',
+    WETH: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png',
+    MATIC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png',
+    WMATIC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png',
+    USDC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdc.png',
+    USDT: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png',
+    XDAI: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xdai.png',
+  },
+  similarTokens: {
+    1: ['ETH', 'WETH'],
+    5: ['ETH', 'WETH'],
+    137: ['MATIC', 'WMATIC'],
+    80001: ['MATIC', 'WMATIC'],
+  },
+  offset: {
+    USDC: 1000000,
+    USDT: 1000000,
+    WETH: 1,
+    XDAI: 1,
+    MATIC: 1,
+  },
+  tokenContractAddress: {
+    5: {
+      ETH: '0X',
+      USDC: '0x5FfbaC75EFc9547FBc822166feD19B05Cd5890bb',
+      USDT: '0xb1f79Eb4fb3BD4DD516033FA9ab3037874A905E4',
+      WETH: '0xb7e94Cce902E34e618A23Cb82432B95d03096146',
+      XDAI: '0xE68104D83e647b7c1C15a91a8D8aAD21a51B3B3E',
+    },
+    80001: {
+      MATIC: '0X',
+      USDC: '0xe6b8a5CF854791412c1f6EFC7CAf629f5Df1c747',
+      USDT: '0x51261AA98e932737a8F159B15d246d32978EB42e',
+      WETH: '0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa',
+      XDAI: '0xf61cBcaC6C5E4F27543495890536B799D18f7178',
+    },
   },
 };
-
-let supportedNetworks = process.env.SUPPORTED_NETWORKS;
-
-try {
-  if (supportedNetworks) {
-    supportedNetworks = JSON.parse(supportedNetworks);
-  }
-} catch (error) {
-  throw new Error('Supported networks array not found in process env');
-}
-
-envConfig.supportedNetworks = supportedNetworks;
 
 const setupConfig = async () => {
   config = envConfig;

@@ -371,6 +371,7 @@ export class Relayer {
         );
       }
     } catch (error: any) {
+      console.log(error);
       log.error(error);
     }
     return transactionResponse;
@@ -486,7 +487,7 @@ export class Relayer {
         log.error(`Error in sendTransaction ${stringify(error)} on network id ${this.networkId}`);
       }
       log.info(`Response from relayer ${stringify(response)}`);
-      if (!response.error) {
+      if (!response || (response && response.error)) {
         try {
           this.channel.ack(msg);
           this.pendingTransactionCount += 1;
