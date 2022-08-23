@@ -34,8 +34,8 @@ config:
   REDIS_PORT: "6379"
   RELAYER_QUEUE_EXCHANGE: "relayer_queue_exchange"
   RELAYER_QUEUE_NAME: "relayer_queue"
-  WEB_SOCKET_API_URL: "http://sdk-testing-ws.staging.biconomy.io/api"
-  WEB_SOCKET_URL: "ws://sdk-testing-ws.staging.biconomy.io/connection/websocket"
+  WEB_SOCKET_API_URL: "https://sdk-testing-ws.staging.biconomy.io/api"
+  WEB_SOCKET_URL: "wss://sdk-testing-ws.staging.biconomy.io/connection/websocket"
   REDIS_URL: "redis://redis:6379"
   SUPPORTED_NETWORKS: "[80001]"
 
