@@ -39,7 +39,7 @@ config:
   REDIS_URL: "redis://redis:6379"
   SUPPORTED_NETWORKS: "[80001]"
 
-  
+
 secret:
   projectID: biconomy-staging
   key:  sdk-staging-relayer
