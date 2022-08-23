@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.relayer.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.relayer.name }}
+    {{- include "relayers-service.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.relayer.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.relayer.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.relayer.name }}
+      annotations:
+        releaseTime: {{ dateInZone "2006-01-02 15:04:05Z" (now) "UTC"| quote }} 
+    spec:
+      containers:
+      - name: {{ .Values.relayer.name }}
+        image: {{ .Values.relayer.image }}
+        ports:
+        - containerPort: {{ .Values.relayer.port }}
+        env:
+          - name: REDIS_PASSWORD
+            value: ""
+          - name: REDIS_USERNAME
+            value: ""
+        envFrom:
+          - configMapRef:
+                name: {{ .Values.name }}
+          - secretRef:
+                name: {{ .Values.name }}
+        resources:
+          requests:
+            memory: {{ .Values.relayer.resource.requests.memory }}
+            cpu: {{ .Values.relayer.resource.requests.cpu }}
+          limits:
+            memory: {{ .Values.relayer.resource.limits.memory }}
+            cpu: {{ .Values.relayer.resource.limits.cpu }}

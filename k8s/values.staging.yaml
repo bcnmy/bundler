@@ -1,0 +1,80 @@
+name: "relayer-server"
+
+relayer:
+  name: "relayer"
+  image: "gcr.io/biconomy-staging/sdk/relayer:latest"
+  port: "80"
+  replicaCount: 1
+  resource:
+    requests:
+      memory: "100Mi"
+      cpu: "100m"
+    limits:
+      memory: "250Mi"
+      cpu: "250m"
+
+server:
+  name: "server"
+  image: "gcr.io/biconomy-staging/sdk/server:latest"
+  port: "3000"
+  replicaCount: 1
+  resource:
+    requests:
+      memory: "100Mi"
+      cpu: "100m"
+    limits:
+      memory: "250Mi"
+      cpu: "250m"
+
+
+namespace: "sdk-staging"
+
+config: 
+  NODE_PATH_INDEX: "1"
+  REDIS_PORT: "6379"
+  RELAYER_QUEUE_EXCHANGE: "relayer_queue_exchange"
+  RELAYER_QUEUE_NAME: "relayer_queue"
+  WEB_SOCKET_API_URL: "http://sdk-testing-ws.staging.biconomy.io/api"
+  WEB_SOCKET_URL: "ws://sdk-testing-ws.staging.biconomy.io/connection/websocket"
+  REDIS_URL: "redis://redis:6379"
+  SUPPORTED_NETWORKS: "[80001]"
+
+  
+secret:
+  projectID: biconomy-staging
+  key:  sdk-staging-relayer
+  BICONOMY_OWNER_ADDRESS:
+    name: BICONOMY_OWNER_ADDRESS
+    version: latest
+    property: BICONOMY_OWNER_ADDRESS
+  CF_API_KEY:
+    name: CF_API_KEY
+    version: latest
+    property: CF_API_KEY
+  BICONOMY_OWNER_PRIVATE_KEY:
+    name: BICONOMY_OWNER_PRIVATE_KEY
+    version: latest
+    property: BICONOMY_OWNER_PRIVATE_KEY
+  ETH_ACCOUNT_PASS:
+    name: ETH_ACCOUNT_PASS
+    version: latest
+    property: ETH_ACCOUNT_PASS
+  HMAC_SECRET_KEY:
+    name: HMAC_SECRET_KEY
+    version: latest
+    property: HMAC_SECRET_KEY
+  MONGO_URL:
+    name: MONGO_URL
+    version: latest
+    property: MONGO_URL
+  RELAYER_QUEUE_URL:
+    name: RELAYER_QUEUE_URL
+    version: latest
+    property: RELAYER_QUEUE_URL
+  RELAYERS_MASTER_SEED:
+    name: RELAYERS_MASTER_SEED
+    version: latest
+    property: RELAYERS_MASTER_SEED
+
+ingress:
+  host: sdk-relayer.staging.biconomy.io

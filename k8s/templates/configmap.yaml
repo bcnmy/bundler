@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "relayers-service.labels" . | nindent 4 }}
+data:
+  NODE_PATH_INDEX: "{{ .Values.config.NODE_PATH_INDEX }}"
+  REDIS_PORT: "{{ .Values.config.REDIS_PORT }}"
+  REDIS_URL: "{{ .Values.config.REDIS_URL }}"
+  RELAYER_QUEUE_EXCHANGE: {{ .Values.config.RELAYER_QUEUE_EXCHANGE }}
+  RELAYER_QUEUE_NAME: {{ .Values.config.RELAYER_QUEUE_NAME }}
+  WEB_SOCKET_API_URL: {{ .Values.config.WEB_SOCKET_API_URL }}
+  WEB_SOCKET_URL: {{ .Values.config.WEB_SOCKET_URL }}
