@@ -50,6 +50,7 @@
     "@types/hdkey": "^2.0.1",
     "@types/jest": "^28.1.7",
     "@types/request-promise": "^4.1.48",
+    "@types/supertest": "^2.0.12",
     "@typescript-eslint/eslint-plugin": "^5.32.0",
     "@typescript-eslint/parser": "^5.32.0",
     "eslint": "^8.21.0",
