@@ -40,6 +40,7 @@ config:
   SUPPORTED_NETWORKS: "[5, 80001]"
   TENDERLY_USER: "yashasvi_yc7"
   TENDERLY_PROJECT: "project"
+  ERC20_TOKEN_GAS_PRICE_INTERVAL: "30000"
 
 
 secret:
@@ -81,6 +82,10 @@ secret:
     name: TENDERLY_ACCESS_KEY
     version: latest
     property: TENDERLY_ACCESS_KEY
+  COINMARKETCAP_API_KEY:
+    name: COINMARKETCAP_API_KEY
+    version: latest
+    property: COINMARKETCAP_API_KEY
 
 ingress:
   host: sdk-relayer.staging.biconomy.io
