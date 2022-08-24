@@ -94,6 +94,7 @@ export const feeOptionsService = async (feeOptionServiceParams: FeeOptionService
     };
   } catch (error) {
     log.info(error);
+    console.log(error);
     return {
       code: 500,
       error: `Error occured in getting fee options service. Error: ${JSON.stringify(error)}`,
