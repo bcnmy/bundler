@@ -60,7 +60,7 @@ export const feeOptionsService = async (feeOptionServiceParams: FeeOptionService
         decimal = 6; // fetch it from contract
         tokenGasPrice = await convertGasPriceToUSD(chainId, gasPrice, chainPriceDataInUSD, token);
         tokenGasPrice = new Big(tokenGasPrice).mul(10 ** decimal).toFixed(0).toString();
-      } else if (token === 'XDAI') {
+      } else if (token === 'DAI') {
         decimal = 18; // fetch it from contract
         tokenGasPrice = await convertGasPriceToUSD(chainId, gasPrice, chainPriceDataInUSD, token);
         tokenGasPrice = new Big(tokenGasPrice).mul(10 ** decimal).toFixed(0).toString();
