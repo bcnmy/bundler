@@ -468,6 +468,10 @@ export class Relayer {
             },
           },
         );
+        // triggering mined event to reduce
+        setTimeout(async (transactionData) => {
+          await this.onTransactionMined(transactionData);
+        }, 120000);
       } catch (error) {
         log.error(`failed to sendTransactionHashGenerated to socket server ${error}`);
       }
