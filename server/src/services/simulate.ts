@@ -46,7 +46,7 @@ const checkIfRelayerIsPaidFully = async (transactionLogs: any, gasUsedInSimulati
     log.info(`Native token gas price: ${nativeTokenGasPrice}`);
     // ERC 20 token gas price should be in units of native asset
     // TODO get price feeds
-    const erc20TokenGasPrice = 0.000625;
+    const erc20TokenGasPrice = refundInfo.tokenGasPrice;
     if (refundInfo.gasToken === '0x0000000000000000000000000000000000000000') {
       refundToRelayer = paymentValue * nativeTokenGasPrice;
     } else {
