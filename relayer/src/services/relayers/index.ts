@@ -231,12 +231,13 @@ export class Relayer {
       gasPriceToUse = await this.getGasPrice();
     }
     log.info(`Transaction Id:- ${transactionId} sent with gas price of ${gasPriceToUse} and nonce as ${nonceToUse} on network id ${this.networkId}`);
-
+    const gasLimitNew = (gasLimit && gasLimit.hex) || '0xAAE60';
+    log.info(`Gas limit :- ${gasLimitNew}`);
     const nonceForTransaction = ethers.BigNumber.from(nonceToUse).toHexString();
     try {
       const transactionData = {
         gasPrice: gasPriceToUse,
-        gasLimit: gasLimit.hex || '0x493E0',
+        gasLimit: gasLimitNew,
         to,
         value: ethers.BigNumber.from('0').toHexString(),
         data,
