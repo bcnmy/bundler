@@ -379,34 +379,38 @@ export class Relayer {
   }
 
   async onTransactionMined(tx: any) {
-    const transactionFee = (parseInt(tx.receipt.effectiveGasPrice.hex, 16)
-            * parseInt(tx.receipt.gasUsed.hex, 16))
-            * 10 ** (-1 * config.decimal[this.networkId]);
-    const baseCurrencyInFiat = await getNativeTokenPriceInUSD(this.networkId);
-    const transactionFeeInFiat = transactionFee * baseCurrencyInFiat;
+    try {
+      // const transactionFee = (parseInt(tx.receipt.effectiveGasPrice.hex, 16)
+      //       * parseInt(tx.receipt.gasUsed.hex, 16))
+      //       * 10 ** (-1 * config.decimal[this.networkId]);
+      // const baseCurrencyInFiat = await getNativeTokenPriceInUSD(this.networkId);
+      // const transactionFeeInFiat = transactionFee * baseCurrencyInFiat;
 
-    const currentTimeInMs = Date.now();
-    // status of the transaction would be updated by gas management service
-    await this.daoUtilsInstance.updateTransaction(
-      {
-        transactionHash: tx.transactionHash,
-      },
-      this.networkId,
-      {
-        receipt: tx.receipt,
-        baseCurrencyInFiat,
-        transactionFee,
-        transactionFeeInFiat,
-        updationTime: currentTimeInMs,
-      },
-    );
-    this.pendingTransactionCount -= 1;
-    log.info(`onTransactionMined => Reducing pending transaction count for relayer ${this.address}. Current pending count is ${this.pendingTransactionCount} on network id ${this.networkId}`);
-    this.checkBalanceBelowThreshold();
-    await Promise.all([
-      Relayer.removeRetry(tx.transactionId),
-      this.checkPendingTransactionThreshold(),
-    ]);
+      // const currentTimeInMs = Date.now();
+      // // status of the transaction would be updated by gas management service
+      // await this.daoUtilsInstance.updateTransaction(
+      //   {
+      //     transactionHash: tx.transactionHash,
+      //   },
+      //   this.networkId,
+      //   {
+      //     receipt: tx.receipt,
+      //     baseCurrencyInFiat,
+      //     transactionFee,
+      //     transactionFeeInFiat,
+      //     updationTime: currentTimeInMs,
+      //   },
+      // );
+      this.pendingTransactionCount -= 1;
+      log.info(`onTransactionMined => Reducing pending transaction count for relayer ${this.address}. Current pending count is ${this.pendingTransactionCount} on network id ${this.networkId}`);
+      this.checkBalanceBelowThreshold();
+      await Promise.all([
+        Relayer.removeRetry(tx.transactionId),
+        this.checkPendingTransactionThreshold(),
+      ]);
+    } catch (error) {
+      log.error('error in mined event');
+    }
   }
 
   async onTransactionDropped(tx: any) {
@@ -469,8 +473,8 @@ export class Relayer {
           },
         );
         // triggering mined event to reduce
-        setTimeout(async (transactionData) => {
-          await this.onTransactionMined(transactionData);
+        setTimeout(async () => {
+          await this.onTransactionMined({ transactionId });
         }, 120000);
       } catch (error) {
         log.error(`failed to sendTransactionHashGenerated to socket server ${error}`);
