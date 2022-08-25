@@ -473,6 +473,7 @@ export class Relayer {
     }
   }
 
+  // remove from the relayer class
   async startConsumptionFromQueue() {
     let response = { error: 'something went wrong' };
     await this.channel.consume(this.queue.queue, async (msg: any) => {

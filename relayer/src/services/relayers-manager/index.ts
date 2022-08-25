@@ -26,6 +26,15 @@ enum RelayersStatus {
 
 }
 
+/**
+ * Function of relayer manager
+ * 1. create relayers for supported networks
+ * 2. fund relayer when balance below threshold
+ * 3. retry transaction (listen to pending txn listener)
+ * 4. Maintain status of active / inactive relayer
+ * 5. increase number of relayer
+ */
+
 export class RelayerManager {
   network: Network;
 
@@ -47,7 +56,6 @@ export class RelayerManager {
 
   RELAYER_CAPACITY_THRESHHOLD: number = 0.6; // 60% of total assigned relayers in queue
 
-  // Could maintain this
   /** @property number of transactions sent by main account */
   mainAccountNonce: number = 0;
 
@@ -59,7 +67,7 @@ export class RelayerManager {
     network: Network,
     networkId: number,
     messenger: RelayerManagerMessenger,
-    connection: any,
+    connection: any, // rabbitmq connection
     daoUtilsInstance: DaoUtils,
   ) {
     this.network = network;
@@ -103,9 +111,9 @@ export class RelayerManager {
     }
   }
 
-  // 0x7979b50486fe342a63409f0149ef33fd3bdaa92e - new relayer
+  // triggered by relayer after checking balance below threshold
   async onRelayerRequestingFunds(address: string) {
-    await this.fundRelayer(address);
+    await this.fundRelayer(address); // call to fee conversion module
   }
 
   async fetchMainAccountNonceFromNetwork() {

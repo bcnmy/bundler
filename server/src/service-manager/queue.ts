@@ -19,9 +19,9 @@ interface IDataToPushInQueue {
 
 const { RELAYER_QUEUE_URL = '', RELAYER_QUEUE_EXCHANGE = 'relayer_queue_exchange' } = process.env;
 
+// TODO: make a class instance of queue => connect, sendToQueue
 let channel: any;
 (async () => {
-  console.log('connecting to amqp on api-server', RELAYER_QUEUE_URL);
   try {
     const connection = await amqp.connect(RELAYER_QUEUE_URL);
     console.log('[AMQP] connected to amqp on api-server');

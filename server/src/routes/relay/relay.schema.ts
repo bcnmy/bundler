@@ -19,8 +19,11 @@ export const relaySchema = object({
 
 export const simulateOptionsSchema = object({
   body: object({
-    wallet: string(),
-    data: string(),
+    // to, data, chainId, refundInfo,
+    to: string().required('to address is required'),
+    data: string().required('data is required'),
+    chainId: number().required('chain id is required'),
+    refundInfo: object(),
   }),
 });
 

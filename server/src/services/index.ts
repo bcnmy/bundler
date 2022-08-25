@@ -1,4 +1,4 @@
-import { feeOptionsService } from './get-fee-options';
+import { feeOptionsService } from './fee-options';
 import { simulateService } from './simulate';
 
 export {

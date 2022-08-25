@@ -7,6 +7,7 @@ const log = logger(module);
 export const feeOptionsApi = async (req: Request, res: Response) => {
   const chainIdInString = req.query.chainId as string;
   const chainId = Number(chainIdInString);
+  // TODO: make network specific instance from service manager
   const response = await feeOptionsService({ chainId });
   try {
     if (response.error) {

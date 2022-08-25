@@ -29,8 +29,8 @@ if (!supportedNetworks) {
 }
 console.log('mongo url ', process.env.MONGO_URL);
 
-const dbInstance = new Mongo(process.env.MONGO_URL || '');
-const daoUtilsInstance = new DaoUtils(dbInstance);
+const dbInstance = new Mongo(process.env.MONGO_URL || ''); // use the commmon instance
+const daoUtilsInstance = new DaoUtils(dbInstance); // use the common instance
 
 export const init = async () => {
   const { queueUrl } = config.relayerService;
@@ -61,11 +61,14 @@ export const init = async () => {
       // Create new instance of Network SDK for all supported networks
       const network: Network = new Network(rpcURL);
       // this should be loaded from .env
+
+      // TODO: private relayer functionality
+      // TODO: 2d array based on purpose
       relayerManagerMap[networkId] = new RelayerManager(
         network,
         networkId,
-        relayerManagerMessenger,
-        connection,
+        relayerManagerMessenger, // socket connection
+        connection, // rabbitmq connection
         daoUtilsInstance,
       );
       log.info(`Setting up ${numberOfRelayersPerNetwork[networkId]} relayer for network id ${networkId}`);

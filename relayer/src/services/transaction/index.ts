@@ -30,6 +30,7 @@ export class Transaction implements IRetryPolicy {
     this.network = network;
   }
 
+  // Transaction => Transaction Manager (sends transaction)
   // eslint-disable-next-line consistent-return
   execute = async (): Promise<any> => {
     const { rawTransaction, fromAddress, privateKey } = this.params;
