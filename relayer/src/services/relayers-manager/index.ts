@@ -29,8 +29,7 @@ enum RelayersStatus {
 /**
  * Function of relayer manager
  * 1. create relayers for supported networks
- * 2. fund relayer when balance below threshold
- * 3. retry transaction (listen to pending txn listener)
+ * 2. fund relayer for the first time
  * 4. Maintain status of active / inactive relayer
  * 5. increase number of relayer
  */
