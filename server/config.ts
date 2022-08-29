@@ -30,7 +30,7 @@ const envConfig: LooseObject = {
     1512051714758: 'DEV',
     1: 'ETH',
     77: 'SPOA',
-    100: 'XDAI',
+    100: 'DAI',
     31: 'RBTC',
     43113: 'AVAX',
     43114: 'AVAX',
@@ -101,8 +101,8 @@ const envConfig: LooseObject = {
   coinMarketCapApiUrl: 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest',
   coinMarketCapApiKey: process.env.COINMARKETCAP_API_KEY,
   supportedFeeTokens: {
-    5: ['ETH', 'USDC', 'USDT', 'XDAI', 'WETH'],
-    80001: ['MATIC', 'USDC', 'USDT', 'XDAI', 'WETH'],
+    5: ['ETH', 'USDC', 'USDT', 'DAI', 'WETH'],
+    80001: ['MATIC', 'USDC', 'USDT', 'DAI', 'WETH'],
   },
   wrappedTokens: {
     WETH: 1,
@@ -115,7 +115,7 @@ const envConfig: LooseObject = {
     WMATIC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png',
     USDC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdc.png',
     USDT: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png',
-    XDAI: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xdai.png',
+    DAI: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/DAI.png',
   },
   similarTokens: {
     1: ['ETH', 'WETH'],
@@ -127,23 +127,23 @@ const envConfig: LooseObject = {
     USDC: 1000000,
     USDT: 1000000,
     WETH: 1,
-    XDAI: 1,
+    DAI: 1,
     MATIC: 1,
   },
   tokenContractAddress: {
     5: {
       ETH: '0X',
-      USDC: '0x5FfbaC75EFc9547FBc822166feD19B05Cd5890bb',
+      USDC: '0xb5B640E6414b6DeF4FC9B3C1EeF373925effeCcF',
       USDT: '0xb1f79Eb4fb3BD4DD516033FA9ab3037874A905E4',
       WETH: '0xb7e94Cce902E34e618A23Cb82432B95d03096146',
-      XDAI: '0xE68104D83e647b7c1C15a91a8D8aAD21a51B3B3E',
+      DAI: '0xE68104D83e647b7c1C15a91a8D8aAD21a51B3B3E',
     },
     80001: {
       MATIC: '0X',
       USDC: '0xe6b8a5CF854791412c1f6EFC7CAf629f5Df1c747',
       USDT: '0x51261AA98e932737a8F159B15d246d32978EB42e',
       WETH: '0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa',
-      XDAI: '0xf61cBcaC6C5E4F27543495890536B799D18f7178',
+      DAI: '0xf61cBcaC6C5E4F27543495890536B799D18f7178',
     },
   },
 };

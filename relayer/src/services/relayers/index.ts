@@ -231,12 +231,13 @@ export class Relayer {
       gasPriceToUse = await this.getGasPrice();
     }
     log.info(`Transaction Id:- ${transactionId} sent with gas price of ${gasPriceToUse} and nonce as ${nonceToUse} on network id ${this.networkId}`);
-
+    const gasLimitNew = (gasLimit && gasLimit.hex) || '0xAAE60';
+    log.info(`Gas limit :- ${gasLimitNew}`);
     const nonceForTransaction = ethers.BigNumber.from(nonceToUse).toHexString();
     try {
       const transactionData = {
         gasPrice: gasPriceToUse,
-        gasLimit: gasLimit.hex || '0x493E0',
+        gasLimit: gasLimitNew,
         to,
         value: ethers.BigNumber.from('0').toHexString(),
         data,
@@ -378,34 +379,38 @@ export class Relayer {
   }
 
   async onTransactionMined(tx: any) {
-    const transactionFee = (parseInt(tx.receipt.effectiveGasPrice.hex, 16)
-            * parseInt(tx.receipt.gasUsed.hex, 16))
-            * 10 ** (-1 * config.decimal[this.networkId]);
-    const baseCurrencyInFiat = await getNativeTokenPriceInUSD(this.networkId);
-    const transactionFeeInFiat = transactionFee * baseCurrencyInFiat;
+    try {
+      // const transactionFee = (parseInt(tx.receipt.effectiveGasPrice.hex, 16)
+      //       * parseInt(tx.receipt.gasUsed.hex, 16))
+      //       * 10 ** (-1 * config.decimal[this.networkId]);
+      // const baseCurrencyInFiat = await getNativeTokenPriceInUSD(this.networkId);
+      // const transactionFeeInFiat = transactionFee * baseCurrencyInFiat;
 
-    const currentTimeInMs = Date.now();
-    // status of the transaction would be updated by gas management service
-    await this.daoUtilsInstance.updateTransaction(
-      {
-        transactionHash: tx.transactionHash,
-      },
-      this.networkId,
-      {
-        receipt: tx.receipt,
-        baseCurrencyInFiat,
-        transactionFee,
-        transactionFeeInFiat,
-        updationTime: currentTimeInMs,
-      },
-    );
-    this.pendingTransactionCount -= 1;
-    log.info(`onTransactionMined => Reducing pending transaction count for relayer ${this.address}. Current pending count is ${this.pendingTransactionCount} on network id ${this.networkId}`);
-    this.checkBalanceBelowThreshold();
-    await Promise.all([
-      Relayer.removeRetry(tx.transactionId),
-      this.checkPendingTransactionThreshold(),
-    ]);
+      // const currentTimeInMs = Date.now();
+      // // status of the transaction would be updated by gas management service
+      // await this.daoUtilsInstance.updateTransaction(
+      //   {
+      //     transactionHash: tx.transactionHash,
+      //   },
+      //   this.networkId,
+      //   {
+      //     receipt: tx.receipt,
+      //     baseCurrencyInFiat,
+      //     transactionFee,
+      //     transactionFeeInFiat,
+      //     updationTime: currentTimeInMs,
+      //   },
+      // );
+      this.pendingTransactionCount -= 1;
+      log.info(`onTransactionMined => Reducing pending transaction count for relayer ${this.address}. Current pending count is ${this.pendingTransactionCount} on network id ${this.networkId}`);
+      this.checkBalanceBelowThreshold();
+      await Promise.all([
+        Relayer.removeRetry(tx.transactionId),
+        this.checkPendingTransactionThreshold(),
+      ]);
+    } catch (error) {
+      log.error('error in mined event');
+    }
   }
 
   async onTransactionDropped(tx: any) {
@@ -467,6 +472,10 @@ export class Relayer {
             },
           },
         );
+        // triggering mined event to reduce
+        setTimeout(async () => {
+          await this.onTransactionMined({ transactionId });
+        }, 120000);
       } catch (error) {
         log.error(`failed to sendTransactionHashGenerated to socket server ${error}`);
       }
