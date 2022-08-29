@@ -22,7 +22,7 @@ type FeeOptionResponseParams = {
 
 const convertGasPriceToUSD = async (
   nativeChainId: number,
-  gasPrice: number,
+  gasPrice: string,
   chainPriceDataInUSD: number,
   token: string,
 ) => {
@@ -44,9 +44,9 @@ export const feeOptionsService = async (feeOptionServiceParams: FeeOptionService
     } = feeOptionServiceParams;
 
     const feeTokens = config.supportedFeeTokens[chainId];
-    const gasPrice = await gasPriceMap[chainId].getGasPrice();
+    const gasPrice: string = await gasPriceMap[chainId].getGasPrice();
 
-    const networkPriceDataInString = await redisClient.get('NETWORK_PRICE_DATA');
+    const networkPriceDataInString = await redisClient.get('NETWORK_PRICE_DATA') || '';
     const networkPriceData = JSON.parse(networkPriceDataInString);
     const chainPriceDataInUSD = networkPriceData[chainId];
 
