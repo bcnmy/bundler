@@ -1,11 +1,13 @@
+/* eslint-disable no-await-in-loop */
 import { Network } from 'network-sdk';
 import { RelayerManagerMessenger } from 'gasless-messaging-sdk';
-import amqp from 'amqplib/callback_api';
 import { config } from '../../config';
 import { logger } from '../../../common/log-config';
 import { DaoUtils } from '../dao-utils';
 import { Mongo } from '../../../common/db/mongo';
 import { RelayerManager } from '../services/relayers-manager';
+import { Consumer } from '../services/consumer';
+import { TransactionManager } from '../services/transaction-manager/transaction-manager';
 
 const log = logger(module);
 const {
@@ -33,49 +35,25 @@ const dbInstance = new Mongo(process.env.MONGO_URL || ''); // use the commmon in
 const daoUtilsInstance = new DaoUtils(dbInstance); // use the common instance
 
 export const init = async () => {
-  const { queueUrl } = config.relayerService;
-  amqp.connect(queueUrl, async (err, conn) => {
-    console.log('[AMQP] connected');
-    connection = conn;
+  /* queueUrlOfTransactionType = {
+    'SCW': 'https://rabbit-mq-scw',
+    'AA': 'https://rabbit-mq-aa'
+  } */
+  const supportedTransactionTypeForNetworks = {
+    80001: ['AA', 'SCW'],
+    137: ['CROSS_CHAIN'],
+  };
+  const { queueUrlOfTransactionType } = config;
+  for (const networkId of supportedNetworks) {
+    for (const transactionType of supportedTransactionTypeForNetworks[networkId]) {
+      const consumer = new Consumer(networkId, transactionType);
 
-    dbInstance.connect();
+      await consumer.connectToQueue(queueUrlOfTransactionType[transactionType]);
 
-    const relayerManagerMessenger = new RelayerManagerMessenger(
-      connectionWs,
-      connectionHttp,
-      secret,
-      apiKey,
-    );
-
-    try {
-      await relayerManagerMessenger.connect();
-    } catch (error) {
-      log.error(error);
+      relayerManagerMap[networkId][transactionType] = new RelayerManager();
     }
-
-    for (const networkId of supportedNetworks) {
-      log.info(`Creating new Network instance for network id ${networkId}`);
-      log.info(`Creating new Meta Transaction Handler instance for network id ${networkId}`);
-
-      const rpcURL: string = config.provider[networkId];
-      // Create new instance of Network SDK for all supported networks
-      const network: Network = new Network(rpcURL);
-      // this should be loaded from .env
-
-      // TODO: private relayer functionality
-      // TODO: 2d array based on purpose
-      relayerManagerMap[networkId] = new RelayerManager(
-        network,
-        networkId,
-        relayerManagerMessenger, // socket connection
-        connection, // rabbitmq connection
-        daoUtilsInstance,
-      );
-      log.info(`Setting up ${numberOfRelayersPerNetwork[networkId]} relayer for network id ${networkId}`);
-
-      relayerManagerMap[networkId].createRelayers(numberOfRelayersPerNetwork[networkId]);
-    }
-  });
+  }
+  const transactionManager = new TransactionManager();
 };
 
 process.on('SIGTERM', async () => {

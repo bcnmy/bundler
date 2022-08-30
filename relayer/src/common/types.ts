@@ -11,3 +11,10 @@ export enum TransactionStatus {
   FAILED = 'FAILED',
   DROPPED = 'DROPPED',
 }
+
+export enum TransactionType {
+  AA = 'AA',
+  SCW = 'SCW',
+  VANILLA_GASLESS = 'VANILLA_GASLESS',
+  CROSS_CHAIN = 'CROSS_CHAIN',
+}

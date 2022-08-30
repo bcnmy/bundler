@@ -66,7 +66,7 @@ export class TransactionManager {
     }
   }
 
-  async sendTransaction(
+  async executeTransaction(
     relayer: IRelayer,
     rawTransactionData: ITransactionData,
   ) :Promise<SendTransactionReturnType> {
@@ -268,5 +268,70 @@ export class TransactionManager {
 
   async waitForTransactionResponse() {
 
+  }
+
+  shouldRetry = async (err: any): Promise<boolean> => {
+    const errInString = err.toString();
+    log.info(errInString);
+    const nonceErrorMessage = config.relayerService.networksNonceError[this.networkId];
+    const replacementFeeLowMessage = REPLACEMENT_UNDERPRICED;
+    const alreadyKnownMessage = ALREADY_KNOWN;
+    const insufficientFundsErrorMessage = config
+      .relayerService.networksInsufficientFundsError[this.networkId]
+    || INSUFFICIENT_FUNDS;
+
+    if (this.retryCount >= this.maxTries) return false;
+
+    if (errInString.indexOf(nonceErrorMessage) > -1 || errInString.indexOf('increasing the gas price or incrementing the nonce') > -1) {
+      log.info(
+        `Nonce too low error for relayer ${this.params.rawTransaction.from} on network id ${this.networkId}. Removing nonce from cache and retrying`,
+      );
+      this.params.rawTransaction.nonce = await this.network
+        .getNonce(this.params.rawTransaction.from, true);
+      log.info(`updating the nonce to ${this.params.rawTransaction.nonce} for relayer ${this.params.rawTransaction.from} on network id ${this.networkId}`);
+    } else if (errInString.indexOf(replacementFeeLowMessage) > -1) {
+      log.info(
+        `Replacement underpriced error for relayer ${this.params.rawTransaction.from} on network id ${this.networkId}`,
+      );
+      let { gasPrice } = await this.network.getGasPrice();
+
+      log.info(`gas price from network ${gasPrice}`);
+      const gasPriceInNumber = ethers.BigNumber.from(
+        gasPrice.toString(),
+      ).toNumber();
+
+      log.info(`this.params.rawTransaction.gasPrice ${this.params.rawTransaction.gasPrice} for relayer ${this.params.rawTransaction.from} on network id ${this.networkId}`);
+
+      if (gasPrice < this.params.rawTransaction.gasPrice) {
+        gasPrice = this.params.rawTransaction.gasPrice;
+      }
+      log.info(`transaction sent with gas price ${this.params.rawTransaction.gasPrice} for relayer ${this.params.rawTransaction.from} on network id ${this.networkId}`);
+      log.info(`bump gas price ${config.bumpGasPrice} for relayer ${this.params.rawTransaction.from} on network id ${this.networkId}`);
+      log.info(`gasPriceInNumber ${gasPriceInNumber} for relayer ${this.params.rawTransaction.from} on network id ${this.networkId}`);
+      this.params.rawTransaction.gasPrice = (
+        gasPriceInNumber * config.bumpGasPrice
+      ) + gasPriceInNumber;
+      log.info(`increasing gas price for the resubmit transaction ${this.params.rawTransaction.gasPrice} for relayer ${this.params.rawTransaction.from} on network id ${this.networkId}`);
+    } else if (errInString.indexOf(alreadyKnownMessage) > -1) {
+      log.info(
+        `Already known transaction hash with same payload and nonce for relayer ${this.params.rawTransaction.from} on network id ${this.networkId}. Removing nonce from cache and retrying`,
+      );
+    } else if (errInString.indexOf(insufficientFundsErrorMessage) > -1) {
+      log.info(`Relayer ${this.params.rawTransaction.from} has insufficient funds`);
+      // Send previous relayer for funding
+    } else {
+      log.info('transaction not being retried');
+      return false;
+    }
+    return true;
+  };
+
+  incrementTry() {
+    this.retryCount += 1;
+  }
+
+  static async removeRetry(transactionId: string) {
+    await redisClient.del(getTransactionDataKey(transactionId));
+    await redisClient.del(getTransactionKey(transactionId));
   }
 }
