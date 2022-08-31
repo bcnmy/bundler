@@ -2,19 +2,8 @@ import { privateToPublic, publicToAddress, toChecksumAddress } from 'ethereumjs-
 import { ethers } from 'ethers';
 import { RelayerManagerMessenger } from 'gasless-messaging-sdk';
 import hdkey from 'hdkey';
-import { Network } from 'network-sdk';
-import { hostname } from 'os';
-import { redisClient } from '../../../../common/db';
 import { logger } from '../../../../common/log-config';
 import { config } from '../../../config';
-import { TransactionStatus } from '../../common/types';
-import { DaoUtils } from '../../dao-utils';
-import {
-  getGasPriceKey, getTransactionDataKey, getTransactionKey,
-} from '../../utils/cache-utils';
-import { getNativeTokenPriceInUSD } from '../../utils/native-token-price';
-import { stringify } from '../../utils/util';
-import { Transaction } from '../transaction';
 
 const log = logger(module);
 
@@ -44,58 +33,19 @@ export class Relayer {
   balance: ethers.BigNumber = ethers.utils.parseEther('0');
 
   /** @property minimum balance required in the relayer */
-  // TODO
-  // Get threshold from config
-  private balanceThreshold: ethers.BigNumber = ethers.utils.parseEther('0.197');
-
-
-  /** @property retry count of a particular transaction id */
-  retryCount: any;
-
-  /** @property minimum balance required in the relayer */
   networkId: number;
 
   /** @property maintains the count of pending transaction */
   pendingTransactionCount: number;
 
-  pendingTransactionCountThreshold: number = 15;
-
-  onRelayerActivate: () => void;
-
-  onRelayerDeactivate: () => void;
-
-  onRelayerRequestingFunds: (address: string) => void;
-
-  queue: any;
-
-  channel: any;
-
-  consumerTag: string = '';
-
-  rabbitmqConnection: any;
-
-  daoUtilsInstance: DaoUtils;
-
   constructor(
     relayerId: number,
-    network: Network,
     networkId: number,
-    connection: any, // rabbitmq connection
-    daoUtilsInstance: DaoUtils,
-    onRelayerActivate: () => void,
-    onRelayerDeactivate: () => void,
-    onRelayerRequestingFunds: (address: string) => void,
   ) {
     this.id = relayerId;
     this.active = true;
-    this.network = network;
     this.networkId = networkId;
-    this.rabbitmqConnection = connection;
-    this.daoUtilsInstance = daoUtilsInstance;
     this.pendingTransactionCount = 0;
-    this.onRelayerActivate = onRelayerActivate;
-    this.onRelayerDeactivate = onRelayerDeactivate;
-    this.onRelayerRequestingFunds = onRelayerRequestingFunds;
   }
 
   /**
@@ -118,7 +68,6 @@ export class Relayer {
     const ethAddr = publicToAddress(ethPubkey).toString('hex');
     const ethAddress = toChecksumAddress(`0x${ethAddr}`);
     this.address = ethAddress.toLowerCase();
-    this.messenger = managerMessenger.getRelayerMessenger(this.address);
 
     this.publicKey = ethPubkey.toString();
     this.privateKey = privateKey.toLowerCase();
@@ -130,7 +79,7 @@ export class Relayer {
     return this;
   }
 
-  activeStatus() {
+  getStatus() {
     return this.active;
   }
 
@@ -139,6 +88,7 @@ export class Relayer {
   }
 
   async setBalance() {
+    // TODO: Get network instance from network manager
     this.balance = (await this.network.getBalance(this.address));
   }
 

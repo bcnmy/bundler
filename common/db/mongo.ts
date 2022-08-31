@@ -1,33 +1,51 @@
-import mongoose from 'mongoose';
+import mongoose, { Mongoose } from 'mongoose';
 import { BlockchainTransactionsMap } from './models/blockchain_transactions';
+import { RedisClient } from './redis-client';
 
 export class Mongo {
-  dbUrl: string;
+  private static instance: Mongo;
 
-  supportedNetworks: Array<number> = [];
+  private client: Mongoose | null;
 
-  constructor(dbUrl: string) {
-    this.dbUrl = dbUrl;
+  private constructor() {
+    this.client = null;
+  }
+
+  public static getInstance(): Mongo {
+    if (!Mongo.instance) {
+      Mongo.instance = new Mongo();
+    }
+    return Mongo.instance;
   }
 
   connect = async () => {
+    const dbUrl = ''; // TODO: get from config instance;
     try {
-      await mongoose.connect(this.dbUrl, {
-        dbName: 'relayer-node-service',
-      });
-      console.log('connected to db');
+      if (!this.client) {
+        this.client = await mongoose.connect(dbUrl, {
+          dbName: 'relayer-node-service',
+        });
+      }
+      console.log('Connected to db');
     } catch (error) {
       console.log('error while connecting to mongo db');
       console.log(error);
     }
   };
 
-  public getBlockchainTransaction(networkId: number) {
-    if (!this.supportedNetworks.includes(networkId)) throw new Error(`Network Id ${networkId} is not supported`);
+  getBlockchainTransaction(networkId: number) {
+    if (!this.client) {
+      throw new Error('Not connected to db');
+    }
+    const supportedNetworks: number[] = []; // TODO: get from config instance;
+    if (!supportedNetworks.includes(networkId)) throw new Error(`Network Id ${networkId} is not supported`);
     return BlockchainTransactionsMap[networkId];
   }
 
-  static close() {
-    return mongoose.disconnect();
+  close() {
+    if (!this.client) {
+      throw new Error('Not connected to db');
+    }
+    return this.client.disconnect();
   }
 }

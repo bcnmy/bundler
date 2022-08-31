@@ -1,29 +1,17 @@
 /* eslint-disable no-await-in-loop */
-import { Mongo } from '../../../common/db/mongo';
 import { logger } from '../../../common/log-config';
 import { config } from '../../config';
-import { DaoUtils } from '../dao-utils';
 import { Consumer } from '../services/consumer';
 import { RelayerManager } from '../services/relayers-manager';
 import { TransactionManager } from '../services/transaction-manager/transaction-manager';
 
 const log = logger(module);
 
-const {
-  supportedNetworks,
-} = config;
 
 const relayerManagerMap: Record<number, RelayerManager> = {};
-
-let connection: any;
-
-if (!supportedNetworks) {
-  throw new Error('supportedNetworks is undefined');
-}
-console.log('mongo url ', process.env.MONGO_URL);
-
-const dbInstance = new Mongo(process.env.MONGO_URL || ''); // use the commmon instance
-const daoUtilsInstance = new DaoUtils(dbInstance); // use the common instance
+// make instance of consumer 
+// make instance of relayer manager
+// make instance of transaction manager
 
 export const init = async () => {
   /* queueUrlOfTransactionType = {

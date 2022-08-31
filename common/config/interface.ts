@@ -7,5 +7,11 @@ export interface IConfig {
 
   update(data: Object): Boolean
 
-  getCredentials(): Object
+  get(): Object
+}
+
+enum CredentialType {
+  SUPPORTED_NETWORKS,
+  RELAYER_SERVICE,
+  MONGO_URL,
 }

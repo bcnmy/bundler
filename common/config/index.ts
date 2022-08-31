@@ -15,7 +15,7 @@ export class Config implements IConfig {
     return true;
   }
 
-  getCredentials(): Object {
+  get(): Object {
     return this.config;
   }
 }
