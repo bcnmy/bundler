@@ -7,7 +7,7 @@ import { DaoUtils } from '../dao-utils';
 import { Mongo } from '../../../common/db/mongo';
 import { RelayerManager } from '../services/relayers-manager';
 import { Consumer } from '../services/consumer';
-import { TransactionManager } from '../services/transaction-manager/transaction-manager';
+import { TransactionManager } from '../services/transaction-manager/abstract-transaction-manager';
 
 const log = logger(module);
 const {
