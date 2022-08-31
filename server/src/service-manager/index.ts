@@ -3,7 +3,7 @@ import { Mongo } from '../../../common/db';
 import { DaoUtils } from '../dao-utils';
 import { GasPrice } from '../../../common/gas-price';
 import { initSetERC20TokenPrices } from '../../../common/network-price/coin-market-cap';
-import { config } from '../../config';
+import { config } from '../../../common/config';
 
 let { supportedNetworks } = config;
 supportedNetworks = JSON.parse(supportedNetworks);

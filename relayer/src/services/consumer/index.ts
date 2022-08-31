@@ -4,16 +4,17 @@
 // consumer(transactionmanager(relayer))
 
 import amqp from 'amqplib/callback_api';
+import { TransactionType } from '../../common/types';
 import { IConsumer } from './interface';
 
 export class Consumer implements IConsumer {
   chainId: number;
 
-  transactionType: ITransactionType;
+  transactionType: TransactionType;
 
-  constructor(chainId: number, transactionType: string) {
+  constructor(chainId: number, transactionType: TransactionType) {
     this.chainId = chainId;
-    this.transactionType = transactionType;
+    this.transactionType = TransactionType[transactionType];
   }
 
   async connectToQueue(queueUrl: string) {

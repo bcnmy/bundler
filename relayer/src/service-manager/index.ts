@@ -1,26 +1,17 @@
 /* eslint-disable no-await-in-loop */
-import { Network } from 'network-sdk';
-import { RelayerManagerMessenger } from 'gasless-messaging-sdk';
-import { config } from '../../config';
-import { logger } from '../../../common/log-config';
-import { DaoUtils } from '../dao-utils';
 import { Mongo } from '../../../common/db/mongo';
-import { RelayerManager } from '../services/relayers-manager';
+import { logger } from '../../../common/log-config';
+import { config } from '../../config';
+import { DaoUtils } from '../dao-utils';
 import { Consumer } from '../services/consumer';
+import { RelayerManager } from '../services/relayers-manager';
 import { TransactionManager } from '../services/transaction-manager/transaction-manager';
 
 const log = logger(module);
+
 const {
-  supportedNetworks, socketService, relayerService,
+  supportedNetworks,
 } = config;
-
-const {
-  secret, apiKey, connectionHttp, connectionWs,
-} = socketService;
-
-const {
-  numberOfRelayersPerNetwork,
-} = relayerService;
 
 const relayerManagerMap: Record<number, RelayerManager> = {};
 
