@@ -118,7 +118,7 @@ export class EvmTransactionManager extends AbstarctTransactionManager {
         );
 
         // save transaction to db
-        await this.saveTransactionDataToDb();
+        await this.saveTransactionDataToDb(transactionExecutionResponse);
       } else {
         // send socket event to client about error
         log.info(`Publish error to socket client via relayer ${transactionExecutionResponse.error}`);
@@ -187,7 +187,7 @@ export class EvmTransactionManager extends AbstarctTransactionManager {
     // save new db data
   }
 
-  async saveTransactionDataToDb() {
+  async saveTransactionDataToDb(transactionExecutionResponse) {
     const currentTimeInMs = Date.now();
     try {
       log.info(`saving data in db for transaction id ${transactionId}`);

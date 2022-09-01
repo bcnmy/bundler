@@ -341,4 +341,48 @@ export class RelayerManager {
       log.error(error);
     }
   }
+
+    // remove from the relayer class
+  async updateRelayerStatePostTransaction() {
+
+  }
+
+  async setPendingCount() {
+    const latestCount = await this.network.getNonce(this.address, false);
+    const pendingCount = await this.network.getNonce(this.address, true);
+    const diff = pendingCount - latestCount;
+    this.pendingTransactionCount = diff > 0 ? diff : 0;
+  }
+
+  async checkPendingTransactionThreshold() {
+    /**
+     * check if pending transaction count greater than threshold
+     * else if relayer was inactive and activate when
+     * the pending transaction count decreased below threshold
+     */
+    if (this.pendingTransactionCount >= this.pendingTransactionCountThreshold) {
+      log.info(`relayer address ${this.address} deactivating with pending transaction count as ${this.pendingTransactionCount} and threshold as ${this.pendingTransactionCountThreshold} on network id ${this.networkId}`);
+      this.active = false;
+      this.onRelayerDeactivate();
+      await this.pauseConsumptionFromQueue();
+    } else if (!this.active
+      && this.pendingTransactionCount < this.pendingTransactionCountThreshold
+    ) {
+      log.info(`activate relayer address ${this.address} on network id ${this.networkId}`);
+      this.active = true;
+      this.onRelayerActivate();
+      await this.startConsumptionFromQueue();
+    }
+  }
+
+  // TODO
+  // Funding of relayer logic where and how?
+
+  checkBalanceBelowThreshold() {
+    this.onRelayerRequestingFunds(this.address);
+  }
+
+  updateBalanceThreshold(value: ethers.BigNumber) {
+    this.balanceThreshold = value;
+  }
 }

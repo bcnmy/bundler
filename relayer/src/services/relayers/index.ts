@@ -25,9 +25,6 @@ export class Relayer {
   /** @property index value of relayer created by relayer manager */
   id: number;
 
-  /** @property public address of the relayer to relay the transaction from */
-  address: string = '';
-
   /** @property public key of the relayer which can be used while sending the transaction */
   private publicKey: string = '';
 
@@ -45,9 +42,8 @@ export class Relayer {
 
   /** @property minimum balance required in the relayer */
   // TODO
-  // Get threshold from config
+  // Get threshold from config and would vary from type of relayer
   private balanceThreshold: ethers.BigNumber = ethers.utils.parseEther('0.197');
-
 
   /** @property retry count of a particular transaction id */
   retryCount: any;
@@ -74,14 +70,12 @@ export class Relayer {
 
   rabbitmqConnection: any;
 
-  daoUtilsInstance: DaoUtils;
 
   constructor(
     relayerId: number,
     network: Network,
     networkId: number,
     connection: any, // rabbitmq connection
-    daoUtilsInstance: DaoUtils,
     onRelayerActivate: () => void,
     onRelayerDeactivate: () => void,
     onRelayerRequestingFunds: (address: string) => void,
@@ -91,7 +85,6 @@ export class Relayer {
     this.network = network;
     this.networkId = networkId;
     this.rabbitmqConnection = connection;
-    this.daoUtilsInstance = daoUtilsInstance;
     this.pendingTransactionCount = 0;
     this.onRelayerActivate = onRelayerActivate;
     this.onRelayerDeactivate = onRelayerDeactivate;
@@ -103,7 +96,7 @@ export class Relayer {
    * It also sets up a channel for relaying the transaction.
    */
   async create(managerMessenger: RelayerManagerMessenger) {
-    if (!relayersMasterSeed) throw new Error('provide relayers master seed');
+    if (!relayersMasterSeed) throw new Error('Provide Relayers Master Seed');
 
     const seedInBuffer = Buffer.from(relayersMasterSeed, 'utf-8');
     const ethRoot = hdkey.fromMasterSeed(seedInBuffer);
@@ -117,8 +110,8 @@ export class Relayer {
 
     const ethAddr = publicToAddress(ethPubkey).toString('hex');
     const ethAddress = toChecksumAddress(`0x${ethAddr}`);
-    this.address = ethAddress.toLowerCase();
-    this.messenger = managerMessenger.getRelayerMessenger(this.address);
+    this.publicKey = ethAddress.toLowerCase();
+    this.messenger = managerMessenger.getRelayerMessenger(this.publicKey);
 
     this.publicKey = ethPubkey.toString();
     this.privateKey = privateKey.toLowerCase();
@@ -145,49 +138,5 @@ export class Relayer {
   async setNonce() {
     // if (localUpdate && !this.nonce) this.nonce += 1;
     this.nonce = await this.network.getNonce(this.address, true);
-  }
-
-  async setPendingCount() {
-    const latestCount = await this.network.getNonce(this.address, false);
-    const pendingCount = await this.network.getNonce(this.address, true);
-    const diff = pendingCount - latestCount;
-    this.pendingTransactionCount = diff > 0 ? diff : 0;
-  }
-
-  // remove from the relayer class
-  async updateRelayerStatePostTransaction() {
-
-  }
-
-  async checkPendingTransactionThreshold() {
-    /**
-     * check if pending transaction count greater than threshold
-     * else if relayer was inactive and activate when
-     * the pending transaction count decreased below threshold
-     */
-    if (this.pendingTransactionCount >= this.pendingTransactionCountThreshold) {
-      log.info(`relayer address ${this.address} deactivating with pending transaction count as ${this.pendingTransactionCount} and threshold as ${this.pendingTransactionCountThreshold} on network id ${this.networkId}`);
-      this.active = false;
-      this.onRelayerDeactivate();
-      await this.pauseConsumptionFromQueue();
-    } else if (!this.active
-      && this.pendingTransactionCount < this.pendingTransactionCountThreshold
-    ) {
-      log.info(`activate relayer address ${this.address} on network id ${this.networkId}`);
-      this.active = true;
-      this.onRelayerActivate();
-      await this.startConsumptionFromQueue();
-    }
-  }
-
-  // TODO
-  // Funding of relayer logic where and how?
-
-  checkBalanceBelowThreshold() {
-    this.onRelayerRequestingFunds(this.address);
-  }
-
-  updateBalanceThreshold(value: ethers.BigNumber) {
-    this.balanceThreshold = value;
   }
 }
