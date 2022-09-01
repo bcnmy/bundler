@@ -1,9 +1,12 @@
 import amqp from 'amqplib';
+import { logger } from '../log-config';
+
+const log = logger(module);
 
 const exchange = ''; // get from config instance
 const queueUrl = ''; // get from config instance
 
-export class Queue implements IQueue {
+export class Queue {
   private channel: any;
 
   private queue: any;
@@ -25,7 +28,7 @@ export class Queue implements IQueue {
     });
   };
 
-  sendToRelayer = async (data: Object) => {
+  sendToRelayer = async (data: object) => {
     const key = `chainid.${this.chainId}.type.${this.transactionType}`;
     this.channel.prefetch(1);
     this.channel.publish(exchange, key, Buffer.from(JSON.stringify(data)), {
@@ -45,14 +48,31 @@ export class Queue implements IQueue {
       const key = `chainid.${this.chainId}.type.${this.transactionType}`;
       log.info(`[*] Waiting for transactions on network id ${this.chainId} with type ${this.transactionType}`);
       this.channel.bindQueue(this.queue.queue, exchange, key);
-    } catch () {
-      
+    } catch (error) {
+      log.error(error);
     }
-  }
+  };
 
-  const consumeInRelayer = async () => {
-    await this.channel.consume(this.queue.queue, async (msg: any) => {
-
+  setupBatchConsumerInRelayer = async () => {
+    this.channel.assertExchange(exchange, 'topic', {
+      durable: true,
     });
-  }
+    this.channel.prefetch(10);
+
+    try {
+      // setup a consumer
+      this.queue = await this.channel.assertQueue(`relayer_queue_${this.chainId}_type_${this.transactionType}`);
+      const key = `chainid.${this.chainId}.type.${this.transactionType}`;
+      log.info(`[*] Waiting for transactions on network id ${this.chainId} with type ${this.transactionType}`);
+      this.channel.bindQueue(this.queue.queue, exchange, key);
+    } catch (error) {
+      log.error(error);
+    }
+  };
+
+  const listenForTransaction = async () => {
+    await this.channel.consume(this.queue.queue, async (msg: any) => {
+      // consumer instance map to call
+    });
+  };
 }
