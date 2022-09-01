@@ -5,7 +5,6 @@ import { BigNumber, ethers } from 'ethers';
 import { RelayerManagerMessenger } from 'gasless-messaging-sdk';
 import { config, configChangeListeners } from '../../../config';
 import { logger } from '../../../../common/log-config';
-import { DaoUtils } from '../../dao-utils';
 import { redisClient } from '../../../../common/db';
 import { getTransactionDataKey } from '../../utils/cache-utils';
 import { stringify } from '../../utils/util';
@@ -39,13 +38,9 @@ export class RelayerManager {
 
   networkId: number;
 
-  messenger: RelayerManagerMessenger;
-
   relayersMap: Record<string, Relayer> = {};
 
   retryCountMap: Record<string, number> = {}; // store retry count corresponding to transaction id
-
-  inactiveRelayerBalanceThreshold: BigNumber = ethers.utils.parseEther('0.10');
 
   minimumRelayerCount: number = 15;
 
@@ -58,22 +53,12 @@ export class RelayerManager {
   /** @property number of transactions sent by main account */
   mainAccountNonce: number = 0;
 
-  connection: any;
-
-  daoUtilsInstance: DaoUtils;
-
   constructor(
     network: Network,
     networkId: number,
-    messenger: RelayerManagerMessenger,
-    connection: any, // rabbitmq connection
-    daoUtilsInstance: DaoUtils,
   ) {
     this.network = network;
     this.networkId = networkId;
-    this.messenger = messenger;
-    this.connection = connection;
-    this.daoUtilsInstance = daoUtilsInstance;
     startPendingTransactionListener(this.networkId, this.retryTransaction.bind(this));
 
     configChangeListeners.relayerManagerService.push(this.onConfigChange.bind(this));
@@ -142,8 +127,6 @@ export class RelayerManager {
           index,
           this.network,
           this.networkId,
-          this.connection, // rabbitmq connection
-          this.daoUtilsInstance,
           this.onRelayerActivate.bind(this),
           this.onRelayerDeactivate.bind(this),
           this.onRelayerRequestingFunds.bind(this),
@@ -347,12 +330,6 @@ export class RelayerManager {
 
   }
 
-  async setPendingCount() {
-    const latestCount = await this.network.getNonce(this.address, false);
-    const pendingCount = await this.network.getNonce(this.address, true);
-    const diff = pendingCount - latestCount;
-    this.pendingTransactionCount = diff > 0 ? diff : 0;
-  }
 
   async checkPendingTransactionThreshold() {
     /**
@@ -384,5 +361,12 @@ export class RelayerManager {
 
   updateBalanceThreshold(value: ethers.BigNumber) {
     this.balanceThreshold = value;
+  }
+
+  async setPendingCount(): Promise<void> {
+    const latestCount = await this.network.getNonce(this.publicKey, false);
+    const pendingCount = await this.network.getNonce(this.publicKey, true);
+    const diff = pendingCount - latestCount;
+    this.pendingTransactionCount = diff > 0 ? diff : 0;
   }
 }

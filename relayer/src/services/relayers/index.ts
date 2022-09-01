@@ -28,14 +28,6 @@ export class Relayer implements IRelayer {
   balance: ethers.BigNumber = ethers.utils.parseEther('0');
 
   /** @property minimum balance required in the relayer */
-  // TODO
-  // Get threshold from config and would vary from type of relayer and set by relayer manager
-  balanceThreshold: ethers.BigNumber;
-
-  /** @property retry count of a particular transaction id */
-  retryCount: number;
-
-  /** @property minimum balance required in the relayer */
   chainId: number;
 
   /** @property maintains the count of pending transaction */
@@ -50,18 +42,14 @@ export class Relayer implements IRelayer {
   constructor(
     relayerId: number,
     chainId: number,
-    retryCount: number,
-    balanceThreshold: ethers.BigNumber,
     pendingTransactionCountThreshold: number,
     network: Network,
   ) {
     this.id = relayerId;
     this.active = true;
     this.chainId = chainId;
-    this.balanceThreshold = balanceThreshold;
     this.pendingTransactionCount = 0;
     this.pendingTransactionCountThreshold = pendingTransactionCountThreshold;
-    this.retryCount = retryCount;
     this.network = network;
   }
 
@@ -91,7 +79,6 @@ export class Relayer implements IRelayer {
 
     await this.setBalance();
     await this.setNonce();
-    await this.setPendingCount();
 
     return this;
   }
@@ -106,24 +93,5 @@ export class Relayer implements IRelayer {
 
   async setNonce(): Promise<void> {
     this.nonce = await this.network.getNonce(this.publicKey, true);
-  }
-
-  async setPendingCount(): Promise<void> {
-    const latestCount = await this.network.getNonce(this.publicKey, false);
-    const pendingCount = await this.network.getNonce(this.publicKey, true);
-    const diff = pendingCount - latestCount;
-    this.pendingTransactionCount = diff > 0 ? diff : 0;
-  }
-
-  async setBalanceThreshold(balanceThreshold: ethers.BigNumber): Promise<void> {
-    this.balanceThreshold = balanceThreshold;
-  }
-
-  async setPendingCountThreshold(pendingTransactionCountThreshold: number): Promise<void> {
-    this.pendingTransactionCountThreshold = pendingTransactionCountThreshold;
-  }
-
-  async setRetryCount(retryCount: number): Promise<void> {
-    this.retryCount = retryCount;
   }
 }
