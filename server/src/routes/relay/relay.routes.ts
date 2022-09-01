@@ -7,4 +7,4 @@ export const relayApiRouter = Router();
 
 relayApiRouter.get('/feeOptions', validateRequest(feeOptionsSchema), feeOptionsApi);
 relayApiRouter.post('/simulate', validateRequest(simulateOptionsSchema), simulateApi);
-relayApiRouter.post('/', validateRequest(relaySchema), relayApi);
+relayApiRouter.post('/', validateRequest(relaySchema), simulateApi, relayApi);

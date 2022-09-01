@@ -210,7 +210,7 @@ export class Relayer {
     let transactionResponse: any;
     const retryTransaction: boolean = retryCount > 0;
     const {
-      gasLimit, to, data, transactionId, value,
+      gasLimit, to, data, transactionId, value, gasLimitInSimulation
     } = rawTransactionData;
 
     let gasPriceToUse;
@@ -231,7 +231,7 @@ export class Relayer {
       gasPriceToUse = await this.getGasPrice();
     }
     log.info(`Transaction Id:- ${transactionId} sent with gas price of ${gasPriceToUse} and nonce as ${nonceToUse} on network id ${this.networkId}`);
-    const gasLimitNew = (gasLimit && gasLimit.hex) || '0xAAE60';
+    const gasLimitNew = (gasLimit && gasLimit.hex) || gasLimitInSimulation;
     log.info(`Gas limit :- ${gasLimitNew}`);
     const nonceForTransaction = ethers.BigNumber.from(nonceToUse).toHexString();
     try {

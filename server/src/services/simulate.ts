@@ -108,23 +108,23 @@ export const simulateService = async (
       };
     }
 
-    const transactionLogs = response.data.transaction.transaction_info.call_trace.logs;
+    // const transactionLogs = response.data.transaction.transaction_info.call_trace.logs;
     const gasUsedInSimulation = response.data.transaction.transaction_info.call_trace.gas_used + response.data.transaction.transaction_info.call_trace.intrinsic_gas;
-    const { isRelayerPaidFully, successOrRevertMsg } = await checkIfRelayerIsPaidFully(transactionLogs, gasUsedInSimulation, parseInt(chainId, 10), refundInfo);
+    // const { isRelayerPaidFully, successOrRevertMsg } = await checkIfRelayerIsPaidFully(transactionLogs, gasUsedInSimulation, parseInt(chainId, 10), refundInfo);
 
-    if (!isRelayerPaidFully) {
-      return {
-        code: 400,
-        error: `Payment to relayer is incorrect, with message: ${successOrRevertMsg}`,
-      };
-    }
+    // if (!isRelayerPaidFully) {
+    //   return {
+    //     code: 400,
+    //     error: `Payment to relayer is incorrect, with message: ${successOrRevertMsg}`,
+    //   };
+    // }
 
     return {
       code: 200,
       msg: 'Fee options fetched successfully',
-      data: [{
-        executed: true, succeeded: true, result: '0x', reason: null, gasUsed: response?.data?.transaction?.gas_used, gasLimit: 13079,
-      }],
+      data: {
+        executed: true, succeeded: true, result: '0x', reason: null, gasUsed: gasUsedInSimulation,
+      },
       // resp,
     };
   } catch (error) {

@@ -30,7 +30,7 @@ const envConfig: LooseObject = {
     1512051714758: 'DEV',
     1: 'ETH',
     77: 'SPOA',
-    100: 'XDAI',
+    100: 'DAI',
     31: 'RBTC',
     43113: 'AVAX',
     43114: 'AVAX',
@@ -115,7 +115,7 @@ const envConfig: LooseObject = {
     WMATIC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png',
     USDC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdc.png',
     USDT: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png',
-    DAI: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/dai.png',
+    XDAI: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xdai.png',
   },
   similarTokens: {
     1: ['ETH', 'WETH'],
