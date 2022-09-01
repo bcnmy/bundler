@@ -1,6 +1,5 @@
 import mongoose, { Mongoose } from 'mongoose';
 import { BlockchainTransactionsMap } from './models/blockchain_transactions';
-import { RedisClient } from './redis-client';
 
 export class Mongo {
   private static instance: Mongo;

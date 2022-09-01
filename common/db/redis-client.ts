@@ -22,11 +22,15 @@ export class RedisClient {
     return RedisClient.instance;
   }
 
-  connect = async () => {
+  connect = async (): Promise<Boolean> => {
     log.info('Initiating Redis connection');
     await this.client.connect();
     log.info('Main Redis connected successfully');
-    this.client.on('error', (err: any) => log.error('Redis Client Error', err));
+    this.client.on('error', (err: any) => {
+      log.error(`Redis Client Error ${err}`);
+      return false;
+    });
+    return true;
   };
 
   decrement = async (key: string): Promise<number> => {
