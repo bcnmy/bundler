@@ -210,7 +210,7 @@ export class Relayer {
     let transactionResponse: any;
     const retryTransaction: boolean = retryCount > 0;
     const {
-      gasLimit, to, data, transactionId, value, gasLimitInSimulation
+      gasLimit, to, data, transactionId, value, gasLimitInSimulation,
     } = rawTransactionData;
 
     let gasPriceToUse;
