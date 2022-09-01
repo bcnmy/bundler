@@ -1,27 +1,14 @@
 import { privateToPublic, publicToAddress, toChecksumAddress } from 'ethereumjs-util';
 import { ethers } from 'ethers';
-import { RelayerManagerMessenger } from 'gasless-messaging-sdk';
 import hdkey from 'hdkey';
 import { Network } from 'network-sdk';
-import { hostname } from 'os';
-import { redisClient } from '../../../../common/db';
-import { logger } from '../../../../common/log-config';
 import { config } from '../../../config';
-import { TransactionStatus } from '../../common/types';
-import { DaoUtils } from '../../dao-utils';
-import {
-  getGasPriceKey, getTransactionDataKey, getTransactionKey,
-} from '../../utils/cache-utils';
-import { getNativeTokenPriceInUSD } from '../../utils/native-token-price';
-import { stringify } from '../../utils/util';
-import { Transaction } from '../transaction';
-
-const log = logger(module);
+import { IRelayer } from './interface';
 
 const relayersMasterSeed = config.relayerService.masterSeed;
 const nodePathRoot = "m/44'/60'/0'/";
 
-export class Relayer {
+export class Relayer implements IRelayer {
   /** @property index value of relayer created by relayer manager */
   id: number;
 
@@ -32,7 +19,7 @@ export class Relayer {
   private privateKey: string = '';
 
   /** @property status of the relayer */
-  private active: boolean = false;
+  active: boolean = false;
 
   /** @property number of transactions sent by the relayer */
   nonce: number = 0;
@@ -42,60 +29,47 @@ export class Relayer {
 
   /** @property minimum balance required in the relayer */
   // TODO
-  // Get threshold from config and would vary from type of relayer
-  private balanceThreshold: ethers.BigNumber = ethers.utils.parseEther('0.197');
+  // Get threshold from config and would vary from type of relayer and set by relayer manager
+  balanceThreshold: ethers.BigNumber;
 
   /** @property retry count of a particular transaction id */
-  retryCount: any;
+  retryCount: number;
 
   /** @property minimum balance required in the relayer */
-  networkId: number;
+  chainId: number;
 
   /** @property maintains the count of pending transaction */
   pendingTransactionCount: number;
 
   pendingTransactionCountThreshold: number = 15;
 
-  onRelayerActivate: () => void;
+  network: Network;
 
-  onRelayerDeactivate: () => void;
-
-  onRelayerRequestingFunds: (address: string) => void;
-
-  queue: any;
-
-  channel: any;
-
-  consumerTag: string = '';
-
-  rabbitmqConnection: any;
-
-
+  // TODO
+  // Make constructor accept an object
   constructor(
     relayerId: number,
+    chainId: number,
+    retryCount: number,
+    balanceThreshold: ethers.BigNumber,
+    pendingTransactionCountThreshold: number,
     network: Network,
-    networkId: number,
-    connection: any, // rabbitmq connection
-    onRelayerActivate: () => void,
-    onRelayerDeactivate: () => void,
-    onRelayerRequestingFunds: (address: string) => void,
   ) {
     this.id = relayerId;
     this.active = true;
-    this.network = network;
-    this.networkId = networkId;
-    this.rabbitmqConnection = connection;
+    this.chainId = chainId;
+    this.balanceThreshold = balanceThreshold;
     this.pendingTransactionCount = 0;
-    this.onRelayerActivate = onRelayerActivate;
-    this.onRelayerDeactivate = onRelayerDeactivate;
-    this.onRelayerRequestingFunds = onRelayerRequestingFunds;
+    this.pendingTransactionCountThreshold = pendingTransactionCountThreshold;
+    this.retryCount = retryCount;
+    this.network = network;
   }
 
   /**
    * Creates relayer and sets the balance, nonce property via rpc call.
    * It also sets up a channel for relaying the transaction.
    */
-  async create(managerMessenger: RelayerManagerMessenger) {
+  async create(): Promise<IRelayer> {
     if (!relayersMasterSeed) throw new Error('Provide Relayers Master Seed');
 
     const seedInBuffer = Buffer.from(relayersMasterSeed, 'utf-8');
@@ -111,7 +85,6 @@ export class Relayer {
     const ethAddr = publicToAddress(ethPubkey).toString('hex');
     const ethAddress = toChecksumAddress(`0x${ethAddr}`);
     this.publicKey = ethAddress.toLowerCase();
-    this.messenger = managerMessenger.getRelayerMessenger(this.publicKey);
 
     this.publicKey = ethPubkey.toString();
     this.privateKey = privateKey.toLowerCase();
@@ -123,20 +96,34 @@ export class Relayer {
     return this;
   }
 
-  activeStatus() {
-    return this.active;
-  }
-
-  setStatus(status: boolean) {
+  setActiveStatus(status: boolean): void {
     this.active = status;
   }
 
-  async setBalance() {
-    this.balance = (await this.network.getBalance(this.address));
+  async setBalance(): Promise<void> {
+    this.balance = (await this.network.getBalance(this.publicKey));
   }
 
-  async setNonce() {
-    // if (localUpdate && !this.nonce) this.nonce += 1;
-    this.nonce = await this.network.getNonce(this.address, true);
+  async setNonce(): Promise<void> {
+    this.nonce = await this.network.getNonce(this.publicKey, true);
+  }
+
+  async setPendingCount(): Promise<void> {
+    const latestCount = await this.network.getNonce(this.publicKey, false);
+    const pendingCount = await this.network.getNonce(this.publicKey, true);
+    const diff = pendingCount - latestCount;
+    this.pendingTransactionCount = diff > 0 ? diff : 0;
+  }
+
+  async setBalanceThreshold(balanceThreshold: ethers.BigNumber): Promise<void> {
+    this.balanceThreshold = balanceThreshold;
+  }
+
+  async setPendingCountThreshold(pendingTransactionCountThreshold: number): Promise<void> {
+    this.pendingTransactionCountThreshold = pendingTransactionCountThreshold;
+  }
+
+  async setRetryCount(retryCount: number): Promise<void> {
+    this.retryCount = retryCount;
   }
 }
