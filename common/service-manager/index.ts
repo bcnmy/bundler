@@ -5,3 +5,4 @@
 // make instance of Network Manger
 // make instance of Gas Price and start updating cache
 // make instance of Network Price and start updating cache
+// make instance of queue for network id and transaction type

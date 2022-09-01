@@ -1,37 +1,31 @@
-/* eslint-disable max-len */
-// setup channel for consuming data from queue
-// 1-1 mapping with relayer
-// consumer(transactionmanager(relayer))
-
-import amqp from 'amqplib/callback_api';
-import { TransactionType } from '../../common/types';
+import { Queue } from '../../../../common/queue';
 import { IConsumer } from './interface';
 
 export class Consumer implements IConsumer {
-  chainId: number;
+  private chainId: number;
 
-  transactionType: TransactionType;
+  transactionType: string;
 
-  constructor(chainId: number, transactionType: TransactionType) {
+  constructor(chainId: number, transactionType: string) {
     this.chainId = chainId;
-    this.transactionType = TransactionType[transactionType];
+    this.transactionType = transactionType;
   }
 
-  async connectToQueue(queueUrl: string) {
-    // connect to rabbit mq
-    amqp.connect(queueUrl, async (err, conn) => {
-      // call consumptionFromQueue();
-      // call fetchRelayerFromRelayerManager & sendTransactionToTransactionManager inside consumptionFromQueue();
-    });
+  async connectToQueue() {
+    const queue = new Queue(this.chainId, this.transactionType);
+    await queue.setupConsumerInRelayer();
+    await queue.consumeInRelayer();
   }
 
-  async fetchRelayerFromRelayerManager(chainId: number, transactionType: string): Promise<IRelayer> {
-    const relayerManager = relayerManagerMap[chainId][transactionType];
+  async fetchRelayerFromRelayerManager(): Promise<IRelayer> {
+    const relayerManager = relayerManagerMap[this.chainId][this.transactionType];
     const activeRelayer = await relayerManager.getActiveRelayer();
     return activeRelayer;
   }
 
-  async sendTransactionToTransactionManager(relayer: IRelayer, transactionData: ITransactionData): Promise<TransactionResponse> {
+  async sendTransactionToTransactionManager(transactionData: ITransactionData)
+    : Promise<TransactionResponse> {
+    const relayer = await this.fetchRelayerFromRelayerManager();
     const transactionResponse = await transactionManager.executeTransaction(relayer, transactionData);
     // Error handling for each case, 417, 500 etc etc
   }

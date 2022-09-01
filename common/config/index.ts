@@ -4,18 +4,18 @@ import { IConfig, LooseObject } from './interface';
 export class Config implements IConfig {
   public config: LooseObject = {};
 
-  setup(): Boolean {
+  setup(): boolean {
     // get config from config.yaml file
     this.config = {};
     return true;
   }
 
-  update(data: Object): Boolean {
+  update(data: object): boolean {
     this.config = _.merge(this.config, data);
     return true;
   }
 
-  get(): Object {
+  get(): object {
     return this.config;
   }
 }

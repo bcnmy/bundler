@@ -49,7 +49,7 @@ export class Relayer {
    * Creates relayer and sets the balance, nonce property via rpc call.
    * It also sets up a channel for relaying the transaction.
    */
-  async create(managerMessenger: RelayerManagerMessenger) {
+  async create() {
     if (!relayersMasterSeed) throw new Error('provide relayers master seed');
 
     const seedInBuffer = Buffer.from(relayersMasterSeed, 'utf-8');
@@ -71,7 +71,6 @@ export class Relayer {
 
     await this.setBalance();
     await this.setNonce();
-    await this.setPendingCount();
 
     return this;
   }

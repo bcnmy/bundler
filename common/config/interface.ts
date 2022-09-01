@@ -3,11 +3,11 @@ export interface LooseObject {
 }
 
 export interface IConfig {
-  setup(): Boolean
+  setup(): boolean
 
-  update(data: Object): Boolean
+  update(data: object): boolean
 
-  get(): Object
+  get(): object
 }
 
 enum CredentialType {
