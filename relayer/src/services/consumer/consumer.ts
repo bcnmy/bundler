@@ -14,7 +14,7 @@ export class Consumer implements IConsumer {
   async connectToQueue() {
     const queue = new Queue(this.chainId, this.transactionType);
     await queue.setupConsumerInRelayer();
-    await queue.consumeInRelayer();
+    await queue.listenForTransaction();
   }
 
   async fetchRelayerFromRelayerManager(): Promise<IRelayer> {
@@ -23,10 +23,14 @@ export class Consumer implements IConsumer {
     return activeRelayer;
   }
 
+  // gets called by queue class
   async sendTransactionToTransactionManager(transactionData: ITransactionData)
     : Promise<TransactionResponse> {
     const relayer = await this.fetchRelayerFromRelayerManager();
     const transactionResponse = await transactionManager.executeTransaction(relayer, transactionData);
+    // relayer manager check for low balance
+    // await relayermanager[chainid].updateBalance().checkForSufficientBalance();
+    // updateNonceInRelayer
     // Error handling for each case, 417, 500 etc etc
   }
 

@@ -65,13 +65,11 @@ export class RelayerManager {
   constructor(
     network: Network,
     networkId: number,
-    messenger: RelayerManagerMessenger,
     connection: any, // rabbitmq connection
     daoUtilsInstance: DaoUtils,
   ) {
     this.network = network;
     this.networkId = networkId;
-    this.messenger = messenger;
     this.connection = connection;
     this.daoUtilsInstance = daoUtilsInstance;
     startPendingTransactionListener(this.networkId, this.retryTransaction.bind(this));

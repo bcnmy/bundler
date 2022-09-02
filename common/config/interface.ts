@@ -2,12 +2,19 @@ export interface LooseObject {
   [key: string]: any
 }
 
+export type NodeConfig = {
+  slack: {
+    token: string,
+    channel: string,
+  },
+};
+
 export interface IConfig {
-  setup(): boolean
+  setup(config: NodeConfig): void
 
   update(data: object): boolean
 
-  get(): object
+  get(): NodeConfig
 }
 
 enum CredentialType {

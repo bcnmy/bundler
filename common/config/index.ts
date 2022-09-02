@@ -1,13 +1,12 @@
 import _ from 'lodash';
-import { IConfig, LooseObject } from './interface';
+import { IConfig, NodeConfig } from './interface';
 
 export class Config implements IConfig {
-  public config: LooseObject = {};
+  public config: NodeConfig | undefined;
 
-  setup(): boolean {
+  setup(config: NodeConfig) {
     // get config from config.yaml file
-    this.config = {};
-    return true;
+    this.config = config;
   }
 
   update(data: object): boolean {
@@ -15,7 +14,7 @@ export class Config implements IConfig {
     return true;
   }
 
-  get(): object {
+  get(): NodeConfig {
     return this.config;
   }
 }
