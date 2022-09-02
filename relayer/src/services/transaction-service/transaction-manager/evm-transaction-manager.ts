@@ -1,22 +1,46 @@
 /* eslint-disable no-param-reassign */
 /* eslint-disable max-len */
 import { ethers } from 'ethers';
-import { config } from '../../../config';
-import { logger } from '../../../../common/log-config';
+import { Network } from 'network-sdk';
+import { config } from '../../../../config';
+import { logger } from '../../../../../common/log-config';
 import {
   getGasPriceKey, getNetworkRpcUrlsKey, getTransactionDataKey, getTransactionKey,
-} from '../../utils/cache-utils';
-import { cache } from '../../../../common/caching';
-import { stringify } from '../../utils/util';
-import { redisClient } from '../../../../common/db';
-import { TransactionStatus } from '../../common/types';
-import { AbstarctTransactionManager } from './abstract-transaction-manager';
-import { ExecuteParams, ITransactionData } from './types';
-import { getNativeTokenPriceInUSD } from '../../utils/native-token-price';
+} from '../../../utils/cache-utils';
+import { cache } from '../../../../../common/caching';
+import { stringify } from '../../../utils/util';
+import { redisClient } from '../../../../../common/db';
+import { TransactionStatus } from '../../../common/types';
+import { ITransactionManager } from './interface';
+import { ExecuteParams, ITransactionData, TransactionResponse } from '../types';
+import { getNativeTokenPriceInUSD } from '../../../utils/native-token-price';
+import { IRelayer } from '../../relayer/interface';
 
 const log = logger(module);
 
-export class EvmTransactionManager extends AbstarctTransactionManager {
+export class EvmTransactionManager implements ITransactionManager {
+  chainId: number;
+
+  network: Network;
+
+  providers: any;
+
+  constructor(chainId: number, network: Network) {
+    this.chainId = chainId;
+    this.network = network;
+  }
+
+  async setProvider() {
+    const networkRpcUrlsData = await redisClient.get(getNetworkRpcUrlsKey()) as string;
+
+    const networkRpcUrls = JSON.parse(networkRpcUrlsData);
+    const providers = (networkRpcUrls && networkRpcUrls[this.chainId]) || [{
+      name: 'default',
+      rpcUrl: this.network.networkUrl,
+    }];
+    this.providers = providers;
+  }
+
   static bumpGasPrice(gasPrice: string, percent: number): String {
     const gasPriceInInt = parseInt(gasPrice, 16);
     const bumpedGasPrice = gasPriceInInt + parseInt((gasPriceInInt * (percent / 100)
@@ -30,6 +54,14 @@ export class EvmTransactionManager extends AbstarctTransactionManager {
     log.info(`Gas price for ${this.chainId} in cache is ${gasPriceFromCache} on network id ${this.chainId}`);
     const gasPrice = ethers.utils.hexValue(Number(gasPriceFromCache));
     return gasPrice;
+  }
+
+  async createTransaction() {
+
+  }
+
+  async signTransaction(): Promise<any> {
+
   }
 
   async sendTransaction(
@@ -49,20 +81,17 @@ export class EvmTransactionManager extends AbstarctTransactionManager {
     }
 
     const {
-      gasLimit, to, data, transactionId, value, chainId,
+      gasLimit, to, data, transactionId, value, chainId, gasLimitCalculateInSimulation,
     } = transactionData;
-
-    const retryTransaction = relayer.retryCount > 0;
 
     const gasPrice = await this.getGasPrice();
     const nonce = relayer.nonce.toString();
 
     log.info(`Transaction Id: ${transactionId} sent with gas price of ${gasPrice} and nonce as ${nonce} on chain id ${chainId} by relayer: ${relayer.address}`);
 
-    const gasLimitToUse = (gasLimit && gasLimit.hex) || '0xAAE60';
+    const gasLimitToUse = gasLimit || gasLimitCalculateInSimulation;
     log.info(`Gas limit to be used in transactionId: ${transactionId} is ${gasLimitToUse}`);
 
-    const nonceForTransaction = ethers.BigNumber.from(nonce).toHexString();
     try {
       const rawTransaction = {
         gasPrice,
@@ -71,11 +100,11 @@ export class EvmTransactionManager extends AbstarctTransactionManager {
         value,
         data,
         chainId,
-        nonce: nonceForTransaction,
+        nonce: ethers.BigNumber.from(nonce).toHexString(),
       };
       log.info(`Transaction Id: ${transactionId} sent with data ${stringify(transactionData)}`);
 
-      transactionExecutionResponse = await this.executeTransaction({
+      transactionExecutionResponse = await this.signAndExecuteTransaction({
         rawTransaction,
         network: this.network,
         retryCount,
@@ -134,23 +163,16 @@ export class EvmTransactionManager extends AbstarctTransactionManager {
     return transactionExecutionResponse;
   }
 
-  async executeTransaction(executeParams: ExecuteParams): Promise<any> {
+  async signAndExecuteTransaction(executeParams: ExecuteParams): Promise<any> {
     const {
       rawTransaction, relayerAddress, relayerPrivateKey, transactionId,
     } = executeParams;
     let data: TransactionResponse;
     log.info(`Executing transaction at ${Date.now()} from relayer address ${relayerAddress} on chainId ${this.chainId}`);
-    const networkRpcUrlsData = await redisClient.get(getNetworkRpcUrlsKey()) as string;
-
-    const networkRpcUrls = JSON.parse(networkRpcUrlsData);
-    const providers = (networkRpcUrls && networkRpcUrls[this.chainId]) || [{
-      name: 'default',
-      rpcUrl: this.network.networkUrl,
-    }];
 
     // TODO
     // Check this for loop, is there a better way to do it
-    for await (const provider of providers) {
+    for await (const provider of this.providers) {
       this.network.setProvider(provider.rpcUrl);
       try {
         data = await this.network.executeTransaction(
@@ -162,29 +184,9 @@ export class EvmTransactionManager extends AbstarctTransactionManager {
           return data;
         }
       } catch (error:any) {
-        log.info(`Error while executing transaction on transactionId: ${transactionId} by relayer: ${relayerAddress} on chainId: ${this.chainId}`);
-        log.info(error);
-        const shouldTransactionBeRetired = await this.shouldRetryTransaction(error.toString());
-        log.info(`Status for retrying is ${shouldTransactionBeRetired} by relayer ${relayerAddress} on chainId ${this.chainId}`);
-        if (shouldTransactionBeRetired) {
-          // TODO
-          // Relayer retry count logic review
-          this.incrementTry();
-          log.info(`retry count is ${this.retryCount} from address ${relayerAddress} on network id ${this.chainId}`);
-          return await Promise.resolve(this.executeTransaction(executeParams));
-        }
-        return {
-          error: `transaction failed with error ${error.toString()} from address ${relayerAddress} on network id ${this.chainId}`,
-        };
+        // Call retry service
       }
     }
-  }
-
-  async sendRetryTransaction(relayer: IRelayer, rawTransactionData: ITransactionData) {
-    // bump up gas price
-    // nonce update
-    // call sendTransaction
-    // save new db data
   }
 
   async saveTransactionDataToDb(transactionExecutionResponse) {
@@ -360,66 +362,4 @@ export class EvmTransactionManager extends AbstarctTransactionManager {
     }
   }
 
-  shouldRetryTransaction = async (err: string): Promise<boolean> => {
-    const nonceErrorMessage = config.relayerService.networksNonceError[this.chainId];
-    const replacementFeeLowMessage = REPLACEMENT_UNDERPRICED;
-    const alreadyKnownMessage = ALREADY_KNOWN;
-    const insufficientFundsErrorMessage = config
-      .relayerService.networksInsufficientFundsError[this.chainId]
-        || INSUFFICIENT_FUNDS;
-
-    if (this.retryCount >= this.maxTries) return false;
-
-    if (err.indexOf(nonceErrorMessage) > -1 || err.indexOf('increasing the gas price or incrementing the nonce') > -1) {
-      log.info(
-        `Nonce too low error for relayer ${this.params.rawTransaction.from} on network id ${this.chainId}. Removing nonce from cache and retrying`,
-      );
-      this.params.rawTransaction.nonce = await this.network
-        .getNonce(this.params.rawTransaction.from, true);
-      log.info(`updating the nonce to ${this.params.rawTransaction.nonce} for relayer ${this.params.rawTransaction.from} on network id ${this.chainId}`);
-    } else if (err.indexOf(replacementFeeLowMessage) > -1) {
-      log.info(
-        `Replacement underpriced error for relayer ${this.params.rawTransaction.from} on network id ${this.chainId}`,
-      );
-      let { gasPrice } = await this.network.getGasPrice();
-
-      log.info(`gas price from network ${gasPrice}`);
-      const gasPriceInNumber = ethers.BigNumber.from(
-        gasPrice.toString(),
-      ).toNumber();
-
-      log.info(`this.params.rawTransaction.gasPrice ${this.params.rawTransaction.gasPrice} for relayer ${this.params.rawTransaction.from} on network id ${this.chainId}`);
-
-      if (gasPrice < this.params.rawTransaction.gasPrice) {
-        gasPrice = this.params.rawTransaction.gasPrice;
-      }
-      log.info(`transaction sent with gas price ${this.params.rawTransaction.gasPrice} for relayer ${this.params.rawTransaction.from} on network id ${this.chainId}`);
-      log.info(`bump gas price ${config.bumpGasPrice} for relayer ${this.params.rawTransaction.from} on network id ${this.chainId}`);
-      log.info(`gasPriceInNumber ${gasPriceInNumber} for relayer ${this.params.rawTransaction.from} on network id ${this.chainId}`);
-      this.params.rawTransaction.gasPrice = (
-        gasPriceInNumber * config.bumpGasPrice
-      ) + gasPriceInNumber;
-      log.info(`increasing gas price for the resubmit transaction ${this.params.rawTransaction.gasPrice} for relayer ${this.params.rawTransaction.from} on network id ${this.chainId}`);
-    } else if (errInString.indexOf(alreadyKnownMessage) > -1) {
-      log.info(
-        `Already known transaction hash with same payload and nonce for relayer ${this.params.rawTransaction.from} on network id ${this.chainId}. Removing nonce from cache and retrying`,
-      );
-    } else if (errInString.indexOf(insufficientFundsErrorMessage) > -1) {
-      log.info(`Relayer ${this.params.rawTransaction.from} has insufficient funds`);
-      // Send previous relayer for funding
-    } else {
-      log.info('transaction not being retried');
-      return false;
-    }
-    return true;
-  };
-
-  incrementTry() {
-    this.retryCount += 1;
-  }
-
-  static async removeRetry(transactionId: string) {
-    await redisClient.del(getTransactionDataKey(transactionId));
-    await redisClient.del(getTransactionKey(transactionId));
-  }
 }

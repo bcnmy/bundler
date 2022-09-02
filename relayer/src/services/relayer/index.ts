@@ -31,9 +31,7 @@ export class Relayer implements IRelayer {
   chainId: number;
 
   /** @property maintains the count of pending transaction */
-  pendingTransactionCount: number;
-
-  pendingTransactionCountThreshold: number = 15;
+  pendingTransactionCount: number = 0;
 
   network: Network;
 
@@ -42,14 +40,11 @@ export class Relayer implements IRelayer {
   constructor(
     relayerId: number,
     chainId: number,
-    pendingTransactionCountThreshold: number,
     network: Network,
   ) {
     this.id = relayerId;
     this.active = true;
     this.chainId = chainId;
-    this.pendingTransactionCount = 0;
-    this.pendingTransactionCountThreshold = pendingTransactionCountThreshold;
     this.network = network;
   }
 
@@ -79,6 +74,7 @@ export class Relayer implements IRelayer {
 
     await this.setBalance();
     await this.setNonce();
+    this.pendingTransactionCount = 0;
 
     return this;
   }
@@ -93,5 +89,16 @@ export class Relayer implements IRelayer {
 
   async setNonce(): Promise<void> {
     this.nonce = await this.network.getNonce(this.publicKey, true);
+  }
+
+  async setPendingTransactionCount(): Promise<void> {
+    const latestCount = await this.network.getNonce(this.publicKey, false);
+    const pendingCount = await this.network.getNonce(this.publicKey, true);
+    const diff = pendingCount - latestCount;
+    this.pendingTransactionCount = diff > 0 ? diff : 0;
+  }
+
+  getPendingTransactionCount(): number {
+    return this.pendingTransactionCount;
   }
 }

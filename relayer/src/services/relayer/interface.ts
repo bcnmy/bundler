@@ -7,7 +7,8 @@ export interface IRelayer {
   nonce: number,
   balance: ethers.BigNumber,
   chainId: number,
-  network: Network
+  network: Network,
+  pendingTransactionCount: number,
 
   create(): Promise<IRelayer>
   setActiveStatus(status: boolean): void

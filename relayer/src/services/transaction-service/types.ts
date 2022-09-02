@@ -2,7 +2,8 @@ import { Network } from 'network-sdk';
 
 // Review all types
 export type ITransactionData = {
-  gasLimit: string,
+  gasLimit?: string,
+  gasLimitCalculateInSimulation: string,
   to: string,
   data: string,
   transactionId: string,
