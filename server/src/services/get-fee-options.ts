@@ -18,6 +18,8 @@ type FeeOptionResponseParams = {
   decimal: number;
   logoUrl: string;
   offset: number;
+  feeTokenTransferGas: number;
+  refundReceiver?: string;
 };
 
 const convertGasPriceToUSD = async (
@@ -87,6 +89,8 @@ export const feeOptionsService = async (feeOptionServiceParams: FeeOptionService
         decimal,
         logoUrl: config.logoUrl[token],
         offset: config.offset[token],
+        feeTokenTransferGas: config.feeTokenTransferGas[chainId][token],
+        refundReceiver: config.refundReceiver[chainId][token],
       });
     }
     return {
