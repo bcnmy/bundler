@@ -149,10 +149,10 @@ const envConfig: LooseObject = {
   feeTokenTransferGas: {
     5: {
       ETH: 7300,
-      USDC: 20975,
-      USDT: 20975,
-      WETH: 20975,
-      DAI: 20975,
+      USDC: 22975,
+      USDT: 22975,
+      WETH: 22975,
+      DAI: 22975,
     },
     80001: {
       MATIC: 21000,
