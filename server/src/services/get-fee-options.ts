@@ -18,11 +18,13 @@ type FeeOptionResponseParams = {
   decimal: number;
   logoUrl: string;
   offset: number;
+  feeTokenTransferGas: number;
+  refundReceiver?: string;
 };
 
 const convertGasPriceToUSD = async (
   nativeChainId: number,
-  gasPrice: number,
+  gasPrice: string,
   chainPriceDataInUSD: number,
   token: string,
 ) => {
@@ -44,9 +46,9 @@ export const feeOptionsService = async (feeOptionServiceParams: FeeOptionService
     } = feeOptionServiceParams;
 
     const feeTokens = config.supportedFeeTokens[chainId];
-    const gasPrice = await gasPriceMap[chainId].getGasPrice();
+    const gasPrice: string = await gasPriceMap[chainId].getGasPrice();
 
-    const networkPriceDataInString = await redisClient.get('NETWORK_PRICE_DATA');
+    const networkPriceDataInString = await redisClient.get('NETWORK_PRICE_DATA') || '';
     const networkPriceData = JSON.parse(networkPriceDataInString);
     const chainPriceDataInUSD = networkPriceData[chainId];
 
@@ -60,7 +62,7 @@ export const feeOptionsService = async (feeOptionServiceParams: FeeOptionService
         decimal = 6; // fetch it from contract
         tokenGasPrice = await convertGasPriceToUSD(chainId, gasPrice, chainPriceDataInUSD, token);
         tokenGasPrice = new Big(tokenGasPrice).mul(10 ** decimal).toFixed(0).toString();
-      } else if (token === 'XDAI') {
+      } else if (token === 'DAI') {
         decimal = 18; // fetch it from contract
         tokenGasPrice = await convertGasPriceToUSD(chainId, gasPrice, chainPriceDataInUSD, token);
         tokenGasPrice = new Big(tokenGasPrice).mul(10 ** decimal).toFixed(0).toString();
@@ -87,6 +89,8 @@ export const feeOptionsService = async (feeOptionServiceParams: FeeOptionService
         decimal,
         logoUrl: config.logoUrl[token],
         offset: config.offset[token],
+        feeTokenTransferGas: config.feeTokenTransferGas[chainId][token],
+        refundReceiver: config.refundReceiver[chainId][token],
       });
     }
     return {

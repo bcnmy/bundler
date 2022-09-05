@@ -30,7 +30,7 @@ const envConfig: LooseObject = {
     1512051714758: 'DEV',
     1: 'ETH',
     77: 'SPOA',
-    100: 'XDAI',
+    100: 'DAI',
     31: 'RBTC',
     43113: 'AVAX',
     43114: 'AVAX',
@@ -101,8 +101,8 @@ const envConfig: LooseObject = {
   coinMarketCapApiUrl: 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest',
   coinMarketCapApiKey: process.env.COINMARKETCAP_API_KEY,
   supportedFeeTokens: {
-    5: ['ETH', 'USDC', 'USDT', 'XDAI', 'WETH'],
-    80001: ['MATIC', 'USDC', 'USDT', 'XDAI', 'WETH'],
+    5: ['ETH', 'USDC', 'USDT', 'DAI', 'WETH'],
+    80001: ['MATIC', 'USDC', 'USDT', 'DAI', 'WETH'],
   },
   wrappedTokens: {
     WETH: 1,
@@ -127,7 +127,7 @@ const envConfig: LooseObject = {
     USDC: 1000000,
     USDT: 1000000,
     WETH: 1,
-    XDAI: 1,
+    DAI: 1,
     MATIC: 1,
   },
   tokenContractAddress: {
@@ -136,14 +136,46 @@ const envConfig: LooseObject = {
       USDC: '0xb5B640E6414b6DeF4FC9B3C1EeF373925effeCcF',
       USDT: '0xb1f79Eb4fb3BD4DD516033FA9ab3037874A905E4',
       WETH: '0xb7e94Cce902E34e618A23Cb82432B95d03096146',
-      XDAI: '0xE68104D83e647b7c1C15a91a8D8aAD21a51B3B3E',
+      DAI: '0xE68104D83e647b7c1C15a91a8D8aAD21a51B3B3E',
     },
     80001: {
       MATIC: '0X',
       USDC: '0xe6b8a5CF854791412c1f6EFC7CAf629f5Df1c747',
       USDT: '0x51261AA98e932737a8F159B15d246d32978EB42e',
       WETH: '0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa',
-      XDAI: '0xf61cBcaC6C5E4F27543495890536B799D18f7178',
+      DAI: '0xf61cBcaC6C5E4F27543495890536B799D18f7178',
+    },
+  },
+  feeTokenTransferGas: {
+    5: {
+      ETH: 7300,
+      USDC: 22975,
+      USDT: 22975,
+      WETH: 22975,
+      DAI: 22975,
+    },
+    80001: {
+      MATIC: 21000,
+      USDC: 21000,
+      USDT: 21000,
+      WETH: 21000,
+      DAI: 21000,
+    },
+  },
+  refundReceiver: {
+    5: {
+      ETH: '0xC1D3206324D806b6586cf15324178f8E8781A293',
+      USDC: '0xC1D3206324D806b6586cf15324178f8E8781A293',
+      USDT: '0xC1D3206324D806b6586cf15324178f8E8781A293',
+      WETH: '0xC1D3206324D806b6586cf15324178f8E8781A293',
+      DAI: '0xC1D3206324D806b6586cf15324178f8E8781A293',
+    },
+    80001: {
+      MATIC: '0xC1D3206324D806b6586cf15324178f8E8781A293',
+      USDC: '0xC1D3206324D806b6586cf15324178f8E8781A293',
+      USDT: '0xC1D3206324D806b6586cf15324178f8E8781A293',
+      WETH: '0xC1D3206324D806b6586cf15324178f8E8781A293',
+      DAI: '0xC1D3206324D806b6586cf15324178f8E8781A293',
     },
   },
 };

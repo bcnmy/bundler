@@ -26,7 +26,7 @@ export class GasPrice {
     log.info(`Gas price for ${this.networkId} is set at ${this.gasPrice}`);
   }
 
-  async getGasPrice() {
+  async getGasPrice(): Promise<string> {
     let gasPrice = await redisClient.get(getGasPriceKey(this.networkId));
     if (!gasPrice) {
       await this.getGasPrice();

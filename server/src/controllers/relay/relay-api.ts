@@ -14,14 +14,14 @@ const log = logger(module);
 export const relayApi = async (req: Request, res: Response) => {
   try {
     const {
-      type, to, data, gasLimit, chainId, value,
+      type, to, data, gasLimit, chainId, value, gasLimitInSimulation,
     } = req.body;
     const transactionId = generateTransactionId(data);
     if (!clientMessenger.socketClient.isConnected()) {
       await clientMessenger.connect();
     }
     const queueData = {
-      transactionId, type, to, data, gasLimit, chainId, value,
+      transactionId, type, to, data, gasLimit, chainId, value, gasLimitInSimulation,
     };
     const response = await sendToQueue(queueData);
     if (response.error) {
@@ -56,7 +56,7 @@ export const relayApi = async (req: Request, res: Response) => {
               code: 200,
               message: 'Meta transaction sent to blockchain',
               transactionId: txId,
-              transactionHash: txHash,
+              hash: txHash,
               connectionUrl: websocketUrl,
             },
           );

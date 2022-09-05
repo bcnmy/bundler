@@ -17,6 +17,12 @@ export const simulateApi = async (req: Request, res: Response, next: NextFunctio
         error: result.error,
       });
     }
+    const simulationData = result.data;
+
+    if (simulationData && simulationData.gasUsed) {
+      req.body.gasLimitInSimulation = simulationData.gasUsed;
+    }
+
     return next();
   } catch (error) {
     log.error(`Error in fetching fee otpions ${error}`);
