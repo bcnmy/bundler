@@ -1,10 +1,11 @@
-import amqp from 'amqplib';
+import amqp, { Channel } from 'amqplib';
 import { logger } from '../log-config';
 
 const log = logger(module);
 
-const exchange = ''; // get from config instance
+const exchange = 'relayer_queue_exchange'; // get from config instance
 const queueUrl = ''; // get from config instance
+
 
 export class Queue {
   private channel: any;
@@ -23,15 +24,15 @@ export class Queue {
   connect = async () => {
     const connection = await amqp.connect(queueUrl);
     this.channel = await connection.createChannel();
-    this.channel.assertExchange(exchange, 'topic', {
+    this.channel.assertExchange(`exchange_${this.transactionType}`, 'direct', {
       durable: true,
     });
   };
 
   sendToRelayer = async (data: object) => {
-    const key = `chainid.${this.chainId}.type.${this.transactionType}`;
+    const key = `chainid.${this.chainId}`;
     this.channel.prefetch(1);
-    this.channel.publish(exchange, key, Buffer.from(JSON.stringify(data)), {
+    this.channel.publish(`exchange_${this.transactionType}`, key, Buffer.from(JSON.stringify(data)), {
       persistent: true,
     });
   };
