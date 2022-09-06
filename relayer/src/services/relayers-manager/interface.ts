@@ -4,12 +4,12 @@ import { IRelayer } from '../relayer/interface';
 export interface IRelayerManager {
   network: Network,
   chainId: number,
-  relayersMap: Record<string, IRelayer>,
-  retryCountMap: Record<string, number>,
+  relayersMap: Record<string, IRelayer>, // check usage
+  retryCountMap: Record<string, number>, // check usage
   minimumRelayerCount: number,
   maximumRelayerCount: number,
-  newRelayerInstanceCreated: number,
-  relayerCapacityThreshold: number,
+  newRelayerInstanceCreated: number, // check usage
+  relayerCapacityThreshold: number, // check usage
   mainAccountAddress: string,
   mainAccountNonce: number,
 

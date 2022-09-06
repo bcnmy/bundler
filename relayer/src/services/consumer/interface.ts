@@ -5,5 +5,4 @@ export interface IConsumer {
     relayer: IRelayer,
     transactionData: ITransactionData
   ): Promise<TransactionResponse>
-  listenForPendingTransaction()
 }
