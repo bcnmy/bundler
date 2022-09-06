@@ -14,7 +14,7 @@ export interface IRelayerManager {
   mainAccountNonce: number,
 
   createRelayers(numberOfRelayers: number): Promise<void>
-  fetchActiveRealyer(): Promise<IRelayer>
+  fetchActiveRelayer(): Promise<IRelayer>
   updateRelayerBalance(relayer: IRelayer): Promise<number>
   incrementRelayerNonce(relayer: IRelayer): number
   incrementRelayerPendingCount(relayer: IRelayer): number
