@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { ClientMessenger } from 'gasless-messaging-sdk';
 import { logger } from '../../../../common/log-config';
-import { sendToQueue } from '../../service-manager/queue';
+import { sendToQueue } from '../../../../common/queue/queue';
 import { generateTransactionId } from '../../utils/tx-id-generator';
 
 const websocketUrl = process.env.WEB_SOCKET_URL || '';

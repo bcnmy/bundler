@@ -1,38 +1,19 @@
-import { TenderlySimulation } from './tenderly';
+import { tenderlyService } from './tenderly-simulate';
 
 interface ISimulate {
-  execute: (data: string, wallet: string, refundInfo: any) => Promise<any>,
-  updateSimulator: (provider: string) => any,
+  tenderly: (data: string, wallet: string, refundInfo: any) => Promise<any>,
 }
 
 export class Simulate implements ISimulate {
-  private simulator: any;
+  private chainId: number;
 
-  constructor(provider: string) {
-    this.updateSimulator(provider);
+  tenderlyService = tenderlyService;
+
+  constructor(chainId: number) {
+    this.chainId = chainId;
   }
 
-  updateSimulator(provider: string) {
-    if (provider === 'anyother') {
-      this.simulator = new AnyOther();
-    } else {
-      this.simulator = new TenderlySimulation();
-    }
-  }
-
-  async execute(data: string, wallet: string, refundInfo: any) {
-    await this.simulator.simulateTransaction(data, wallet, refundInfo);
-  }
-
-  async tenderly() {
-
-  }
-
-  async blocknative() {
-    
+  async tenderly(data: string, wallet: string, refundInfo: any) {
+    this.tenderlyService(wallet, data, this.chainId, refundInfo);
   }
 }
-
-
-const simulate = new Simulate();
-simulate.execute();

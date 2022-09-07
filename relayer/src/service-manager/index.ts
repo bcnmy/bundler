@@ -1,10 +1,7 @@
 /* eslint-disable no-await-in-loop */
-import { Network } from 'network-sdk';
-import { RelayerManagerMessenger } from 'gasless-messaging-sdk';
-import { config } from '../../config';
 import { logger } from '../../../common/log-config';
-import { DaoUtils } from '../dao-utils';
-import { Mongo } from '../../../common/db/mongo';
+import { config } from '../../config';
+import { Consumer } from '../services/consumer';
 import { RelayerManager } from '../services/relayers-manager';
 import { Consumer } from '../services/consumer';
 import { TransactionManager } from '../services/transaction-service/transaction-manager/interface';
@@ -14,25 +11,11 @@ const {
   supportedNetworks, socketService, relayerService,
 } = config;
 
-const {
-  secret, apiKey, connectionHttp, connectionWs,
-} = socketService;
-
-const {
-  numberOfRelayersPerNetwork,
-} = relayerService;
 
 const relayerManagerMap: Record<number, RelayerManager> = {};
-
-let connection: any;
-
-if (!supportedNetworks) {
-  throw new Error('supportedNetworks is undefined');
-}
-console.log('mongo url ', process.env.MONGO_URL);
-
-const dbInstance = new Mongo(process.env.MONGO_URL || ''); // use the commmon instance
-const daoUtilsInstance = new DaoUtils(dbInstance); // use the common instance
+// make instance of consumer 
+// make instance of relayer manager
+// make instance of transaction manager
 
 export const init = async () => {
   /* queueUrlOfTransactionType = {

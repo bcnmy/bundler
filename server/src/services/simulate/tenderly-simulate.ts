@@ -1,7 +1,6 @@
 /* eslint-disable max-len */
 import axios from 'axios';
-import { logger } from '../../../common/log-config';
-import { gasPriceMap } from '../service-manager';
+import { logger } from '../../../../common/log-config';
 
 const log = logger(module);
 
@@ -79,10 +78,10 @@ const checkIfRelayerIsPaidFully = async (transactionLogs: any, gasUsedInSimulati
 // https://rpc.tenderly.co/fork/a7e7d2e6-90dd-4faf-be9d-aa367904c77b
 
 // todo
-export const simulateService = async (
+export const tenderlyService = async (
   wallet: string,
   data: string,
-  chainId: string,
+  chainId: number,
   refundInfo: { tokenGasPrice: string, gasToken: string },
 ) => {
   try {
@@ -90,7 +89,7 @@ export const simulateService = async (
     const tAxios = tenderlyInstance();
     const body = {
       // standard TX fields
-      network_id: chainId,
+      network_id: chainId.toString(),
       from: '0xb3d1f43ec5249538c6c0fd4fd6e06b4215ce3000',
       input: data,
       gas: 8000000,
@@ -111,7 +110,7 @@ export const simulateService = async (
 
     const transactionLogs = response.data.transaction.transaction_info.call_trace.logs;
     const gasUsedInSimulation = response.data.transaction.transaction_info.call_trace.gas_used + response.data.transaction.transaction_info.call_trace.intrinsic_gas;
-    const { isRelayerPaidFully, successOrRevertMsg } = await checkIfRelayerIsPaidFully(transactionLogs, gasUsedInSimulation, parseInt(chainId, 10), refundInfo);
+    const { isRelayerPaidFully, successOrRevertMsg } = await checkIfRelayerIsPaidFully(transactionLogs, gasUsedInSimulation, chainId, refundInfo);
 
     if (!isRelayerPaidFully) {
       return {
