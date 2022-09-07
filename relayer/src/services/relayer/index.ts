@@ -83,6 +83,10 @@ export class Relayer implements IRelayer {
     this.active = status;
   }
 
+  getRelayerAddress(): string {
+    return this.publicKey;
+  }
+
   async setBalance(): Promise<void> {
     this.balance = (await this.network.getBalance(this.publicKey));
   }

@@ -5,8 +5,6 @@ import { Mutex } from 'async-mutex';
 import { ethers } from 'ethers';
 import { config, configChangeListeners } from '../../../config';
 import { logger } from '../../../../common/log-config';
-import { redisClient } from '../../../../common/db';
-import { getTransactionDataKey } from '../../utils/cache-utils';
 import { stringify } from '../../utils/util';
 import { Relayer } from '../relayer';
 import { IRelayer } from '../relayer/interface';
@@ -22,7 +20,6 @@ const { BICONOMY_OWNER_ADDRESS = '', BICONOMY_OWNER_PRIVATE_KEY = '' } = process
 enum RelayersStatus {
   ACTIVE = 'active',
   INACTIVE = 'inactive',
-
 }
 
 /**
@@ -43,13 +40,13 @@ export class RelayerManager implements IRelayerManager {
 
   relayersMap: Record<string, IRelayer> = {};
 
-  retryCountMap: Record<string, number> = {}; // store retry count corresponding to transaction id
+  retryCountMap: Record<string, number> = {};
+
+  pendingTransactionCountMap: Record<string, number> = {};
 
   minimumRelayerCount: number = 15;
 
   maximumRelayerCount: number = 100;
-
-  newRelayerInstanceCreated: number = 5;
 
   relayerCapacityThreshold: number = 0.6; // 60% of total assigned relayers in queue
 
@@ -107,30 +104,40 @@ export class RelayerManager implements IRelayerManager {
     log.info(`Lock released after creating relayers on ${this.chainId}`);
   }
 
+  async fetchMainAccountNonceFromNetwork(): Promise<number> {
+    return this.network
+  }
+
   async fetchActiveRelayer(): Promise<IRelayer> {
 
   }
 
   static updateRelayerBalance(relayer: IRelayer): number {
-    
+
   }
 
-  static incrementRelayerNonce(relayer: IRelayer): number {
-    relayer.nonce += 1;
-    const { nonce } = relayer;
-    return nonce;
+  updateRelayerMap(relayer: IRelayer) {
+    this.relayersMap[relayer.id] = relayer;
   }
 
-  static incrementRelayerPendingCount(relayer: IRelayer): number {
+  updateRetryCountMap(relayer: IRelayer) {
+    this.retryCountMap[relayer.id] += 1;
+  }
+
+  updatePendingTransactionCountMap(relayer: IRelayer, increment: number) {
+    this.pendingTransactionCountMap[relayer.id] += increment;
+  }
+
+  incrementRelayerPendingCount(relayer: IRelayer): IRelayer {
     relayer.pendingTransactionCount += 1;
-    const { pendingTransactionCount } = relayer;
-    return pendingTransactionCount;
+    this.updatePendingTransactionCountMap(relayer, 1);
+    return relayer;
   }
 
-  static decrementRelayerPendingCount(relayer: IRelayer): number {
+  decrementRelayerPendingCount(relayer: IRelayer): IRelayer {
     relayer.pendingTransactionCount -= 1;
-    const { pendingTransactionCount } = relayer;
-    return pendingTransactionCount;
+    this.updatePendingTransactionCountMap(relayer, -1);
+    return relayer;
   }
 
   async fundRelayer(address: string) {
@@ -204,11 +211,10 @@ export class RelayerManager implements IRelayerManager {
 
   async getMainAccountNonceFromNetwork() {
     const nonce = await this.network.getNonce(BICONOMY_OWNER_ADDRESS, true);
-    log.info(`Main account nonce is ${nonce} on network id ${this.chainId}`);
     return nonce;
   }
 
-  async getMainAccountNonce() {
+  getMainAccountNonce() {
     return this.mainAccountNonce;
   }
 }

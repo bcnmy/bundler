@@ -2,24 +2,23 @@ import { Network } from 'network-sdk';
 import { IRelayer } from '../relayer/interface';
 
 export interface IRelayerManager {
-  network: Network,
-  chainId: number,
-  relayersMap: Record<string, IRelayer>, // check usage
-  retryCountMap: Record<string, number>, // check usage
-  minimumRelayerCount: number,
-  maximumRelayerCount: number,
-  newRelayerInstanceCreated: number, // check usage
-  relayerCapacityThreshold: number, // check usage
-  mainAccountAddress: string,
-  mainAccountNonce: number,
+  network: Network;
+  chainId: number;
+  minimumRelayerCount: number;
+  maximumRelayerCount: number;
+  mainAccountAddress: string;
+  mainAccountNonce: number;
+  relayerMap: Record<string, IRelayer>;
+  retryCountMap: Record<string, number>;
+  pendingTransactionCountMap: Record<string, number>
+  relayerCapacityThreshold: number;
 
-  createRelayers(numberOfRelayers: number): Promise<void>
-  fetchActiveRelayer(): Promise<IRelayer>
-  updateRelayerBalance(relayer: IRelayer): Promise<number>
-  incrementRelayerNonce(relayer: IRelayer): number
-  incrementRelayerPendingCount(relayer: IRelayer): number
-  decrementRelayerPendingCount(relayer: IRelayer): number
-  fundRelayer(address: string): Promise<void>
-  getMainAccountNonce(): Promise<number>
-  getMainAccountNonceFromNetwork(): Promise<number>
+  createRelayers(numberOfRelayers: number): Promise<void>;
+  fetchActiveRelayer(): Promise<IRelayer>;
+  updateRelayerBalance(relayer: IRelayer): Promise<IRelayer>;
+  incrementRelayerPendingCount(relayer: IRelayer): IRelayer;
+  decrementRelayerPendingCount(relayer: IRelayer): IRelayer;
+  fundRelayer(relayer: IRelayer): Promise<IRelayer>;
+  getMainAccountNonce(): number;
+  getMainAccountNonceFromNetwork(): Promise<number>;
 }
