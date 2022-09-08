@@ -1,12 +1,28 @@
 import _ from 'lodash';
+import { readYamlEnvSync } from 'yaml-env-defaults';
+import yenv from 'yenv'
+
 import { IConfig, NodeConfig } from './interface';
 
 export class Config implements IConfig {
-  public config: NodeConfig | undefined;
+  public config: NodeConfig | null;
 
-  setup(config: NodeConfig) {
+  constructor() {
+    this.config = null;
+  }
+
+  setup() {
     // get config from config.yaml file
-    this.config = config;
+    try {
+      console.log(process.env.SLACK_TOKEN);
+
+      const data: NodeConfig = yenv('config.yml');
+      // merge missing config from .env file and validate
+      console.log(data);
+      this.config = data;
+    } catch (e) {
+      console.log(e);
+    }
   }
 
   update(data: object): boolean {
@@ -14,7 +30,7 @@ export class Config implements IConfig {
     return true;
   }
 
-  get(): NodeConfig {
+  get(): NodeConfig | null {
     return this.config;
   }
 }

@@ -29,11 +29,11 @@ export type NodeConfig = {
 };
 
 export interface IConfig {
-  setup(config: NodeConfig): void
+  setup(): void
 
   update(data: object): boolean
 
-  get(): NodeConfig
+  get(): NodeConfig | null
 }
 
 enum CredentialType {

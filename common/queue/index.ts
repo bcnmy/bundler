@@ -1,4 +1,4 @@
-import amqp, { Channel } from 'amqplib';
+import amqp, { Channel, Replies.AssertQueue } from 'amqplib';
 import { logger } from '../log-config';
 
 const log = logger(module);
@@ -6,11 +6,10 @@ const log = logger(module);
 const exchange = 'relayer_queue_exchange'; // get from config instance
 const queueUrl = ''; // get from config instance
 
-
 export class Queue {
-  private channel: any;
+  private channel: Channel;
 
-  private queue: any;
+  private queue: Replies.AssertQueue;
 
   private chainId: number;
 
@@ -69,11 +68,5 @@ export class Queue {
     } catch (error) {
       log.error(error);
     }
-  };
-
-  const listenForTransaction = async () => {
-    await this.channel.consume(this.queue.queue, async (msg: any) => {
-      // consumer instance map to call
-    });
   };
 }
