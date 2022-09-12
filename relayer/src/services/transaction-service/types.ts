@@ -11,16 +11,6 @@ export type ITransactionData = {
   chainId: number,
 };
 
-export type IRawTransaction = {
-  gasPrice: string,
-  gasLimit: string,
-  to: string,
-  value: string,
-  data: string,
-  chainId: number,
-  nonce: string,
-};
-
 export type ExecuteParams = {
   rawTransaction: IRawTransaction,
   network: Network,

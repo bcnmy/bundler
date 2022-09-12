@@ -1,3 +1,14 @@
+export type IEVMRawTransaction = {
+    nonce: string,
+    to: string,
+    data: string,
+    chainId: number,
+    value: string,
+    gasPrice: string,
+    gasLimit: string,
+  };
+  
+
 export interface IRetryPolicy {
   maxTries: number;
   shouldRetry: (err: any) => Promise<boolean>;
