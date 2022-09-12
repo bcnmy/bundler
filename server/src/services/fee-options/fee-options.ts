@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import Big from 'big.js';
 import { redisClient } from '../../../common/db';
-import { logger } from '../../../common/log-config';
+import { logger } from '../../../../common/log-config';
 import { config } from '../../config';
 import { gasPriceMap } from '../service-manager';
 
@@ -22,7 +22,7 @@ type FeeOptionResponseParams = {
 
 const convertGasPriceToUSD = async (
   nativeChainId: number,
-  gasPrice: string,
+  gasPrice: number,
   chainPriceDataInUSD: number,
   token: string,
 ) => {
@@ -44,9 +44,9 @@ export const feeOptionsService = async (feeOptionServiceParams: FeeOptionService
     } = feeOptionServiceParams;
 
     const feeTokens = config.supportedFeeTokens[chainId];
-    const gasPrice: string = await gasPriceMap[chainId].getGasPrice();
+    const gasPrice = await gasPriceMap[chainId].getGasPrice();
 
-    const networkPriceDataInString = await redisClient.get('NETWORK_PRICE_DATA') || '';
+    const networkPriceDataInString = await redisClient.get('NETWORK_PRICE_DATA');
     const networkPriceData = JSON.parse(networkPriceDataInString);
     const chainPriceDataInUSD = networkPriceData[chainId];
 
@@ -60,7 +60,7 @@ export const feeOptionsService = async (feeOptionServiceParams: FeeOptionService
         decimal = 6; // fetch it from contract
         tokenGasPrice = await convertGasPriceToUSD(chainId, gasPrice, chainPriceDataInUSD, token);
         tokenGasPrice = new Big(tokenGasPrice).mul(10 ** decimal).toFixed(0).toString();
-      } else if (token === 'DAI') {
+      } else if (token === 'XDAI') {
         decimal = 18; // fetch it from contract
         tokenGasPrice = await convertGasPriceToUSD(chainId, gasPrice, chainPriceDataInUSD, token);
         tokenGasPrice = new Big(tokenGasPrice).mul(10 ** decimal).toFixed(0).toString();
@@ -94,7 +94,6 @@ export const feeOptionsService = async (feeOptionServiceParams: FeeOptionService
     };
   } catch (error) {
     log.info(error);
-    console.log(error);
     return {
       code: 500,
       error: `Error occured in getting fee options service. Error: ${JSON.stringify(error)}`,
