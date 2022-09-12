@@ -1,12 +1,12 @@
-export type IEVMRawTransaction = {
-    nonce: string,
-    to: string,
-    data: string,
-    chainId: number,
-    value: string,
-    gasPrice: string,
-    gasLimit: string,
-  };
+export type EVMRawTransactionType = {
+  nonce: string,
+  to: string,
+  data: string,
+  chainId: number,
+  value: string,
+  gasPrice: string,
+  gasLimit: string,
+};
   
 
 export interface IRetryPolicy {

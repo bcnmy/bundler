@@ -1,11 +1,11 @@
 import { ethers } from 'ethers';
-import { IEVMRawTransaction } from '../../common';
+import { EVMRawTransactionType } from '../../common';
 import { IEVMAccount } from './interface';
 
-export class EVMAccount implements IEVMAccount<IEVMRawTransaction> {
-  signer: ethers.Signer;
+export class EVMAccount implements IEVMAccount<EVMRawTransactionType> {
+  private signer: ethers.Signer;
   
-  publicKey: string;
+  private publicKey: string;
 
   constructor(accountPublicKey: string, accountPrivateKey: string) {
     this.signer = new ethers.Wallet(accountPrivateKey);
@@ -20,7 +20,7 @@ export class EVMAccount implements IEVMAccount<IEVMRawTransaction> {
     return this.signer.signMessage(message);
   }
 
-  signTransaction(rawTransaction: IEVMRawTransaction): Promise<string> {
+  signTransaction(rawTransaction: EVMRawTransactionType): Promise<string> {
     return this.signer.signTransaction(rawTransaction);
   }
 }

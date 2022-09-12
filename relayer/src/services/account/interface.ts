@@ -5,8 +5,6 @@ interface IAccount {
 }
 
 export interface IEVMAccount<RawTransactionType> extends IAccount {
-  signer: ethers.Signer;
-
   signMessage(message: string): Promise<string>;
   signTransaction(rawTransaction: RawTransactionType): Promise<string>
 }
