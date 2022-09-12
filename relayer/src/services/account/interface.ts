@@ -1,5 +1,3 @@
-import { ethers } from 'ethers';
-
 interface IAccount {
   getPublicKey(): string
 }

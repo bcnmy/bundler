@@ -4,7 +4,7 @@ import { IEVMAccount } from './interface';
 
 export class EVMAccount implements IEVMAccount<EVMRawTransactionType> {
   private signer: ethers.Signer;
-  
+
   private publicKey: string;
 
   constructor(accountPublicKey: string, accountPrivateKey: string) {
