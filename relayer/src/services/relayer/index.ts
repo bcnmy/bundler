@@ -1,21 +1,16 @@
 import { privateToPublic, publicToAddress, toChecksumAddress } from 'ethereumjs-util';
 import { ethers } from 'ethers';
-import { RelayerManagerMessenger } from 'gasless-messaging-sdk';
 import hdkey from 'hdkey';
-import { logger } from '../../../../common/log-config';
+import { Network } from 'network-sdk';
 import { config } from '../../../config';
-
-const log = logger(module);
+import { IRelayer } from './interface';
 
 const relayersMasterSeed = config.relayerService.masterSeed;
 const nodePathRoot = "m/44'/60'/0'/";
 
-export class Relayer {
+export class Relayer implements IRelayer {
   /** @property index value of relayer created by relayer manager */
   id: number;
-
-  /** @property public address of the relayer to relay the transaction from */
-  address: string = '';
 
   /** @property public key of the relayer which can be used while sending the transaction */
   private publicKey: string = '';
@@ -24,7 +19,7 @@ export class Relayer {
   private privateKey: string = '';
 
   /** @property status of the relayer */
-  private active: boolean = false;
+  active: boolean = false;
 
   /** @property number of transactions sent by the relayer */
   nonce: number = 0;
@@ -33,24 +28,32 @@ export class Relayer {
   balance: ethers.BigNumber = ethers.utils.parseEther('0');
 
   /** @property minimum balance required in the relayer */
-  networkId: number;
+  chainId: number;
 
+  /** @property maintains the count of pending transaction */
+  pendingTransactionCount: number = 0;
+
+  network: Network;
+
+  // TODO
+  // Make constructor accept an object
   constructor(
     relayerId: number,
-    networkId: number,
+    chainId: number,
+    network: Network,
   ) {
     this.id = relayerId;
     this.active = true;
-    this.networkId = networkId;
-    this.pendingTransactionCount = 0;
+    this.chainId = chainId;
+    this.network = network;
   }
 
   /**
    * Creates relayer and sets the balance, nonce property via rpc call.
    * It also sets up a channel for relaying the transaction.
    */
-  async create() {
-    if (!relayersMasterSeed) throw new Error('provide relayers master seed');
+  async create(): Promise<IRelayer> {
+    if (!relayersMasterSeed) throw new Error('Provide Relayers Master Seed');
 
     const seedInBuffer = Buffer.from(relayersMasterSeed, 'utf-8');
     const ethRoot = hdkey.fromMasterSeed(seedInBuffer);
@@ -64,32 +67,42 @@ export class Relayer {
 
     const ethAddr = publicToAddress(ethPubkey).toString('hex');
     const ethAddress = toChecksumAddress(`0x${ethAddr}`);
-    this.address = ethAddress.toLowerCase();
+    this.publicKey = ethAddress.toLowerCase();
 
     this.publicKey = ethPubkey.toString();
     this.privateKey = privateKey.toLowerCase();
 
     await this.setBalance();
     await this.setNonce();
+    this.pendingTransactionCount = 0;
 
     return this;
   }
 
-  getStatus() {
-    return this.active;
-  }
-
-  setStatus(status: boolean) {
+  setActiveStatus(status: boolean): void {
     this.active = status;
   }
 
-  async setBalance() {
-    // TODO: Get network instance from network manager
-    this.balance = (await this.network.getBalance(this.address));
+  getRelayerAddress(): string {
+    return this.publicKey;
   }
 
-  async setNonce() {
-    // if (localUpdate && !this.nonce) this.nonce += 1;
-    this.nonce = await this.network.getNonce(this.address, true);
+  async setBalance(): Promise<void> {
+    this.balance = (await this.network.getBalance(this.publicKey));
+  }
+
+  async setNonce(): Promise<void> {
+    this.nonce = await this.network.getNonce(this.publicKey, true);
+  }
+
+  async setPendingTransactionCount(): Promise<void> {
+    const latestCount = await this.network.getNonce(this.publicKey, false);
+    const pendingCount = await this.network.getNonce(this.publicKey, true);
+    const diff = pendingCount - latestCount;
+    this.pendingTransactionCount = diff > 0 ? diff : 0;
+  }
+
+  getPendingTransactionCount(): number {
+    return this.pendingTransactionCount;
   }
 }

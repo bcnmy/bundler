@@ -3,9 +3,13 @@ import { logger } from '../../../common/log-config';
 import { config } from '../../config';
 import { Consumer } from '../services/consumer';
 import { RelayerManager } from '../services/relayers-manager';
-import { TransactionManager } from '../services/transaction-manager/transaction-manager';
+import { Consumer } from '../services/consumer';
+import { TransactionManager } from '../services/transaction-service/transaction-manager/interface';
 
 const log = logger(module);
+const {
+  supportedNetworks, socketService, relayerService,
+} = config;
 
 
 const relayerManagerMap: Record<number, RelayerManager> = {};
