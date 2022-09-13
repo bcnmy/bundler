@@ -1,5 +1,7 @@
-export interface ITransactionPublisher<TransactionMessageType> {
-    queue: IQueue;
+import { IQueue } from '../../../../common/interface';
 
-    publish(TransactionMessageType)
+export interface ITransactionPublisher<TransactionMessageType> {
+  queue: IQueue<TransactionMessageType>;
+
+  publish(data: TransactionMessageType): Promise<boolean>
 }
