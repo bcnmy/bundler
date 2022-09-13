@@ -8,14 +8,14 @@ export type NodeConfig = {
     channel: string,
   },
   datasources: {
-    monog_url: string,
-    redis_url: string,
+    mongoUrl: string,
+    redisUrl: string,
   },
   socket_service: {
-    wss_url: string,
-    http_url: string,
+    wssUrl: string,
+    httpUrl: string,
     secret: string,
-    api_key: string,
+    apiKey: string,
   },
   supported_networks: Array<number>,
   chains: {

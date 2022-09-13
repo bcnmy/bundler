@@ -9,7 +9,7 @@
 
 import { TransactionType } from '../../relayer/src/common/types';
 import { Mongo } from '../db/mongo';
-import { Queue } from '../queue';
+import { Queue } from '../queue/aa-transaction-queue';
 
 const queueMap: any = {}; // TODO: Add type of queue
 const dbInstance = Mongo.getInstance();
