@@ -7,7 +7,6 @@ export type EVMRawTransactionType = {
   gasPrice: string,
   gasLimit: string,
 };
-  
 
 export interface IRetryPolicy {
   maxTries: number;
@@ -21,11 +20,4 @@ export enum TransactionStatus {
   SUCCESS = 'SUCCESS',
   FAILED = 'FAILED',
   DROPPED = 'DROPPED',
-}
-
-export enum TransactionType {
-  AA = 'AA',
-  SCW = 'SCW',
-  VANILLA_GASLESS = 'VANILLA_GASLESS',
-  CROSS_CHAIN = 'CROSS_CHAIN',
 }

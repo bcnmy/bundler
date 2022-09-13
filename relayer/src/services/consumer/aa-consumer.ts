@@ -1,8 +1,21 @@
-import { TransactionType } from '../../common/types';
-import { Consumer } from './consumer';
+import { ConsumeMessage } from 'amqplib';
+import { AATransactionMessageType, IQueue } from '../../../../common/interface';
+import { IConsumer } from './interface';
 
-export class AAConsumer extends Consumer {
-  constructor(chainId: number) {
-    super(chainId, TransactionType.AA);
+export class AAConsumer implements IConsumer<AATransactionMessageType> {
+  chainId: number;
+
+  transactionType: string;
+
+  constructor(chainId: number, transactionType: string) {
+    this.chainId = chainId;
+    this.transactionType = transactionType;
   }
+
+  onMessageReceived = async (msg?: ConsumeMessage, queue?: IQueue<AATransactionMessageType>) => {
+    if (msg) {
+      console.log(msg.content.toString(), this.transactionType);
+      queue?.ack(msg);
+    }
+  };
 }

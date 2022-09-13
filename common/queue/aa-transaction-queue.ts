@@ -15,12 +15,16 @@ export class AATransactionsQueue implements IQueue<AATransactionMessageType> {
 
   msg!: ConsumeMessage | null;
 
-  onMessageReceived: () => void;
+  onMessageReceived: () => Promise<void>;
 
-  constructor(chainId: number, type: string, onMessageReceived: () => void) {
-    this.onMessageReceived = onMessageReceived;
+  constructor(
+    chainId: number,
+    type: string,
+    onMessageReceived: () => Promise<void>,
+  ) {
     this.chainId = chainId;
     this.transactionType = type;
+    this.onMessageReceived = onMessageReceived;
   }
 
   connect = async () => {
@@ -53,7 +57,10 @@ export class AATransactionsQueue implements IQueue<AATransactionMessageType> {
       const key = `chainid.${this.chainId}.type.${this.transactionType}`;
       log.info(`[*] Waiting for transactions on network id ${this.chainId} with type ${this.transactionType}`);
       this.channel.bindQueue(queue.queue, `relayer_queue_exchange_${this.transactionType}`, key);
-      await this.channel.consume(queue.queue, this.onMessageReceived.bind(this));
+      await this.channel.consume(
+        queue.queue,
+        this.onMessageReceived,
+      );
 
       return true;
     } catch (error) {
