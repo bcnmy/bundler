@@ -1,4 +1,5 @@
 import { Network } from 'network-sdk';
+import { ICacheService } from '../../../../common/cache';
 
 export interface INonceManager {
   chainId: number;

@@ -33,4 +33,3 @@ export interface IQueue<TransactionMessageType> {
   consume(): Promise<boolean>
   ack(arg0: ConsumeMessage): Promise<void>
 }
-

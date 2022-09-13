@@ -4,5 +4,5 @@ export interface ITransactionListener {
   chainId: number;
   network: Network;
 
-  notify(transactionResponse: ITransactionResponse): Promise<void>
+  notify(transactionResponse: TransactionResponseType): Promise<void>
 }

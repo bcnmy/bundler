@@ -1,4 +1,7 @@
 import { Network } from 'network-sdk';
+import { INonceManager } from '../nonce-manager';
+import { ITransactionListener } from '../transaction-listener';
+import { TransactionDataType } from './types';
 
 export interface ITransactionService<AccountType> {
   chainId: number;
@@ -8,5 +11,5 @@ export interface ITransactionService<AccountType> {
 
   // TODO
   // Check return type
-  sendTransaction(transaction: ITransaction, account: AccountType): Promise<void>;
+  sendTransaction(transaction: TransactionDataType, account: AccountType): Promise<void>;
 }

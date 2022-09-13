@@ -1,25 +1,19 @@
-import { Network } from 'network-sdk';
-
-// Review all types
-export type ITransactionData = {
-  gasLimit?: string,
-  gasLimitCalculateInSimulation: string,
-  to: string,
-  data: string,
-  transactionId: string,
-  value: string,
-  chainId: number,
+export type TransactionResponseType = {
+  chainId: number;
+  transactionId: string;
+  transactionHash: string;
+  relayerAddress: string;
 };
 
-export type ExecuteParams = {
-  rawTransaction: IRawTransaction,
-  network: Network,
-  retryCount: number,
-  relayerAddress: string,
-  relayerPrivateKey: string,
-  transactionId: string
+export type TransactionDataType = {
+  to: string;
+  value: string;
+  data: string;
+  gasLimit ?: number;
+  // TODO
+  // define speed as an enum in Network SDK
+  speed ?: string;
+  transactionId: string;
 };
 
-// https://docs.ethers.io/v5/api/providers/types/#providers-TransactionResponse
-export type TransactionResponse = {
-}
+export type EVMTransactionResponseType = TransactionResponseType;
