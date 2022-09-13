@@ -20,16 +20,9 @@ export type SCWTransactionMessageType = {
 
 export interface IQueue<TransactionMessageType> {
   chainId: number;
-  transactionType: string;
+  transactionType?: string;
   connect(): Promise<void>
   publish(arg0: TransactionMessageType): Promise<boolean>
   consume(): Promise<boolean>
   ack(arg0: ConsumeMessage): Promise<void>
 }
-
-// export interface IQueuePublisher<TransactionMessageType> extends IQueue {
-// }
-
-// export interface IQueueConsumer<TransactionMessageType> extends IQueue {
-//   channel: Channel;
-// }

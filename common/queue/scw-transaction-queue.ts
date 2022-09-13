@@ -1,12 +1,12 @@
 import amqp, { Channel, ConsumeMessage, Replies } from 'amqplib';
-import { AATransactionMessageType, IQueue } from '../interface';
+import { SCWTransactionMessageType, IQueue } from '../interface';
 import { logger } from '../log-config';
 
 const log = logger(module);
 
 const queueUrl = process.env.RELAYER_QUEUE_URL;
 
-export class AATransactionsQueue implements IQueue<AATransactionMessageType> {
+export class SCWTransactionsQueue implements IQueue<SCWTransactionMessageType> {
   private channel!: Channel;
 
   chainId: number;
@@ -33,7 +33,7 @@ export class AATransactionsQueue implements IQueue<AATransactionMessageType> {
     }
   };
 
-  publish = async (data: AATransactionMessageType) => {
+  publish = async (data: SCWTransactionMessageType) => {
     const key = `chainid.${this.chainId}`;
     this.channel.prefetch(1);
     this.channel.publish(`relayer_queue_exchange_${this.transactionType}`, key, Buffer.from(JSON.stringify(data)), {

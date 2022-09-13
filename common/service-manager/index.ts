@@ -9,7 +9,7 @@
 
 import { TransactionType } from '../../relayer/src/common/types';
 import { Mongo } from '../db/mongo';
-import { Queue } from '../queue/aa-transaction-queue';
+import { AATransactionsQueue } from '../queue/aa-transaction-queue';
 
 const queueMap: any = {}; // TODO: Add type of queue
 const dbInstance = Mongo.getInstance();
@@ -23,7 +23,7 @@ const transactionType:{ [key: number]: string[] } = {
 for (const chainId of supportedNetworks) {
   // for each network get transaction type
   for (const type of transactionType[chainId]) {
-    const queue = new Queue(chainId, type);
+    const queue = new AATransactionsQueue(chainId, type);
     queueMap[chainId][type] = queue;
   }
 }
