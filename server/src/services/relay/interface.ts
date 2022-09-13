@@ -1,3 +1,5 @@
+import { AATransactionMessageType, SCWTransactionMessageType } from '../../../../common/interface';
+
 type RelayService = {
   code: number;
   transactionId: string;
@@ -10,10 +12,10 @@ type Error = {
 
 export type RelayServiceResponse = RelayService | Error;
 
-interface IRelayService {
-  sendTransactionToRelayer(): Promise<RelayServiceResponse>;
+interface IRelayService<TransactionMessageType> {
+  sendTransactionToRelayer(arg0: TransactionMessageType): Promise<RelayServiceResponse>;
 }
 
-export interface IAARelayService extends IRelayService {}
+export interface IAARelayService extends IRelayService<AATransactionMessageType> {}
 
-export interface ISCWRelayService extends IRelayService {}
+export interface ISCWRelayService extends IRelayService<SCWTransactionMessageType> {}

@@ -21,12 +21,12 @@ export class GasPrice {
   async setGasPrice() {
     const gasPriceInHex = (await this.network.getGasPrice()).gasPrice;
     this.gasPrice = ethers.BigNumber.from(gasPriceInHex).toNumber().toString();
-    await redisClient.set(getGasPriceKey(this.chainId), this.gasPrice);
+    // await redisClient.set(getGasPriceKey(this.chainId), this.gasPrice);
     log.info(`Gas price for ${this.chainId} is set at ${this.gasPrice}`);
   }
 
   async getGasPrice(): Promise<string> {
-    let gasPrice = await redisClient.get(getGasPriceKey(this.chainId));
+    // let gasPrice = await redisClient.get(getGasPriceKey(this.chainId));
     if (!gasPrice) {
       await this.getGasPrice();
       gasPrice = this.gasPrice;
