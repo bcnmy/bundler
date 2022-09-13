@@ -1,3 +1,3 @@
-export * from './transaction-listener';
+export * from './transaction-publisher';
 export * from './interface';
 export * from './types';

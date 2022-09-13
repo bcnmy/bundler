@@ -9,7 +9,7 @@
 // make instance of queue for network id and transaction type - done
 
 import { AAConsumer } from '../../relayer/src/services/consumer/aa-consumer';
-// import { Mongo } from '../db/mongo';
+import { Mongo } from '../../common/db/mongo/mongo';
 import { TransactionType } from '../interface';
 import { AATransactionsQueue } from '../queue/aa-transaction-queue';
 

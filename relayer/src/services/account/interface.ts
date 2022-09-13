@@ -1,4 +1,4 @@
-interface IAccount {
+export interface IAccount {
   getPublicKey(): string
 }
 

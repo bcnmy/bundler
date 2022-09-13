@@ -9,6 +9,8 @@ import { stringify } from '../../utils/util';
 import { Relayer } from '../relayer';
 import { IRelayer } from '../relayer/interface';
 import { IRelayerManager } from './interface';
+import { EVMAccount } from '../account';
+import { ITransactionService } from '../transaction-service/interface';
 
 const log = logger(module);
 const fundRelayerMutex = new Mutex();
@@ -33,36 +35,61 @@ enum RelayersStatus {
  * Convert either from main account or convert per relayer
  */
 
-export class RelayerManager implements IRelayerManager {
-  network: Network;
-
+export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
   chainId: number;
 
-  relayersMap: Record<string, IRelayer> = {};
+  transactionService: ITransactionService<EVMAccount>;
 
-  retryCountMap: Record<string, number> = {};
+  // TODO
+  // Update default values to fetch from config
+  minRelayerCount: number = 5;
 
-  pendingTransactionCountMap: Record<string, number> = {};
+  maxRelayerCount: number = 15;
 
-  minimumRelayerCount: number = 15;
+  inactiveRelayerCountThreshold: number = 0.6;
 
-  maximumRelayerCount: number = 100;
+  pendingTransactionCountThreshold: number = 15;
 
-  relayerCapacityThreshold: number = 0.6; // 60% of total assigned relayers in queue
+  newRelayerInstanceCount: number = 10;
 
-  /** @property number of transactions sent by main account */
-  mainAccountNonce: number = 0;
-
-  mainAccountAddress: string = '';
+  relayerMap?: Record<string, EVMAccount>;
 
   constructor(
-    network: Network,
     chainId: number,
+    transactionService: ITransactionService<EVMAccount>,
   ) {
-    this.network = network;
     this.chainId = chainId;
+    this.transactionService = transactionService;
 
     configChangeListeners.relayerManagerService.push(this.onConfigChange.bind(this));
+  }
+
+  fundRelayers(relayer: EVMAccount): Promise<boolean> {
+    throw new Error('Method not implemented.');
+  }
+
+  getRelayer(relayerAddress: string): Promise<EVMAccount> {
+    throw new Error('Method not implemented.');
+  }
+
+  getActiveRelayer(): Promise<EVMAccount> {
+    throw new Error('Method not implemented.');
+  }
+
+  setMinRelayerCount(): Promise<boolean> {
+    throw new Error('Method not implemented.');
+  }
+
+  setMaxRelayerCount(): Promise<boolean> {
+    throw new Error('Method not implemented.');
+  }
+
+  setInactiveRelayerCountThreshold(): Promise<boolean> {
+    throw new Error('Method not implemented.');
+  }
+
+  setPendingTransactionCountThreshold(): Promise<boolean> {
+    throw new Error('Method not implemented.');
   }
 
   async createRelayers(numberOfRelayers: number): Promise<void> {
@@ -105,7 +132,7 @@ export class RelayerManager implements IRelayerManager {
   }
 
   async fetchMainAccountNonceFromNetwork(): Promise<number> {
-    return this.network
+    return this.network;
   }
 
   async fetchActiveRelayer(): Promise<IRelayer> {

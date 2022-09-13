@@ -1,6 +1,6 @@
 import mongoose, { Mongoose } from 'mongoose';
-import { IDBService } from './interface';
-import { BlockchainTransactionsMap } from './models/blockchain_transactions';
+import { IDBService } from '../../../interface';
+import { BlockchainTransactionsMap } from '../../..';
 
 export class Mongo implements IDBService {
   private static instance: Mongo;

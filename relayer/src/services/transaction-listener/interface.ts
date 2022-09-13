@@ -1,8 +1,8 @@
 import { Network } from 'network-sdk';
 
-export interface ITransactionListener extends ITransactionPublisher {
+export interface ITransactionListener {
   chainId: number;
   network: Network;
 
-  notify(transactionResponse: ITransactionResponse): Promise<void>
+  notify(transactionResponse: TransactionResponseType): Promise<void>
 }

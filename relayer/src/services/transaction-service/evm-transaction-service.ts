@@ -3,6 +3,9 @@ import { EVMRawTransactionType } from '../../common';
 import { IEVMAccount } from '../account';
 import { ITransactionService } from './interface';
 import { logger } from '../../../../common/log-config';
+import { ITransactionListener } from '../transaction-listener';
+import { TransactionDataType } from './types';
+import { INonceManager } from '../nonce-manager';
 
 const log = logger(module);
 
@@ -43,6 +46,6 @@ export class EVMTransactionService implements ITransactionService<IEVMAccount<EV
   }
 
   // eslint-disable-next-line max-len
-  sendTransaction(transaction: ITransaction, account: IEVMAccount<EVMRawTransactionType>): Promise<void> {
+  sendTransaction(transaction: TransactionDataType, account: IEVMAccount<EVMRawTransactionType>): Promise<EVMTransactionResponseType> {
   }
 }
