@@ -1,6 +1,6 @@
 import { Network } from 'network-sdk';
 
-export interface ITransactionListener extends ITransactionPublisher {
+export interface ITransactionListener {
   chainId: number;
   network: Network;
 

@@ -3,6 +3,7 @@ import { EVMRawTransactionType } from '../../common';
 import { IEVMAccount } from '../account';
 import { ITransactionService } from './interface';
 import { logger } from '../../../../common/log-config';
+import { ITransactionListener } from '../transaction-listener';
 
 const log = logger(module);
 

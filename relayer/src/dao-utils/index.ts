@@ -1,4 +1,4 @@
-import { Mongo } from '../../../common/db/mongo';
+import { Mongo } from '../../../common/db/mongo/models/blockchain_transactions/mongo';
 import { logger } from '../../../common/log-config';
 import { IDaoUtils } from './interface/dao-utils';
 

@@ -1,10 +1,11 @@
 import { createClient } from 'redis';
-import { logger } from '../log-config';
-import { parseError } from '../utils';
+import { logger } from '../../log-config';
+import { parseError } from '../../utils';
+import { ICacheService } from '../interface';
 
 const log = logger(module);
 
-export class RedisClient {
+export class RedisClient implements ICacheService {
   private static instance: RedisClient;
 
   private client;

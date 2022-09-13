@@ -8,7 +8,7 @@
 // make instance of queue for network id and transaction type - done
 
 import { TransactionType } from '../../relayer/src/common/types';
-import { Mongo } from '../db/mongo';
+import { Mongo } from '../db/mongo/models/blockchain_transactions/mongo';
 import { Queue } from '../queue/aa-transaction-queue';
 
 const queueMap: any = {}; // TODO: Add type of queue

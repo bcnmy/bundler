@@ -1,5 +1,5 @@
 import { createClient } from 'redis';
-import { logger } from '../log-config';
+import { logger } from '../../log-config';
 
 const log = logger(module);
 

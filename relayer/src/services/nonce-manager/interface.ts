@@ -5,8 +5,7 @@ export interface INonceManager {
   networkService: Network;
   cacheService: ICacheService;
 
-  getNonce(address: string): Promise<number>
-  markUsed(address: string, nonce: number): Promise<void>
-  incrementNonce(address: string): Promise<number>
-
+  getNonce(address: string): Promise<number>;
+  markUsed(address: string, nonce: number): Promise<void>;
+  incrementNonce(address: string): Promise<number>;
 }

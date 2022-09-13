@@ -20,7 +20,7 @@ export type SCWTransactionMessageType = {
 
 export interface IQueue<TransactionMessageType> {
   chainId: number;
-  transactionType: string;
+  transactionType?: string;
   connect(): Promise<void>
   publish(arg0: TransactionMessageType): Promise<boolean>
   consume(): Promise<boolean>
