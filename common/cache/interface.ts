@@ -1,8 +1,8 @@
 export interface ICacheService {
   get(key: string): Promise<string>
-  set(key: string): Promise<string>
-  increment(key: string, incrementBy ?: number): Promise<string>
-  decrement(key: string, decrementBy ?: number): Promise<string>
-  expire(key: string, expiryTime: number): Promise<string>
-  delete(key: string): Promise<void>
+  set(key: string, value: string, hideValueInLogs: boolean): Promise<boolean>
+  increment(key: string, incrementBy ?: number): Promise<boolean>
+  decrement(key: string, decrementBy ?: number): Promise<boolean>
+  expire(key: string, expiryTime: number): Promise<boolean>
+  delete(key: string): Promise<boolean>
 }
