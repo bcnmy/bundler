@@ -1,14 +1,7 @@
-export type TransactionResponse = {
-  success: boolean,
-  data?: object,
-  error: string,
-}
+import { ConsumeMessage } from 'amqplib';
+import { IQueue } from '../../../../common/interface';
 
-export interface IConsumer {
-  connectToQueue(queueUrl: string): Promise<void>;
-  fetchRelayerFromRelayerManager(chainId: number, transactionType: string): Promise<IRelayer>
-  sendTransactionToTransactionManager(
-    relayer: IRelayer,
-    transactionData: ITransactionData
-  ): Promise<TransactionResponse>
+export interface IConsumer<TransactionMessageType> {
+
+  onMessageReceived: (msg: ConsumeMessage, queue: IQueue<TransactionMessageType>) => Promise<void>;
 }

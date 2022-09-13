@@ -1,12 +1,12 @@
 import amqp, { Channel, ConsumeMessage, Replies } from 'amqplib';
-import { AATransactionMessageType, IQueue } from '../interface';
+import { SCWTransactionMessageType, IQueue } from '../interface';
 import { logger } from '../log-config';
 
 const log = logger(module);
 
 const queueUrl = process.env.RELAYER_QUEUE_URL;
 
-export class AATransactionsQueue implements IQueue<AATransactionMessageType> {
+export class SCWTransactionsQueue implements IQueue<SCWTransactionMessageType> {
   private channel!: Channel;
 
   chainId: number;
@@ -15,16 +15,12 @@ export class AATransactionsQueue implements IQueue<AATransactionMessageType> {
 
   msg!: ConsumeMessage | null;
 
-  onMessageReceived: () => Promise<void>;
+  onMessageReceived: () => void;
 
-  constructor(
-    chainId: number,
-    type: string,
-    onMessageReceived: () => Promise<void>,
-  ) {
+  constructor(chainId: number, type: string, onMessageReceived: () => void) {
+    this.onMessageReceived = onMessageReceived;
     this.chainId = chainId;
     this.transactionType = type;
-    this.onMessageReceived = onMessageReceived;
   }
 
   connect = async () => {
@@ -37,7 +33,7 @@ export class AATransactionsQueue implements IQueue<AATransactionMessageType> {
     }
   };
 
-  publish = async (data: AATransactionMessageType) => {
+  publish = async (data: SCWTransactionMessageType) => {
     const key = `chainid.${this.chainId}`;
     this.channel.prefetch(1);
     this.channel.publish(`relayer_queue_exchange_${this.transactionType}`, key, Buffer.from(JSON.stringify(data)), {
@@ -57,10 +53,7 @@ export class AATransactionsQueue implements IQueue<AATransactionMessageType> {
       const key = `chainid.${this.chainId}.type.${this.transactionType}`;
       log.info(`[*] Waiting for transactions on network id ${this.chainId} with type ${this.transactionType}`);
       this.channel.bindQueue(queue.queue, `relayer_queue_exchange_${this.transactionType}`, key);
-      await this.channel.consume(
-        queue.queue,
-        this.onMessageReceived,
-      );
+      await this.channel.consume(queue.queue, this.onMessageReceived.bind(this));
 
       return true;
     } catch (error) {
