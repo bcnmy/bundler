@@ -1,4 +1,4 @@
-import { Queue } from '../../../../common/queue';
+import { Queue } from '../../../../common/queue/aa-transaction-queue';
 import { IConsumer } from './interface';
 
 export class Consumer implements IConsumer {
