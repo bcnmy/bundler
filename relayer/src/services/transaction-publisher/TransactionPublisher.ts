@@ -1,6 +1,6 @@
 import { IQueue } from '../../../../common/interface';
-import { ITransactionPublisher } from './interface';
-import { TransactionQueueMessageType } from './types';
+import { ITransactionPublisher } from './interface/ITransactionPublisher';
+import { TransactionQueueMessageType } from './types/types';
 
 // eslint-disable-next-line max-len
 export class TransactionPublisher implements ITransactionPublisher<TransactionQueueMessageType> {

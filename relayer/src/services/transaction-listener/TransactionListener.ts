@@ -1,18 +1,18 @@
 import { Network } from 'network-sdk';
 import { IQueue } from '../../../../common/interface';
 import { ITransactionPublisher } from '../transaction-publisher';
-import { ITransactionListener } from './interface';
-import { TransactionListenerMessageType } from './types';
+import { ITransactionListener } from './interface/ITransactionListener';
+import { TransactionListenerMessageType } from './types/types';
 
 // eslint-disable-next-line max-len
 export class TransactionListener implements ITransactionListener, ITransactionPublisher<TransactionListenerMessageType> {
   chainId: number;
 
-  network: Network;
+  networkService: Network;
 
   constructor(chainId: number, network: Network) {
     this.chainId = chainId;
-    this.network = network;
+    this.networkService = network;
   }
 
   queue: IQueue<TransactionListenerMessageType>;

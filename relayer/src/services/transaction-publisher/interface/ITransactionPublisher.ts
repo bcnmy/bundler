@@ -1,4 +1,4 @@
-import { IQueue } from '../../../../common/interface';
+import { IQueue } from '../../../../../common/interface';
 
 export interface ITransactionPublisher<TransactionMessageType> {
   queue: IQueue<TransactionMessageType>;

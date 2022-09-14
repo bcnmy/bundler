@@ -1,3 +1,3 @@
-export * from './evm-transaction-service';
-export * from './types';
-export * from './interface';
+export * from './EVMTransactionService';
+export * from './types/types';
+export * from './interface/ITransactionService';

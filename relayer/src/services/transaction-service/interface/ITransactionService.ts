@@ -1,11 +1,11 @@
 import { Network } from 'network-sdk';
-import { INonceManager } from '../nonce-manager';
-import { ITransactionListener } from '../transaction-listener';
-import { TransactionDataType } from './types';
+import { INonceManager } from '../../nonce-manager';
+import { ITransactionListener } from '../../transaction-listener';
+import { TransactionDataType } from '../types/types';
 
 export interface ITransactionService<AccountType> {
   chainId: number;
-  network: Network;
+  networkService: Network;
   transactionListener: ITransactionListener;
   nonceManager: INonceManager
 
