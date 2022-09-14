@@ -1,19 +1,34 @@
 import _ from 'lodash';
-import yenv from 'yenv';
+import config from './development.config.json';
 
-import { IConfig, NodeConfig } from './interface';
+import { IConfig, ConfigType } from './interface/IConfig';
+
+function replaceData(data: any) {
+  Object.keys(data).forEach((key: string) => {
+    const value = data[key];
+    if (typeof value === 'object') {
+      replaceData(value);
+    // eslint-disable-next-line no-prototype-builtins
+    } else if (process.env.hasOwnProperty(key)) {
+      // eslint-disable-next-line no-param-reassign
+      data[key] = process.env[key];
+    }
+  });
+  return data;
+}
 
 export class Config implements IConfig {
-  public config: NodeConfig | null;
+  public config: ConfigType | null;
 
   constructor() {
     this.config = null;
   }
 
   setup() {
-    // get config from config.yaml file
+    // load json based on env
+    // decrypt the .env file
     try {
-      const data: NodeConfig = yenv('config.yml');
+      const data: ConfigType = config;
       // merge missing config from .env file and validate
       console.log(data);
       this.config = data;
@@ -27,7 +42,7 @@ export class Config implements IConfig {
     return true;
   }
 
-  get(): NodeConfig | null {
+  get(): ConfigType | null {
     return this.config;
   }
 }

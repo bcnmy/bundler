@@ -1,12 +1,13 @@
 import amqp, { Channel, ConsumeMessage, Replies } from 'amqplib';
-import { AATransactionMessageType, IQueue } from '../interface';
+import { AATransactionMessageType } from '../types';
+import { IQueue } from './interface/IQueue';
 import { logger } from '../log-config';
 
 const log = logger(module);
 
 const queueUrl = process.env.RELAYER_QUEUE_URL;
 
-export class AATransactionsQueue implements IQueue<AATransactionMessageType> {
+export class AATransactionQueue implements IQueue<AATransactionMessageType> {
   private channel!: Channel;
 
   chainId: number;
@@ -15,16 +16,12 @@ export class AATransactionsQueue implements IQueue<AATransactionMessageType> {
 
   msg!: ConsumeMessage | null;
 
-  onMessageReceived: () => Promise<void>;
-
   constructor(
     chainId: number,
     type: string,
-    onMessageReceived: () => Promise<void>,
   ) {
     this.chainId = chainId;
     this.transactionType = type;
-    this.onMessageReceived = onMessageReceived;
   }
 
   connect = async () => {
@@ -46,7 +43,7 @@ export class AATransactionsQueue implements IQueue<AATransactionMessageType> {
     return true;
   };
 
-  consume = async () => {
+  consume = async (onMessageReceived: () => void) => {
     this.channel.assertExchange(`relayer_queue_exchange_${this.transactionType}`, 'topic', {
       durable: true,
     });
@@ -59,7 +56,7 @@ export class AATransactionsQueue implements IQueue<AATransactionMessageType> {
       this.channel.bindQueue(queue.queue, `relayer_queue_exchange_${this.transactionType}`, key);
       await this.channel.consume(
         queue.queue,
-        this.onMessageReceived,
+        onMessageReceived.bind(this),
       );
 
       return true;

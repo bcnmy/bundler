@@ -1,12 +1,13 @@
 import amqp, { Channel, ConsumeMessage, Replies } from 'amqplib';
-import { SCWTransactionMessageType, IQueue } from '../interface';
+import { SCWTransactionMessageType } from '../types';
+import { IQueue } from './interface/IQueue';
 import { logger } from '../log-config';
 
 const log = logger(module);
 
 const queueUrl = process.env.RELAYER_QUEUE_URL;
 
-export class SCWTransactionsQueue implements IQueue<SCWTransactionMessageType> {
+export class SCWTransactionQueue implements IQueue<SCWTransactionMessageType> {
   private channel!: Channel;
 
   chainId: number;

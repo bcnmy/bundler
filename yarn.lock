@@ -3113,7 +3113,7 @@ hash.js@1.1.7, hash.js@^1.0.0, hash.js@^1.0.3, hash.js@^1.1.7:
 
 hdkey@^2.0.1:
   version "2.0.1"
-  resolved "https://registry.npmjs.org/hdkey/-/hdkey-2.0.1.tgz"
+  resolved "https://registry.yarnpkg.com/hdkey/-/hdkey-2.0.1.tgz#0a211d0c510bfc44fa3ec9d44b13b634641cad74"
   integrity sha512-c+tl9PHG9/XkGgG0tD7CJpRVaE0jfZizDNmnErUAKQ4EjQSOcOUcV3EN9ZEZS8pZ4usaeiiK0H7stzuzna8feA==
   dependencies:
     bs58check "^2.1.2"

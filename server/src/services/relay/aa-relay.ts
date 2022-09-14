@@ -1,6 +1,7 @@
-import { AATransactionMessageType, IQueue, TransactionType } from '../../../../common/interface';
-import { IAARelayService, RelayServiceResponseType } from './interface';
+import { AATransactionMessageType, TransactionType } from '../../../../common/types';
+import { IQueue } from '../../../../common/queue';
 import { queueMap } from '../../../../common/service-manager';
+import { IAARelayService, RelayServiceResponseType } from './interface';
 
 export class AARelayService implements IAARelayService {
   transactionId: string;

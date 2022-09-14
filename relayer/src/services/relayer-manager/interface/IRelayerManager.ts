@@ -7,8 +7,8 @@ export interface IRelayerManager<AccountType> {
   fundRelayers(ownerAccount: AccountType, accountAddress ?: string): Promise<boolean>;
   getRelayer(relayerAddress: string): Promise<AccountType>;
   getActiveRelayer(): Promise<AccountType>;
-  setMinRelayerCount(): Promise<boolean>
-  setMaxRelayerCount(): Promise<boolean>
+  setMinRelayerCount(minRelayerCount: number): void
+  setMaxRelayerCount(maxRelayerCount: number): void
   setInactiveRelayerCountThreshold(): Promise<boolean>
   setPendingTransactionCountThreshold(): Promise<boolean>
 }

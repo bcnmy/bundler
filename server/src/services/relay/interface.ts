@@ -1,4 +1,4 @@
-import { AATransactionMessageType, SCWTransactionMessageType } from '../../../../common/interface';
+import { AATransactionMessageType, SCWTransactionMessageType } from '../../../../common/types';
 
 type ResponseType = {
   code: number;
