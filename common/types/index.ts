@@ -1,10 +1,15 @@
-import { ConsumeMessage } from 'amqplib';
-
 export enum TransactionType {
   AA = 'AA',
   SCW = 'SCW',
   VANILLA_GASLESS = 'VANILLA_GASLESS',
   CROSS_CHAIN = 'CROSS_CHAIN',
+}
+
+export enum RelayerManagerType {
+  AA = 0,
+  SCW = 0,
+  VANILLA_GASLESS = 0,
+  CROSS_CHAIN = 1,
 }
 
 export type AATransactionMessageType = {
@@ -24,12 +29,3 @@ export type SCWTransactionMessageType = {
   chainId: number;
   value: string;
 };
-
-export interface IQueue<TransactionMessageType> {
-  chainId: number;
-  transactionType?: string;
-  connect(): Promise<void>
-  publish(arg0: TransactionMessageType): Promise<boolean>
-  consume(): Promise<boolean>
-  ack(arg0: ConsumeMessage): Promise<void>
-}

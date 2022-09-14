@@ -1,4 +1,4 @@
-import { IQueue } from '../../../../common/interface';
+import { IQueue } from '../../../../common/queue';
 import { TransactionQueueMessageType } from '../transaction-publisher';
 import { ITransactionService } from '../transaction-service/interface';
 

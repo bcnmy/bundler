@@ -1,4 +1,4 @@
-import { IQueue } from '../../../../common/interface';
+import { IQueue } from '../../../../common/queue';
 import { ITransactionPublisher } from './interface';
 import { TransactionQueueMessageType } from './types';
 

@@ -1,5 +1,5 @@
 import { Network } from 'network-sdk';
-import { IQueue } from '../../../../common/interface';
+import { IQueue } from '../../../../common/queue';
 import { ITransactionPublisher } from '../transaction-publisher';
 import { ITransactionListener } from './interface';
 import { TransactionListenerMessageType } from './types';

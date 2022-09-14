@@ -1,5 +1,5 @@
-import { AATransactionMessageType } from '../../../../common/interface';
-import { IAARelayService, RelayServiceResponse } from './interface';
+import { AATransactionMessageType } from "../../../../common/types";
+import { IAARelayService, RelayServiceResponseType } from "./interface";
 
 export class AARelayService implements IAARelayService {
   transactionId: string;
@@ -8,8 +8,11 @@ export class AARelayService implements IAARelayService {
     this.transactionId = transactionId;
   }
 
-  async sendTransactionToRelayer(data: AATransactionMessageType): Promise<RelayServiceResponse> {
-    const response: RelayServiceResponse = {
+  async sendTransactionToRelayer(
+    data: AATransactionMessageType,
+  ): Promise<RelayServiceResponseType> {
+    console.log(data);
+    const response: RelayServiceResponseType = {
       code: 200,
       transactionId: this.transactionId,
     };
