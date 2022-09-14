@@ -1,10 +1,10 @@
 import { Network } from 'network-sdk';
 import { EVMRawTransactionType } from '../../common';
 import { IEVMAccount } from '../account';
-import { ITransactionService } from './interface';
+import { ITransactionService } from './interface/ITransactionService';
 import { logger } from '../../../../common/log-config';
 import { ITransactionListener } from '../transaction-listener';
-import { TransactionDataType } from './types';
+import { TransactionDataType } from './types/types';
 import { INonceManager } from '../nonce-manager';
 
 const log = logger(module);
@@ -13,7 +13,7 @@ const log = logger(module);
 export class EVMTransactionService implements ITransactionService<IEVMAccount<EVMRawTransactionType>> {
   chainId: number;
 
-  network: Network;
+  networkService: Network;
 
   transactionListener: ITransactionListener;
 
@@ -21,7 +21,7 @@ export class EVMTransactionService implements ITransactionService<IEVMAccount<EV
 
   constructor(chainId: number, network: Network) {
     this.chainId = chainId;
-    this.network = network;
+    this.networkService = network;
   }
 
   private getGasPrice() {

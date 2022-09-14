@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import { EVMRawTransactionType } from '../../common';
-import { IEVMAccount } from './interface';
+import { IEVMAccount } from './interface/IEVMAccount';
 
 export class EVMAccount implements IEVMAccount<EVMRawTransactionType> {
   private signer: ethers.Signer;

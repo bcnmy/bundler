@@ -1,3 +1,3 @@
-export * from './transaction-publisher';
-export * from './interface';
+export * from './TransactionPublisher';
+export * from './interface/ITransactionPublisher';
 export * from './types';
