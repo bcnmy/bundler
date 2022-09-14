@@ -10,7 +10,7 @@ import { Relayer } from '../relayer';
 import { IRelayer } from '../relayer/interface';
 import { IRelayerManager } from './interface';
 import { EVMAccount } from '../account';
-import { ITransactionService } from '../transaction-service/interface/interface';
+import { ITransactionService } from '../transaction-service/interface/ITransactionService';
 
 const log = logger(module);
 const fundRelayerMutex = new Mutex();

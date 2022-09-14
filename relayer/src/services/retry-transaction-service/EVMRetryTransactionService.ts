@@ -1,8 +1,8 @@
 import { ConsumeMessage } from 'amqplib';
 import { EVMAccount } from '../account';
 import { TransactionQueueMessageType } from '../transaction-publisher';
-import { ITransactionService } from '../transaction-service/interface/interface';
-import { IRetryTransactionService } from './interface/interface';
+import { ITransactionService } from '../transaction-service/interface/ITransactionService';
+import { IRetryTransactionService } from './interface/IRetryTransactionService';
 
 export class EVMRetryTransactionService implements IRetryTransactionService<EVMAccount> {
   // TODO

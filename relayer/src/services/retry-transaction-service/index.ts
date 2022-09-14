@@ -1,2 +1,2 @@
 export * from './EVMRetryTransactionService';
-export * from './interface/interface';
+export * from './interface/IRetryTransactionService';
