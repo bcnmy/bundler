@@ -1,9 +1,7 @@
 import { ConsumeMessage } from 'amqplib';
-import { AATransactionMessageType } from '../../../../common/types';
-import { IQueue } from '../../../../common/queue';
-import { IConsumer } from './interface/IConsumer';
+import { ITransactionConsumer } from './interface/ITransactionConsumer';
 
-export class AAConsumer implements IConsumer<AATransactionMessageType> {
+export class AAConsumer implements ITransactionConsumer {
   chainId: number;
 
   transactionType: string;
@@ -15,14 +13,14 @@ export class AAConsumer implements IConsumer<AATransactionMessageType> {
 
   onMessageReceived = async (
     msg?: ConsumeMessage,
-    queue?: IQueue<AATransactionMessageType>,
   ) => {
     if (msg) {
       console.log(msg.content.toString(), this.transactionType);
       // call the relayer manager to get the active relayer
       // call the transaction service
       // with data and active relayer => sendTransaction(ITransaction, A) : ITransaction
-      queue?.ack(msg);
+      // REVIEW
+      // this?.queue?.ack(msg);
     }
   };
 }

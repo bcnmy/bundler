@@ -5,12 +5,6 @@ import { ITransactionService } from '../transaction-service/interface/ITransacti
 import { IRetryTransactionService } from './interface/IRetryTransactionService';
 
 export class EVMRetryTransactionService implements IRetryTransactionService<EVMAccount> {
-  // TODO
-  // Keep publish?
-  publish(arg0: TransactionQueueMessageType): Promise<boolean> {
-    throw new Error('Method not implemented.');
-  }
-
   transactionService: ITransactionService<EVMAccount>;
 
   chainId: number;

@@ -1,2 +1,2 @@
 export * from './interface/IAccount';
-export * from './evm-account';
+export * from './EVMAccount';
