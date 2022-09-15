@@ -30,15 +30,6 @@ export type SCWTransactionMessageType = {
   value: string;
 };
 
-export interface IQueue<TransactionMessageType> {
-  chainId: number;
-  transactionType?: string;
-  connect(): Promise<void>
-  publish(arg0: TransactionMessageType): Promise<boolean>
-  consume(): Promise<boolean>
-  ack(arg0: ConsumeMessage): Promise<void>
-}
-
 export type EVMRawTransactionType = {
   nonce: string,
   to: string,
@@ -49,13 +40,7 @@ export type EVMRawTransactionType = {
   gasLimit: string,
 };
 
-export interface IRetryPolicy {
-  maxTries: number;
-  shouldRetry: (err: any) => Promise<boolean>;
-  incrementTry: () => void;
-}
-
-export enum TransactionStatus {
+export enum TransactionStatusType {
   IN_PROCESS = 'IN_PROCESS',
   PENDING = 'PENDING',
   SUCCESS = 'SUCCESS',

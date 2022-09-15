@@ -12,7 +12,7 @@ import { AAConsumer } from '../../relayer/src/services/consumer/AAConsumer';
 import { Config } from '../config';
 // import { Mongo } from '../../common/db/mongo/mongo';
 import { TransactionType } from '../types';
-import { AATransactionsQueue } from '../queue/AATransactionQueue';
+import { AATransactionQueue } from '../queue/AATransactionQueue';
 
 const queueMap: any = {}; // TODO: Add type of queue
 // const dbInstance = Mongo.getInstance();
@@ -33,8 +33,8 @@ const config = configInstance.get();
     // for each network get transaction type
     for (const type of transactionType[chainId]) {
       if (type === TransactionType.AA) {
-        const aaConsumer = new AAConsumer(chainId, type);
-        const queue = new AATransactionsQueue(chainId, type);
+        const queue = new AATransactionQueue(chainId, type);
+        const aaConsumer = new AAConsumer(chainId, type, queue);
         await queue.connect();
         // start listening for transaction
         await queue.consume(aaConsumer.onMessageReceived);
