@@ -48,7 +48,11 @@ export const feeOptionsService = async (feeOptionServiceParams: FeeOptionService
     const feeTokens = config.supportedFeeTokens[chainId];
     const gasPrice: string = await gasPriceMap[chainId].getGasPrice();
 
-    const networkPriceDataInString = await redisClient.get('NETWORK_PRICE_DATA') || '';
+    let networkPriceDataInString = await redisClient.get('NETWORK_PRICE_DATA') || '';
+    if (!networkPriceDataInString) {
+      networkPriceDataInString = '{"1":"1652.34","4":"1652.34","5":"1652.34","137":"0.80","80001":"0.80"}';
+      await redisClient.set('NETWORK_PRICE_DATA', networkPriceDataInString);
+    }
     const networkPriceData = JSON.parse(networkPriceDataInString);
     const chainPriceDataInUSD = networkPriceData[chainId];
 
