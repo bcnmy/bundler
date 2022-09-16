@@ -1,3 +1,5 @@
+import { ConsumeMessage } from 'amqplib';
+
 export enum TransactionType {
   AA = 'AA',
   SCW = 'SCW',
