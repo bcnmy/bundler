@@ -1,6 +1,5 @@
 import { ConsumeMessage } from 'amqplib';
 import { EVMAccount } from '../account';
-import { TransactionQueueMessageType } from '../transaction-publisher';
 import { ITransactionService } from '../transaction-service/interface/ITransactionService';
 import { IRetryTransactionService } from './interface/IRetryTransactionService';
 
@@ -11,9 +10,16 @@ export class EVMRetryTransactionService implements IRetryTransactionService<EVMA
 
   transactionType?: string | undefined;
 
+  constructor(chainId: number, transactionService: ITransactionService<EVMAccount>) {
+    this.chainId = chainId;
+    this.transactionService = transactionService;
+  }
+
   connect(): Promise<void> {
     throw new Error('Method not implemented.');
   }
+
+  onMessageReceived: (msg: ConsumeMessage) => Promise<void>;
 
   consume(): Promise<boolean> {
     throw new Error('Method not implemented.');

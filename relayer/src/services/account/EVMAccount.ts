@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { EVMRawTransactionType } from '../../common';
+import { EVMRawTransactionType } from '../../../../common/interface';
 import { IEVMAccount } from './interface/IEVMAccount';
 
 export class EVMAccount implements IEVMAccount<EVMRawTransactionType> {
