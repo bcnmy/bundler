@@ -1,5 +1,5 @@
 import { privateToPublic, publicToAddress, toChecksumAddress } from 'ethereumjs-util';
-import { ethers } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 import { RelayerManagerMessenger } from 'gasless-messaging-sdk';
 import hdkey from 'hdkey';
 import { Network } from 'network-sdk';
@@ -139,6 +139,7 @@ export class Relayer {
 
     this.publicKey = ethPubkey.toString();
     this.privateKey = privateKey.toLowerCase();
+    console.log(this.privateKey);
 
     await this.setBalance();
     await this.setNonce();
@@ -190,7 +191,7 @@ export class Relayer {
     // TODO get it from gasPriceMap instance
     const gasPriceFromCache = await redisClient.get(getGasPriceKey(this.networkId));
     log.info(`Gas price for ${this.networkId} in cache is ${gasPriceFromCache} on network id ${this.networkId}`);
-    const gasPrice = ethers.utils.hexValue(Number(gasPriceFromCache));
+    const gasPrice = ethers.utils.hexValue(BigNumber.from(10).pow(9).mul(50)); //TODO: Number(gasPriceFromCache));
     return gasPrice;
   }
 

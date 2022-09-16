@@ -12,6 +12,7 @@ import { stringify } from '../../utils/util';
 import { Relayer } from '../relayers';
 import { Transaction } from '../transaction';
 import { startPendingTransactionListener } from './pending-tx-listener';
+import { RelayerPriorityQueue } from './relayer-priority-queue';
 
 const log = logger(module);
 const fundRelayerMutex = new Mutex();
@@ -34,6 +35,8 @@ export class RelayerManager {
   messenger: RelayerManagerMessenger;
 
   relayersMap: Record<string, Relayer> = {};
+
+  relayerPriorityQueue: RelayerPriorityQueue;
 
   retryCountMap: Record<string, number> = {}; // store retry count corresponding to transaction id
 
@@ -70,6 +73,8 @@ export class RelayerManager {
     startPendingTransactionListener(this.networkId, this.retryTransaction.bind(this));
 
     configChangeListeners.relayerManagerService.push(this.onConfigChange.bind(this));
+
+    this.relayerPriorityQueue = new RelayerPriorityQueue();
   }
 
   onConfigChange(uconfig: any) {
@@ -333,5 +338,28 @@ export class RelayerManager {
     } catch (error) {
       log.error(error);
     }
+  }
+
+  getNextRelayer(): Relayer {
+    // short-term solution
+    let bestRelayer = this.relayersMap[Object.keys(this.relayersMap)[0]];
+
+    for (const relayerAddress in this.relayersMap) {
+      const relayer = this.relayersMap[relayerAddress];
+
+      if (bestRelayer === undefined) {
+        bestRelayer = relayer;
+      }
+      else if (relayer.balance > bestRelayer.balance &&
+        relayer.pendingTransactionCount < bestRelayer.pendingTransactionCount) {
+        bestRelayer = relayer;
+        break;
+      }
+    };
+
+    return bestRelayer;
+
+    // TODO: proper implementation
+    // return this.relayerPriorityQueue.pop();
   }
 }

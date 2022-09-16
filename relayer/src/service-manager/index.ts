@@ -48,7 +48,7 @@ export const init = async () => {
     );
 
     try {
-      await relayerManagerMessenger.connect();
+      // await relayerManagerMessenger.connect();
     } catch (error) {
       log.error(error);
     }

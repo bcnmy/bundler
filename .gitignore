@@ -5,3 +5,7 @@ centrifugo_config.json
 relayer/dist
 server/dist
 coverage
+
+dist/
+
+*.dump

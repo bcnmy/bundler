@@ -38,6 +38,7 @@ const convertGasPriceToUSD = async (
 };
 
 export const feeOptionsService = async (feeOptionServiceParams: FeeOptionServiceParams) => {
+  /*
   const response: Array<FeeOptionResponseParams> = [];
 
   try {
@@ -80,7 +81,34 @@ export const feeOptionsService = async (feeOptionServiceParams: FeeOptionService
           tokenGasPrice = new Big(gasPriceInUSD).div(new Big(crossChainPrice));
           decimal = config.decimal[crossChainId];
           tokenGasPrice = new Big(tokenGasPrice).mul(10 ** decimal).toFixed(0).toString();
+        } else if (token === 'XDAI') {
+          decimal = 18; // fetch it from contract
+          tokenGasPrice = await convertGasPriceToUSD(chainId, gasPrice, chainPriceDataInUSD, token);
+          tokenGasPrice = new Big(tokenGasPrice).mul(10 ** decimal).toFixed(0).toString();
+        } else {
+          // calculate for cross chain
+          const crossChainId = config.wrappedTokens[token];
+          if (crossChainId) {
+            const gasPriceInUSD = await convertGasPriceToUSD(
+              chainId,
+              gasPrice,
+              chainPriceDataInUSD,
+              token,
+            );
+            const crossChainPrice = networkPriceData[crossChainId];
+            tokenGasPrice = new Big(gasPriceInUSD).div(new Big(crossChainPrice));
+            decimal = config.decimal[crossChainId];
+            tokenGasPrice = new Big(tokenGasPrice).mul(10 ** decimal).toFixed(0).toString();
+          }
         }
+        response.push({
+          tokenGasPrice: Number(tokenGasPrice),
+          symbol: token,
+          address: config.tokenContractAddress[chainId][token],
+          decimal,
+          logoUrl: config.logoUrl[token],
+          offset: config.offset[token],
+        });
       }
       response.push({
         tokenGasPrice: Number(tokenGasPrice),
@@ -104,4 +132,7 @@ export const feeOptionsService = async (feeOptionServiceParams: FeeOptionService
       error: `Error occured in getting fee options service. Error: ${JSON.stringify(error)}`,
     };
   }
+  */
+  const response: Array<FeeOptionResponseParams> = [];
+  return response;
 };

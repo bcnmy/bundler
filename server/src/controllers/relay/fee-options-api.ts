@@ -9,12 +9,12 @@ export const feeOptionsApi = async (req: Request, res: Response) => {
   const chainId = Number(chainIdInString);
   const response = await feeOptionsService({ chainId });
   try {
-    if (response.error) {
-      return res.status(400).json({
-        msg: 'bad request',
-        error: response.error,
-      });
-    }
+    // if (response.error) {
+    //   return res.status(400).json({
+    //     msg: 'bad request',
+    //     error: response.error,
+    //   });
+    // }
     return res.json({
       msg: 'all ok',
       data: {

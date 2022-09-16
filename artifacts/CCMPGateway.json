@@ -1,0 +1,920 @@
+[
+  {
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "nonce",
+        "type": "uint256"
+      }
+    ],
+    "name": "AlreadyExecuted",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "InvalidPayload",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "sourceChainId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "contract ICCMPGateway",
+        "name": "sourceGateway",
+        "type": "address"
+      }
+    ],
+    "name": "InvalidSource",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "adaptorName",
+        "type": "string"
+      }
+    ],
+    "name": "UnsupportedAdapter",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "destinationChainId",
+        "type": "uint256"
+      }
+    ],
+    "name": "UnsupportedDestinationChain",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "VerificationFailed",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "destinationChainId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "contract ICCMPGateway",
+        "name": "destinationGateway",
+        "type": "address"
+      }
+    ],
+    "name": "WrongDestination",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "string",
+        "name": "adaptorName",
+        "type": "string"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "adaptor",
+        "type": "address"
+      }
+    ],
+    "name": "AdaptorUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newCCMPExecutor",
+        "type": "address"
+      }
+    ],
+    "name": "CCMPExecutorUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "hash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "contract ICCMPGateway",
+        "name": "sourceGateway",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "contract ICCMPRouterAdaptor",
+        "name": "sourceAdaptor",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "sourceChainId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "contract ICCMPGateway",
+        "name": "destinationGateway",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "destinationChainId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "nonce",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "routerAdaptor",
+        "type": "string"
+      },
+      {
+        "components": [
+          {
+            "internalType": "enum GasFeePaymentMode",
+            "name": "mode",
+            "type": "uint8"
+          },
+          {
+            "internalType": "address",
+            "name": "feeTokenAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "feeAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "relayer",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "feeSourcePayloadIndex",
+            "type": "uint256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct GasFeePaymentArgs",
+        "name": "args",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "enum CCMPOperation",
+            "name": "operationType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes",
+            "name": "data",
+            "type": "bytes"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct CCMPMessagePayload[]",
+        "name": "payload",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "CCMPMessageExecuted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "hash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "contract ICCMPGateway",
+        "name": "sourceGateway",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "contract ICCMPRouterAdaptor",
+        "name": "sourceAdaptor",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "sourceChainId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "contract ICCMPGateway",
+        "name": "destinationGateway",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "destinationChainId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "nonce",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "routerAdaptor",
+        "type": "string"
+      },
+      {
+        "components": [
+          {
+            "internalType": "enum GasFeePaymentMode",
+            "name": "mode",
+            "type": "uint8"
+          },
+          {
+            "internalType": "address",
+            "name": "feeTokenAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "feeAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "relayer",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "feeSourcePayloadIndex",
+            "type": "uint256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct GasFeePaymentArgs",
+        "name": "args",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "enum CCMPOperation",
+            "name": "operationType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes",
+            "name": "data",
+            "type": "bytes"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct CCMPMessagePayload[]",
+        "name": "payload",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "CCMPMessageRouted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "destinationChainId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "contract ICCMPGateway",
+        "name": "gateway",
+        "type": "address"
+      }
+    ],
+    "name": "GatewayUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "version",
+        "type": "uint8"
+      }
+    ],
+    "name": "Initialized",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "Paused",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousPauser",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newPauser",
+        "type": "address"
+      }
+    ],
+    "name": "PauserChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "_tf",
+        "type": "address"
+      }
+    ],
+    "name": "TrustedForwarderChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "Unpaused",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "name": "adaptors",
+    "outputs": [
+      {
+        "internalType": "contract ICCMPRouterAdaptor",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "ccmpExecutor",
+    "outputs": [
+      {
+        "internalType": "contract ICCMPExecutor",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newPauser",
+        "type": "address"
+      }
+    ],
+    "name": "changePauser",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "gateways",
+    "outputs": [
+      {
+        "internalType": "contract ICCMPGateway",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_trustedForwader",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_pauser",
+        "type": "address"
+      }
+    ],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "pauser",
+        "type": "address"
+      }
+    ],
+    "name": "isPauser",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "forwarder",
+        "type": "address"
+      }
+    ],
+    "name": "isTrustedForwarder",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "nextNonce",
+    "outputs": [
+      {
+        "internalType": "uint128",
+        "name": "",
+        "type": "uint128"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "nonceUsed",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pause",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "paused",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "sender",
+            "type": "address"
+          },
+          {
+            "internalType": "contract ICCMPGateway",
+            "name": "sourceGateway",
+            "type": "address"
+          },
+          {
+            "internalType": "contract ICCMPRouterAdaptor",
+            "name": "sourceAdaptor",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sourceChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "contract ICCMPGateway",
+            "name": "destinationGateway",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "destinationChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "nonce",
+            "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "routerAdaptor",
+            "type": "string"
+          },
+          {
+            "components": [
+              {
+                "internalType": "enum GasFeePaymentMode",
+                "name": "mode",
+                "type": "uint8"
+              },
+              {
+                "internalType": "address",
+                "name": "feeTokenAddress",
+                "type": "address"
+              },
+              {
+                "internalType": "uint256",
+                "name": "feeAmount",
+                "type": "uint256"
+              },
+              {
+                "internalType": "address",
+                "name": "relayer",
+                "type": "address"
+              },
+              {
+                "internalType": "uint256",
+                "name": "feeSourcePayloadIndex",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct GasFeePaymentArgs",
+            "name": "gasFeePaymentArgs",
+            "type": "tuple"
+          },
+          {
+            "components": [
+              {
+                "internalType": "enum CCMPOperation",
+                "name": "operationType",
+                "type": "uint8"
+              },
+              {
+                "internalType": "bytes",
+                "name": "data",
+                "type": "bytes"
+              }
+            ],
+            "internalType": "struct CCMPMessagePayload[]",
+            "name": "payload",
+            "type": "tuple[]"
+          }
+        ],
+        "internalType": "struct CCMPMessage",
+        "name": "_message",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes",
+        "name": "_verificationData",
+        "type": "bytes"
+      }
+    ],
+    "name": "receiveMessage",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "renouncePauser",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_destinationChainId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "_adaptorName",
+        "type": "string"
+      },
+      {
+        "components": [
+          {
+            "internalType": "enum CCMPOperation",
+            "name": "operationType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes",
+            "name": "data",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct CCMPMessagePayload[]",
+        "name": "_payloads",
+        "type": "tuple[]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "enum GasFeePaymentMode",
+            "name": "mode",
+            "type": "uint8"
+          },
+          {
+            "internalType": "address",
+            "name": "feeTokenAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "feeAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "relayer",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "feeSourcePayloadIndex",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct GasFeePaymentArgs",
+        "name": "_gasFeePaymentArgs",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes",
+        "name": "_routerArgs",
+        "type": "bytes"
+      }
+    ],
+    "name": "sendMessage",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ICCMPExecutor",
+        "name": "_executor",
+        "type": "address"
+      }
+    ],
+    "name": "setCCMPExecutor",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_chainId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "contract ICCMPGateway",
+        "name": "_gateway",
+        "type": "address"
+      }
+    ],
+    "name": "setGateway",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "contract ICCMPRouterAdaptor",
+        "name": "adaptor",
+        "type": "address"
+      }
+    ],
+    "name": "setRouterAdaptor",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "unpause",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

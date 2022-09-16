@@ -4,7 +4,7 @@ import { parseError, stringify } from '../../../common/utils';
 
 const log = logger(module);
 
-interface IDataToPushInQueue {
+export interface IDataToPushInQueue {
   transactionId: string;
   type: number;
   gasPrice?: string;

@@ -15,6 +15,8 @@ const envConfig: LooseObject = {
   provider: {
     5: 'https://goerli.infura.io/v3/30125eccc47e475b9a9421f0eaf1e19c',
     80001: 'https://polygon-mumbai.g.alchemy.com/v2/OcZ3-nUEz5Pnk-y0FzLikmD6Ky_ompOf',
+    43113: 'https://api.avax-test.network/ext/bc/C/rpc',
+    4002: 'https://rpc.testnet.fantom.network',
   },
   currency: {
     8995: 'MATIC',
@@ -177,6 +179,63 @@ const envConfig: LooseObject = {
       WETH: '0xC1D3206324D806b6586cf15324178f8E8781A293',
       DAI: '0xC1D3206324D806b6586cf15324178f8E8781A293',
     },
+  },
+  ccmp: {
+    wormholeHostURL: "https://wormhole-v2-testnet-api.certus.one",
+    contracts: {
+      43113: {
+        // CCMPExecutor: 0x44109379c9cDd04f8afE3FeA161b236BE7DbF280,
+        // AxelarAdaptor: 0x5f26dF88f7C9522044940cA257e57b9dD6072857,
+        // WormholeAdaptor: 0x3325639d0058D76319b692009CC9760C16A4C74d,
+        // CCMPConfigurationFacet: 0xDdB0DECA91b45024586Dbe33ef3FFC0749B055Ee,
+        // CCMPReceiverMessageFacet: 0x49B4727A2591B1F34c4775c883500960D1eC06b1,
+        // CCMPSendMessageFacet: 0xB552525317019cA54787dC20022C46AA237c8453,
+        // DiamondCutFacet: 0x3A86d5199d70C2f1b7d1732Aa50B7C4d22Fb05F3,
+        // DiamondLoupeFacet: 0x52c57ED21Dc38d2b6466FD94E0323A6bA0976d0C,
+        // DiamondInit: 0x81f2e6e46596240038E047698808B8Ea2CE04475,
+        // Diamond: 0xA816251826202799399Dbdcf42BFd5533A9b251b,
+        // sampleContract: 0xA8F406E049A6b09a69559C5e76A3FfE6DB6f8092
+        CCMPExecutor: 0x78d084b6BfEB90Ac787a163e03F7dcE9B2fA9274,
+        AxelarAdaptor: 0x92E5b8Cb7D21DfB4F7a84610eD9271e0b207D8b8,
+        WormholeAdaptor: 0x9Bb1239A3719Ccc5e0C551f0B16954737601F787,
+        AbacusAdaptor: 0x89A4920D12e3B59372E9841171Cb7BD4B2d8ee1A,
+        CCMPConfigurationFacet: 0x97FcFfeA99b8C2ac576f55a028dCCBCF3E81481d,
+        CCMPReceiverMessageFacet: 0xd45C146C20E2d1B91D5Ca5366f5B56b55f9657D6,
+        CCMPSendMessageFacet: 0xB5927ae01De192aCB5b3273FC801d863Cdb7C597,
+        DiamondCutFacet: 0x8E6C143d37fEbD2EDCc3fa068B537Cfd6B63fD17,
+        DiamondLoupeFacet: 0x4da0f1fF68D2E265C630b604bEFD1De24953a5Ea,
+        DiamondInit: 0xf5C88dBAAD38A3c4C989De86d62c0da8513C3994,
+        Diamond: 0x70983C70985DeeEfA5249583ea569AfAAeD3a852,
+        sampleContract: 0x7eC42390fce75a98C087Bf2eA3690EBD375b1c19
+      },
+      // 97: {
+      //   CCMPExecutor: 0x11963cc8D9c219c1Cf0ed7B3ca9aEaa5bc1C2AB2,
+      //   AxelarAdaptor: 0x7e450CF19983B4c7B9c5C3eE6877c233e0Ac5E0C,
+      //   WormholeAdaptor: 0xe1B63E22ecdf97C7F9762BFDefcd15d9e6a94Bbc,
+      //   CCMPConfigurationFacet: 0x7c97117050E72144e841231Bb3571853a017e902,
+      //   CCMPReceiverMessageFacet: 0xf04919da5a392edc3F232B90D0e0E6847f3BB9E1,
+      //   CCMPSendMessageFacet: 0xA60940529b73d0fC21F715026EAF3845a6DAd6E7,
+      //   DiamondCutFacet: 0x754C4bd5c286DA154394cf15a7fd0029E6966230,
+      //   DiamondLoupeFacet: 0x1Bf151EE87D5701DC14Ee29200f6b45AA06b7C9F,
+      //   DiamondInit: 0xd2ed4A4B7827C6EF0640c4826A43C467F9504e83,
+      //   Diamond: 0xa1438079404C96a2D2e7155df2322134a608fa11,
+      //   sampleContract: 0xe1532e0014a9bB08F043E86Ac057895444912136
+      // }
+      80001: {
+        CCMPExecutor: 0x69d1Db7de106D39811cb8cC7FFFE541C76582602,
+        AxelarAdaptor: 0x8a90b071dDa1F4dD3a8b13ac6a81d119a22f501B,
+        WormholeAdaptor: 0xef0286B6d77730941186F26D76282f95A36d008c,
+        AbacusAdaptor: 0xb196e62a6354d7658E599B86637f2acbE3d2f243,
+        CCMPConfigurationFacet: 0x4937287EEf3dcC7C28D87d2C33895E68cA49c0B5,
+        CCMPReceiverMessageFacet: 0xe811f4878d4Cc16Cb681d23053Cc23425637Bb1e,
+        CCMPSendMessageFacet: 0x9673b6737cfFeAd1ddE52FA05D832674cC7256f5,
+        DiamondCutFacet: 0x02076044497847f8CeE3025F617D2C035eefcf2B,
+        DiamondLoupeFacet: 0x13fc8DCAae746d90006410F64dd3D8cBC46c2Ef8,
+        DiamondInit: 0x33BBBe77d01055e3Ea33A04178a6c64267329146,
+        Diamond: 0x7210Ce17B2e8731398A9c1D728d16f08d7A9d311,
+        sampleContract: 0xa8139ABCcd7D6c8b9d74e36851f1D33e78aFca21
+      }
+    }
   },
 };
 

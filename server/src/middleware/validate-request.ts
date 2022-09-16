@@ -10,6 +10,8 @@ export const validateRequest = (schema: AnySchema) => async (
   next: NextFunction,
 ) => {
   try {
+    console.log("validating schema", req.body);
+
     await schema.validate({
       body: req.body,
       query: req.query,
@@ -18,7 +20,7 @@ export const validateRequest = (schema: AnySchema) => async (
 
     return next();
   } catch (e: any) {
-    log.error(e);
+    console.error(e);
     return res.status(400).send({
       code: 400,
       message: e.errors,
