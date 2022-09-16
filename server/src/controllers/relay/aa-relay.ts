@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { ClientMessenger } from 'gasless-messaging-sdk';
 import { logger } from '../../../../common/log-config';
 import { AARelayService } from '../../services/relay/aa-relay';
+import { isError } from '../../services/relay/interface';
 import { generateTransactionId } from '../../utils/tx-id-generator';
 
 const websocketUrl = process.env.WEB_SOCKET_URL || '';
@@ -11,7 +12,7 @@ const clientMessenger = new ClientMessenger(
 
 const log = logger(module);
 
-export const relayApi = async (req: Request, res: Response) => {
+export const relayAATransactionApi = async (req: Request, res: Response) => {
   try {
     const {
       type, to, data, gasLimit, chainId, value,
@@ -24,7 +25,7 @@ export const relayApi = async (req: Request, res: Response) => {
     const response = await relayService.sendTransactionToRelayer({
       type, to, data, gasLimit, chainId, value,
     });
-    if (response.error) {
+    if (isError(response)) {
       return res.status(400).json({
         msg: 'bad request',
         error: response.error,
@@ -33,7 +34,7 @@ export const relayApi = async (req: Request, res: Response) => {
     return res.json({
       transactionId,
       connectionUrl: websocketUrl,
-    })
+    });
   } catch (error) {
     log.error(`Error in relay ${error}`);
     return res.status(500).json({
@@ -41,7 +42,6 @@ export const relayApi = async (req: Request, res: Response) => {
     });
   }
 };
-
 
 // clientMessenger.createTransactionNotifier(transactionId, {
 //   onMined: (tx:any) => {

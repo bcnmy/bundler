@@ -1,9 +1,9 @@
-import { relayApi } from './relay/relay';
+import { relayAATransactionApi } from './relay/aa-relay';
 import { feeOptionsApi } from './fee-options/fee-options';
 import { simulateApi } from '../../../common/simulate/simulate';
 
 export {
-  relayApi,
+  relayAATransactionApi,
   simulateApi,
   feeOptionsApi,
 };
