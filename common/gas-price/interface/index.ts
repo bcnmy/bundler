@@ -1,4 +1,7 @@
-import { GasPriceType } from "../types";
+import { EVMAccount } from '../../../relayer/src/services/account/EVMAccount';
+import { INetworkService } from '../../network';
+import { EVMRawTransactionType } from '../../types';
+import { GasPriceType } from '../types';
 
 export interface IGasPrice {
   updateFrequencyInSeconds: number;
@@ -7,15 +10,15 @@ export interface IGasPrice {
 
 export interface IAbstractGasPrice {
   chainId: number;
-  networkService: INetworkService;
+  networkService?: INetworkService<EVMAccount, EVMRawTransactionType>;
 
-  setGasPrice(chainId: number, gasType: GasPriceType, price: number): Promise<void>
-  getGasPrice(chainId: number, gasType: GasPriceType): Promise<void>
+  setGasPrice(gasType: GasPriceType, price: string): Promise<void>
+  getGasPrice(gasType: GasPriceType): Promise<string>
 
-  setMaxFeeGasPrice(chainId: number, gasType: GasPriceType, price: number): Promise<void>
-  getMaxFeeGasPrice(chainId: number, gasType: GasPriceType): Promise<void>
+  setMaxFeeGasPrice(gasType: GasPriceType, price: string): Promise<void>
+  getMaxFeeGasPrice(gasType: GasPriceType): Promise<string>
 
-  setMaxPriorityFeeGasPrice(chainId: number, gasType: GasPriceType, price: number): Promise<void>
-  getMaxPriorityFeeGasPrice(chainId: number, gasType: GasPriceType): Promise<void>
+  setMaxPriorityFeeGasPrice(gasType: GasPriceType, price: string): Promise<void>
+  getMaxPriorityFeeGasPrice(gasType: GasPriceType): Promise<>
 
 }

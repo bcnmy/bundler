@@ -2,36 +2,48 @@
 import { ethers } from 'ethers';
 import { logger } from '../log-config';
 import { redisClient } from '../service-manager';
-import { IAbstractGasPrice } from './interface/index';
+import { IAbstractGasPrice } from './interface';
+import { INetworkService } from '../network';
+import { EVMAccount } from '../../relayer/src/services/account/EVMAccount';
+import { EVMRawTransactionType } from '../types';
+import { GasPriceType } from './types';
 
 const log = logger(module);
 export class AbstactGasPrice implements IAbstractGasPrice {
   chainId: number;
 
-  network: INetworkService;
+  network?: INetworkService<EVMAccount, EVMRawTransactionType>;
 
-  constructor(chainId: number, network?: INetworkService) {
+  constructor(chainId: number, network?: INetworkService<EVMAccount, EVMRawTransactionType>) {
     this.chainId = chainId;
     this.network = network;
   }
 
-  async setGasPrice(networkId: number, gasType: string, price: string) {
-    // save to redis here
-    await redisClient.set(this.getGasPriceKey(networkId, gasType), price);
+  private getGasPriceKey(gasType: string) {
+    return `GasPrice_${this.chainId}_${gasType}`;
   }
 
-  async getGasPrice(networkId: number, gasType: string) {
-    // return gas price here
-    const result = await redisClient.get(this.getGasPriceKey(networkId, gasType));
+  private getMaxFeeGasKey = (gasType: GasPriceType) => {
+    return `MaxFeeGas_${this.chainId}_${gasType}`;
+  };
+
+  private getMaxPriorityFeeGasKey = (gasType: GasPriceType) => {
+    return `MaxPriorityFeeGas_${this.chainId}_${gasType}`;
+  };
+
+  async setGasPrice(gasType: GasPriceType, price: string) {
+    await redisClient.set(this.getGasPriceKey(gasType), price);
+  }
+
+  async getGasPrice(gasType: string) {
+    const result = await redisClient.get(this.getGasPriceKey(gasType));
     return result;
   }
 
-  // eslint-disable-next-line class-methods-use-this
-  getGasPriceKey(networkId: number, gasType: string) {
-    // get redis key for gas price
-    const data = `GasPrice_${networkId}_${gasType}`;
-    return data;
+  async setMaxFeeGasPrice(gasType: GasPriceType, price: string) {
+    await redisClient.set(this.getMaxFeeGasKey(gasType), price);
   }
+
 
   async setup(gP?: string) {
     try {
