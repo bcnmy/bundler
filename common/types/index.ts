@@ -1,4 +1,5 @@
 import { ConsumeMessage } from 'amqplib';
+import { BigNumber } from 'ethers';
 
 export enum TransactionType {
   AA = 'AA',
@@ -42,13 +43,23 @@ export interface IQueue<TransactionMessageType> {
 }
 
 export type EVMRawTransactionType = {
-  nonce: string,
-  to: string,
-  data: string,
-  chainId: number,
-  value: string,
-  gasPrice: string,
-  gasLimit: string,
+  from: string;
+  gasPrice?: string | BigNumber;
+  maxFeePerGas?: string | BigNumber;
+  maxPriorityFeePerGas?: string | BigNumber;
+  gasLimit: string;
+  to: string;
+  value: string | number;
+  data: string;
+  chainId: number;
+  nonce: number | string;
+  accessList?: AccessListItem[];
+  type?: number;
+};
+
+export type AccessListItem = {
+  address: string;
+  storageKeys: string[];
 };
 
 export interface IRetryPolicy {
