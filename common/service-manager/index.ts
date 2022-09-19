@@ -13,10 +13,12 @@ import { Config } from '../config';
 // import { Mongo } from '../../common/db/mongo/mongo';
 import { TransactionType } from '../types';
 import { AATransactionQueue } from '../queue/AATransactionQueue';
+import { RedisCacheService } from '../cache';
 
 const queueMap: any = {}; // TODO: Add type of queue
 // const dbInstance = Mongo.getInstance();
 // const daoUtilsInstance = new DaoUtils(dbInstance);
+const redisClient = RedisCacheService.getInstance();
 
 const supportedNetworks: number[] = [5, 80001];
 const transactionType:{ [key: number]: string[] } = {
@@ -47,4 +49,5 @@ const config = configInstance.get();
 export {
   config,
   queueMap,
+  redisClient,
 };

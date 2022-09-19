@@ -2,10 +2,11 @@ import { Network } from 'network-sdk';
 import { ethers } from 'ethers';
 import { logger } from '../log-config';
 import { getGasPriceKey } from '../../relayer/src/utils/cache-utils';
+import { IGasPrice } from './interface';
 
 const log = logger(module);
 
-export class GasPrice {
+export class GasPrice implements IGasPrice {
   private chainId: number;
 
   private network: Network;
