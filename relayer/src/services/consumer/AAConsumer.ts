@@ -1,9 +1,7 @@
 import { ConsumeMessage } from 'amqplib';
-import { AATransactionMessageType } from '../../../../common/types';
-import { IQueue } from '../../../../common/queue';
-import { IConsumer } from './interface/IConsumer';
+import { ITransactionConsumer } from './interface/ITransactionConsumer';
 
-export class AAConsumer implements IConsumer<AATransactionMessageType> {
+export class AAConsumer implements ITransactionConsumer {
   chainId: number;
 
   transactionType: string;

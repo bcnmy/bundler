@@ -6,11 +6,34 @@ import hdkey from 'hdkey';
 import { RawTransactionType } from 'network-sdk/dist/types';
 import { logger } from '../../../../common/log-config';
 import { config } from '../../../../common/service-manager';
-import { RelayerManagerType } from '../../../../common/types';
 import { stringify } from '../../utils/util';
+<<<<<<< HEAD:relayer/src/services/relayer-manager/evm-relayer-manager.ts
+import { Relayer } from '../relayer';
+import { IRelayer } from '../relayer/interface';
+import { IRelayerManager } from './interface';
+import { EVMAccount } from '../account';
+import { ITransactionService } from '../transaction-service/interface/ITransactionService';
+=======
 import { EVMAccount } from '../account';
 import { ITransactionService } from '../transaction-service/interface';
 import { IRelayerManager } from './interface/IRelayerManager';
+import { RelayerManagerType } from '../../../../common/types';
+import { stringify } from '../../utils/util';
+<<<<<<< HEAD:relayer/src/services/relayer-manager/evm-relayer-manager.ts
+import { Relayer } from '../relayer';
+import { IRelayer } from '../relayer/interface';
+import { IRelayerManager } from './interface';
+import { EVMAccount } from '../account';
+import { ITransactionService } from '../transaction-service/interface/ITransactionService';
+=======
+import { EVMAccount } from '../account';
+import { ITransactionService } from '../transaction-service/interface';
+import { IRelayerManager } from './interface/IRelayerManager';
+<<<<<<< HEAD
+=======
+import { RelayerManagerType } from '../../../../common/types';
+>>>>>>> afc5151a9252383e116220d081860cfbf3cdc1a2:relayer/src/services/relayer-manager/EVMRelayerManager.ts
+>>>>>>> development-yash
 
 const log = logger(module);
 const fundRelayerMutex = new Mutex();
@@ -30,6 +53,15 @@ const createRelayerMutex = new Mutex();
 export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
   chainId: number;
 
+<<<<<<< HEAD:relayer/src/services/relayer-manager/evm-relayer-manager.ts
+  transactionService: ITransactionService<EVMAccount>;
+
+  // TODO
+  // Update default values to fetch from config
+  minRelayerCount: number = 5;
+
+  maxRelayerCount: number = 15;
+=======
   transactionService: ITransactionService<EVMAccount>; // to fund relayers
 
   // TODO
@@ -37,6 +69,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
   minRelayerCount: number = 5; // minimum number of relayers to be created
 
   maxRelayerCount: number = 15; // maximum number of relayers to be created
+>>>>>>> afc5151a9252383e116220d081860cfbf3cdc1a2:relayer/src/services/relayer-manager/EVMRelayerManager.ts
 
   inactiveRelayerCountThreshold: number = 0.6;
 
@@ -52,6 +85,39 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
   ) {
     this.chainId = chainId;
     this.transactionService = transactionService;
+<<<<<<< HEAD:relayer/src/services/relayer-manager/evm-relayer-manager.ts
+
+    configChangeListeners.relayerManagerService.push(this.onConfigChange.bind(this));
+  }
+
+  fundRelayers(relayer: EVMAccount): Promise<boolean> {
+    throw new Error('Method not implemented.');
+  }
+
+  getRelayer(relayerAddress: string): Promise<EVMAccount> {
+    throw new Error('Method not implemented.');
+  }
+
+  getActiveRelayer(): Promise<EVMAccount> {
+    throw new Error('Method not implemented.');
+  }
+
+  setMinRelayerCount(): Promise<boolean> {
+    throw new Error('Method not implemented.');
+  }
+
+  setMaxRelayerCount(): Promise<boolean> {
+    throw new Error('Method not implemented.');
+  }
+
+  setInactiveRelayerCountThreshold(): Promise<boolean> {
+    throw new Error('Method not implemented.');
+  }
+
+  setPendingTransactionCountThreshold(): Promise<boolean> {
+    throw new Error('Method not implemented.');
+  }
+=======
   }
 
   setMinRelayerCount = (minRelayerCount: number) => {
@@ -61,14 +127,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
   setMaxRelayerCount = (maxRelayerCount: number) => {
     this.maxRelayerCount = maxRelayerCount;
   };
-
-  setInactiveRelayerCountThreshold(inactiveRelayerCountThreshold: number) {
-    this.inactiveRelayerCountThreshold = inactiveRelayerCountThreshold;
-  }
-
-  setPendingTransactionCountThreshold(pendingTransactionCountThreshold: number) {
-    this.pendingTransactionCountThreshold = pendingTransactionCountThreshold;
-  }
+>>>>>>> afc5151a9252383e116220d081860cfbf3cdc1a2:relayer/src/services/relayer-manager/EVMRelayerManager.ts
 
   async createRelayers(numberOfRelayers: number): Promise<void> {
     log.info(`Waiting for lock to create relayers on ${this.chainId}`);
@@ -117,6 +176,25 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
     log.info(`Lock released after creating relayers on ${this.chainId}`);
   }
 
+  async fetchMainAccountNonceFromNetwork(): Promise<number> {
+    return this.network;
+  }
+
+  async fetchActiveRelayer(): Promise<IRelayer> {
+
+  }
+
+  static updateRelayerBalance(relayer: IRelayer): number {
+
+  }
+
+  updateRelayerMap(relayer: IRelayer) {
+    this.relayersMap[relayer.id] = relayer;
+  }
+
+  updateRetryCountMap(relayer: IRelayer) {
+    this.retryCountMap[relayer.id] += 1;
+  }
   async fundRelayer(address: string) {
     const BICONOMY_OWNER_PRIVATE_KEY = config?.chains.ownerAccountDetails[this.chainId].privateKey;
     const BICONOMY_OWNER_ADDRESS = config?.chains.ownerAccountDetails[this.chainId].publicKey;

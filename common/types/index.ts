@@ -1,3 +1,6 @@
+import { ConsumeMessage } from 'amqplib';
+import { BigNumber } from 'ethers';
+
 export enum TransactionType {
   AA = 'AA',
   SCW = 'SCW',
@@ -30,17 +33,42 @@ export type SCWTransactionMessageType = {
   value: string;
 };
 
+export interface IQueue<TransactionMessageType> {
+  chainId: number;
+  transactionType?: string;
+  connect(): Promise<void>
+  publish(arg0: TransactionMessageType): Promise<boolean>
+  consume(): Promise<boolean>
+  ack(arg0: ConsumeMessage): Promise<void>
+}
+
 export type EVMRawTransactionType = {
-  nonce: string,
-  to: string,
-  data: string,
-  chainId: number,
-  value: string,
-  gasPrice: string,
-  gasLimit: string,
+  from: string;
+  gasPrice?: string | BigNumber;
+  maxFeePerGas?: string | BigNumber;
+  maxPriorityFeePerGas?: string | BigNumber;
+  gasLimit: string;
+  to: string;
+  value: string | number;
+  data: string;
+  chainId: number;
+  nonce: number | string;
+  accessList?: AccessListItem[];
+  type?: number;
 };
 
-export enum TransactionStatusType {
+export type AccessListItem = {
+  address: string;
+  storageKeys: string[];
+};
+
+export interface IRetryPolicy {
+  maxTries: number;
+  shouldRetry: (err: any) => Promise<boolean>;
+  incrementTry: () => void;
+}
+
+export enum TransactionStatus {
   IN_PROCESS = 'IN_PROCESS',
   PENDING = 'PENDING',
   SUCCESS = 'SUCCESS',

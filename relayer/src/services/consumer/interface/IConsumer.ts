@@ -2,8 +2,7 @@ import { ConsumeMessage } from 'amqplib';
 import { IQueue } from '../../../../../common/queue';
 import { TransactionType } from '../../../../../common/types';
 
-export interface IConsumer<TransactionMessageType> {
-
+export interface IConsumer {
   chainId: number;
   transactionType: TransactionType; // ENUM from common
 

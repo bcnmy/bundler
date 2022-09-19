@@ -1,25 +1,25 @@
 import { ConsumeMessage } from 'amqplib';
 import { EVMAccount } from '../account';
-import { TransactionQueueMessageType } from '../transaction-publisher';
 import { ITransactionService } from '../transaction-service/interface/ITransactionService';
 import { IRetryTransactionService } from './interface/IRetryTransactionService';
 
 export class EVMRetryTransactionService implements IRetryTransactionService<EVMAccount> {
-  // TODO
-  // Keep publish?
-  publish(arg0: TransactionQueueMessageType): Promise<boolean> {
-    throw new Error('Method not implemented.');
-  }
-
   transactionService: ITransactionService<EVMAccount>;
 
   chainId: number;
 
   transactionType?: string | undefined;
 
+  constructor(chainId: number, transactionService: ITransactionService<EVMAccount>) {
+    this.chainId = chainId;
+    this.transactionService = transactionService;
+  }
+
   connect(): Promise<void> {
     throw new Error('Method not implemented.');
   }
+
+  onMessageReceived: (msg: ConsumeMessage) => Promise<void>;
 
   consume(): Promise<boolean> {
     throw new Error('Method not implemented.');
