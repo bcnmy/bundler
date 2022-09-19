@@ -10,7 +10,7 @@ const clientMessenger = new ClientMessenger(
 
 const log = logger(module);
 
-export const relayApi = async (req: Request, res: Response) => {
+export const SCWRelay = async (req: Request, res: Response) => {
   try {
     const {
       type, to, data, gasLimit, chainId, value,
