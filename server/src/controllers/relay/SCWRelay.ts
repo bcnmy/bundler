@@ -20,7 +20,7 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
     if (!clientMessenger.socketClient.isConnected()) {
       await clientMessenger.connect();
     }
-    const relayService = new AARelayService(transactionId);
+    const relayService = new SCWRelayService(transactionId);
     const response = await relayService.sendTransactionToRelayer({
       type, to, data, gasLimit, chainId, value,
     });

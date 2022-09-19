@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { ClientMessenger } from 'gasless-messaging-sdk';
 import { logger } from '../../../../common/log-config';
 import { isError } from '../../../../common/types';
-import { AARelayService } from '../../services/relay/aa-relay';
+import { AARelayService } from '../../services/relay/AARelay';
 import { generateTransactionId } from '../../utils/tx-id-generator';
 
 const websocketUrl = process.env.WEB_SOCKET_URL || '';
@@ -21,8 +21,8 @@ export const relayAATransaction = async (req: Request, res: Response) => {
     if (!clientMessenger.socketClient.isConnected()) {
       await clientMessenger.connect();
     }
-    const relayService = new AARelayService(transactionId);
-    const response = await relayService.sendTransactionToRelayer({
+    const aaRelayService = new AARelayService(transactionId);
+    const response = await aaRelayService.sendTransactionToRelayer({
       type, to, data, gasLimit, chainId, value,
     });
     if (isError(response)) {
