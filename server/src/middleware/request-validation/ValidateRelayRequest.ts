@@ -15,6 +15,7 @@ export const validateRelayRequest = () => async (
     const { transactionType } = req.body;
     switch (transactionType) {
       case TransactionType.SCW:
+        // TODO / This is wrong, validateRequest expects req, res, next
         validateRequest(scwRequestSchema);
         break;
       case TransactionType.AA:
