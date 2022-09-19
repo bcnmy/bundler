@@ -1,15 +1,16 @@
 /* eslint-disable no-param-reassign */
 import { Mutex } from 'async-mutex';
+import { privateToPublic, publicToAddress, toChecksumAddress } from 'ethereumjs-util';
 import { ethers } from 'ethers';
-import { RawTransactionType } from 'network-sdk/dist/types';
 import hdkey from 'hdkey';
+import { RawTransactionType } from 'network-sdk/dist/types';
 import { logger } from '../../../../common/log-config';
 import { config } from '../../../../common/service-manager';
+import { RelayerManagerType } from '../../../../common/types';
 import { stringify } from '../../utils/util';
 import { EVMAccount } from '../account';
 import { ITransactionService } from '../transaction-service/interface';
 import { IRelayerManager } from './interface/IRelayerManager';
-import { RelayerManagerType } from '../../../../common/types';
 
 const log = logger(module);
 const fundRelayerMutex = new Mutex();
@@ -61,6 +62,14 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
     this.maxRelayerCount = maxRelayerCount;
   };
 
+  setInactiveRelayerCountThreshold(inactiveRelayerCountThreshold: number) {
+    this.inactiveRelayerCountThreshold = inactiveRelayerCountThreshold;
+  }
+
+  setPendingTransactionCountThreshold(pendingTransactionCountThreshold: number) {
+    this.pendingTransactionCountThreshold = pendingTransactionCountThreshold;
+  }
+
   async createRelayers(numberOfRelayers: number): Promise<void> {
     log.info(`Waiting for lock to create relayers on ${this.chainId}`);
     const release = await createRelayerMutex.acquire();
@@ -89,7 +98,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
         );
         promises.push(relayer.create(this.messenger));
       }
-      const relayers: Relayer[] = await Promise.all(promises);
+      const relayers: EVMAccount[] = await Promise.all(promises);
 
       log.info(`Relayers created on network id ${this.chainId}`);
       relayers.map(async (relayer) => {
@@ -175,5 +184,13 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
     } catch (error) {
       log.error(`Error in fundRelayer ${stringify(error)}`);
     }
+  }
+
+  async getRelayer(relayerAddress: string): Promise<EVMAccount> {
+    
+  }
+
+  async getActiveRelayer(): Promise<EVMAccount> {
+    
   }
 }
