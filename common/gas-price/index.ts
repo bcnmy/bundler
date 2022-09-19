@@ -3,10 +3,11 @@ import { ethers } from 'ethers';
 import { logger } from '../log-config';
 import { getGasPriceKey } from '../../relayer/src/utils/cache-utils';
 import { IGasPrice } from './interface';
+import { AbstractGasPrice } from './AbstactGasPrice';
 
 const log = logger(module);
 
-export class GasPrice implements IGasPrice {
+export class GasPrice extends AbstractGasPrice implements IGasPrice {
   private chainId: number;
 
   private network: Network;
