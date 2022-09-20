@@ -1,7 +1,7 @@
 import { IBlockchainTransaction } from '../mongo/interface/IBlockchainTransaction';
 
 export interface ITransactionDAO {
-  save(chainId: number, data: IBlockchainTransaction): Promise<IBlockchainTransaction>
-  update(data: IBlockchainTransaction): Promise<IBlockchainTransaction>
-  getByTransactionId(id: string): Promise<IBlockchainTransaction>
+  save(chainId: number, transactionData: object): Promise<void>
+  updateByTransactionId(chainId: number, id: string, transactionData: object): Promise<void>
+  getByTransactionId(chainId: number, id: string): Promise<IBlockchainTransaction | null>
 }
