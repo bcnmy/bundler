@@ -2,7 +2,7 @@ import { EVMAccount } from '../../../relayer/src/services/account';
 import { logger } from '../../log-config';
 import { INetworkService } from '../../network';
 import { IScheduler } from '../../scheduler';
-import { config, redisClient } from '../../service-manager';
+import { config } from '../../service-manager';
 import { EVMRawTransactionType } from '../../types';
 import { gasPriceCall } from '../../utils/axios-calls';
 import { AbstractGasPrice } from '../AbstactGasPrice';
@@ -120,38 +120,52 @@ export class MaticMainnetGasPrice extends AbstractGasPrice implements IGasPrice,
 
       const lowerLimit = config?.gasPrice[this.chainId].minGasPrice;
       let maxPriorityFeeMedium = mediumMaxPriorityFeeInWei;
+      let maxFeeMedium;
       if (lowerLimit) {
         if (mediumMaxFeeInWei < lowerLimit) {
-          maxFeeMedium = lowerLimit;
+          maxFeeMedium = mediumMaxFeeInWei;
         }
-        if (maxPriorityFeeMedium < parseInt(lowerLimit)) {
-          maxPriorityFeeMedium = parseInt(lowerLimit);
+        if (maxPriorityFeeMedium < lowerLimit) {
+          maxPriorityFeeMedium = lowerLimit;
         }
       }
-      maxFeeMedium = parseInt(mediumMaxFeeInWei * multiplier);
-      maxPriorityFeeMedium = parseInt(maxPriorityFeeMedium * 1.05);
+      maxFeeMedium = (mediumMaxFeeInWei * multiplier).toString();
+      maxPriorityFeeMedium *= 1.05;
 
-      // log.info(`Polygon mainnet multiplier is ${multiplier}`);
-      // log.info(`Polygon mainnet maxFeeMedium is ${maxFeeMedium}`);
-      // log.info(`Polygon mainnet maxPriorityFeeMedium is ${maxPriorityFeeMedium}`);
-      // await set(getMaxFeePerGasKey(config.gasPriceMaticNetworkId, config.gasPriceType.MEDIUM), maxFeeMedium);
-      // await set(getMaxPriorityFeePerGasKey(config.gasPriceMaticNetworkId, config.gasPriceType.MEDIUM), maxPriorityFeeMedium);
+      log.info(`Polygon mainnet multiplier is ${multiplier}`);
+      log.info(`Polygon mainnet maxFeeMedium is ${maxFeeMedium}`);
+      log.info(`Polygon mainnet maxPriorityFeeMedium is ${maxPriorityFeeMedium}`);
+      await this.setMaxFeeGasPrice(GasPriceType.MEDIUM, maxFeeMedium);
 
-      // await set(getMaxFeePerGasKey(config.gasPriceMaticNetworkId, config.gasPriceType.FAST), parseInt(fastMaxFeeInWei * multiplier));
-      // await set(getMaxPriorityFeePerGasKey(config.gasPriceMaticNetworkId, config.gasPriceType.FAST), parseInt(fastMaxPriorityFeeInWei));
+      await this.setMaxPriorityFeeGasPrice(GasPriceType.MEDIUM, maxPriorityFeeMedium.toString());
 
-      // const safeMaxFeePerGasFromCache = await get(getMaxFeePerGasKey(config.gasPriceMaticNetworkId, config.gasPriceType.SAFE));
-      // log.info(`Polygon Mainnet Safe Max Fee Per Gas From Cache: ${safeMaxFeePerGasFromCache}`);
-      // const mediumMaxFeePerGasFromCache = await get(getMaxFeePerGasKey(config.gasPriceMaticNetworkId, config.gasPriceType.MEDIUM));
-      // log.info(`Polygon Mainnet Medium Max Fee Per Gas From Cache: ${mediumMaxFeePerGasFromCache}`);
-      // const fastMaxFeePerGasFromCache = await get(getMaxFeePerGasKey(config.gasPriceMaticNetworkId, config.gasPriceType.FAST));
-      // log.info(`Polygon Mainnet Fast Max Fee Per Gas From Cache: ${fastMaxFeePerGasFromCache}`);
-      // const safeMaxPriorityFeePerGasFromCache = await get(getMaxPriorityFeePerGasKey(config.gasPriceMaticNetworkId, config.gasPriceType.SAFE));
-      // log.info(`Polygon Mainnet Safe Max Priority Fee Per Gas From Cache: ${safeMaxPriorityFeePerGasFromCache}`);
-      // const mediumMaxPriorityFeePerGasFromCache = await get(getMaxPriorityFeePerGasKey(config.gasPriceMaticNetworkId, config.gasPriceType.MEDIUM));
-      // log.info(`Polygon Mainnet Medium Max Priority Fee Per Gas From Cache: ${mediumMaxPriorityFeePerGasFromCache}`);
-      // const fastMaxPriorityFeePerGasFromCache = await get(getMaxPriorityFeePerGasKey(config.gasPriceMaticNetworkId, config.gasPriceType.FAST));
-      // log.info(`Polygon Mainnet Fast Max Priority Fee Per Gas From Cache: ${fastMaxPriorityFeePerGasFromCache}`);
+      await this.setMaxFeeGasPrice(GasPriceType.FAST, (fastMaxFeeInWei * multiplier).toString());
+
+      await this.setMaxPriorityFeeGasPrice(GasPriceType.FAST, fastMaxPriorityFeeInWei.toString());
+
+      const safeMaxFeeGasFromCache = await this.getMaxFeeGasPrice(GasPriceType.DEFAULT);
+      log.info(`Polygon Mainnet Safe Max Fee Per Gas From Cache: ${safeMaxFeeGasFromCache}`);
+
+      const mediumMaxFeeGasFromCache = await this.getMaxFeeGasPrice(GasPriceType.MEDIUM);
+      log.info(`Polygon Mainnet Medium Max Fee Per Gas From Cache: ${mediumMaxFeeGasFromCache}`);
+
+      const fastMaxFeeGasFromCache = await this.getMaxFeeGasPrice(GasPriceType.FAST);
+      log.info(`Polygon Mainnet Fast Max Fee Per Gas From Cache: ${fastMaxFeeGasFromCache}`);
+
+      const safeMaxPriorityFeeGasFromCache = await this.getMaxPriorityFeeGasPrice(
+        GasPriceType.DEFAULT,
+      );
+      log.info(`Polygon Mainnet Safe Max Priority Fee Per Gas From Cache: ${safeMaxPriorityFeeGasFromCache}`);
+
+      const mediumMaxPriorityFeeGasFromCache = await this.getMaxPriorityFeeGasPrice(
+        GasPriceType.MEDIUM,
+      );
+      log.info(`Polygon Mainnet Medium Max Priority Fee Per Gas From Cache: ${mediumMaxPriorityFeeGasFromCache}`);
+
+      const fastMaxPriorityFeeGasFromCache = await this.getMaxPriorityFeeGasPrice(
+        GasPriceType.FAST,
+      );
+      log.info(`Polygon Mainnet Fast Max Priority Fee Per Gas From Cache: ${fastMaxPriorityFeeGasFromCache}`);
     }
   }
 
