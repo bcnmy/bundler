@@ -10,15 +10,16 @@
 
 import { AAConsumer } from '../../relayer/src/services/consumer/AAConsumer';
 import { Config } from '../config';
-// import { Mongo } from '../../common/db/mongo/mongo';
 import { TransactionType } from '../types';
 import { AATransactionQueue } from '../queue/AATransactionQueue';
 import { RedisCacheService } from '../cache';
+import { Mongo } from '../db';
 
 const queueMap: any = {}; // TODO: Add type of queue
 // const dbInstance = Mongo.getInstance();
 // const daoUtilsInstance = new DaoUtils(dbInstance);
 const redisClient = RedisCacheService.getInstance();
+const dbInstance = Mongo.getInstance();
 
 const supportedNetworks: number[] = [5, 80001];
 const transactionType:{ [key: number]: string[] } = {
@@ -50,4 +51,5 @@ export {
   config,
   queueMap,
   redisClient,
+  dbInstance,
 };

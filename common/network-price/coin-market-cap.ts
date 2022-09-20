@@ -1,8 +1,7 @@
 /* eslint-disable consistent-return */
 import axios from 'axios';
-import { config } from '../../server/config';
 import { logger } from '../log-config';
-import { redisClient } from '../db';
+import { config, redisClient } from '../service-manager';
 
 const log = logger(module);
 
