@@ -1,4 +1,4 @@
-import { redisClient } from '../../../common/db';
+import { redisClient } from '../../../common/db/mongo/models';
 import { logger } from '../../../common/log-config';
 import { getNetworkFiatPricingKey } from './cache-utils';
 
