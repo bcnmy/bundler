@@ -15,6 +15,7 @@ const gasPriceMap: Record<number, GasPrice> = {};
   await dbInstance.connect();
   await initSetERC20TokenPrices();
   for (const networkId of supportedNetworks) {
+    console.log('supported network is ', networkId);
     const rpcURL: string = config.provider[networkId];
     // Create new instance of Network SDK for all supported networks
     const network: Network = new Network(rpcURL);

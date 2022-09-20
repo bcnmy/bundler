@@ -13,7 +13,7 @@ const envConfig: LooseObject = {
     MATIC: [80001, 137],
   },
   provider: {
-    5: 'https://goerli.infura.io/v3/30125eccc47e475b9a9421f0eaf1e19c',
+    5: 'https://eth-goerli.alchemyapi.io/v2/8vLFyF65nIpyd1CrfhqHd7kYtetw3Y7y',
     80001: 'https://polygon-mumbai.g.alchemy.com/v2/OcZ3-nUEz5Pnk-y0FzLikmD6Ky_ompOf',
   },
   currency: {
@@ -134,7 +134,7 @@ const envConfig: LooseObject = {
     5: {
       ETH: '0x0000000000000000000000000000000000000000',
       USDC: '0xb5B640E6414b6DeF4FC9B3C1EeF373925effeCcF',
-      USDT: '0xb1f79Eb4fb3BD4DD516033FA9ab3037874A905E4',
+      USDT: '0x64Ef393b6846114Bad71E2cB2ccc3e10736b5716',
       WETH: '0xb7e94Cce902E34e618A23Cb82432B95d03096146',
       DAI: '0xE68104D83e647b7c1C15a91a8D8aAD21a51B3B3E',
     },

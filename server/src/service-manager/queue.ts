@@ -33,7 +33,7 @@ let channel: any;
     console.log('error in connecting to amqp', error);
     // eslint-disable-next-line no-promise-executor-return
     await new Promise((r) => setTimeout(r, 5000));
-    process.exit(1);
+    // process.exit(1);
   }
 })();
 

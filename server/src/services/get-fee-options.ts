@@ -1,5 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import Big from 'big.js';
+import { ethers } from 'ethers';
 import { redisClient } from '../../../common/db';
 import { logger } from '../../../common/log-config';
 import { config } from '../../config';
@@ -46,6 +47,7 @@ export const feeOptionsService = async (feeOptionServiceParams: FeeOptionService
     } = feeOptionServiceParams;
 
     const feeTokens = config.supportedFeeTokens[chainId];
+    console.log(gasPriceMap[chainId]);
     const gasPrice: string = await gasPriceMap[chainId].getGasPrice();
 
     let networkPriceDataInString = await redisClient.get('NETWORK_PRICE_DATA') || '';
@@ -63,7 +65,12 @@ export const feeOptionsService = async (feeOptionServiceParams: FeeOptionService
         tokenGasPrice = gasPrice;
         decimal = config.decimal[chainId];
       } else if (token === 'USDC' || token === 'USDT') {
-        decimal = 6; // fetch it from contract
+        const abi = [
+          'function balanceOf(walletAddress) view returns (uint256)',
+          'function decimals() view returns (uint256)',
+        ];
+        const tokenContract = new ethers.Contract(config.tokenContractAddress[chainId][token], abi);
+        decimal = tokenContract.decimals(); // fetch it from contract
         tokenGasPrice = await convertGasPriceToUSD(chainId, gasPrice, chainPriceDataInUSD, token);
         tokenGasPrice = new Big(tokenGasPrice).mul(10 ** decimal).toFixed(0).toString();
       } else if (token === 'DAI') {
