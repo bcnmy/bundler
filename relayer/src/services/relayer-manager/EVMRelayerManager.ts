@@ -18,22 +18,6 @@ import { EVMAccount } from '../account';
 import { ITransactionService } from '../transaction-service/interface';
 import { IRelayerManager } from './interface/IRelayerManager';
 import { RelayerManagerType } from '../../../../common/types';
-import { stringify } from '../../utils/util';
-<<<<<<< HEAD:relayer/src/services/relayer-manager/evm-relayer-manager.ts
-import { Relayer } from '../relayer';
-import { IRelayer } from '../relayer/interface';
-import { IRelayerManager } from './interface';
-import { EVMAccount } from '../account';
-import { ITransactionService } from '../transaction-service/interface/ITransactionService';
-=======
-import { EVMAccount } from '../account';
-import { ITransactionService } from '../transaction-service/interface';
-import { IRelayerManager } from './interface/IRelayerManager';
-<<<<<<< HEAD
-=======
-import { RelayerManagerType } from '../../../../common/types';
->>>>>>> afc5151a9252383e116220d081860cfbf3cdc1a2:relayer/src/services/relayer-manager/EVMRelayerManager.ts
->>>>>>> development-yash
 
 const log = logger(module);
 const fundRelayerMutex = new Mutex();
@@ -75,7 +59,11 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
 
   pendingTransactionCountThreshold: number = 15;
 
+<<<<<<< HEAD:relayer/src/services/relayer-manager/evm-relayer-manager.ts
+  newRelayerInstanceCount: number = 10;
+=======
   newRelayerInstanceCount: number = 2;
+>>>>>>> afc5151a9252383e116220d081860cfbf3cdc1a2:relayer/src/services/relayer-manager/EVMRelayerManager.ts
 
   relayerMap?: Record<string, EVMAccount>;
 
@@ -176,6 +164,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
     log.info(`Lock released after creating relayers on ${this.chainId}`);
   }
 
+<<<<<<< HEAD:relayer/src/services/relayer-manager/evm-relayer-manager.ts
   async fetchMainAccountNonceFromNetwork(): Promise<number> {
     return this.network;
   }
@@ -195,9 +184,11 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
   updateRetryCountMap(relayer: IRelayer) {
     this.retryCountMap[relayer.id] += 1;
   }
+=======
   async fundRelayer(address: string) {
     const BICONOMY_OWNER_PRIVATE_KEY = config?.chains.ownerAccountDetails[this.chainId].privateKey;
     const BICONOMY_OWNER_ADDRESS = config?.chains.ownerAccountDetails[this.chainId].publicKey;
+>>>>>>> afc5151a9252383e116220d081860cfbf3cdc1a2:relayer/src/services/relayer-manager/EVMRelayerManager.ts
 
     const fundingRelayerAmount = config?.relayerManager[RelayerManagerType.AA].fundingRelayerAmount;
     const gasLimitMap = config?.relayerManager[0].gasLimitMap;

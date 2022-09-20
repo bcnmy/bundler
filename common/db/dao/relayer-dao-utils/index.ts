@@ -1,5 +1,5 @@
-import { Mongo } from '../../../common/db/mongo/models/blockchain_transactions/mongo';
-import { logger } from '../../../common/log-config';
+import { Mongo } from '../../mongo/models/blockchain_transactions/mongo';
+import { logger } from '../../../log-config';
 import { IDaoUtils } from './interface/dao-utils';
 
 const log = logger(module);

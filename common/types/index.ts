@@ -75,3 +75,14 @@ export enum TransactionStatus {
   FAILED = 'FAILED',
   DROPPED = 'DROPPED',
 }
+
+type ErrorType = {
+  code: number;
+  error: string;
+};
+
+export function isError<T>(
+  response: T | ErrorType,
+): response is ErrorType {
+  return (response as ErrorType).error !== undefined;
+}
