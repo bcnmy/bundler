@@ -79,6 +79,16 @@ export type ConfigType = {
         [key: number]: string
       }
     }
+  },
+  gasPrice: { // add validation to check the object exists for network id 137
+    [key: number]: {
+      minGasPrice: number,
+      maxGasPrice: number,
+      baseFeeMultiplier: number,
+      gasOracle: {
+        [key: string]: string,
+      },
+    }
   }
 
 };

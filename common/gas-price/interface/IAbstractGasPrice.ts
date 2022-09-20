@@ -3,11 +3,6 @@ import { INetworkService } from '../../network';
 import { EVMRawTransactionType } from '../../types';
 import { GasPriceType } from '../types';
 
-export interface IGasPrice {
-  updateFrequencyInSeconds: number;
-  setup(): void;
-}
-
 export interface IAbstractGasPrice {
   chainId: number;
   networkService?: INetworkService<EVMAccount, EVMRawTransactionType>;
@@ -19,6 +14,6 @@ export interface IAbstractGasPrice {
   getMaxFeeGasPrice(gasType: GasPriceType): Promise<string>
 
   setMaxPriorityFeeGasPrice(gasType: GasPriceType, price: string): Promise<void>
-  getMaxPriorityFeeGasPrice(gasType: GasPriceType): Promise<>
+  getMaxPriorityFeeGasPrice(gasType: GasPriceType): Promise<string>
 
 }
