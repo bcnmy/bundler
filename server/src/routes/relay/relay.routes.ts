@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { simulateApi } from '../../../../common/simulate/simulate';
+import { simulateApi } from '../../controllers/simulate';
 import { feeOptionsApi, relayApi } from '../../controllers';
 import { validateRelayRequest, validateRequest } from '../../middleware';
 import { simulateOptionsSchema, feeOptionsSchema } from './relay.schema';

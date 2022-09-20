@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
-import { logger } from '../log-config';
-import { simulateService } from '../../server/src/services';
+import { logger } from '../../../../common/log-config';
+import { simulateService } from '../../services';
 
 const log = logger(module);
 
