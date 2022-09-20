@@ -1,7 +1,3 @@
-import { feeOptionsService } from './fee-options/fee-options';
-import { simulateService } from './simulate';
-
-export {
-  simulateService,
-  feeOptionsService,
-};
+export * from './fee-options';
+export * from './relay';
+export * from './simulate';
