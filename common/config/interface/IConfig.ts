@@ -89,7 +89,12 @@ export type ConfigType = {
         [key: string]: string,
       },
     }
-  }
+  },
+  feeOption: {
+    supportedFeeTokens: {
+      [key:number]: Array<string>
+    }
+  },
 
 };
 

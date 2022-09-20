@@ -16,8 +16,7 @@ import { RedisCacheService } from '../cache';
 import { Mongo } from '../db';
 
 const queueMap: any = {}; // TODO: Add type of queue
-// const dbInstance = Mongo.getInstance();
-// const daoUtilsInstance = new DaoUtils(dbInstance);
+
 const redisClient = RedisCacheService.getInstance();
 const dbInstance = Mongo.getInstance();
 
@@ -37,8 +36,8 @@ const config = configInstance.get();
     for (const type of transactionType[chainId]) {
       if (type === TransactionType.AA) {
         const queue = new AATransactionQueue(chainId, type);
-        const aaConsumer = new AAConsumer(chainId, type, queue);
         await queue.connect();
+        const aaConsumer = new AAConsumer(chainId, type, queue);
         // start listening for transaction
         await queue.consume(aaConsumer.onMessageReceived);
         queueMap[chainId][type] = queue;

@@ -1,6 +1,14 @@
 import { ConsumeMessage } from 'amqplib';
 import { BigNumber } from 'ethers';
 
+export enum TransactionStatus {
+  IN_PROCESS = 'IN_PROCESS',
+  PENDING = 'PENDING',
+  SUCCESS = 'SUCCESS',
+  FAILED = 'FAILED',
+  DROPPED = 'DROPPED',
+}
+
 export enum TransactionType {
   AA = 'AA',
   SCW = 'SCW',
@@ -14,24 +22,6 @@ export enum RelayerManagerType {
   VANILLA_GASLESS = 0,
   CROSS_CHAIN = 1,
 }
-
-export type AATransactionMessageType = {
-  type: string;
-  to: string;
-  data: string;
-  gasLimit: string;
-  chainId: number;
-  value: string;
-};
-
-export type SCWTransactionMessageType = {
-  type: string;
-  to: string;
-  data: string;
-  gasLimit: string;
-  chainId: number;
-  value: string;
-};
 
 export interface IQueue<TransactionMessageType> {
   chainId: number;
@@ -68,13 +58,24 @@ export interface IRetryPolicy {
   incrementTry: () => void;
 }
 
-export enum TransactionStatus {
-  IN_PROCESS = 'IN_PROCESS',
-  PENDING = 'PENDING',
-  SUCCESS = 'SUCCESS',
-  FAILED = 'FAILED',
-  DROPPED = 'DROPPED',
-}
+export type AATransactionMessageType = {
+  type: string;
+  to: string;
+  data: string;
+  gasLimit: string;
+  chainId: number;
+  value: string;
+};
+
+export type SCWTransactionMessageType = {
+  type: string;
+  to: string;
+  data: string;
+  gasLimit: string;
+  chainId: number;
+  value: string;
+};
+
 
 type ErrorType = {
   code: number;
