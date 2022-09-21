@@ -23,7 +23,6 @@ export enum RelayerManagerType {
   CROSS_CHAIN = 1,
 }
 
-
 export type EVMRawTransactionType = {
   from: string;
   gasPrice?: string | BigNumber;

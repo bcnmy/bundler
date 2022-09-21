@@ -1,10 +1,10 @@
 import { config } from '../service-manager';
-import { MaticMainnetGasPrice } from './networks/MaticMainnetGasPrice';
+import { MaticGasPrice } from './networks/MaticGasPrice';
 import { GoerliGasPrice } from './networks/GoerliGasPrice';
 import { MumbaiGasPrice } from './networks/MumbaiGasPrice';
 import { IGasPrice } from './interface/IGasPrice';
 
-type GasPriceType = MaticMainnetGasPrice | GoerliGasPrice | MumbaiGasPrice | undefined;
+type GasPriceType = MaticGasPrice | GoerliGasPrice | MumbaiGasPrice | undefined;
 export class GasPrice implements IGasPrice<GasPriceType> {
   chainId: number;
 
@@ -13,11 +13,11 @@ export class GasPrice implements IGasPrice<GasPriceType> {
     this.setup();
   }
 
-  setup() {
+  setup = () => {
     const updateFrequencyInSeconds = config?.gasPrice.updateFrequencyInSeconds[this.chainId] || 60;
     switch (this.chainId) {
       case 137:
-        return new MaticMainnetGasPrice(this.chainId, updateFrequencyInSeconds);
+        return new MaticGasPrice(this.chainId, updateFrequencyInSeconds);
       case 5:
         return new GoerliGasPrice(this.chainId, updateFrequencyInSeconds);
       case 80001:
@@ -25,5 +25,5 @@ export class GasPrice implements IGasPrice<GasPriceType> {
       default:
         return undefined;
     }
-  }
+  };
 }

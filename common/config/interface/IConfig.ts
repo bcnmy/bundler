@@ -103,21 +103,29 @@ export type ConfigType = {
     wrappedTokens: {
       [key: string]: number
     },
-    tokenContractAddress: {
+    supportedFeeTokensConfig: {
+      [key: number]: {
+        [key: string]: {
+          logoUrl: string,
+          tokenContractAddress: string,
+          decimals: number,
+          feeTokenTransferGas: number,
+        },
+      }
+    },
+  },
+  tokenPrice: {
+    coinMarketCapApi: string,
+    networkSymbols: {
+      [key: string]: Array<number>
+    },
+    updateFrequencyInSeconds: number,
+    symbolMapByChainId: {
       [key: number]: {
         [key: string]: string,
       }
-    },
-    feeTokenTransferGas: {
-      [key: number]: {
-        [key: string]: number,
-      }
-    },
-    logoUrl: {
-      [key: string]: string,
-    },
-  },
-
+    }
+  }
 };
 
 export interface IConfig {

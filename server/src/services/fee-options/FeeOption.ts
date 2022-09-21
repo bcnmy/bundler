@@ -2,7 +2,7 @@
 import Big from 'big.js';
 import { GasPriceType } from '../../../../common/gas-price/types';
 import { logger } from '../../../../common/log-config';
-import { config, redisClient, gasPriceMap } from '../../../../common/service-manager';
+import { config, gasPriceMap, redisClient } from '../../../../common/service-manager';
 import { FeeOptionResponseParams } from './types';
 
 const log = logger(module);
@@ -51,21 +51,12 @@ export class FeeOption {
 
       for (const token of feeTokens) {
         let tokenGasPrice;
-        let decimal;
-        if (config?.feeOption.similarTokens[this.chainId].includes(token)) { // check if same token
+        const supportedTokenConfig = config.feeOption.supportedFeeTokensConfig[this.chainId][token];
+        const decimal = supportedTokenConfig.decimals;
+        // get similar or wrapped token
+        if (config?.feeOption.similarTokens[this.chainId].includes(token)) {
           tokenGasPrice = gasPrice;
-          decimal = config.chains.decimal[this.chainId];
-        } else if (token === 'USDC' || token === 'USDT') {
-          decimal = 6; // fetch it from contract
-          tokenGasPrice = await convertGasPriceToUSD(
-            this.chainId,
-            gasPrice,
-            chainPriceDataInUSD,
-            token,
-          );
-          tokenGasPrice = new Big(tokenGasPrice).mul(10 ** decimal).toFixed(0).toString();
-        } else if (token === 'XDAI') {
-          decimal = 18; // fetch it from contract
+        } else if (token === 'USDC' || token === 'USDT' || token === 'DAI') { // stables
           tokenGasPrice = await convertGasPriceToUSD(
             this.chainId,
             gasPrice,
@@ -75,7 +66,7 @@ export class FeeOption {
           tokenGasPrice = new Big(tokenGasPrice).mul(10 ** decimal).toFixed(0).toString();
         } else {
           // calculate for cross chain
-          const crossChainId = config?.feeOption.wrappedTokens[token];
+          const crossChainId = config.feeOption.wrappedTokens[token];
           if (crossChainId) {
             const gasPriceInUSD = await convertGasPriceToUSD(
               this.chainId,
@@ -85,18 +76,17 @@ export class FeeOption {
             );
             const crossChainPrice = networkPriceData[crossChainId];
             tokenGasPrice = new Big(gasPriceInUSD).div(new Big(crossChainPrice));
-            decimal = config?.chains.decimal[crossChainId] || 1;
             tokenGasPrice = new Big(tokenGasPrice).mul(10 ** decimal).toFixed(0).toString();
           }
         }
         response.push({
           tokenGasPrice: Number(tokenGasPrice),
           symbol: token,
-          address: config.feeOption.tokenContractAddress[this.chainId][token] || '',
-          decimal: Number(decimal),
-          logoUrl: config?.feeOption.logoUrl[token] || '',
-          offset: config?.feeOption.offset[token] || 1,
-          feeTokenTransferGas: config?.feeOption.feeTokenTransferGas[this.chainId][token] || 0,
+          decimal,
+          offset: config.feeOption.offset[token] || 1,
+          address: supportedTokenConfig.tokenContractAddress,
+          logoUrl: supportedTokenConfig.logoUrl,
+          feeTokenTransferGas: supportedTokenConfig.feeTokenTransferGas,
         });
       }
       return {

@@ -1,6 +1,39 @@
 import { ConsumeMessage } from 'amqplib';
 import { BigNumber } from 'ethers';
 
+export enum TransactionType {
+  AA = 'AA',
+  SCW = 'SCW',
+  VANILLA_GASLESS = 'VANILLA_GASLESS',
+  CROSS_CHAIN = 'CROSS_CHAIN',
+}
+
+export enum TransactionStatus {
+  IN_PROCESS = 'IN_PROCESS',
+  PENDING = 'PENDING',
+  SUCCESS = 'SUCCESS',
+  FAILED = 'FAILED',
+  DROPPED = 'DROPPED',
+}
+
+export type AATransactionMessageType = {
+  type: string;
+  to: string;
+  data: string;
+  gasLimit: string;
+  chainId: number;
+  value: string;
+};
+
+export type SCWTransactionMessageType = {
+  type: string;
+  to: string;
+  data: string;
+  gasLimit: string;
+  chainId: number;
+  value: string;
+};
+
 export interface IQueue<TransactionMessageType> {
   chainId: number;
   transactionType?: string;

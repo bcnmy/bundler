@@ -7,10 +7,11 @@ import { RawTransactionType } from 'network-sdk/dist/types';
 import { logger } from '../../../../common/log-config';
 import { config } from '../../../../common/service-manager';
 import { stringify } from '../../utils/util';
+import { Relayer } from '../relayer';
+import { IRelayer } from '../relayer/interface';
+import { IRelayerManager } from './interface';
 import { EVMAccount } from '../account';
-import { ITransactionService } from '../transaction-service/interface';
-import { IRelayerManager } from './interface/IRelayerManager';
-import { RelayerManagerType } from '../../../../common/types';
+import { ITransactionService } from '../transaction-service/interface/ITransactionService';
 
 const log = logger(module);
 const fundRelayerMutex = new Mutex();
@@ -30,19 +31,19 @@ const createRelayerMutex = new Mutex();
 export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
   chainId: number;
 
-  transactionService: ITransactionService<EVMAccount>; // to fund relayers
+  transactionService: ITransactionService<EVMAccount>;
 
   // TODO
   // Update default values to fetch from config
-  minRelayerCount: number = 5; // minimum number of relayers to be created
+  minRelayerCount: number = 5;
 
-  maxRelayerCount: number = 15; // maximum number of relayers to be created
-  
+  maxRelayerCount: number = 15;
+
   inactiveRelayerCountThreshold: number = 0.6;
 
   pendingTransactionCountThreshold: number = 15;
 
-  newRelayerInstanceCount: number = 2;
+  newRelayerInstanceCount: number = 10;
 
   relayerMap?: Record<string, EVMAccount>;
 
@@ -52,15 +53,37 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
   ) {
     this.chainId = chainId;
     this.transactionService = transactionService;
+
+    configChangeListeners.relayerManagerService.push(this.onConfigChange.bind(this));
   }
 
-  setMinRelayerCount = (minRelayerCount: number) => {
-    this.minRelayerCount = minRelayerCount;
-  };
+  fundRelayers(relayer: EVMAccount): Promise<boolean> {
+    throw new Error('Method not implemented.');
+  }
 
-  setMaxRelayerCount = (maxRelayerCount: number) => {
-    this.maxRelayerCount = maxRelayerCount;
-  };
+  getRelayer(relayerAddress: string): Promise<EVMAccount> {
+    throw new Error('Method not implemented.');
+  }
+
+  getActiveRelayer(): Promise<EVMAccount> {
+    throw new Error('Method not implemented.');
+  }
+
+  setMinRelayerCount(): Promise<boolean> {
+    throw new Error('Method not implemented.');
+  }
+
+  setMaxRelayerCount(): Promise<boolean> {
+    throw new Error('Method not implemented.');
+  }
+
+  setInactiveRelayerCountThreshold(): Promise<boolean> {
+    throw new Error('Method not implemented.');
+  }
+
+  setPendingTransactionCountThreshold(): Promise<boolean> {
+    throw new Error('Method not implemented.');
+  }
 
   async createRelayers(numberOfRelayers: number): Promise<void> {
     log.info(`Waiting for lock to create relayers on ${this.chainId}`);
@@ -109,14 +132,29 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
     log.info(`Lock released after creating relayers on ${this.chainId}`);
   }
 
+  async fetchMainAccountNonceFromNetwork(): Promise<number> {
+    return this.network;
+  }
+
+  async fetchActiveRelayer(): Promise<IRelayer> {
+  }
+
+  static updateRelayerBalance(relayer: IRelayer): number {
+  }
+
+  updateRelayerMap(relayer: IRelayer) {
+    this.relayersMap[relayer.id] = relayer;
+  }
+
+  updateRetryCountMap(relayer: IRelayer) {
+    this.retryCountMap[relayer.id] += 1;
+  }
+
   async fundRelayer(address: string) {
     const BICONOMY_OWNER_PRIVATE_KEY = config?.chains.ownerAccountDetails[this.chainId].privateKey;
     const BICONOMY_OWNER_ADDRESS = config?.chains.ownerAccountDetails[this.chainId].publicKey;
-
     const fundingRelayerAmount = config?.relayerManager[RelayerManagerType.AA].fundingRelayerAmount;
     const gasLimitMap = config?.relayerManager[0].gasLimitMap;
-
-
 
     try {
       // check funding threshold
@@ -176,13 +214,5 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
     } catch (error) {
       log.error(`Error in fundRelayer ${stringify(error)}`);
     }
-  }
-
-  async getRelayer(relayerAddress: string): Promise<EVMAccount> {
-    
-  }
-
-  async getActiveRelayer(): Promise<EVMAccount> {
-    
   }
 }
