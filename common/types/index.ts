@@ -1,14 +1,19 @@
 import { ConsumeMessage } from 'amqplib';
-<<<<<<< HEAD
-=======
 import { BigNumber } from 'ethers';
->>>>>>> development-kunal
 
 export enum TransactionType {
   AA = 'AA',
   SCW = 'SCW',
   VANILLA_GASLESS = 'VANILLA_GASLESS',
   CROSS_CHAIN = 'CROSS_CHAIN',
+}
+
+export enum TransactionStatus {
+  IN_PROCESS = 'IN_PROCESS',
+  PENDING = 'PENDING',
+  SUCCESS = 'SUCCESS',
+  FAILED = 'FAILED',
+  DROPPED = 'DROPPED',
 }
 
 export enum RelayerManagerType {
@@ -18,14 +23,6 @@ export enum RelayerManagerType {
   CROSS_CHAIN = 1,
 }
 
-export interface IQueue<TransactionMessageType> {
-  chainId: number;
-  transactionType?: string;
-  connect(): Promise<void>
-  publish(arg0: TransactionMessageType): Promise<boolean>
-  consume(): Promise<boolean>
-  ack(arg0: ConsumeMessage): Promise<void>
-}
 
 export type EVMRawTransactionType = {
   from: string;
@@ -80,33 +77,20 @@ export interface IQueue<TransactionMessageType> {
   ack(arg0: ConsumeMessage): Promise<void>
 }
 
-export type EVMRawTransactionType = {
-  nonce: string,
-  to: string,
-  data: string,
-  chainId: number,
-  value: string,
-  gasPrice: string,
-  gasLimit: string,
+type ResponseType = {
+  code: number;
+  transactionId: string;
 };
 
-<<<<<<< HEAD
-export interface IRetryPolicy {
-  maxTries: number;
-  shouldRetry: (err: any) => Promise<boolean>;
-  incrementTry: () => void;
-}
+type ErrorType = {
+  code: number;
+  error: string;
+};
 
-export enum TransactionStatus {
-  IN_PROCESS = 'IN_PROCESS',
-  PENDING = 'PENDING',
-  SUCCESS = 'SUCCESS',
-  FAILED = 'FAILED',
-  DROPPED = 'DROPPED',
-=======
+export type RelayServiceResponseType = ResponseType | ErrorType;
+
 export function isError<T>(
   response: T | ErrorType,
 ): response is ErrorType {
   return (response as ErrorType).error !== undefined;
->>>>>>> development-kunal
 }

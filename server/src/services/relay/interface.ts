@@ -1,14 +1,4 @@
-type ResponseType = {
-  code: number;
-  transactionId: string;
-};
-
-type ErrorType = {
-  code: number;
-  error: string;
-};
-
-export type RelayServiceResponseType = ResponseType | ErrorType;
+import { RelayServiceResponseType } from '../../../../common/types';
 
 export interface IRelayService<TransactionMessageType> {
   sendTransactionToRelayer(data: TransactionMessageType): Promise<RelayServiceResponseType>;
