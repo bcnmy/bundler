@@ -8,20 +8,19 @@ export enum TransactionType {
   CROSS_CHAIN = 'CROSS_CHAIN',
 }
 
+export enum TransactionStatus {
+  IN_PROCESS = 'IN_PROCESS',
+  PENDING = 'PENDING',
+  SUCCESS = 'SUCCESS',
+  FAILED = 'FAILED',
+  DROPPED = 'DROPPED',
+}
+
 export enum RelayerManagerType {
   AA = 0,
   SCW = 0,
   VANILLA_GASLESS = 0,
   CROSS_CHAIN = 1,
-}
-
-export interface IQueue<TransactionMessageType> {
-  chainId: number;
-  transactionType?: string;
-  connect(): Promise<void>
-  publish(arg0: TransactionMessageType): Promise<boolean>
-  consume(): Promise<boolean>
-  ack(arg0: ConsumeMessage): Promise<void>
 }
 
 export type EVMRawTransactionType = {
@@ -68,15 +67,26 @@ export type SCWTransactionMessageType = {
   value: string;
 };
 
-export type EVMRawTransactionType = {
-  nonce: string,
-  to: string,
-  data: string,
-  chainId: number,
-  value: string,
-  gasPrice: string,
-  gasLimit: string,
+export interface IQueue<TransactionMessageType> {
+  chainId: number;
+  transactionType?: string;
+  connect(): Promise<void>
+  publish(arg0: TransactionMessageType): Promise<boolean>
+  consume(): Promise<boolean>
+  ack(arg0: ConsumeMessage): Promise<void>
+}
+
+type ResponseType = {
+  code: number;
+  transactionId: string;
 };
+
+type ErrorType = {
+  code: number;
+  error: string;
+};
+
+export type RelayServiceResponseType = ResponseType | ErrorType;
 
 export function isError<T>(
   response: T | ErrorType,

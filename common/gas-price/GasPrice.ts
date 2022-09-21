@@ -25,5 +25,5 @@ export class GasPrice implements IGasPrice<GasPriceType> {
       default:
         return undefined;
     }
-  }
+  };
 }
