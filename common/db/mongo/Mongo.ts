@@ -1,6 +1,7 @@
 import mongoose, { Mongoose } from 'mongoose';
-import { IDBService } from '../../../interface';
-import { BlockchainTransactionsMap } from '../../..';
+import { IDBService } from '../interface/IDBService';
+import { BlockchainTransactionsMap } from './models';
+import { config } from '../../service-manager';
 
 export class Mongo implements IDBService {
   private static instance: Mongo;
@@ -19,7 +20,10 @@ export class Mongo implements IDBService {
   }
 
   connect = async () => {
-    const dbUrl = ''; // TODO: get from config instance;
+    const dbUrl = config?.dataSources.mongoUrl || '';
+    if (!dbUrl) {
+      throw new Error('Database url not provided');
+    }
     try {
       if (!this.client) {
         this.client = await mongoose.connect(dbUrl, {
@@ -37,7 +41,7 @@ export class Mongo implements IDBService {
     if (!this.client) {
       throw new Error('Not connected to db');
     }
-    const supportedNetworks: number[] = []; // TODO: get from config instance;
+    const supportedNetworks: number[] = config?.supportedNetworks || [];
     if (!supportedNetworks.includes(networkId)) throw new Error(`Network Id ${networkId} is not supported`);
     return BlockchainTransactionsMap[networkId];
   }

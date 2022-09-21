@@ -18,7 +18,7 @@ function replaceData(data: any) {
 }
 
 export class Config implements IConfig {
-  public config: ConfigType | null;
+  config: ConfigType | null;
 
   constructor() {
     this.config = null;
@@ -42,7 +42,7 @@ export class Config implements IConfig {
     return true;
   }
 
-  get(): ConfigType | null {
+  get(): ConfigType {
     return this.config;
   }
 }

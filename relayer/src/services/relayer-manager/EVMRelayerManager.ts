@@ -1,8 +1,9 @@
 /* eslint-disable no-param-reassign */
 import { Mutex } from 'async-mutex';
+import { privateToPublic, publicToAddress, toChecksumAddress } from 'ethereumjs-util';
 import { ethers } from 'ethers';
-import { RawTransactionType } from 'network-sdk/dist/types';
 import hdkey from 'hdkey';
+import { RawTransactionType } from 'network-sdk/dist/types';
 import { logger } from '../../../../common/log-config';
 import { config } from '../../../../common/service-manager';
 import { stringify } from '../../utils/util';
@@ -145,7 +146,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
         );
         promises.push(relayer.create(this.messenger));
       }
-      const relayers: Relayer[] = await Promise.all(promises);
+      const relayers: EVMAccount[] = await Promise.all(promises);
 
       log.info(`Relayers created on network id ${this.chainId}`);
       relayers.map(async (relayer) => {
@@ -253,5 +254,13 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
     } catch (error) {
       log.error(`Error in fundRelayer ${stringify(error)}`);
     }
+  }
+
+  async getRelayer(relayerAddress: string): Promise<EVMAccount> {
+    
+  }
+
+  async getActiveRelayer(): Promise<EVMAccount> {
+    
   }
 }
