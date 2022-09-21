@@ -173,7 +173,7 @@ const envConfig: LooseObject = {
     137: {
       MATIC: 18,
       USDC: 6,
-      USDT: 18,
+      USDT: 6,
       WETH: 18,
       DAI: 18,
     },
