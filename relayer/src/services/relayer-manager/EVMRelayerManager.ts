@@ -18,6 +18,7 @@ import { EVMAccount } from '../account';
 import { ITransactionService } from '../transaction-service/interface';
 import { IRelayerManager } from './interface/IRelayerManager';
 import { RelayerManagerType } from '../../../../common/types';
+>>>>>>> afc5151a9252383e116220d081860cfbf3cdc1a2:relayer/src/services/relayer-manager/EVMRelayerManager.ts
 
 const log = logger(module);
 const fundRelayerMutex = new Mutex();

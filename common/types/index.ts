@@ -1,14 +1,6 @@
 import { ConsumeMessage } from 'amqplib';
 import { BigNumber } from 'ethers';
 
-export enum TransactionStatus {
-  IN_PROCESS = 'IN_PROCESS',
-  PENDING = 'PENDING',
-  SUCCESS = 'SUCCESS',
-  FAILED = 'FAILED',
-  DROPPED = 'DROPPED',
-}
-
 export enum TransactionType {
   AA = 'AA',
   SCW = 'SCW',
@@ -76,10 +68,14 @@ export type SCWTransactionMessageType = {
   value: string;
 };
 
-
-type ErrorType = {
-  code: number;
-  error: string;
+export type EVMRawTransactionType = {
+  nonce: string,
+  to: string,
+  data: string,
+  chainId: number,
+  value: string,
+  gasPrice: string,
+  gasLimit: string,
 };
 
 export function isError<T>(
