@@ -5,4 +5,6 @@ export type FeeOptionResponseParams = {
   decimal: number;
   logoUrl: string;
   offset: number;
+  feeTokenTransferGas: number;
+  refundReceiver?: string;
 };

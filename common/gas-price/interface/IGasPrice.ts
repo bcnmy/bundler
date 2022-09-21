@@ -1,4 +1,3 @@
-export interface IGasPrice {
-  updateFrequencyInSeconds: number;
-  setup(): void;
+export interface IGasPrice<T> {
+  setup(): T;
 }

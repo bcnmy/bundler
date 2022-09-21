@@ -6,12 +6,11 @@ import { config } from '../../service-manager';
 import { EVMRawTransactionType } from '../../types';
 import { gasPriceCall } from '../../utils/axios-calls';
 import { AbstractGasPrice } from '../AbstactGasPrice';
-import { IGasPrice } from '../interface/IGasPrice';
 import { GasPriceType } from '../types';
 
 const log = logger(module);
 
-export class MaticMainnetGasPrice extends AbstractGasPrice implements IGasPrice, IScheduler {
+export class MaticMainnetGasPrice extends AbstractGasPrice implements IScheduler {
   updateFrequencyInSeconds: number;
 
   constructor(

@@ -28,12 +28,9 @@ export type ConfigType = {
       [key: number]: string,
     },
     decimal: {
-      [key: number]: string,
+      [key: number]: number,
     },
     provider: {
-      [key: number]: string,
-    },
-    gasPriceUpdateFrequency: {
       [key: number]: string,
     },
     ownerAccountDetails: {
@@ -81,6 +78,9 @@ export type ConfigType = {
     }
   },
   gasPrice: { // add validation to check the object exists for network id 137
+    updateFrequencyInSeconds: {
+      [key: number]: number,
+    },
     [key: number]: {
       minGasPrice: number,
       maxGasPrice: number,
@@ -93,7 +93,29 @@ export type ConfigType = {
   feeOption: {
     supportedFeeTokens: {
       [key:number]: Array<string>
-    }
+    },
+    offset: {
+      [key: string]: number
+    },
+    similarTokens: {
+      [key:number]: Array<string> // mapping for wrapped token with token id
+    },
+    wrappedTokens: {
+      [key: string]: number
+    },
+    tokenContractAddress: {
+      [key: number]: {
+        [key: string]: string,
+      }
+    },
+    feeTokenTransferGas: {
+      [key: number]: {
+        [key: string]: number,
+      }
+    },
+    logoUrl: {
+      [key: string]: string,
+    },
   },
 
 };

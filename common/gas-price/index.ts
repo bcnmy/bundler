@@ -1,1 +1,1 @@
-export * from './networks/MaticMainnetGasPrice';
+export * from './GasPrice';
