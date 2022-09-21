@@ -26,6 +26,6 @@ export const simulateOptionsSchema = object({
 
 export const feeOptionsSchema = object({
   query: object({
-    chainId: string().oneOf(['5', '80001']),
+    chainId: string().oneOf(['5', '80001', '137']),
   }),
 });

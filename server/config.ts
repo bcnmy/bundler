@@ -15,6 +15,7 @@ const envConfig: LooseObject = {
   provider: {
     5: 'https://eth-goerli.alchemyapi.io/v2/8vLFyF65nIpyd1CrfhqHd7kYtetw3Y7y',
     80001: 'https://polygon-mumbai.g.alchemy.com/v2/OcZ3-nUEz5Pnk-y0FzLikmD6Ky_ompOf',
+    137: 'https://polygon-mainnet.g.alchemy.com/v2/s6bOKN9QDGXpVbsqzJMl_AHeZHNOCTcM',
   },
   currency: {
     8995: 'MATIC',
@@ -103,6 +104,7 @@ const envConfig: LooseObject = {
   supportedFeeTokens: {
     5: ['ETH', 'USDC', 'USDT', 'DAI', 'WETH'],
     80001: ['MATIC', 'USDC', 'USDT', 'DAI', 'WETH'],
+    137: ['MATIC', 'USDC', 'USDT', 'DAI', 'WETH'],
   },
   wrappedTokens: {
     WETH: 1,
@@ -140,10 +142,40 @@ const envConfig: LooseObject = {
     },
     80001: {
       MATIC: '0x0000000000000000000000000000000000000000',
-      USDC: '0xe6b8a5CF854791412c1f6EFC7CAf629f5Df1c747',
-      USDT: '0x51261AA98e932737a8F159B15d246d32978EB42e',
+      USDC: '0xdA5289fCAAF71d52a80A254da614a192b693e977',
+      USDT: '0xeaBc4b91d9375796AA4F69cC764A4aB509080A58',
       WETH: '0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa',
       DAI: '0xf61cBcaC6C5E4F27543495890536B799D18f7178',
+    },
+    137: {
+      MATIC: '0x0000000000000000000000000000000000000000',
+      USDC: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
+      USDT: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
+      WETH: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
+      DAI: '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063',
+    },
+  },
+  decimalTokens: {
+    5: {
+      ETH: 18,
+      USDC: 6,
+      USDT: 18,
+      WETH: 18,
+      DAI: 18,
+    },
+    80001: {
+      MATIC: 18,
+      USDC: 6,
+      USDT: 18,
+      WETH: 18,
+      DAI: 18,
+    },
+    137: {
+      MATIC: 18,
+      USDC: 6,
+      USDT: 18,
+      WETH: 18,
+      DAI: 18,
     },
   },
   feeTokenTransferGas: {
@@ -161,6 +193,13 @@ const envConfig: LooseObject = {
       WETH: 21000,
       DAI: 21000,
     },
+    137: {
+      MATIC: 21000,
+      USDC: 21000,
+      USDT: 21000,
+      WETH: 21000,
+      DAI: 21000,
+    },
   },
   refundReceiver: {
     5: {
@@ -171,6 +210,13 @@ const envConfig: LooseObject = {
       DAI: '0xC1D3206324D806b6586cf15324178f8E8781A293',
     },
     80001: {
+      MATIC: '0xC1D3206324D806b6586cf15324178f8E8781A293',
+      USDC: '0xC1D3206324D806b6586cf15324178f8E8781A293',
+      USDT: '0xC1D3206324D806b6586cf15324178f8E8781A293',
+      WETH: '0xC1D3206324D806b6586cf15324178f8E8781A293',
+      DAI: '0xC1D3206324D806b6586cf15324178f8E8781A293',
+    },
+    137: {
       MATIC: '0xC1D3206324D806b6586cf15324178f8E8781A293',
       USDC: '0xC1D3206324D806b6586cf15324178f8E8781A293',
       USDT: '0xC1D3206324D806b6586cf15324178f8E8781A293',
