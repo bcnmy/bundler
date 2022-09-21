@@ -47,8 +47,9 @@ export const feeOptionsService = async (feeOptionServiceParams: FeeOptionService
     } = feeOptionServiceParams;
 
     const feeTokens = config.supportedFeeTokens[chainId];
-    console.log(gasPriceMap[chainId]);
     const gasPrice: string = await gasPriceMap[chainId].getGasPrice();
+
+    console.log(`gasPrice is ${gasPrice}`);
 
     let networkPriceDataInString = await redisClient.get('NETWORK_PRICE_DATA') || '';
     if (!networkPriceDataInString) {
@@ -69,8 +70,19 @@ export const feeOptionsService = async (feeOptionServiceParams: FeeOptionService
           'function balanceOf(walletAddress) view returns (uint256)',
           'function decimals() view returns (uint256)',
         ];
-        const tokenContract = new ethers.Contract(config.tokenContractAddress[chainId][token], abi);
-        decimal = tokenContract.decimals(); // fetch it from contract
+        console.log('address is', config.tokenContractAddress[chainId][token]);
+        try {
+          const tokenContract = new ethers.Contract(
+            config.tokenContractAddress[chainId][token],
+            abi,
+          );
+          decimal = await tokenContract.decimals(); // fetch it from contract
+          console.log(config.tokenContractAddress[chainId][token], decimal);
+        } catch (error) {
+          console.log(error);
+          decimal = 18;
+        }
+
         tokenGasPrice = await convertGasPriceToUSD(chainId, gasPrice, chainPriceDataInUSD, token);
         tokenGasPrice = new Big(tokenGasPrice).mul(10 ** decimal).toFixed(0).toString();
       } else if (token === 'DAI') {
