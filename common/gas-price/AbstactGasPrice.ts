@@ -31,30 +31,30 @@ export class AbstractGasPrice implements IAbstractGasPrice {
     await redisClient.set(this.getGasPriceKey(gasType), price);
   }
 
-  async getGasPrice(gasType: GasPriceType) {
+  getGasPrice = async (gasType: GasPriceType) => {
     const result = await redisClient.get(this.getGasPriceKey(gasType));
     return result;
-  }
+  };
 
-  async setMaxFeeGasPrice(gasType: GasPriceType, price: string) {
+  setMaxFeeGasPrice = async (gasType: GasPriceType, price: string) => {
     await redisClient.set(this.getMaxFeeGasKey(gasType), price);
-  }
+  };
 
   async getMaxPriorityFeeGasPrice(gasType: GasPriceType): Promise<string> {
     const result = await redisClient.get(this.getMaxPriorityFeeGasKey(gasType));
     return result;
   }
 
-  async getMaxFeeGasPrice(gasType: GasPriceType): Promise<string> {
+  getMaxFeeGasPrice = async (gasType: GasPriceType): Promise<string> => {
     const result = await redisClient.get(this.getMaxFeeGasKey(gasType));
     return result;
-  }
+  };
 
-  async setMaxPriorityFeeGasPrice(gasType: GasPriceType, price: string): Promise<void> {
+  setMaxPriorityFeeGasPrice = async (gasType: GasPriceType, price: string) => {
     await redisClient.set(this.getMaxPriorityFeeGasKey(gasType), price);
-  }
+  };
 
-  async setup(gP?: string) {
+  setup = async (gP?: string) => {
     try {
       if (!this.network) {
         throw new Error('network instance not available');
@@ -74,5 +74,5 @@ export class AbstractGasPrice implements IAbstractGasPrice {
     } catch (error) {
       log.info(`Error in setting gas price for network id ${this.chainId} - ${JSON.stringify(error)}`);
     }
-  }
+  };
 }

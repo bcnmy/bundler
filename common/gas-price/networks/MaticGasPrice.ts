@@ -10,7 +10,7 @@ import { GasPriceType } from '../types';
 
 const log = logger(module);
 
-export class MaticMainnetGasPrice extends AbstractGasPrice implements IScheduler {
+export class MaticGasPrice extends AbstractGasPrice implements IScheduler {
   updateFrequencyInSeconds: number;
 
   constructor(
@@ -22,8 +22,8 @@ export class MaticMainnetGasPrice extends AbstractGasPrice implements IScheduler
     this.updateFrequencyInSeconds = updateFrequencyInSeconds;
   }
 
-  async polygonGasStation() {
-    const url = config?.gasPrice[this.chainId].gasOracle.polygonscanUrl;
+  polygonGasStation = async () => {
+    const url = config.gasPrice[this.chainId].gasOracle.polygonscanUrl;
     if (!url) throw new Error('Polygon scan gas station url not provided.');
 
     const { status, result: response } = await gasPriceCall(url);
@@ -40,10 +40,10 @@ export class MaticMainnetGasPrice extends AbstractGasPrice implements IScheduler
     const fastestGasPriceInWei = fastestGasPrice * 1e9;
 
     return { mediumGasPriceInWei, fastGasPriceInWei, fastestGasPriceInWei };
-  }
+  };
 
-  async maticGasStation() {
-    const url = config?.gasPrice[this.chainId].gasOracle.maticGasStationUrl || '';
+  maticGasStation = async () => {
+    const url = config.gasPrice[this.chainId].gasOracle.maticGasStationUrl || '';
     if (!url) throw new Error('Matic gas station url not provided.');
 
     const response = await gasPriceCall(url);
@@ -61,10 +61,10 @@ export class MaticMainnetGasPrice extends AbstractGasPrice implements IScheduler
     log.info(`Fast GasPrice for Mainnet from matic gas station is ${fastGasPrice} gwei`);
     log.info(`Fastest GasPrice for Mainnet from matic gas station is ${fastestGasPrice} gwei`);
     return { mediumGasPriceInWei, fastGasPriceInWei, fastestGasPriceInWei };
-  }
+  };
 
-  async maticGasStationForEIP1559() {
-    const url = config?.gasPrice[this.chainId].gasOracle.maticGasStationUrlForEIP1559 || '';
+  maticGasStationForEIP1559 = async () => {
+    const url = config.gasPrice[this.chainId].gasOracle.maticGasStationUrlForEIP1559 || '';
     if (!url) throw new Error('Matic gas station url for EIP-1559 not provided.');
 
     const response = await gasPriceCall(url);
@@ -98,7 +98,7 @@ export class MaticMainnetGasPrice extends AbstractGasPrice implements IScheduler
 
     log.info(`Estimated Base Fee for Mainnet from matic gas station is ${estimatedBaseFee} gwei`);
 
-    const multiplier = config?.gasPrice[this.chainId].baseFeeMultiplier
+    const multiplier = config.gasPrice[this.chainId].baseFeeMultiplier
       ? config.gasPrice[this.chainId].baseFeeMultiplier : 1;
 
     if (safeMaxPriorityFeeInWei
@@ -117,7 +117,7 @@ export class MaticMainnetGasPrice extends AbstractGasPrice implements IScheduler
         safeMaxPriorityFeeInWei.toString(),
       );
 
-      const lowerLimit = config?.gasPrice[this.chainId].minGasPrice;
+      const lowerLimit = config.gasPrice[this.chainId].minGasPrice;
       let maxPriorityFeeMedium = mediumMaxPriorityFeeInWei;
       let maxFeeMedium;
       if (lowerLimit) {
@@ -166,9 +166,9 @@ export class MaticMainnetGasPrice extends AbstractGasPrice implements IScheduler
       );
       log.info(`Polygon Mainnet Fast Max Priority Fee Per Gas From Cache: ${fastMaxPriorityFeeGasFromCache}`);
     }
-  }
+  };
 
-  async setup() {
+  setup = async () => {
     let response: any;
     try {
       response = await this.maticGasStation().catch(async (err) => {
@@ -185,19 +185,18 @@ export class MaticMainnetGasPrice extends AbstractGasPrice implements IScheduler
       fastestGasPriceInWei,
     } = response;
 
-    if (config?.gasPrice[this.chainId].gasOracle.polygonscanUrl
-       && fastGasPriceInWei < config?.gasPrice[this.chainId].minGasPrice) {
-      fastGasPriceInWei = config?.gasPrice[this.chainId].minGasPrice;
+    if (config.gasPrice[this.chainId].gasOracle.polygonscanUrl
+       && fastGasPriceInWei < config.gasPrice[this.chainId].minGasPrice) {
+      fastGasPriceInWei = config.gasPrice[this.chainId].minGasPrice;
       // If fastest gas price is less than 110% of fast gas price, increase the fastest gas price
       // so when its used to bump up gas price, it doesn't end up in "transaction underpriced" error
       if (fastestGasPriceInWei <= (fastGasPriceInWei * 1.1)) {
         // Set fastest gas price to be 11% higher than fast gas price
-        // TODO: Review - should it default to 0 ?
-        fastestGasPriceInWei = (config?.gasPrice[this.chainId].minGasPrice || 0) * 1.11;
+        fastestGasPriceInWei = (config.gasPrice[this.chainId].minGasPrice) * 1.11;
       }
     }
 
-    const upperLimit = config?.gasPrice[this.chainId].maxGasPrice;
+    const upperLimit = config.gasPrice[this.chainId].maxGasPrice;
     if (upperLimit) {
       if (fastGasPriceInWei > upperLimit) {
         // log.info(`Fast gas price for matic ${fastGasPriceInWei} is more than 500 gwei`)
@@ -225,9 +224,9 @@ export class MaticMainnetGasPrice extends AbstractGasPrice implements IScheduler
       GasPriceType.FAST,
       Math.round(fastestGasPriceInWei).toString(),
     );
-  }
+  };
 
-  schedule() {
+  schedule = () => {
     setInterval(this.setup, this.updateFrequencyInSeconds * 1000);
-  }
+  };
 }

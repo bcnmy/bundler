@@ -1,1 +1,1 @@
-export * from './fee-options';
+export * from './FeeOption';

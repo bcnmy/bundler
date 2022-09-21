@@ -17,9 +17,9 @@ export class GoerliGasPrice extends AbstractGasPrice implements IGasPrice, ISche
     this.updateFrequencyInSeconds = updateFrequencyInSeconds;
   }
 
-  async setup(): Promise<void> {
+  setup = async (): Promise<void> => {
     console.log(this.chainId);
-  }
+  };
 
   schedule() {
     setInterval(this.setup, this.updateFrequencyInSeconds * 1000);
