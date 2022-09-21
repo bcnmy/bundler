@@ -67,8 +67,26 @@ export const feeOptionsService = async (feeOptionServiceParams: FeeOptionService
         decimal = config.decimal[chainId];
       } else if (token === 'USDC' || token === 'USDT') {
         const abi = [
-          'function balanceOf(walletAddress) view returns (uint256)',
-          'function decimals() view returns (uint256)',
+          {
+            constant: true,
+            inputs: [{ name: '_owner', type: 'address' }],
+            name: 'balanceOf',
+            outputs: [{ name: 'balance', type: 'uint256' }],
+            type: 'function',
+          },
+          {
+            constant: true,
+            inputs: [],
+            name: 'decimals',
+            outputs: [
+              {
+                name: '',
+                type: 'uint8',
+              },
+            ],
+            payable: false,
+            type: 'function',
+          },
         ];
         console.log('address is', config.tokenContractAddress[chainId][token]);
         try {
