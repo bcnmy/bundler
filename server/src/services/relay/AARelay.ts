@@ -19,7 +19,7 @@ export class AARelayService implements IRelayService<AATransactionMessageType> {
     try {
       response = {
         code: 200,
-        transactionId: this.transactionId,
+        transactionId: data.chainId,
       };
     } catch (error) {
       console.log(error);

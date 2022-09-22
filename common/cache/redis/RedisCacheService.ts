@@ -6,7 +6,7 @@ import { ICacheService } from '../interface';
 const log = logger(module);
 
 export class RedisCacheService implements ICacheService {
-  private static instance: RedisCacheService;
+  private static instance: ICacheService;
 
   private redisClient;
 
@@ -16,7 +16,7 @@ export class RedisCacheService implements ICacheService {
     });
   }
 
-  public static getInstance(): RedisCacheService {
+  public static getInstance(): ICacheService {
     if (!RedisCacheService.instance) {
       RedisCacheService.instance = new RedisCacheService();
     }

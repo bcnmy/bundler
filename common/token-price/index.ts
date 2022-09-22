@@ -1,1 +1,1 @@
-export * from './TokenPrice';
+export * from './CMCTokenPriceManager';

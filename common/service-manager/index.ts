@@ -13,7 +13,7 @@ import { TransactionType } from '../types';
 import { AATransactionQueue } from '../queue/AATransactionQueue';
 import { RedisCacheService } from '../cache';
 import { Mongo } from '../db';
-import { GasPrice } from '../gas-price';
+import { GasPriceManager } from '../gas-price';
 
 const queueMap: any = {}; // TODO: Add type of queue
 const gasPriceMap: any = {}; // TODO: Add type of queue
@@ -29,7 +29,8 @@ const transactionType:{ [key: number]: string[] } = {
 
 (async () => {
   for (const chainId of supportedNetworks) {
-    gasPriceMap[chainId] = new GasPrice(chainId, redisClient);
+    const gm = new GasPriceManager(chainId, redisClient);
+    gasPriceMap[chainId] = gm.setup();
     // for each network get transaction type
     for (const type of transactionType[chainId]) {
       if (type === TransactionType.AA) {

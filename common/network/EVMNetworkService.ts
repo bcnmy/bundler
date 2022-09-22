@@ -64,6 +64,7 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
               return await this.ethersProvider.getTransactionCount(params.address, 'pending');
             }
             return await this.ethersProvider.getTransactionCount(params.address);
+          // TODO: Check error type
           case RpcMethod.sendTransaction:
             return await this.ethersProvider.sendTransaction(params.tx);
           default:

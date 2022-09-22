@@ -6,7 +6,7 @@ import { MaticGasPrice } from './networks/MaticGasPrice';
 import { MumbaiGasPrice } from './networks/MumbaiGasPrice';
 
 type GasPriceType = MaticGasPrice | GoerliGasPrice | MumbaiGasPrice | undefined;
-export class GasPrice implements IGasPrice<GasPriceType> {
+export class GasPriceManager implements IGasPrice<GasPriceType> {
   chainId: number;
 
   redisClient: ICacheService;
@@ -14,7 +14,6 @@ export class GasPrice implements IGasPrice<GasPriceType> {
   constructor(chainId: number, redisClient: ICacheService) {
     this.chainId = chainId;
     this.redisClient = redisClient;
-    this.setup();
   }
 
   setup() {

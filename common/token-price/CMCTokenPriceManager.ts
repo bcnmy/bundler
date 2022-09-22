@@ -8,7 +8,7 @@ import { NetworkSymbolCategoriesType } from './types';
 
 const log = logger(module);
 
-export class TokenPrice implements ITokenPrice, IScheduler {
+export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
   updateFrequencyInSeconds: number;
 
   networkSymbolCategories: NetworkSymbolCategoriesType;
