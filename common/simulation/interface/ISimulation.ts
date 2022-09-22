@@ -1,8 +1,5 @@
 import { SimulationDataType, SimulationResponseType } from '../types';
-import { IExternalSimulation } from './IExternalSimulation';
 
-export interface ISimulation<ExternalSimulationData> {
-  externalSimulationService: IExternalSimulation,
-
+export interface ISimulation {
   simulate(simulationData: SimulationDataType): Promise<SimulationResponseType>;
 }
