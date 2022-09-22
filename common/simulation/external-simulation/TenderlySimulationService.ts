@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { IExternalSimulation } from '../interface';
 import { ExternalSimulationResponseType, TenderlySimulationDataType } from '../types';
 import { logger } from '../../log-config';
 
@@ -7,7 +6,7 @@ const log = logger(module);
 
 const { TENDERLY_USER, TENDERLY_PROJECT, TENDERLY_ACCESS_KEY } = process.env;
 
-export class TenderlySimulationService implements IExternalSimulation {
+export class TenderlySimulationService {
   static async simulate(
     simualtionData: TenderlySimulationDataType,
   ): Promise<ExternalSimulationResponseType> {

@@ -16,24 +16,6 @@ export enum TransactionStatus {
   DROPPED = 'DROPPED',
 }
 
-export type AATransactionMessageType = {
-  type: string;
-  to: string;
-  data: string;
-  gasLimit: string;
-  chainId: number;
-  value: string;
-};
-
-export type SCWTransactionMessageType = {
-  type: string;
-  to: string;
-  data: string;
-  gasLimit: string;
-  chainId: number;
-  value: string;
-};
-
 export interface IQueue<TransactionMessageType> {
   chainId: number;
   transactionType?: string;

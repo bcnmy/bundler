@@ -56,6 +56,7 @@ export type AATransactionMessageType = {
   gasLimit: string;
   chainId: number;
   value: string;
+  transactionId: string;
 };
 
 export type SCWTransactionMessageType = {
@@ -65,6 +66,7 @@ export type SCWTransactionMessageType = {
   gasLimit: string;
   chainId: number;
   value: string;
+  transactionId: string;
 };
 
 export interface IQueue<TransactionMessageType> {
