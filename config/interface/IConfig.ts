@@ -100,7 +100,7 @@ export type ConfigType = {
     similarTokens: {
       [key:number]: Array<string> // mapping for wrapped token with token id
     },
-    wrappedTokens: {
+    nativeChainIds: {
       [key: string]: number
     },
     supportedFeeTokensConfig: {

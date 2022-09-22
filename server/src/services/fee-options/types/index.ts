@@ -1,4 +1,4 @@
-export type FeeOptionResponseParams = {
+export type FeeOptionResponseType = {
   tokenGasPrice: number;
   symbol: string;
   address: string;

@@ -18,11 +18,11 @@ export class TokenPrice implements ITokenPrice, IScheduler {
     this.updateFrequencyInSeconds = config.tokenPrice.updateFrequencyInSeconds;
   }
 
-  schedule = (): void => {
+  schedule() {
     setInterval(this.setup, this.updateFrequencyInSeconds * 1000);
-  };
+  }
 
-  private setup = async () => {
+  private async setup() {
     try {
       const networkSymbolsCategoriesKeys = Object.keys(this.networkSymbolCategories);
       const response = await axios.get(`${config.tokenPrice.coinMarketCapApi}?symbol=${networkSymbolsCategoriesKeys.toString()}`, {
@@ -53,18 +53,18 @@ export class TokenPrice implements ITokenPrice, IScheduler {
     } catch (error) {
       log.error(error);
     }
-  };
+  }
 
-  getTokenPrice = async (symbol: string): Promise<number> => {
+  async getTokenPrice(symbol: string): Promise<number> {
     let data = JSON.parse(await redisClient.get('NETWORK_PRICE_DATA'));
     if (!data) {
       await this.setup();
       data = JSON.parse(await redisClient.get('NETWORK_PRICE_DATA'));
     }
     return data[symbol];
-  };
+  }
 
-  getTokenPriceByTokenAddress = async (chainId: number, tokenAddress: string): Promise<number> => {
+  async getTokenPriceByTokenAddress(chainId: number, tokenAddress: string): Promise<number> {
     let tokenPrice: number = 0;
     try {
       if (tokenAddress) {
@@ -83,5 +83,5 @@ export class TokenPrice implements ITokenPrice, IScheduler {
       log.error(error);
     }
     return tokenPrice;
-  };
+  }
 }

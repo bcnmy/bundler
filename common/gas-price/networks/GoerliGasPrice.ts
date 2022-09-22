@@ -1,4 +1,6 @@
+import { config } from '../../../config';
 import { EVMAccount } from '../../../relayer/src/services/account';
+import { ICacheService } from '../../cache';
 import { INetworkService } from '../../network';
 import { IScheduler } from '../../scheduler';
 import { EVMRawTransactionType } from '../../types';
@@ -9,16 +11,16 @@ export class GoerliGasPrice extends AbstractGasPrice implements IScheduler {
 
   constructor(
     chainId: number,
-    updateFrequencyInSeconds: number,
+    redisClient: ICacheService,
     network?: INetworkService<EVMAccount, EVMRawTransactionType>,
   ) {
-    super(chainId, network);
-    this.updateFrequencyInSeconds = updateFrequencyInSeconds;
+    super(chainId, redisClient, network);
+    this.updateFrequencyInSeconds = config.gasPrice.updateFrequencyInSeconds[this.chainId] || 60;
   }
 
-  setup = async (): Promise<void> => {
+  async setup() {
     console.log(this.chainId);
-  };
+  }
 
   schedule() {
     setInterval(this.setup, this.updateFrequencyInSeconds * 1000);

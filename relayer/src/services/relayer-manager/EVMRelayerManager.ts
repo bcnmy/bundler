@@ -151,8 +151,8 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
   }
 
   async fundRelayer(address: string) {
-    const BICONOMY_OWNER_PRIVATE_KEY = config?.chains.ownerAccountDetails[this.chainId].privateKey;
-    const BICONOMY_OWNER_ADDRESS = config?.chains.ownerAccountDetails[this.chainId].publicKey;
+    const BICONOMY_OWNER_PRIVATE_KEY = config.chains.ownerAccountDetails[this.chainId].privateKey;
+    const BICONOMY_OWNER_ADDRESS = config.chains.ownerAccountDetails[this.chainId].publicKey;
     const fundingRelayerAmount = config?.relayerManager[RelayerManagerType.AA].fundingRelayerAmount;
     const gasLimitMap = config?.relayerManager[0].gasLimitMap;
 

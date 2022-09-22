@@ -1,5 +1,6 @@
 import * as ethers from 'ethers';
 import { EVMAccount } from '../../relayer/src/services/account/EVMAccount';
+import { ICacheService } from '../cache';
 import { logger } from '../log-config';
 import { INetworkService } from '../network';
 import { EVMRawTransactionType } from '../types';
@@ -12,12 +13,16 @@ export class AbstractGasPrice implements IAbstractGasPrice {
 
   network?: INetworkService<EVMAccount, EVMRawTransactionType> | undefined;
 
+  redisClient: ICacheService;
+
   constructor(
     chainId: number,
+    redisClient: ICacheService,
     network?: INetworkService<EVMAccount, EVMRawTransactionType>,
   ) {
     this.chainId = chainId;
     this.network = network;
+    this.redisClient = redisClient;
   }
 
   private getGasPriceKey = (gasType: GasPriceType) => `GasPrice_${this.chainId}_${gasType}`;
@@ -27,33 +32,33 @@ export class AbstractGasPrice implements IAbstractGasPrice {
   private getMaxPriorityFeeGasKey = (gasType: GasPriceType) => `MaxPriorityFeeGas_${this.chainId}_${gasType}`;
 
   async setGasPrice(gasType: GasPriceType, price: string) {
-    await redisClient.set(this.getGasPriceKey(gasType), price);
+    await this.redisClient.set(this.getGasPriceKey(gasType), price);
   }
 
-  getGasPrice = async (gasType: GasPriceType) => {
-    const result = await redisClient.get(this.getGasPriceKey(gasType));
+  async getGasPrice(gasType: GasPriceType) {
+    const result = await this.redisClient.get(this.getGasPriceKey(gasType));
     return result;
-  };
+  }
 
-  setMaxFeeGasPrice = async (gasType: GasPriceType, price: string) => {
-    await redisClient.set(this.getMaxFeeGasKey(gasType), price);
-  };
+  async setMaxFeeGasPrice(gasType: GasPriceType, price: string) {
+    await this.redisClient.set(this.getMaxFeeGasKey(gasType), price);
+  }
 
   async getMaxPriorityFeeGasPrice(gasType: GasPriceType): Promise<string> {
-    const result = await redisClient.get(this.getMaxPriorityFeeGasKey(gasType));
+    const result = await this.redisClient.get(this.getMaxPriorityFeeGasKey(gasType));
     return result;
   }
 
-  getMaxFeeGasPrice = async (gasType: GasPriceType): Promise<string> => {
-    const result = await redisClient.get(this.getMaxFeeGasKey(gasType));
+  async getMaxFeeGasPrice(gasType: GasPriceType): Promise<string> {
+    const result = await this.redisClient.get(this.getMaxFeeGasKey(gasType));
     return result;
-  };
+  }
 
-  setMaxPriorityFeeGasPrice = async (gasType: GasPriceType, price: string) => {
-    await redisClient.set(this.getMaxPriorityFeeGasKey(gasType), price);
-  };
+  async setMaxPriorityFeeGasPrice(gasType: GasPriceType, price: string) {
+    await this.redisClient.set(this.getMaxPriorityFeeGasKey(gasType), price);
+  }
 
-  setup = async (gP?: string) => {
+  async setup(gP?: string) {
     try {
       if (!this.network) {
         throw new Error('network instance not available');
@@ -73,5 +78,5 @@ export class AbstractGasPrice implements IAbstractGasPrice {
     } catch (error) {
       log.info(`Error in setting gas price for network id ${this.chainId} - ${JSON.stringify(error)}`);
     }
-  };
+  }
 }

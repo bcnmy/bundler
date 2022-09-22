@@ -20,7 +20,7 @@ export class Mongo implements IDBService {
   }
 
   connect = async () => {
-    const dbUrl = config?.dataSources.mongoUrl || '';
+    const dbUrl = config.dataSources.mongoUrl || '';
     if (!dbUrl) {
       throw new Error('Database url not provided');
     }
@@ -41,7 +41,7 @@ export class Mongo implements IDBService {
     if (!this.client) {
       throw new Error('Not connected to db');
     }
-    const supportedNetworks: number[] = config?.supportedNetworks || [];
+    const supportedNetworks: number[] = config.supportedNetworks || [];
     if (!supportedNetworks.includes(networkId)) throw new Error(`Network Id ${networkId} is not supported`);
     return BlockchainTransactionsMap[networkId];
   }

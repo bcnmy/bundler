@@ -1,11 +1,9 @@
 /* eslint-disable no-await-in-loop */
 import Big from 'big.js';
+import { config } from '../../../../config';
 import { GasPriceType } from '../../../../common/gas-price/types';
-import { logger } from '../../../../common/log-config';
-import { config, gasPriceMap, redisClient } from '../../../../common/service-manager';
-import { FeeOptionResponseParams } from './types';
-
-const log = logger(module);
+import { gasPriceMap, redisClient } from '../../../../common/service-manager';
+import { FeeOptionResponseType } from './types';
 
 const convertGasPriceToUSD = async (
   nativeChainId: number,
@@ -13,8 +11,8 @@ const convertGasPriceToUSD = async (
   chainPriceDataInUSD: number,
   token: string,
 ) => {
-  const decimal = config?.chains.decimal[nativeChainId] || 18;
-  const offset = config?.feeOption.offset[token] || 1;
+  const decimal = config.chains.decimal[nativeChainId] || 18;
+  const offset = config.feeOption.offset[token] || 1;
   const usdc = new Big(gasPrice)
     .mul(new Big(chainPriceDataInUSD))
     .div(new Big(10 ** decimal))
@@ -35,10 +33,9 @@ export class FeeOption {
   }
 
   async get() {
-    const response: Array<FeeOptionResponseParams> = [];
-
     try {
-      const feeTokens = config?.feeOption.supportedFeeTokens[this.chainId] || [];
+      const response: Array<FeeOptionResponseType> = [];
+      const feeTokens = config.feeOption.supportedFeeTokens[this.chainId] || [];
       const gasPriceInString: string = await gasPriceMap[this.chainId].getGasPrice(
         GasPriceType.DEFAULT,
       );
@@ -54,7 +51,7 @@ export class FeeOption {
         const supportedTokenConfig = config.feeOption.supportedFeeTokensConfig[this.chainId][token];
         const decimal = supportedTokenConfig.decimals;
         // get similar or wrapped token
-        if (config?.feeOption.similarTokens[this.chainId].includes(token)) {
+        if (config.feeOption.similarTokens[this.chainId].includes(token)) {
           tokenGasPrice = gasPrice;
         } else if (token === 'USDC' || token === 'USDT' || token === 'DAI') { // stables
           tokenGasPrice = await convertGasPriceToUSD(
@@ -65,17 +62,17 @@ export class FeeOption {
           );
           tokenGasPrice = new Big(tokenGasPrice).mul(10 ** decimal).toFixed(0).toString();
         } else {
-          // calculate for cross chain
-          const crossChainId = config.feeOption.wrappedTokens[token];
-          if (crossChainId) {
+        // calculate for cross chain
+          const nativeChainId = config.feeOption.nativeChainIds[token];
+          if (nativeChainId) {
             const gasPriceInUSD = await convertGasPriceToUSD(
               this.chainId,
               gasPrice,
               chainPriceDataInUSD,
               token,
             );
-            const crossChainPrice = networkPriceData[crossChainId];
-            tokenGasPrice = new Big(gasPriceInUSD).div(new Big(crossChainPrice));
+            const nativeChainPrice = networkPriceData[nativeChainId];
+            tokenGasPrice = new Big(gasPriceInUSD).div(new Big(nativeChainPrice));
             tokenGasPrice = new Big(tokenGasPrice).mul(10 ** decimal).toFixed(0).toString();
           }
         }
@@ -90,10 +87,10 @@ export class FeeOption {
         });
       }
       return {
+        code: 200,
         response,
       };
     } catch (error) {
-      log.info(error);
       return {
         code: 500,
         error: `Error occured in getting fee options service. Error: ${JSON.stringify(error)}`,

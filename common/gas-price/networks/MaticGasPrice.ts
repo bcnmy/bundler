@@ -1,5 +1,6 @@
 import { config } from '../../../config';
 import { EVMAccount } from '../../../relayer/src/services/account';
+import { ICacheService } from '../../cache';
 import { logger } from '../../log-config';
 import { INetworkService } from '../../network';
 import { IScheduler } from '../../scheduler';
@@ -15,14 +16,14 @@ export class MaticGasPrice extends AbstractGasPrice implements IScheduler {
 
   constructor(
     chainId: number,
-    updateFrequencyInSeconds: number,
+    redisClient: ICacheService,
     network?: INetworkService<EVMAccount, EVMRawTransactionType>,
   ) {
-    super(chainId, network);
-    this.updateFrequencyInSeconds = updateFrequencyInSeconds;
+    super(chainId, redisClient, network);
+    this.updateFrequencyInSeconds = config.gasPrice.updateFrequencyInSeconds[this.chainId] || 60;
   }
 
-  polygonGasStation = async () => {
+  async polygonGasStation() {
     const url = config.gasPrice[this.chainId].gasOracle.polygonscanUrl;
     if (!url) throw new Error('Polygon scan gas station url not provided.');
 
@@ -40,9 +41,9 @@ export class MaticGasPrice extends AbstractGasPrice implements IScheduler {
     const fastestGasPriceInWei = fastestGasPrice * 1e9;
 
     return { mediumGasPriceInWei, fastGasPriceInWei, fastestGasPriceInWei };
-  };
+  }
 
-  maticGasStation = async () => {
+  async maticGasStation() {
     const url = config.gasPrice[this.chainId].gasOracle.maticGasStationUrl || '';
     if (!url) throw new Error('Matic gas station url not provided.');
 
@@ -61,9 +62,9 @@ export class MaticGasPrice extends AbstractGasPrice implements IScheduler {
     log.info(`Fast GasPrice for Mainnet from matic gas station is ${fastGasPrice} gwei`);
     log.info(`Fastest GasPrice for Mainnet from matic gas station is ${fastestGasPrice} gwei`);
     return { mediumGasPriceInWei, fastGasPriceInWei, fastestGasPriceInWei };
-  };
+  }
 
-  maticGasStationForEIP1559 = async () => {
+  async maticGasStationForEIP1559() {
     const url = config.gasPrice[this.chainId].gasOracle.maticGasStationUrlForEIP1559 || '';
     if (!url) throw new Error('Matic gas station url for EIP-1559 not provided.');
 
@@ -166,9 +167,9 @@ export class MaticGasPrice extends AbstractGasPrice implements IScheduler {
       );
       log.info(`Polygon Mainnet Fast Max Priority Fee Per Gas From Cache: ${fastMaxPriorityFeeGasFromCache}`);
     }
-  };
+  }
 
-  setup = async () => {
+  async setup() {
     let response: any;
     try {
       response = await this.maticGasStation().catch(async (err) => {
@@ -224,9 +225,9 @@ export class MaticGasPrice extends AbstractGasPrice implements IScheduler {
       GasPriceType.FAST,
       Math.round(fastestGasPriceInWei).toString(),
     );
-  };
+  }
 
-  schedule = () => {
+  async schedule() {
     setInterval(this.setup, this.updateFrequencyInSeconds * 1000);
-  };
+  }
 }
