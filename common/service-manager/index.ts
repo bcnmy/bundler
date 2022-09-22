@@ -10,13 +10,17 @@
 
 import { AAConsumer } from '../../relayer/src/services/consumer/AAConsumer';
 import { Config } from '../config';
-// import { Mongo } from '../../common/db/mongo/mongo';
 import { TransactionType } from '../types';
 import { AATransactionQueue } from '../queue/AATransactionQueue';
+import { RedisCacheService } from '../cache';
+import { Mongo } from '../db';
+import { GasPrice } from '../gas-price';
 
 const queueMap: any = {}; // TODO: Add type of queue
-// const dbInstance = Mongo.getInstance();
-// const daoUtilsInstance = new DaoUtils(dbInstance);
+const gasPriceMap: any = {}; // TODO: Add type of queue
+
+const redisClient = RedisCacheService.getInstance();
+const dbInstance = Mongo.getInstance();
 
 const supportedNetworks: number[] = [5, 80001];
 const transactionType:{ [key: number]: string[] } = {
@@ -25,17 +29,18 @@ const transactionType:{ [key: number]: string[] } = {
 };
 
 const configInstance = new Config();
-configInstance.setup();
+// configInstance.setup();
 const config = configInstance.get();
 
 (async () => {
   for (const chainId of supportedNetworks) {
+    gasPriceMap[chainId] = new GasPrice(chainId);
     // for each network get transaction type
     for (const type of transactionType[chainId]) {
       if (type === TransactionType.AA) {
         const queue = new AATransactionQueue(chainId, type);
-        const aaConsumer = new AAConsumer(chainId, type, queue);
         await queue.connect();
+        const aaConsumer = new AAConsumer(chainId, type, queue);
         // start listening for transaction
         await queue.consume(aaConsumer.onMessageReceived);
         queueMap[chainId][type] = queue;
@@ -47,4 +52,7 @@ const config = configInstance.get();
 export {
   config,
   queueMap,
+  gasPriceMap,
+  redisClient,
+  dbInstance,
 };

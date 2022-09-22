@@ -1,5 +1,5 @@
 import { supertest } from 'supertest';
-import { Mongo } from '../../common/db';
+import { Mongo } from '../../common/db/mongo/models';
 import app from '../src/app';
 
 beforeEach((done) => {

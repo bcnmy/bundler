@@ -9,6 +9,6 @@ export interface IRelayerManager<AccountType> {
   getActiveRelayer(): Promise<AccountType>;
   setMinRelayerCount(minRelayerCount: number): void
   setMaxRelayerCount(maxRelayerCount: number): void
-  setInactiveRelayerCountThreshold(): Promise<boolean>
-  setPendingTransactionCountThreshold(): Promise<boolean>
+  setInactiveRelayerCountThreshold(inactiveRelayerCountThreshold: number): void
+  setPendingTransactionCountThreshold(pendingTransactionCountThreshold: number): void
 }

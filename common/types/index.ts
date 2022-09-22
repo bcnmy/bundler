@@ -8,11 +8,45 @@ export enum TransactionType {
   CROSS_CHAIN = 'CROSS_CHAIN',
 }
 
+export enum TransactionStatus {
+  IN_PROCESS = 'IN_PROCESS',
+  PENDING = 'PENDING',
+  SUCCESS = 'SUCCESS',
+  FAILED = 'FAILED',
+  DROPPED = 'DROPPED',
+}
+
 export enum RelayerManagerType {
   AA = 0,
   SCW = 0,
   VANILLA_GASLESS = 0,
   CROSS_CHAIN = 1,
+}
+
+export type EVMRawTransactionType = {
+  from: string;
+  gasPrice?: string | BigNumber;
+  maxFeePerGas?: string | BigNumber;
+  maxPriorityFeePerGas?: string | BigNumber;
+  gasLimit: string;
+  to: string;
+  value: string | number;
+  data: string;
+  chainId: number;
+  nonce: number | string;
+  accessList?: AccessListItem[];
+  type?: number;
+};
+
+export type AccessListItem = {
+  address: string;
+  storageKeys: string[];
+};
+
+export interface IRetryPolicy {
+  maxTries: number;
+  shouldRetry: (err: any) => Promise<boolean>;
+  incrementTry: () => void;
 }
 
 export type AATransactionMessageType = {
@@ -42,44 +76,17 @@ export interface IQueue<TransactionMessageType> {
   ack(arg0: ConsumeMessage): Promise<void>
 }
 
-export type EVMRawTransactionType = {
-  from: string;
-  gasPrice?: string | BigNumber;
-  maxFeePerGas?: string | BigNumber;
-  maxPriorityFeePerGas?: string | BigNumber;
-  gasLimit: string;
-  to: string;
-  value: string | number;
-  data: string;
-  chainId: number;
-  nonce: number | string;
-  accessList?: AccessListItem[];
-  type?: number;
+type ResponseType = {
+  code: number;
+  transactionId: string;
 };
-
-export type AccessListItem = {
-  address: string;
-  storageKeys: string[];
-};
-
-export interface IRetryPolicy {
-  maxTries: number;
-  shouldRetry: (err: any) => Promise<boolean>;
-  incrementTry: () => void;
-}
-
-export enum TransactionStatus {
-  IN_PROCESS = 'IN_PROCESS',
-  PENDING = 'PENDING',
-  SUCCESS = 'SUCCESS',
-  FAILED = 'FAILED',
-  DROPPED = 'DROPPED',
-}
 
 type ErrorType = {
   code: number;
   error: string;
 };
+
+export type RelayServiceResponseType = ResponseType | ErrorType;
 
 export function isError<T>(
   response: T | ErrorType,
