@@ -1,8 +1,8 @@
-import { config } from '../service-manager';
-import { MaticGasPrice } from './networks/MaticGasPrice';
-import { GoerliGasPrice } from './networks/GoerliGasPrice';
-import { MumbaiGasPrice } from './networks/MumbaiGasPrice';
+import { config } from '../../config';
 import { IGasPrice } from './interface/IGasPrice';
+import { GoerliGasPrice } from './networks/GoerliGasPrice';
+import { MaticGasPrice } from './networks/MaticGasPrice';
+import { MumbaiGasPrice } from './networks/MumbaiGasPrice';
 
 type GasPriceType = MaticGasPrice | GoerliGasPrice | MumbaiGasPrice | undefined;
 export class GasPrice implements IGasPrice<GasPriceType> {

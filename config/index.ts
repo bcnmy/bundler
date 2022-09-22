@@ -1,23 +1,8 @@
 import _ from 'lodash';
-import config from './development.config.json';
 
 import { IConfig, ConfigType } from './interface/IConfig';
 
-function replaceData(data: any) {
-  Object.keys(data).forEach((key: string) => {
-    const value = data[key];
-    if (typeof value === 'object') {
-      replaceData(value);
-    // eslint-disable-next-line no-prototype-builtins
-    } else if (process.env.hasOwnProperty(key)) {
-      // eslint-disable-next-line no-param-reassign
-      data[key] = process.env[key];
-    }
-  });
-  return data;
-}
-
-export class Config implements IConfig {
+class Config implements IConfig {
   config: ConfigType | null;
 
   constructor() {
@@ -46,3 +31,6 @@ export class Config implements IConfig {
     return this.config;
   }
 }
+
+const configInstance = new Config();
+export const config = configInstance.get();

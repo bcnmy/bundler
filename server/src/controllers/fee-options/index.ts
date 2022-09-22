@@ -1,14 +1,14 @@
 import { Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
-import { feeOptionsService } from '../../services';
+import { FeeOption } from '../../services';
 
 const log = logger(module);
 
 export const feeOptionsApi = async (req: Request, res: Response) => {
   const chainIdInString = req.query.chainId as string;
   const chainId = Number(chainIdInString);
-  // TODO: make network specific instance from service manager
-  const response = await feeOptionsService({ chainId });
+  const feeOption = new FeeOption(chainId);
+  const response = await feeOption.get();
   try {
     if (response.error) {
       return res.status(400).json({

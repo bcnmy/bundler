@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { config } from '../../config';
 import { logger } from '../log-config';
 import { IScheduler } from '../scheduler';
-import { config, redisClient } from '../service-manager';
+import { redisClient } from '../service-manager';
 import { ITokenPrice } from './interface/ITokenPrice';
 import { NetworkSymbolCategoriesType } from './types';
 
