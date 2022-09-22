@@ -1,4 +1,4 @@
-import { TransactionType } from '../../types';
+import { TransactionType } from '../../common/types';
 
 export interface LooseObject {
   [key: string]: any

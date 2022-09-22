@@ -3,9 +3,8 @@ import { INetworkService } from '../../network';
 import { IScheduler } from '../../scheduler';
 import { EVMRawTransactionType } from '../../types';
 import { AbstractGasPrice } from '../AbstactGasPrice';
-import { IGasPrice } from '../interface/IGasPrice';
 
-export class MumbaiGasPrice extends AbstractGasPrice implements IGasPrice, IScheduler {
+export class MumbaiGasPrice extends AbstractGasPrice implements IScheduler {
   updateFrequencyInSeconds: number;
 
   constructor(

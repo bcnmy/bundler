@@ -9,7 +9,6 @@
 // make instance of queue for network id and transaction type - done
 
 import { AAConsumer } from '../../relayer/src/services/consumer/AAConsumer';
-import { Config } from '../config';
 import { TransactionType } from '../types';
 import { AATransactionQueue } from '../queue/AATransactionQueue';
 import { RedisCacheService } from '../cache';
@@ -27,10 +26,6 @@ const transactionType:{ [key: number]: string[] } = {
   5: [TransactionType.AA, TransactionType.SCW],
   80001: [TransactionType.AA, TransactionType.SCW],
 };
-
-const configInstance = new Config();
-// configInstance.setup();
-const config = configInstance.get();
 
 (async () => {
   for (const chainId of supportedNetworks) {
@@ -50,7 +45,6 @@ const config = configInstance.get();
 })();
 
 export {
-  config,
   queueMap,
   gasPriceMap,
   redisClient,

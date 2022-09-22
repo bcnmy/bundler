@@ -1,7 +1,7 @@
 import mongoose, { Mongoose } from 'mongoose';
+import { config } from '../../../config';
 import { IDBService } from '../interface/IDBService';
 import { BlockchainTransactionsMap } from './models';
-import { config } from '../../service-manager';
 
 export class Mongo implements IDBService {
   private static instance: Mongo;

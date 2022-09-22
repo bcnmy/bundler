@@ -1,2 +1,2 @@
 export * from './interface';
-export * from './redis/redis-client';
+export * from './redis/RedisCacheService';

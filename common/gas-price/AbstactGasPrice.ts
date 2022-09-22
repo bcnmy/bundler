@@ -1,8 +1,7 @@
-import { ethers } from 'ethers';
+import * as ethers from 'ethers';
 import { EVMAccount } from '../../relayer/src/services/account/EVMAccount';
 import { logger } from '../log-config';
 import { INetworkService } from '../network';
-import { redisClient } from '../service-manager';
 import { EVMRawTransactionType } from '../types';
 import { IAbstractGasPrice } from './interface/IAbstractGasPrice';
 import { GasPriceType } from './types';
@@ -63,7 +62,7 @@ export class AbstractGasPrice implements IAbstractGasPrice {
       if (!gP) {
         const gasPriceFromNetwork = (await this.network.getGasPrice()).gasPrice;
         if (gasPriceFromNetwork) {
-          gasPrice = ethers.utils.isHexString(gasPriceFromNetwork)
+          gasPrice = ethers.ethers.utils.isHexString(gasPriceFromNetwork)
             ? parseInt(gasPriceFromNetwork, 16).toString()
             : '';
         }

@@ -1,8 +1,8 @@
+import { config } from '../../../config';
 import { EVMAccount } from '../../../relayer/src/services/account';
 import { logger } from '../../log-config';
 import { INetworkService } from '../../network';
 import { IScheduler } from '../../scheduler';
-import { config } from '../../service-manager';
 import { EVMRawTransactionType } from '../../types';
 import { gasPriceCall } from '../../utils/axios-calls';
 import { AbstractGasPrice } from '../AbstactGasPrice';
