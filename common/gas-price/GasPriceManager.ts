@@ -1,6 +1,5 @@
-import { config } from '../../config';
 import { ICacheService } from '../cache';
-import { IGasPrice } from './interface/IGasPrice';
+import { IGasPrice } from './interface/IGasPriceManager';
 import { GoerliGasPrice } from './networks/GoerliGasPrice';
 import { MaticGasPrice } from './networks/MaticGasPrice';
 import { MumbaiGasPrice } from './networks/MumbaiGasPrice';

@@ -4,11 +4,11 @@ import { ICacheService } from '../cache';
 import { logger } from '../log-config';
 import { INetworkService } from '../network';
 import { EVMRawTransactionType } from '../types';
-import { IAbstractGasPrice } from './interface/IAbstractGasPrice';
+import { IGasPrice } from './interface/IGasPrice';
 import { GasPriceType } from './types';
 
 const log = logger(module);
-export class AbstractGasPrice implements IAbstractGasPrice {
+export class AbstractGasPrice implements IGasPrice {
   chainId: number;
 
   network?: INetworkService<EVMAccount, EVMRawTransactionType> | undefined;
