@@ -9,7 +9,7 @@
 // make instance of queue for network id and transaction type - done
 
 import { AAConsumer } from '../../relayer/src/services/consumer/AAConsumer';
-import { TransactionType } from '../types';
+import { AATransactionMessageType, IQueue, TransactionType } from '../types';
 import { AATransactionQueue } from '../queue/AATransactionQueue';
 import { RedisCacheService } from '../cache';
 import { Mongo } from '../db';
@@ -36,12 +36,12 @@ const transactionType:{ [key: number]: string[] } = {
     // for each network get transaction type
     for (const type of transactionType[chainId]) {
       if (type === TransactionType.AA) {
-        const queue = new AATransactionQueue(chainId, type);
+        const queue: IQueue<AATransactionMessageType> = new AATransactionQueue(chainId, type);
         await queue.connect();
         const aaConsumer = new AAConsumer(chainId, type, queue);
         // start listening for transaction
         await queue.consume(aaConsumer.onMessageReceived);
-        queueMap[chainId][type] = queue;
+
         const aaRelayService = new AARelayService(queue);
         relayMap[chainId][type] = aaRelayService;
       }

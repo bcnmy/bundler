@@ -1,21 +1,22 @@
 /* eslint-disable no-param-reassign */
 import { Mutex } from 'async-mutex';
 import { privateToPublic, publicToAddress, toChecksumAddress } from 'ethereumjs-util';
-import { ethers } from 'ethers';
 import hdkey from 'hdkey';
-import { RawTransactionType } from 'network-sdk/dist/types';
 import { logger } from '../../../../common/log-config';
-import { config } from '../../../../common/service-manager';
+import { INetworkService } from '../../../../common/network';
+import { AATransactionMessageType } from '../../../../common/types';
+import { config } from '../../../../config';
 import { stringify } from '../../utils/util';
-import { Relayer } from '../relayer';
-import { IRelayer } from '../relayer/interface';
-import { IRelayerManager } from './interface';
 import { EVMAccount } from '../account';
+import { INonceManager } from '../nonce-manager';
 import { ITransactionService } from '../transaction-service/interface/ITransactionService';
+import { IRelayerManager } from './interface/IRelayerManager';
+import { RelayerMetaDataType } from './types';
 
 const log = logger(module);
 const fundRelayerMutex = new Mutex();
 const createRelayerMutex = new Mutex();
+const nodePathRoot = "m/44'/60'/0'/";
 
 /**
  * Function of relayer manager
@@ -33,8 +34,6 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
 
   transactionService: ITransactionService<EVMAccount>;
 
-  // TODO
-  // Update default values to fetch from config
   minRelayerCount: number = 5;
 
   maxRelayerCount: number = 15;
@@ -45,62 +44,47 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
 
   newRelayerInstanceCount: number = 10;
 
-  relayerMap?: Record<string, EVMAccount>;
+  public relayerMap: Record<string, RelayerMetaDataType> = {};
+
+  nonceManagerService: INonceManager;
+
+  networkService: INetworkService<EVMAccount, AATransactionMessageType>;
 
   constructor(
     chainId: number,
+    networkService: INetworkService<EVMAccount, AATransactionMessageType>,
     transactionService: ITransactionService<EVMAccount>,
+    nonceManagerService: INonceManager,
   ) {
     this.chainId = chainId;
+    this.networkService = networkService;
     this.transactionService = transactionService;
-
-    configChangeListeners.relayerManagerService.push(this.onConfigChange.bind(this));
+    this.nonceManagerService = nonceManagerService;
   }
 
-  fundRelayers(relayer: EVMAccount): Promise<boolean> {
-    throw new Error('Method not implemented.');
-  }
-
-  getRelayer(relayerAddress: string): Promise<EVMAccount> {
-    throw new Error('Method not implemented.');
-  }
-
-  getActiveRelayer(): Promise<EVMAccount> {
-    throw new Error('Method not implemented.');
-  }
-
-  setMinRelayerCount(): Promise<boolean> {
-    throw new Error('Method not implemented.');
-  }
-
-  setMaxRelayerCount(): Promise<boolean> {
-    throw new Error('Method not implemented.');
-  }
-
-  setInactiveRelayerCountThreshold(): Promise<boolean> {
-    throw new Error('Method not implemented.');
-  }
-
-  setPendingTransactionCountThreshold(): Promise<boolean> {
-    throw new Error('Method not implemented.');
+  getRelayersCount() {
+    if (this.maxRelayerCount < 10) {
+      return this.maxRelayerCount;
+    }
+    return 10;
   }
 
   async createRelayers(numberOfRelayers: number): Promise<void> {
     log.info(`Waiting for lock to create relayers on ${this.chainId}`);
     const release = await createRelayerMutex.acquire();
     log.info(`Received lock to create relayers on ${this.chainId}`);
+    const relayersMasterSeed = config.chains.ownerAccountDetails[0].privateKey;
+    const relayers: EVMAccount[] = [];
 
     try {
-      const promises = [];
-      for (let relayerIndex = 1; relayerIndex <= numberOfRelayers; relayerIndex += 1) {
-        const index = this.getRelayersCount() + relayerIndex;
-
+      const index = this.getRelayersCount();
+      for (let relayerIndex = index; relayerIndex <= index + numberOfRelayers; relayerIndex += 1) {
         const seedInBuffer = Buffer.from(relayersMasterSeed, 'utf-8');
         const ethRoot = hdkey.fromMasterSeed(seedInBuffer);
 
-        const { nodePathIndex } = config.relayerService;
+        const { nodePathIndex } = config.relayer;
         const nodePath = `${nodePathRoot + nodePathIndex}/`;
-        const ethNodePath: any = ethRoot.derive(nodePath + this.id);
+        const ethNodePath: any = ethRoot.derive(nodePath + relayerIndex);
         const privateKey = ethNodePath._privateKey.toString('hex');
         const ethPubkey = privateToPublic(ethNodePath.privateKey);
 
@@ -111,17 +95,17 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
           address,
           privateKey,
         );
-        promises.push(relayer.create(this.messenger));
+        relayers.push(relayer);
       }
-      const relayers: EVMAccount[] = await Promise.all(promises);
 
       log.info(`Relayers created on network id ${this.chainId}`);
       relayers.map(async (relayer) => {
-        const relayerAddress = relayer.address.toLowerCase();
-        this.relayersMap[relayerAddress] = relayer;
-        await this.fundRelayer(relayerAddress);
-
-        await this.relayersMap[relayerAddress].createChannel();
+        const relayerAddress = relayer.getPublicKey().toLowerCase();
+        this.relayerMap[relayerAddress] = {
+          pendingCount: 0,
+          nonce: await this.nonceManagerService.getNonce(relayerAddress),
+          balance: (await this.networkService.getBalance(relayerAddress)).toNumber(),
+        };
       });
     } catch (error) {
       console.log(error);
@@ -132,87 +116,28 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
     log.info(`Lock released after creating relayers on ${this.chainId}`);
   }
 
-  async fetchMainAccountNonceFromNetwork(): Promise<number> {
-    return this.network;
+  async fundRelayers(ownerAccount: EVMAccount, address: string[]): Promise<boolean> {
+    console.log(this.pendingTransactionCountThreshold, ownerAccount, address);
+    return true;
   }
 
-  async fetchActiveRelayer(): Promise<IRelayer> {
+  getRelayer(relayerAddress: string): EVMAccount | RelayerMetaDataType {
+    return this.relayerMap[relayerAddress];
   }
 
-  static updateRelayerBalance(relayer: IRelayer): number {
+  setMinRelayerCount(minRelayerCount: number) {
+    this.minRelayerCount = minRelayerCount;
   }
 
-  updateRelayerMap(relayer: IRelayer) {
-    this.relayersMap[relayer.id] = relayer;
+  setMaxRelayerCount(maxRelayerCount: number) {
+    this.maxRelayerCount = maxRelayerCount;
   }
 
-  updateRetryCountMap(relayer: IRelayer) {
-    this.retryCountMap[relayer.id] += 1;
+  setInactiveRelayerCountThreshold(threshold: number) {
+    this.inactiveRelayerCountThreshold = threshold;
   }
 
-  async fundRelayer(address: string) {
-    const BICONOMY_OWNER_PRIVATE_KEY = config.chains.ownerAccountDetails[this.chainId].privateKey;
-    const BICONOMY_OWNER_ADDRESS = config.chains.ownerAccountDetails[this.chainId].publicKey;
-    const fundingRelayerAmount = config?.relayerManager[RelayerManagerType.AA].fundingRelayerAmount;
-    const gasLimitMap = config?.relayerManager[0].gasLimitMap;
-
-    try {
-      // check funding threshold
-      if (!this.hasBalanceBelowThreshold(address)) {
-        log.info(`Has sufficient funds in relayer ${address} on network id ${this.chainId}`);
-        return;
-      }
-      const release = await fundRelayerMutex.acquire();
-
-      log.info(`Funding relayer ${address} on network id ${this.chainId}`);
-
-      let gasLimitIndex = 0;
-      // different gas limit for arbitrum
-      if ([42161, 421611].includes(this.chainId)) gasLimitIndex = 1;
-
-      const gasLimit = gasLimitMap[gasLimitIndex].toString();
-      // fetch gas price
-      const { gasPrice } = await this.network.getGasPrice();
-
-      const mainAccountNonce = await this.getMainAccountNonce();
-
-      const rawTx: RawTransactionType = {
-        from: BICONOMY_OWNER_ADDRESS,
-        gasPrice: ethers.BigNumber.from(
-          gasPrice.toString(),
-        ).toHexString(),
-        gasLimit: ethers.BigNumber.from(
-          gasLimit.toString(),
-        ).toHexString(),
-        to: address,
-        value: ethers
-          .utils.parseEther(fundingRelayerAmount[this.chainId].toString()).toHexString(),
-        nonce: ethers.BigNumber.from(
-          mainAccountNonce.toString(),
-        ).toHexString(),
-        chainId: this.chainId,
-      };
-      log.info(`Funding relayer ${address} on network id ${this.chainId} with raw tx ${stringify(rawTx)}`);
-      const transaction = new Transaction({
-        rawTransaction: rawTx,
-        fromAddress: BICONOMY_OWNER_ADDRESS,
-        privateKey: BICONOMY_OWNER_PRIVATE_KEY,
-        chainId: this.chainId,
-      }, this.network);
-      const response: any = await transaction.execute();
-      if (response.nonce) {
-        this.mainAccountNonce = response.nonce + 1;
-      }
-      release();
-      const { hash, error } = response;
-      if (hash) {
-        log.info(`Hash from funding relayer ${address} is ${hash} on network id ${this.chainId}`);
-        this.listenForTransactionStatus(hash);
-      } else if (error) {
-        log.error(`Unable to fund relayer ${address} due to ${error} on network id ${this.chainId}`);
-      }
-    } catch (error) {
-      log.error(`Error in fundRelayer ${stringify(error)}`);
-    }
+  setPendingTransactionCountThreshold(threshold: number) {
+    this.pendingTransactionCountThreshold = threshold;
   }
 }
