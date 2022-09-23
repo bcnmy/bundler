@@ -1,1 +1,1 @@
-export * from './GasPrice';
+export * from './GasPriceManager';
