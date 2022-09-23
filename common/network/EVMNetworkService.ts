@@ -67,6 +67,8 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
           // TODO: Check error type
           case RpcMethod.sendTransaction:
             return await this.ethersProvider.sendTransaction(params.tx);
+          case RpcMethod.waitForTransaction:
+            return await this.ethersProvider.waitForTransaction(params.transactionHash);
           default:
             return null;
         }
@@ -262,6 +264,13 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
       tx,
     });
     return receipt;
+  }
+
+  async waitForTransaction(transactionHash: string): Promise<ethers.providers.TransactionReceipt> {
+    const transactionReceipt = await this.useProvider(RpcMethod.waitForTransaction, {
+      transactionHash,
+    });
+    return transactionReceipt;
   }
 
   async getContractEventEmitter(
