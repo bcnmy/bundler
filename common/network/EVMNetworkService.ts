@@ -254,7 +254,7 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
   async sendTransaction(
     rawTransactionData: EVMRawTransactionType,
     account: EVMAccount,
-  ): Promise<object> {
+  ): Promise<ethers.providers.TransactionResponse> {
     const rawTx: EVMRawTransactionType = rawTransactionData;
     rawTx.from = account.getPublicKey();
     const tx = await account.signTransaction(rawTx);

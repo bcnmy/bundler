@@ -47,7 +47,7 @@ export interface INetworkService<AccountType, RawTransactionType> {
   sendTransaction(
     rawTransactionData: RawTransactionType,
     account: AccountType,
-  ): Promise<object>;
+  ): Promise<ethers.providers.TransactionResponse>;
   getContractEventEmitter(
     contractAddress: string,
     contractAbi: string,

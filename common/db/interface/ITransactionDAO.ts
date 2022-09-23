@@ -1,4 +1,4 @@
-import { IBlockchainTransaction } from '../mongo/interface/IBlockchainTransaction';
+import { IBlockchainTransaction } from '..';
 
 export interface ITransactionDAO {
   save(chainId: number, transactionData: object): Promise<void>

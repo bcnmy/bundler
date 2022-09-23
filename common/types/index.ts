@@ -29,15 +29,15 @@ export type AccessListItem = {
 
 export type EVMRawTransactionType = {
   from: string;
-  gasPrice?: string | BigNumber;
-  maxFeePerGas?: string | BigNumber;
-  maxPriorityFeePerGas?: string | BigNumber;
-  gasLimit: string;
+  gasPrice?: BigNumber;
+  maxFeePerGas?: BigNumber;
+  maxPriorityFeePerGas?: BigNumber;
+  gasLimit: number;
   to: string;
-  value: string | number;
+  value: string;
   data: string;
   chainId: number;
-  nonce: number | string;
+  nonce: number;
   accessList?: AccessListItem[];
   type?: number;
 };

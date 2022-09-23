@@ -1,3 +1,4 @@
+import { ethers } from 'ethers';
 import { INetworkService } from '../../../../../common/network';
 import { EVMRawTransactionType } from '../../../../../common/types';
 import { IEVMAccount } from '../../account/interface/IEVMAccount';
@@ -11,7 +12,8 @@ export interface ITransactionService<AccountType> {
   transactionListener: ITransactionListener;
   nonceManager: INonceManager
 
-  // TODO
-  // Check return type
-  sendTransaction(transaction: TransactionDataType, account: AccountType): Promise<void>;
+  sendTransaction(
+    transaction: TransactionDataType,
+    account: AccountType
+  ): Promise<ethers.providers.TransactionResponse>;
 }

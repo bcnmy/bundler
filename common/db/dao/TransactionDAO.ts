@@ -1,10 +1,8 @@
-import { IBlockchainTransaction } from '../mongo/interface/IBlockchainTransaction';
-import { ITransactionDAO } from '../interface/ITransactionDAO';
-import { Mongo } from '../mongo/Mongo';
-import { IDBService } from '../interface/IDBService';
+import { ITransactionDAO } from '../interface';
+import { Mongo, IBlockchainTransaction } from '../mongo';
 
 export class TransactionDAO implements ITransactionDAO {
-  private _db: IDBService;
+  private _db: Mongo;
 
   constructor() {
     this._db = Mongo.getInstance();
