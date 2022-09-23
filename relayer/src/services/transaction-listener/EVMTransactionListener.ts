@@ -6,7 +6,12 @@ import { EVMRawTransactionType, TransactionStatus } from '../../../../common/typ
 import { IEVMAccount } from '../account/interface/IEVMAccount';
 import { ITransactionPublisher } from '../transaction-publisher';
 import { ITransactionListener } from './interface/ITransactionListener';
-import { NotifyTransactionListenerParamsType, OnTransactionFailureParamsType, OnTransactionSuccessParamsType, TransactionListenerMessageType } from './types';
+import {
+  NotifyTransactionListenerParamsType,
+  OnTransactionFailureParamsType,
+  OnTransactionSuccessParamsType,
+  TransactionListenerMessageType,
+} from './types';
 
 export class EVMTransactionListener implements
 ITransactionListener, ITransactionPublisher<TransactionListenerMessageType> {

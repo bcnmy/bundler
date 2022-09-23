@@ -9,7 +9,7 @@ export type NotifyTransactionListenerParamsType = {
   transactionExecutionResponse: ethers.providers.TransactionResponse,
   transactionId: string,
   relayerAddress: string,
-  userAddress: string
+  userAddress?: string
 };
 
 export type OnTransactionSuccessParamsType = NotifyTransactionListenerParamsType;

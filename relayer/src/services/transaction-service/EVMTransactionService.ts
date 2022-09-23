@@ -14,7 +14,7 @@ import { IEVMAccount } from '../account/interface/IEVMAccount';
 import { EVMRawTransactionType } from '../../../../common/types';
 import { GasPriceType } from '../../../../common/gas-price/types';
 import { IGasPrice } from '../../../../common/gas-price/interface/IGasPrice';
-import { ITransactionDAO } from '../../../../common/db';
+import { NotifyTransactionListenerParamsType } from '../transaction-listener/types';
 
 export class EVMTransactionService implements
 ITransactionService<IEVMAccount<EVMRawTransactionType>> {
@@ -57,11 +57,10 @@ ITransactionService<IEVMAccount<EVMRawTransactionType>> {
   }
 
   private async notifyTransactionListener(
-    transactionExecutionResponse: ethers.providers.TransactionResponse,
-    transactionId: string,
+    notifyTransactionListenerParams: NotifyTransactionListenerParamsType,
   ): Promise<void> {
     // call transaction listener
-    await this.transactionListener.notify(transactionExecutionResponse.hash, transactionId);
+    await this.transactionListener.notify(notifyTransactionListenerParams);
   }
 
   private async createTransaction(
@@ -113,7 +112,7 @@ ITransactionService<IEVMAccount<EVMRawTransactionType>> {
     // tell to transaction listener
     // save data in db
     const {
-      to, value, data, gasLimitFromClient, gasLimitInSimulation, speed, transactionId,
+      to, value, data, gasLimitFromClient, gasLimitInSimulation, speed, transactionId, userAddress,
     } = transactionData;
     const gasLimit = gasLimitFromClient || gasLimitInSimulation;
     const rawTransaction = await this.createTransaction({
