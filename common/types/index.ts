@@ -1,4 +1,3 @@
-import { ConsumeMessage } from 'amqplib';
 import { BigNumber } from 'ethers';
 
 export enum TransactionType {
@@ -23,31 +22,25 @@ export enum RelayerManagerType {
   CROSS_CHAIN = 1,
 }
 
-export type EVMRawTransactionType = {
-  from: string;
-  gasPrice?: string | BigNumber;
-  maxFeePerGas?: string | BigNumber;
-  maxPriorityFeePerGas?: string | BigNumber;
-  gasLimit: string;
-  to: string;
-  value: string | number;
-  data: string;
-  chainId: number;
-  nonce: number | string;
-  accessList?: AccessListItem[];
-  type?: number;
-};
-
 export type AccessListItem = {
   address: string;
   storageKeys: string[];
 };
 
-export interface IRetryPolicy {
-  maxTries: number;
-  shouldRetry: (err: any) => Promise<boolean>;
-  incrementTry: () => void;
-}
+export type EVMRawTransactionType = {
+  from: string;
+  gasPrice?: BigNumber;
+  maxFeePerGas?: BigNumber;
+  maxPriorityFeePerGas?: BigNumber;
+  gasLimit: number;
+  to: string;
+  value: string;
+  data: string;
+  chainId: number;
+  nonce: number;
+  accessList?: AccessListItem[];
+  type?: number;
+};
 
 export type AATransactionMessageType = {
   type: string;
@@ -68,15 +61,6 @@ export type SCWTransactionMessageType = {
   value: string;
   transactionId: string;
 };
-
-export interface IQueue<TransactionMessageType> {
-  chainId: number;
-  transactionType?: string;
-  connect(): Promise<void>
-  publish(arg0: TransactionMessageType): Promise<boolean>
-  consume(): Promise<boolean>
-  ack(arg0: ConsumeMessage): Promise<void>
-}
 
 type ResponseType = {
   code: number;

@@ -4,7 +4,7 @@ import { IDBService } from '../interface/IDBService';
 import { BlockchainTransactionsMap } from './models';
 
 export class Mongo implements IDBService {
-  private static instance: IDBService;
+  private static instance: Mongo;
 
   private client: Mongoose | null;
 
@@ -12,7 +12,7 @@ export class Mongo implements IDBService {
     this.client = null;
   }
 
-  public static getInstance(): IDBService {
+  public static getInstance(): Mongo {
     // TODO: Add lock
     if (!Mongo.instance) {
       Mongo.instance = new Mongo();
