@@ -42,6 +42,7 @@ const transactionType:{ [key: number]: string[] } = {
         // start listening for transaction
         await queue.consume(aaConsumer.onMessageReceived);
         queueMap[chainId][type] = queue;
+
         const aaRelayService = new AARelayService(queue);
         relayMap[chainId][type] = aaRelayService;
       }
