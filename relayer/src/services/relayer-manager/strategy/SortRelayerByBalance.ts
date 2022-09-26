@@ -1,8 +1,9 @@
 import { IStrategy } from '../interface/IStrategy';
+import { EVMRelayerMetaDataType } from '../types';
 
-export class SortRelayerByBalance implements IStrategy {
+export class SortRelayerByBalance implements IStrategy<EVMRelayerMetaDataType> {
   // eslint-disable-next-line class-methods-use-this
-  public doAlgorithm(data: string[]): string[] {
-    return data.sort();
+  public doAlgorithm(data: EVMRelayerMetaDataType[]): EVMRelayerMetaDataType[] {
+    return data.sort((d) => d.address.length);
   }
 }

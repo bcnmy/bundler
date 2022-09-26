@@ -11,7 +11,9 @@ import { EVMAccount } from '../account';
 import { INonceManager } from '../nonce-manager';
 import { ITransactionService } from '../transaction-service/interface/ITransactionService';
 import { IRelayerManager } from './interface/IRelayerManager';
-import { RelayerMetaDataType } from './types';
+import { SortRelayerByLeastPendingCount } from './strategy/SortRelayerByLeastPendingCount';
+import { StrategyManager } from './strategy/StrategyManager';
+import { EVMRelayerMetaDataType } from './types';
 
 const log = logger(module);
 const fundRelayerMutex = new Mutex();
@@ -44,7 +46,9 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
 
   newRelayerInstanceCount: number = 10;
 
-  public relayerMap: Record<string, RelayerMetaDataType> = {};
+  public activeRelayerData: Array<EVMRelayerMetaDataType> = [];
+
+  public relayerMap: Record<string, EVMAccount> = {};
 
   nonceManagerService: INonceManager;
 
@@ -60,6 +64,11 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
     this.networkService = networkService;
     this.transactionService = transactionService;
     this.nonceManagerService = nonceManagerService;
+  }
+
+  getActiveRelayer(): void {
+    const strategy = new StrategyManager(new SortRelayerByLeastPendingCount());
+    strategy.performAlgorithm(this.activeRelayerData);
   }
 
   getRelayersCount() {
@@ -95,17 +104,19 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
           address,
           privateKey,
         );
+        this.relayerMap[address] = relayer;
         relayers.push(relayer);
       }
 
       log.info(`Relayers created on network id ${this.chainId}`);
       relayers.map(async (relayer) => {
         const relayerAddress = relayer.getPublicKey().toLowerCase();
-        this.relayerMap[relayerAddress] = {
+        this.activeRelayerData.push({
+          address: relayer.getPublicKey(),
           pendingCount: 0,
           nonce: await this.nonceManagerService.getNonce(relayerAddress),
           balance: (await this.networkService.getBalance(relayerAddress)).toNumber(),
-        };
+        });
       });
     } catch (error) {
       console.log(error);

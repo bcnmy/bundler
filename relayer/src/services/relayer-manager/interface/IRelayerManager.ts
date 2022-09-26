@@ -6,6 +6,7 @@ export interface IRelayerManager<AccountType> {
   createRelayers(numberOfRelayers: number): Promise<void>;
   fundRelayers(ownerAccount: AccountType, accountAddress: string[]): Promise<boolean>;
   getRelayer(relayerAddress: string): AccountType | RelayerMetaDataType;
+  getActiveRelayer(): AccountType | RelayerMetaDataType;
   setMinRelayerCount(minRelayerCount: number): void
   setMaxRelayerCount(maxRelayerCount: number): void
   setInactiveRelayerCountThreshold(inactiveRelayerCountThreshold: number): void
