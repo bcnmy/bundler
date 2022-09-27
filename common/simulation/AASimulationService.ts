@@ -22,15 +22,13 @@ export class AASimulationService {
 
   async simulate(
     simulationData: AASimulationDataType,
-    entryPointAbi: string,
-    entryPointAddress: string,
   ): Promise<SimulationResponseType> {
     // entry point contract call to check
     // https://github.com/eth-infinitism/account-abstraction/blob/5b7130c2645cbba7fe4540a96997163b44c1aafd/contracts/core/EntryPoint.sol#L245
     const { userOp } = simulationData;
     await this.networkService.executeReadMethod(
-      entryPointAbi,
-      entryPointAddress,
+      this.entryPointAbi,
+      this.entryPointAddress,
       'simulateValidation',
       userOp,
     );

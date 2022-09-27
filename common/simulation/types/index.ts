@@ -3,6 +3,7 @@ import { UserOperationType } from '../../types';
 // data response type that external simulation serivcereturns
 export type ExternalSimulationResponseType = {
   simulationSuccess: boolean,
+  simulationMessage: string,
   simualtionGasLimit: number,
 };
 

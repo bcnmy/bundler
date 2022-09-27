@@ -1,33 +1,26 @@
 import { NextFunction, Request, Response } from 'express';
-import { logger } from '../../../../common/log-config';
 import { TransactionType } from '../../../../common/types';
-
-const log = logger(module);
+import { simulateAATransaction } from './SimulateAATransaction';
+import { simulateSCWTransaction } from './SimulateSCWTransaction';
 
 export const simulateApi = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const {
-      to, data, chainId, refundInfo, transactionType,
-    } = req.body;
-    switch (transactionType) {
+    const { tranasctionType } = req.body;
+    switch (tranasctionType) {
       case TransactionType.AA:
-        simulateAATransaction(req, res);
-        next();
-        break;
+        return simulateAATransaction(req, res, next);
       case TransactionType.SCW:
-        simulateSCWTransaction(req, res);
-        next();
-        break;
+        return simulateSCWTransaction(req, res, next);
       default:
         return res.status(400).send({
           code: 400,
           message: 'Wrong transaction type sent in request',
         });
-    }
+      }
   } catch (error) {
-    log.error(`Error in fetching fee otpions ${error}`);
-    return res.status(500).json({
-      error,
+    return res.status(500).send({
+      code: 500,
+      message: 'Wrong transaction type sent in request',
     });
   }
-};
+}

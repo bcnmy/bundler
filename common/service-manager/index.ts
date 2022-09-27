@@ -16,7 +16,7 @@ import { Mongo } from '../db';
 import { GasPriceManager } from '../gas-price';
 import { AARelayService } from '../relay-service';
 import { IQueue } from '../interface';
-import { AASimulationService, SCWSimulationService } from '../simulation';
+import { AASimulationService } from '../simulation';
 import { EVMNetworkService } from '../network';
 import { config } from '../../config';
 import { CMCTokenPriceManager } from '../token-price';
@@ -28,8 +28,7 @@ const relayMap: any = {};
 const redisClient = RedisCacheService.getInstance();
 const dbInstance = Mongo.getInstance();
 
-const scwSimulationService = new SCWSimulationService();
-let aaSimulatonService;
+const aaSimulatonServiceMap: any = {};
 
 const { supportedNetworks, supportedTransactionType } = config;
 
@@ -79,7 +78,11 @@ const { supportedNetworks, supportedTransactionType } = config;
     const { entryPointData } = config;
     const entryPointAbi = entryPointData.abi;
     const entryPointAddress = entryPointData.address[chainId];
-    aaSimulatonService = new AASimulationService(networkService, entryPointAbi, entryPointAddress);
+    aaSimulatonServiceMap[chainId] = new AASimulationService(
+      networkService,
+      entryPointAbi,
+      entryPointAddress,
+    );
   }
 })();
 
@@ -89,6 +92,5 @@ export {
   relayMap,
   redisClient,
   dbInstance,
-  scwSimulationService,
-  aaSimulatonService,
+  aaSimulatonServiceMap,
 };

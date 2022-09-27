@@ -1,14 +1,14 @@
 import { IStrategy } from '../interface/IStrategy';
-import { EVMRelayerMetaDataType } from '../types';
+import { EVMRelayerDataType } from '../types';
 
 export class SortEVMRelayerByLeastPendingCount implements IStrategy {
-  relayerMapData: Array<EVMRelayerMetaDataType>;
+  relayerMapData: Array<EVMRelayerDataType>;
 
-  constructor(relayerMapData: Array<EVMRelayerMetaDataType>) {
+  constructor(relayerMapData: Array<EVMRelayerDataType>) {
     this.relayerMapData = relayerMapData;
   }
 
-  public doAlgorithm(): EVMRelayerMetaDataType[] {
+  public doAlgorithm(): EVMRelayerDataType[] {
     return this.relayerMapData.sort((a, b) => a.pendingCount - b.pendingCount);
   }
 }
