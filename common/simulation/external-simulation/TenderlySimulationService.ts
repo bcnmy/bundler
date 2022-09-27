@@ -31,8 +31,9 @@ export class TenderlySimulationService {
 
     if (!response?.data?.transaction?.status) {
       return {
-        code: 400,
-        error: response?.data?.transaction?.error_message,
+        simulationSuccess: false,
+        simulationMessage: response?.data?.transaction?.error_message,
+        simualtionGasLimit: 0,
       };
     }
 
@@ -50,18 +51,16 @@ export class TenderlySimulationService {
 
     if (!isRelayerPaidFully) {
       return {
-        code: 400,
-        error: `Payment to relayer is incorrect, with message: ${successOrRevertMsg}`,
+        simulationSuccess: false,
+        simulationMessage: `Payment to relayer is incorrect, with message: ${successOrRevertMsg}`,
+        simualtionGasLimit: 0,
       };
     }
 
     return {
-      code: 200,
-      msg: 'Fee options fetched successfully',
-      data: [{
-        executed: true, succeeded: true, result: '0x', reason: null, gasUsed: response?.data?.transaction?.gas_used, gasLimit: 13079,
-      }],
-      // resp,
+      simulationSuccess: true,
+      simulationMessage: 'Fee options fetched successfully',
+      simualtionGasLimit: response?.data?.transaction?.gas_used,
     };
   }
 

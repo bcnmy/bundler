@@ -57,6 +57,9 @@ const data: ConfigType = {
       137: 'https://rpc-mainnet.maticvigil.com',
       80001: 'https://rpc-mumbai.maticvigil.com',
     },
+    fallbackUrls: {
+
+    },
     ownerAccountDetails: {
       5: {
         publicKey: '',

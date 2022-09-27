@@ -10,7 +10,6 @@ import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
 import { AATransactionMessageType } from '../../../../common/types';
 import { config } from '../../../../config';
-import { stringify } from '../../utils/util';
 import { EVMAccount } from '../account';
 import { INonceManager } from '../nonce-manager';
 import { ITransactionService } from '../transaction-service/interface/ITransactionService';
@@ -150,7 +149,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
         });
       });
     } catch (error) {
-      log.error(`failed to create relayers ${stringify(error)} on network id ${this.chainId}`);
+      log.error(`failed to create relayers ${JSON.stringify(error)} on network id ${this.chainId}`);
     }
 
     release();
@@ -199,7 +198,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
         nonce: ethers.BigNumber.from(ownerAccountNonce.toString()).toHexString(),
         chainId: this.chainId,
       };
-      log.info(`Funding relayer ${address} on network id ${this.chainId} with raw tx ${stringify(rawTx)}`);
+      log.info(`Funding relayer ${address} on network id ${this.chainId} with raw tx ${JSON.stringify(rawTx)}`);
       await this.transactionService.sendTransaction(rawTx, ownerAccount);
       release();
     }

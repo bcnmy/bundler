@@ -54,11 +54,11 @@ ITransactionListener, ITransactionPublisher<TransactionListenerMessageType> {
     await this.publish(transactionExecutionResponse);
   }
 
-  private onTransactionDropped() {
-    // when retry count expires
-    // send no op txn just like defender
-    // https://docs.openzeppelin.com/defender/relay#valid-until
-  }
+  // private onTransactionDropped() {
+  //   // when retry count expires
+  //   // send no op txn just like defender
+  //   // https://docs.openzeppelin.com/defender/relay#valid-until
+  // }
 
   private async onTransactionFailure(onTranasctionFailureParams: OnTransactionFailureParamsType) {
     const {

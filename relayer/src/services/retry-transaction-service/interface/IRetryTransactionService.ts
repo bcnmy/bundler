@@ -1,11 +1,9 @@
 import { IConsumer } from '../../consumer/interface/IConsumer';
-import { TransactionQueueMessageType } from '../../transaction-publisher';
 import { ITransactionService } from '../../transaction-service/interface/ITransactionService';
+import { TransactionQueueMessageType } from '../types';
 
 export interface IRetryTransactionService<AccountType>
   extends IConsumer<TransactionQueueMessageType> {
   transactionService: ITransactionService<AccountType>;
   chainId: number;
-
-  getBumpedGasPrice(pastGasPrice: string, bumpingPercentage: number): Promise<string>
 }
