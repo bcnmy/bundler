@@ -271,6 +271,12 @@ const data: ConfigType = {
     symbolMapByChainId: {},
   },
   queueUrl: '',
+  entryPointData: {
+    abi: 'TODO',
+    address: {
+      5: '',
+    },
+  },
 };
 const configInstance = new Config(data);
 export const config = configInstance.get();

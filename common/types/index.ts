@@ -79,3 +79,17 @@ export function isError<T>(
 ): response is ErrorType {
   return (response as ErrorType).error !== undefined;
 }
+
+export type UserOperationType = {
+  sender: string;
+  nonce: number;
+  initCode: string;
+  callData: string;
+  callGasLimit: number;
+  verificationGasLimit: number;
+  preVerificationGas: number;
+  maxFeePerGas: number;
+  maxPriorityFeePerGas: number;
+  paymasterAndData: string;
+  signature: string;
+};

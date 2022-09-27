@@ -1,14 +1,12 @@
-import { IExternalSimulation, ISimulation } from './interface';
-import { SimulationDataType, SimulationResponseType, TenderlySimulationDataType } from './types';
+import { TenderlySimulationService } from './external-simulation';
+import { SCWSimulationDataType, SimulationResponseType } from './types';
 
-export class SCWSimulationService implements ISimulation {
-  externalSimulationService: IExternalSimulation<TenderlySimulationDataType>;
-
-  constructor(externalSimulationService: IExternalSimulation<TenderlySimulationDataType>) {
-    this.externalSimulationService = externalSimulationService;
-  }
-
-  simulate(simulationData: SimulationDataType): Promise<SimulationResponseType> {
-    return this.externalSimulationService.simulate(simulationData);
+export class SCWSimulationService {
+  static async simulate(simulationData: SCWSimulationDataType): Promise<SimulationResponseType> {
+    await TenderlySimulationService.simulate(simulationData);
+    return {
+      isSimulationSuccessful: true,
+      gasLimitFromSimulation: 500000,
+    };
   }
 }
