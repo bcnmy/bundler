@@ -3,19 +3,17 @@ import _ from 'lodash';
 import { IConfig, ConfigType } from './interface/IConfig';
 
 class Config implements IConfig {
-  config: ConfigType | null;
+  config: ConfigType;
 
-  constructor() {
-    this.config = null;
+  constructor(config: ConfigType) {
+    this.config = config;
   }
 
-  setup() {
+  setup(data: ConfigType) {
     // load json based on env
     // decrypt the .env file
     try {
-      const data: ConfigType = config;
       // merge missing config from .env file and validate
-      console.log(data);
       this.config = data;
     } catch (e) {
       console.log(e);
@@ -32,5 +30,6 @@ class Config implements IConfig {
   }
 }
 
-const configInstance = new Config();
+const configData = {};
+const configInstance = new Config(configData);
 export const config = configInstance.get();

@@ -7,7 +7,7 @@ import { config } from '../../config';
   config.setup();
   const server = await import('./server');
   // if ( === 'done') {
-    server.init();
-    // await import('./service-manager');
+  server.init();
+  // await import('./service-manager');
   // }
 })();

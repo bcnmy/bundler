@@ -1,7 +1,7 @@
 import { IExternalSimulation, ISimulation } from './interface';
 import { SimulationDataType, SimulationResponseType, TenderlySimulationDataType } from './types';
 
-export class SCWSimulationService implements ISimulation<TenderlySimulationDataType> {
+export class SCWSimulationService implements ISimulation {
   externalSimulationService: IExternalSimulation<TenderlySimulationDataType>;
 
   constructor(externalSimulationService: IExternalSimulation<TenderlySimulationDataType>) {

@@ -1,4 +1,5 @@
-import { SCWTransactionMessageType, IQueue, RelayServiceResponseType } from '../types';
+import { IQueue } from '../interface';
+import { SCWTransactionMessageType, RelayServiceResponseType } from '../types';
 import { IRelayService } from './interface/IRelayService';
 
 export class SCWRelayService implements IRelayService<SCWTransactionMessageType> {
