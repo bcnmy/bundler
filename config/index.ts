@@ -270,6 +270,7 @@ const data: ConfigType = {
     updateFrequencyInSeconds: 0,
     symbolMapByChainId: {},
   },
+  queueUrl: '',
 };
 const configInstance = new Config(data);
 export const config = configInstance.get();
