@@ -10,9 +10,11 @@ export class GasPriceManager implements IGasPriceManager<GasPriceType> {
 
   redisClient: ICacheService;
 
-  constructor(chainId: number, redisClient: ICacheService) {
-    this.chainId = chainId;
+  constructor(redisClient: ICacheService, options: {
+    chainId: number,
+  }) {
     this.redisClient = redisClient;
+    this.chainId = options.chainId;
   }
 
   setup() {
