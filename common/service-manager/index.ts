@@ -17,6 +17,9 @@ import { GasPriceManager } from '../gas-price';
 import { AARelayService } from '../relay-service';
 import { IQueue } from '../interface';
 import { AASimulationService, SCWSimulationService } from '../simulation';
+import { EVMNetworkService } from '../network';
+import { config } from '../../config';
+import { CMCTokenPriceManager } from '../token-price';
 
 const queueMap: any = {}; // TODO: Add type of queue
 const gasPriceMap: any = {}; // TODO: Add type of queue
@@ -26,6 +29,7 @@ const redisClient = RedisCacheService.getInstance();
 const dbInstance = Mongo.getInstance();
 
 const scwSimulationService = new SCWSimulationService();
+let aaSimulatonSerice: AASimulationService;
 
 const supportedNetworks: number[] = [5, 80001];
 const transactionType:{ [key: number]: string[] } = {
@@ -36,7 +40,19 @@ const transactionType:{ [key: number]: string[] } = {
 (async () => {
   for (const chainId of supportedNetworks) {
     const gasPriceManager = new GasPriceManager(chainId, redisClient);
-    gasPriceManager.setup();
+    const gasPriceService = gasPriceManager.setup();
+    if (gasPriceService) {
+      gasPriceService.schedule();
+    }
+
+    const networkService = new EVMNetworkService(
+      chainId,
+      config.chains.provider[chainId],
+      config.chains.fallbackUrls[chainId] || [],
+    );
+
+    const tokenService = new CMCTokenPriceManager();
+
     // for each network get transaction type
     for (const type of transactionType[chainId]) {
       if (type === TransactionType.AA) {
@@ -50,6 +66,7 @@ const transactionType:{ [key: number]: string[] } = {
         relayMap[chainId][type] = aaRelayService;
       }
     }
+    aaSimulatonSerice = new AASimulationService(networkService);
   }
 })();
 

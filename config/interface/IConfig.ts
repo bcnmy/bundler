@@ -33,6 +33,9 @@ export type ConfigType = {
     provider: {
       [key: number]: string,
     },
+    fallbackUrls: {
+      [key: number]: Array<string>,
+    },
     ownerAccountDetails: {
       [key: number]: {
         publicKey: string,
