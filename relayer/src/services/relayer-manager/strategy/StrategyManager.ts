@@ -1,7 +1,6 @@
 import { IStrategy } from '../interface/IStrategy';
-import { EVMRelayerMetaDataType } from '../types';
 
-export class StrategyManager<EVMRelayerMetaDataType> {
+export class StrategyManager {
   private strategy: IStrategy;
 
   constructor(strategy: IStrategy) {
@@ -12,9 +11,8 @@ export class StrategyManager<EVMRelayerMetaDataType> {
     this.strategy = strategy;
   }
 
-  public performAlgorithm(data: EVMRelayerMetaDataType[]): void {
-    console.log('Context: Sorting data using the strategy (not sure how it\'ll do it)');
-    const result = this.strategy.doAlgorithm(data);
-    console.log(result.join(','));
+  public performAlgorithm(): void {
+    console.log('Context: Sorting data using the strategy');
+    this.strategy.doAlgorithm();
   }
 }

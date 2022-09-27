@@ -1,3 +1,3 @@
-export interface IStrategy<T> {
-  doAlgorithm(data: T[]): T[];
+export interface IStrategy {
+  doAlgorithm(): void;
 }

@@ -32,7 +32,7 @@ const transactionType:{ [key: number]: string[] } = {
 (async () => {
   for (const chainId of supportedNetworks) {
     const gasPriceManager = new GasPriceManager(chainId, redisClient);
-    gasPriceMap[chainId] = gasPriceManager.setup();
+    gasPriceManager.setup();
     // for each network get transaction type
     for (const type of transactionType[chainId]) {
       if (type === TransactionType.AA) {
