@@ -16,6 +16,9 @@ import { Mongo } from '../db';
 import { GasPriceManager } from '../gas-price';
 import { AARelayService } from '../relay-service';
 import { IQueue } from '../interface';
+import { EVMNetworkService } from '../network';
+import { config } from '../../config';
+import { CMCTokenPriceManager } from '../token-price';
 
 const queueMap: any = {}; // TODO: Add type of queue
 const gasPriceMap: any = {}; // TODO: Add type of queue
@@ -33,7 +36,19 @@ const transactionType:{ [key: number]: string[] } = {
 (async () => {
   for (const chainId of supportedNetworks) {
     const gasPriceManager = new GasPriceManager(chainId, redisClient);
-    gasPriceManager.setup();
+    const gasPriceService = gasPriceManager.setup();
+    if (gasPriceService) {
+      gasPriceService.schedule();
+    }
+
+    const networkService = new EVMNetworkService(
+      chainId,
+      config.chains.provider[chainId],
+      config.chains.fallbackUrls[chainId] || [],
+    );
+
+    const tokenService = new CMCTokenPriceManager();
+
     // for each network get transaction type
     for (const type of transactionType[chainId]) {
       if (type === TransactionType.AA) {

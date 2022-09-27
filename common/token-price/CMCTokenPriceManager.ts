@@ -13,8 +13,9 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
 
   networkSymbolCategories: NetworkSymbolCategoriesType;
 
-  constructor(networkSymbolCategories: NetworkSymbolCategoriesType) {
-    this.networkSymbolCategories = networkSymbolCategories;
+  constructor() {
+    // network symbol categories to be updated via setter if needed
+    this.networkSymbolCategories = config.tokenPrice.networkSymbols;
     this.updateFrequencyInSeconds = config.tokenPrice.updateFrequencyInSeconds;
   }
 
