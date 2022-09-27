@@ -1,5 +1,6 @@
 import { ConsumeMessage } from 'amqplib';
-import { TransactionType, AATransactionMessageType, IQueue } from '../../../../common/types';
+import { IQueue } from '../../../../common/interface';
+import { TransactionType, AATransactionMessageType } from '../../../../common/types';
 import { ITransactionConsumer } from './interface/ITransactionConsumer';
 
 export class AAConsumer implements ITransactionConsumer<AATransactionMessageType> {

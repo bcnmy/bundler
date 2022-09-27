@@ -1,5 +1,8 @@
 import { ConsumeMessage } from 'amqplib';
+import { IQueue } from '../../../../common/queue';
+import { TransactionType } from '../../../../common/types';
 import { EVMAccount } from '../account';
+import { TransactionQueueMessageType } from '../transaction-publisher';
 import { ITransactionService } from '../transaction-service/interface/ITransactionService';
 import { IRetryTransactionService } from './interface/IRetryTransactionService';
 
@@ -8,28 +11,28 @@ export class EVMRetryTransactionService implements IRetryTransactionService<EVMA
 
   chainId: number;
 
-  transactionType?: string | undefined;
+  transactionType: TransactionType;
 
-  constructor(chainId: number, transactionService: ITransactionService<EVMAccount>) {
+  queue: IQueue<TransactionQueueMessageType>;
+
+  constructor(
+    chainId: number,
+    transactionService: ITransactionService<EVMAccount>,
+    transactionType: TransactionType,
+    queue: IQueue<TransactionQueueMessageType>,
+  ) {
     this.chainId = chainId;
     this.transactionService = transactionService;
-  }
-
-  connect(): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
-
-  onMessageReceived: (msg: ConsumeMessage) => Promise<void>;
-
-  consume(): Promise<boolean> {
-    throw new Error('Method not implemented.');
-  }
-
-  ack(arg0: ConsumeMessage): Promise<void> {
-    throw new Error('Method not implemented.');
+    this.transactionType = transactionType;
+    this.queue = queue;
   }
 
   getBumpedGasPrice(pastGasPrice: string, bumpingPercentage: number): Promise<string> {
     throw new Error('Method not implemented.');
   }
+
+  onMessageReceived: (
+    msg: ConsumeMessage,
+    queue: IQueue<TransactionQueueMessageType>
+  ) => Promise<void>;
 }

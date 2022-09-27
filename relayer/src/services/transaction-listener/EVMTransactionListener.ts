@@ -50,10 +50,14 @@ ITransactionListener, ITransactionPublisher<TransactionListenerMessageType> {
       relayerAddress,
       userAddress,
     );
+    // add txn data in cache
+    await this.publish(transactionExecutionResponse);
   }
 
   private onTransactionDropped() {
-
+    // when retry count expires
+    // send no op txn just like defender
+    // https://docs.openzeppelin.com/defender/relay#valid-until
   }
 
   private async onTransactionFailure(onTranasctionFailureParams: OnTransactionFailureParamsType) {
@@ -66,6 +70,8 @@ ITransactionListener, ITransactionPublisher<TransactionListenerMessageType> {
       relayerAddress,
       userAddress,
     );
+    // add txn data in cache
+    await this.publish(transactionExecutionResponse);
   }
 
   private async saveTransactionDataToDatabase(
@@ -97,6 +103,9 @@ ITransactionListener, ITransactionPublisher<TransactionListenerMessageType> {
       transactionExecutionResponse, transactionId, relayerAddress, userAddress,
     } = notifyTransactionListenerParams;
     const tranasctionHash = transactionExecutionResponse.hash;
+    // publish to queue with expiry header
+    // pop happens when expiry header expires
+    // retry txn service will check for receipt
     const transactionReceipt = await this.networkService.waitForTransaction(tranasctionHash);
     if (transactionReceipt.status === 1) {
       this.onTransactionSuccess({

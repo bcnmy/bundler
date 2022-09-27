@@ -1,5 +1,6 @@
+import { IQueue } from '../interface';
 import {
-  AATransactionMessageType, RelayServiceResponseType, IQueue,
+  AATransactionMessageType, RelayServiceResponseType,
 } from '../types';
 import { IRelayService } from './interface/IRelayService';
 

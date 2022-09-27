@@ -9,12 +9,13 @@
 // make instance of queue for network id and transaction type - done
 
 import { AAConsumer } from '../../relayer/src/services/consumer/AAConsumer';
-import { AATransactionMessageType, IQueue, TransactionType } from '../types';
+import { AATransactionMessageType, TransactionType } from '../types';
 import { AATransactionQueue } from '../queue/AATransactionQueue';
 import { RedisCacheService } from '../cache';
 import { Mongo } from '../db';
 import { GasPriceManager } from '../gas-price';
 import { AARelayService } from '../relay-service';
+import { IQueue } from '../interface';
 
 const queueMap: any = {}; // TODO: Add type of queue
 const gasPriceMap: any = {}; // TODO: Add type of queue

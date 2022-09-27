@@ -128,11 +128,12 @@ export type ConfigType = {
         [key: string]: string,
       }
     }
-  }
+  },
+  queueUrl: string
 };
 
 export interface IConfig {
-  setup(): void
+  setup(data: ConfigType): void
 
   update(data: object): boolean
 

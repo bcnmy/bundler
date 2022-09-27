@@ -2,10 +2,11 @@ import amqp, { Channel, ConsumeMessage, Replies } from 'amqplib';
 import { AATransactionMessageType } from '../types';
 import { IQueue } from './interface/IQueue';
 import { logger } from '../log-config';
+import { config } from '../../config';
 
 const log = logger(module);
 
-const queueUrl = process.env.RELAYER_QUEUE_URL;
+const { queueUrl } = config;
 
 export class AATransactionQueue implements IQueue<AATransactionMessageType> {
   private channel!: Channel;
