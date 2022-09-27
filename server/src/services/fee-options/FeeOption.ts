@@ -48,8 +48,7 @@ export class FeeOption {
 
       for (const token of feeTokens) {
         let tokenGasPrice;
-        const supportedTokenConfig = config.feeOption.supportedFeeTokensConfig[this.chainId][token];
-        const decimal = supportedTokenConfig.decimals;
+        const decimal = config.feeOption.decimals[this.chainId][token];
         // get similar or wrapped token
         if (config.feeOption.similarTokens[this.chainId].includes(token)) {
           tokenGasPrice = gasPrice;
@@ -81,9 +80,9 @@ export class FeeOption {
           symbol: token,
           decimal,
           offset: config.feeOption.offset[token] || 1,
-          address: supportedTokenConfig.tokenContractAddress,
-          logoUrl: supportedTokenConfig.logoUrl,
-          feeTokenTransferGas: supportedTokenConfig.feeTokenTransferGas,
+          address: config.feeOption.tokenContractAddress[this.chainId][token],
+          logoUrl: config.feeOption.logoUrl[token],
+          feeTokenTransferGas: config.feeOption.feeTokenTransferGas[this.chainId][token],
         });
       }
       return {
