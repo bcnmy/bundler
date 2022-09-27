@@ -17,7 +17,6 @@ export type SCWSimulationDataType = {
 
 export type AASimulationDataType = {
   userOp: UserOperationType,
-  chainId: number,
 };
 
 // data response type that simulation service returns

@@ -29,7 +29,7 @@ const redisClient = RedisCacheService.getInstance();
 const dbInstance = Mongo.getInstance();
 
 const scwSimulationService = new SCWSimulationService();
-let aaSimulatonSerice: AASimulationService;
+let aaSimulatonService;
 
 const supportedNetworks: number[] = [5, 80001];
 const transactionType:{ [key: number]: string[] } = {
@@ -66,7 +66,10 @@ const transactionType:{ [key: number]: string[] } = {
         relayMap[chainId][type] = aaRelayService;
       }
     }
-    aaSimulatonSerice = new AASimulationService(networkService);
+    const { entryPointData } = config;
+    const entryPointAbi = entryPointData.abi;
+    const entryPointAddress = entryPointData.address[chainId];
+    aaSimulatonService = new AASimulationService(networkService, entryPointAbi, entryPointAddress);
   }
 })();
 
@@ -77,4 +80,5 @@ export {
   redisClient,
   dbInstance,
   scwSimulationService,
+  aaSimulatonService,
 };
