@@ -135,7 +135,13 @@ export type ConfigType = {
       }
     }
   },
-  queueUrl: string
+  queueUrl: string,
+  entryPointData: {
+    abi: string,
+    address: {
+      [key: number]: string
+    }
+  }
 };
 
 export interface IConfig {

@@ -112,9 +112,10 @@ ITransactionService<IEVMAccount<EVMRawTransactionType>> {
     // tell to transaction listener
     // save data in db
     const {
-      to, value, data, gasLimitFromClient, gasLimitInSimulation, speed, transactionId, userAddress,
+      to, value, data, gasLimitFromClient,
+      gasLimitFromSimulation, speed, transactionId, userAddress,
     } = transactionData;
-    const gasLimit = gasLimitFromClient || gasLimitInSimulation;
+    const gasLimit = gasLimitFromClient || gasLimitFromSimulation;
     const rawTransaction = await this.createTransaction({
       from: account.getPublicKey(),
       to,

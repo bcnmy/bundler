@@ -16,6 +16,7 @@ import { Mongo } from '../db';
 import { GasPriceManager } from '../gas-price';
 import { AARelayService } from '../relay-service';
 import { IQueue } from '../interface';
+import { AASimulationService, SCWSimulationService } from '../simulation';
 
 const queueMap: any = {}; // TODO: Add type of queue
 const gasPriceMap: any = {}; // TODO: Add type of queue
@@ -23,6 +24,8 @@ const relayMap: any = {};
 
 const redisClient = RedisCacheService.getInstance();
 const dbInstance = Mongo.getInstance();
+
+const scwSimulationService = new SCWSimulationService();
 
 const supportedNetworks: number[] = [5, 80001];
 const transactionType:{ [key: number]: string[] } = {
@@ -56,4 +59,5 @@ export {
   relayMap,
   redisClient,
   dbInstance,
+  scwSimulationService,
 };

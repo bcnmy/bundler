@@ -29,7 +29,7 @@ export type TransactionDataType = {
   value: string;
   data: string;
   gasLimitFromClient ?: number;
-  gasLimitInSimulation: number;
+  gasLimitFromSimulation: number;
   speed: GasPriceType;
   userAddress?: string,
   transactionId: string;

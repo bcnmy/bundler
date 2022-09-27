@@ -20,7 +20,7 @@ export class MaticGasPrice extends AbstractGasPrice implements IScheduler {
     network?: INetworkService<EVMAccount, EVMRawTransactionType>,
   ) {
     super(chainId, redisClient, network);
-    this.updateFrequencyInSeconds = config.gasPrice.updateFrequencyInSeconds[this.chainId] || 60;
+    this.updateFrequencyInSeconds = config.gasPrice[this.chainId].updateFrequencyInSeconds || 60;
   }
 
   async polygonGasStation() {

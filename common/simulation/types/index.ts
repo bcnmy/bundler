@@ -1,3 +1,5 @@
+import { UserOperationType } from '../../types';
+
 // data response type that external simulation serivcereturns
 export type ExternalSimulationResponseType = {
   simulationSuccess: boolean,
@@ -5,13 +7,23 @@ export type ExternalSimulationResponseType = {
 };
 
 // data type that simulation service expects
-export type SimulationDataType = {
+export type SCWSimulationDataType = {
+  chainId: number,
+  data: string,
+  wallet: string,
+  refundInfo: any,
+  gasPriceMap: any,
+};
 
+export type AASimulationDataType = {
+  userOp: UserOperationType,
+  chainId: number,
 };
 
 // data response type that simulation service returns
 export type SimulationResponseType = {
-
+  isSimulationSuccessful: boolean,
+  gasLimitFromSimulation: number
 };
 
 // data type that tenderly simulation service expects
