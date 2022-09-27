@@ -1,22 +1,40 @@
 import axios from 'axios';
-import { config } from '../../config';
+import { SymbolMapByChainIdType } from '../../config/types';
+import { ICacheService } from '../cache';
 import { logger } from '../log-config';
 import { IScheduler } from '../scheduler';
-import { redisClient } from '../service-manager';
 import { ITokenPrice } from './interface/ITokenPrice';
 import { NetworkSymbolCategoriesType } from './types';
 
 const log = logger(module);
 
 export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
-  updateFrequencyInSeconds: number;
+  private apiKey: string;
 
-  networkSymbolCategories: NetworkSymbolCategoriesType;
+  private updateFrequencyInSeconds: number;
 
-  constructor() {
+  private networkSymbolCategories: NetworkSymbolCategoriesType;
+
+  private symbolMapByChainId: SymbolMapByChainIdType;
+
+  redisClient: ICacheService;
+
+  constructor(
+    redisClient: ICacheService,
+    options: {
+      apiKey: string,
+      networkSymbolCategories: NetworkSymbolCategoriesType,
+      updateFrequencyInSeconds: number,
+      symbolMapByChainId: SymbolMapByChainIdType,
+    },
+  ) {
+    // update api key when expired
+    this.apiKey = options.apiKey;
     // network symbol categories to be updated via setter if needed
-    this.networkSymbolCategories = config.tokenPrice.networkSymbols;
-    this.updateFrequencyInSeconds = config.tokenPrice.updateFrequencyInSeconds;
+    this.networkSymbolCategories = options.networkSymbolCategories;
+    this.updateFrequencyInSeconds = options.updateFrequencyInSeconds;
+    this.symbolMapByChainId = options.symbolMapByChainId;
+    this.redisClient = redisClient;
   }
 
   schedule() {
@@ -26,9 +44,9 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
   private async setup() {
     try {
       const networkSymbolsCategoriesKeys = Object.keys(this.networkSymbolCategories);
-      const response = await axios.get(`${config.tokenPrice.coinMarketCapApi}?symbol=${networkSymbolsCategoriesKeys.toString()}`, {
+      const response = await axios.get(`${this.apiKey}?symbol=${networkSymbolsCategoriesKeys.toString()}`, {
         headers: {
-          'X-CMC_PRO_API_KEY': config.tokenPrice.coinMarketCapApi,
+          'X-CMC_PRO_API_KEY': this.apiKey,
         },
       });
       if (response && response.data && response.data.data) {
@@ -44,7 +62,7 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
             }
           });
           log.info('Network price data updated in cache');
-          await redisClient.set('NETWORK_PRICE_DATA', JSON.stringify(coinsRateObj));
+          await this.redisClient.set('NETWORK_PRICE_DATA', JSON.stringify(coinsRateObj));
         } else {
           log.error('Network keys is not defined while fetching the network prices');
         }
@@ -57,10 +75,10 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
   }
 
   async getTokenPrice(symbol: string): Promise<number> {
-    let data = JSON.parse(await redisClient.get('NETWORK_PRICE_DATA'));
+    let data = JSON.parse(await this.redisClient.get('NETWORK_PRICE_DATA'));
     if (!data) {
       await this.setup();
-      data = JSON.parse(await redisClient.get('NETWORK_PRICE_DATA'));
+      data = JSON.parse(await this.redisClient.get('NETWORK_PRICE_DATA'));
     }
     return data[symbol];
   }
@@ -69,7 +87,7 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
     let tokenPrice: number = 0;
     try {
       if (tokenAddress) {
-        const tokenSymbol = config.tokenPrice.symbolMapByChainId[chainId][tokenAddress];
+        const tokenSymbol = this.symbolMapByChainId[chainId][tokenAddress];
 
         if (tokenSymbol) {
           tokenPrice = await this.getTokenPrice(tokenSymbol);

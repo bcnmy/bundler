@@ -11,13 +11,15 @@ export class AAConsumer implements ITransactionConsumer<AATransactionMessageType
   queue: IQueue<AATransactionMessageType>;
 
   constructor(
-    chainId: number,
-    transactionType: TransactionType,
     queue: IQueue<AATransactionMessageType>,
+    options: {
+      chainId: number,
+      transactionType: TransactionType,
+    },
   ) {
-    this.chainId = chainId;
-    this.transactionType = transactionType;
     this.queue = queue;
+    this.chainId = options.chainId;
+    this.transactionType = options.transactionType;
   }
 
   onMessageReceived = async (

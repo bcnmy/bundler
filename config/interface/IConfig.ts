@@ -1,4 +1,5 @@
 import { TransactionType } from '../../common/types';
+import { SymbolMapByChainIdType } from '../types';
 
 export interface LooseObject {
   [key: string]: any
@@ -132,11 +133,7 @@ export type ConfigType = {
       [key: string]: Array<number>
     },
     updateFrequencyInSeconds: number,
-    symbolMapByChainId: {
-      [key: number]: {
-        [key: string]: string,
-      }
-    }
+    symbolMapByChainId: SymbolMapByChainIdType,
   },
   queueUrl: string,
   entryPointData: {

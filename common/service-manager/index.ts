@@ -31,34 +31,44 @@ const dbInstance = Mongo.getInstance();
 const scwSimulationService = new SCWSimulationService();
 let aaSimulatonService;
 
-const supportedNetworks: number[] = [5, 80001];
-const transactionType:{ [key: number]: string[] } = {
-  5: [TransactionType.AA, TransactionType.SCW],
-  80001: [TransactionType.AA, TransactionType.SCW],
-};
+const { supportedNetworks, supportedTransactionType } = config;
 
 (async () => {
   for (const chainId of supportedNetworks) {
-    const gasPriceManager = new GasPriceManager(chainId, redisClient);
+    const gasPriceManager = new GasPriceManager(redisClient, {
+      chainId,
+    });
     const gasPriceService = gasPriceManager.setup();
     if (gasPriceService) {
       gasPriceService.schedule();
     }
 
-    const networkService = new EVMNetworkService(
+    const networkService = new EVMNetworkService({
       chainId,
-      config.chains.provider[chainId],
-      config.chains.fallbackUrls[chainId] || [],
-    );
+      rpcUrl: config.chains.provider[chainId],
+      fallbackRpcUrls: config.chains.fallbackUrls[chainId] || [],
+    });
 
-    const tokenService = new CMCTokenPriceManager();
+    const tokenService = new CMCTokenPriceManager(redisClient, {
+      apiKey: config.tokenPrice.coinMarketCapApi,
+      networkSymbolCategories: config.tokenPrice.networkSymbols,
+      updateFrequencyInSeconds: config.tokenPrice.updateFrequencyInSeconds,
+      symbolMapByChainId: config.tokenPrice.symbolMapByChainId,
+    });
+    tokenService.schedule();
 
     // for each network get transaction type
-    for (const type of transactionType[chainId]) {
+    for (const type of supportedTransactionType[chainId]) {
       if (type === TransactionType.AA) {
-        const queue: IQueue<AATransactionMessageType> = new AATransactionQueue(chainId, type);
+        const queue: IQueue<AATransactionMessageType> = new AATransactionQueue({
+          chainId,
+          transactionType: type,
+        });
         await queue.connect();
-        const aaConsumer = new AAConsumer(chainId, type, queue);
+        const aaConsumer = new AAConsumer(queue, {
+          chainId,
+          transactionType: type,
+        });
         // start listening for transaction
         await queue.consume(aaConsumer.onMessageReceived);
 

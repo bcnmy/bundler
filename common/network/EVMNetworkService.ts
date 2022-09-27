@@ -18,11 +18,13 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
 
   fallbackRpcUrls: string[];
 
-  constructor(chainId: number, rpcUrl: string, fallbackRpcUrls: string[]) {
-    this.chainId = chainId;
-    this.rpcUrl = rpcUrl;
-    this.ethersProvider = new ethers.providers.JsonRpcProvider(rpcUrl);
-    this.fallbackRpcUrls = fallbackRpcUrls;
+  constructor(options: {
+    chainId: number, rpcUrl: string, fallbackRpcUrls: string[]
+  }) {
+    this.chainId = options.chainId;
+    this.rpcUrl = options.rpcUrl;
+    this.fallbackRpcUrls = options.fallbackRpcUrls;
+    this.ethersProvider = new ethers.providers.JsonRpcProvider(options.rpcUrl);
   }
 
   getActiveRpcUrl(): string {

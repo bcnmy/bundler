@@ -18,11 +18,13 @@ export class AATransactionQueue implements IQueue<AATransactionMessageType> {
   msg!: ConsumeMessage | null;
 
   constructor(
-    chainId: number,
-    type: string,
+    options: {
+      chainId: number,
+      transactionType: string,
+    },
   ) {
-    this.chainId = chainId;
-    this.transactionType = type;
+    this.chainId = options.chainId;
+    this.transactionType = options.transactionType;
   }
 
   connect = async () => {
