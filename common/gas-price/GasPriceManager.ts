@@ -1,11 +1,11 @@
 import { ICacheService } from '../cache';
-import { IGasPrice } from './interface/IGasPriceManager';
+import { IGasPriceManager } from './interface/IGasPriceManager';
 import { GoerliGasPrice } from './networks/GoerliGasPrice';
 import { MaticGasPrice } from './networks/MaticGasPrice';
 import { MumbaiGasPrice } from './networks/MumbaiGasPrice';
 
 type GasPriceType = MaticGasPrice | GoerliGasPrice | MumbaiGasPrice | undefined;
-export class GasPriceManager implements IGasPrice<GasPriceType> {
+export class GasPriceManager implements IGasPriceManager<GasPriceType> {
   chainId: number;
 
   redisClient: ICacheService;

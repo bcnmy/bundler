@@ -70,7 +70,7 @@ export type ConfigType = {
   transaction: {
     errors: {
       networkResponseCodes: {
-        [key: string]: string
+        [key: number]: string
       },
       networksNonceError: {
         [key: number]: string
@@ -81,10 +81,8 @@ export type ConfigType = {
     }
   },
   gasPrice: { // add validation to check the object exists for network id 137
-    updateFrequencyInSeconds: {
-      [key: number]: number,
-    },
     [key: number]: {
+      updateFrequencyInSeconds: number,
       minGasPrice: number,
       maxGasPrice: number,
       baseFeeMultiplier: number,
@@ -106,16 +104,24 @@ export type ConfigType = {
     nativeChainIds: {
       [key: string]: number
     },
-    supportedFeeTokensConfig: {
+    logoUrl: {
+      [key: string]: string
+    },
+    tokenContractAddress: {
       [key: number]: {
-        [key: string]: {
-          logoUrl: string,
-          tokenContractAddress: string,
-          decimals: number,
-          feeTokenTransferGas: number,
-        },
+        [key: string]: string;
       }
     },
+    decimals: {
+      [key: number]: {
+        [key: string]: number;
+      }
+    },
+    feeTokenTransferGas: {
+      [key: number]: {
+        [key: string]: number;
+      }
+    }
   },
   tokenPrice: {
     coinMarketCapApi: string,
@@ -133,8 +139,6 @@ export type ConfigType = {
 };
 
 export interface IConfig {
-  setup(data: ConfigType): void
-
   update(data: object): boolean
 
   get(): ConfigType | null

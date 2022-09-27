@@ -1,4 +1,4 @@
-export type EVMRelayerMetaDataType = {
+export type EVMRelayerDataType = {
   address: string;
   nonce: number;
   pendingCount: number;

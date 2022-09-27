@@ -17,7 +17,7 @@ import { ITransactionService } from '../transaction-service/interface/ITransacti
 import { IRelayerManager } from './interface/IRelayerManager';
 import { SortEVMRelayerByLeastPendingCount } from './strategy';
 import { StrategyManager } from './strategy/StrategyManager';
-import { EVMRelayerMetaDataType } from './types';
+import { EVMRelayerDataType } from './types';
 
 const log = logger(module);
 const fundRelayerMutex = new Mutex();
@@ -52,11 +52,11 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
 
   fundingBalanceThreshold: number = 0.1;
 
-  public activeRelayerDataMap: Array<EVMRelayerMetaDataType> = [];
+  public activeRelayerData: Array<EVMRelayerDataType> = [];
 
   public relayerMap: Record<string, EVMAccount> = {};
 
-  public processingTransactionRelayerDataMap: Record<string, EVMRelayerMetaDataType> = {};
+  public processingTransactionRelayerDataMap: Record<string, EVMRelayerDataType> = {};
 
   nonceManagerService: INonceManager;
 
@@ -80,10 +80,10 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
 
   getActiveRelayer(): EVMAccount | null {
     const strategy = new StrategyManager(
-      new SortEVMRelayerByLeastPendingCount(this.activeRelayerDataMap),
+      new SortEVMRelayerByLeastPendingCount(this.activeRelayerData),
     );
     strategy.performAlgorithm();
-    const activeRelayer = this.activeRelayerDataMap.pop();
+    const activeRelayer = this.activeRelayerData.pop();
     if (activeRelayer) {
       this.processingTransactionRelayerDataMap[activeRelayer.address] = activeRelayer;
       return this.relayerMap[activeRelayer.address];
@@ -93,7 +93,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
 
   addActiveRelayer(address: string): void {
     if (this.processingTransactionRelayerDataMap[address]) {
-      this.activeRelayerDataMap.push(this.processingTransactionRelayerDataMap[address]);
+      this.activeRelayerData.push(this.processingTransactionRelayerDataMap[address]);
       console.log(`Relayer ${address} added to active relayer map`);
     }
   }
@@ -101,10 +101,10 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
   // get total number of relayers
   getRelayersCount(active: boolean = false): number {
     if (active) {
-      return this.activeRelayerDataMap.length;
+      return this.activeRelayerData.length;
     }
     return Object.keys(this.processingTransactionRelayerDataMap).length
-      + this.activeRelayerDataMap.length;
+      + this.activeRelayerData.length;
   }
 
   async createRelayers(numberOfRelayers: number): Promise<void> {
@@ -142,7 +142,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
         const relayerAddress = relayer.getPublicKey().toLowerCase();
         const balance = await (await this.networkService.getBalance(relayerAddress)).toNumber();
         const nonce = await this.nonceManagerService.getNonce(relayerAddress);
-        this.activeRelayerDataMap.push({
+        this.activeRelayerData.push({
           address: relayer.getPublicKey(),
           pendingCount: 0,
           nonce,
@@ -158,7 +158,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
   }
 
   hasBalanceBelowThreshold(address: string): boolean {
-    const relayerData = this.activeRelayerDataMap.find((relayer) => relayer.address === address);
+    const relayerData = this.activeRelayerData.find((relayer) => relayer.address === address);
     const relayerBalance = relayerData?.balance || 0;
     if (relayerBalance < this.fundingBalanceThreshold) {
       return true;

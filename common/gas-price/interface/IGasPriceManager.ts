@@ -1,3 +1,3 @@
-export interface IGasPrice<T> {
+export interface IGasPriceManager<T> {
   setup(): T;
 }
