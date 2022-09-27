@@ -10,6 +10,7 @@ export enum RpcMethod {
   getTransactionReceipt,
   getTransactionCount,
   sendTransaction,
+  waitForTransaction,
 }
 
 export interface INetworkService<AccountType, RawTransactionType> {
@@ -55,4 +56,7 @@ export interface INetworkService<AccountType, RawTransactionType> {
     contractEventName: string,
   ): Promise<EventEmitter>;
   getTransactionReceipt(transactionHash: string): Promise<object>;
+  waitForTransaction(
+    transactionHash: string
+  ): Promise<ethers.providers.TransactionReceipt>
 }

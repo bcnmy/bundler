@@ -11,10 +11,10 @@ import {
 import { INonceManager } from '../nonce-manager';
 import { INetworkService } from '../../../../common/network';
 import { IEVMAccount } from '../account/interface/IEVMAccount';
-import { EVMRawTransactionType, TransactionStatus } from '../../../../common/types';
+import { EVMRawTransactionType } from '../../../../common/types';
 import { GasPriceType } from '../../../../common/gas-price/types';
 import { IGasPrice } from '../../../../common/gas-price/interface/IGasPrice';
-import { ITransactionDAO } from '../../../../common/db';
+import { NotifyTransactionListenerParamsType } from '../transaction-listener/types';
 
 export class EVMTransactionService implements
 ITransactionService<IEVMAccount<EVMRawTransactionType>> {
@@ -28,18 +28,15 @@ ITransactionService<IEVMAccount<EVMRawTransactionType>> {
 
   gasPriceService: IGasPrice;
 
-  transactionDao: ITransactionDAO;
-
   constructor(transactionServiceParams: TransactionServiceParamsType) {
     const {
-      chainId, networkService, transactionListener, nonceManager, gasPriceService, transactionDao,
+      chainId, networkService, transactionListener, nonceManager, gasPriceService,
     } = transactionServiceParams;
     this.chainId = chainId;
     this.networkService = networkService;
     this.transactionListener = transactionListener;
     this.nonceManager = nonceManager;
     this.gasPriceService = gasPriceService;
-    this.transactionDao = transactionDao;
   }
 
   private async getGasPrice(speed: GasPriceType): Promise<BigNumber> {
@@ -59,9 +56,11 @@ ITransactionService<IEVMAccount<EVMRawTransactionType>> {
     await this.nonceManager.incrementNonce(address);
   }
 
-  private async notifyTransactionListener(transactionExecutionResponse: object): Promise<void> {
+  private async notifyTransactionListener(
+    notifyTransactionListenerParams: NotifyTransactionListenerParamsType,
+  ): Promise<void> {
     // call transaction listener
-    await this.transactionListener.notify(transactionExecutionResponse);
+    await this.transactionListener.notify(notifyTransactionListenerParams);
   }
 
   private async createTransaction(
@@ -103,28 +102,6 @@ ITransactionService<IEVMAccount<EVMRawTransactionType>> {
     return transactionExecutionResponse;
   }
 
-  private async saveTransactionDataToDatabase(
-    transactionExecutionResponse: ethers.providers.TransactionResponse,
-    transactionId: string,
-    relayerAddress: string,
-    userAddress?: string,
-  ): Promise<void> {
-    const transactionDataToBeSaveInDatabase = {
-      transactionId,
-      transactionHash: transactionExecutionResponse.hash,
-      status: TransactionStatus.PENDING,
-      rawTransaction: transactionExecutionResponse,
-      chainId: this.chainId,
-      gasPrice: transactionExecutionResponse.gasPrice,
-      receipt: {},
-      relayerAddress,
-      userAddress,
-      creationTime: Date.now(),
-      updationTime: Date.now(),
-    };
-    await this.transactionDao.save(this.chainId, transactionDataToBeSaveInDatabase);
-  }
-
   async sendTransaction(
     transactionData: TransactionDataType,
     account: IEVMAccount<EVMRawTransactionType>,
@@ -135,7 +112,7 @@ ITransactionService<IEVMAccount<EVMRawTransactionType>> {
     // tell to transaction listener
     // save data in db
     const {
-      to, value, data, gasLimitFromClient, gasLimitInSimulation, speed, userAddress, transactionId,
+      to, value, data, gasLimitFromClient, gasLimitInSimulation, speed, transactionId, userAddress,
     } = transactionData;
     const gasLimit = gasLimitFromClient || gasLimitInSimulation;
     const rawTransaction = await this.createTransaction({
@@ -152,13 +129,12 @@ ITransactionService<IEVMAccount<EVMRawTransactionType>> {
       account,
     });
     await this.incrementNonce(account.getPublicKey());
-    await this.notifyTransactionListener(transactionExecutionResponse);
-    await this.saveTransactionDataToDatabase(
+    await this.notifyTransactionListener({
       transactionExecutionResponse,
       transactionId,
-      account.getPublicKey(),
+      relayerAddress: account.getPublicKey(),
       userAddress,
-    );
+    });
     return transactionExecutionResponse;
   }
 }

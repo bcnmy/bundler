@@ -1,5 +1,5 @@
 import { IConsumer } from './IConsumer';
 
-export interface ITransactionConsumer extends IConsumer {
-  transactionType: string
+export interface ITransactionConsumer<TransactionMessageType>
+  extends IConsumer<TransactionMessageType> {
 }

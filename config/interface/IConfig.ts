@@ -40,6 +40,9 @@ export type ConfigType = {
       }
     }
   },
+  relayer: {
+    nodePathIndex: number,
+  },
   relayerManager: [{
     name: string, // assume it to be an identifier by the consumer
     gasLimitMap: {

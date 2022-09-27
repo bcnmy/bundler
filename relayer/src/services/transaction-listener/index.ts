@@ -1,2 +1,2 @@
-export * from './TransactionListener';
+export * from './EVMTransactionListener';
 export * from './interface/ITransactionListener';
