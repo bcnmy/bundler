@@ -8,14 +8,24 @@ import { GasPriceManager } from '../gas-price';
 import { IQueue } from '../interface';
 import { EVMNetworkService } from '../network';
 import { AATransactionQueue, SCWTransactionQueue } from '../queue';
-import { AARelayService } from '../relay-service';
+import { AARelayService, SCWRelayService } from '../relay-service';
 import { AASimulationService, SCWSimulationService } from '../simulation';
 import { CMCTokenPriceManager } from '../token-price';
 import { AATransactionMessageType, SCWTransactionMessageType, TransactionType } from '../types';
 
-const relayMap: any = {};
-const feeOptionMap: any = {};
-const simulatonServiceMap: any = {};
+const relayMap: {
+  [chainId: number]: {
+    [transactionType: string]: AARelayService | SCWRelayService;
+  }
+} = {};
+const feeOptionMap: {
+  [chainId: number]: FeeOption;
+} = {};
+const simulatonServiceMap: {
+  [chainId: number]: {
+    [transactionType: string]: AASimulationService | SCWSimulationService;
+  }
+} = {};
 
 const redisClient = RedisCacheService.getInstance();
 const dbInstance = Mongo.getInstance();
@@ -26,7 +36,6 @@ const { supportedNetworks, supportedTransactionType } = config;
   for (const chainId of supportedNetworks) {
     relayMap[chainId] = {};
     simulatonServiceMap[chainId] = {};
-    feeOptionMap[chainId] = {};
 
     const gasPriceManager = new GasPriceManager(redisClient, {
       chainId,
@@ -83,14 +92,17 @@ const { supportedNetworks, supportedTransactionType } = config;
         );
       } else if (type === TransactionType.SCW) {
         // queue for scw
-        const queue: IQueue<SCWTransactionMessageType> = new SCWTransactionQueue({
+        const scwQueue: IQueue<SCWTransactionMessageType> = new SCWTransactionQueue({
           chainId,
         });
-        await queue.connect();
-        const scwConsumer = new SCWConsumer(queue, {
+        await scwQueue.connect();
+        const scwConsumer = new SCWConsumer(scwQueue, {
           chainId,
         });
-        await queue.consume(scwConsumer.onMessageReceived);
+        await scwQueue.consume(scwConsumer.onMessageReceived);
+
+        const scwRelayService = new SCWRelayService(scwQueue);
+        relayMap[chainId][type] = scwRelayService;
 
         simulatonServiceMap[chainId][type] = new SCWSimulationService(
           networkService,

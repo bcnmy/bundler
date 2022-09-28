@@ -7,17 +7,18 @@ export const relayApi = async (
   req: Request,
   res: Response,
 ) => {
-  console.log(req.body);
-  const { tranasctionType } = req.body;
-  switch (tranasctionType) {
-    case TransactionType.AA:
-      return relayAATransaction(req, res);
-    case TransactionType.SCW:
-      return relaySCWTransaction(req, res);
-    default:
-      return res.status(400).send({
-        code: 400,
-        message: 'Wrong transaction type sent in request',
-      });
+  const { transactionType } = req.body;
+  let response = null;
+  if (transactionType === TransactionType.AA) {
+    response = await relayAATransaction(req, res);
+  } else if (transactionType === TransactionType.SCW) {
+    response = await relaySCWTransaction(req, res);
   }
+  if (!response) {
+    return res.status(400).send({
+      code: 400,
+      message: 'Wrong transaction type sent in request',
+    });
+  }
+  return response;
 };

@@ -14,6 +14,7 @@ export class AARelayService implements IRelayService<AATransactionMessageType> {
   async sendTransactionToRelayer(
     data: AATransactionMessageType,
   ): Promise<RelayServiceResponseType> {
+    console.log(`Sending transaction to queue with ${data.transactionId}`);
     await this.queue.publish(data);
     let response : RelayServiceResponseType;
     try {

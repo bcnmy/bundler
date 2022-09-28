@@ -24,7 +24,7 @@ export class SCWConsumer implements ITransactionConsumer<SCWTransactionMessageTy
     msg?: ConsumeMessage,
   ) => {
     if (msg) {
-      console.log(msg.content.toString(), this.transactionType);
+      console.log('onMessage received in scw', msg.content.toString(), this.transactionType);
       this.queue?.ack(msg);
     }
   };

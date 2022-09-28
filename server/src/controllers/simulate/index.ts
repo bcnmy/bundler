@@ -8,10 +8,10 @@ export const simulateApi = async (req: Request, res: Response, next: NextFunctio
     const { tranasctionType } = req.body;
     switch (tranasctionType) {
       case TransactionType.AA:
-        await simulateAATransaction(req, res, next);
+        await simulateAATransaction(req, res);
         break;
       case TransactionType.SCW:
-        await simulateSCWTransaction(req, res, next);
+        await simulateSCWTransaction(req, res);
         break;
       default:
         return res.status(400).send({

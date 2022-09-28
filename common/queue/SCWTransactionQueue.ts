@@ -32,15 +32,17 @@ export class SCWTransactionQueue implements IQueue<SCWTransactionMessageType> {
   };
 
   publish = async (data: SCWTransactionMessageType) => {
-    const key = `chainid.${this.chainId}`;
+    const key = `chainid.${this.chainId}.type.${this.transactionType}`;
     this.channel.prefetch(1);
     this.channel.publish(`relayer_queue_exchange_${this.transactionType}`, key, Buffer.from(JSON.stringify(data)), {
       persistent: true,
     });
+    log.info(`[x] Sent transaction to queue with transaction id ${data.transactionId}`);
     return true;
   };
 
   consume = async (onMessageReceived: () => void) => {
+    log.info(`[x] Setting up consumer for queue with chain id ${this.chainId} for transaction type ${this.transactionType}`);
     this.channel.assertExchange(`relayer_queue_exchange_${this.transactionType}`, 'direct', {
       durable: true,
     });

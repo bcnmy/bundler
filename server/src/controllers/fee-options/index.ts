@@ -23,7 +23,7 @@ export const feeOptionsApi = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    log.error(`Error in relay ${error}`);
+    log.error(`Error in fee option ${error}`);
     return res.status(500).json({
       error,
     });

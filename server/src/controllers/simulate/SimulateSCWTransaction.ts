@@ -11,12 +11,12 @@ export const simulateSCWTransaction = async (req: Request, res: Response) => {
       to, data, chainId, refundInfo,
     } = req.body;
 
-    SCWSimulationService.simulate({
-      chainId,
-      data,
-      to,
-      refundInfo,
-    });
+    // SCWSimulationService.simulate({
+    //   chainId,
+    //   data,
+    //   to,
+    //   refundInfo,
+    // });
     return res.status(400).send({
       code: 400,
       message: 'Wrong transaction type sent in request',

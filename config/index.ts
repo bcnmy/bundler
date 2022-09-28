@@ -60,20 +60,6 @@ const data: ConfigType = {
     fallbackUrls: {
 
     },
-    ownerAccountDetails: {
-      5: {
-        publicKey: '',
-        privateKey: '',
-      },
-      137: {
-        publicKey: '',
-        privateKey: '',
-      },
-      80001: {
-        publicKey: '',
-        privateKey: '',
-      },
-    },
   },
   relayer: {
     nodePathIndex: 0,
@@ -114,6 +100,20 @@ const data: ConfigType = {
         5: 1,
         137: 1,
         80001: 1,
+      },
+      ownerAccountDetails: {
+        5: {
+          publicKey: '',
+          privateKey: '',
+        },
+        137: {
+          publicKey: '',
+          privateKey: '',
+        },
+        80001: {
+          publicKey: '',
+          privateKey: '',
+        },
       },
     },
   ],
@@ -174,11 +174,27 @@ const data: ConfigType = {
       137: ['MATIC', 'USDC', 'USDT', 'DAI', 'WETH'],
     },
     offset: {
-      USDC: 1000000,
-      USDT: 1000000,
-      WETH: 1,
-      DAI: 1,
-      MATIC: 1,
+      5: {
+        USDC: 1000000,
+        USDT: 1000000,
+        WETH: 1,
+        DAI: 1,
+        MATIC: 1,
+      },
+      80001: {
+        USDC: 1000000,
+        USDT: 1000000,
+        WETH: 1,
+        DAI: 1,
+        MATIC: 1,
+      },
+      137: {
+        USDC: 1000000,
+        USDT: 1000000,
+        WETH: 1,
+        DAI: 1,
+        MATIC: 1,
+      },
     },
     similarTokens: {
       1: ['ETH', 'WETH'],
@@ -191,13 +207,33 @@ const data: ConfigType = {
       WMATIC: 137,
     },
     logoUrl: {
-      ETH: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png',
-      WETH: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png',
-      MATIC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png',
-      WMATIC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png',
-      USDC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdc.png',
-      USDT: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png',
-      XDAI: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xdai.png',
+      5: {
+        ETH: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png',
+        WETH: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png',
+        MATIC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png',
+        WMATIC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png',
+        USDC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdc.png',
+        USDT: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png',
+        XDAI: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xdai.png',
+      },
+      80001: {
+        ETH: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png',
+        WETH: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png',
+        MATIC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png',
+        WMATIC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png',
+        USDC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdc.png',
+        USDT: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png',
+        XDAI: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xdai.png',
+      },
+      137: {
+        ETH: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png',
+        WETH: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png',
+        MATIC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png',
+        WMATIC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png',
+        USDC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdc.png',
+        USDT: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png',
+        XDAI: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xdai.png',
+      },
     },
     tokenContractAddress: {
       5: {

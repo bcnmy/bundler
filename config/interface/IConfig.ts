@@ -102,7 +102,7 @@ export type ConfigType = {
     },
     offset: {
       [key: number]: {
-        [key: string]: string;
+        [key: string]: number;
       }
     },
     similarTokens: {

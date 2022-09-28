@@ -14,6 +14,7 @@ const log = logger(module);
 
 export const relaySCWTransaction = async (req: Request, res: Response) => {
   try {
+    log.info('relaySCWTransaction', req.body);
     const {
       type, to, data, gasLimit, chainId, value,
     } = req.body;
@@ -21,6 +22,7 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
     if (!clientMessenger.socketClient.isConnected()) {
       await clientMessenger.connect();
     }
+    log.info(`Sending transaction to relayer with ${transactionId}`);
     const response = await relayMap[chainId][TransactionType.SCW].sendTransactionToRelayer({
       type, to, data, gasLimit, chainId, value, transactionId,
     });
@@ -35,9 +37,9 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
       connectionUrl: websocketUrl,
     });
   } catch (error) {
-    log.error(`Error in relay ${error}`);
+    log.error(`Error in SCW relay ${error}`);
     return res.status(500).json({
-      error,
+      error: JSON.stringify(error),
     });
   }
 };

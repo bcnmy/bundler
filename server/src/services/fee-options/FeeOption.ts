@@ -13,7 +13,7 @@ const convertGasPriceToUSD = async (
   token: string,
 ) => {
   const decimal = config.chains.decimal[nativeChainId] || 18;
-  const offset = config.feeOption.offset[token] || 1;
+  const offset = config.feeOption.offset[nativeChainId][token] || 1;
   const usdc = new Big(gasPrice)
     .mul(new Big(chainPriceDataInUSD))
     .div(new Big(10 ** decimal))
@@ -94,9 +94,9 @@ export class FeeOption {
           tokenGasPrice: Number(tokenGasPrice),
           symbol: token,
           decimal,
-          offset: config.feeOption.offset[token] || 1,
+          offset: config.feeOption.offset[this.chainId][token] || 1,
           address: config.feeOption.tokenContractAddress[this.chainId][token],
-          logoUrl: config.feeOption.logoUrl[token],
+          logoUrl: config.feeOption.logoUrl[this.chainId][token],
           feeTokenTransferGas: config.feeOption.feeTokenTransferGas[this.chainId][token],
         });
       }
