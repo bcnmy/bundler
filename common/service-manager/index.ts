@@ -1,9 +1,12 @@
 /* eslint-disable no-await-in-loop */
 import { config } from '../../config';
 import { AAConsumer, SCWConsumer } from '../../relayer/src/services/consumer';
+import { EVMRelayerManager } from '../../relayer/src/services/relayer-manager/EVMRelayerManager';
+import { EVMTransactionListener } from '../../relayer/src/services/transaction-listener';
+import { EVMTransactionService } from '../../relayer/src/services/transaction-service';
 import { FeeOption } from '../../server/src/services';
 import { RedisCacheService } from '../cache';
-import { Mongo } from '../db';
+import { Mongo, TransactionDAO } from '../db';
 import { GasPriceManager } from '../gas-price';
 import { IQueue } from '../interface';
 import { EVMNetworkService } from '../network';
@@ -28,11 +31,11 @@ const simulatonServiceMap: {
 } = {};
 
 const redisClient = RedisCacheService.getInstance();
-const dbInstance = Mongo.getInstance();
 
 const { supportedNetworks, supportedTransactionType } = config;
 
 (async () => {
+  const transactionDao = new TransactionDAO();
   for (const chainId of supportedNetworks) {
     relayMap[chainId] = {};
     simulatonServiceMap[chainId] = {};
@@ -50,6 +53,41 @@ const { supportedNetworks, supportedTransactionType } = config;
       rpcUrl: config.chains.provider[chainId],
       fallbackRpcUrls: config.chains.fallbackUrls[chainId] || [],
     });
+
+    const transactionQueue = new 
+
+    const transactionListener = new EVMTransactionListener({
+      networkService,
+      queue: transactionQueue,
+      transactionDao,
+      options: {
+        chainId,
+      },
+    });
+
+    const transactionService = new EVMTransactionService({
+      networkService,
+      transactionListener,
+      nonceManager,
+      gasPriceService,
+      transactionDao,
+      options: {
+        chainId,
+      },
+    });
+
+    const relayerManagers = [];
+    for (const relayerManager of config.relayerManager) {
+      const relayerMangerInstance = new EVMRelayerManager({
+        networkService,
+        gasPriceService,
+        transactionService,
+        nonceManagerService,
+        options: {
+          chainId,
+        },
+      });
+    }
 
     const tokenService = new CMCTokenPriceManager(redisClient, {
       apiKey: config.tokenPrice.coinMarketCapApi,
@@ -117,7 +155,6 @@ const { supportedNetworks, supportedTransactionType } = config;
 })();
 
 export {
-  dbInstance,
   redisClient,
   relayMap,
   feeOptionMap,

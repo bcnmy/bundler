@@ -6,7 +6,7 @@ import {
   CreateRawTransactionReturnType,
   ExecuteTransactionParamsType,
   TransactionDataType,
-  TransactionServiceParamsType,
+  EVMTransactionServiceParamsType,
 } from './types';
 import { INonceManager } from '../nonce-manager';
 import { INetworkService } from '../../../../common/network';
@@ -28,11 +28,11 @@ ITransactionService<IEVMAccount<EVMRawTransactionType>> {
 
   gasPriceService: IGasPrice;
 
-  constructor(transactionServiceParams: TransactionServiceParamsType) {
+  constructor(evmTransactionServiceParams: EVMTransactionServiceParamsType) {
     const {
-      chainId, networkService, transactionListener, nonceManager, gasPriceService,
-    } = transactionServiceParams;
-    this.chainId = chainId;
+      options, networkService, transactionListener, nonceManager, gasPriceService,
+    } = evmTransactionServiceParams;
+    this.chainId = options.chainId;
     this.networkService = networkService;
     this.transactionListener = transactionListener;
     this.nonceManager = nonceManager;

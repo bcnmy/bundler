@@ -16,7 +16,7 @@ import { ITransactionService } from '../transaction-service/interface/ITransacti
 import { IRelayerManager } from './interface/IRelayerManager';
 import { SortEVMRelayerByLeastPendingCount } from './strategy';
 import { StrategyManager } from './strategy/StrategyManager';
-import { EVMRelayerDataType } from './types';
+import { EVMRelayerDataType, EVMRelayerManagerServiceParamsType } from './types';
 
 const log = logger(module);
 const fundRelayerMutex = new Mutex();
@@ -64,13 +64,12 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
   gasPriceService: IGasPrice;
 
   constructor(
-    chainId: number,
-    networkService: INetworkService<EVMAccount, AATransactionMessageType>,
-    gasPriceService: IGasPrice,
-    transactionService: ITransactionService<EVMAccount>,
-    nonceManagerService: INonceManager,
+    evmRelayerManagerServiceParams: EVMRelayerManagerServiceParamsType,
   ) {
-    this.chainId = chainId;
+    const {
+      options, networkService, gasPriceService, transactionService, nonceManagerService,
+    } = evmRelayerManagerServiceParams;
+    this.chainId = options.chainId;
     this.networkService = networkService;
     this.gasPriceService = gasPriceService;
     this.transactionService = transactionService;

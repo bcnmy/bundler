@@ -8,13 +8,15 @@ import { IEVMAccount } from '../../account/interface/IEVMAccount';
 import { INonceManager } from '../../nonce-manager';
 import { ITransactionListener } from '../../transaction-listener';
 
-export type TransactionServiceParamsType = {
-  chainId: number,
+export type EVMTransactionServiceParamsType = {
   networkService: INetworkService<IEVMAccount<EVMRawTransactionType>, EVMRawTransactionType>,
   transactionListener: ITransactionListener,
   nonceManager: INonceManager,
   gasPriceService: IGasPrice,
-  transactionDao: ITransactionDAO
+  transactionDao: ITransactionDAO,
+  options: {
+    chainId: number,
+  }
 };
 
 export type TransactionResponseType = {
