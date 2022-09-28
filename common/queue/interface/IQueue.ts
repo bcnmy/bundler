@@ -2,7 +2,6 @@ import { ConsumeMessage } from 'amqplib';
 
 export interface IQueue<TransactionMessageType> {
   chainId: number;
-  transactionType?: string;
   connect(): Promise<void>
   publish(arg0: TransactionMessageType): Promise<boolean>
   consume(onMessageReceived: () => void): Promise<boolean>

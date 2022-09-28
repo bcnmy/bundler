@@ -11,9 +11,8 @@ export type ExternalSimulationResponseType = {
 export type SCWSimulationDataType = {
   chainId: number,
   data: string,
-  wallet: string,
+  to: string,
   refundInfo: any,
-  gasPriceMap: any,
 };
 
 export type AASimulationDataType = {
@@ -23,7 +22,8 @@ export type AASimulationDataType = {
 // data response type that simulation service returns
 export type SimulationResponseType = {
   isSimulationSuccessful: boolean,
-  gasLimitFromSimulation: number
+  gasLimitFromSimulation: number,
+  msgFromSimulation: string,
 };
 
 // data type that tenderly simulation service expects

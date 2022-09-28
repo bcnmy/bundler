@@ -26,7 +26,7 @@ export class GasPriceManager implements IGasPriceManager<GasPriceType> {
       case 80001:
         return new MumbaiGasPrice(this.chainId, this.redisClient);
       default:
-        return undefined;
+        return new MaticGasPrice(this.chainId, this.redisClient);
     }
   }
 }

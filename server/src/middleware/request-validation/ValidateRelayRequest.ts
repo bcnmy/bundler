@@ -1,8 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
-import { TransactionType } from '../../../../common/types';
 import { logger } from '../../../../common/log-config';
-import { validateRequest } from './ValidateRequest';
-import { scwRequestSchema, aaRequestSchema, crossChainRequestSchema } from '../../routes/relay/relay.schema';
+import { TransactionType } from '../../../../common/types';
+import { aaRequestSchema, crossChainRequestSchema, scwRequestSchema } from '../../routes/relay/relay.schema';
 
 const log = logger(module);
 
@@ -15,14 +14,25 @@ export const validateRelayRequest = () => async (
     const { transactionType } = req.body;
     switch (transactionType) {
       case TransactionType.SCW:
-        // TODO / This is wrong, validateRequest expects req, res, next
-        validateRequest(scwRequestSchema);
+        await scwRequestSchema.validate({
+          body: req.body,
+          query: req.query,
+          params: req.params,
+        });
         break;
       case TransactionType.AA:
-        validateRequest(aaRequestSchema);
+        await aaRequestSchema.validate({
+          body: req.body,
+          query: req.query,
+          params: req.params,
+        });
         break;
       case TransactionType.CROSS_CHAIN:
-        validateRequest(crossChainRequestSchema);
+        await crossChainRequestSchema.validate({
+          body: req.body,
+          query: req.query,
+          params: req.params,
+        });
         break;
       default:
         return res.status(400).send({

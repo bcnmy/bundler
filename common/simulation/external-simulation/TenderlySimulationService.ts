@@ -1,20 +1,40 @@
 import axios from 'axios';
 import { ExternalSimulationResponseType, TenderlySimulationDataType } from '../types';
 import { logger } from '../../log-config';
+import { IGasPrice } from '../../gas-price/interface/IGasPrice';
+import { GasPriceType } from '../../gas-price/types';
+import { IExternalSimulation } from '../interface';
 
 const log = logger(module);
 
-const { TENDERLY_USER, TENDERLY_PROJECT, TENDERLY_ACCESS_KEY } = process.env;
+export class TenderlySimulationService implements IExternalSimulation {
+  gasPriceService: IGasPrice;
 
-export class TenderlySimulationService {
-  static async simulate(
+  private tenderlyUser: string;
+
+  private tenderlyProject: string;
+
+  private tenderlyAccessKey: string;
+
+  constructor(gasPriceService: IGasPrice, options: {
+    tenderlyUser: string,
+    tenderlyProject: string,
+    tenderlyAccessKey: string,
+  }) {
+    this.gasPriceService = gasPriceService;
+    this.tenderlyUser = options.tenderlyUser;
+    this.tenderlyProject = options.tenderlyProject;
+    this.tenderlyAccessKey = options.tenderlyAccessKey;
+  }
+
+  async simulate(
     simualtionData: TenderlySimulationDataType,
   ): Promise<ExternalSimulationResponseType> {
     const {
-      chainId, data, wallet, refundInfo, gasPriceMap,
+      chainId, data, wallet, refundInfo,
     } = simualtionData;
-    const SIMULATE_URL = `https://api.tenderly.co/api/v1/account/${TENDERLY_USER}/project/${TENDERLY_PROJECT}/simulate`;
-    const tAxios = TenderlySimulationService.tenderlyInstance();
+    const SIMULATE_URL = `https://api.tenderly.co/api/v1/account/${this.tenderlyUser}/project/${this.tenderlyProject}/simulate`;
+    const tAxios = this.tenderlyInstance();
     const body = {
       // standard TX fields
       network_id: chainId.toString(),
@@ -40,14 +60,12 @@ export class TenderlySimulationService {
     const transactionLogs = response.data.transaction.transaction_info.call_trace.logs;
     const gasUsedInSimulation = response.data.transaction.transaction_info.call_trace.gas_used
      + response.data.transaction.transaction_info.call_trace.intrinsic_gas;
-    const { isRelayerPaidFully, successOrRevertMsg } = await TenderlySimulationService
-      .checkIfRelayerIsPaidFully(
-        transactionLogs,
-        gasUsedInSimulation,
-        chainId,
-        gasPriceMap,
-        refundInfo,
-      );
+    const { isRelayerPaidFully, successOrRevertMsg } = await this.checkIfRelayerIsPaidFully(
+      transactionLogs,
+      gasUsedInSimulation,
+      chainId,
+      refundInfo,
+    );
 
     if (!isRelayerPaidFully) {
       return {
@@ -64,20 +82,21 @@ export class TenderlySimulationService {
     };
   }
 
-  static tenderlyInstance = () => axios.create({
-    headers: {
-      'X-Access-Key': TENDERLY_ACCESS_KEY || '',
-      'Content-Type': 'application/json',
-    },
-  });
+  private tenderlyInstance() {
+    return axios.create({
+      headers: {
+        'X-Access-Key': this.tenderlyAccessKey || '',
+        'Content-Type': 'application/json',
+      },
+    });
+  }
 
-  static checkIfRelayerIsPaidFully = async (
+  private async checkIfRelayerIsPaidFully(
     transactionLogs: any,
     gasUsedInSimulation: number,
     chainId: number,
-    gasPriceMap: any,
     refundInfo: { tokenGasPrice: string, gasToken: string },
-  ) => {
+  ) {
     try {
       log.info(`Refund info received: ${refundInfo}`);
       const executionSuccessLog = transactionLogs.find((transactionLog: any) => transactionLog.name === 'ExecutionSuccess');
@@ -104,7 +123,8 @@ export class TenderlySimulationService {
       log.info(`Payment sent in transaction: ${paymentValue}`);
 
       let refundToRelayer: number;
-      const nativeTokenGasPrice = await gasPriceMap[chainId].getGasPrice();
+      const nativeTokenGasPrice = parseInt(await
+      this.gasPriceService.getGasPrice(GasPriceType.DEFAULT), 10);
 
       log.info(`Native token gas price: ${nativeTokenGasPrice}`);
       // ERC 20 token gas price should be in units of native asset
@@ -138,5 +158,5 @@ export class TenderlySimulationService {
         successOrRevertMsg: `Something went wrong with error: ${error}`,
       };
     }
-  };
+  }
 }

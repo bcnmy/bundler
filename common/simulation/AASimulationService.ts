@@ -12,12 +12,14 @@ export class AASimulationService {
 
   constructor(
     networkService: INetworkService<EVMAccount, EVMRawTransactionType>,
-    entryPointAbi: string,
-    entryPointAddress: string,
+    options: {
+      entryPointAbi: string,
+      entryPointAddress: string,
+    },
   ) {
     this.networkService = networkService;
-    this.entryPointAbi = entryPointAbi;
-    this.entryPointAddress = entryPointAddress;
+    this.entryPointAbi = options.entryPointAbi;
+    this.entryPointAddress = options.entryPointAddress;
   }
 
   async simulate(
@@ -35,6 +37,7 @@ export class AASimulationService {
     return {
       isSimulationSuccessful: true,
       gasLimitFromSimulation: 500000,
+      msgFromSimulation: '',
     };
   }
 }

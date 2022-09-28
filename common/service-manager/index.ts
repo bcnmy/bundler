@@ -1,39 +1,33 @@
 /* eslint-disable no-await-in-loop */
-// make instance of config and the call setup
-// make instance of Mongo
-// make instance of Redis Client
-// make instance of Redis PubSub
-// make instance of Network Manger
-// make instance of Gas Price and start updating cache
-// make instance of Network Price and start updating cache
-// make instance of queue for network id and transaction type - done
-
-import { AAConsumer } from '../../relayer/src/services/consumer/AAConsumer';
-import { AATransactionMessageType, TransactionType } from '../types';
-import { AATransactionQueue } from '../queue/AATransactionQueue';
+import { config } from '../../config';
+import { AAConsumer, SCWConsumer } from '../../relayer/src/services/consumer';
+import { FeeOption } from '../../server/src/services';
 import { RedisCacheService } from '../cache';
 import { Mongo } from '../db';
 import { GasPriceManager } from '../gas-price';
-import { AARelayService } from '../relay-service';
 import { IQueue } from '../interface';
-import { AASimulationService } from '../simulation';
 import { EVMNetworkService } from '../network';
-import { config } from '../../config';
+import { AATransactionQueue, SCWTransactionQueue } from '../queue';
+import { AARelayService } from '../relay-service';
+import { AASimulationService, SCWSimulationService } from '../simulation';
 import { CMCTokenPriceManager } from '../token-price';
+import { AATransactionMessageType, SCWTransactionMessageType, TransactionType } from '../types';
 
-const queueMap: any = {}; // TODO: Add type of queue
-const gasPriceMap: any = {}; // TODO: Add type of queue
 const relayMap: any = {};
+const feeOptionMap: any = {};
+const simulatonServiceMap: any = {};
 
 const redisClient = RedisCacheService.getInstance();
 const dbInstance = Mongo.getInstance();
-
-const aaSimulatonServiceMap: any = {};
 
 const { supportedNetworks, supportedTransactionType } = config;
 
 (async () => {
   for (const chainId of supportedNetworks) {
+    relayMap[chainId] = {};
+    simulatonServiceMap[chainId] = {};
+    feeOptionMap[chainId] = {};
+
     const gasPriceManager = new GasPriceManager(redisClient, {
       chainId,
     });
@@ -56,41 +50,64 @@ const { supportedNetworks, supportedTransactionType } = config;
     });
     tokenService.schedule();
 
+    const feeOptionService = new FeeOption(gasPriceService, redisClient, {
+      chainId,
+    });
+    feeOptionMap[chainId] = feeOptionService;
     // for each network get transaction type
     for (const type of supportedTransactionType[chainId]) {
+      const { entryPointData } = config;
+      const entryPointAbi = entryPointData.abi;
+      const entryPointAddress = entryPointData.address[chainId];
+
       if (type === TransactionType.AA) {
-        const queue: IQueue<AATransactionMessageType> = new AATransactionQueue({
+        const aaQueue: IQueue<AATransactionMessageType> = new AATransactionQueue({
           chainId,
-          transactionType: type,
         });
-        await queue.connect();
-        const aaConsumer = new AAConsumer(queue, {
+        await aaQueue.connect();
+        const aaConsumer = new AAConsumer(aaQueue, {
           chainId,
-          transactionType: type,
         });
         // start listening for transaction
-        await queue.consume(aaConsumer.onMessageReceived);
+        await aaQueue.consume(aaConsumer.onMessageReceived);
 
-        const aaRelayService = new AARelayService(queue);
+        const aaRelayService = new AARelayService(aaQueue);
         relayMap[chainId][type] = aaRelayService;
+
+        simulatonServiceMap[chainId][type] = new AASimulationService(
+          networkService,
+          {
+            entryPointAbi,
+            entryPointAddress,
+          },
+        );
+      } else if (type === TransactionType.SCW) {
+        // queue for scw
+        const queue: IQueue<SCWTransactionMessageType> = new SCWTransactionQueue({
+          chainId,
+        });
+        await queue.connect();
+        const scwConsumer = new SCWConsumer(queue, {
+          chainId,
+        });
+        await queue.consume(scwConsumer.onMessageReceived);
+
+        simulatonServiceMap[chainId][type] = new SCWSimulationService(
+          networkService,
+          {
+            entryPointAbi,
+            entryPointAddress,
+          },
+        );
       }
     }
-    const { entryPointData } = config;
-    const entryPointAbi = entryPointData.abi;
-    const entryPointAddress = entryPointData.address[chainId];
-    aaSimulatonServiceMap[chainId] = new AASimulationService(
-      networkService,
-      entryPointAbi,
-      entryPointAddress,
-    );
   }
 })();
 
 export {
-  queueMap,
-  gasPriceMap,
-  relayMap,
-  redisClient,
   dbInstance,
-  aaSimulatonServiceMap,
+  redisClient,
+  relayMap,
+  feeOptionMap,
+  simulatonServiceMap,
 };

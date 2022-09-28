@@ -2,8 +2,9 @@
 import Big from 'big.js';
 import { config } from '../../../../config';
 import { GasPriceType } from '../../../../common/gas-price/types';
-import { gasPriceMap, redisClient } from '../../../../common/service-manager';
 import { FeeOptionResponseType } from './types';
+import { IGasPrice } from '../../../../common/gas-price/interface/IGasPrice';
+import { ICacheService } from '../../../../common/cache';
 
 const convertGasPriceToUSD = async (
   nativeChainId: number,
@@ -24,11 +25,23 @@ const convertGasPriceToUSD = async (
 export class FeeOption {
   chainId: number;
 
-  constructor(chainId: number) {
-    this.chainId = chainId;
+  gasPriceService: IGasPrice;
+
+  redisClient: ICacheService;
+
+  constructor(
+    gasPriceService: IGasPrice,
+    redisClient: ICacheService,
+    options: {
+      chainId: number,
+    },
+  ) {
+    this.redisClient = redisClient;
+    this.gasPriceService = gasPriceService;
+    this.chainId = options.chainId;
   }
 
-  static getNetworkPriceDataKey() {
+  private static getNetworkPriceDataKey() {
     return 'NETWORK_PRICE_DATA';
   }
 
@@ -36,13 +49,15 @@ export class FeeOption {
     try {
       const response: Array<FeeOptionResponseType> = [];
       const feeTokens = config.feeOption.supportedFeeTokens[this.chainId] || [];
-      const gasPriceInString: string = await gasPriceMap[this.chainId].getGasPrice(
+      const gasPriceInString: string = await this.gasPriceService.getGasPrice(
         GasPriceType.DEFAULT,
       );
 
       const gasPrice = Number(gasPriceInString);
 
-      const networkPriceDataInString = await redisClient.get(FeeOption.getNetworkPriceDataKey());
+      const networkPriceDataInString = await this.redisClient.get(
+        FeeOption.getNetworkPriceDataKey(),
+      );
       const networkPriceData = JSON.parse(networkPriceDataInString);
       const chainPriceDataInUSD = networkPriceData[this.chainId];
 

@@ -1,27 +1,24 @@
 import amqp, { Channel, ConsumeMessage, Replies } from 'amqplib';
-import { SCWTransactionMessageType } from '../types';
-import { IQueue } from './interface/IQueue';
+import { config } from '../../config';
 import { logger } from '../log-config';
+import { SCWTransactionMessageType, TransactionType } from '../types';
+import { IQueue } from './interface/IQueue';
 
 const log = logger(module);
 
-const queueUrl = process.env.RELAYER_QUEUE_URL;
+const { queueUrl } = config;
 
 export class SCWTransactionQueue implements IQueue<SCWTransactionMessageType> {
   private channel!: Channel;
 
   chainId: number;
 
-  transactionType?: string;
+  private transactionType: string = TransactionType.SCW;
 
   msg!: ConsumeMessage | null;
 
-  onMessageReceived: () => void;
-
-  constructor(chainId: number, type: string, onMessageReceived: () => void) {
-    this.onMessageReceived = onMessageReceived;
-    this.chainId = chainId;
-    this.transactionType = type;
+  constructor(options: { chainId: number }) {
+    this.chainId = options.chainId;
   }
 
   connect = async () => {
@@ -43,8 +40,8 @@ export class SCWTransactionQueue implements IQueue<SCWTransactionMessageType> {
     return true;
   };
 
-  consume = async () => {
-    this.channel.assertExchange(`relayer_queue_exchange_${this.transactionType}`, 'topic', {
+  consume = async (onMessageReceived: () => void) => {
+    this.channel.assertExchange(`relayer_queue_exchange_${this.transactionType}`, 'direct', {
       durable: true,
     });
     this.channel.prefetch(1);
@@ -54,7 +51,7 @@ export class SCWTransactionQueue implements IQueue<SCWTransactionMessageType> {
       const key = `chainid.${this.chainId}.type.${this.transactionType}`;
       log.info(`[*] Waiting for transactions on network id ${this.chainId} with type ${this.transactionType}`);
       this.channel.bindQueue(queue.queue, `relayer_queue_exchange_${this.transactionType}`, key);
-      await this.channel.consume(queue.queue, this.onMessageReceived.bind(this));
+      await this.channel.consume(queue.queue, onMessageReceived.bind(this));
 
       return true;
     } catch (error) {

@@ -10,6 +10,9 @@ export const validateRequest = (schema: AnySchema) => async (
   next: NextFunction,
 ) => {
   try {
+    console.log('validateRequest', req.body);
+    console.log('validateSchema', schema);
+
     await schema.validate({
       body: req.body,
       query: req.query,

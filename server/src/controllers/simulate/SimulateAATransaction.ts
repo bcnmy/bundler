@@ -11,11 +11,6 @@ export const simulateAATransaction = async (req: Request, res: Response, next: N
       chainId, userOp,
     } = req.body;
     aaSimulatonServiceMap[chainId].simulate(userOp);
-    next();
-    return res.status(400).send({
-      code: 400,
-      message: 'Wrong transaction type sent in request',
-    });
   } catch (error) {
     log.error(`Error in fetching fee otpions ${error}`);
     return res.status(500).json({

@@ -24,6 +24,7 @@ export type ConfigType = {
   supportedTransactionType: {
     [key: number]: Array<TransactionType>
   },
+  // chains: networkid : currency, decimal, provider,
   chains: {
     currency: {
       [key: number]: string,
@@ -36,12 +37,6 @@ export type ConfigType = {
     },
     fallbackUrls: {
       [key: number]: Array<string>,
-    },
-    ownerAccountDetails: {
-      [key: number]: {
-        publicKey: string,
-        privateKey: string,
-      }
     }
   },
   relayer: {
@@ -70,6 +65,12 @@ export type ConfigType = {
     newRelayerInstanceCount: {
       [key: number]: number
     },
+    ownerAccountDetails: {
+      [key: number]: {
+        publicKey: string,
+        privateKey: string,
+      }
+    }
   }],
   transaction: {
     errors: {
@@ -100,7 +101,9 @@ export type ConfigType = {
       [key:number]: Array<string>
     },
     offset: {
-      [key: string]: number
+      [key: number]: {
+        [key: string]: string;
+      }
     },
     similarTokens: {
       [key:number]: Array<string> // mapping for wrapped token with token id
@@ -109,7 +112,9 @@ export type ConfigType = {
       [key: string]: number
     },
     logoUrl: {
-      [key: string]: string
+      [key: number]: {
+        [key: string]: string;
+      }
     },
     tokenContractAddress: {
       [key: number]: {

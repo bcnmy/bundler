@@ -1,8 +1,8 @@
 import amqp, { Channel, ConsumeMessage, Replies } from 'amqplib';
-import { AATransactionMessageType } from '../types';
-import { IQueue } from './interface/IQueue';
-import { logger } from '../log-config';
 import { config } from '../../config';
+import { logger } from '../log-config';
+import { AATransactionMessageType, TransactionType } from '../types';
+import { IQueue } from './interface/IQueue';
 
 const log = logger(module);
 
@@ -13,18 +13,16 @@ export class AATransactionQueue implements IQueue<AATransactionMessageType> {
 
   chainId: number;
 
-  transactionType?: string;
+  transactionType: string = TransactionType.AA;
 
   msg!: ConsumeMessage | null;
 
   constructor(
     options: {
       chainId: number,
-      transactionType: string,
     },
   ) {
     this.chainId = options.chainId;
-    this.transactionType = options.transactionType;
   }
 
   connect = async () => {
@@ -47,7 +45,7 @@ export class AATransactionQueue implements IQueue<AATransactionMessageType> {
   };
 
   consume = async (onMessageReceived: () => void) => {
-    this.channel.assertExchange(`relayer_queue_exchange_${this.transactionType}`, 'topic', {
+    this.channel.assertExchange(`relayer_queue_exchange_${this.transactionType}`, 'direct', {
       durable: true,
     });
     this.channel.prefetch(1);

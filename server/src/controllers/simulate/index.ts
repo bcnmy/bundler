@@ -8,19 +8,23 @@ export const simulateApi = async (req: Request, res: Response, next: NextFunctio
     const { tranasctionType } = req.body;
     switch (tranasctionType) {
       case TransactionType.AA:
-        return simulateAATransaction(req, res, next);
+        await simulateAATransaction(req, res, next);
+        break;
       case TransactionType.SCW:
-        return simulateSCWTransaction(req, res, next);
+        await simulateSCWTransaction(req, res, next);
+        break;
       default:
         return res.status(400).send({
           code: 400,
           message: 'Wrong transaction type sent in request',
         });
-      }
+    }
+    return next();
   } catch (error) {
+    console.log(error);
     return res.status(500).send({
       code: 500,
       message: 'Wrong transaction type sent in request',
     });
   }
-}
+};

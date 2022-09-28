@@ -7,6 +7,7 @@ export const relayApi = async (
   req: Request,
   res: Response,
 ) => {
+  console.log(req.body);
   const { tranasctionType } = req.body;
   switch (tranasctionType) {
     case TransactionType.AA:

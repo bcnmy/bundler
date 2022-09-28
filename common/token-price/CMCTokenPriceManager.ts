@@ -28,9 +28,7 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
       symbolMapByChainId: SymbolMapByChainIdType,
     },
   ) {
-    // update api key when expired
     this.apiKey = options.apiKey;
-    // network symbol categories to be updated via setter if needed
     this.networkSymbolCategories = options.networkSymbolCategories;
     this.updateFrequencyInSeconds = options.updateFrequencyInSeconds;
     this.symbolMapByChainId = options.symbolMapByChainId;

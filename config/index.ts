@@ -35,7 +35,7 @@ const data: ConfigType = {
     secret: '',
     apiKey: '',
   },
-  supportedNetworks: [5, 137, 80001],
+  supportedNetworks: [5, 80001],
   supportedTransactionType: {
     5: [TransactionType.AA, TransactionType.SCW],
     137: [TransactionType.AA, TransactionType.SCW],
@@ -152,7 +152,8 @@ const data: ConfigType = {
       maxGasPrice: 10000000000,
       baseFeeMultiplier: 1.1,
       gasOracle: {
-        maticGasStation: 'https://gasstation-mainnet.matic.network',
+        maticGasStationUrl: 'https://gasstation-mainnet.matic.network/v2',
+        polygonGasStation: '',
       },
     },
     80001: {
@@ -161,7 +162,8 @@ const data: ConfigType = {
       maxGasPrice: 10000000000,
       baseFeeMultiplier: 1.1,
       gasOracle: {
-        maticGasStation: 'https://gasstation-mumbai.matic.today',
+        maticGasStationUrl: 'https://gasstation-mainnet.matic.network/v2',
+        polygonGasStation: '',
       },
     },
   },
@@ -268,12 +270,33 @@ const data: ConfigType = {
     },
   },
   tokenPrice: {
-    coinMarketCapApi: '',
-    networkSymbols: {},
-    updateFrequencyInSeconds: 0,
-    symbolMapByChainId: {},
+    coinMarketCapApi: 'a305bb95-7c48-4fb6-bc65-4de8c9193f2f',
+    networkSymbols: {
+      ETH: [1, 3, 4, 42, 5, 421611, 42161, 420, 10],
+      MATIC: [8995, 80001, 15001, 16110, 137],
+      DAI: [77, 100],
+      RBTC: [31],
+      AVAX: [43113, 43114],
+      BNB : [97, 56],
+      GLMR: [1287, 1284],
+      EDG: [2021],
+      MOVR: [1285],
+      FTM: [250, 4002],
+      CELO: [42220, 44787],
+      NEON: [245022926],
+      BOBA: [1294],
+    },
+    updateFrequencyInSeconds: 60,
+    symbolMapByChainId: {
+      1: {
+        '0x6B175474E89094C44Da98b954EedeAC495271d0F': 'DAI',
+        '0x0D8775F648430679A709E98d2b0Cb6250d2887EF': 'BAT',
+        '0x514910771AF9Ca656af840dff83E8264EcF986CA': 'LINK',
+        '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599': 'WBTC',
+      },
+    },
   },
-  queueUrl: '',
+  queueUrl: 'amqp://localhost:5672?heartbeat=30',
   entryPointData: {
     abi: 'TODO',
     address: {

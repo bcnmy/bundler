@@ -1,17 +1,17 @@
 import { ConsumeMessage } from 'amqplib';
 import { IQueue } from '../../../../common/interface';
-import { TransactionType, AATransactionMessageType } from '../../../../common/types';
+import { TransactionType, SCWTransactionMessageType } from '../../../../common/types';
 import { ITransactionConsumer } from './interface/ITransactionConsumer';
 
-export class AAConsumer implements ITransactionConsumer<AATransactionMessageType> {
+export class SCWConsumer implements ITransactionConsumer<SCWTransactionMessageType> {
   chainId: number;
 
-  private transactionType: TransactionType = TransactionType.AA;
+  private transactionType: TransactionType = TransactionType.SCW;
 
-  queue: IQueue<AATransactionMessageType>;
+  queue: IQueue<SCWTransactionMessageType>;
 
   constructor(
-    queue: IQueue<AATransactionMessageType>,
+    queue: IQueue<SCWTransactionMessageType>,
     options: {
       chainId: number,
     },
