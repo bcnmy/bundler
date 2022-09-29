@@ -2,7 +2,7 @@
 import { config } from '../../config';
 import { AAConsumer, SCWConsumer } from '../../relayer/src/services/consumer';
 import { EVMNonceManager } from '../../relayer/src/services/nonce-manager';
-import { EVMRelayerManager } from '../../relayer/src/services/relayer-manager/EVMRelayerManager';
+import { EVMRelayerManager } from '../../relayer/src/services/relayer-manager';
 import { EVMTransactionListener } from '../../relayer/src/services/transaction-listener';
 import { EVMTransactionService } from '../../relayer/src/services/transaction-service';
 import { FeeOption } from '../../server/src/services';
@@ -18,6 +18,13 @@ import { AARelayService, SCWRelayService } from '../relay-service';
 import { AASimulationService, SCWSimulationService } from '../simulation';
 import { CMCTokenPriceManager } from '../token-price';
 import { AATransactionMessageType, SCWTransactionMessageType, TransactionType } from '../types';
+
+// change below to assign relayer manager to transaction type
+const relayerManagerTransactionTypeNameMap = {
+  [TransactionType.AA]: 'RM1',
+  [TransactionType.SCW]: 'RM1',
+  [TransactionType.CROSS_CHAIN]: 'RM2',
+};
 
 const relayMap: {
   [chainId: number]: {
@@ -117,8 +124,6 @@ const { supportedNetworks, supportedTransactionType } = config;
       relayerManagers.push(relayerMangerInstance);
     }
 
-    // find relaeyr manager based on name
-
     const tokenService = new CMCTokenPriceManager(cacheService, {
       apiKey: config.tokenPrice.coinMarketCapApi,
       networkSymbolCategories: config.tokenPrice.networkSymbols,
@@ -137,14 +142,25 @@ const { supportedNetworks, supportedTransactionType } = config;
       const entryPointAbi = entryPointData.abi;
       const entryPointAddress = entryPointData.address[chainId];
 
+      const aaRelayerManager = relayerManagers.find(
+        (rm) => rm.name === relayerManagerTransactionTypeNameMap[type],
+      );
+      if (!aaRelayerManager) {
+        throw new Error(`Relayer manager not found for ${type}`);
+      }
+
       if (type === TransactionType.AA) {
         const aaQueue: IQueue<AATransactionMessageType> = new AATransactionQueue({
           chainId,
         });
         await aaQueue.connect();
-        const aaConsumer = new AAConsumer(aaQueue, {
-          chainId,
-        });
+        const aaConsumer = new AAConsumer(
+          aaQueue,
+          aaRelayerManager,
+          {
+            chainId,
+          },
+        );
         // start listening for transaction
         await aaQueue.consume(aaConsumer.onMessageReceived);
 
@@ -164,9 +180,21 @@ const { supportedNetworks, supportedTransactionType } = config;
           chainId,
         });
         await scwQueue.connect();
-        const scwConsumer = new SCWConsumer(scwQueue, {
-          chainId,
-        });
+
+        const scwRelayerManager = relayerManagers.find(
+          (rm) => rm.name === relayerManagerTransactionTypeNameMap[type],
+        );
+        if (!scwRelayerManager) {
+          throw new Error(`Relayer manager not found for ${type}`);
+        }
+
+        const scwConsumer = new SCWConsumer(
+          scwQueue,
+          scwRelayerManager,
+          {
+            chainId,
+          },
+        );
         await scwQueue.consume(scwConsumer.onMessageReceived);
 
         const scwRelayService = new SCWRelayService(scwQueue);
