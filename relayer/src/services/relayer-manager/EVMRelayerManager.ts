@@ -55,6 +55,8 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
 
   fundingRelayerAmount: number;
 
+  masterSeed: string;
+
   ownerAccountDetails: EVMAccount;
 
   gasLimitMap: {
@@ -89,6 +91,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
     this.fundingBalanceThreshold = options.fundingBalanceThreshold;
     this.fundingRelayerAmount = options.fundingRelayerAmount;
     this.ownerAccountDetails = options.ownerAccountDetails;
+    this.masterSeed = options.masterSeed;
     this.gasLimitMap = options.gasLimitMap;
     this.networkService = networkService;
     this.gasPriceService = gasPriceService;
@@ -156,18 +159,23 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
       }
 
       log.info(`Relayers created on network id ${this.chainId}`);
-      relayers.map(async (relayer) => {
+      for (const relayer of relayers) {
         const relayerAddress = relayer.getPublicKey().toLowerCase();
-        relayersAddressList.push(relayerAddress);
-        const balance = (await this.networkService.getBalance(relayerAddress))?.toNumber();
-        const nonce = await this.nonceManager.getNonce(relayerAddress);
-        this.activeRelayerData.push({
-          address: relayer.getPublicKey(),
-          pendingCount: 0,
-          nonce,
-          balance,
-        });
-      });
+        try {
+          const balanceFromNetwork = await this.networkService.getBalance(relayerAddress);
+          const balance = balanceFromNetwork.toNumber();
+          const nonce = await this.nonceManager.getNonce(relayerAddress);
+          this.activeRelayerData.push({
+            address: relayer.getPublicKey(),
+            pendingCount: 0,
+            nonce,
+            balance,
+          });
+          relayersAddressList.push(relayerAddress);
+        } catch (error) {
+          log.info(`Error while getting balance and nonce for relayer ${relayerAddress}`);
+        }
+      }
     } catch (error) {
       log.error(`failed to create relayers ${JSON.stringify(error)} on network id ${this.chainId}`);
     }

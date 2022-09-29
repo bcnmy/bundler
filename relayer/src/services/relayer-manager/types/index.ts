@@ -13,6 +13,7 @@ export type EVMRelayerManagerServiceParamsType = {
   options: {
     name: string;
     chainId: number;
+    masterSeed: string;
     minRelayerCount: number;
     maxRelayerCount: number;
     inactiveRelayerCountThreshold: number;

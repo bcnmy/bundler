@@ -67,6 +67,7 @@ const data: ConfigType = {
   relayerManagers: [
     {
       name: 'RM1',
+      masterSeed: 'd13c0fefe2d7639fff2e9c583bddabfc9d3dc3255e0f148fbfb2adbfe7f54488fca2bfd317de3181a4f898421d5580e04dc35eaad2646c7f2bf1531bca68b390',
       gasLimitMap: {
         0: 1000000,
         1: 1000000,
