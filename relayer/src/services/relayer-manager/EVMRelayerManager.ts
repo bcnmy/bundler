@@ -1,5 +1,4 @@
 /* eslint-disable no-await-in-loop */
-/* eslint-disable no-param-reassign */
 import { Mutex } from 'async-mutex';
 import { privateToPublic, publicToAddress, toChecksumAddress } from 'ethereumjs-util';
 import { ethers } from 'ethers';
@@ -115,6 +114,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
   addActiveRelayer(address: string): void {
     if (this.processingTransactionRelayerDataMap[address]) {
       this.activeRelayerData.push(this.processingTransactionRelayerDataMap[address]);
+      log.info(`Relayer ${address} added to active relayer map`);
     }
   }
 

@@ -3,7 +3,7 @@ import { TransactionType } from '../../../../common/types';
 import { relayAATransaction } from './AARelay';
 import { relaySCWTransaction } from './SCWRelay';
 
-export const relayApi = async (
+export const requestHandler = async (
   req: Request,
   res: Response,
 ) => {
