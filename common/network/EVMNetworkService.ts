@@ -54,9 +54,9 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
           case RpcMethod.getGasPrice:
             return await this.ethersProvider.getGasPrice();
           case RpcMethod.getEIP1159GasPrice:
-            return await this.ethersProvider.getGasPrice(); // REVIEW the difference
+            return await this.ethersProvider.getGasPrice();
           case RpcMethod.getBalance:
-            return await this.ethersProvider.getBalance(params.balance);
+            return await this.ethersProvider.getBalance(params.address);
           case RpcMethod.estimateGas:
             return await this.ethersProvider.estimateGas(params);
           case RpcMethod.getTransactionReceipt:
@@ -83,7 +83,7 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
         }
       }
     };
-    withFallbackRetry();
+    return withFallbackRetry();
   };
 
   async getEIP1559GasPrice(): Promise<Type2TransactionGasPriceType> {
@@ -174,7 +174,9 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
   }
 
   async getBalance(address: string): Promise<BigNumber> {
-    const balance = await this.useProvider(RpcMethod.getBalance, address);
+    const balance = await this.useProvider(RpcMethod.getBalance, {
+      address,
+    });
     return balance;
   }
 

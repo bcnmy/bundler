@@ -17,12 +17,7 @@ export interface IRelayerManager<AccountType> {
   newRelayerInstanceCount: number;
   fundingBalanceThreshold: number;
   fundingRelayerAmount: number;
-  ownerAccountDetails: {
-    [key: number]: {
-      publicKey: string,
-      privateKey: string,
-    }
-  };
+  ownerAccountDetails: EVMAccount;
   activeRelayerData: Array<EVMRelayerDataType>;
   relayerMap: Record<string, EVMAccount>;
   processingTransactionRelayerDataMap: Record<string, EVMRelayerDataType>;
@@ -30,8 +25,8 @@ export interface IRelayerManager<AccountType> {
   networkService: INetworkService<IEVMAccount<EVMRawTransactionType>, EVMRawTransactionType>;
   gasPriceService: IGasPrice;
 
-  createRelayers(numberOfRelayers: number): Promise<void>;
-  fundRelayers(ownerAccount: AccountType, accountAddress: string[]): Promise<boolean>;
+  createRelayers(numberOfRelayers?: number): Promise<string[]>;
+  fundRelayers(accountAddress: string[]): Promise<boolean>;
   getActiveRelayer(): AccountType | null;
   addActiveRelayer(address: string): void;
   getRelayersCount(active: boolean): number;

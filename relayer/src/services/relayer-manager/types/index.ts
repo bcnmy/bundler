@@ -13,6 +13,7 @@ export type EVMRelayerManagerServiceParamsType = {
   options: {
     name: string;
     chainId: number;
+    masterSeed: string;
     minRelayerCount: number;
     maxRelayerCount: number;
     inactiveRelayerCountThreshold: number;
@@ -23,12 +24,7 @@ export type EVMRelayerManagerServiceParamsType = {
     gasLimitMap: {
       [key: number]: number
     },
-    ownerAccountDetails: {
-      [key: number]: {
-        publicKey: string,
-        privateKey: string,
-      }
-    }
+    ownerAccountDetails: EVMAccount,
   },
 };
 

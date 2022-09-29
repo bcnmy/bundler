@@ -44,6 +44,7 @@ export type ConfigType = {
   },
   relayerManagers: [{
     name: string, // assume it to be an identifier by the consumer
+    masterSeed: string,
     gasLimitMap: {
       [key: number]: number
     }

@@ -66,7 +66,8 @@ const data: ConfigType = {
   },
   relayerManagers: [
     {
-      name: 'relayer1',
+      name: 'RM1',
+      masterSeed: 'd13c0fefe2d7639fff2e9c583bddabfc9d3dc3255e0f148fbfb2adbfe7f54488fca2bfd317de3181a4f898421d5580e04dc35eaad2646c7f2bf1531bca68b390',
       gasLimitMap: {
         0: 1000000,
         1: 1000000,
@@ -108,16 +109,16 @@ const data: ConfigType = {
       },
       ownerAccountDetails: {
         5: {
-          publicKey: '',
-          privateKey: '',
+          publicKey: '0xC1D3206324D806b6586cf15324178f8E8781A293',
+          privateKey: '4d17e2c379e7285cea9d44ac6059435e381485014c8a387c30bac78f957efa01',
         },
         137: {
-          publicKey: '',
-          privateKey: '',
+          publicKey: '0xC1D3206324D806b6586cf15324178f8E8781A293',
+          privateKey: '4d17e2c379e7285cea9d44ac6059435e381485014c8a387c30bac78f957efa01',
         },
         80001: {
-          publicKey: '',
-          privateKey: '',
+          publicKey: '0xC1D3206324D806b6586cf15324178f8E8781A293',
+          privateKey: '4d17e2c379e7285cea9d44ac6059435e381485014c8a387c30bac78f957efa01',
         },
       },
     },

@@ -12,7 +12,6 @@ export class StrategyManager {
   }
 
   public performAlgorithm(): void {
-    console.log('Context: Sorting data using the strategy');
     this.strategy.doAlgorithm();
   }
 }
