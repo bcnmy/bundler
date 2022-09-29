@@ -42,7 +42,7 @@ export type ConfigType = {
   relayer: {
     nodePathIndex: number,
   },
-  relayerManager: [{
+  relayerManagers: [{
     name: string, // assume it to be an identifier by the consumer
     gasLimitMap: {
       [key: number]: number
@@ -62,6 +62,9 @@ export type ConfigType = {
     fundingRelayerAmount: {
       [key: number]: number
     },
+    fundingBalanceThreshold: {
+      [key: number]: number
+    }
     newRelayerInstanceCount: {
       [key: number]: number
     },

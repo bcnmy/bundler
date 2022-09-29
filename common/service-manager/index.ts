@@ -1,12 +1,13 @@
 /* eslint-disable no-await-in-loop */
 import { config } from '../../config';
 import { AAConsumer, SCWConsumer } from '../../relayer/src/services/consumer';
+import { EVMNonceManager } from '../../relayer/src/services/nonce-manager';
 import { EVMRelayerManager } from '../../relayer/src/services/relayer-manager/EVMRelayerManager';
 import { EVMTransactionListener } from '../../relayer/src/services/transaction-listener';
 import { EVMTransactionService } from '../../relayer/src/services/transaction-service';
 import { FeeOption } from '../../server/src/services';
 import { RedisCacheService } from '../cache';
-import { Mongo, TransactionDAO } from '../db';
+import { TransactionDAO } from '../db';
 import { GasPriceManager } from '../gas-price';
 import { IQueue } from '../interface';
 import { EVMNetworkService } from '../network';
@@ -30,7 +31,7 @@ const simulatonServiceMap: {
   }
 } = {};
 
-const redisClient = RedisCacheService.getInstance();
+const cacheService = RedisCacheService.getInstance();
 
 const { supportedNetworks, supportedTransactionType } = config;
 
@@ -40,7 +41,7 @@ const { supportedNetworks, supportedTransactionType } = config;
     relayMap[chainId] = {};
     simulatonServiceMap[chainId] = {};
 
-    const gasPriceManager = new GasPriceManager(redisClient, {
+    const gasPriceManager = new GasPriceManager(cacheService, {
       chainId,
     });
     const gasPriceService = gasPriceManager.setup();
@@ -54,7 +55,15 @@ const { supportedNetworks, supportedTransactionType } = config;
       fallbackRpcUrls: config.chains.fallbackUrls[chainId] || [],
     });
 
-    const transactionQueue = new 
+    const transactionQueue = new TransactionQueue();
+
+    const nonceManager = new EVMNonceManager({
+      options: {
+        chainId,
+      },
+      networkService,
+      cacheService,
+    });
 
     const transactionListener = new EVMTransactionListener({
       networkService,
@@ -77,19 +86,30 @@ const { supportedNetworks, supportedTransactionType } = config;
     });
 
     const relayerManagers = [];
-    for (const relayerManager of config.relayerManager) {
+    for (const relayerManager of config.relayerManagers) {
       const relayerMangerInstance = new EVMRelayerManager({
         networkService,
         gasPriceService,
         transactionService,
-        nonceManagerService,
+        nonceManager,
         options: {
           chainId,
+          name: relayerManager.name,
+          minRelayerCount: relayerManager.minRelayerCount[chainId],
+          maxRelayerCount: relayerManager.maxRelayerCount[chainId],
+          inactiveRelayerCountThreshold: relayerManager.inactiveRelayerCountThreshold[chainId],
+          pendingTransactionCountThreshold: relayerManager
+            .pendingTransactionCountThreshold[chainId],
+          newRelayerInstanceCount: relayerManager.newRelayerInstanceCount[chainId],
+          fundingBalanceThreshold: relayerManager.fundingBalanceThreshold[chainId],
+          fundingRelayerAmount: relayerManager.fundingRelayerAmount[chainId],
+          ownerAccountDetails: relayerManager.ownerAccountDetails[chainId],
         },
       });
+      relayerManagers.push(relayerMangerInstance);
     }
 
-    const tokenService = new CMCTokenPriceManager(redisClient, {
+    const tokenService = new CMCTokenPriceManager(cacheService, {
       apiKey: config.tokenPrice.coinMarketCapApi,
       networkSymbolCategories: config.tokenPrice.networkSymbols,
       updateFrequencyInSeconds: config.tokenPrice.updateFrequencyInSeconds,
@@ -97,7 +117,7 @@ const { supportedNetworks, supportedTransactionType } = config;
     });
     tokenService.schedule();
 
-    const feeOptionService = new FeeOption(gasPriceService, redisClient, {
+    const feeOptionService = new FeeOption(gasPriceService, cacheService, {
       chainId,
     });
     feeOptionMap[chainId] = feeOptionService;
@@ -155,7 +175,7 @@ const { supportedNetworks, supportedTransactionType } = config;
 })();
 
 export {
-  redisClient,
+  cacheService,
   relayMap,
   feeOptionMap,
   simulatonServiceMap,

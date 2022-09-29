@@ -8,25 +8,25 @@ type GasPriceType = MaticGasPrice | GoerliGasPrice | MumbaiGasPrice | undefined;
 export class GasPriceManager implements IGasPriceManager<GasPriceType> {
   chainId: number;
 
-  redisClient: ICacheService;
+  cacheService: ICacheService;
 
-  constructor(redisClient: ICacheService, options: {
+  constructor(cacheService: ICacheService, options: {
     chainId: number,
   }) {
-    this.redisClient = redisClient;
+    this.cacheService = cacheService;
     this.chainId = options.chainId;
   }
 
   setup() {
     switch (this.chainId) {
       case 137:
-        return new MaticGasPrice(this.chainId, this.redisClient);
+        return new MaticGasPrice(this.chainId, this.cacheService);
       case 5:
-        return new GoerliGasPrice(this.chainId, this.redisClient);
+        return new GoerliGasPrice(this.chainId, this.cacheService);
       case 80001:
-        return new MumbaiGasPrice(this.chainId, this.redisClient);
+        return new MumbaiGasPrice(this.chainId, this.cacheService);
       default:
-        return new MaticGasPrice(this.chainId, this.redisClient);
+        return new MaticGasPrice(this.chainId, this.cacheService);
     }
   }
 }

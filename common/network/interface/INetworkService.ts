@@ -31,6 +31,7 @@ export interface INetworkService<AccountType, RawTransactionType> {
   getEIP1559GasPrice(): Promise<Type2TransactionGasPriceType>;
   getBalance(address: string): Promise<BigNumber>;
   getContract(abi: string, contractAddress: string): ethers.Contract;
+  getNonce(address: string, pendingNonce?: boolean): Promise<number>
   // TODO
   // Find a better return type than object
   executeReadMethod(

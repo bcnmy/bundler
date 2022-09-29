@@ -27,16 +27,16 @@ export class FeeOption {
 
   gasPriceService: IGasPrice;
 
-  redisClient: ICacheService;
+  cacheService: ICacheService;
 
   constructor(
     gasPriceService: IGasPrice,
-    redisClient: ICacheService,
+    cacheService: ICacheService,
     options: {
       chainId: number,
     },
   ) {
-    this.redisClient = redisClient;
+    this.cacheService = cacheService;
     this.gasPriceService = gasPriceService;
     this.chainId = options.chainId;
   }
@@ -55,7 +55,7 @@ export class FeeOption {
 
       const gasPrice = Number(gasPriceInString);
 
-      const networkPriceDataInString = await this.redisClient.get(
+      const networkPriceDataInString = await this.cacheService.get(
         FeeOption.getNetworkPriceDataKey(),
       );
       const networkPriceData = JSON.parse(networkPriceDataInString);

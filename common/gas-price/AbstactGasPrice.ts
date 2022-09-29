@@ -13,16 +13,16 @@ export class AbstractGasPrice implements IGasPrice {
 
   network?: INetworkService<EVMAccount, EVMRawTransactionType> | undefined;
 
-  redisClient: ICacheService;
+  cacheService: ICacheService;
 
   constructor(
     chainId: number,
-    redisClient: ICacheService,
+    cacheService: ICacheService,
     network?: INetworkService<EVMAccount, EVMRawTransactionType>,
   ) {
     this.chainId = chainId;
     this.network = network;
-    this.redisClient = redisClient;
+    this.cacheService = cacheService;
   }
 
   private getGasPriceKey = (gasType: GasPriceType) => `GasPrice_${this.chainId}_${gasType}`;
@@ -32,30 +32,30 @@ export class AbstractGasPrice implements IGasPrice {
   private getMaxPriorityFeeGasKey = (gasType: GasPriceType) => `MaxPriorityFeeGas_${this.chainId}_${gasType}`;
 
   async setGasPrice(gasType: GasPriceType, price: string) {
-    await this.redisClient.set(this.getGasPriceKey(gasType), price);
+    await this.cacheService.set(this.getGasPriceKey(gasType), price);
   }
 
   async getGasPrice(gasType: GasPriceType) {
-    const result = await this.redisClient.get(this.getGasPriceKey(gasType));
+    const result = await this.cacheService.get(this.getGasPriceKey(gasType));
     return result;
   }
 
   async setMaxFeeGasPrice(gasType: GasPriceType, price: string) {
-    await this.redisClient.set(this.getMaxFeeGasKey(gasType), price);
+    await this.cacheService.set(this.getMaxFeeGasKey(gasType), price);
   }
 
   async getMaxPriorityFeeGasPrice(gasType: GasPriceType): Promise<string> {
-    const result = await this.redisClient.get(this.getMaxPriorityFeeGasKey(gasType));
+    const result = await this.cacheService.get(this.getMaxPriorityFeeGasKey(gasType));
     return result;
   }
 
   async getMaxFeeGasPrice(gasType: GasPriceType): Promise<string> {
-    const result = await this.redisClient.get(this.getMaxFeeGasKey(gasType));
+    const result = await this.cacheService.get(this.getMaxFeeGasKey(gasType));
     return result;
   }
 
   async setMaxPriorityFeeGasPrice(gasType: GasPriceType, price: string) {
-    await this.redisClient.set(this.getMaxPriorityFeeGasKey(gasType), price);
+    await this.cacheService.set(this.getMaxPriorityFeeGasKey(gasType), price);
   }
 
   async setup(gP?: string) {

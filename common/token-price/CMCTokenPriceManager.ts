@@ -17,10 +17,10 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
 
   private symbolMapByChainId: SymbolMapByChainIdType;
 
-  redisClient: ICacheService;
+  cacheService: ICacheService;
 
   constructor(
-    redisClient: ICacheService,
+    cacheService: ICacheService,
     options: {
       apiKey: string,
       networkSymbolCategories: NetworkSymbolCategoriesType,
@@ -32,7 +32,7 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
     this.networkSymbolCategories = options.networkSymbolCategories;
     this.updateFrequencyInSeconds = options.updateFrequencyInSeconds;
     this.symbolMapByChainId = options.symbolMapByChainId;
-    this.redisClient = redisClient;
+    this.cacheService = cacheService;
   }
 
   schedule() {
@@ -60,7 +60,7 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
             }
           });
           log.info('Network price data updated in cache');
-          await this.redisClient.set('NETWORK_PRICE_DATA', JSON.stringify(coinsRateObj));
+          await this.cacheService.set('NETWORK_PRICE_DATA', JSON.stringify(coinsRateObj));
         } else {
           log.error('Network keys is not defined while fetching the network prices');
         }
@@ -73,10 +73,10 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
   }
 
   async getTokenPrice(symbol: string): Promise<number> {
-    let data = JSON.parse(await this.redisClient.get('NETWORK_PRICE_DATA'));
+    let data = JSON.parse(await this.cacheService.get('NETWORK_PRICE_DATA'));
     if (!data) {
       await this.setup();
-      data = JSON.parse(await this.redisClient.get('NETWORK_PRICE_DATA'));
+      data = JSON.parse(await this.cacheService.get('NETWORK_PRICE_DATA'));
     }
     return data[symbol];
   }

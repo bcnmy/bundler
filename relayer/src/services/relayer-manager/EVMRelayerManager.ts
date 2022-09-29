@@ -8,9 +8,10 @@ import { IGasPrice } from '../../../../common/gas-price/interface/IGasPrice';
 import { GasPriceType } from '../../../../common/gas-price/types';
 import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
-import { AATransactionMessageType } from '../../../../common/types';
+import { AATransactionMessageType, EVMRawTransactionType } from '../../../../common/types';
 import { config } from '../../../../config';
 import { EVMAccount } from '../account';
+import { IEVMAccount } from '../account/interface/IEVMAccount';
 import { INonceManager } from '../nonce-manager';
 import { ITransactionService } from '../transaction-service/interface/ITransactionService';
 import { IRelayerManager } from './interface/IRelayerManager';
@@ -35,21 +36,32 @@ const nodePathRoot = "m/44'/60'/0'/";
  */
 
 export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
+  name: string;
+
   chainId: number;
 
   transactionService: ITransactionService<EVMAccount>;
 
-  minRelayerCount: number = 5;
+  minRelayerCount: number;
 
-  maxRelayerCount: number = 15;
+  maxRelayerCount: number;
 
-  inactiveRelayerCountThreshold: number = 0.6;
+  inactiveRelayerCountThreshold: number;
 
-  pendingTransactionCountThreshold: number = 15;
+  pendingTransactionCountThreshold: number;
 
-  newRelayerInstanceCount: number = 10;
+  newRelayerInstanceCount: number;
 
-  fundingBalanceThreshold: number = 0.1;
+  fundingBalanceThreshold: number;
+
+  fundingRelayerAmount: number;
+
+  ownerAccountDetails: {
+    [key: number]: {
+      publicKey: string,
+      privateKey: string,
+    }
+  };
 
   public activeRelayerData: Array<EVMRelayerDataType> = [];
 
@@ -57,9 +69,9 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
 
   public processingTransactionRelayerDataMap: Record<string, EVMRelayerDataType> = {};
 
-  nonceManagerService: INonceManager;
+  nonceManager: INonceManager;
 
-  networkService: INetworkService<EVMAccount, AATransactionMessageType>;
+  networkService: INetworkService<IEVMAccount<EVMRawTransactionType>, EVMRawTransactionType>;
 
   gasPriceService: IGasPrice;
 
@@ -67,13 +79,22 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
     evmRelayerManagerServiceParams: EVMRelayerManagerServiceParamsType,
   ) {
     const {
-      options, networkService, gasPriceService, transactionService, nonceManagerService,
+      options, networkService, gasPriceService, transactionService, nonceManager,
     } = evmRelayerManagerServiceParams;
     this.chainId = options.chainId;
+    this.name = options.name;
+    this.minRelayerCount = options.minRelayerCount;
+    this.maxRelayerCount = options.maxRelayerCount;
+    this.inactiveRelayerCountThreshold = options.inactiveRelayerCountThreshold;
+    this.pendingTransactionCountThreshold = options.pendingTransactionCountThreshold;
+    this.newRelayerInstanceCount = options.newRelayerInstanceCount;
+    this.fundingBalanceThreshold = options.fundingBalanceThreshold;
+    this.fundingRelayerAmount = options.fundingRelayerAmount;
+    this.ownerAccountDetails = options.ownerAccountDetails;
     this.networkService = networkService;
     this.gasPriceService = gasPriceService;
     this.transactionService = transactionService;
-    this.nonceManagerService = nonceManagerService;
+    this.nonceManager = nonceManager;
   }
 
   getActiveRelayer(): EVMAccount | null {

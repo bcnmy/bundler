@@ -1,18 +1,32 @@
 import { IGasPrice } from '../../../../../common/gas-price/interface/IGasPrice';
 import { INetworkService } from '../../../../../common/network';
-import { AATransactionMessageType } from '../../../../../common/types';
+import { EVMRawTransactionType } from '../../../../../common/types';
 import { EVMAccount } from '../../account';
+import { IEVMAccount } from '../../account/interface/IEVMAccount';
 import { INonceManager } from '../../nonce-manager';
 import { ITransactionService } from '../../transaction-service';
 
 export type EVMRelayerManagerServiceParamsType = {
-  networkService: INetworkService<EVMAccount, AATransactionMessageType>,
+  networkService: INetworkService<IEVMAccount<EVMRawTransactionType>, EVMRawTransactionType>,
   gasPriceService: IGasPrice,
   transactionService: ITransactionService<EVMAccount>,
-  nonceManagerService: INonceManager,
+  nonceManager: INonceManager,
   options: {
-    chainId: number,
-
+    name: string;
+    chainId: number;
+    minRelayerCount: number;
+    maxRelayerCount: number;
+    inactiveRelayerCountThreshold: number;
+    pendingTransactionCountThreshold: number;
+    newRelayerInstanceCount: number;
+    fundingBalanceThreshold: number;
+    fundingRelayerAmount: number,
+    ownerAccountDetails: {
+      [key: number]: {
+        publicKey: string,
+        privateKey: string,
+      }
+    }
   },
 };
 

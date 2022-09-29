@@ -1,2 +1,2 @@
-export * from './NonceManager';
+export * from './EVMNonceManager';
 export * from './interface/INonceManager';
