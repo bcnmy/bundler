@@ -1,5 +1,4 @@
 /* eslint-disable no-await-in-loop */
-/* eslint-disable no-param-reassign */
 import { Mutex } from 'async-mutex';
 import { privateToPublic, publicToAddress, toChecksumAddress } from 'ethereumjs-util';
 import { ethers } from 'ethers';

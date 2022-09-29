@@ -241,9 +241,9 @@ const EVMRelayerManagerMap: {
       }
     }
   }
-  for (const relayerMangerName of Object.keys(EVMRelayerManagerMap)) {
+  for (const relayerManagerName of Object.keys(EVMRelayerManagerMap)) {
     for (const chainId of supportedNetworks) {
-      const relayerManager = EVMRelayerManagerMap[relayerMangerName][chainId];
+      const relayerManager = EVMRelayerManagerMap[relayerManagerName][chainId];
       if (relayerManager) {
         await relayerManager.createRelayers();
       }
