@@ -8,7 +8,7 @@ const log = logger(module);
 
 const { queueUrl } = config;
 
-export class TransactionHandlerQueue implements IQueue<TransactionMessageType> {
+export class RetryTransactionHandlerQueue implements IQueue<TransactionMessageType> {
   private channel!: Channel;
 
   chainId: number;
@@ -49,13 +49,13 @@ export class TransactionHandlerQueue implements IQueue<TransactionMessageType> {
     this.channel.prefetch(1);
     try {
       // setup a consumer
-      const transactionQueue: Replies.AssertQueue = await this.channel.assertQueue('transaction_queue');
+      const retryTransactionQueue: Replies.AssertQueue = await this.channel.assertQueue('retry_transaction_queue');
 
       const key = `chainid.${this.chainId}`;
       log.info(`[*] Waiting for transactions on network id ${this.chainId}`);
-      this.channel.bindQueue(transactionQueue.queue, 'transaction_queue_exchange', key);
+      this.channel.bindQueue(retryTransactionQueue.queue, 'transaction_queue_exchange', key);
       await this.channel.consume(
-        transactionQueue.queue,
+        retryTransactionQueue.queue,
         onMessageReceived.bind(this),
       );
 

@@ -11,7 +11,9 @@ import { TransactionDAO } from '../db';
 import { GasPriceManager } from '../gas-price';
 import { IQueue } from '../interface';
 import { EVMNetworkService } from '../network';
-import { AATransactionQueue, SCWTransactionQueue } from '../queue';
+import {
+  AATransactionQueue, RetryTransactionHandlerQueue, SCWTransactionQueue, TransactionHandlerQueue,
+} from '../queue';
 import { AARelayService, SCWRelayService } from '../relay-service';
 import { AASimulationService, SCWSimulationService } from '../simulation';
 import { CMCTokenPriceManager } from '../token-price';
@@ -55,7 +57,12 @@ const { supportedNetworks, supportedTransactionType } = config;
       fallbackRpcUrls: config.chains.fallbackUrls[chainId] || [],
     });
 
-    const transactionQueue = new TransactionQueue();
+    const transactionQueue = new TransactionHandlerQueue({
+      chainId,
+    });
+    const retryTransactionQueue = new RetryTransactionHandlerQueue({
+      chainId,
+    });
 
     const nonceManager = new EVMNonceManager({
       options: {
@@ -67,7 +74,8 @@ const { supportedNetworks, supportedTransactionType } = config;
 
     const transactionListener = new EVMTransactionListener({
       networkService,
-      queue: transactionQueue,
+      transactionQueue,
+      retryTransactionQueue,
       transactionDao,
       options: {
         chainId,

@@ -11,16 +11,18 @@ import {
   NotifyTransactionListenerParamsType,
   OnTransactionFailureParamsType,
   OnTransactionSuccessParamsType,
-  TransactionListenerMessageType,
+  TransactionMessageType,
 } from './types';
 
 export class EVMTransactionListener implements
-ITransactionListener, ITransactionPublisher<TransactionListenerMessageType> {
+ITransactionListener, ITransactionPublisher<TransactionMessageType> {
   chainId: number;
 
   networkService: INetworkService<IEVMAccount<EVMRawTransactionType>, EVMRawTransactionType>;
 
-  queue: IQueue<TransactionListenerMessageType>;
+  transactionQueue: IQueue<TransactionMessageType>;
+
+  retryTransactionQueue: IQueue<TransactionMessageType>;
 
   transactionDao: ITransactionDAO;
 
@@ -28,16 +30,22 @@ ITransactionListener, ITransactionPublisher<TransactionListenerMessageType> {
     evmTransactionListenerParams: EVMTransactionListenerParamsType,
   ) {
     const {
-      options, networkService, queue, transactionDao,
+      options, networkService, transactionQueue, retryTransactionQueue, transactionDao,
     } = evmTransactionListenerParams;
     this.chainId = options.chainId;
     this.networkService = networkService;
-    this.queue = queue;
+    this.transactionQueue = transactionQueue;
+    this.retryTransactionQueue = retryTransactionQueue;
     this.transactionDao = transactionDao;
   }
 
-  async publish(data: TransactionListenerMessageType): Promise<boolean> {
-    await this.queue.publish(data);
+  async publishToTransactionQueue(data: TransactionMessageType): Promise<boolean> {
+    await this.transactionQueue.publish(data);
+    return true;
+  }
+
+  async publishToRetryTransactionQueue(data: TransactionMessageType): Promise<boolean> {
+    await this.retryTransactionQueue.publish(data);
     return true;
   }
 
@@ -52,7 +60,7 @@ ITransactionListener, ITransactionPublisher<TransactionListenerMessageType> {
       userAddress,
     );
     // add txn data in cache
-    await this.publish(transactionExecutionResponse);
+    await this.publishToTransactionQueue(transactionExecutionResponse);
   }
 
   // private onTransactionDropped() {
@@ -72,7 +80,7 @@ ITransactionListener, ITransactionPublisher<TransactionListenerMessageType> {
       userAddress,
     );
     // add txn data in cache
-    await this.publish(transactionExecutionResponse);
+    await this.publishToTransactionQueue(transactionExecutionResponse);
   }
 
   private async saveTransactionDataToDatabase(
@@ -105,6 +113,7 @@ ITransactionListener, ITransactionPublisher<TransactionListenerMessageType> {
     } = notifyTransactionListenerParams;
     const tranasctionHash = transactionExecutionResponse.hash;
     // publish to queue with expiry header
+    await this.publishToRetryTransactionQueue(transactionExecutionResponse);
     // pop happens when expiry header expires
     // retry txn service will check for receipt
     const transactionReceipt = await this.networkService.waitForTransaction(tranasctionHash);

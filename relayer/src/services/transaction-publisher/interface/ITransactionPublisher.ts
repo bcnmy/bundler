@@ -1,7 +1,10 @@
 import { IQueue } from '../../../../../common/interface';
 
 export interface ITransactionPublisher<TransactionMessageType> {
-  queue: IQueue<TransactionMessageType>;
+  transactionQueue: IQueue<TransactionMessageType>;
 
-  publish(data: TransactionMessageType): Promise<boolean>
+  retryTransactionQueue: IQueue<TransactionMessageType>;
+
+  publishToTransactionQueue(data: TransactionMessageType): Promise<boolean>;
+  publishToRetryTransactionQueue(data: TransactionMessageType): Promise<boolean>;
 }

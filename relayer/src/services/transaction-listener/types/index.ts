@@ -5,14 +5,12 @@ import { INetworkService } from '../../../../../common/network';
 import { EVMRawTransactionType } from '../../../../../common/types';
 import { IEVMAccount } from '../../account/interface/IEVMAccount';
 
-export type TransactionListenerMessageType = {
-  // TODO
-  // Define the struct to send
-};
+export type TransactionMessageType = ethers.providers.TransactionResponse;
 
 export type EVMTransactionListenerParamsType = {
   networkService: INetworkService<IEVMAccount<EVMRawTransactionType>, EVMRawTransactionType>,
-  queue: IQueue<TransactionListenerMessageType>,
+  transactionQueue: IQueue<TransactionMessageType>,
+  retryTransactionQueue: IQueue<TransactionMessageType>,
   transactionDao: ITransactionDAO,
   options: {
     chainId: number
