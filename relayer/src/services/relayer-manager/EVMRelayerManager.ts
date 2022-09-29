@@ -117,7 +117,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
   addActiveRelayer(address: string): void {
     if (this.processingTransactionRelayerDataMap[address]) {
       this.activeRelayerData.push(this.processingTransactionRelayerDataMap[address]);
-      console.log(`Relayer ${address} added to active relayer map`);
+      log.info(`Relayer ${address} added to active relayer map`);
     }
   }
 
