@@ -1,9 +1,13 @@
 /* eslint-disable no-await-in-loop */
 import { config } from '../../config';
 import { AAConsumer, SCWConsumer } from '../../relayer/src/services/consumer';
+import { EVMNonceManager } from '../../relayer/src/services/nonce-manager';
+import { EVMRelayerManager } from '../../relayer/src/services/relayer-manager/EVMRelayerManager';
+import { EVMTransactionListener } from '../../relayer/src/services/transaction-listener';
+import { EVMTransactionService } from '../../relayer/src/services/transaction-service';
 import { FeeOption } from '../../server/src/services';
 import { RedisCacheService } from '../cache';
-import { Mongo } from '../db';
+import { TransactionDAO } from '../db';
 import { GasPriceManager } from '../gas-price';
 import { IQueue } from '../interface';
 import { EVMNetworkService } from '../network';
@@ -27,17 +31,17 @@ const simulatonServiceMap: {
   }
 } = {};
 
-const redisClient = RedisCacheService.getInstance();
-const dbInstance = Mongo.getInstance();
+const cacheService = RedisCacheService.getInstance();
 
 const { supportedNetworks, supportedTransactionType } = config;
 
 (async () => {
+  const transactionDao = new TransactionDAO();
   for (const chainId of supportedNetworks) {
     relayMap[chainId] = {};
     simulatonServiceMap[chainId] = {};
 
-    const gasPriceManager = new GasPriceManager(redisClient, {
+    const gasPriceManager = new GasPriceManager(cacheService, {
       chainId,
     });
     const gasPriceService = gasPriceManager.setup();
@@ -51,7 +55,63 @@ const { supportedNetworks, supportedTransactionType } = config;
       fallbackRpcUrls: config.chains.fallbackUrls[chainId] || [],
     });
 
-    const tokenService = new CMCTokenPriceManager(redisClient, {
+    const transactionQueue = new TransactionQueue();
+
+    const nonceManager = new EVMNonceManager({
+      options: {
+        chainId,
+      },
+      networkService,
+      cacheService,
+    });
+
+    const transactionListener = new EVMTransactionListener({
+      networkService,
+      queue: transactionQueue,
+      transactionDao,
+      options: {
+        chainId,
+      },
+    });
+
+    const transactionService = new EVMTransactionService({
+      networkService,
+      transactionListener,
+      nonceManager,
+      gasPriceService,
+      transactionDao,
+      options: {
+        chainId,
+      },
+    });
+
+    const relayerManagers = [];
+    for (const relayerManager of config.relayerManagers) {
+      const relayerMangerInstance = new EVMRelayerManager({
+        networkService,
+        gasPriceService,
+        transactionService,
+        nonceManager,
+        options: {
+          chainId,
+          name: relayerManager.name,
+          minRelayerCount: relayerManager.minRelayerCount[chainId],
+          maxRelayerCount: relayerManager.maxRelayerCount[chainId],
+          inactiveRelayerCountThreshold: relayerManager.inactiveRelayerCountThreshold[chainId],
+          pendingTransactionCountThreshold: relayerManager
+            .pendingTransactionCountThreshold[chainId],
+          newRelayerInstanceCount: relayerManager.newRelayerInstanceCount[chainId],
+          fundingBalanceThreshold: relayerManager.fundingBalanceThreshold[chainId],
+          fundingRelayerAmount: relayerManager.fundingRelayerAmount[chainId],
+          ownerAccountDetails: relayerManager.ownerAccountDetails[chainId],
+        },
+      });
+      relayerManagers.push(relayerMangerInstance);
+    }
+
+    // find relaeyr manager based on name
+
+    const tokenService = new CMCTokenPriceManager(cacheService, {
       apiKey: config.tokenPrice.coinMarketCapApi,
       networkSymbolCategories: config.tokenPrice.networkSymbols,
       updateFrequencyInSeconds: config.tokenPrice.updateFrequencyInSeconds,
@@ -59,7 +119,7 @@ const { supportedNetworks, supportedTransactionType } = config;
     });
     tokenService.schedule();
 
-    const feeOptionService = new FeeOption(gasPriceService, redisClient, {
+    const feeOptionService = new FeeOption(gasPriceService, cacheService, {
       chainId,
     });
     feeOptionMap[chainId] = feeOptionService;
@@ -117,8 +177,7 @@ const { supportedNetworks, supportedTransactionType } = config;
 })();
 
 export {
-  dbInstance,
-  redisClient,
+  cacheService,
   relayMap,
   feeOptionMap,
   simulatonServiceMap,

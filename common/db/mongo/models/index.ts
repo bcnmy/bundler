@@ -1,1 +1,1 @@
-export * from './blockchain_transactions/model';
+export * from './blockchain-transactions/model';

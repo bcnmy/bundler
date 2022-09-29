@@ -8,6 +8,8 @@ export class SCWConsumer implements ITransactionConsumer<SCWTransactionMessageTy
 
   private transactionType: TransactionType = TransactionType.SCW;
 
+  relayer
+
   queue: IQueue<SCWTransactionMessageType>;
 
   constructor(
@@ -26,6 +28,9 @@ export class SCWConsumer implements ITransactionConsumer<SCWTransactionMessageTy
     if (msg) {
       console.log('onMessage received in scw', msg.content.toString(), this.transactionType);
       this.queue?.ack(msg);
+      // get active relayer
+      const activeRelayer = 
+      // call transaction service
     }
   };
 }

@@ -16,10 +16,10 @@ export class MaticGasPrice extends AbstractGasPrice implements IScheduler {
 
   constructor(
     chainId: number,
-    redisClient: ICacheService,
+    cacheService: ICacheService,
     network?: INetworkService<EVMAccount, EVMRawTransactionType>,
   ) {
-    super(chainId, redisClient, network);
+    super(chainId, cacheService, network);
     this.updateFrequencyInSeconds = config.gasPrice[this.chainId].updateFrequencyInSeconds || 60;
   }
 

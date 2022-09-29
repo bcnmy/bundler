@@ -7,6 +7,7 @@ import { IEVMAccount } from '../account/interface/IEVMAccount';
 import { ITransactionPublisher } from '../transaction-publisher';
 import { ITransactionListener } from './interface/ITransactionListener';
 import {
+  EVMTransactionListenerParamsType,
   NotifyTransactionListenerParamsType,
   OnTransactionFailureParamsType,
   OnTransactionSuccessParamsType,
@@ -24,12 +25,12 @@ ITransactionListener, ITransactionPublisher<TransactionListenerMessageType> {
   transactionDao: ITransactionDAO;
 
   constructor(
-    chainId: number,
-    networkService: INetworkService<IEVMAccount<EVMRawTransactionType>, EVMRawTransactionType>,
-    queue: IQueue<TransactionListenerMessageType>,
-    transactionDao: ITransactionDAO,
+    evmTransactionListenerParams: EVMTransactionListenerParamsType,
   ) {
-    this.chainId = chainId;
+    const {
+      options, networkService, queue, transactionDao,
+    } = evmTransactionListenerParams;
+    this.chainId = options.chainId;
     this.networkService = networkService;
     this.queue = queue;
     this.transactionDao = transactionDao;

@@ -1,17 +1,23 @@
-import { Network } from 'network-sdk';
 import { ICacheService } from '../../../../common/cache';
+import { INetworkService } from '../../../../common/network';
+import { EVMRawTransactionType } from '../../../../common/types';
+import { IEVMAccount } from '../account/interface/IEVMAccount';
 import { INonceManager } from './interface/INonceManager';
+import { EVMNonceManagerParamsType } from './types';
 
-export class NonceManager implements INonceManager {
+export class EVMNonceManager implements INonceManager {
   chainId: number;
 
-  networkService: Network;
+  networkService: INetworkService<IEVMAccount<EVMRawTransactionType>, EVMRawTransactionType>;
 
   cacheService: ICacheService;
 
-  constructor(chainId: number, network: Network, cacheService: ICacheService) {
-    this.chainId = chainId;
-    this.networkService = network;
+  constructor(evmNonceManagerParams: EVMNonceManagerParamsType) {
+    const {
+      options, networkService, cacheService,
+    } = evmNonceManagerParams;
+    this.chainId = options.chainId;
+    this.networkService = networkService;
     this.cacheService = cacheService;
   }
 
