@@ -64,7 +64,7 @@ const data: ConfigType = {
   relayer: {
     nodePathIndex: 0,
   },
-  relayerManager: [
+  relayerManagers: [
     {
       name: 'relayer1',
       gasLimitMap: {
@@ -92,9 +92,14 @@ const data: ConfigType = {
         80001: 15,
       },
       fundingRelayerAmount: {
-        5: 0.1,
-        137: 0.1,
-        80001: 0.1,
+        5: 0.5,
+        137: 0.5,
+        80001: 0.5,
+      },
+      fundingBalanceThreshold: {
+        5: 0.3,
+        137: 0.3,
+        80001: 0.3,
       },
       newRelayerInstanceCount: {
         5: 1,
@@ -313,7 +318,7 @@ const data: ConfigType = {
       DAI: [77, 100],
       RBTC: [31],
       AVAX: [43113, 43114],
-      BNB : [97, 56],
+      BNB: [97, 56],
       GLMR: [1287, 1284],
       EDG: [2021],
       MOVR: [1285],

@@ -10,10 +10,10 @@ import {
 } from './types';
 import { INonceManager } from '../nonce-manager';
 import { INetworkService } from '../../../../common/network';
-import { IEVMAccount } from '../account/interface/IEVMAccount';
+import { IEVMAccount } from '../account';
 import { EVMRawTransactionType } from '../../../../common/types';
 import { GasPriceType } from '../../../../common/gas-price/types';
-import { IGasPrice } from '../../../../common/gas-price/interface/IGasPrice';
+import { IGasPrice } from '../../../../common/gas-price';
 import { NotifyTransactionListenerParamsType } from '../transaction-listener/types';
 
 export class EVMTransactionService implements

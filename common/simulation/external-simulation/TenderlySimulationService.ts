@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { ExternalSimulationResponseType, TenderlySimulationDataType } from '../types';
 import { logger } from '../../log-config';
-import { IGasPrice } from '../../gas-price/interface/IGasPrice';
+import { IGasPrice } from '../../gas-price';
 import { GasPriceType } from '../../gas-price/types';
 import { IExternalSimulation } from '../interface';
 

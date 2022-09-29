@@ -4,14 +4,13 @@ import { Mutex } from 'async-mutex';
 import { privateToPublic, publicToAddress, toChecksumAddress } from 'ethereumjs-util';
 import { ethers } from 'ethers';
 import hdkey from 'hdkey';
-import { IGasPrice } from '../../../../common/gas-price/interface/IGasPrice';
+import { IGasPrice } from '../../../../common/gas-price';
 import { GasPriceType } from '../../../../common/gas-price/types';
 import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
-import { AATransactionMessageType, EVMRawTransactionType } from '../../../../common/types';
+import { EVMRawTransactionType } from '../../../../common/types';
 import { config } from '../../../../config';
-import { EVMAccount } from '../account';
-import { IEVMAccount } from '../account/interface/IEVMAccount';
+import { EVMAccount, IEVMAccount } from '../account';
 import { INonceManager } from '../nonce-manager';
 import { ITransactionService } from '../transaction-service/interface/ITransactionService';
 import { IRelayerManager } from './interface/IRelayerManager';
@@ -63,11 +62,15 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
     }
   };
 
-  public activeRelayerData: Array<EVMRelayerDataType> = [];
+  gasLimitMap: {
+    [key: number]: number
+  };
 
-  public relayerMap: Record<string, EVMAccount> = {};
+  activeRelayerData: Array<EVMRelayerDataType> = [];
 
-  public processingTransactionRelayerDataMap: Record<string, EVMRelayerDataType> = {};
+  relayerMap: Record<string, EVMAccount> = {};
+
+  processingTransactionRelayerDataMap: Record<string, EVMRelayerDataType> = {};
 
   nonceManager: INonceManager;
 
@@ -91,6 +94,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
     this.fundingBalanceThreshold = options.fundingBalanceThreshold;
     this.fundingRelayerAmount = options.fundingRelayerAmount;
     this.ownerAccountDetails = options.ownerAccountDetails;
+    this.gasLimitMap = options.gasLimitMap;
     this.networkService = networkService;
     this.gasPriceService = gasPriceService;
     this.transactionService = transactionService;
@@ -130,7 +134,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
     log.info(`Waiting for lock to create relayers on ${this.chainId}`);
     const release = await createRelayerMutex.acquire();
     log.info(`Received lock to create relayers on ${this.chainId}`);
-    const relayersMasterSeed = config.chains.ownerAccountDetails[0].privateKey;
+    const relayersMasterSeed = this.ownerAccountDetails[this.chainId].privateKey;
     const relayers: EVMAccount[] = [];
 
     try {
@@ -160,7 +164,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
       relayers.map(async (relayer) => {
         const relayerAddress = relayer.getPublicKey().toLowerCase();
         const balance = await (await this.networkService.getBalance(relayerAddress)).toNumber();
-        const nonce = await this.nonceManagerService.getNonce(relayerAddress);
+        const nonce = await this.nonceManager.getNonce(relayerAddress);
         this.activeRelayerData.push({
           address: relayer.getPublicKey(),
           pendingCount: 0,
@@ -199,11 +203,11 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
       // different gas limit for arbitrum
       if ([42161, 421611].includes(this.chainId)) gasLimitIndex = 1;
 
-      const gasLimit = config.relayerManager[0].gasLimitMap[gasLimitIndex];
+      const gasLimit = this.gasLimitMap[gasLimitIndex];
 
-      const fundingAmount = config.relayerManager[0].fundingRelayerAmount[this.chainId];
+      const fundingAmount = this.fundingRelayerAmount;
 
-      const ownerAccountNonce = await this.nonceManagerService.getNonce(
+      const ownerAccountNonce = await this.nonceManager.getNonce(
         ownerAccount.getPublicKey(),
       );
       const gasPrice = await this.gasPriceService.getGasPrice(GasPriceType.DEFAULT);

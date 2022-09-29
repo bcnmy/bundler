@@ -3,7 +3,7 @@ import { EVMNetworkService, INetworkService, Type0TransactionGasPriceType } from
 import { IQueue } from '../../../../common/queue';
 import { EVMRawTransactionType, TransactionType } from '../../../../common/types';
 import { EVMAccount } from '../account';
-import { IEVMAccount } from '../account/interface/IEVMAccount';
+import { IEVMAccount } from '../account';
 import { ITransactionService } from '../transaction-service/interface/ITransactionService';
 import { IRetryTransactionService } from './interface/IRetryTransactionService';
 import { TransactionQueueMessageType } from './types';

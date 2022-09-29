@@ -1,3 +1,3 @@
-import { TransactionListenerMessageType } from '../../transaction-listener/types';
+import { ethers } from 'ethers';
 
-export type TransactionQueueMessageType = TransactionListenerMessageType;
+export type TransactionQueueMessageType = ethers.providers.TransactionResponse;

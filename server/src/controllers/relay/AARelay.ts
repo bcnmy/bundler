@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { ClientMessenger } from 'gasless-messaging-sdk';
 import { logger } from '../../../../common/log-config';
-import { relayMap } from '../../../../common/service-manager';
+import { routeTransactionToRelayerMap } from '../../../../common/service-manager';
 import { isError, TransactionType } from '../../../../common/types';
 import { generateTransactionId } from '../../utils/tx-id-generator';
 
@@ -21,7 +21,7 @@ export const relayAATransaction = async (req: Request, res: Response) => {
     if (!clientMessenger.socketClient.isConnected()) {
       await clientMessenger.connect();
     }
-    const response = await relayMap[chainId][TransactionType.AA].sendTransactionToRelayer({
+    const response = await routeTransactionToRelayerMap[chainId][TransactionType.AA].sendTransactionToRelayer({
       type, to, data, gasLimit, chainId, value, transactionId,
     });
     if (isError(response)) {

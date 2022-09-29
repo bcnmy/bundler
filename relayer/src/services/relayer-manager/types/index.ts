@@ -1,8 +1,7 @@
-import { IGasPrice } from '../../../../../common/gas-price/interface/IGasPrice';
+import { IGasPrice } from '../../../../../common/gas-price';
 import { INetworkService } from '../../../../../common/network';
 import { EVMRawTransactionType } from '../../../../../common/types';
-import { EVMAccount } from '../../account';
-import { IEVMAccount } from '../../account/interface/IEVMAccount';
+import { IEVMAccount, EVMAccount } from '../../account';
 import { INonceManager } from '../../nonce-manager';
 import { ITransactionService } from '../../transaction-service';
 
@@ -21,6 +20,9 @@ export type EVMRelayerManagerServiceParamsType = {
     newRelayerInstanceCount: number;
     fundingBalanceThreshold: number;
     fundingRelayerAmount: number,
+    gasLimitMap: {
+      [key: number]: number
+    },
     ownerAccountDetails: {
       [key: number]: {
         publicKey: string,
