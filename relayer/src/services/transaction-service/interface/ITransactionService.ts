@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 import { INetworkService } from '../../../../../common/network';
 import { EVMRawTransactionType } from '../../../../../common/types';
-import { IEVMAccount } from '../../account/interface/IEVMAccount';
+import { IEVMAccount } from '../../account';
 import { INonceManager } from '../../nonce-manager';
 import { ITransactionListener } from '../../transaction-listener';
 import { TransactionDataType } from '../types';

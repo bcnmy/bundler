@@ -1,7 +1,7 @@
 import { ICacheService } from '../../../../common/cache';
 import { INetworkService } from '../../../../common/network';
 import { EVMRawTransactionType } from '../../../../common/types';
-import { IEVMAccount } from '../account/interface/IEVMAccount';
+import { IEVMAccount } from '../account';
 import { INonceManager } from './interface/INonceManager';
 import { EVMNonceManagerParamsType } from './types';
 

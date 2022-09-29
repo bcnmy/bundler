@@ -26,7 +26,7 @@ const relayerManagerTransactionTypeNameMap = {
   [TransactionType.CROSS_CHAIN]: 'RM2',
 };
 
-const relayMap: {
+const routeTransactionToRelayerMap: {
   [chainId: number]: {
     [transactionType: string]: AARelayService | SCWRelayService;
   }
@@ -47,7 +47,7 @@ const { supportedNetworks, supportedTransactionType } = config;
 (async () => {
   const transactionDao = new TransactionDAO();
   for (const chainId of supportedNetworks) {
-    relayMap[chainId] = {};
+    routeTransactionToRelayerMap[chainId] = {};
     simulatonServiceMap[chainId] = {};
 
     const gasPriceManager = new GasPriceManager(cacheService, {
@@ -119,6 +119,7 @@ const { supportedNetworks, supportedTransactionType } = config;
           fundingBalanceThreshold: relayerManager.fundingBalanceThreshold[chainId],
           fundingRelayerAmount: relayerManager.fundingRelayerAmount[chainId],
           ownerAccountDetails: relayerManager.ownerAccountDetails[chainId],
+          gasLimitMap: relayerManager.gasLimitMap,
         },
       });
       relayerManagers.push(relayerMangerInstance);
@@ -143,7 +144,7 @@ const { supportedNetworks, supportedTransactionType } = config;
       const entryPointAddress = entryPointData.address[chainId];
 
       const aaRelayerManager = relayerManagers.find(
-        (rm) => rm.name === relayerManagerTransactionTypeNameMap[type],
+        (relayerManager) => relayerManager.name === relayerManagerTransactionTypeNameMap[type],
       );
       if (!aaRelayerManager) {
         throw new Error(`Relayer manager not found for ${type}`);
@@ -154,18 +155,19 @@ const { supportedNetworks, supportedTransactionType } = config;
           chainId,
         });
         await aaQueue.connect();
-        const aaConsumer = new AAConsumer(
-          aaQueue,
-          aaRelayerManager,
-          {
+        const aaConsumer = new AAConsumer({
+          queue: aaQueue,
+          relayerManager: aaRelayerManager,
+          transactionService,
+          options: {
             chainId,
           },
-        );
+        });
         // start listening for transaction
         await aaQueue.consume(aaConsumer.onMessageReceived);
 
         const aaRelayService = new AARelayService(aaQueue);
-        relayMap[chainId][type] = aaRelayService;
+        routeTransactionToRelayerMap[chainId][type] = aaRelayService;
 
         simulatonServiceMap[chainId][type] = new AASimulationService(
           networkService,
@@ -182,23 +184,24 @@ const { supportedNetworks, supportedTransactionType } = config;
         await scwQueue.connect();
 
         const scwRelayerManager = relayerManagers.find(
-          (rm) => rm.name === relayerManagerTransactionTypeNameMap[type],
+          (relayerManager) => relayerManager.name === relayerManagerTransactionTypeNameMap[type],
         );
         if (!scwRelayerManager) {
           throw new Error(`Relayer manager not found for ${type}`);
         }
 
-        const scwConsumer = new SCWConsumer(
-          scwQueue,
-          scwRelayerManager,
-          {
+        const scwConsumer = new SCWConsumer({
+          queue: scwQueue,
+          relayerManager: scwRelayerManager,
+          transactionService,
+          options: {
             chainId,
           },
-        );
+        });
         await scwQueue.consume(scwConsumer.onMessageReceived);
 
         const scwRelayService = new SCWRelayService(scwQueue);
-        relayMap[chainId][type] = scwRelayService;
+        routeTransactionToRelayerMap[chainId][type] = scwRelayService;
 
         simulatonServiceMap[chainId][type] = new SCWSimulationService(
           networkService,
@@ -213,8 +216,7 @@ const { supportedNetworks, supportedTransactionType } = config;
 })();
 
 export {
-  cacheService,
-  relayMap,
+  routeTransactionToRelayerMap,
   feeOptionMap,
   simulatonServiceMap,
 };

@@ -3,7 +3,7 @@ import { ITransactionDAO } from '../../../../common/db';
 import { IQueue } from '../../../../common/interface';
 import { INetworkService } from '../../../../common/network';
 import { EVMRawTransactionType, TransactionStatus } from '../../../../common/types';
-import { IEVMAccount } from '../account/interface/IEVMAccount';
+import { IEVMAccount } from '../account';
 import { ITransactionPublisher } from '../transaction-publisher';
 import { ITransactionListener } from './interface/ITransactionListener';
 import {

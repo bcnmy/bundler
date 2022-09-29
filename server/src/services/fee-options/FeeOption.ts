@@ -3,7 +3,7 @@ import Big from 'big.js';
 import { config } from '../../../../config';
 import { GasPriceType } from '../../../../common/gas-price/types';
 import { FeeOptionResponseType } from './types';
-import { IGasPrice } from '../../../../common/gas-price/interface/IGasPrice';
+import { IGasPrice } from '../../../../common/gas-price';
 import { ICacheService } from '../../../../common/cache';
 
 const convertGasPriceToUSD = async (

@@ -1,4 +1,4 @@
-import { IGasPrice } from '../../gas-price/interface/IGasPrice';
+import { IGasPrice } from '../../gas-price';
 
 export interface IExternalSimulation {
   gasPriceService: IGasPrice;
