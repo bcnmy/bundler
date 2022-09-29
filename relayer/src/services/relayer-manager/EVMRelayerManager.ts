@@ -99,10 +99,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
   }
 
   getActiveRelayer(): EVMAccount | null {
-    const strategy = new StrategyManager(
-      new SortEVMRelayerByLeastPendingCount(this.activeRelayerData),
-    );
-    strategy.performAlgorithm();
+    this.activeRelayerData = SortEVMRelayerByLeastPendingCount.performAlgorithm(this.activeRelayerData);
     const activeRelayer = this.activeRelayerData.pop();
     if (activeRelayer) {
       this.processingTransactionRelayerDataMap[activeRelayer.address] = activeRelayer;

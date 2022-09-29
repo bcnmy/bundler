@@ -245,7 +245,8 @@ const EVMRelayerManagerMap: {
     for (const chainId of supportedNetworks) {
       const relayerManager = EVMRelayerManagerMap[relayerManagerName][chainId];
       if (relayerManager) {
-        await relayerManager.createRelayers();
+        const addressList = await relayerManager.createRelayers();
+        await relayerManager.fundRelayers(addressList);
       }
     }
   }
