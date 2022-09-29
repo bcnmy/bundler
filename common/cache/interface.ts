@@ -1,4 +1,6 @@
 export interface ICacheService {
+
+  connect(): Promise<void>;
   get(key: string): Promise<string>
   set(key: string, value: string, hideValueInLogs?: boolean): Promise<boolean>
   increment(key: string, incrementBy ?: number): Promise<boolean>

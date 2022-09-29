@@ -23,18 +23,16 @@ export class RedisCacheService implements ICacheService {
     return RedisCacheService.instance;
   }
 
-  connect = async (): Promise<Boolean> => {
+  async connect(): Promise<void> {
     log.info('Initiating Redis connection');
     await this.redisClient.connect();
     log.info('Main Redis connected successfully');
     this.redisClient.on('error', (err: any) => {
       log.error(`Redis redisClient Error ${err}`);
-      return false;
     });
-    return true;
-  };
+  }
 
-  decrement = async (key: string, decrementBy: number = 1): Promise<boolean> => {
+  async decrement(key: string, decrementBy: number = 1): Promise<boolean> {
     log.info(`Decrementing cache value by ${decrementBy} => Key: ${key}`);
     log.info('checking if the key exists');
     // could use get service also here
@@ -50,9 +48,9 @@ export class RedisCacheService implements ICacheService {
       log.error(`Error in decrement value ${parseError(error)}`);
     }
     return false;
-  };
+  }
 
-  delete = async (key: string): Promise<boolean> => {
+  async delete(key: string): Promise<boolean> {
     log.info(`Deleting cahce value => Key: ${key}`);
     try {
       const result = await this.redisClient.del(key);
@@ -62,9 +60,9 @@ export class RedisCacheService implements ICacheService {
       log.error(`Error in deleting key ${key} - ${parseError(error)}`);
       return false;
     }
-  };
+  }
 
-  expire = async (key: string, expiryTime: number): Promise<boolean> => {
+  async expire(key: string, expiryTime: number): Promise<boolean> {
     try {
       const result = await this.redisClient.expire(key, expiryTime);
       if (result) return true;
@@ -73,9 +71,9 @@ export class RedisCacheService implements ICacheService {
       log.error(parseError(error));
       return false;
     }
-  };
+  }
 
-  get = async (key: string): Promise<string> => {
+  async get(key: string): Promise<string> {
     try {
       const result = await this.redisClient.get(key) || '';
       return result;
@@ -83,9 +81,9 @@ export class RedisCacheService implements ICacheService {
       log.error(`Error getting value for key ${key} - ${parseError(error)}`);
     }
     return '';
-  };
+  }
 
-  increment = async (key: string, incrementBy: number = 1): Promise<boolean> => {
+  async increment(key: string, incrementBy: number = 1): Promise<boolean> {
     log.info(`Inrementing cache value by ${incrementBy} => Key: ${key}`);
     log.info('checking if the key exists');
     try {
@@ -105,9 +103,9 @@ export class RedisCacheService implements ICacheService {
       log.error(`Error in increment value - ${parseError(error)}`);
       return false;
     }
-  };
+  }
 
-  set = async (key: string, value: string, hideValueInLogs: boolean = false): Promise<boolean> => {
+  async set(key: string, value: string, hideValueInLogs: boolean = false): Promise<boolean> {
     if (!hideValueInLogs) {
       log.info(`Setting cache value => Key: ${key} Value: ${value}`);
     } else {
@@ -120,5 +118,5 @@ export class RedisCacheService implements ICacheService {
       log.error(`Error setting value $${value} for key ${key} - ${parseError(error)}`);
       return false;
     }
-  };
+  }
 }

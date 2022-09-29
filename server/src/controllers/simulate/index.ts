@@ -21,7 +21,6 @@ export const simulateApi = async (req: Request, res: Response, next: NextFunctio
     }
     return next();
   } catch (error) {
-    console.log(error);
     return res.status(500).send({
       code: 500,
       message: 'Wrong transaction type sent in request',

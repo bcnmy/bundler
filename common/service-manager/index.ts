@@ -1,8 +1,9 @@
 /* eslint-disable no-await-in-loop */
 import { config } from '../../config';
+import { EVMAccount } from '../../relayer/src/services/account';
 import { AAConsumer, SCWConsumer } from '../../relayer/src/services/consumer';
 import { EVMNonceManager } from '../../relayer/src/services/nonce-manager';
-import { EVMRelayerManager } from '../../relayer/src/services/relayer-manager';
+import { EVMRelayerManager, IRelayerManager } from '../../relayer/src/services/relayer-manager';
 import { EVMTransactionListener } from '../../relayer/src/services/transaction-listener';
 import { EVMTransactionService } from '../../relayer/src/services/transaction-service';
 import { FeeOption } from '../../server/src/services';
@@ -42,9 +43,13 @@ const simulatonServiceMap: {
 
 const cacheService = RedisCacheService.getInstance();
 
+const EVMRelayerManagers: Array<IRelayerManager<EVMAccount>> = [];
+
 const { supportedNetworks, supportedTransactionType } = config;
 
 (async () => {
+  await cacheService.connect();
+
   const transactionDao = new TransactionDAO();
   for (const chainId of supportedNetworks) {
     routeTransactionToRelayerMap[chainId] = {};
@@ -100,7 +105,6 @@ const { supportedNetworks, supportedTransactionType } = config;
       },
     });
 
-    const relayerManagers = [];
     for (const relayerManager of config.relayerManagers) {
       const relayerMangerInstance = new EVMRelayerManager({
         networkService,
@@ -118,11 +122,14 @@ const { supportedNetworks, supportedTransactionType } = config;
           newRelayerInstanceCount: relayerManager.newRelayerInstanceCount[chainId],
           fundingBalanceThreshold: relayerManager.fundingBalanceThreshold[chainId],
           fundingRelayerAmount: relayerManager.fundingRelayerAmount[chainId],
-          ownerAccountDetails: relayerManager.ownerAccountDetails[chainId],
+          ownerAccountDetails: new EVMAccount(
+            relayerManager.ownerAccountDetails[chainId].publicKey,
+            relayerManager.ownerAccountDetails[chainId].privateKey,
+          ),
           gasLimitMap: relayerManager.gasLimitMap,
         },
       });
-      relayerManagers.push(relayerMangerInstance);
+      EVMRelayerManagers.push(relayerMangerInstance);
     }
 
     const tokenService = new CMCTokenPriceManager(cacheService, {
@@ -131,7 +138,7 @@ const { supportedNetworks, supportedTransactionType } = config;
       updateFrequencyInSeconds: config.tokenPrice.updateFrequencyInSeconds,
       symbolMapByChainId: config.tokenPrice.symbolMapByChainId,
     });
-    tokenService.schedule();
+    // tokenService.schedule();
 
     const feeOptionService = new FeeOption(gasPriceService, cacheService, {
       chainId,
@@ -143,7 +150,7 @@ const { supportedNetworks, supportedTransactionType } = config;
       const entryPointAbi = entryPointData.abi;
       const entryPointAddress = entryPointData.address[chainId];
 
-      const aaRelayerManager = relayerManagers.find(
+      const aaRelayerManager = EVMRelayerManagers.find(
         (relayerManager) => relayerManager.name === relayerManagerTransactionTypeNameMap[type],
       );
       if (!aaRelayerManager) {
@@ -183,7 +190,7 @@ const { supportedNetworks, supportedTransactionType } = config;
         });
         await scwQueue.connect();
 
-        const scwRelayerManager = relayerManagers.find(
+        const scwRelayerManager = EVMRelayerManagers.find(
           (relayerManager) => relayerManager.name === relayerManagerTransactionTypeNameMap[type],
         );
         if (!scwRelayerManager) {
@@ -213,10 +220,17 @@ const { supportedNetworks, supportedTransactionType } = config;
       }
     }
   }
+  for (const relayerMangerInstance of EVMRelayerManagers) {
+    // create minimum required relayers
+    const addresses = await relayerMangerInstance.createRelayers();
+    // fund relayers with the required funding amount
+    await relayerMangerInstance.fundRelayers(addresses);
+  }
 })();
 
 export {
   routeTransactionToRelayerMap,
   feeOptionMap,
   simulatonServiceMap,
+  EVMRelayerManagers,
 };

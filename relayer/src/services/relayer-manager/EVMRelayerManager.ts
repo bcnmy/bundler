@@ -55,12 +55,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
 
   fundingRelayerAmount: number;
 
-  ownerAccountDetails: {
-    [key: number]: {
-      publicKey: string,
-      privateKey: string,
-    }
-  };
+  ownerAccountDetails: EVMAccount;
 
   gasLimitMap: {
     [key: number]: number
@@ -117,7 +112,6 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
   addActiveRelayer(address: string): void {
     if (this.processingTransactionRelayerDataMap[address]) {
       this.activeRelayerData.push(this.processingTransactionRelayerDataMap[address]);
-      console.log(`Relayer ${address} added to active relayer map`);
     }
   }
 
@@ -130,13 +124,14 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
       + this.activeRelayerData.length;
   }
 
-  async createRelayers(numberOfRelayers: number): Promise<void> {
+  // return list of created list of relayers address
+  async createRelayers(numberOfRelayers: number = this.minRelayerCount): Promise<string[]> {
     log.info(`Waiting for lock to create relayers on ${this.chainId}`);
     const release = await createRelayerMutex.acquire();
     log.info(`Received lock to create relayers on ${this.chainId}`);
-    const relayersMasterSeed = this.ownerAccountDetails[this.chainId].privateKey;
+    const relayersMasterSeed = this.ownerAccountDetails.getPublicKey();
     const relayers: EVMAccount[] = [];
-
+    const relayersAddressList: string[] = [];
     try {
       const index = this.getRelayersCount();
       for (let relayerIndex = index; relayerIndex <= index + numberOfRelayers; relayerIndex += 1) {
@@ -163,7 +158,8 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
       log.info(`Relayers created on network id ${this.chainId}`);
       relayers.map(async (relayer) => {
         const relayerAddress = relayer.getPublicKey().toLowerCase();
-        const balance = await (await this.networkService.getBalance(relayerAddress)).toNumber();
+        relayersAddressList.push(relayerAddress);
+        const balance = (await this.networkService.getBalance(relayerAddress))?.toNumber();
         const nonce = await this.nonceManager.getNonce(relayerAddress);
         this.activeRelayerData.push({
           address: relayer.getPublicKey(),
@@ -178,6 +174,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
 
     release();
     log.info(`Lock released after creating relayers on ${this.chainId}`);
+    return relayersAddressList;
   }
 
   hasBalanceBelowThreshold(address: string): boolean {
@@ -189,41 +186,41 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
     return false;
   }
 
-  async fundRelayers(ownerAccount: EVMAccount, addressList: string[]): Promise<any> {
+  async fundRelayers(addressList: string[]): Promise<any> {
     log.info(`Waiting for lock to fund relayers on ${this.chainId}`);
     for (const address of addressList) {
+      const release = await fundRelayerMutex.acquire();
       if (!this.hasBalanceBelowThreshold(address)) {
         log.info(`Has sufficient funds in relayer ${address} on network id ${this.chainId}`);
-        return;
+      } else {
+        // eslint-disable-next-line no-await-in-loop
+        log.info(`Funding relayer ${address} on network id ${this.chainId}`);
+        let gasLimitIndex = 0;
+        // different gas limit for arbitrum
+        if ([42161, 421611].includes(this.chainId)) gasLimitIndex = 1;
+
+        const gasLimit = this.gasLimitMap[gasLimitIndex];
+
+        const fundingAmount = this.fundingRelayerAmount;
+
+        const ownerAccountNonce = await this.nonceManager.getNonce(
+          this.ownerAccountDetails.getPublicKey(),
+        );
+        const gasPrice = await this.gasPriceService.getGasPrice(GasPriceType.DEFAULT);
+        const rawTx: any = {
+          from: this.ownerAccountDetails.getPublicKey(),
+          gasPrice: ethers.BigNumber.from(gasPrice).toHexString(),
+          gasLimit: ethers.BigNumber.from(
+            gasLimit.toString(),
+          ).toHexString(),
+          to: address,
+          value: ethers.utils.parseEther(fundingAmount.toString()).toHexString(),
+          nonce: ethers.BigNumber.from(ownerAccountNonce.toString()).toHexString(),
+          chainId: this.chainId,
+        };
+        log.info(`Funding relayer ${address} on network id ${this.chainId} with raw tx ${JSON.stringify(rawTx)}`);
+        await this.transactionService.sendTransaction(rawTx, this.ownerAccountDetails);
       }
-      // eslint-disable-next-line no-await-in-loop
-      const release = await fundRelayerMutex.acquire();
-      log.info(`Funding relayer ${address} on network id ${this.chainId}`);
-      let gasLimitIndex = 0;
-      // different gas limit for arbitrum
-      if ([42161, 421611].includes(this.chainId)) gasLimitIndex = 1;
-
-      const gasLimit = this.gasLimitMap[gasLimitIndex];
-
-      const fundingAmount = this.fundingRelayerAmount;
-
-      const ownerAccountNonce = await this.nonceManager.getNonce(
-        ownerAccount.getPublicKey(),
-      );
-      const gasPrice = await this.gasPriceService.getGasPrice(GasPriceType.DEFAULT);
-      const rawTx: any = {
-        from: ownerAccount.getPublicKey(),
-        gasPrice: ethers.BigNumber.from(gasPrice).toHexString(),
-        gasLimit: ethers.BigNumber.from(
-          gasLimit.toString(),
-        ).toHexString(),
-        to: address,
-        value: ethers.utils.parseEther(fundingAmount.toString()).toHexString(),
-        nonce: ethers.BigNumber.from(ownerAccountNonce.toString()).toHexString(),
-        chainId: this.chainId,
-      };
-      log.info(`Funding relayer ${address} on network id ${this.chainId} with raw tx ${JSON.stringify(rawTx)}`);
-      await this.transactionService.sendTransaction(rawTx, ownerAccount);
       release();
     }
   }

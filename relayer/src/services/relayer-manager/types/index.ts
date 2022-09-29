@@ -23,12 +23,7 @@ export type EVMRelayerManagerServiceParamsType = {
     gasLimitMap: {
       [key: number]: number
     },
-    ownerAccountDetails: {
-      [key: number]: {
-        publicKey: string,
-        privateKey: string,
-      }
-    }
+    ownerAccountDetails: EVMAccount,
   },
 };
 
