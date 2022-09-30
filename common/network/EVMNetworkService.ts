@@ -253,7 +253,7 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
     return transactionReceipt;
   }
 
-  async getNonce(address: string, pendingNonce?: boolean): Promise<number> {
+  async getNonce(address: string, pendingNonce = true): Promise<number> {
     const nonce = await this.useProvider(RpcMethod.getTransactionCount, {
       pendingNonce,
       address,
@@ -293,8 +293,8 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
     const iFace = new ethers.utils.Interface(contractAbi);
     const contractTopicEventEmitter = new EventEmitter();
 
-    this.ethersProvider.on(filter, async (log: any) => {
-      const parsedLog = iFace.parseLog(log);
+    this.ethersProvider.on(filter, async (contractLog) => {
+      const parsedLog = iFace.parseLog(contractLog);
       contractTopicEventEmitter.emit(contractEventName, parsedLog);
     });
     return contractTopicEventEmitter;
