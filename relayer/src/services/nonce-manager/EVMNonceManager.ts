@@ -38,7 +38,7 @@ export class EVMNonceManager implements INonceManager {
   }
 
   private async getAndSetNonceFromNetwork(address: string): Promise<number> {
-    const nonceFromNetwork = await this.networkService.getNonce(address);
+    const nonceFromNetwork = await this.networkService.getNonce(address, true);
     await this.cacheService.set(this.getAccountNonceKey(address), nonceFromNetwork.toString());
     return nonceFromNetwork;
   }
