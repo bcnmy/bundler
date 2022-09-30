@@ -1,3 +1,4 @@
+import { ethers } from 'ethers';
 import { IGasPrice } from '../../../../../common/gas-price';
 import { INetworkService } from '../../../../../common/network';
 import { EVMRawTransactionType } from '../../../../../common/types';
@@ -15,7 +16,7 @@ export interface IRelayerManager<AccountType> {
   inactiveRelayerCountThreshold: number;
   pendingTransactionCountThreshold: number;
   newRelayerInstanceCount: number;
-  fundingBalanceThreshold: number;
+  fundingBalanceThreshold: ethers.BigNumber;
   fundingRelayerAmount: number;
   ownerAccountDetails: EVMAccount;
   activeRelayerData: Array<EVMRelayerDataType>;

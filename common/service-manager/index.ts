@@ -11,7 +11,7 @@ import { EVMTransactionListener } from '../../relayer/src/services/transaction-l
 import { EVMTransactionService } from '../../relayer/src/services/transaction-service';
 import { FeeOption } from '../../server/src/services';
 import { RedisCacheService } from '../cache';
-import { TransactionDAO } from '../db';
+import { Mongo, TransactionDAO } from '../db';
 import { GasPriceManager } from '../gas-price';
 import { IQueue } from '../interface';
 import { EVMNetworkService } from '../network';
@@ -51,6 +51,7 @@ const simulatonServiceMap: {
   };
 } = {};
 
+const dbInstance = Mongo.getInstance();
 const cacheService = RedisCacheService.getInstance();
 
 const { supportedNetworks, supportedTransactionType } = config;
@@ -62,6 +63,7 @@ const EVMRelayerManagerMap: {
 } = {};
 
 (async () => {
+  await dbInstance.connect();
   await cacheService.connect();
 
   const transactionDao = new TransactionDAO();
@@ -251,6 +253,7 @@ const EVMRelayerManagerMap: {
       const relayerManager = EVMRelayerManagerMap[relayerManagerName][chainId];
       if (relayerManager) {
         const addressList = await relayerManager.createRelayers();
+        console.log('Relayer address list length', addressList.length, relayerManager.minRelayerCount);
         await relayerManager.fundRelayers(addressList);
       }
     }

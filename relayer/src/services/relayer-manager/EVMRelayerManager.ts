@@ -49,7 +49,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
 
   newRelayerInstanceCount: number;
 
-  fundingBalanceThreshold: number;
+  fundingBalanceThreshold: ethers.BigNumber;
 
   fundingRelayerAmount: number;
 
@@ -135,7 +135,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
     const relayersAddressList: string[] = [];
     try {
       const index = this.getRelayersCount();
-      for (let relayerIndex = index; relayerIndex <= index + numberOfRelayers; relayerIndex += 1) {
+      for (let relayerIndex = index; relayerIndex < index + numberOfRelayers; relayerIndex += 1) {
         const seedInBuffer = Buffer.from(relayersMasterSeed, 'utf-8');
         const ethRoot = hdkey.fromMasterSeed(seedInBuffer);
 
@@ -156,12 +156,10 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
         relayers.push(relayer);
       }
 
-      log.info(`Relayers created on network id ${this.chainId}`);
       for (const relayer of relayers) {
         const relayerAddress = relayer.getPublicKey().toLowerCase();
         try {
-          const balanceFromNetwork = await this.networkService.getBalance(relayerAddress);
-          const balance = balanceFromNetwork.toNumber();
+          const balance = await this.networkService.getBalance(relayerAddress);
           const nonce = await this.nonceManager.getNonce(relayerAddress);
           this.activeRelayerData.push({
             address: relayer.getPublicKey(),
@@ -171,7 +169,8 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
           });
           relayersAddressList.push(relayerAddress);
         } catch (error) {
-          log.info(`Error while getting balance and nonce for relayer ${relayerAddress}`);
+          console.log(error);
+          log.info(`Error while getting balance and nonce for relayer ${relayerAddress} on chain id ${this.chainId}`);
         }
       }
     } catch (error) {
@@ -185,9 +184,12 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
 
   hasBalanceBelowThreshold(address: string): boolean {
     const relayerData = this.activeRelayerData.find((relayer) => relayer.address === address);
-    const relayerBalance = relayerData?.balance || 0;
-    if (relayerBalance < this.fundingBalanceThreshold) {
-      return true;
+    if (relayerData) {
+      const relayerBalance = relayerData.balance;
+      log.info(`Relayer ${address} balance is ${relayerBalance} on chain id ${this.chainId}`);
+      if (relayerBalance.lte(this.fundingBalanceThreshold)) {
+        return true;
+      }
     }
     return false;
   }

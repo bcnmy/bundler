@@ -8,7 +8,7 @@ export interface INonceManager {
   networkService: INetworkService<IEVMAccount<EVMRawTransactionType>, EVMRawTransactionType>;
   cacheService: ICacheService;
 
-  getNonce(address: string): Promise<number>;
+  getNonce(address: string, pendingCount?: boolean): Promise<number>;
   markUsed(address: string, nonce: number): Promise<void>;
   incrementNonce(address: string): Promise<boolean>;
 }

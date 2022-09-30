@@ -21,10 +21,10 @@ export class EVMNonceManager implements INonceManager {
     this.cacheService = cacheService;
   }
 
-  async getNonce(address: string): Promise<number> {
+  async getNonce(address: string, pendingCount = true): Promise<number> {
     const nonce = await this.cacheService.get(this.getAccountNonceKey(address));
     if (!nonce) {
-      return this.getAndSetNonceFromNetwork(address);
+      return this.getAndSetNonceFromNetwork(address, pendingCount);
     }
     return parseInt(nonce, 10);
   }
@@ -37,8 +37,8 @@ export class EVMNonceManager implements INonceManager {
     return this.cacheService.increment(this.getAccountNonceKey(address), 1);
   }
 
-  private async getAndSetNonceFromNetwork(address: string): Promise<number> {
-    const nonceFromNetwork = await this.networkService.getNonce(address, true);
+  private async getAndSetNonceFromNetwork(address: string, pendingCount: boolean): Promise<number> {
+    const nonceFromNetwork = await this.networkService.getNonce(address, pendingCount);
     await this.cacheService.set(this.getAccountNonceKey(address), nonceFromNetwork.toString());
     return nonceFromNetwork;
   }

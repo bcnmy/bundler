@@ -1,3 +1,4 @@
+import { ethers } from 'ethers';
 import { TransactionType } from '../../common/types';
 import { SymbolMapByChainIdType } from '../types';
 
@@ -65,7 +66,7 @@ export type ConfigType = {
       [key: number]: number
     },
     fundingBalanceThreshold: {
-      [key: number]: number
+      [key: number]: ethers.BigNumber,
     }
     newRelayerInstanceCount: {
       [key: number]: number

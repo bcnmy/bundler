@@ -92,6 +92,7 @@ ITransactionService<IEVMAccount<EVMRawTransactionType>> {
     executeTransactionParams: ExecuteTransactionParamsType,
   ): Promise<ethers.providers.TransactionResponse> {
     const { rawTransaction, account } = executeTransactionParams;
+    // TODO: handle and return error response
     const transactionExecutionResponse = await this.networkService.sendTransaction(
       rawTransaction,
       account,

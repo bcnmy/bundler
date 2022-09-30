@@ -1,7 +1,7 @@
+import { ethers } from 'ethers';
 import _ from 'lodash';
-
-import { IConfig, ConfigType } from './interface/IConfig';
 import { TransactionType } from '../common/types';
+import { ConfigType, IConfig } from './interface/IConfig';
 
 class Config implements IConfig {
   config: ConfigType;
@@ -26,8 +26,8 @@ const data: ConfigType = {
     channel: '1BQKZLQ0Y',
   },
   dataSources: {
-    mongoUrl: '',
-    redisUrl: '',
+    mongoUrl: 'mongodb://localhost:27017',
+    redisUrl: 'redis://localhost:6379',
   },
   socketService: {
     wssUrl: '',
@@ -36,7 +36,7 @@ const data: ConfigType = {
     apiKey: '',
   },
   supportedNetworks: [5, 80001],
-  EIP1559SupportedNetworks: [80001],
+  EIP1559SupportedNetworks: [],
   supportedTransactionType: {
     5: [TransactionType.AA, TransactionType.SCW],
     137: [TransactionType.AA, TransactionType.SCW],
@@ -95,14 +95,14 @@ const data: ConfigType = {
         80001: 15,
       },
       fundingRelayerAmount: {
-        5: 0.5,
+        5: 0.03,
         137: 0.5,
         80001: 0.5,
       },
       fundingBalanceThreshold: {
-        5: 0.3,
-        137: 0.3,
-        80001: 0.3,
+        5: ethers.utils.parseEther('0.01'),
+        137: ethers.utils.parseEther('0.3'),
+        80001: ethers.utils.parseEther('0.3'),
       },
       newRelayerInstanceCount: {
         5: 1,

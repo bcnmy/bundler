@@ -1,3 +1,4 @@
+import { ethers } from 'ethers';
 import { IGasPrice } from '../../../../../common/gas-price';
 import { INetworkService } from '../../../../../common/network';
 import { EVMRawTransactionType } from '../../../../../common/types';
@@ -19,7 +20,7 @@ export type EVMRelayerManagerServiceParamsType = {
     inactiveRelayerCountThreshold: number;
     pendingTransactionCountThreshold: number;
     newRelayerInstanceCount: number;
-    fundingBalanceThreshold: number;
+    fundingBalanceThreshold: ethers.BigNumber;
     fundingRelayerAmount: number,
     gasLimitMap: {
       [key: number]: number
@@ -32,5 +33,5 @@ export type EVMRelayerDataType = {
   address: string;
   nonce: number;
   pendingCount: number;
-  balance: number;
+  balance: ethers.BigNumber;
 };
