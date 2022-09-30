@@ -89,9 +89,12 @@ const EVMRelayerManagerMap: {
     const transactionQueue = new TransactionHandlerQueue({
       chainId,
     });
+    await transactionQueue.connect();
+
     const retryTransactionQueue = new RetryTransactionHandlerQueue({
       chainId,
     });
+    await retryTransactionQueue.connect();
 
     const nonceManager = new EVMNonceManager({
       options: {
