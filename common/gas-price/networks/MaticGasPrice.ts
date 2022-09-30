@@ -1,3 +1,4 @@
+import { schedule } from 'node-cron';
 import { config } from '../../../config';
 import { EVMAccount } from '../../../relayer/src/services/account';
 import { ICacheService } from '../../cache';
@@ -230,7 +231,9 @@ export class MaticGasPrice extends AbstractGasPrice implements IScheduler {
     );
   }
 
-  async schedule() {
-    setInterval(this.setup, this.updateFrequencyInSeconds * 1000);
+  schedule() {
+    schedule(`*/${this.updateFrequencyInSeconds} * * * * *`, () => {
+      this.setup();
+    });
   }
 }

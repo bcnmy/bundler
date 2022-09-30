@@ -1,3 +1,4 @@
+import { schedule } from 'node-cron';
 import { config } from '../../../config';
 import { EVMAccount } from '../../../relayer/src/services/account';
 import { ICacheService } from '../../cache';
@@ -21,11 +22,9 @@ export class GoerliGasPrice extends AbstractGasPrice implements IScheduler {
     this.updateFrequencyInSeconds = config.gasPrice[this.chainId].updateFrequencyInSeconds || 60;
   }
 
-  async setup() {
-    console.log(this.chainId);
-  }
-
   schedule() {
-    setInterval(this.setup, this.updateFrequencyInSeconds * 1000);
+    schedule(`*/${this.updateFrequencyInSeconds} * * * * *`, () => {
+      this.setup();
+    });
   }
 }

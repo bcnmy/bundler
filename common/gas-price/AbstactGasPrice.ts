@@ -90,7 +90,7 @@ export class AbstractGasPrice implements IGasPrice {
 
       log.info(`Setting gas price for network id ${this.chainId} as ${gasPrice}`);
     } catch (error) {
-      log.info(`Error in setting gas price for network id ${this.chainId} - ${JSON.stringify(error)}`);
+      log.info(`Error in setting gas price for network id ${this.chainId} - ${error}`);
     }
   }
 }
