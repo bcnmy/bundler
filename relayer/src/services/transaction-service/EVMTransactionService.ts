@@ -1,4 +1,4 @@
-import { BigNumber, ethers } from 'ethers';
+import { ethers } from 'ethers';
 import { ITransactionService } from './interface/ITransactionService';
 import { ITransactionListener } from '../transaction-listener';
 import {
@@ -12,7 +12,6 @@ import { INonceManager } from '../nonce-manager';
 import { INetworkService } from '../../../../common/network';
 import { IEVMAccount } from '../account';
 import { EVMRawTransactionType } from '../../../../common/types';
-import { GasPriceType } from '../../../../common/gas-price/types';
 import { IGasPrice } from '../../../../common/gas-price';
 import { NotifyTransactionListenerParamsType } from '../transaction-listener/types';
 
@@ -37,18 +36,6 @@ ITransactionService<IEVMAccount<EVMRawTransactionType>> {
     this.transactionListener = transactionListener;
     this.nonceManager = nonceManager;
     this.gasPriceService = gasPriceService;
-  }
-
-  private async getGasPrice(speed: GasPriceType): Promise<BigNumber> {
-    // Import from service manager class
-    const gasPrice = BigNumber.from(await this.gasPriceService.getGasPrice(speed));
-    return gasPrice;
-  }
-
-  private async getNonce(address: string): Promise<number> {
-    // get nonce via nonceManager instance
-    const nonce = await this.nonceManager.getNonce(address);
-    return nonce;
   }
 
   private async incrementNonce(address: string): Promise<void> {
@@ -76,18 +63,29 @@ ITransactionService<IEVMAccount<EVMRawTransactionType>> {
       speed,
       account,
     } = createTransactionParams;
-    const gasPrice = await this.getGasPrice(speed);
-    const nonce = await this.getNonce(account.getPublicKey());
-    return {
+    const nonce = await this.nonceManager.getNonce(account.getPublicKey());
+    const response = {
       from,
       to,
       value,
-      gasPrice,
       gasLimit,
       data,
       chainId: this.chainId,
       nonce,
     };
+    const gasPrice = await this.gasPriceService.getGasPrice(speed);
+    if (typeof gasPrice !== 'string') {
+      const {
+        maxPriorityFeePerGas,
+        maxFeePerGas,
+      } = gasPrice;
+      return {
+        ...response,
+        maxFeePerGas: ethers.utils.hexlify(Number(maxFeePerGas)),
+        maxPriorityFeePerGas: ethers.utils.hexlify(Number(maxPriorityFeePerGas)),
+      };
+    }
+    return { ...response, gasPrice: ethers.utils.hexlify(Number(gasPrice)) };
   }
 
   private async executeTransaction(
@@ -112,10 +110,9 @@ ITransactionService<IEVMAccount<EVMRawTransactionType>> {
     // tell to transaction listener
     // save data in db
     const {
-      to, value, data, gasLimitFromClient,
-      gasLimitFromSimulation, speed, transactionId, userAddress,
+      to, value, data, gasLimit,
+      speed, transactionId, userAddress,
     } = transactionData;
-    const gasLimit = gasLimitFromClient || gasLimitFromSimulation;
     const rawTransaction = await this.createTransaction({
       from: account.getPublicKey(),
       to,
@@ -129,10 +126,11 @@ ITransactionService<IEVMAccount<EVMRawTransactionType>> {
       rawTransaction,
       account,
     });
+    console.log('transactionExecutionResponse', transactionExecutionResponse);
     await this.incrementNonce(account.getPublicKey());
     await this.notifyTransactionListener({
       transactionExecutionResponse,
-      transactionId,
+      transactionId: transactionId as string,
       relayerAddress: account.getPublicKey(),
       userAddress,
     });

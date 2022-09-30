@@ -1,6 +1,6 @@
 import { EVMAccount } from '../../../relayer/src/services/account/EVMAccount';
 import { INetworkService } from '../../network';
-import { EVMRawTransactionType } from '../../types';
+import { EVMRawTransactionType, NetworkBasedGasPriceType } from '../../types';
 import { GasPriceType } from '../types';
 
 export interface IGasPrice {
@@ -8,7 +8,7 @@ export interface IGasPrice {
   networkService?: INetworkService<EVMAccount, EVMRawTransactionType>;
 
   setGasPrice(gasType: GasPriceType, price: string): Promise<void>
-  getGasPrice(gasType: GasPriceType): Promise<string>
+  getGasPrice(gasType?: GasPriceType): Promise<NetworkBasedGasPriceType>
 
   setMaxFeeGasPrice(gasType: GasPriceType, price: string): Promise<void>
   getMaxFeeGasPrice(gasType: GasPriceType): Promise<string>

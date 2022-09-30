@@ -36,6 +36,7 @@ const data: ConfigType = {
     apiKey: '',
   },
   supportedNetworks: [5, 80001],
+  EIP1559SupportedNetworks: [80001],
   supportedTransactionType: {
     5: [TransactionType.AA, TransactionType.SCW],
     137: [TransactionType.AA, TransactionType.SCW],
@@ -109,16 +110,16 @@ const data: ConfigType = {
       },
       ownerAccountDetails: {
         5: {
-          publicKey: '0xC1D3206324D806b6586cf15324178f8E8781A293',
-          privateKey: '4d17e2c379e7285cea9d44ac6059435e381485014c8a387c30bac78f957efa01',
+          publicKey: '0x040a9cbC4453B0eeaE12f3210117B422B890C1ED',
+          privateKey: 'd952fa86f1e2fed30fb3a6da6e5c24d7deb65b6bb46da3ece5f56fd39e64bbd0',
         },
         137: {
-          publicKey: '0xC1D3206324D806b6586cf15324178f8E8781A293',
-          privateKey: '4d17e2c379e7285cea9d44ac6059435e381485014c8a387c30bac78f957efa01',
+          publicKey: '0x040a9cbC4453B0eeaE12f3210117B422B890C1ED',
+          privateKey: 'd952fa86f1e2fed30fb3a6da6e5c24d7deb65b6bb46da3ece5f56fd39e64bbd0',
         },
         80001: {
-          publicKey: '0xC1D3206324D806b6586cf15324178f8E8781A293',
-          privateKey: '4d17e2c379e7285cea9d44ac6059435e381485014c8a387c30bac78f957efa01',
+          publicKey: '0x040a9cbC4453B0eeaE12f3210117B422B890C1ED',
+          privateKey: 'd952fa86f1e2fed30fb3a6da6e5c24d7deb65b6bb46da3ece5f56fd39e64bbd0',
         },
       },
     },

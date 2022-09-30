@@ -1,4 +1,3 @@
-import { BigNumber } from 'ethers';
 import { ITransactionDAO } from '../../../../../common/db';
 import { IGasPrice } from '../../../../../common/gas-price';
 import { GasPriceType } from '../../../../../common/gas-price/types';
@@ -30,11 +29,10 @@ export type TransactionDataType = {
   to: string;
   value: string;
   data: string;
-  gasLimitFromClient ?: number;
-  gasLimitFromSimulation: number;
-  speed: GasPriceType;
+  gasLimit: string; // value will be in hex
+  speed?: GasPriceType;
   userAddress?: string,
-  transactionId: string;
+  transactionId?: string;
 };
 
 export type CreateRawTransactionParamsType = {
@@ -42,21 +40,12 @@ export type CreateRawTransactionParamsType = {
   to: string;
   value: string;
   data: string;
-  gasLimit: number;
-  speed: GasPriceType;
+  gasLimit: string;
+  speed?: GasPriceType;
   account: IEVMAccount<EVMRawTransactionType>;
 };
 
-export type CreateRawTransactionReturnType = {
-  from: string,
-  to: string;
-  value: string;
-  gasPrice: BigNumber;
-  gasLimit: number;
-  data: string;
-  chainId: number;
-  nonce: number;
-};
+export type CreateRawTransactionReturnType = EVMRawTransactionType;
 
 export type ExecuteTransactionParamsType = {
   rawTransaction: EVMRawTransactionType,

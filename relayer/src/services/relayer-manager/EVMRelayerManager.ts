@@ -98,7 +98,9 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
   }
 
   getActiveRelayer(): EVMAccount | null {
-    this.activeRelayerData = SortEVMRelayerByLeastPendingCount.performAlgorithm(this.activeRelayerData);
+    this.activeRelayerData = SortEVMRelayerByLeastPendingCount.performAlgorithm(
+      this.activeRelayerData,
+    );
     const activeRelayer = this.activeRelayerData.pop();
     if (activeRelayer) {
       this.processingTransactionRelayerDataMap[activeRelayer.address] = activeRelayer;
@@ -211,8 +213,9 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
           this.ownerAccountDetails.getPublicKey(),
         );
         const gasPrice = await this.gasPriceService.getGasPrice(GasPriceType.DEFAULT);
-        const rawTx: any = {
+        const rawTx = {
           from: this.ownerAccountDetails.getPublicKey(),
+          data: '0x',
           gasPrice: ethers.BigNumber.from(gasPrice).toHexString(),
           gasLimit: ethers.BigNumber.from(
             gasLimit.toString(),
