@@ -7,7 +7,9 @@ import { EVMRawTransactionType } from '../types';
 import { ERC20_ABI } from '../constants';
 import { IERC20NetworkService, INetworkService, RpcMethod } from './interface';
 import { Type0TransactionGasPriceType, Type2TransactionGasPriceType } from './types';
+import { logger } from '../log-config';
 
+const log = logger(module);
 export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTransactionType>,
  IERC20NetworkService {
   chainId: number;
@@ -68,14 +70,7 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
             return await this.ethersProvider.getTransactionCount(params.address);
           // TODO: Check error type
           case RpcMethod.sendTransaction:
-            console.log(params.tx, 'in switch');
-            let r;
-            try {
-              r = await this.ethersProvider.sendTransaction(params.tx)
-            } catch (error) {
-              console.log(error);
-            }
-            return r;
+            return await this.ethersProvider.sendTransaction(params.tx);
           case RpcMethod.waitForTransaction:
             return await this.ethersProvider.waitForTransaction(params.transactionHash);
           default:
@@ -83,6 +78,7 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
         }
       } catch (error) {
         // TODO // Handle errors
+        log.info(error);
         for (;rpcUrlIndex < this.fallbackRpcUrls.length; rpcUrlIndex += 1) {
           this.ethersProvider = new ethers.providers.JsonRpcProvider(
             this.fallbackRpcUrls[rpcUrlIndex],
@@ -271,12 +267,12 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
   ): Promise<ethers.providers.TransactionResponse> {
     const rawTx: EVMRawTransactionType = rawTransactionData;
     rawTx.from = account.getPublicKey();
+    log.info(`raw transaction: ${JSON.stringify(rawTx)}`);
     const tx = await account.signTransaction(rawTx);
-    console.log('......rawTx', rawTx);
-    console.log('tx.......', tx);
     const receipt = await this.useProvider(RpcMethod.sendTransaction, {
       tx,
     });
+    log.info(`Receipt: ${JSON.stringify(receipt)}`);
     return receipt;
   }
 
