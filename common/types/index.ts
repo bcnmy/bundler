@@ -1,5 +1,3 @@
-import { BigNumber } from 'ethers';
-
 export enum TransactionType {
   AA = 'AA',
   SCW = 'SCW',
@@ -25,12 +23,17 @@ export type AccessListItem = {
   storageKeys: string[];
 };
 
+export type NetworkBasedGasPriceType = string | {
+  maxPriorityFeePerGas: string;
+  maxFeePerGas: string;
+};
+
 export type EVMRawTransactionType = {
   from: string;
-  gasPrice?: BigNumber;
-  maxFeePerGas?: BigNumber;
-  maxPriorityFeePerGas?: BigNumber;
-  gasLimit: number;
+  gasPrice?: string;
+  maxPriorityFeePerGas?: string;
+  maxFeePerGas?: string;
+  gasLimit: string;
   to: string;
   value: string;
   data: string;

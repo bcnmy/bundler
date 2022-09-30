@@ -70,19 +70,21 @@ const EVMRelayerManagerMap: {
     routeTransactionToRelayerMap[chainId] = {};
     simulatonServiceMap[chainId] = {};
 
-    const gasPriceManager = new GasPriceManager(cacheService, {
-      chainId,
-    });
-    const gasPriceService = gasPriceManager.setup();
-    if (gasPriceService) {
-      gasPriceService.schedule();
-    }
-
     const networkService = new EVMNetworkService({
       chainId,
       rpcUrl: config.chains.provider[chainId],
       fallbackRpcUrls: config.chains.fallbackUrls[chainId] || [],
     });
+
+    const gasPriceManager = new GasPriceManager(cacheService, networkService, {
+      chainId,
+      EIP1559SupportedNetworks: config.EIP1559SupportedNetworks,
+    });
+
+    const gasPriceService = gasPriceManager.setup();
+    if (gasPriceService) {
+      gasPriceService.schedule();
+    }
 
     const transactionQueue = new TransactionHandlerQueue({
       chainId,

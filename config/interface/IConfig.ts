@@ -21,6 +21,7 @@ export type ConfigType = {
     apiKey: string,
   },
   supportedNetworks: Array<number>,
+  EIP1559SupportedNetworks: Array<number>,
   supportedTransactionType: {
     [key: number]: Array<TransactionType>
   },

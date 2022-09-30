@@ -3,7 +3,7 @@ import { EVMAccount } from '../../relayer/src/services/account/EVMAccount';
 import { ICacheService } from '../cache';
 import { logger } from '../log-config';
 import { INetworkService } from '../network';
-import { EVMRawTransactionType } from '../types';
+import { EVMRawTransactionType, NetworkBasedGasPriceType } from '../types';
 import { IGasPrice } from './interface/IGasPrice';
 import { GasPriceType } from './types';
 
@@ -11,17 +11,23 @@ const log = logger(module);
 export class AbstractGasPrice implements IGasPrice {
   chainId: number;
 
-  network?: INetworkService<EVMAccount, EVMRawTransactionType> | undefined;
+  networkService: INetworkService<EVMAccount, EVMRawTransactionType> | undefined;
 
   cacheService: ICacheService;
 
+  EIP1559SupportedNetworks: Array<number>;
+
   constructor(
-    chainId: number,
     cacheService: ICacheService,
-    network?: INetworkService<EVMAccount, EVMRawTransactionType>,
+    networkService: INetworkService<EVMAccount, EVMRawTransactionType>,
+    options: {
+      chainId: number,
+      EIP1559SupportedNetworks: Array<number>
+    },
   ) {
-    this.chainId = chainId;
-    this.network = network;
+    this.chainId = options.chainId;
+    this.EIP1559SupportedNetworks = options.EIP1559SupportedNetworks;
+    this.networkService = networkService;
     this.cacheService = cacheService;
   }
 
@@ -35,8 +41,16 @@ export class AbstractGasPrice implements IGasPrice {
     await this.cacheService.set(this.getGasPriceKey(gasType), price);
   }
 
-  async getGasPrice(gasType: GasPriceType) {
-    const result = await this.cacheService.get(this.getGasPriceKey(gasType));
+  async getGasPrice(gasType = GasPriceType.DEFAULT): Promise<NetworkBasedGasPriceType> {
+    let result: NetworkBasedGasPriceType;
+    if (this.EIP1559SupportedNetworks.includes(this.chainId)) {
+      result = {
+        maxFeePerGas: await this.getMaxFeeGasPrice(gasType),
+        maxPriorityFeePerGas: await this.getMaxPriorityFeeGasPrice(gasType),
+      };
+    } else {
+      result = await this.cacheService.get(this.getGasPriceKey(gasType));
+    }
     return result;
   }
 
@@ -60,12 +74,12 @@ export class AbstractGasPrice implements IGasPrice {
 
   async setup(gP?: string) {
     try {
-      if (!this.network) {
+      if (!this.networkService) {
         throw new Error('network instance not available');
       }
       let gasPrice: string = gP || '';
       if (!gP) {
-        const gasPriceFromNetwork = (await this.network.getGasPrice()).gasPrice;
+        const gasPriceFromNetwork = (await this.networkService.getGasPrice()).gasPrice;
         if (gasPriceFromNetwork) {
           gasPrice = ethers.ethers.utils.isHexString(gasPriceFromNetwork)
             ? parseInt(gasPriceFromNetwork, 16).toString()

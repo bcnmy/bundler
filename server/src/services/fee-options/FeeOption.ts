@@ -49,10 +49,11 @@ export class FeeOption {
     try {
       const response: Array<FeeOptionResponseType> = [];
       const feeTokens = config.feeOption.supportedFeeTokens[this.chainId] || [];
-      const gasPriceInString: string = await this.gasPriceService.getGasPrice(
+      const gasPriceInString = await this.gasPriceService.getGasPrice(
         GasPriceType.DEFAULT,
       );
 
+      // TODO // Check for EIP 1559
       const gasPrice = Number(gasPriceInString);
 
       const networkPriceDataInString = await this.cacheService.get(

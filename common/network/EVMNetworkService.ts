@@ -68,13 +68,21 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
             return await this.ethersProvider.getTransactionCount(params.address);
           // TODO: Check error type
           case RpcMethod.sendTransaction:
-            return await this.ethersProvider.sendTransaction(params.tx);
+            console.log(params.tx, 'in switch');
+            let r;
+            try {
+              r = await this.ethersProvider.sendTransaction(params.tx)
+            } catch (error) {
+              console.log(error);
+            }
+            return r;
           case RpcMethod.waitForTransaction:
             return await this.ethersProvider.waitForTransaction(params.transactionHash);
           default:
             return null;
         }
       } catch (error) {
+        // TODO // Handle errors
         for (;rpcUrlIndex < this.fallbackRpcUrls.length; rpcUrlIndex += 1) {
           this.ethersProvider = new ethers.providers.JsonRpcProvider(
             this.fallbackRpcUrls[rpcUrlIndex],
@@ -264,6 +272,8 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
     const rawTx: EVMRawTransactionType = rawTransactionData;
     rawTx.from = account.getPublicKey();
     const tx = await account.signTransaction(rawTx);
+    console.log('......rawTx', rawTx);
+    console.log('tx.......', tx);
     const receipt = await this.useProvider(RpcMethod.sendTransaction, {
       tx,
     });
