@@ -14,7 +14,6 @@ import { INonceManager } from '../nonce-manager';
 import { ITransactionService } from '../transaction-service/interface/ITransactionService';
 import { IRelayerManager } from './interface/IRelayerManager';
 import { SortEVMRelayerByLeastPendingCount } from './strategy';
-import { StrategyManager } from './strategy/StrategyManager';
 import { EVMRelayerDataType, EVMRelayerManagerServiceParamsType } from './types';
 
 const log = logger(module);
