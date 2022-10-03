@@ -13,17 +13,16 @@ import { INetworkService } from '../../../../common/network';
 import { IEVMAccount } from '../account';
 import { EVMRawTransactionType } from '../../../../common/types';
 import { IGasPrice } from '../../../../common/gas-price';
-import { NotifyTransactionListenerParamsType } from '../transaction-listener/types';
 
 export class EVMTransactionService implements
-ITransactionService<IEVMAccount<EVMRawTransactionType>> {
+ITransactionService<IEVMAccount, EVMRawTransactionType> {
   chainId: number;
 
-  networkService: INetworkService<IEVMAccount<EVMRawTransactionType>, EVMRawTransactionType>;
+  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
 
   transactionListener: ITransactionListener;
 
-  nonceManager: INonceManager;
+  nonceManager: INonceManager<IEVMAccount, EVMRawTransactionType>;
 
   gasPriceService: IGasPrice;
 
@@ -36,18 +35,6 @@ ITransactionService<IEVMAccount<EVMRawTransactionType>> {
     this.transactionListener = transactionListener;
     this.nonceManager = nonceManager;
     this.gasPriceService = gasPriceService;
-  }
-
-  private async incrementNonce(address: string): Promise<void> {
-    // increment nonce via nonceManager instance
-    await this.nonceManager.incrementNonce(address);
-  }
-
-  private async notifyTransactionListener(
-    notifyTransactionListenerParams: NotifyTransactionListenerParamsType,
-  ): Promise<void> {
-    // call transaction listener
-    await this.transactionListener.notify(notifyTransactionListenerParams);
   }
 
   private async createTransaction(
@@ -96,13 +83,13 @@ ITransactionService<IEVMAccount<EVMRawTransactionType>> {
       rawTransaction,
       account,
     );
-    this.incrementNonce(account.getPublicKey());
+    await this.nonceManager.incrementNonce(account.getPublicKey());
     return transactionExecutionResponse;
   }
 
   async sendTransaction(
     transactionData: TransactionDataType,
-    account: IEVMAccount<EVMRawTransactionType>,
+    account: IEVMAccount,
   ): Promise<ethers.providers.TransactionResponse> {
     // create transaction
     // get gas price
@@ -127,8 +114,8 @@ ITransactionService<IEVMAccount<EVMRawTransactionType>> {
       account,
     });
     console.log('transactionExecutionResponse', transactionExecutionResponse);
-    await this.incrementNonce(account.getPublicKey());
-    await this.notifyTransactionListener({
+    await this.nonceManager.incrementNonce(account.getPublicKey());
+    await this.transactionListener.notify({
       transactionExecutionResponse,
       transactionId: transactionId as string,
       relayerAddress: account.getPublicKey(),

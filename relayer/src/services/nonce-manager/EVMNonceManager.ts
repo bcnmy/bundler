@@ -5,10 +5,10 @@ import { IEVMAccount } from '../account';
 import { INonceManager } from './interface/INonceManager';
 import { EVMNonceManagerParamsType } from './types';
 
-export class EVMNonceManager implements INonceManager {
+export class EVMNonceManager implements INonceManager<IEVMAccount, EVMRawTransactionType> {
   chainId: number;
 
-  networkService: INetworkService<IEVMAccount<EVMRawTransactionType>, EVMRawTransactionType>;
+  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
 
   cacheService: ICacheService;
 

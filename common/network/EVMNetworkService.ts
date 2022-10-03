@@ -245,7 +245,9 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
     return estimatedGas;
   }
 
-  async getTransactionReceipt(transactionHash: string): Promise<object> {
+  async getTransactionReceipt(
+    transactionHash: string,
+  ): Promise<ethers.providers.TransactionReceipt> {
     const transactionReceipt = await this.useProvider(
       RpcMethod.getTransactionReceipt,
       transactionHash,
@@ -298,6 +300,12 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
       contractTopicEventEmitter.emit(contractEventName, parsedLog);
     });
     return contractTopicEventEmitter;
+  }
+
+  async getDecimal(tokenAddress: string): Promise<number> {
+    const erc20Contract = this.getContract(JSON.stringify(ERC20_ABI), tokenAddress);
+    const decimal = await erc20Contract.decimal;
+    return decimal;
   }
 
   async sendRpcCall(method: string, params: Array<object>): Promise<object> {

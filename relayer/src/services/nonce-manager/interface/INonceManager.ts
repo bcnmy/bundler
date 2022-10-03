@@ -1,11 +1,9 @@
 import { ICacheService } from '../../../../../common/cache';
 import { INetworkService } from '../../../../../common/network';
-import { EVMRawTransactionType } from '../../../../../common/types';
-import { IEVMAccount } from '../../account';
 
-export interface INonceManager {
+export interface INonceManager<AccountType, RawTransactionType> {
   chainId: number;
-  networkService: INetworkService<IEVMAccount<EVMRawTransactionType>, EVMRawTransactionType>;
+  networkService: INetworkService<AccountType, RawTransactionType>;
   cacheService: ICacheService;
 
   getNonce(address: string): Promise<number>;
