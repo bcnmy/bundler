@@ -9,9 +9,9 @@ import { INonceManager } from '../../nonce-manager';
 import { ITransactionListener } from '../../transaction-listener';
 
 export type EVMTransactionServiceParamsType = {
-  networkService: INetworkService<IEVMAccount<EVMRawTransactionType>, EVMRawTransactionType>,
+  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
   transactionListener: ITransactionListener,
-  nonceManager: INonceManager,
+  nonceManager: INonceManager<IEVMAccount, EVMRawTransactionType>,
   gasPriceService: IGasPrice,
   transactionDao: ITransactionDAO,
   options: {
@@ -54,14 +54,14 @@ export type CreateRawTransactionParamsType = {
   data: string;
   gasLimit: string;
   speed?: GasPriceType;
-  account: IEVMAccount<EVMRawTransactionType>;
+  account: IEVMAccount;
 };
 
 export type CreateRawTransactionReturnType = EVMRawTransactionType;
 
 export type ExecuteTransactionParamsType = {
   rawTransaction: EVMRawTransactionType,
-  account: IEVMAccount<EVMRawTransactionType>
+  account: IEVMAccount
 };
 
 export type EVMTransactionResponseType = TransactionResponseType;

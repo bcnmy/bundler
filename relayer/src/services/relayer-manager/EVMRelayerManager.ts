@@ -34,12 +34,12 @@ const nodePathRoot = "m/44'/60'/0'/";
  * Convert either from main account or convert per relayer
  */
 
-export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
+export class EVMRelayerManager implements IRelayerManager<EVMAccount, EVMRawTransactionType> {
   name: string;
 
   chainId: number;
 
-  transactionService: ITransactionService<EVMAccount>;
+  transactionService: ITransactionService<EVMAccount, EVMRawTransactionType>;
 
   minRelayerCount: number;
 
@@ -69,9 +69,9 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
 
   processingTransactionRelayerDataMap: Record<string, EVMRelayerDataType> = {};
 
-  nonceManager: INonceManager;
+  nonceManager: INonceManager<IEVMAccount, EVMRawTransactionType>;
 
-  networkService: INetworkService<IEVMAccount<EVMRawTransactionType>, EVMRawTransactionType>;
+  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
 
   gasPriceService: IGasPrice;
 

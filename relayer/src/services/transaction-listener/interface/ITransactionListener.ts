@@ -7,7 +7,7 @@ import { NotifyTransactionListenerParamsType, TransactionMessageType } from '../
 
 export interface ITransactionListener {
   chainId: number;
-  networkService: INetworkService<IEVMAccount<EVMRawTransactionType>, EVMRawTransactionType>;
+  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
   transactionDao: ITransactionDAO;
   transactionQueue: IQueue<TransactionMessageType>;
   retryTransactionQueue: IQueue<TransactionMessageType>;

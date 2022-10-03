@@ -6,7 +6,6 @@ import { EVMRawTransactionType } from '../../../../common/types';
 import { IEVMAccount } from '../account';
 import { INonceManager } from '../nonce-manager';
 import { ITransactionListener } from '../transaction-listener';
-import { NotifyTransactionListenerParamsType } from '../transaction-listener/types';
 import { ITransactionService } from './interface/ITransactionService';
 import {
   CreateRawTransactionParamsType,
@@ -15,20 +14,20 @@ import {
   EVMTransactionServiceParamsType,
   ExecuteTransactionParamsType,
   SuccessTransactionResponseType,
-  TransactionDataType
+  TransactionDataType,
 } from './types';
 
 const log = logger(module);
 
 export class EVMTransactionService implements
-ITransactionService<IEVMAccount<EVMRawTransactionType>> {
+ITransactionService<IEVMAccount, EVMRawTransactionType> {
   chainId: number;
 
-  networkService: INetworkService<IEVMAccount<EVMRawTransactionType>, EVMRawTransactionType>;
+  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
 
   transactionListener: ITransactionListener;
 
-  nonceManager: INonceManager;
+  nonceManager: INonceManager<IEVMAccount, EVMRawTransactionType>;
 
   gasPriceService: IGasPrice;
 
@@ -41,18 +40,6 @@ ITransactionService<IEVMAccount<EVMRawTransactionType>> {
     this.transactionListener = transactionListener;
     this.nonceManager = nonceManager;
     this.gasPriceService = gasPriceService;
-  }
-
-  private async incrementNonce(address: string): Promise<void> {
-    // increment nonce via nonceManager instance
-    await this.nonceManager.incrementNonce(address);
-  }
-
-  private async notifyTransactionListener(
-    notifyTransactionListenerParams: NotifyTransactionListenerParamsType,
-  ): Promise<void> {
-    // call transaction listener
-    await this.transactionListener.notify(notifyTransactionListenerParams);
   }
 
   private async createTransaction(
@@ -97,22 +84,17 @@ ITransactionService<IEVMAccount<EVMRawTransactionType>> {
     executeTransactionParams: ExecuteTransactionParamsType,
   ): Promise<ethers.providers.TransactionResponse> {
     const { rawTransaction, account } = executeTransactionParams;
-    try {
-      const transactionExecutionResponse = await this.networkService.sendTransaction(
-        rawTransaction,
-        account,
-      );
-      this.incrementNonce(account.getPublicKey());
-      return transactionExecutionResponse;
-    } catch (error) {
-      log.info(`Error while executing transaction: ${error}`);
-      throw new Error(JSON.stringify(error));
-    }
+    const transactionExecutionResponse = await this.networkService.sendTransaction(
+      rawTransaction,
+      account,
+    );
+    await this.nonceManager.incrementNonce(account.getPublicKey());
+    return transactionExecutionResponse;
   }
 
   async sendTransaction(
     transactionData: TransactionDataType,
-    account: IEVMAccount<EVMRawTransactionType>,
+    account: IEVMAccount,
   ): Promise<SuccessTransactionResponseType | ErrorTransactionResponseType> {
     const {
       to, value, data, gasLimit,
@@ -134,8 +116,8 @@ ITransactionService<IEVMAccount<EVMRawTransactionType>> {
         rawTransaction,
         account,
       });
-      await this.incrementNonce(account.getPublicKey());
-      await this.notifyTransactionListener({
+      await this.nonceManager.incrementNonce(account.getPublicKey());
+      await this.transactionListener.notify({
         transactionExecutionResponse,
         transactionId: transactionId as string,
         relayerAddress: account.getPublicKey(),

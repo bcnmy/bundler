@@ -1,16 +1,14 @@
 import { ethers } from 'ethers';
 import { IGasPrice } from '../../../../../common/gas-price';
 import { INetworkService } from '../../../../../common/network';
-import { EVMRawTransactionType } from '../../../../../common/types';
-import { EVMAccount, IEVMAccount } from '../../account';
 import { INonceManager } from '../../nonce-manager';
 import { ITransactionService } from '../../transaction-service';
 import { EVMRelayerDataType } from '../types';
 
-export interface IRelayerManager<AccountType> {
+export interface IRelayerManager<AccountType, RawTransactionType> {
   name: string;
   chainId: number;
-  transactionService: ITransactionService<EVMAccount>;
+  transactionService: ITransactionService<AccountType, RawTransactionType>;
   minRelayerCount: number;
   maxRelayerCount: number;
   inactiveRelayerCountThreshold: number;
@@ -18,12 +16,16 @@ export interface IRelayerManager<AccountType> {
   newRelayerInstanceCount: number;
   fundingBalanceThreshold: ethers.BigNumber;
   fundingRelayerAmount: number;
-  ownerAccountDetails: EVMAccount;
+  masterSeed: string;
+  ownerAccountDetails: AccountType;
+  gasLimitMap: {
+    [key: number]: number
+  };
   activeRelayerData: Array<EVMRelayerDataType>;
-  relayerMap: Record<string, EVMAccount>;
+  relayerMap: Record<string, AccountType>;
   processingTransactionRelayerDataMap: Record<string, EVMRelayerDataType>;
-  nonceManager: INonceManager;
-  networkService: INetworkService<IEVMAccount<EVMRawTransactionType>, EVMRawTransactionType>;
+  nonceManager: INonceManager<AccountType, RawTransactionType>;
+  networkService: INetworkService<AccountType, RawTransactionType>;
   gasPriceService: IGasPrice;
 
   createRelayers(numberOfRelayers?: number): Promise<string[]>;

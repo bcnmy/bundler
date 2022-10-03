@@ -56,7 +56,7 @@ export interface INetworkService<AccountType, RawTransactionType> {
     topic: string,
     contractEventName: string,
   ): Promise<EventEmitter>;
-  getTransactionReceipt(transactionHash: string): Promise<object>;
+  getTransactionReceipt(transactionHash: string): Promise<ethers.providers.TransactionReceipt>;
   waitForTransaction(
     transactionHash: string
   ): Promise<ethers.providers.TransactionReceipt>

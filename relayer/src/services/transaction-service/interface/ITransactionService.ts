@@ -1,15 +1,15 @@
+import { IGasPrice } from '../../../../../common/gas-price';
 import { INetworkService } from '../../../../../common/network';
-import { EVMRawTransactionType } from '../../../../../common/types';
-import { IEVMAccount } from '../../account';
 import { INonceManager } from '../../nonce-manager';
 import { ITransactionListener } from '../../transaction-listener';
 import { ErrorTransactionResponseType, SuccessTransactionResponseType, TransactionDataType } from '../types';
 
-export interface ITransactionService<AccountType> {
+export interface ITransactionService<AccountType, RawTransactionType> {
   chainId: number;
-  networkService: INetworkService<IEVMAccount<EVMRawTransactionType>, EVMRawTransactionType>;
+  networkService: INetworkService<AccountType, RawTransactionType>;
   transactionListener: ITransactionListener;
-  nonceManager: INonceManager
+  nonceManager: INonceManager<AccountType, RawTransactionType>;
+  gasPriceService: IGasPrice;
 
   sendTransaction(
     transaction: TransactionDataType,

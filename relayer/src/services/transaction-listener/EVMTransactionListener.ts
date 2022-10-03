@@ -21,7 +21,7 @@ export class EVMTransactionListener implements
 ITransactionListener, ITransactionPublisher<TransactionMessageType> {
   chainId: number;
 
-  networkService: INetworkService<IEVMAccount<EVMRawTransactionType>, EVMRawTransactionType>;
+  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
 
   transactionQueue: IQueue<TransactionMessageType>;
 

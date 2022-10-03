@@ -7,10 +7,10 @@ import { INonceManager } from '../../nonce-manager';
 import { ITransactionService } from '../../transaction-service';
 
 export type EVMRelayerManagerServiceParamsType = {
-  networkService: INetworkService<IEVMAccount<EVMRawTransactionType>, EVMRawTransactionType>,
+  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
   gasPriceService: IGasPrice,
-  transactionService: ITransactionService<EVMAccount>,
-  nonceManager: INonceManager,
+  transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>,
+  nonceManager: INonceManager<IEVMAccount, EVMRawTransactionType>,
   options: {
     name: string;
     chainId: number;

@@ -8,5 +8,5 @@ export interface IERC20NetworkService {
     spenderAddress: string,
     value: BigNumber
   ): Promise<Boolean>;
-  // TODO getDecimal
+  getDecimal(tokenAddress: string): Promise<number>
 }
