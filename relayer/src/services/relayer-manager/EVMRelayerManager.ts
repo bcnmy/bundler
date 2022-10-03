@@ -17,6 +17,8 @@ import { SortEVMRelayerByLeastPendingCount } from './strategy';
 import { EVMRelayerDataType, EVMRelayerManagerServiceParamsType } from './types';
 
 const log = logger(module);
+
+const getActiveRelayerMutex = new Mutex();
 const fundRelayerMutex = new Mutex();
 const createRelayerMutex = new Mutex();
 const nodePathRoot = "m/44'/60'/0'/";
@@ -32,12 +34,12 @@ const nodePathRoot = "m/44'/60'/0'/";
  * Convert either from main account or convert per relayer
  */
 
-export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
+export class EVMRelayerManager implements IRelayerManager<EVMAccount, EVMRawTransactionType> {
   name: string;
 
   chainId: number;
 
-  transactionService: ITransactionService<EVMAccount>;
+  transactionService: ITransactionService<EVMAccount, EVMRawTransactionType>;
 
   minRelayerCount: number;
 
@@ -49,7 +51,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
 
   newRelayerInstanceCount: number;
 
-  fundingBalanceThreshold: number;
+  fundingBalanceThreshold: ethers.BigNumber;
 
   fundingRelayerAmount: number;
 
@@ -67,9 +69,9 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
 
   processingTransactionRelayerDataMap: Record<string, EVMRelayerDataType> = {};
 
-  nonceManager: INonceManager;
+  nonceManager: INonceManager<IEVMAccount, EVMRawTransactionType>;
 
-  networkService: INetworkService<IEVMAccount<EVMRawTransactionType>, EVMRawTransactionType>;
+  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
 
   gasPriceService: IGasPrice;
 
@@ -97,11 +99,14 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
     this.nonceManager = nonceManager;
   }
 
-  getActiveRelayer(): EVMAccount | null {
+  async getActiveRelayer(): Promise<EVMAccount | null> {
+    // add mutex lock here
+    const activeRelayerLock = await getActiveRelayerMutex.acquire();
     this.activeRelayerData = SortEVMRelayerByLeastPendingCount.performAlgorithm(
       this.activeRelayerData,
     );
-    const activeRelayer = this.activeRelayerData.pop();
+    const activeRelayer = this.activeRelayerData.shift();
+    activeRelayerLock();
     if (activeRelayer) {
       this.processingTransactionRelayerDataMap[activeRelayer.address] = activeRelayer;
       return this.relayerMap[activeRelayer.address];
@@ -135,7 +140,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
     const relayersAddressList: string[] = [];
     try {
       const index = this.getRelayersCount();
-      for (let relayerIndex = index; relayerIndex <= index + numberOfRelayers; relayerIndex += 1) {
+      for (let relayerIndex = index; relayerIndex < index + numberOfRelayers; relayerIndex += 1) {
         const seedInBuffer = Buffer.from(relayersMasterSeed, 'utf-8');
         const ethRoot = hdkey.fromMasterSeed(seedInBuffer);
 
@@ -156,12 +161,10 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
         relayers.push(relayer);
       }
 
-      log.info(`Relayers created on network id ${this.chainId}`);
       for (const relayer of relayers) {
         const relayerAddress = relayer.getPublicKey().toLowerCase();
         try {
-          const balanceFromNetwork = await this.networkService.getBalance(relayerAddress);
-          const balance = balanceFromNetwork.toNumber();
+          const balance = await this.networkService.getBalance(relayerAddress);
           const nonce = await this.nonceManager.getNonce(relayerAddress);
           this.activeRelayerData.push({
             address: relayer.getPublicKey(),
@@ -171,7 +174,8 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
           });
           relayersAddressList.push(relayerAddress);
         } catch (error) {
-          log.info(`Error while getting balance and nonce for relayer ${relayerAddress}`);
+          console.log(error);
+          log.info(`Error while getting balance and nonce for relayer ${relayerAddress} on chain id ${this.chainId}`);
         }
       }
     } catch (error) {
@@ -185,9 +189,12 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
 
   hasBalanceBelowThreshold(address: string): boolean {
     const relayerData = this.activeRelayerData.find((relayer) => relayer.address === address);
-    const relayerBalance = relayerData?.balance || 0;
-    if (relayerBalance < this.fundingBalanceThreshold) {
-      return true;
+    if (relayerData) {
+      const relayerBalance = relayerData.balance;
+      log.info(`Relayer ${address} balance is ${relayerBalance} on chain id ${this.chainId}`);
+      if (relayerBalance.lte(this.fundingBalanceThreshold)) {
+        return true;
+      }
     }
     return false;
   }

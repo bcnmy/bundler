@@ -12,11 +12,7 @@ export const BlockchainTransactionSchema = new Schema<IBlockchainTransaction>({
     type: String,
     required: true,
   },
-  previousTransactionHash: {
-    type: String,
-  },
-  contractAddress: { type: String },
-  networkId: { type: Number },
+  chainId: { type: Number },
   status: {
     type: String,
     required: true,
@@ -29,48 +25,16 @@ export const BlockchainTransactionSchema = new Schema<IBlockchainTransaction>({
     type: String,
     required: true,
   },
-  signerAddress: {
-    type: String,
-    required: true,
-  },
-  metaTxData: {
-    type: Object,
-    required: true,
-  },
   rawTransaction: {
     type: Object,
     required: true,
   },
-  transactionFee: {
-    type: Number,
-    required: true,
-  },
-  transactionFeeCurrency: {
-    type: String,
-    required: true,
-  },
-  baseCurrencyInFiat: {
-    type: Number,
-    required: false,
-  },
-  transactionFeeInFiat: {
-    type: Number,
-  },
-  transactionFeeInFiatCurrency: {
-    type: String,
-  },
   gasPrice: {
     type: String,
   },
-  gasUsed: {
-    type: Number,
-  },
-  gasLimit: {
-    type: Number,
-  },
   resubmitted: {
     type: Boolean,
-    required: false, // could be made true
+    default: false,
   },
   creationTime: {
     type: Number,
@@ -78,8 +42,5 @@ export const BlockchainTransactionSchema = new Schema<IBlockchainTransaction>({
   },
   updationTime: {
     type: Number,
-  },
-  ipAddress: {
-    type: String,
   },
 });

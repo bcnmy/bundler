@@ -35,11 +35,14 @@ export class RetryTransactionHandlerQueue implements IQueue<TransactionMessageTy
 
   publish = async (data: TransactionMessageType) => {
     const key = `chainid.${this.chainId}`;
-    this.channel.prefetch(1);
-    this.channel.publish('transaction_queue_exchange', key, Buffer.from(JSON.stringify(data)), {
-      persistent: true,
-    });
-    return true;
+    if (this.channel) {
+      this.channel.prefetch(1);
+      this.channel.publish('transaction_queue_exchange', key, Buffer.from(JSON.stringify(data)), {
+        persistent: true,
+      });
+      return true;
+    }
+    return false;
   };
 
   consume = async (onMessageReceived: () => void) => {

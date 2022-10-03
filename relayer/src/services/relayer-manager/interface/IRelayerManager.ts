@@ -1,3 +1,4 @@
+import { ethers } from 'ethers';
 import { IGasPrice } from '../../../../../common/gas-price';
 import { INetworkService } from '../../../../../common/network';
 import { INonceManager } from '../../nonce-manager';
@@ -13,7 +14,7 @@ export interface IRelayerManager<AccountType, RawTransactionType> {
   inactiveRelayerCountThreshold: number;
   pendingTransactionCountThreshold: number;
   newRelayerInstanceCount: number;
-  fundingBalanceThreshold: number;
+  fundingBalanceThreshold: ethers.BigNumber;
   fundingRelayerAmount: number;
   masterSeed: string;
   ownerAccountDetails: AccountType;
@@ -29,7 +30,7 @@ export interface IRelayerManager<AccountType, RawTransactionType> {
 
   createRelayers(numberOfRelayers?: number): Promise<string[]>;
   fundRelayers(accountAddress: string[]): Promise<boolean>;
-  getActiveRelayer(): AccountType | null;
+  getActiveRelayer(): Promise<AccountType | null>;
   addActiveRelayer(address: string): void;
   getRelayersCount(active: boolean): number;
   setMinRelayerCount(minRelayerCount: number): void

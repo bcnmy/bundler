@@ -6,7 +6,7 @@ export interface INonceManager<AccountType, RawTransactionType> {
   networkService: INetworkService<AccountType, RawTransactionType>;
   cacheService: ICacheService;
 
-  getNonce(address: string): Promise<number>;
+  getNonce(address: string, pendingCount?: boolean): Promise<number>;
   markUsed(address: string, nonce: number): Promise<void>;
   incrementNonce(address: string): Promise<boolean>;
 }

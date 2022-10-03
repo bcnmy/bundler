@@ -1,3 +1,4 @@
+import { ethers } from 'ethers';
 import { ITransactionDAO } from '../../../../../common/db';
 import { IGasPrice } from '../../../../../common/gas-price';
 import { GasPriceType } from '../../../../../common/gas-price/types';
@@ -33,6 +34,17 @@ export type TransactionDataType = {
   speed?: GasPriceType;
   userAddress?: string,
   transactionId?: string;
+};
+
+export type ErrorTransactionResponseType = {
+  state: 'failed';
+  code: number;
+  error: string;
+};
+
+export type SuccessTransactionResponseType = ethers.providers.TransactionResponse & {
+  state: 'success';
+  code: number;
 };
 
 export type CreateRawTransactionParamsType = {

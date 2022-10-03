@@ -1,11 +1,12 @@
 import mongoose from 'mongoose';
+import { config } from '../../../../../config';
 import { IBlockchainTransaction } from '../../interface/IBlockchainTransaction';
 import { BlockchainTransactionSchema } from './schema';
 
-const supportedNetworks = process.env.SUPPORTED_NETWORKS || [];
+const { supportedNetworks } = config;
 
-type BlockchainTransactionsMapType = {
-  [networkId: string]: mongoose.Model<IBlockchainTransaction, {}, {}, {}>;
+export type BlockchainTransactionsMapType = {
+  [networkId: number]: mongoose.Model<IBlockchainTransaction, {}, {}, {}>;
 };
 
 const BlockchainTransactionsMap: BlockchainTransactionsMapType = {};

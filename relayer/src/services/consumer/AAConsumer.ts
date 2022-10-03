@@ -40,7 +40,9 @@ export class AAConsumer implements ITransactionConsumer<AATransactionMessageType
       log.info(`onMessage received in ${this.transactionType}: ${transactionDataReceivedFromQueue}`);
       this.queue?.ack(msg);
       // get active relayer
-      const activeRelayer = this.relayerManager.getActiveRelayer();
+      const activeRelayer = await this.relayerManager.getActiveRelayer();
+      log.info(`Active relayer for ${this.transactionType} is ${activeRelayer?.getPublicKey()}`);
+
       if (activeRelayer) {
       // call transaction service
       // TODO check on return logic

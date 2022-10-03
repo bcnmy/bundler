@@ -11,7 +11,7 @@ import { EVMTransactionListener } from '../../relayer/src/services/transaction-l
 import { EVMTransactionService } from '../../relayer/src/services/transaction-service';
 import { FeeOption } from '../../server/src/services';
 import { RedisCacheService } from '../cache';
-import { TransactionDAO } from '../db';
+import { Mongo, TransactionDAO } from '../db';
 import { GasPriceManager } from '../gas-price';
 import { IQueue } from '../interface';
 import { EVMNetworkService } from '../network';
@@ -51,6 +51,7 @@ const simulatonServiceMap: {
   };
 } = {};
 
+const dbInstance = Mongo.getInstance();
 const cacheService = RedisCacheService.getInstance();
 
 const { supportedNetworks, supportedTransactionType } = config;
@@ -61,10 +62,11 @@ const EVMRelayerManagerMap: {
   }
 } = {};
 
-(async () => {
-  await cacheService.connect();
+const transactionDao = new TransactionDAO();
 
-  const transactionDao = new TransactionDAO();
+(async () => {
+  await dbInstance.connect();
+  await cacheService.connect();
 
   for (const chainId of supportedNetworks) {
     routeTransactionToRelayerMap[chainId] = {};
@@ -89,9 +91,12 @@ const EVMRelayerManagerMap: {
     const transactionQueue = new TransactionHandlerQueue({
       chainId,
     });
+    await transactionQueue.connect();
+
     const retryTransactionQueue = new RetryTransactionHandlerQueue({
       chainId,
     });
+    await retryTransactionQueue.connect();
 
     const nonceManager = new EVMNonceManager({
       options: {
@@ -162,7 +167,7 @@ const EVMRelayerManagerMap: {
       updateFrequencyInSeconds: config.tokenPrice.updateFrequencyInSeconds,
       symbolMapByChainId: config.tokenPrice.symbolMapByChainId,
     });
-    // tokenService.schedule();
+    tokenService.schedule();
 
     const feeOptionService = new FeeOption(gasPriceService, cacheService, {
       chainId,
@@ -248,6 +253,7 @@ const EVMRelayerManagerMap: {
       const relayerManager = EVMRelayerManagerMap[relayerManagerName][chainId];
       if (relayerManager) {
         const addressList = await relayerManager.createRelayers();
+        console.log('Relayer address list length', addressList.length, relayerManager.minRelayerCount);
         await relayerManager.fundRelayers(addressList);
       }
     }
