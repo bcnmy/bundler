@@ -8,10 +8,7 @@ export const scwRequestSchema = object({
   body: object({
     value: number(),
     to: string().matches(/^0x[a-fA-F0-9]{40}$/).required('to address is required'),
-    gasLimit: object().shape({
-      hex: string(),
-      type: string(),
-    }),
+    gasLimit: string(), // in hex
     data: string().required('data is required'),
     chainId: number().required('chain id (network id) is required'),
   }),

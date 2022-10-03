@@ -22,11 +22,12 @@ export class EVMNonceManager implements INonceManager {
   }
 
   async getNonce(address: string, pendingCount = true): Promise<number> {
-    const nonce = await this.cacheService.get(this.getAccountNonceKey(address));
-    if (!nonce) {
-      return this.getAndSetNonceFromNetwork(address, pendingCount);
-    }
-    return parseInt(nonce, 10);
+    // TODO: review nonce from cache
+    return this.getAndSetNonceFromNetwork(address, pendingCount);
+    // const nonce = await this.cacheService.get(this.getAccountNonceKey(address));
+    // if (!nonce) {
+    // }
+    // return parseInt(nonce, 10);
   }
 
   async markUsed(address: string, nonce: number): Promise<void> {

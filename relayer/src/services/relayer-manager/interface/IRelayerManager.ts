@@ -28,7 +28,7 @@ export interface IRelayerManager<AccountType> {
 
   createRelayers(numberOfRelayers?: number): Promise<string[]>;
   fundRelayers(accountAddress: string[]): Promise<boolean>;
-  getActiveRelayer(): AccountType | null;
+  getActiveRelayer(): Promise<AccountType | null>;
   addActiveRelayer(address: string): void;
   getRelayersCount(active: boolean): number;
   setMinRelayerCount(minRelayerCount: number): void

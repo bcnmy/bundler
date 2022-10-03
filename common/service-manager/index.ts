@@ -62,11 +62,11 @@ const EVMRelayerManagerMap: {
   }
 } = {};
 
+const transactionDao = new TransactionDAO();
+
 (async () => {
   await dbInstance.connect();
   await cacheService.connect();
-
-  const transactionDao = new TransactionDAO();
 
   for (const chainId of supportedNetworks) {
     routeTransactionToRelayerMap[chainId] = {};
@@ -167,7 +167,7 @@ const EVMRelayerManagerMap: {
       updateFrequencyInSeconds: config.tokenPrice.updateFrequencyInSeconds,
       symbolMapByChainId: config.tokenPrice.symbolMapByChainId,
     });
-    // tokenService.schedule();
+    tokenService.schedule();
 
     const feeOptionService = new FeeOption(gasPriceService, cacheService, {
       chainId,

@@ -1,19 +1,24 @@
 import { ethers } from 'ethers';
-import { ITransactionService } from './interface/ITransactionService';
+import { IGasPrice } from '../../../../common/gas-price';
+import { logger } from '../../../../common/log-config';
+import { INetworkService } from '../../../../common/network';
+import { EVMRawTransactionType } from '../../../../common/types';
+import { IEVMAccount } from '../account';
+import { INonceManager } from '../nonce-manager';
 import { ITransactionListener } from '../transaction-listener';
+import { NotifyTransactionListenerParamsType } from '../transaction-listener/types';
+import { ITransactionService } from './interface/ITransactionService';
 import {
   CreateRawTransactionParamsType,
   CreateRawTransactionReturnType,
-  ExecuteTransactionParamsType,
-  TransactionDataType,
+  ErrorTransactionResponseType,
   EVMTransactionServiceParamsType,
+  ExecuteTransactionParamsType,
+  SuccessTransactionResponseType,
+  TransactionDataType
 } from './types';
-import { INonceManager } from '../nonce-manager';
-import { INetworkService } from '../../../../common/network';
-import { IEVMAccount } from '../account';
-import { EVMRawTransactionType } from '../../../../common/types';
-import { IGasPrice } from '../../../../common/gas-price';
-import { NotifyTransactionListenerParamsType } from '../transaction-listener/types';
+
+const log = logger(module);
 
 export class EVMTransactionService implements
 ITransactionService<IEVMAccount<EVMRawTransactionType>> {
@@ -63,7 +68,7 @@ ITransactionService<IEVMAccount<EVMRawTransactionType>> {
       speed,
       account,
     } = createTransactionParams;
-    const nonce = await this.nonceManager.getNonce(account.getPublicKey());
+    const nonce = await this.nonceManager.getNonce(account.getPublicKey(), false);
     const response = {
       from,
       to,
@@ -92,28 +97,28 @@ ITransactionService<IEVMAccount<EVMRawTransactionType>> {
     executeTransactionParams: ExecuteTransactionParamsType,
   ): Promise<ethers.providers.TransactionResponse> {
     const { rawTransaction, account } = executeTransactionParams;
-    // TODO: handle and return error response
-    const transactionExecutionResponse = await this.networkService.sendTransaction(
-      rawTransaction,
-      account,
-    );
-    this.incrementNonce(account.getPublicKey());
-    return transactionExecutionResponse;
+    try {
+      const transactionExecutionResponse = await this.networkService.sendTransaction(
+        rawTransaction,
+        account,
+      );
+      this.incrementNonce(account.getPublicKey());
+      return transactionExecutionResponse;
+    } catch (error) {
+      log.info(`Error while executing transaction: ${error}`);
+      throw new Error(JSON.stringify(error));
+    }
   }
 
   async sendTransaction(
     transactionData: TransactionDataType,
     account: IEVMAccount<EVMRawTransactionType>,
-  ): Promise<ethers.providers.TransactionResponse> {
-    // create transaction
-    // get gas price
-    // send transaction
-    // tell to transaction listener
-    // save data in db
+  ): Promise<SuccessTransactionResponseType | ErrorTransactionResponseType> {
     const {
       to, value, data, gasLimit,
       speed, transactionId, userAddress,
     } = transactionData;
+    // create transaction
     const rawTransaction = await this.createTransaction({
       from: account.getPublicKey(),
       to,
@@ -123,18 +128,31 @@ ITransactionService<IEVMAccount<EVMRawTransactionType>> {
       speed,
       account,
     });
-    const transactionExecutionResponse = await this.executeTransaction({
-      rawTransaction,
-      account,
-    });
-    console.log('transactionExecutionResponse', transactionExecutionResponse);
-    await this.incrementNonce(account.getPublicKey());
-    await this.notifyTransactionListener({
-      transactionExecutionResponse,
-      transactionId: transactionId as string,
-      relayerAddress: account.getPublicKey(),
-      userAddress,
-    });
-    return transactionExecutionResponse;
+
+    try {
+      const transactionExecutionResponse = await this.executeTransaction({
+        rawTransaction,
+        account,
+      });
+      await this.incrementNonce(account.getPublicKey());
+      await this.notifyTransactionListener({
+        transactionExecutionResponse,
+        transactionId: transactionId as string,
+        relayerAddress: account.getPublicKey(),
+        userAddress,
+      });
+      return {
+        state: 'success',
+        code: 200,
+        ...transactionExecutionResponse,
+      };
+    } catch (error) {
+      log.info(`Error while sending transaction: ${error}`);
+      return {
+        state: 'failed',
+        code: 500,
+        error: JSON.stringify(error),
+      };
+    }
   }
 }

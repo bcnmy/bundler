@@ -17,6 +17,8 @@ import { SortEVMRelayerByLeastPendingCount } from './strategy';
 import { EVMRelayerDataType, EVMRelayerManagerServiceParamsType } from './types';
 
 const log = logger(module);
+
+const getActiveRelayerMutex = new Mutex();
 const fundRelayerMutex = new Mutex();
 const createRelayerMutex = new Mutex();
 const nodePathRoot = "m/44'/60'/0'/";
@@ -97,11 +99,14 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount> {
     this.nonceManager = nonceManager;
   }
 
-  getActiveRelayer(): EVMAccount | null {
+  async getActiveRelayer(): Promise<EVMAccount | null> {
+    // add mutex lock here
+    const activeRelayerLock = await getActiveRelayerMutex.acquire();
     this.activeRelayerData = SortEVMRelayerByLeastPendingCount.performAlgorithm(
       this.activeRelayerData,
     );
-    const activeRelayer = this.activeRelayerData.pop();
+    const activeRelayer = this.activeRelayerData.shift();
+    activeRelayerLock();
     if (activeRelayer) {
       this.processingTransactionRelayerDataMap[activeRelayer.address] = activeRelayer;
       return this.relayerMap[activeRelayer.address];

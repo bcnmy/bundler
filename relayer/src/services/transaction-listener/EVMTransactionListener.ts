@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import { ITransactionDAO } from '../../../../common/db';
 import { IQueue } from '../../../../common/interface';
+import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
 import { EVMRawTransactionType, TransactionStatus } from '../../../../common/types';
 import { IEVMAccount } from '../account';
@@ -13,6 +14,8 @@ import {
   OnTransactionSuccessParamsType,
   TransactionMessageType,
 } from './types';
+
+const log = logger(module);
 
 export class EVMTransactionListener implements
 ITransactionListener, ITransactionPublisher<TransactionMessageType> {
@@ -111,6 +114,10 @@ ITransactionListener, ITransactionPublisher<TransactionMessageType> {
     const {
       transactionExecutionResponse, transactionId, relayerAddress, userAddress,
     } = notifyTransactionListenerParams;
+    if (!transactionExecutionResponse) {
+      log.error('transactionExecutionResponse is null');
+      return;
+    }
     const tranasctionHash = transactionExecutionResponse.hash;
     // publish to queue with expiry header
     await this.publishToRetryTransactionQueue(transactionExecutionResponse);

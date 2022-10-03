@@ -1,7 +1,7 @@
 import mongoose, { Mongoose } from 'mongoose';
 import { config } from '../../../config';
 import { IDBService } from '../interface/IDBService';
-import { BlockchainTransactionsMap } from './models';
+import { BlockchainTransactionsMap, BlockchainTransactionsMapType } from './models';
 
 export class Mongo implements IDBService {
   private static instance: Mongo;
@@ -13,7 +13,6 @@ export class Mongo implements IDBService {
   }
 
   public static getInstance(): Mongo {
-    // TODO: Add lock
     if (!Mongo.instance) {
       Mongo.instance = new Mongo();
     }
@@ -38,7 +37,7 @@ export class Mongo implements IDBService {
     }
   };
 
-  getBlockchainTransaction(networkId: number) {
+  getBlockchainTransaction(networkId: number): BlockchainTransactionsMapType[number] {
     if (!this.client) {
       throw new Error('Not connected to db');
     }

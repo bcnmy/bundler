@@ -40,14 +40,19 @@ export class SCWConsumer implements ITransactionConsumer<SCWTransactionMessageTy
       log.info(`onMessage received in ${this.transactionType}: ${transactionDataReceivedFromQueue}`);
       this.queue?.ack(msg);
       // get active relayer
-      const activeRelayer = this.relayerManager.getActiveRelayer();
+      const activeRelayer = await this.relayerManager.getActiveRelayer();
+      log.info(`Active relayer for ${this.transactionType} is ${activeRelayer?.getPublicKey()}`);
       if (activeRelayer) {
-      // call transaction service
-      // TODO check on return logic
-        await this.transactionService.sendTransaction(
+        const response = await this.transactionService.sendTransaction(
           transactionDataReceivedFromQueue,
           activeRelayer,
         );
+        this.relayerManager.addActiveRelayer(activeRelayer.getPublicKey());
+        if (response.state === 'success') {
+          log.info(`Transaction sent successfully for ${this.transactionType} on chain ${this.chainId}`);
+        } else {
+          log.error(`Transaction failed with error: ${response?.error || 'unknown error'} for ${this.transactionType} on chain ${this.chainId}`);
+        }
       } else {
         throw new Error(`No active relayer for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);
       }

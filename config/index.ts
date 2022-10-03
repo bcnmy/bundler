@@ -97,12 +97,12 @@ const data: ConfigType = {
       fundingRelayerAmount: {
         5: 0.03,
         137: 0.5,
-        80001: 0.5,
+        80001: 0.2,
       },
       fundingBalanceThreshold: {
         5: ethers.utils.parseEther('0.01'),
         137: ethers.utils.parseEther('0.3'),
-        80001: ethers.utils.parseEther('0.3'),
+        80001: ethers.utils.parseEther('0.1'),
       },
       newRelayerInstanceCount: {
         5: 1,

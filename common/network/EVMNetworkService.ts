@@ -77,8 +77,7 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
             return null;
         }
       } catch (error) {
-        // TODO // Handle errors
-        log.info(error);
+        log.info(`Error in network service ${error}`);
         for (;rpcUrlIndex < this.fallbackRpcUrls.length; rpcUrlIndex += 1) {
           this.ethersProvider = new ethers.providers.JsonRpcProvider(
             this.fallbackRpcUrls[rpcUrlIndex],
