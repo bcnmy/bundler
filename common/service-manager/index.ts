@@ -26,6 +26,7 @@ import { AASimulationService, SCWSimulationService } from '../simulation';
 import { CMCTokenPriceManager } from '../token-price';
 import {
   AATransactionMessageType,
+  EVMRawTransactionType,
   SCWTransactionMessageType,
   TransactionType,
 } from '../types';
@@ -58,7 +59,7 @@ const { supportedNetworks, supportedTransactionType } = config;
 
 const EVMRelayerManagerMap: {
   [name: string] : {
-    [chainId: number]: IRelayerManager<EVMAccount>;
+    [chainId: number]: IRelayerManager<EVMAccount, EVMRawTransactionType>;
   }
 } = {};
 

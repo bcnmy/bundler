@@ -1,13 +1,11 @@
 import { ITransactionDAO } from '../../../../../common/db';
 import { IQueue } from '../../../../../common/interface';
 import { INetworkService } from '../../../../../common/network';
-import { EVMRawTransactionType } from '../../../../../common/types';
-import { IEVMAccount } from '../../account';
 import { NotifyTransactionListenerParamsType, TransactionMessageType } from '../types';
 
-export interface ITransactionListener {
+export interface ITransactionListener<AccountType, RawTransactionType> {
   chainId: number;
-  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
+  networkService: INetworkService<AccountType, RawTransactionType>;
   transactionDao: ITransactionDAO;
   transactionQueue: IQueue<TransactionMessageType>;
   retryTransactionQueue: IQueue<TransactionMessageType>;

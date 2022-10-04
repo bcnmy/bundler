@@ -4,7 +4,7 @@ import { INetworkService } from '../network';
 import { EVMRawTransactionType } from '../types';
 import { IGasPriceManager } from './interface/IGasPriceManager';
 import { GoerliGasPrice } from './networks/GoerliGasPrice';
-import { MaticGasPrice } from './networks/MaticGasPrice';
+import { MaticGasPrice } from './networks/PolygonGasPrice';
 import { MumbaiGasPrice } from './networks/MumbaiGasPrice';
 
 type GasPriceType = MaticGasPrice | GoerliGasPrice | MumbaiGasPrice | undefined;

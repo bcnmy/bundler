@@ -11,7 +11,7 @@ const log = logger(module);
 export class AbstractGasPrice implements IGasPrice {
   chainId: number;
 
-  networkService: INetworkService<EVMAccount, EVMRawTransactionType> | undefined;
+  networkService: INetworkService<EVMAccount, EVMRawTransactionType>;
 
   cacheService: ICacheService;
 

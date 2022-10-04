@@ -13,7 +13,7 @@ export class SCWTransactionQueue implements IQueue<SCWTransactionMessageType> {
 
   chainId: number;
 
-  private transactionType: string = TransactionType.SCW;
+  private transactionType: TransactionType = TransactionType.SCW;
 
   msg!: ConsumeMessage | null;
 

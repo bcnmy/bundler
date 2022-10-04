@@ -21,9 +21,10 @@ export const relayAATransaction = async (req: Request, res: Response) => {
     if (!clientMessenger.socketClient.isConnected()) {
       await clientMessenger.connect();
     }
-    const response = await routeTransactionToRelayerMap[chainId][TransactionType.AA].sendTransactionToRelayer({
-      type, to, data, gasLimit, chainId, value, transactionId,
-    });
+    const response = await routeTransactionToRelayerMap[chainId][TransactionType.AA]
+      .sendTransactionToRelayer({
+        type, to, data, gasLimit, chainId, value, transactionId,
+      });
     if (isError(response)) {
       return res.status(400).json({
         msg: 'bad request',

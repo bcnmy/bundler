@@ -12,6 +12,7 @@ import { GasPriceType } from '../types';
 
 const log = logger(module);
 
+// TODO // Review file
 export class MaticGasPrice extends AbstractGasPrice implements IScheduler {
   updateFrequencyInSeconds: number;
 
