@@ -11,14 +11,13 @@ import { EVMRawTransactionType } from '../../../../common/types';
 import { config } from '../../../../config';
 import { EVMAccount, IEVMAccount } from '../account';
 import { INonceManager } from '../nonce-manager';
+import { EVMRelayerMetaDataType, IRelayerQueue } from '../relayer-queue';
 import { ITransactionService } from '../transaction-service/interface/ITransactionService';
 import { IRelayerManager } from './interface/IRelayerManager';
-import { SortEVMRelayerByLeastPendingCount } from './strategy';
-import { EVMRelayerDataType, EVMRelayerManagerServiceParamsType } from './types';
+import { EVMRelayerManagerServiceParamsType } from './types';
 
 const log = logger(module);
 
-const getActiveRelayerMutex = new Mutex();
 const fundRelayerMutex = new Mutex();
 const createRelayerMutex = new Mutex();
 const nodePathRoot = "m/44'/60'/0'/";
@@ -55,7 +54,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount, EVMRawTran
 
   fundingRelayerAmount: number;
 
-  masterSeed: string;
+  relayerSeed: string;
 
   ownerAccountDetails: EVMAccount;
 
@@ -63,11 +62,11 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount, EVMRawTran
     [key: number]: number
   };
 
-  activeRelayerData: Array<EVMRelayerDataType> = [];
+  relayerQueue: IRelayerQueue<EVMRelayerMetaDataType>;
 
   relayerMap: Record<string, EVMAccount> = {};
 
-  processingTransactionRelayerDataMap: Record<string, EVMRelayerDataType> = {};
+  transactionProcessingRelayerMap: Record<string, EVMRelayerMetaDataType> = {};
 
   nonceManager: INonceManager<IEVMAccount, EVMRawTransactionType>;
 
@@ -79,7 +78,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount, EVMRawTran
     evmRelayerManagerServiceParams: EVMRelayerManagerServiceParamsType,
   ) {
     const {
-      options, networkService, gasPriceService, transactionService, nonceManager,
+      options, networkService, gasPriceService, transactionService, nonceManager, relayerQueue,
     } = evmRelayerManagerServiceParams;
     this.chainId = options.chainId;
     this.name = options.name;
@@ -91,8 +90,9 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount, EVMRawTran
     this.fundingBalanceThreshold = options.fundingBalanceThreshold;
     this.fundingRelayerAmount = options.fundingRelayerAmount;
     this.ownerAccountDetails = options.ownerAccountDetails;
-    this.masterSeed = options.masterSeed;
+    this.relayerSeed = options.relayerSeed;
     this.gasLimitMap = options.gasLimitMap;
+    this.relayerQueue = relayerQueue;
     this.networkService = networkService;
     this.gasPriceService = gasPriceService;
     this.transactionService = transactionService;
@@ -100,34 +100,31 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount, EVMRawTran
   }
 
   async getActiveRelayer(): Promise<EVMAccount | null> {
-    // add mutex lock here
-    const activeRelayerLock = await getActiveRelayerMutex.acquire();
-    this.activeRelayerData = SortEVMRelayerByLeastPendingCount.performAlgorithm(
-      this.activeRelayerData,
-    );
-    const activeRelayer = this.activeRelayerData.shift();
-    activeRelayerLock();
+    const activeRelayer = await this.relayerQueue.pop();
     if (activeRelayer) {
-      this.processingTransactionRelayerDataMap[activeRelayer.address] = activeRelayer;
+      this.transactionProcessingRelayerMap[activeRelayer.address] = activeRelayer;
       return this.relayerMap[activeRelayer.address];
     }
     return null;
   }
 
-  addActiveRelayer(address: string): void {
-    if (this.processingTransactionRelayerDataMap[address]) {
-      this.activeRelayerData.push(this.processingTransactionRelayerDataMap[address]);
+  async addActiveRelayer(address: string): Promise<void> {
+    const relayer = this.transactionProcessingRelayerMap[address];
+    if (relayer) {
+      await this.relayerQueue.push(relayer);
       log.info(`Relayer ${address} added to active relayer map`);
+    } else {
+      log.error(`Relayer ${address} not found in processing relayer map`);
     }
   }
 
   // get total number of relayers
   getRelayersCount(active: boolean = false): number {
     if (active) {
-      return this.activeRelayerData.length;
+      return this.relayerQueue.size();
     }
-    return Object.keys(this.processingTransactionRelayerDataMap).length
-      + this.activeRelayerData.length;
+    return Object.keys(this.transactionProcessingRelayerMap).length
+      + this.relayerQueue.size();
   }
 
   // return list of created list of relayers address
@@ -166,7 +163,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount, EVMRawTran
         try {
           const balance = await this.networkService.getBalance(relayerAddress);
           const nonce = await this.nonceManager.getNonce(relayerAddress);
-          this.activeRelayerData.push({
+          this.relayerQueue.push({
             address: relayer.getPublicKey(),
             pendingCount: 0,
             nonce,
@@ -174,7 +171,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount, EVMRawTran
           });
           relayersAddressList.push(relayerAddress);
         } catch (error) {
-          console.log(error);
+          log.error(error);
           log.info(`Error while getting balance and nonce for relayer ${relayerAddress} on chain id ${this.chainId}`);
         }
       }
@@ -188,7 +185,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount, EVMRawTran
   }
 
   hasBalanceBelowThreshold(address: string): boolean {
-    const relayerData = this.activeRelayerData.find((relayer) => relayer.address === address);
+    const relayerData = this.relayerQueue.list().find((relayer) => relayer.address === address);
     if (relayerData) {
       const relayerBalance = relayerData.balance;
       log.info(`Relayer ${address} balance is ${relayerBalance} on chain id ${this.chainId}`);
