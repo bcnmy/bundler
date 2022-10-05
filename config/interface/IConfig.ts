@@ -2,157 +2,154 @@ import { ethers } from 'ethers';
 import { TransactionType } from '../../common/types';
 import { SymbolMapByChainIdType } from '../types';
 
-export interface LooseObject {
-  [key: string]: any
-}
+type ChainIdWithStringValueType = {
+  [key: number]: string
+};
+
+type ChainIdWithArrayStringValueType = {
+  [key: number]: string[]
+};
+
+type ChainIdWithNumberValueType = {
+  [key: number]: number
+};
+
+type ChainIdWithBigNumberValueType = {
+  [key: number]: ethers.BigNumber
+};
+
+type ChainIdAndTokenWithNumberValueType = {
+  [key: number]: {
+    [key: string]: number;
+  }
+};
+
+type ChainIdAndTokenWithStringValueType = {
+  [key: number]: {
+    [key: string]: string;
+  }
+};
+
+type OwnerAccountDetailsType = {
+  [key: number]: {
+    publicKey: string,
+    privateKey: string,
+  }
+};
+
+type SocketServiceConfigType = {
+  wssUrl: string,
+  httpUrl: string,
+  secret: string,
+  apiKey: string,
+};
+
+type GasPriceConfigType = {
+  [key: number]: {
+    updateFrequencyInSeconds: number,
+    minGasPrice: number,
+    maxGasPrice: number,
+    baseFeeMultiplier: number,
+    gasOracle: {
+      [key: string]: string,
+    },
+  }
+};
+
+type NetworkSymbolMapType = {
+  [key: string]: Array<number>
+};
+
+type NativeChainIdMapType = {
+  [key: string]: number
+};
+
+type FeeOptionConfigType = {
+  supportedFeeTokens: ChainIdWithArrayStringValueType,
+  similarTokens: ChainIdWithArrayStringValueType,
+  nativeChainIds: NativeChainIdMapType,
+  offset: ChainIdAndTokenWithNumberValueType,
+  logoUrl: ChainIdAndTokenWithStringValueType,
+  tokenContractAddress: ChainIdAndTokenWithStringValueType,
+  decimals: ChainIdAndTokenWithNumberValueType,
+  feeTokenTransferGas: ChainIdAndTokenWithNumberValueType,
+};
+
+type TokenPriceConfigType = {
+  coinMarketCapApi: string,
+  networkSymbols: NetworkSymbolMapType,
+  updateFrequencyInSeconds: number,
+  symbolMapByChainId: SymbolMapByChainIdType,
+};
+
+type RelayerManagerConfigType = Array<{
+  name: string, // assume it to be an identifier by the consumer
+  masterSeed: string,
+  gasLimitMap: ChainIdWithNumberValueType,
+  minRelayerCount: ChainIdWithNumberValueType,
+  maxRelayerCount: ChainIdWithNumberValueType,
+  inactiveRelayerCountThreshold: ChainIdWithNumberValueType,
+  pendingTransactionCountThreshold: ChainIdWithNumberValueType,
+  fundingRelayerAmount: ChainIdWithNumberValueType,
+  fundingBalanceThreshold: ChainIdWithBigNumberValueType,
+  newRelayerInstanceCount: ChainIdWithNumberValueType,
+  ownerAccountDetails: OwnerAccountDetailsType,
+}>;
+
+type TransactionConfigType = {
+  errors: {
+    networkResponseCodes: ChainIdWithStringValueType,
+    networksNonceError: ChainIdWithStringValueType,
+    networksInsufficientFundsError: ChainIdWithStringValueType,
+  }
+};
+
+type ChainsConfigType = {
+  currency: ChainIdWithStringValueType,
+  decimal: ChainIdWithNumberValueType,
+  provider: ChainIdWithStringValueType,
+  fallbackUrls: ChainIdWithArrayStringValueType,
+};
+
+type RelayerConfigType = {
+  nodePathIndex: number,
+};
+
+type SlackConfigType = {
+  token: string,
+  channel: string,
+};
+
+type ChainIdSupportedTransactionType = {
+  [key: number]: Array<TransactionType>
+};
+
+type EntryPointDataConfigType = {
+  abi: string,
+  address: ChainIdWithStringValueType,
+};
+
+type DataSourcesConfigType = {
+  mongoUrl: string,
+  redisUrl: string,
+};
 
 export type ConfigType = {
-  slack: {
-    token: string,
-    channel: string,
-  },
-  dataSources: {
-    mongoUrl: string, // env file
-    redisUrl: string,
-  },
-  socketService: {
-    wssUrl: string,
-    httpUrl: string,
-    secret: string,
-    apiKey: string,
-  },
+  queueUrl: string,
+  slack: SlackConfigType,
+  dataSources: DataSourcesConfigType,
+  socketService: SocketServiceConfigType,
   supportedNetworks: Array<number>,
   EIP1559SupportedNetworks: Array<number>,
-  supportedTransactionType: {
-    [key: number]: Array<TransactionType>
-  },
-  // chains: networkid : currency, decimal, provider,
-  chains: {
-    currency: {
-      [key: number]: string,
-    },
-    decimal: {
-      [key: number]: number,
-    },
-    provider: {
-      [key: number]: string,
-    },
-    fallbackUrls: {
-      [key: number]: Array<string>,
-    }
-  },
-  relayer: {
-    nodePathIndex: number,
-  },
-  relayerManagers: [{
-    name: string, // assume it to be an identifier by the consumer
-    masterSeed: string,
-    gasLimitMap: {
-      [key: number]: number
-    }
-    minRelayerCount: {
-      [key: number]: number
-    },
-    maxRelayerCount: {
-      [key: number]: number
-    },
-    inactiveRelayerCountThreshold: {
-      [key: number]: number
-    },
-    pendingTransactionCountThreshold: {
-      [key: number]: number
-    },
-    fundingRelayerAmount: {
-      [key: number]: number
-    },
-    fundingBalanceThreshold: {
-      [key: number]: ethers.BigNumber,
-    }
-    newRelayerInstanceCount: {
-      [key: number]: number
-    },
-    ownerAccountDetails: {
-      [key: number]: {
-        publicKey: string,
-        privateKey: string,
-      }
-    }
-  }],
-  transaction: {
-    errors: {
-      networkResponseCodes: {
-        [key: number]: string
-      },
-      networksNonceError: {
-        [key: number]: string
-      },
-      networksInsufficientFundsError: {
-        [key: number]: string
-      }
-    }
-  },
-  gasPrice: { // add validation to check the object exists for network id 137
-    [key: number]: {
-      updateFrequencyInSeconds: number,
-      minGasPrice: number,
-      maxGasPrice: number,
-      baseFeeMultiplier: number,
-      gasOracle: {
-        [key: string]: string,
-      },
-    }
-  },
-  feeOption: {
-    supportedFeeTokens: {
-      [key:number]: Array<string>
-    },
-    offset: {
-      [key: number]: {
-        [key: string]: number;
-      }
-    },
-    similarTokens: {
-      [key:number]: Array<string> // mapping for wrapped token with token id
-    },
-    nativeChainIds: {
-      [key: string]: number
-    },
-    logoUrl: {
-      [key: number]: {
-        [key: string]: string;
-      }
-    },
-    tokenContractAddress: {
-      [key: number]: {
-        [key: string]: string;
-      }
-    },
-    decimals: {
-      [key: number]: {
-        [key: string]: number;
-      }
-    },
-    feeTokenTransferGas: {
-      [key: number]: {
-        [key: string]: number;
-      }
-    }
-  },
-  tokenPrice: {
-    coinMarketCapApi: string,
-    networkSymbols: {
-      [key: string]: Array<number>
-    },
-    updateFrequencyInSeconds: number,
-    symbolMapByChainId: SymbolMapByChainIdType,
-  },
-  queueUrl: string,
-  entryPointData: {
-    abi: string,
-    address: {
-      [key: number]: string
-    }
-  }
+  supportedTransactionType: ChainIdSupportedTransactionType,
+  chains: ChainsConfigType,
+  relayer: RelayerConfigType,
+  relayerManagers: RelayerManagerConfigType,
+  transaction: TransactionConfigType,
+  gasPrice: GasPriceConfigType,
+  feeOption: FeeOptionConfigType,
+  tokenPrice: TokenPriceConfigType,
+  entryPointData: EntryPointDataConfigType,
 };
 
 export interface IConfig {
