@@ -7,8 +7,8 @@ import { GoerliGasPrice } from './networks/GoerliGasPrice';
 import { MaticGasPrice } from './networks/MaticGasPrice';
 import { MumbaiGasPrice } from './networks/MumbaiGasPrice';
 
-type GasPriceType = MaticGasPrice | GoerliGasPrice | MumbaiGasPrice | undefined;
-export class GasPriceManager implements IGasPriceManager<GasPriceType> {
+export type GasPriceServiceType = MaticGasPrice | GoerliGasPrice | MumbaiGasPrice | undefined;
+export class GasPriceManager implements IGasPriceManager<GasPriceServiceType> {
   cacheService: ICacheService;
 
   networkService: INetworkService<EVMAccount, EVMRawTransactionType>;
