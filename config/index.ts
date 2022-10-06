@@ -61,6 +61,11 @@ const data: ConfigType = {
     fallbackUrls: {
 
     },
+    retryTransactionInterval: {
+      5: 100,
+      80001: 100,
+      137: 100,
+    },
   },
   relayer: {
     nodePathIndex: 0,

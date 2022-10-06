@@ -8,6 +8,7 @@ import {
   IRelayerManager,
 } from '../../relayer/src/services/relayer-manager';
 import { EVMRelayerQueue } from '../../relayer/src/services/relayer-queue';
+import { EVMRetryTransactionService } from '../../relayer/src/services/retry-transaction-service';
 import { EVMTransactionListener } from '../../relayer/src/services/transaction-listener';
 import { EVMTransactionService } from '../../relayer/src/services/transaction-service';
 import { FeeOption } from '../../server/src/services';
@@ -128,6 +129,18 @@ const transactionDao = new TransactionDAO();
         chainId,
       },
     });
+
+    console.log(`retry queue is ${retryTransactionQueue}`);
+
+    const retryTransactionSerivce = new EVMRetryTransactionService({
+      transactionService,
+      networkService,
+      retryTransactionQueue,
+      options: {
+        chainId,
+      },
+    });
+    retryTransactionQueue.consume(retryTransactionSerivce.onMessageReceived);
 
     const relayerQueue = new EVMRelayerQueue([]);
     for (const relayerManager of config.relayerManagers) {

@@ -38,7 +38,7 @@ ITransactionConsumer<AATransactionMessageType, IEVMAccount, EVMRawTransactionTyp
   ) => {
     if (msg) {
       const transactionDataReceivedFromQueue = JSON.parse(msg.content.toString());
-      log.info(`onMessage received in ${this.transactionType}: ${transactionDataReceivedFromQueue}`);
+      log.info(`onMessage received in ${this.transactionType}: ${JSON.stringify(transactionDataReceivedFromQueue)}`);
       this.queue?.ack(msg);
       // get active relayer
       const activeRelayer = await this.relayerManager.getActiveRelayer();

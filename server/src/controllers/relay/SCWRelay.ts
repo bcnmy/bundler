@@ -23,7 +23,7 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
     if (!clientMessenger.socketClient.isConnected()) {
       await clientMessenger.connect();
     }
-    log.info(`Sending transaction to relayer with ${transactionId}`);
+    log.info(`Sending transaction to relayer with transactionId: ${transactionId}`);
     const response = await routeTransactionToRelayerMap[chainId][TransactionType.SCW]
       .sendTransactionToRelayer({
         type, to, data, gasLimit, chainId, value, transactionId,

@@ -39,6 +39,7 @@ export class RetryTransactionHandlerQueue implements IQueue<TransactionMessageTy
       this.channel.prefetch(1);
       this.channel.publish('transaction_queue_exchange', key, Buffer.from(JSON.stringify(data)), {
         persistent: true,
+        headers: { 'x-delay': config.chains.retryTransactionInterval[this.chainId] },
       });
       return true;
     }
@@ -59,7 +60,7 @@ export class RetryTransactionHandlerQueue implements IQueue<TransactionMessageTy
       this.channel.bindQueue(retryTransactionQueue.queue, 'transaction_queue_exchange', key);
       await this.channel.consume(
         retryTransactionQueue.queue,
-        onMessageReceived.bind(this),
+        onMessageReceived,
       );
 
       return true;
