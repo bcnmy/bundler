@@ -99,6 +99,7 @@ export class FeeOption {
           address: config.feeOption.tokenContractAddress[this.chainId][token],
           logoUrl: config.feeOption.logoUrl[this.chainId][token],
           feeTokenTransferGas: config.feeOption.feeTokenTransferGas[this.chainId][token],
+          refundReceiver: config.feeOption.refundReceiver[this.chainId],
         });
       }
       return {

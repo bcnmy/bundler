@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { TransactionType } from '../../../../common/types';
+import { TransactionMethodType } from '../../../../common/types';
 import { relayAATransaction } from './AARelay';
 import { relaySCWTransaction } from './SCWRelay';
 
@@ -7,11 +7,11 @@ export const requestHandler = async (
   req: Request,
   res: Response,
 ) => {
-  const { transactionType } = req.body;
+  const { method } = req.body;
   let response = null;
-  if (transactionType === TransactionType.AA) {
+  if (method === TransactionMethodType.AA) {
     response = await relayAATransaction(req, res);
-  } else if (transactionType === TransactionType.SCW) {
+  } else if (method === TransactionMethodType.SCW) {
     response = await relaySCWTransaction(req, res);
   }
   if (!response) {
