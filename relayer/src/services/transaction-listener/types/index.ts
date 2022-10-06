@@ -8,7 +8,7 @@ import { IEVMAccount } from '../../account';
 export type TransactionMessageType = ethers.providers.TransactionResponse;
 
 export type EVMTransactionListenerParamsType = {
-  networkService: INetworkService<IEVMAccount<EVMRawTransactionType>, EVMRawTransactionType>,
+  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
   transactionQueue: IQueue<TransactionMessageType>,
   retryTransactionQueue: IQueue<TransactionMessageType>,
   transactionDao: ITransactionDAO,

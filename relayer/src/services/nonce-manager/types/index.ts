@@ -7,6 +7,6 @@ export type EVMNonceManagerParamsType = {
   options: {
     chainId: number;
   },
-  networkService: INetworkService<IEVMAccount<EVMRawTransactionType>, EVMRawTransactionType>;
+  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
   cacheService: ICacheService;
 };
