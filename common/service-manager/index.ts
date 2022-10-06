@@ -7,6 +7,7 @@ import {
   EVMRelayerManager,
   IRelayerManager,
 } from '../../relayer/src/services/relayer-manager';
+import { EVMRelayerQueue } from '../../relayer/src/services/relayer-queue';
 import { EVMTransactionListener } from '../../relayer/src/services/transaction-listener';
 import { EVMTransactionService } from '../../relayer/src/services/transaction-service';
 import { FeeOption } from '../../server/src/services';
@@ -128,6 +129,7 @@ const transactionDao = new TransactionDAO();
       },
     });
 
+    const relayerQueue = new EVMRelayerQueue([]);
     for (const relayerManager of config.relayerManagers) {
       if (!EVMRelayerManagerMap[relayerManager.name]) {
         EVMRelayerManagerMap[relayerManager.name] = {};
@@ -137,10 +139,11 @@ const transactionDao = new TransactionDAO();
         gasPriceService,
         transactionService,
         nonceManager,
+        relayerQueue,
         options: {
           chainId,
           name: relayerManager.name,
-          masterSeed: relayerManager.masterSeed,
+          relayerSeed: relayerManager.relayerSeed,
           minRelayerCount: relayerManager.minRelayerCount[chainId],
           maxRelayerCount: relayerManager.maxRelayerCount[chainId],
           inactiveRelayerCountThreshold:

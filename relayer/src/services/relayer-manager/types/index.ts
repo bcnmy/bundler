@@ -2,8 +2,9 @@ import { ethers } from 'ethers';
 import { IGasPrice } from '../../../../../common/gas-price';
 import { INetworkService } from '../../../../../common/network';
 import { EVMRawTransactionType } from '../../../../../common/types';
-import { IEVMAccount, EVMAccount } from '../../account';
+import { EVMAccount, IEVMAccount } from '../../account';
 import { INonceManager } from '../../nonce-manager';
+import { EVMRelayerMetaDataType, IRelayerQueue } from '../../relayer-queue';
 import { ITransactionService } from '../../transaction-service';
 
 export type EVMRelayerManagerServiceParamsType = {
@@ -11,10 +12,11 @@ export type EVMRelayerManagerServiceParamsType = {
   gasPriceService: IGasPrice,
   transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>,
   nonceManager: INonceManager<IEVMAccount, EVMRawTransactionType>,
+  relayerQueue: IRelayerQueue<EVMRelayerMetaDataType>,
   options: {
     name: string;
     chainId: number;
-    masterSeed: string;
+    relayerSeed: string;
     minRelayerCount: number;
     maxRelayerCount: number;
     inactiveRelayerCountThreshold: number;
@@ -27,11 +29,4 @@ export type EVMRelayerManagerServiceParamsType = {
     },
     ownerAccountDetails: EVMAccount,
   },
-};
-
-export type RelayerDataType = {
-  address: string;
-  nonce: number;
-  pendingCount: number;
-  balance: ethers.BigNumber;
 };

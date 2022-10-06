@@ -2,8 +2,8 @@ import { ethers } from 'ethers';
 import { IGasPrice } from '../../../../../common/gas-price';
 import { INetworkService } from '../../../../../common/network';
 import { INonceManager } from '../../nonce-manager';
+import { EVMRelayerMetaDataType } from '../../relayer-queue';
 import { ITransactionService } from '../../transaction-service';
-import { RelayerDataType } from '../types';
 
 export interface IRelayerManager<AccountType, RawTransactionType> {
   name: string;
@@ -16,14 +16,13 @@ export interface IRelayerManager<AccountType, RawTransactionType> {
   newRelayerInstanceCount: number;
   fundingBalanceThreshold: ethers.BigNumber;
   fundingRelayerAmount: number;
-  masterSeed: string;
+  relayerSeed: string;
   ownerAccountDetails: AccountType;
   gasLimitMap: {
     [key: number]: number
   };
-  activeRelayerData: Array<RelayerDataType>;
   relayerMap: Record<string, AccountType>;
-  processingTransactionRelayerDataMap: Record<string, RelayerDataType>;
+  transactionProcessingRelayerMap: Record<string, EVMRelayerMetaDataType>;
   nonceManager: INonceManager<AccountType, RawTransactionType>;
   networkService: INetworkService<AccountType, RawTransactionType>;
   gasPriceService: IGasPrice;
@@ -31,7 +30,7 @@ export interface IRelayerManager<AccountType, RawTransactionType> {
   createRelayers(numberOfRelayers?: number): Promise<string[]>;
   fundRelayers(accountAddress: string[]): Promise<boolean>;
   getActiveRelayer(): Promise<AccountType | null>;
-  addActiveRelayer(address: string): void;
+  addActiveRelayer(address: string): Promise<void>;
   getRelayersCount(active: boolean): number;
   hasBalanceBelowThreshold(address: string): boolean;
   setMinRelayerCount(minRelayerCount: number): void
