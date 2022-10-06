@@ -1,7 +1,7 @@
 import { ConsumeMessage } from 'amqplib';
 import { IQueue } from '../../../../common/interface';
 import { logger } from '../../../../common/log-config';
-import { TransactionType, SCWTransactionMessageType } from '../../../../common/types';
+import { TransactionType, SCWTransactionMessageType, EVMRawTransactionType } from '../../../../common/types';
 import { EVMAccount } from '../account';
 import { IRelayerManager } from '../relayer-manager/interface/IRelayerManager';
 import { ITransactionService } from '../transaction-service';
@@ -9,14 +9,15 @@ import { ITransactionConsumer } from './interface/ITransactionConsumer';
 import { SCWConsumerParamsType } from './types';
 
 const log = logger(module);
-export class SCWConsumer implements ITransactionConsumer<SCWTransactionMessageType> {
+export class SCWConsumer implements
+ITransactionConsumer<SCWTransactionMessageType, EVMAccount, EVMRawTransactionType> {
   chainId: number;
 
   private transactionType: TransactionType = TransactionType.SCW;
 
-  relayerManager: IRelayerManager<EVMAccount>;
+  relayerManager: IRelayerManager<EVMAccount, EVMRawTransactionType>;
 
-  transactionService: ITransactionService<EVMAccount>;
+  transactionService: ITransactionService<EVMAccount, EVMRawTransactionType>;
 
   queue: IQueue<SCWTransactionMessageType>;
 

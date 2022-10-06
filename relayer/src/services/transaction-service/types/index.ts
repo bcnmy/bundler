@@ -10,7 +10,7 @@ import { ITransactionListener } from '../../transaction-listener';
 
 export type EVMTransactionServiceParamsType = {
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
-  transactionListener: ITransactionListener,
+  transactionListener: ITransactionListener<IEVMAccount, EVMRawTransactionType>,
   nonceManager: INonceManager<IEVMAccount, EVMRawTransactionType>,
   gasPriceService: IGasPrice,
   transactionDao: ITransactionDAO,
