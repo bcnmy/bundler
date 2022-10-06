@@ -23,9 +23,10 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
       await clientMessenger.connect();
     }
     log.info(`Sending transaction to relayer with ${transactionId}`);
-    const response = await routeTransactionToRelayerMap[chainId][TransactionType.SCW].sendTransactionToRelayer({
-      type, to, data, gasLimit, chainId, value, transactionId,
-    });
+    const response = await routeTransactionToRelayerMap[chainId][TransactionType.SCW]
+      .sendTransactionToRelayer({
+        type, to, data, gasLimit, chainId, value, transactionId,
+      });
     if (isError(response)) {
       return res.status(400).json({
         msg: 'bad request',

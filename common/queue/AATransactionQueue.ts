@@ -13,7 +13,7 @@ export class AATransactionQueue implements IQueue<AATransactionMessageType> {
 
   chainId: number;
 
-  transactionType: string = TransactionType.AA;
+  transactionType: TransactionType = TransactionType.AA;
 
   msg!: ConsumeMessage | null;
 

@@ -1,24 +1,25 @@
 import { ConsumeMessage } from 'amqplib';
 import { IQueue } from '../../../../common/interface';
 import { logger } from '../../../../common/log-config';
-import { TransactionType, AATransactionMessageType } from '../../../../common/types';
-import { EVMAccount } from '../account';
+import { TransactionType, AATransactionMessageType, EVMRawTransactionType } from '../../../../common/types';
+import { IEVMAccount } from '../account';
 import { IRelayerManager } from '../relayer-manager';
 import { ITransactionService } from '../transaction-service';
 import { ITransactionConsumer } from './interface/ITransactionConsumer';
 import { AAConsumerParamsType } from './types';
 
 const log = logger(module);
-export class AAConsumer implements ITransactionConsumer<AATransactionMessageType> {
+export class AAConsumer implements
+ITransactionConsumer<AATransactionMessageType, IEVMAccount, EVMRawTransactionType> {
   chainId: number;
 
   private transactionType: TransactionType = TransactionType.AA;
 
   queue: IQueue<AATransactionMessageType>;
 
-  relayerManager: IRelayerManager<EVMAccount>;
+  relayerManager: IRelayerManager<IEVMAccount, EVMRawTransactionType>;
 
-  transactionService: ITransactionService<EVMAccount>;
+  transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>;
 
   constructor(
     aaConsumerParams: AAConsumerParamsType,

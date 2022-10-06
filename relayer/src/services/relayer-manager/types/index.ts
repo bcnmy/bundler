@@ -4,7 +4,7 @@ import { INetworkService } from '../../../../../common/network';
 import { EVMRawTransactionType } from '../../../../../common/types';
 import { EVMAccount, IEVMAccount } from '../../account';
 import { INonceManager } from '../../nonce-manager';
-import { IRelayerQueue } from '../../relayer-queue';
+import { EVMRelayerMetaDataType, IRelayerQueue } from '../../relayer-queue';
 import { ITransactionService } from '../../transaction-service';
 
 export type EVMRelayerManagerServiceParamsType = {
@@ -12,7 +12,7 @@ export type EVMRelayerManagerServiceParamsType = {
   gasPriceService: IGasPrice,
   transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>,
   nonceManager: INonceManager<IEVMAccount, EVMRawTransactionType>,
-  relayerQueue: IRelayerQueue,
+  relayerQueue: IRelayerQueue<EVMRelayerMetaDataType>,
   options: {
     name: string;
     chainId: number;

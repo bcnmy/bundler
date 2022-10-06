@@ -32,6 +32,7 @@ export interface IRelayerManager<AccountType, RawTransactionType> {
   getActiveRelayer(): Promise<AccountType | null>;
   addActiveRelayer(address: string): Promise<void>;
   getRelayersCount(active: boolean): number;
+  hasBalanceBelowThreshold(address: string): boolean;
   setMinRelayerCount(minRelayerCount: number): void
   setMaxRelayerCount(maxRelayerCount: number): void
   setInactiveRelayerCountThreshold(inactiveRelayerCountThreshold: number): void
