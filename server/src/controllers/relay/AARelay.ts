@@ -3,9 +3,10 @@ import { ClientMessenger } from 'gasless-messaging-sdk';
 import { logger } from '../../../../common/log-config';
 import { routeTransactionToRelayerMap } from '../../../../common/service-manager';
 import { isError, TransactionType } from '../../../../common/types';
+import { config } from '../../../../config';
 import { generateTransactionId } from '../../utils/tx-id-generator';
 
-const websocketUrl = process.env.WEB_SOCKET_URL || '';
+const websocketUrl = config.socketService.wssUrl;
 const clientMessenger = new ClientMessenger(
   websocketUrl,
 );
@@ -16,14 +17,15 @@ export const relayAATransaction = async (req: Request, res: Response) => {
   try {
     const {
       type, to, data, gasLimit, chainId, value,
-    } = req.body;
+    } = req.body.params;
     const transactionId = generateTransactionId(data);
     if (!clientMessenger.socketClient.isConnected()) {
       await clientMessenger.connect();
     }
-    const response = await routeTransactionToRelayerMap[chainId][TransactionType.AA].sendTransactionToRelayer({
-      type, to, data, gasLimit, chainId, value, transactionId,
-    });
+    const response = await routeTransactionToRelayerMap[chainId][TransactionType.AA]
+      .sendTransactionToRelayer({
+        type, to, data, gasLimit, chainId, value, transactionId,
+      });
     if (isError(response)) {
       return res.status(400).json({
         msg: 'bad request',

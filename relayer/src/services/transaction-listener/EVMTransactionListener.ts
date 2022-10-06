@@ -18,7 +18,8 @@ import {
 const log = logger(module);
 
 export class EVMTransactionListener implements
-ITransactionListener, ITransactionPublisher<TransactionMessageType> {
+ITransactionListener<IEVMAccount, EVMRawTransactionType>,
+ITransactionPublisher<TransactionMessageType> {
   chainId: number;
 
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;

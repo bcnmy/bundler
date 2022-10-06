@@ -8,10 +8,10 @@ import { IGasPrice } from './interface/IGasPrice';
 import { GasPriceType } from './types';
 
 const log = logger(module);
-export class AbstractGasPrice implements IGasPrice {
+export class GasPrice implements IGasPrice {
   chainId: number;
 
-  networkService: INetworkService<EVMAccount, EVMRawTransactionType> | undefined;
+  networkService: INetworkService<EVMAccount, EVMRawTransactionType>;
 
   cacheService: ICacheService;
 

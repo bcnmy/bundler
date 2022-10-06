@@ -4,6 +4,12 @@ export enum TransactionType {
   CROSS_CHAIN = 'CROSS_CHAIN',
 }
 
+export enum TransactionMethodType {
+  SCW = 'eth_sendSmartContractWalletTransaction',
+  AA = 'eth_sendUserOperation',
+  CROSS_CHAIN = 'eth_sendCrossChainTransaction',
+}
+
 export enum TransactionStatus {
   IN_PROCESS = 'IN_PROCESS',
   PENDING = 'PENDING',

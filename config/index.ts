@@ -30,10 +30,10 @@ const data: ConfigType = {
     redisUrl: 'redis://localhost:6379',
   },
   socketService: {
-    wssUrl: '',
-    httpUrl: '',
-    secret: '',
-    apiKey: '',
+    wssUrl: 'ws://localhost:9000/connection/websocket',
+    httpUrl: 'http://localhost:9000/api',
+    secret: '9edb7c38-0f55-4627-9bda-4cc050b5f6cb',
+    apiKey: 'a4c3c3df-4294-4719-a6a6-0c3416d68466',
   },
   supportedNetworks: [5, 80001],
   EIP1559SupportedNetworks: [],
@@ -68,7 +68,7 @@ const data: ConfigType = {
   relayerManagers: [
     {
       name: 'RM1',
-      masterSeed: 'd13c0fefe2d7639fff2e9c583bddabfc9d3dc3255e0f148fbfb2adbfe7f54488fca2bfd317de3181a4f898421d5580e04dc35eaad2646c7f2bf1531bca68b390',
+      relayerSeed: 'd13c0fefe2d7639fff2e9c583bddabfc9d3dc3255e0f148fbfb2adbfe7f54488fca2bfd317de3181a4f898421d5580e04dc35eaad2646c7f2bf1531bca68b390',
       gasLimitMap: {
         0: 21000, // DEFAULT -> EVM
         1: 710000, // Arbitrum
@@ -311,6 +311,11 @@ const data: ConfigType = {
         WETH: 21000,
         DAI: 21000,
       },
+    },
+    refundReceiver: {
+      5: '0x040a9cbC4453B0eeaE12f3210117B422B890C1ED',
+      80001: '0x040a9cbC4453B0eeaE12f3210117B422B890C1ED',
+      137: '0x040a9cbC4453B0eeaE12f3210117B422B890C1ED',
     },
   },
   tokenPrice: {

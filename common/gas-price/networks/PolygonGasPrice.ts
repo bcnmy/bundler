@@ -7,12 +7,12 @@ import { INetworkService } from '../../network';
 import { IScheduler } from '../../scheduler';
 import { EVMRawTransactionType } from '../../types';
 import { gasPriceCall } from '../../utils/axios-calls';
-import { AbstractGasPrice } from '../AbstactGasPrice';
+import { GasPrice } from '../GasPrice';
 import { GasPriceType } from '../types';
 
 const log = logger(module);
 
-export class MaticGasPrice extends AbstractGasPrice implements IScheduler {
+export class MaticGasPrice extends GasPrice implements IScheduler {
   updateFrequencyInSeconds: number;
 
   constructor(

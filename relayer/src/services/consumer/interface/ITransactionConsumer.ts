@@ -1,10 +1,9 @@
-import { EVMAccount } from '../../account';
 import { IRelayerManager } from '../../relayer-manager';
 import { ITransactionService } from '../../transaction-service';
 import { IConsumer } from './IConsumer';
 
-export interface ITransactionConsumer<TransactionMessageType>
+export interface ITransactionConsumer<TransactionMessageType, AccountType, RawTransactionType>
   extends IConsumer<TransactionMessageType> {
-  relayerManager: IRelayerManager<EVMAccount>;
-  transactionService: ITransactionService<EVMAccount>
+  relayerManager: IRelayerManager<AccountType, RawTransactionType>;
+  transactionService: ITransactionService<AccountType, RawTransactionType>
 }

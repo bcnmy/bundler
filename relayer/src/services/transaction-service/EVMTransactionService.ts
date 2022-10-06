@@ -25,7 +25,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
 
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
 
-  transactionListener: ITransactionListener;
+  transactionListener: ITransactionListener<IEVMAccount, EVMRawTransactionType>;
 
   nonceManager: INonceManager<IEVMAccount, EVMRawTransactionType>;
 
