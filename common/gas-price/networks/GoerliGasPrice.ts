@@ -5,9 +5,9 @@ import { ICacheService } from '../../cache';
 import { INetworkService } from '../../network';
 import { IScheduler } from '../../scheduler';
 import { EVMRawTransactionType } from '../../types';
-import { AbstractGasPrice } from '../AbstactGasPrice';
+import { GasPrice } from '../GasPrice';
 
-export class GoerliGasPrice extends AbstractGasPrice implements IScheduler {
+export class GoerliGasPrice extends GasPrice implements IScheduler {
   updateFrequencyInSeconds: number;
 
   constructor(
