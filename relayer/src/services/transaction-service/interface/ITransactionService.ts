@@ -7,7 +7,7 @@ import { ErrorTransactionResponseType, SuccessTransactionResponseType, Transacti
 export interface ITransactionService<AccountType, RawTransactionType> {
   chainId: number;
   networkService: INetworkService<AccountType, RawTransactionType>;
-  transactionListener: ITransactionListener;
+  transactionListener: ITransactionListener<AccountType, RawTransactionType>;
   nonceManager: INonceManager<AccountType, RawTransactionType>;
   gasPriceService: IGasPrice;
 

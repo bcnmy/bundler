@@ -14,7 +14,7 @@ import { INonceManager } from '../nonce-manager';
 import { ITransactionService } from '../transaction-service/interface/ITransactionService';
 import { IRelayerManager } from './interface/IRelayerManager';
 import { SortEVMRelayerByLeastPendingCount } from './strategy';
-import { EVMRelayerDataType, EVMRelayerManagerServiceParamsType } from './types';
+import { RelayerDataType, EVMRelayerManagerServiceParamsType } from './types';
 
 const log = logger(module);
 
@@ -63,11 +63,11 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount, EVMRawTran
     [key: number]: number
   };
 
-  activeRelayerData: Array<EVMRelayerDataType> = [];
+  activeRelayerData: Array<RelayerDataType> = [];
 
   relayerMap: Record<string, EVMAccount> = {};
 
-  processingTransactionRelayerDataMap: Record<string, EVMRelayerDataType> = {};
+  processingTransactionRelayerDataMap: Record<string, RelayerDataType> = {};
 
   nonceManager: INonceManager<IEVMAccount, EVMRawTransactionType>;
 

@@ -29,7 +29,7 @@ export type EVMRelayerManagerServiceParamsType = {
   },
 };
 
-export type EVMRelayerDataType = {
+export type RelayerDataType = {
   address: string;
   nonce: number;
   pendingCount: number;

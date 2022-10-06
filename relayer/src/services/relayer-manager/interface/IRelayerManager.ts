@@ -3,7 +3,7 @@ import { IGasPrice } from '../../../../../common/gas-price';
 import { INetworkService } from '../../../../../common/network';
 import { INonceManager } from '../../nonce-manager';
 import { ITransactionService } from '../../transaction-service';
-import { EVMRelayerDataType } from '../types';
+import { RelayerDataType } from '../types';
 
 export interface IRelayerManager<AccountType, RawTransactionType> {
   name: string;
@@ -21,9 +21,9 @@ export interface IRelayerManager<AccountType, RawTransactionType> {
   gasLimitMap: {
     [key: number]: number
   };
-  activeRelayerData: Array<EVMRelayerDataType>;
+  activeRelayerData: Array<RelayerDataType>;
   relayerMap: Record<string, AccountType>;
-  processingTransactionRelayerDataMap: Record<string, EVMRelayerDataType>;
+  processingTransactionRelayerDataMap: Record<string, RelayerDataType>;
   nonceManager: INonceManager<AccountType, RawTransactionType>;
   networkService: INetworkService<AccountType, RawTransactionType>;
   gasPriceService: IGasPrice;
@@ -33,6 +33,7 @@ export interface IRelayerManager<AccountType, RawTransactionType> {
   getActiveRelayer(): Promise<AccountType | null>;
   addActiveRelayer(address: string): void;
   getRelayersCount(active: boolean): number;
+  hasBalanceBelowThreshold(address: string): boolean;
   setMinRelayerCount(minRelayerCount: number): void
   setMaxRelayerCount(maxRelayerCount: number): void
   setInactiveRelayerCountThreshold(inactiveRelayerCountThreshold: number): void
