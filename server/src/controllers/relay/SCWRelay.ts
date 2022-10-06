@@ -3,9 +3,10 @@ import { ClientMessenger } from 'gasless-messaging-sdk';
 import { logger } from '../../../../common/log-config';
 import { routeTransactionToRelayerMap } from '../../../../common/service-manager';
 import { isError, TransactionType } from '../../../../common/types';
+import { config } from '../../../../config';
 import { generateTransactionId } from '../../utils/tx-id-generator';
 
-const websocketUrl = process.env.WEB_SOCKET_URL || '';
+const websocketUrl = config.socketService.wssUrl;
 const clientMessenger = new ClientMessenger(
   websocketUrl,
 );
@@ -17,7 +18,7 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
     log.info('relaySCWTransaction', req.body);
     const {
       type, to, data, gasLimit, chainId, value,
-    } = req.body;
+    } = req.body.params;
     const transactionId = generateTransactionId(data);
     if (!clientMessenger.socketClient.isConnected()) {
       await clientMessenger.connect();

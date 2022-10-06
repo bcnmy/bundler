@@ -73,6 +73,7 @@ type FeeOptionConfigType = {
   tokenContractAddress: ChainIdAndTokenWithStringValueType,
   decimals: ChainIdAndTokenWithNumberValueType,
   feeTokenTransferGas: ChainIdAndTokenWithNumberValueType,
+  refundReceiver: ChainIdWithStringValueType,
 };
 
 type TokenPriceConfigType = {
