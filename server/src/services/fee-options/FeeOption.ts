@@ -100,6 +100,7 @@ export class FeeOption {
           logoUrl: config.feeOption.logoUrl[this.chainId][token],
           feeTokenTransferGas: config.feeOption.feeTokenTransferGas[this.chainId][token],
           refundReceiver: config.feeOption.refundReceiver[this.chainId],
+          commission: config.feeOption.commission[this.chainId] || 0,
         });
       }
       return {
