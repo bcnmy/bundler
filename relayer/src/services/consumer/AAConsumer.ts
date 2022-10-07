@@ -1,7 +1,7 @@
 import { ConsumeMessage } from 'amqplib';
 import { logger } from '../../../../common/log-config';
 import { IQueue } from '../../../../common/queue';
-import { EVMRawTransactionType, TransactionType } from '../../../../common/types';
+import { AATransactionMessageType, EVMRawTransactionType, TransactionType } from '../../../../common/types';
 import { IEVMAccount } from '../account';
 import { IRelayerManager } from '../relayer-manager';
 import { ITransactionService } from '../transaction-service';
@@ -11,9 +11,11 @@ import { AAConsumerParamsType } from './types';
 const log = logger(module);
 export class AAConsumer implements
 ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
-  chainId: number;
-
   private transactionType: TransactionType = TransactionType.AA;
+
+  private queue: IQueue<AATransactionMessageType>;
+
+  chainId: number;
 
   relayerManager: IRelayerManager<IEVMAccount, EVMRawTransactionType>;
 
@@ -23,8 +25,9 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
     aaConsumerParams: AAConsumerParamsType,
   ) {
     const {
-      options, relayerManager, transactionService,
+      options, queue, relayerManager, transactionService,
     } = aaConsumerParams;
+    this.queue = queue;
     this.relayerManager = relayerManager;
     this.chainId = options.chainId;
     this.transactionService = transactionService;
@@ -33,11 +36,10 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
   onMessageReceived = async (
     msg?: ConsumeMessage,
   ) => {
-    const self = this as unknown as IQueue<AAConsumerParamsType>;
     if (msg) {
       const transactionDataReceivedFromQueue = JSON.parse(msg.content.toString());
       log.info(`onMessage received in ${this.transactionType}: ${JSON.stringify(transactionDataReceivedFromQueue)}`);
-      self.ack(msg);
+      this.queue.ack(msg);
       // get active relayer
       const activeRelayer = await this.relayerManager.getActiveRelayer();
       log.info(`Active relayer for ${this.transactionType} is ${activeRelayer?.getPublicKey()}`);

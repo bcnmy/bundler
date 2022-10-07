@@ -1,7 +1,7 @@
 import { ConsumeMessage } from 'amqplib';
 import { logger } from '../../../../common/log-config';
 import { IQueue } from '../../../../common/queue';
-import { EVMRawTransactionType, TransactionType } from '../../../../common/types';
+import { EVMRawTransactionType, SCWTransactionMessageType, TransactionType } from '../../../../common/types';
 import { EVMAccount } from '../account';
 import { IRelayerManager } from '../relayer-manager/interface/IRelayerManager';
 import { ITransactionService } from '../transaction-service';
@@ -11,9 +11,11 @@ import { SCWConsumerParamsType } from './types';
 const log = logger(module);
 export class SCWConsumer implements
 ITransactionConsumer<EVMAccount, EVMRawTransactionType> {
-  chainId: number;
-
   private transactionType: TransactionType = TransactionType.SCW;
+
+  private queue: IQueue<SCWTransactionMessageType>;
+
+  chainId: number;
 
   relayerManager: IRelayerManager<EVMAccount, EVMRawTransactionType>;
 
@@ -23,8 +25,9 @@ ITransactionConsumer<EVMAccount, EVMRawTransactionType> {
     scwConsumerParamsType: SCWConsumerParamsType,
   ) {
     const {
-      options, relayerManager, transactionService,
+      options, queue, relayerManager, transactionService,
     } = scwConsumerParamsType;
+    this.queue = queue;
     this.relayerManager = relayerManager;
     this.transactionService = transactionService;
     this.chainId = options.chainId;
@@ -33,11 +36,10 @@ ITransactionConsumer<EVMAccount, EVMRawTransactionType> {
   onMessageReceived = async (
     msg?: ConsumeMessage,
   ) => {
-    const self = this as unknown as IQueue<SCWConsumerParamsType>;
     if (msg) {
       const transactionDataReceivedFromQueue = JSON.parse(msg.content.toString());
       log.info(`onMessage received in ${this.transactionType}: ${JSON.stringify(transactionDataReceivedFromQueue)}`);
-      self.ack(msg);
+      this.queue.ack(msg);
       // get active relayer
       const activeRelayer = await this.relayerManager.getActiveRelayer();
       log.info(`Active relayer for ${this.transactionType} is ${activeRelayer?.getPublicKey()}`);
