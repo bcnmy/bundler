@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import { config } from '../../config';
 import { EVMAccount } from '../../relayer/src/services/account';
-import { AAConsumer, SCWConsumer } from '../../relayer/src/services/consumer';
+import { AAConsumer, SCWConsumer, SocketConsumer } from '../../relayer/src/services/consumer';
 import { EVMNonceManager } from '../../relayer/src/services/nonce-manager';
 import {
   EVMRelayerManager,
@@ -95,6 +95,14 @@ const transactionDao = new TransactionDAO();
       chainId,
     });
     await transactionQueue.connect();
+
+    const socketConsumer = new SocketConsumer({
+      queue: transactionQueue,
+      options: {
+        chainId,
+      },
+    });
+    transactionQueue.consume(socketConsumer.onMessageReceived);
 
     const retryTransactionQueue = new RetryTransactionHandlerQueue({
       chainId,

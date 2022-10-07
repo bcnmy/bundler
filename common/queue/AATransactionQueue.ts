@@ -11,9 +11,15 @@ const { queueUrl } = config;
 export class AATransactionQueue implements IQueue<AATransactionMessageType> {
   private channel!: Channel;
 
+  transactionType: TransactionType = TransactionType.AA;
+
+  private exchangeName = `relayer_queue_exchange_${this.transactionType}`;
+
+  private exchangeType = 'direct';
+
   chainId: number;
 
-  transactionType: TransactionType = TransactionType.AA;
+  queueName: string;
 
   msg!: ConsumeMessage | null;
 
@@ -23,13 +29,14 @@ export class AATransactionQueue implements IQueue<AATransactionMessageType> {
     },
   ) {
     this.chainId = options.chainId;
+    this.queueName = `relayer_queue_${this.transactionType}_${this.chainId}`;
   }
 
   connect = async () => {
     const connection = await amqp.connect(queueUrl);
     if (!this.channel) {
       this.channel = await connection.createChannel();
-      this.channel.assertExchange(`relayer_queue_exchange_${this.transactionType}`, 'direct', {
+      this.channel.assertExchange(this.exchangeName, this.exchangeType, {
         durable: true,
       });
     }
@@ -37,24 +44,21 @@ export class AATransactionQueue implements IQueue<AATransactionMessageType> {
 
   publish = async (data: AATransactionMessageType) => {
     const key = `chainid.${this.chainId}`;
-    this.channel.prefetch(1);
-    this.channel.publish(`relayer_queue_exchange_${this.transactionType}`, key, Buffer.from(JSON.stringify(data)), {
+    this.channel.publish(this.exchangeName, key, Buffer.from(JSON.stringify(data)), {
       persistent: true,
     });
     return true;
   };
 
   consume = async (onMessageReceived: () => void) => {
-    this.channel.assertExchange(`relayer_queue_exchange_${this.transactionType}`, 'direct', {
-      durable: true,
-    });
+    log.info(`[x] Setting up consumer for queue with chain id ${this.chainId} for transaction type ${this.transactionType}`);
     this.channel.prefetch(1);
     try {
       // setup a consumer
       const queue: Replies.AssertQueue = await this.channel.assertQueue(`relayer_queue_${this.chainId}_type_${this.transactionType}`);
       const key = `chainid.${this.chainId}.type.${this.transactionType}`;
       log.info(`[*] Waiting for transactions on network id ${this.chainId} with type ${this.transactionType}`);
-      this.channel.bindQueue(queue.queue, `relayer_queue_exchange_${this.transactionType}`, key);
+      this.channel.bindQueue(queue.queue, this.exchangeName, key);
       await this.channel.consume(
         queue.queue,
         onMessageReceived.bind(this),
