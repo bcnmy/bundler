@@ -1,7 +1,7 @@
 import { ConsumeMessage } from 'amqplib';
-import { IQueue } from '../../../../common/interface';
 import { logger } from '../../../../common/log-config';
-import { TransactionType, AATransactionMessageType, EVMRawTransactionType } from '../../../../common/types';
+import { IQueue } from '../../../../common/queue';
+import { EVMRawTransactionType, TransactionType } from '../../../../common/types';
 import { IEVMAccount } from '../account';
 import { IRelayerManager } from '../relayer-manager';
 import { ITransactionService } from '../transaction-service';
@@ -10,12 +10,10 @@ import { AAConsumerParamsType } from './types';
 
 const log = logger(module);
 export class AAConsumer implements
-ITransactionConsumer<AATransactionMessageType, IEVMAccount, EVMRawTransactionType> {
+ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
   chainId: number;
 
   private transactionType: TransactionType = TransactionType.AA;
-
-  queue: IQueue<AATransactionMessageType>;
 
   relayerManager: IRelayerManager<IEVMAccount, EVMRawTransactionType>;
 
@@ -25,9 +23,8 @@ ITransactionConsumer<AATransactionMessageType, IEVMAccount, EVMRawTransactionTyp
     aaConsumerParams: AAConsumerParamsType,
   ) {
     const {
-      options, queue, relayerManager, transactionService,
+      options, relayerManager, transactionService,
     } = aaConsumerParams;
-    this.queue = queue;
     this.relayerManager = relayerManager;
     this.chainId = options.chainId;
     this.transactionService = transactionService;
@@ -36,10 +33,11 @@ ITransactionConsumer<AATransactionMessageType, IEVMAccount, EVMRawTransactionTyp
   onMessageReceived = async (
     msg?: ConsumeMessage,
   ) => {
+    const self = this as unknown as IQueue<AAConsumerParamsType>;
     if (msg) {
       const transactionDataReceivedFromQueue = JSON.parse(msg.content.toString());
       log.info(`onMessage received in ${this.transactionType}: ${JSON.stringify(transactionDataReceivedFromQueue)}`);
-      this.queue?.ack(msg);
+      self.ack(msg);
       // get active relayer
       const activeRelayer = await this.relayerManager.getActiveRelayer();
       log.info(`Active relayer for ${this.transactionType} is ${activeRelayer?.getPublicKey()}`);

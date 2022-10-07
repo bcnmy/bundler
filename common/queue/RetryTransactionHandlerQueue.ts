@@ -60,7 +60,7 @@ export class RetryTransactionHandlerQueue implements IQueue<TransactionMessageTy
       this.channel.bindQueue(retryTransactionQueue.queue, 'transaction_queue_exchange', key);
       await this.channel.consume(
         retryTransactionQueue.queue,
-        onMessageReceived,
+        onMessageReceived.bind(this),
       );
 
       return true;

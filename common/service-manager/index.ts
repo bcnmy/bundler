@@ -130,12 +130,9 @@ const transactionDao = new TransactionDAO();
       },
     });
 
-    console.log(`retry queue is ${retryTransactionQueue}`);
-
     const retryTransactionSerivce = new EVMRetryTransactionService({
       transactionService,
       networkService,
-      retryTransactionQueue,
       options: {
         chainId,
       },
