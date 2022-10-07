@@ -21,13 +21,13 @@ export class AASimulationService {
     const { userOp, entryPointAddress, entryPointAbi } = simulationData;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const userOpSimulation = await this.networkService.executeReadMethod(
-      entryPointAbi,
+      JSON.stringify(entryPointAbi),
       entryPointAddress,
       'simulateValidation',
       userOp,
     );
     const entryPointContract = this.networkService.getContract(
-      entryPointAbi,
+      JSON.stringify(entryPointAbi),
       entryPointAddress,
     );
     const estimatedGasForUserOp = await this.networkService.estimateGas(entryPointContract, 'handleOps', [userOp], config.zeroAddress);

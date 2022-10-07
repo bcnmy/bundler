@@ -86,6 +86,7 @@ const transactionDao = new TransactionDAO();
 
   for (const chainId of supportedNetworks) {
     routeTransactionToRelayerMap[chainId] = {};
+    entryPointMap[chainId] = [];
 
     const networkService = new EVMNetworkService({
       chainId,
@@ -232,14 +233,16 @@ const transactionDao = new TransactionDAO();
         );
 
         const { entryPointData } = config;
+
         for (let entryPointIndex = 0;
           entryPointIndex < entryPointData[chainId].length;
           entryPointIndex += 1) {
           const entryPoint = entryPointData[chainId][entryPointIndex];
+
           entryPointMap[chainId].push({
             address: entryPoint.address,
             entryPointContract: networkService.getContract(
-              entryPoint.abi.toString(),
+              JSON.stringify(entryPoint.abi),
               entryPoint.address,
             ),
           });
