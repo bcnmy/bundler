@@ -27,18 +27,21 @@ export const aaRequestSchema = object({
   body: object({
     method: string().matches(/eth_sendUserOperation/),
     params: object({
-      sender: string().matches(/^0x[a-fA-F0-9]{40}$/).required('sender address is required'),
-      nonce: number().required('nonce is required'),
-      initCode: string(),
-      callData: string().required('callData is required'),
-      callGas: number().required('callGas is required'),
-      verificationGas: number().required('verificationGas is required'),
-      preVerificationGas: number().required('preVerificationGas is required'),
-      maxFeePerGas: number().required('maxFeePerGas is required'),
-      maxPriorityFeePerGas: number().required('maxPriorityFeePerGas is required'),
-      paymaster: string().matches(/^0x[a-fA-F0-9]{40}$/).required('paymaster address is required'),
-      paymasterData: string(),
-      signature: string().required('signature is required'),
+      userOp: object({
+        sender: string().matches(/^0x[a-fA-F0-9]{40}$/).required('sender address is required'),
+        nonce: number().required('nonce is required'),
+        initCode: string(),
+        callData: string().required('callData is required'),
+        callGasLimit: number().required('callGasLimit is required'),
+        verificationGasLimit: number().required('verificationGas is required'),
+        preVerificationGas: number().required('preVerificationGas is required'),
+        maxFeePerGas: number().required('maxFeePerGas is required'),
+        maxPriorityFeePerGas: number().required('maxPriorityFeePerGas is required'),
+        paymasterAndData: string(),
+        signature: string().required('signature is required'),
+      }),
+      entryPointAddress: string().required('entryPointAddress is required'),
+      chainId: number().required('chainId is required'),
     }),
     jsonrpc: string().required('jsonrpc is required'),
     id: number().required('id is required'),
@@ -63,16 +66,6 @@ export const crossChainRequestSchema = object({
     }),
     jsonrpc: string().required('jsonrpc is required'),
     id: number().required('id is required'),
-  }),
-});
-
-export const simulateOptionsSchema = object({
-  body: object({
-    // to, data, chainId, refundInfo,
-    to: string().required('to address is required'),
-    data: string().required('data is required'),
-    chainId: number().required('chain id is required'),
-    refundInfo: object(),
   }),
 });
 

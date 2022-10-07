@@ -1,23 +1,15 @@
 import { NextFunction, Request, Response } from 'express';
-import { TransactionType } from '../../../../common/types';
+import { TransactionMethodType } from '../../../../common/types';
 import { simulateAATransaction } from './SimulateAATransaction';
 import { simulateSCWTransaction } from './SimulateSCWTransaction';
 
-export const simulateApi = async (req: Request, res: Response, next: NextFunction) => {
+export const simulateTransaction = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { tranasctionType } = req.body;
-    switch (tranasctionType) {
-      case TransactionType.AA:
-        await simulateAATransaction(req, res);
-        break;
-      case TransactionType.SCW:
-        await simulateSCWTransaction(req, res);
-        break;
-      default:
-        return res.status(400).send({
-          code: 400,
-          message: 'Wrong transaction type sent in request',
-        });
+    const { method } = req.body;
+    if (method === TransactionMethodType.AA) {
+      await simulateAATransaction(req, res, next);
+    } else if (method === TransactionMethodType.SCW) {
+      await simulateSCWTransaction(req, res, next);
     }
     return next();
   } catch (error) {
