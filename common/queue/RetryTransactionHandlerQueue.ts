@@ -39,6 +39,7 @@ export class RetryTransactionHandlerQueue implements IQueue<TransactionMessageTy
       this.channel.prefetch(1);
       this.channel.publish('transaction_queue_exchange', key, Buffer.from(JSON.stringify(data)), {
         persistent: true,
+        headers: { 'x-delay': config.chains.retryTransactionInterval[this.chainId] },
       });
       return true;
     }
@@ -53,9 +54,10 @@ export class RetryTransactionHandlerQueue implements IQueue<TransactionMessageTy
     try {
       // setup a consumer
       const retryTransactionQueue: Replies.AssertQueue = await this.channel.assertQueue('retry_transaction_queue');
-
       const key = `chainid.${this.chainId}`;
-      log.info(`[*] Waiting for transactions on network id ${this.chainId}`);
+
+      log.info(`[*] Waiting for retry transactions on network id ${this.chainId}`);
+
       this.channel.bindQueue(retryTransactionQueue.queue, 'transaction_queue_exchange', key);
       await this.channel.consume(
         retryTransactionQueue.queue,

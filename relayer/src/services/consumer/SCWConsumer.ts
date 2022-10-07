@@ -1,7 +1,7 @@
 import { ConsumeMessage } from 'amqplib';
-import { IQueue } from '../../../../common/interface';
 import { logger } from '../../../../common/log-config';
-import { TransactionType, SCWTransactionMessageType, EVMRawTransactionType } from '../../../../common/types';
+import { IQueue } from '../../../../common/queue';
+import { EVMRawTransactionType, SCWTransactionMessageType, TransactionType } from '../../../../common/types';
 import { EVMAccount } from '../account';
 import { IRelayerManager } from '../relayer-manager/interface/IRelayerManager';
 import { ITransactionService } from '../transaction-service';
@@ -10,16 +10,16 @@ import { SCWConsumerParamsType } from './types';
 
 const log = logger(module);
 export class SCWConsumer implements
-ITransactionConsumer<SCWTransactionMessageType, EVMAccount, EVMRawTransactionType> {
-  chainId: number;
-
+ITransactionConsumer<EVMAccount, EVMRawTransactionType> {
   private transactionType: TransactionType = TransactionType.SCW;
+
+  private queue: IQueue<SCWTransactionMessageType>;
+
+  chainId: number;
 
   relayerManager: IRelayerManager<EVMAccount, EVMRawTransactionType>;
 
   transactionService: ITransactionService<EVMAccount, EVMRawTransactionType>;
-
-  queue: IQueue<SCWTransactionMessageType>;
 
   constructor(
     scwConsumerParamsType: SCWConsumerParamsType,
@@ -38,8 +38,8 @@ ITransactionConsumer<SCWTransactionMessageType, EVMAccount, EVMRawTransactionTyp
   ) => {
     if (msg) {
       const transactionDataReceivedFromQueue = JSON.parse(msg.content.toString());
-      log.info(`onMessage received in ${this.transactionType}: ${transactionDataReceivedFromQueue}`);
-      this.queue?.ack(msg);
+      log.info(`onMessage received in ${this.transactionType}: ${JSON.stringify(transactionDataReceivedFromQueue)}`);
+      this.queue.ack(msg);
       // get active relayer
       const activeRelayer = await this.relayerManager.getActiveRelayer();
       log.info(`Active relayer for ${this.transactionType} is ${activeRelayer?.getPublicKey()}`);

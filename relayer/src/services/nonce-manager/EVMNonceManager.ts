@@ -1,10 +1,12 @@
 import { ICacheService } from '../../../../common/cache';
+import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
 import { EVMRawTransactionType } from '../../../../common/types';
 import { IEVMAccount } from '../account';
 import { INonceManager } from './interface/INonceManager';
 import { EVMNonceManagerParamsType } from './types';
 
+const log = logger(module);
 export class EVMNonceManager implements INonceManager<IEVMAccount, EVMRawTransactionType> {
   chainId: number;
 
@@ -22,12 +24,23 @@ export class EVMNonceManager implements INonceManager<IEVMAccount, EVMRawTransac
   }
 
   async getNonce(address: string, pendingCount = true): Promise<number> {
-    // TODO: review nonce from cache
-    return this.getAndSetNonceFromNetwork(address, pendingCount);
-    // const nonce = await this.cacheService.get(this.getAccountNonceKey(address));
-    // if (!nonce) {
-    // }
-    // return parseInt(nonce, 10);
+    let nonce;
+    const accountNonceKey = this.getAccountNonceKey(address);
+    nonce = await this.cacheService.get(accountNonceKey);
+    log.info(`Nonce from cache for account: ${address} on chainId: ${this.chainId} is ${nonce}`);
+
+    if (nonce !== null && nonce !== 'undefined') {
+      nonce = parseInt(nonce, 10);
+      if (await this.cacheService.get(this.getUsedAccountNonceKey(address, nonce))) {
+        log.info(`Nonce ${nonce} for address ${address} is already used. So clearing nonce and getting nonce from network`);
+        nonce = await this.getAndSetNonceFromNetwork(address, pendingCount);
+      } else {
+        nonce = await this.getAndSetNonceFromNetwork(address, pendingCount);
+      }
+    } else {
+      nonce = await this.getAndSetNonceFromNetwork(address, pendingCount);
+    }
+    return nonce;
   }
 
   async markUsed(address: string, nonce: number): Promise<void> {

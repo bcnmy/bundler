@@ -110,6 +110,7 @@ type ChainsConfigType = {
   decimal: ChainIdWithNumberValueType,
   provider: ChainIdWithStringValueType,
   fallbackUrls: ChainIdWithArrayStringValueType,
+  retryTransactionInterval: ChainIdWithNumberValueType
 };
 
 type RelayerConfigType = {
