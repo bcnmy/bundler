@@ -100,6 +100,7 @@ const transactionDao = new TransactionDAO();
       queue: transactionQueue,
       options: {
         chainId,
+        wssUrl: config.socketService.wssUrl,
       },
     });
     transactionQueue.consume(socketConsumer.onMessageReceived);
