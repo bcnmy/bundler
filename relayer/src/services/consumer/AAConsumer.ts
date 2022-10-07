@@ -1,7 +1,7 @@
 import { ConsumeMessage } from 'amqplib';
-import { IQueue } from '../../../../common/interface';
 import { logger } from '../../../../common/log-config';
-import { TransactionType, AATransactionMessageType, EVMRawTransactionType } from '../../../../common/types';
+import { IQueue } from '../../../../common/queue';
+import { AATransactionMessageType, EVMRawTransactionType, TransactionType } from '../../../../common/types';
 import { IEVMAccount } from '../account';
 import { IRelayerManager } from '../relayer-manager';
 import { ITransactionService } from '../transaction-service';
@@ -10,12 +10,12 @@ import { AAConsumerParamsType } from './types';
 
 const log = logger(module);
 export class AAConsumer implements
-ITransactionConsumer<AATransactionMessageType, IEVMAccount, EVMRawTransactionType> {
-  chainId: number;
-
+ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
   private transactionType: TransactionType = TransactionType.AA;
 
-  queue: IQueue<AATransactionMessageType>;
+  private queue: IQueue<AATransactionMessageType>;
+
+  chainId: number;
 
   relayerManager: IRelayerManager<IEVMAccount, EVMRawTransactionType>;
 
@@ -39,7 +39,7 @@ ITransactionConsumer<AATransactionMessageType, IEVMAccount, EVMRawTransactionTyp
     if (msg) {
       const transactionDataReceivedFromQueue = JSON.parse(msg.content.toString());
       log.info(`onMessage received in ${this.transactionType}: ${JSON.stringify(transactionDataReceivedFromQueue)}`);
-      this.queue?.ack(msg);
+      this.queue.ack(msg);
       // get active relayer
       const activeRelayer = await this.relayerManager.getActiveRelayer();
       log.info(`Active relayer for ${this.transactionType} is ${activeRelayer?.getPublicKey()}`);

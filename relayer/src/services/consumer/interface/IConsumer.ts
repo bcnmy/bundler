@@ -1,8 +1,7 @@
 import { ConsumeMessage } from 'amqplib';
-import { IQueue } from '../../../../../common/queue';
 
-export interface IConsumer<TransactionMessageType> {
+export interface IConsumer {
   chainId: number;
 
-  onMessageReceived: (queue: IQueue<TransactionMessageType>, msg: ConsumeMessage) => Promise<void>;
+  onMessageReceived: (msg: ConsumeMessage) => Promise<void>;
 }
