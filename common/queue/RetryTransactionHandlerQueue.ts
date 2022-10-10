@@ -11,6 +11,12 @@ const { queueUrl } = config;
 export class RetryTransactionHandlerQueue implements IQueue<TransactionMessageType> {
   private channel!: Channel;
 
+  private exchangeName = 'transaction_queue_exchange';
+
+  private exchangeType = 'direct';
+
+  private queueName = 'retry_transaction_queue';
+
   chainId: number;
 
   msg!: ConsumeMessage | null;
@@ -27,17 +33,16 @@ export class RetryTransactionHandlerQueue implements IQueue<TransactionMessageTy
     const connection = await amqp.connect(queueUrl);
     if (!this.channel) {
       this.channel = await connection.createChannel();
-      this.channel.assertExchange('transaction_queue_exchange', 'direct', {
+      this.channel.assertExchange(this.exchangeName, this.exchangeType, {
         durable: true,
       });
     }
   };
 
   publish = async (data: TransactionMessageType) => {
-    const key = `chainid.${this.chainId}`;
+    const key = `retry_chainid.${this.chainId}`;
     if (this.channel) {
-      this.channel.prefetch(1);
-      this.channel.publish('transaction_queue_exchange', key, Buffer.from(JSON.stringify(data)), {
+      this.channel.publish(this.exchangeName, key, Buffer.from(JSON.stringify(data)), {
         persistent: true,
         headers: { 'x-delay': config.chains.retryTransactionInterval[this.chainId] },
       });
@@ -47,18 +52,18 @@ export class RetryTransactionHandlerQueue implements IQueue<TransactionMessageTy
   };
 
   consume = async (onMessageReceived: () => void) => {
-    this.channel.assertExchange('transaction_queue_exchange', 'direct', {
-      durable: true,
-    });
+    log.info(`[x] Setting up consumer for queue with chain id ${this.chainId} for retry transaction`);
     this.channel.prefetch(1);
     try {
       // setup a consumer
-      const retryTransactionQueue: Replies.AssertQueue = await this.channel.assertQueue('retry_transaction_queue');
-      const key = `chainid.${this.chainId}`;
+      const retryTransactionQueue: Replies.AssertQueue = await this.channel.assertQueue(
+        this.queueName,
+      );
+      const key = `retry_chainid.${this.chainId}`;
 
       log.info(`[*] Waiting for retry transactions on network id ${this.chainId}`);
 
-      this.channel.bindQueue(retryTransactionQueue.queue, 'transaction_queue_exchange', key);
+      this.channel.bindQueue(retryTransactionQueue.queue, this.exchangeName, key);
       await this.channel.consume(
         retryTransactionQueue.queue,
         onMessageReceived.bind(this),

@@ -40,7 +40,7 @@ type OwnerAccountDetailsType = {
 type SocketServiceConfigType = {
   wssUrl: string,
   httpUrl: string,
-  secret: string,
+  token: string,
   apiKey: string,
 };
 

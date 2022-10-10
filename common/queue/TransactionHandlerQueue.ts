@@ -11,6 +11,12 @@ const { queueUrl } = config;
 export class TransactionHandlerQueue implements IQueue<TransactionMessageType> {
   private channel!: Channel;
 
+  private exchangeName = 'transaction_queue_exchange';
+
+  private exchangeType = 'direct';
+
+  private queueName = 'transaction_queue';
+
   chainId: number;
 
   msg!: ConsumeMessage | null;
@@ -27,7 +33,7 @@ export class TransactionHandlerQueue implements IQueue<TransactionMessageType> {
     const connection = await amqp.connect(queueUrl);
     if (!this.channel) {
       this.channel = await connection.createChannel();
-      this.channel.assertExchange('transaction_queue_exchange', 'direct', {
+      this.channel.assertExchange(this.exchangeName, this.exchangeType, {
         durable: true,
       });
     }
@@ -36,24 +42,21 @@ export class TransactionHandlerQueue implements IQueue<TransactionMessageType> {
   publish = async (data: TransactionMessageType) => {
     const key = `chainid.${this.chainId}`;
     this.channel.prefetch(1);
-    this.channel.publish('transaction_queue_exchange', key, Buffer.from(JSON.stringify(data)), {
+    this.channel.publish(this.exchangeName, key, Buffer.from(JSON.stringify(data)), {
       persistent: true,
     });
     return true;
   };
 
   consume = async (onMessageReceived: () => void) => {
-    this.channel.assertExchange('transaction_queue_exchange', 'direct', {
-      durable: true,
-    });
     this.channel.prefetch(1);
     try {
       // setup a consumer
-      const transactionQueue: Replies.AssertQueue = await this.channel.assertQueue('transaction_queue');
+      const transactionQueue: Replies.AssertQueue = await this.channel.assertQueue(this.queueName);
 
       const key = `chainid.${this.chainId}`;
       log.info(`[*] Waiting for transactions on network id ${this.chainId}`);
-      this.channel.bindQueue(transactionQueue.queue, 'transaction_queue_exchange', key);
+      this.channel.bindQueue(transactionQueue.queue, this.exchangeName, key);
       await this.channel.consume(
         transactionQueue.queue,
         onMessageReceived.bind(this),
