@@ -29,7 +29,7 @@ export class RetryTransactionHandlerQueue implements IQueue<TransactionMessageTy
     this.chainId = options.chainId;
   }
 
-  connect = async () => {
+  async connect() {
     const connection = await amqp.connect(queueUrl);
     if (!this.channel) {
       this.channel = await connection.createChannel();
@@ -37,9 +37,9 @@ export class RetryTransactionHandlerQueue implements IQueue<TransactionMessageTy
         durable: true,
       });
     }
-  };
+  }
 
-  publish = async (data: TransactionMessageType) => {
+  async publish(data: TransactionMessageType) {
     const key = `retry_chainid.${this.chainId}`;
     log.info(`Publishing data to retry queue on chain id ${this.chainId} with interval ${config.chains.retryTransactionInterval[this.chainId]} and key ${key}`);
     if (this.channel) {
@@ -50,9 +50,9 @@ export class RetryTransactionHandlerQueue implements IQueue<TransactionMessageTy
       return true;
     }
     return false;
-  };
+  }
 
-  consume = async (onMessageReceived: () => void) => {
+  async consume(onMessageReceived: () => void) {
     log.info(`[x] Setting up consumer for queue with chain id ${this.chainId} for retry transaction`);
     this.channel.prefetch(1);
     try {
@@ -75,9 +75,9 @@ export class RetryTransactionHandlerQueue implements IQueue<TransactionMessageTy
       log.error(error);
       return false;
     }
-  };
+  }
 
-  ack = async (data: ConsumeMessage) => {
+  async ack(data: ConsumeMessage) {
     this.channel.ack(data);
-  };
+  }
 }

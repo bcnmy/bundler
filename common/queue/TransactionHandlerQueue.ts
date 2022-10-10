@@ -37,9 +37,9 @@ export class TransactionHandlerQueue implements IQueue<TransactionMessageType> {
         durable: true,
       });
     }
-  };
+  }
 
-  publish = async (data: TransactionMessageType) => {
+  async publish(data: TransactionMessageType) {
     const key = `chainid.${this.chainId}`;
     log.info(`Publishing data to retry queue on chain id ${this.chainId} with interval ${config.chains.retryTransactionInterval[this.chainId]} and key ${key}`);
     this.channel.prefetch(1);
@@ -47,9 +47,9 @@ export class TransactionHandlerQueue implements IQueue<TransactionMessageType> {
       persistent: true,
     });
     return true;
-  };
+  }
 
-  consume = async (onMessageReceived: () => void) => {
+  async consume(onMessageReceived: () => void) {
     this.channel.prefetch(1);
     try {
       // setup a consumer
@@ -68,9 +68,9 @@ export class TransactionHandlerQueue implements IQueue<TransactionMessageType> {
       log.error(error);
       return false;
     }
-  };
+  }
 
-  ack = async (data: ConsumeMessage) => {
+  async ack(data: ConsumeMessage) {
     this.channel.ack(data);
-  };
+  }
 }

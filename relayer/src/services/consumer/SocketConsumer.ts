@@ -1,16 +1,14 @@
-import { CentClient } from 'cent.js';
 import { ConsumeMessage } from 'amqplib';
+import { CentClient } from 'cent.js';
 import { logger } from '../../../../common/log-config';
 import { IQueue } from '../../../../common/queue';
-import { TransactionMessageType } from '../../../../common/queue/types';
-import { ISocketConsumer } from './interface/ISocketConsumer';
+import { TransactionQueueMessageType } from '../../../../common/types';
 import { config } from '../../../../config';
+import { ISocketConsumer } from './interface/ISocketConsumer';
 import { SocketConsumerParamsType } from './types';
 
 const log = logger(module);
 export class SocketConsumer implements ISocketConsumer {
-  private queue: IQueue<TransactionMessageType>;
-
   chainId: number;
 
   socketClient: CentClient;
@@ -19,24 +17,23 @@ export class SocketConsumer implements ISocketConsumer {
     socketConsumerParams: SocketConsumerParamsType,
   ) {
     const {
-      options, queue,
+      options,
     } = socketConsumerParams;
     this.socketClient = new CentClient({
       url: config.socketService.httpUrl,
       token: config.socketService.apiKey,
     });
-
-    this.queue = queue;
     this.chainId = options.chainId;
   }
 
   async onMessageReceived(
     msg?: ConsumeMessage,
   ) {
+    const self = this as unknown as IQueue<TransactionQueueMessageType>;
     if (msg) {
       const transactionDataReceivedFromQueue = JSON.parse(msg.content.toString());
       log.info(`onMessage received in socket service on chain Id ${this.chainId}: ${JSON.stringify(transactionDataReceivedFromQueue)}`);
-      this.queue.ack(msg);
+      self.ack(msg);
       try {
         this.socketClient.publish({
           channel: `transaction:${transactionDataReceivedFromQueue.transactionId}`,

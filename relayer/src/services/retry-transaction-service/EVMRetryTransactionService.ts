@@ -3,11 +3,11 @@ import { RawTransactionType } from 'network-sdk/dist/types';
 import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
 import { IQueue } from '../../../../common/queue';
-import { EVMRawTransactionType } from '../../../../common/types';
+import { EVMRawTransactionType, TransactionQueueMessageType } from '../../../../common/types';
 import { IEVMAccount } from '../account';
 import { ITransactionService } from '../transaction-service/interface/ITransactionService';
 import { IRetryTransactionService } from './interface/IRetryTransactionService';
-import { EVMRetryTransactionServiceParamsType, TransactionQueueMessageType } from './types';
+import { EVMRetryTransactionServiceParamsType } from './types';
 
 const log = logger(module);
 export class EVMRetryTransactionService implements
