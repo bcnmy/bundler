@@ -33,7 +33,7 @@ export type TransactionDataType = {
   gasLimit: string; // value will be in hex
   speed?: GasPriceType;
   userAddress?: string,
-  transactionId?: string;
+  transactionId: string;
 };
 
 export type ErrorTransactionResponseType = {

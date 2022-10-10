@@ -29,7 +29,7 @@ export class TransactionHandlerQueue implements IQueue<TransactionMessageType> {
     this.chainId = options.chainId;
   }
 
-  connect = async () => {
+  async connect() {
     const connection = await amqp.connect(queueUrl);
     if (!this.channel) {
       this.channel = await connection.createChannel();
@@ -41,6 +41,7 @@ export class TransactionHandlerQueue implements IQueue<TransactionMessageType> {
 
   publish = async (data: TransactionMessageType) => {
     const key = `chainid.${this.chainId}`;
+    log.info(`Publishing data to retry queue on chain id ${this.chainId} with interval ${config.chains.retryTransactionInterval[this.chainId]} and key ${key}`);
     this.channel.prefetch(1);
     this.channel.publish(this.exchangeName, key, Buffer.from(JSON.stringify(data)), {
       persistent: true,

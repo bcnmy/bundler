@@ -23,28 +23,32 @@ export class SocketConsumer implements ISocketConsumer {
     } = socketConsumerParams;
     this.socketClient = new CentClient({
       url: config.socketService.httpUrl,
-      token: config.socketService.token,
+      token: config.socketService.apiKey,
     });
 
     this.queue = queue;
     this.chainId = options.chainId;
   }
 
-  onMessageReceived = async (
+  async onMessageReceived(
     msg?: ConsumeMessage,
-  ) => {
+  ) {
     if (msg) {
       const transactionDataReceivedFromQueue = JSON.parse(msg.content.toString());
       log.info(`onMessage received in socket service on chain Id ${this.chainId}: ${JSON.stringify(transactionDataReceivedFromQueue)}`);
       this.queue.ack(msg);
-      this.socketClient.publish({
-        channel: `transaction:${transactionDataReceivedFromQueue.transactionId}`,
-        data: {
-          event: 'transactionMined',
-        },
-      });
+      try {
+        this.socketClient.publish({
+          channel: `transaction:${transactionDataReceivedFromQueue.transactionId}`,
+          data: {
+            event: 'transactionMined',
+          },
+        });
+      } catch (error) {
+        log.error(`Failed to send to client on socket server with error: ${JSON.stringify(error)}`);
+      }
     } else {
       throw new Error(`No msg received from queue in socket service on chainId: ${this.chainId}`);
     }
-  };
+  }
 }

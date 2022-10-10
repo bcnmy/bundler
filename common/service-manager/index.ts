@@ -67,6 +67,10 @@ const EVMRelayerManagerMap: {
 
 const transactionDao = new TransactionDAO();
 
+const socketConsumerMap: any = {};
+const retryTransactionSerivceMap: any = {};
+const transactionListenerMap: any = {};
+
 (async () => {
   await dbInstance.connect();
   await cacheService.connect();
@@ -96,14 +100,14 @@ const transactionDao = new TransactionDAO();
     });
     await transactionQueue.connect();
 
-    const socketConsumer = new SocketConsumer({
+    socketConsumerMap[chainId] = new SocketConsumer({
       queue: transactionQueue,
       options: {
         chainId,
         wssUrl: config.socketService.wssUrl,
       },
     });
-    transactionQueue.consume(socketConsumer.onMessageReceived);
+    transactionQueue.consume(socketConsumerMap[chainId].onMessageReceived);
 
     const retryTransactionQueue = new RetryTransactionHandlerQueue({
       chainId,
@@ -127,6 +131,7 @@ const transactionDao = new TransactionDAO();
         chainId,
       },
     });
+    transactionListenerMap[chainId] = transactionListener;
 
     const transactionService = new EVMTransactionService({
       networkService,
@@ -139,14 +144,14 @@ const transactionDao = new TransactionDAO();
       },
     });
 
-    const retryTransactionSerivce = new EVMRetryTransactionService({
+    retryTransactionSerivceMap[chainId] = new EVMRetryTransactionService({
       transactionService,
       networkService,
       options: {
         chainId,
       },
     });
-    retryTransactionQueue.consume(retryTransactionSerivce.onMessageReceived);
+    retryTransactionQueue.consume(retryTransactionSerivceMap[chainId].onMessageReceived);
 
     const relayerQueue = new EVMRelayerQueue([]);
     for (const relayerManager of config.relayerManagers) {
@@ -182,6 +187,10 @@ const transactionDao = new TransactionDAO();
         },
       });
       EVMRelayerManagerMap[relayerManager.name][chainId] = relayerMangerInstance;
+
+      const addressList = await relayerMangerInstance.createRelayers();
+      console.log('Relayer address list length', addressList.length, relayerManager.minRelayerCount);
+      await relayerMangerInstance.fundRelayers(addressList);
     }
 
     const tokenService = new CMCTokenPriceManager(cacheService, {
@@ -271,16 +280,7 @@ const transactionDao = new TransactionDAO();
       }
     }
   }
-  for (const relayerManagerName of Object.keys(EVMRelayerManagerMap)) {
-    for (const chainId of supportedNetworks) {
-      const relayerManager = EVMRelayerManagerMap[relayerManagerName][chainId];
-      if (relayerManager) {
-        const addressList = await relayerManager.createRelayers();
-        console.log('Relayer address list length', addressList.length, relayerManager.minRelayerCount);
-        await relayerManager.fundRelayers(addressList);
-      }
-    }
-  }
+  console.log('<=== Config setup completed ===>');
 })();
 
 export {

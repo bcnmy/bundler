@@ -58,10 +58,10 @@ ITransactionPublisher<TransactionMessageType> {
       transactionExecutionResponse, transactionId, relayerAddress, userAddress,
     } = onTranasctionSuccessParams;
 
-    log.info(`Publishing transaction data of transactionId: ${transactionId} to transaction queue`);
+    log.info(`Publishing transaction data of transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
     await this.publishToTransactionQueue(transactionExecutionResponse);
 
-    log.info(`Saving transaction data in database for ${transactionId}`);
+    log.info(`Saving transaction data in database for ${transactionId} on chainId ${this.chainId}`);
     await this.saveTransactionDataToDatabase(
       transactionExecutionResponse,
       transactionId,
@@ -75,10 +75,10 @@ ITransactionPublisher<TransactionMessageType> {
       transactionExecutionResponse, transactionId, relayerAddress, userAddress,
     } = onTranasctionFailureParams;
 
-    log.info(`Publishing transaction data of transactionId: ${transactionId} to transaction queue`);
+    log.info(`Publishing transaction data of transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
     await this.publishToTransactionQueue(transactionExecutionResponse);
 
-    log.info(`Saving transaction data in database for ${transactionId}`);
+    log.info(`Saving transaction data in database for ${transactionId} on chainId ${this.chainId}`);
     await this.saveTransactionDataToDatabase(
       transactionExecutionResponse,
       transactionId,
@@ -120,23 +120,23 @@ ITransactionPublisher<TransactionMessageType> {
       return;
     }
     const tranasctionHash = transactionExecutionResponse.hash;
-    log.info(`Transaction hash is: ${tranasctionHash} for transactionId: ${transactionId}`);
+    log.info(`Transaction hash is: ${tranasctionHash} for transactionId: ${transactionId} on chainId ${this.chainId}`);
 
     // publish to queue with expiry header
-    log.info(`Publishing transaction data of transactionId: ${transactionId} to retry transaction queue`);
+    log.info(`Publishing transaction data of transactionId: ${transactionId} to retry transaction queue on chainId ${this.chainId}`);
     await this.publishToRetryTransactionQueue(transactionExecutionResponse);
     // pop happens when expiry header expires
     // retry txn service will check for receipt
     const transactionReceipt = await this.networkService.waitForTransaction(tranasctionHash);
-    log.info(`Transaction receipt is: ${JSON.stringify(transactionReceipt)} for transactionId: ${transactionId}`);
+    log.info(`Transaction receipt is: ${JSON.stringify(transactionReceipt)} for transactionId: ${transactionId} on chainId ${this.chainId}`);
 
     if (transactionReceipt.status === 1) {
-      log.info(`Transaction is a success for transactionId: ${transactionId}`);
+      log.info(`Transaction is a success for transactionId: ${transactionId} on chainId ${this.chainId}`);
       this.onTransactionSuccess({
         transactionExecutionResponse, transactionId, relayerAddress, userAddress,
       });
     } else if (transactionReceipt.status === 0) {
-      log.info(`Transaction is a failure for transactionId: ${transactionId}`);
+      log.info(`Transaction is a failure for transactionId: ${transactionId} on chainId ${this.chainId}`);
       this.onTransactionFailure({
         transactionExecutionResponse, transactionId, relayerAddress, userAddress,
       });

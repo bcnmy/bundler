@@ -9,6 +9,7 @@ import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
 import { EVMRawTransactionType } from '../../../../common/types';
 import { config } from '../../../../config';
+import { generateTransactionId } from '../../../../server/src/utils/tx-id-generator';
 import { EVMAccount, IEVMAccount } from '../account';
 import { INonceManager } from '../nonce-manager';
 import { EVMRelayerMetaDataType, IRelayerQueue } from '../relayer-queue';
@@ -229,8 +230,11 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount, EVMRawTran
           nonce: ethers.BigNumber.from(ownerAccountNonce.toString()).toHexString(),
           chainId: this.chainId,
         };
+        const transactionId = generateTransactionId(JSON.stringify(rawTx));
         log.info(`Funding relayer ${address} on network id ${this.chainId} with raw tx ${JSON.stringify(rawTx)}`);
-        await this.transactionService.sendTransaction(rawTx, this.ownerAccountDetails);
+        await this.transactionService.sendTransaction({
+          ...rawTx, transactionId,
+        }, this.ownerAccountDetails);
       }
       release();
     }

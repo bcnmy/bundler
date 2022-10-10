@@ -11,7 +11,7 @@ const { queueUrl } = config;
 export class RetryTransactionHandlerQueue implements IQueue<TransactionMessageType> {
   private channel!: Channel;
 
-  private exchangeName = 'transaction_queue_exchange';
+  private exchangeName = 'retry_transaction_queue_exchange';
 
   private exchangeType = 'direct';
 
@@ -41,6 +41,7 @@ export class RetryTransactionHandlerQueue implements IQueue<TransactionMessageTy
 
   publish = async (data: TransactionMessageType) => {
     const key = `retry_chainid.${this.chainId}`;
+    log.info(`Publishing data to retry queue on chain id ${this.chainId} with interval ${config.chains.retryTransactionInterval[this.chainId]} and key ${key}`);
     if (this.channel) {
       this.channel.publish(this.exchangeName, key, Buffer.from(JSON.stringify(data)), {
         persistent: true,

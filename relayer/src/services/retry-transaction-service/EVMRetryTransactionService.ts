@@ -32,7 +32,7 @@ IRetryTransactionService<IEVMAccount, EVMRawTransactionType> {
   ) {
     const self = this as unknown as IQueue<TransactionQueueMessageType>;
     if (msg) {
-      log.info(`Message received from retry transction queue: ${JSON.stringify(msg.content.toString())} on chainId: ${this.chainId}`);
+      log.info(`Message received from retry transction queue on chainId: ${this.chainId} with key ${msg.fields.routingKey} as ${JSON.stringify(msg.content.toString())}`);
       self.ack(msg);
     } else {
       log.info(`Message not received on retry transaction queue on chainId: ${this.chainId}`);
