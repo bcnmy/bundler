@@ -322,6 +322,9 @@ const data: ConfigType = {
       80001: '0x040a9cbC4453B0eeaE12f3210117B422B890C1ED',
       137: '0x040a9cbC4453B0eeaE12f3210117B422B890C1ED',
     },
+    commission: {
+      5: 0.003,
+    },
   },
   tokenPrice: {
     coinMarketCapApi: 'a305bb95-7c48-4fb6-bc65-4de8c9193f2f',
