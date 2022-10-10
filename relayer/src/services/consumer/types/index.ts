@@ -1,5 +1,5 @@
-import { IQueue } from '../../../../../common/interface';
-import { AATransactionMessageType, EVMRawTransactionType } from '../../../../../common/types';
+import { IQueue } from '../../../../../common/queue';
+import { AATransactionMessageType, EVMRawTransactionType, SCWTransactionMessageType } from '../../../../../common/types';
 import { EVMAccount } from '../../account';
 import { IRelayerManager } from '../../relayer-manager';
 import { ITransactionService } from '../../transaction-service';
@@ -13,4 +13,11 @@ export type AAConsumerParamsType = {
   },
 };
 
-export type SCWConsumerParamsType = AAConsumerParamsType;
+export type SCWConsumerParamsType = {
+  queue: IQueue<SCWTransactionMessageType>,
+  relayerManager: IRelayerManager<EVMAccount, EVMRawTransactionType>,
+  transactionService: ITransactionService<EVMAccount, EVMRawTransactionType>,
+  options: {
+    chainId: number,
+  },
+};

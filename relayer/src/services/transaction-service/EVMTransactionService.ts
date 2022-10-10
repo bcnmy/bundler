@@ -55,7 +55,10 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       speed,
       account,
     } = createTransactionParams;
-    const nonce = await this.nonceManager.getNonce(account.getPublicKey(), false);
+    const relayerAddress = account.getPublicKey();
+
+    const nonce = await this.nonceManager.getNonce(relayerAddress, false);
+    log.info(`Nonce for relayerAddress: ${nonce}`);
     const response = {
       from,
       to,
@@ -67,6 +70,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     };
     const gasPrice = await this.gasPriceService.getGasPrice(speed);
     if (typeof gasPrice !== 'string') {
+      log.info(`Gas price being used to send transaction by relayer: ${relayerAddress} is: ${JSON.stringify(gasPrice)}`);
       const {
         maxPriorityFeePerGas,
         maxFeePerGas,
@@ -77,6 +81,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         maxPriorityFeePerGas: ethers.utils.hexlify(Number(maxPriorityFeePerGas)),
       };
     }
+    log.info(`Gas price being used to send transaction by relayer: ${relayerAddress} is: ${gasPrice}`);
     return { ...response, gasPrice: ethers.utils.hexlify(Number(gasPrice)) };
   }
 
@@ -88,7 +93,6 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       rawTransaction,
       account,
     );
-    await this.nonceManager.incrementNonce(account.getPublicKey());
     return transactionExecutionResponse;
   }
 
@@ -96,13 +100,15 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     transactionData: TransactionDataType,
     account: IEVMAccount,
   ): Promise<SuccessTransactionResponseType | ErrorTransactionResponseType> {
+    const relayerAddress = account.getPublicKey();
     const {
       to, value, data, gasLimit,
       speed, transactionId, userAddress,
     } = transactionData;
+    log.info(`Transaction request received with transactionId: ${transactionId}`);
     // create transaction
     const rawTransaction = await this.createTransaction({
-      from: account.getPublicKey(),
+      from: relayerAddress,
       to,
       value,
       data,
@@ -110,17 +116,24 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       speed,
       account,
     });
+    log.info(`Raw transaction for transactionId; ${JSON.stringify(rawTransaction)}`);
 
     try {
       const transactionExecutionResponse = await this.executeTransaction({
         rawTransaction,
         account,
       });
-      await this.nonceManager.incrementNonce(account.getPublicKey());
+      log.info(`Transaction execution response for transactionId: ${JSON.stringify(transactionExecutionResponse)}`);
+
+      log.info(`Incrementing nonce for account: ${relayerAddress}`);
+      await this.nonceManager.incrementNonce(relayerAddress);
+      log.info(`Incremented nonce for account: ${relayerAddress}`);
+
+      log.info(`Notifying transaction listener for transactionId: ${transactionId}`);
       await this.transactionListener.notify({
         transactionExecutionResponse,
         transactionId: transactionId as string,
-        relayerAddress: account.getPublicKey(),
+        relayerAddress,
         userAddress,
       });
       return {

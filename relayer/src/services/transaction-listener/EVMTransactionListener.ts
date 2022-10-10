@@ -57,34 +57,34 @@ ITransactionPublisher<TransactionMessageType> {
     const {
       transactionExecutionResponse, transactionId, relayerAddress, userAddress,
     } = onTranasctionSuccessParams;
+
+    log.info(`Publishing transaction data of transactionId: ${transactionId} to transaction queue`);
+    await this.publishToTransactionQueue(transactionExecutionResponse);
+
+    log.info(`Saving transaction data in database for ${transactionId}`);
     await this.saveTransactionDataToDatabase(
       transactionExecutionResponse,
       transactionId,
       relayerAddress,
       userAddress,
     );
-    // add txn data in cache
-    await this.publishToTransactionQueue(transactionExecutionResponse);
   }
-
-  // private onTransactionDropped() {
-  //   // when retry count expires
-  //   // send no op txn just like defender
-  //   // https://docs.openzeppelin.com/defender/relay#valid-until
-  // }
 
   private async onTransactionFailure(onTranasctionFailureParams: OnTransactionFailureParamsType) {
     const {
       transactionExecutionResponse, transactionId, relayerAddress, userAddress,
     } = onTranasctionFailureParams;
+
+    log.info(`Publishing transaction data of transactionId: ${transactionId} to transaction queue`);
+    await this.publishToTransactionQueue(transactionExecutionResponse);
+
+    log.info(`Saving transaction data in database for ${transactionId}`);
     await this.saveTransactionDataToDatabase(
       transactionExecutionResponse,
       transactionId,
       relayerAddress,
       userAddress,
     );
-    // add txn data in cache
-    await this.publishToTransactionQueue(transactionExecutionResponse);
   }
 
   private async saveTransactionDataToDatabase(
@@ -120,16 +120,23 @@ ITransactionPublisher<TransactionMessageType> {
       return;
     }
     const tranasctionHash = transactionExecutionResponse.hash;
+    log.info(`Transaction hash is: ${tranasctionHash} for transactionId: ${transactionId}`);
+
     // publish to queue with expiry header
+    log.info(`Publishing transaction data of transactionId: ${transactionId} to retry transaction queue`);
     await this.publishToRetryTransactionQueue(transactionExecutionResponse);
     // pop happens when expiry header expires
     // retry txn service will check for receipt
     const transactionReceipt = await this.networkService.waitForTransaction(tranasctionHash);
+    log.info(`Transaction receipt is: ${JSON.stringify(transactionReceipt)} for transactionId: ${transactionId}`);
+
     if (transactionReceipt.status === 1) {
+      log.info(`Transaction is a success for transactionId: ${transactionId}`);
       this.onTransactionSuccess({
         transactionExecutionResponse, transactionId, relayerAddress, userAddress,
       });
     } else if (transactionReceipt.status === 0) {
+      log.info(`Transaction is a failure for transactionId: ${transactionId}`);
       this.onTransactionFailure({
         transactionExecutionResponse, transactionId, relayerAddress, userAddress,
       });

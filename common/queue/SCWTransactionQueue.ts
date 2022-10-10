@@ -11,9 +11,9 @@ const { queueUrl } = config;
 export class SCWTransactionQueue implements IQueue<SCWTransactionMessageType> {
   private channel!: Channel;
 
-  chainId: number;
-
   private transactionType: TransactionType = TransactionType.SCW;
+
+  chainId: number;
 
   msg!: ConsumeMessage | null;
 
@@ -51,9 +51,14 @@ export class SCWTransactionQueue implements IQueue<SCWTransactionMessageType> {
       // setup a consumer
       const queue: Replies.AssertQueue = await this.channel.assertQueue(`relayer_queue_${this.chainId}_type_${this.transactionType}`);
       const key = `chainid.${this.chainId}.type.${this.transactionType}`;
+
       log.info(`[*] Waiting for transactions on network id ${this.chainId} with type ${this.transactionType}`);
+
       this.channel.bindQueue(queue.queue, `relayer_queue_exchange_${this.transactionType}`, key);
-      await this.channel.consume(queue.queue, onMessageReceived.bind(this));
+      await this.channel.consume(
+        queue.queue,
+        onMessageReceived.bind(this),
+      );
 
       return true;
     } catch (error) {
