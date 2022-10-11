@@ -33,9 +33,9 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
     this.transactionService = transactionService;
   }
 
-  async onMessageReceived(
+  onMessageReceived = async (
     msg?: ConsumeMessage,
-  ) {
+  ): Promise<void> => {
     if (msg) {
       const transactionDataReceivedFromQueue = JSON.parse(msg.content.toString());
       log.info(`onMessage received in ${this.transactionType}: ${JSON.stringify(transactionDataReceivedFromQueue)}`);
@@ -57,5 +57,5 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
     } else {
       throw new Error(`No msg received from queue for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);
     }
-  }
+  };
 }

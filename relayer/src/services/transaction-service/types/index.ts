@@ -1,4 +1,3 @@
-import { ethers } from 'ethers';
 import { ITransactionDAO } from '../../../../../common/db';
 import { IGasPrice } from '../../../../../common/gas-price';
 import { GasPriceType } from '../../../../../common/gas-price/types';
@@ -7,6 +6,7 @@ import { EVMRawTransactionType } from '../../../../../common/types';
 import { IEVMAccount } from '../../account';
 import { INonceManager } from '../../nonce-manager';
 import { ITransactionListener } from '../../transaction-listener';
+import { TransactionListenerNotifyReturnType } from '../../transaction-listener/types';
 
 export type EVMTransactionServiceParamsType = {
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
@@ -42,7 +42,7 @@ export type ErrorTransactionResponseType = {
   error: string;
 };
 
-export type SuccessTransactionResponseType = ethers.providers.TransactionResponse & {
+export type SuccessTransactionResponseType = TransactionListenerNotifyReturnType & {
   state: 'success';
   code: number;
 };

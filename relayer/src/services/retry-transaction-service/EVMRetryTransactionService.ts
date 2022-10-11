@@ -18,24 +18,26 @@ IRetryTransactionService<IEVMAccount, EVMRawTransactionType> {
 
   chainId: number;
 
+  queue: IQueue<TransactionQueueMessageType>;
+
   constructor(evmRetryTransactionServiceParams: EVMRetryTransactionServiceParamsType) {
     const {
-      options, transactionService, networkService,
+      options, transactionService, networkService, retryTransactionQueue,
     } = evmRetryTransactionServiceParams;
     this.chainId = options.chainId;
     this.transactionService = transactionService;
     this.networkService = networkService;
+    this.queue = retryTransactionQueue;
   }
 
-  async onMessageReceived(
+  onMessageReceived = async (
     msg?: ConsumeMessage,
-  ) {
-    const self = this as unknown as IQueue<TransactionQueueMessageType>;
+  ) => {
     if (msg) {
-      log.info(`Message received from retry transction queue on chainId: ${this.chainId} with key ${msg.fields.routingKey} as ${JSON.stringify(msg.content.toString())}`);
-      self.ack(msg);
+      log.info(`Message received from retry transction queue on chainId: ${this.chainId}: ${JSON.stringify(msg.content.toString())}`);
+      this.queue.ack(msg);
     } else {
       log.info(`Message not received on retry transaction queue on chainId: ${this.chainId}`);
     }
-  }
+  };
 }

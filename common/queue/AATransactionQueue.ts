@@ -61,7 +61,7 @@ export class AATransactionQueue implements IQueue<AATransactionMessageType> {
       this.channel.bindQueue(queue.queue, this.exchangeName, key);
       await this.channel.consume(
         queue.queue,
-        onMessageReceived.bind(this),
+        onMessageReceived,
       );
 
       return true;

@@ -130,16 +130,17 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       log.info(`Incremented nonce for account: ${relayerAddress} on chainId ${this.chainId}`);
 
       log.info(`Notifying transaction listener for transactionId: ${transactionId} on chainId ${this.chainId}`);
-      await this.transactionListener.notify({
+      const transactionListenerNotifyResponse = await this.transactionListener.notify({
         transactionExecutionResponse,
         transactionId: transactionId as string,
         relayerAddress,
         userAddress,
       });
+
       return {
         state: 'success',
         code: 200,
-        ...transactionExecutionResponse,
+        ...transactionListenerNotifyResponse,
       };
     } catch (error) {
       log.info(`Error while sending transaction: ${error}`);

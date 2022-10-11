@@ -1,9 +1,11 @@
 import { IQueue } from '../interface';
+import { logger } from '../log-config';
 import {
   AATransactionMessageType, RelayServiceResponseType,
 } from '../types';
 import { IRelayService } from './interface/IRelayService';
 
+const log = logger(module);
 export class AARelayService implements IRelayService<AATransactionMessageType> {
   queue: IQueue<AATransactionMessageType>;
 
@@ -14,7 +16,7 @@ export class AARelayService implements IRelayService<AATransactionMessageType> {
   async sendTransactionToRelayer(
     data: AATransactionMessageType,
   ): Promise<RelayServiceResponseType> {
-    console.log(`Sending transaction to queue with ${data.transactionId}`);
+    log.info(`Sending transaction to queue with ${data.transactionId}`);
     await this.queue.publish(data);
     let response : RelayServiceResponseType;
     try {

@@ -61,7 +61,7 @@ export class SCWTransactionQueue implements IQueue<SCWTransactionMessageType> {
       this.channel.bindQueue(queue.queue, `relayer_queue_exchange_${this.transactionType}`, key);
       await this.channel.consume(
         queue.queue,
-        onMessageReceived.bind(this),
+        onMessageReceived,
       );
 
       return true;

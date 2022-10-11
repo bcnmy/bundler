@@ -53,7 +53,9 @@ export class TransactionHandlerQueue implements IQueue<TransactionMessageType> {
     this.channel.prefetch(1);
     try {
       // setup a consumer
-      const transactionQueue: Replies.AssertQueue = await this.channel.assertQueue(this.queueName);
+      const transactionQueue: Replies.AssertQueue = await this.channel.assertQueue(
+        `${this.queueName}_${this.chainId}`,
+      );
 
       const key = `chainid.${this.chainId}`;
       log.info(`[*] Waiting for transactions on network id ${this.chainId}`);

@@ -16,6 +16,7 @@ import { RedisCacheService } from '../cache';
 import { Mongo, TransactionDAO } from '../db';
 import { GasPriceManager } from '../gas-price';
 import { IQueue } from '../interface';
+import { logger } from '../log-config';
 import { EVMNetworkService } from '../network';
 import {
   AATransactionQueue,
@@ -32,6 +33,8 @@ import {
   SCWTransactionMessageType,
   TransactionType,
 } from '../types';
+
+const log = logger(module);
 
 // change below to assign relayer manager to transaction type
 const relayerManagerTransactionTypeNameMap = {
@@ -70,6 +73,9 @@ const transactionDao = new TransactionDAO();
 const socketConsumerMap: any = {};
 const retryTransactionSerivceMap: any = {};
 const transactionListenerMap: any = {};
+const retryTransactionQueueMap: {
+  [key: number]: RetryTransactionHandlerQueue,
+} = {};
 
 (async () => {
   await dbInstance.connect();
@@ -112,7 +118,8 @@ const transactionListenerMap: any = {};
     const retryTransactionQueue = new RetryTransactionHandlerQueue({
       chainId,
     });
-    await retryTransactionQueue.connect();
+    retryTransactionQueueMap[chainId] = retryTransactionQueue;
+    await retryTransactionQueueMap[chainId].connect();
 
     const nonceManager = new EVMNonceManager({
       options: {
@@ -145,13 +152,16 @@ const transactionListenerMap: any = {};
     });
 
     retryTransactionSerivceMap[chainId] = new EVMRetryTransactionService({
+      retryTransactionQueue,
       transactionService,
       networkService,
       options: {
         chainId,
       },
     });
-    retryTransactionQueue.consume(retryTransactionSerivceMap[chainId].onMessageReceived);
+    retryTransactionQueueMap[chainId].consume(
+      retryTransactionSerivceMap[chainId].onMessageReceived,
+    );
 
     const relayerQueue = new EVMRelayerQueue([]);
     for (const relayerManager of config.relayerManagers) {
@@ -189,7 +199,7 @@ const transactionListenerMap: any = {};
       EVMRelayerManagerMap[relayerManager.name][chainId] = relayerMangerInstance;
 
       const addressList = await relayerMangerInstance.createRelayers();
-      console.log('Relayer address list length', addressList.length, relayerManager.minRelayerCount);
+      log.info('Relayer address list length', addressList.length, relayerManager.minRelayerCount);
       await relayerMangerInstance.fundRelayers(addressList);
     }
 
@@ -280,7 +290,7 @@ const transactionListenerMap: any = {};
       }
     }
   }
-  console.log('<=== Config setup completed ===>');
+  log.info('<=== Config setup completed ===>');
 })();
 
 export {
