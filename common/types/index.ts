@@ -1,3 +1,5 @@
+import { ethers } from 'ethers';
+
 export enum TransactionType {
   AA = 'AA',
   SCW = 'SCW',
@@ -9,6 +11,8 @@ export enum TransactionMethodType {
   AA = 'eth_sendUserOperation',
   CROSS_CHAIN = 'eth_sendCrossChainTransaction',
 }
+
+export type TransactionQueueMessageType = ethers.providers.TransactionResponse;
 
 export enum TransactionStatus {
   IN_PROCESS = 'IN_PROCESS',

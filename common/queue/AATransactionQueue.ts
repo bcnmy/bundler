@@ -32,7 +32,7 @@ export class AATransactionQueue implements IQueue<AATransactionMessageType> {
     this.queueName = `relayer_queue_${this.transactionType}_${this.chainId}`;
   }
 
-  connect = async () => {
+  async connect() {
     const connection = await amqp.connect(queueUrl);
     if (!this.channel) {
       this.channel = await connection.createChannel();
@@ -40,17 +40,17 @@ export class AATransactionQueue implements IQueue<AATransactionMessageType> {
         durable: true,
       });
     }
-  };
+  }
 
-  publish = async (data: AATransactionMessageType) => {
+  async publish(data: AATransactionMessageType) {
     const key = `chainid.${this.chainId}`;
     this.channel.publish(this.exchangeName, key, Buffer.from(JSON.stringify(data)), {
       persistent: true,
     });
     return true;
-  };
+  }
 
-  consume = async (onMessageReceived: () => void) => {
+  async consume(onMessageReceived: () => void) {
     log.info(`[x] Setting up consumer for queue with chain id ${this.chainId} for transaction type ${this.transactionType}`);
     this.channel.prefetch(1);
     try {
@@ -61,7 +61,7 @@ export class AATransactionQueue implements IQueue<AATransactionMessageType> {
       this.channel.bindQueue(queue.queue, this.exchangeName, key);
       await this.channel.consume(
         queue.queue,
-        onMessageReceived.bind(this),
+        onMessageReceived,
       );
 
       return true;
@@ -69,9 +69,9 @@ export class AATransactionQueue implements IQueue<AATransactionMessageType> {
       log.error(error);
       return false;
     }
-  };
+  }
 
-  ack = async (data: ConsumeMessage) => {
+  async ack(data: ConsumeMessage) {
     this.channel.ack(data);
-  };
+  }
 }

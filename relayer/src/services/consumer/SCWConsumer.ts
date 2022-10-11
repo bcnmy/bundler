@@ -35,7 +35,7 @@ ITransactionConsumer<EVMAccount, EVMRawTransactionType> {
 
   onMessageReceived = async (
     msg?: ConsumeMessage,
-  ) => {
+  ): Promise<void> => {
     if (msg) {
       const transactionDataReceivedFromQueue = JSON.parse(msg.content.toString());
       log.info(`onMessage received in ${this.transactionType}: ${JSON.stringify(transactionDataReceivedFromQueue)}`);
@@ -44,15 +44,16 @@ ITransactionConsumer<EVMAccount, EVMRawTransactionType> {
       const activeRelayer = await this.relayerManager.getActiveRelayer();
       log.info(`Active relayer for ${this.transactionType} is ${activeRelayer?.getPublicKey()}`);
       if (activeRelayer) {
-        const response = await this.transactionService.sendTransaction(
+        const transactionServiceResponse = await this.transactionService.sendTransaction(
           transactionDataReceivedFromQueue,
           activeRelayer,
         );
+        log.info(`Response from transaction service after sending transaction on chaindId: ${this.chainId}: ${JSON.stringify(transactionServiceResponse)}`);
         this.relayerManager.addActiveRelayer(activeRelayer.getPublicKey());
-        if (response.state === 'success') {
+        if (transactionServiceResponse.state === 'success') {
           log.info(`Transaction sent successfully for ${this.transactionType} on chain ${this.chainId}`);
         } else {
-          log.error(`Transaction failed with error: ${response?.error || 'unknown error'} for ${this.transactionType} on chain ${this.chainId}`);
+          log.error(`Transaction failed with error: ${transactionServiceResponse?.error || 'unknown error'} for ${this.transactionType} on chain ${this.chainId}`);
         }
       } else {
         throw new Error(`No active relayer for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);

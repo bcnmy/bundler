@@ -28,7 +28,7 @@ export class SCWTransactionQueue implements IQueue<SCWTransactionMessageType> {
     this.queueName = `relayer_queue_${this.transactionType}_${this.chainId}`;
   }
 
-  connect = async () => {
+  async connect() {
     const connection = await amqp.connect(queueUrl);
     if (!this.channel) {
       this.channel = await connection.createChannel();
@@ -36,9 +36,9 @@ export class SCWTransactionQueue implements IQueue<SCWTransactionMessageType> {
         durable: true,
       });
     }
-  };
+  }
 
-  publish = async (data: SCWTransactionMessageType) => {
+  async publish(data: SCWTransactionMessageType) {
     const key = `chainid.${this.chainId}.type.${this.transactionType}`;
     this.channel.prefetch(1);
     this.channel.publish(this.exchangeName, key, Buffer.from(JSON.stringify(data)), {
@@ -46,9 +46,9 @@ export class SCWTransactionQueue implements IQueue<SCWTransactionMessageType> {
     });
     log.info(`[x] Sent transaction to queue with transaction id ${data.transactionId}`);
     return true;
-  };
+  }
 
-  consume = async (onMessageReceived: () => void) => {
+  async consume(onMessageReceived: () => void) {
     log.info(`[x] Setting up consumer for queue with chain id ${this.chainId} for transaction type ${this.transactionType}`);
     this.channel.prefetch(1);
     try {
@@ -61,7 +61,7 @@ export class SCWTransactionQueue implements IQueue<SCWTransactionMessageType> {
       this.channel.bindQueue(queue.queue, `relayer_queue_exchange_${this.transactionType}`, key);
       await this.channel.consume(
         queue.queue,
-        onMessageReceived.bind(this),
+        onMessageReceived,
       );
 
       return true;
@@ -69,9 +69,9 @@ export class SCWTransactionQueue implements IQueue<SCWTransactionMessageType> {
       log.error(error);
       return false;
     }
-  };
+  }
 
-  ack = async (data: ConsumeMessage) => {
+  async ack(data: ConsumeMessage) {
     this.channel.ack(data);
-  };
+  }
 }

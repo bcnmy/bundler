@@ -1,5 +1,5 @@
 export interface IBlockchainTransaction {
-  transactionId: string;
+  transactionId: string; // REVIEW // In case of funding relayer transactions no transactionId
   transactionHash: string;
   status: string;
   rawTransaction: object;

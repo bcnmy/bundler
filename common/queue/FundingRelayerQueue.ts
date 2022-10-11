@@ -11,13 +11,13 @@ const { queueUrl } = config;
 export class RetryTransactionHandlerQueue implements IQueue<TransactionMessageType> {
   private channel!: Channel;
 
-  private exchangeName = 'retry_transaction_queue_exchange';
+  private exchangeName = 'funding_relayer_queue_exchange';
 
   private exchangeType = 'direct';
 
   chainId: number;
 
-  private queueName = 'retry_transaction_queue';
+  private queueName = 'funding_relayer_queue';
 
   msg!: ConsumeMessage | null;
 
@@ -40,13 +40,10 @@ export class RetryTransactionHandlerQueue implements IQueue<TransactionMessageTy
   }
 
   async publish(data: TransactionMessageType) {
-    const key = `retry_chainid.${this.chainId}`;
-    log.info(`Publishing data to retry queue on chain id ${this.chainId} with interval ${config.chains.retryTransactionInterval[this.chainId]} and key ${key}`);
+    const key = `funding_chainid.${this.chainId}`;
+    log.info(`Publishing data to funding queue on chain id ${this.chainId} with key ${key}`);
     if (this.channel) {
-      this.channel.publish(this.exchangeName, key, Buffer.from(JSON.stringify(data)), {
-        persistent: true,
-        headers: { 'x-delay': config.chains.retryTransactionInterval[this.chainId] },
-      });
+      this.channel.publish(this.exchangeName, key, Buffer.from(JSON.stringify(data)));
       return true;
     }
     return false;
@@ -57,16 +54,16 @@ export class RetryTransactionHandlerQueue implements IQueue<TransactionMessageTy
     this.channel.prefetch(1);
     try {
       // setup a consumer
-      const retryTransactionQueue: Replies.AssertQueue = await this.channel.assertQueue(
+      const fundingRelayerQueue: Replies.AssertQueue = await this.channel.assertQueue(
         `${this.queueName}_${this.chainId}`,
       );
-      const key = `retry_chainid.${this.chainId}`;
+      const key = `funding_chainid.${this.chainId}`;
 
-      log.info(`[*] Waiting for retry transactions on network id ${this.chainId}`);
+      log.info(`[*] Waiting for funding transactions on network id ${this.chainId}`);
 
-      this.channel.bindQueue(retryTransactionQueue.queue, this.exchangeName, key);
+      this.channel.bindQueue(fundingRelayerQueue.queue, this.exchangeName, key);
       await this.channel.consume(
-        retryTransactionQueue.queue,
+        fundingRelayerQueue.queue,
         onMessageReceived,
       );
 

@@ -29,7 +29,7 @@ export class TransactionHandlerQueue implements IQueue<TransactionMessageType> {
     this.chainId = options.chainId;
   }
 
-  connect = async () => {
+  async connect() {
     const connection = await amqp.connect(queueUrl);
     if (!this.channel) {
       this.channel = await connection.createChannel();
@@ -37,22 +37,25 @@ export class TransactionHandlerQueue implements IQueue<TransactionMessageType> {
         durable: true,
       });
     }
-  };
+  }
 
-  publish = async (data: TransactionMessageType) => {
+  async publish(data: TransactionMessageType) {
     const key = `chainid.${this.chainId}`;
+    log.info(`Publishing data to retry queue on chain id ${this.chainId} with interval ${config.chains.retryTransactionInterval[this.chainId]} and key ${key}`);
     this.channel.prefetch(1);
     this.channel.publish(this.exchangeName, key, Buffer.from(JSON.stringify(data)), {
       persistent: true,
     });
     return true;
-  };
+  }
 
-  consume = async (onMessageReceived: () => void) => {
+  async consume(onMessageReceived: () => void) {
     this.channel.prefetch(1);
     try {
       // setup a consumer
-      const transactionQueue: Replies.AssertQueue = await this.channel.assertQueue(this.queueName);
+      const transactionQueue: Replies.AssertQueue = await this.channel.assertQueue(
+        `${this.queueName}_${this.chainId}`,
+      );
 
       const key = `chainid.${this.chainId}`;
       log.info(`[*] Waiting for transactions on network id ${this.chainId}`);
@@ -67,9 +70,9 @@ export class TransactionHandlerQueue implements IQueue<TransactionMessageType> {
       log.error(error);
       return false;
     }
-  };
+  }
 
-  ack = async (data: ConsumeMessage) => {
+  async ack(data: ConsumeMessage) {
     this.channel.ack(data);
-  };
+  }
 }
