@@ -1,33 +1,24 @@
 import { EVMAccount } from '../../relayer/src/services/account';
 import { INetworkService } from '../network';
 import { EVMRawTransactionType } from '../types';
+import { TenderlySimulationService } from './external-simulation';
 import { SCWSimulationDataType, SimulationResponseType } from './types';
 
 export class SCWSimulationService {
   networkService: INetworkService<EVMAccount, EVMRawTransactionType>;
 
-  entryPointAbi: string;
-
-  entryPointAddress: string;
+  tenderlySimulationService: TenderlySimulationService;
 
   constructor(
     networkService: INetworkService<EVMAccount, EVMRawTransactionType>,
-    options: {
-      entryPointAbi: string,
-      entryPointAddress: string,
-    },
+    tenderlySimulationService: TenderlySimulationService,
   ) {
     this.networkService = networkService;
-    this.entryPointAbi = options.entryPointAbi;
-    this.entryPointAddress = options.entryPointAddress;
+    this.tenderlySimulationService = tenderlySimulationService;
   }
 
   async simulate(simulationData: SCWSimulationDataType): Promise<SimulationResponseType> {
-    console.log(this.entryPointAbi, simulationData);
-    return {
-      isSimulationSuccessful: true,
-      gasLimitFromSimulation: 500000,
-      msgFromSimulation: '',
-    };
+    const tenderlySimulationResult = await this.tenderlySimulationService.simulate(simulationData);
+    return tenderlySimulationResult;
   }
 }

@@ -1,26 +1,23 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
-import { SCWSimulationService } from '../../../../common/simulation';
+import { scwSimulationServiceMap } from '../../../../common/service-manager';
 
 const log = logger(module);
 
 // eslint-disable-next-line consistent-return
-export const simulateSCWTransaction = async (req: Request, res: Response) => {
+export const simulateSCWTransaction = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const {
       to, data, chainId, refundInfo,
-    } = req.body;
+    } = req.body.params;
 
-    // SCWSimulationService.simulate({
-    //   chainId,
-    //   data,
-    //   to,
-    //   refundInfo,
-    // });
-    return res.status(400).send({
-      code: 400,
-      message: 'Wrong transaction type sent in request',
+    await scwSimulationServiceMap[chainId].simulate({
+      to,
+      data,
+      chainId,
+      refundInfo,
     });
+    next();
   } catch (error) {
     log.error(`Error in fetching fee otpions ${error}`);
     return res.status(500).json({

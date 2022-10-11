@@ -1,4 +1,5 @@
 /* eslint-disable no-await-in-loop */
+import { ethers } from 'ethers';
 import { config } from '../../config';
 import { EVMAccount } from '../../relayer/src/services/account';
 import { AAConsumer, SCWConsumer, SocketConsumer } from '../../relayer/src/services/consumer';
@@ -26,6 +27,7 @@ import {
 } from '../queue';
 import { AARelayService, SCWRelayService } from '../relay-service';
 import { AASimulationService, SCWSimulationService } from '../simulation';
+import { TenderlySimulationService } from '../simulation/external-simulation';
 import { CMCTokenPriceManager } from '../token-price';
 import {
   AATransactionMessageType,
@@ -48,13 +50,24 @@ const routeTransactionToRelayerMap: {
     [transactionType: string]: AARelayService | SCWRelayService;
   };
 } = {};
+
 const feeOptionMap: {
   [chainId: number]: FeeOption;
 } = {};
-const simulatonServiceMap: {
-  [chainId: number]: {
-    [transactionType: string]: AASimulationService | SCWSimulationService;
-  };
+
+const aaSimulatonServiceMap: {
+  [chainId: number]: AASimulationService;
+} = {};
+
+const scwSimulationServiceMap: {
+  [chainId: number]: SCWSimulationService;
+} = {};
+
+const entryPointMap: {
+  [chainId: number]: Array<{
+    address: string,
+    entryPointContract: ethers.Contract
+  }>
 } = {};
 
 const dbInstance = Mongo.getInstance();
@@ -83,7 +96,7 @@ const retryTransactionQueueMap: {
 
   for (const chainId of supportedNetworks) {
     routeTransactionToRelayerMap[chainId] = {};
-    simulatonServiceMap[chainId] = {};
+    entryPointMap[chainId] = [];
 
     const networkService = new EVMNetworkService({
       chainId,
@@ -217,10 +230,6 @@ const retryTransactionQueueMap: {
     feeOptionMap[chainId] = feeOptionService;
     // for each network get transaction type
     for (const type of supportedTransactionType[chainId]) {
-      const { entryPointData } = config;
-      const entryPointAbi = entryPointData.abi;
-      const entryPointAddress = entryPointData.address[chainId];
-
       const aaRelayerManager = EVMRelayerManagerMap[
         relayerManagerTransactionTypeNameMap[type]][chainId];
       if (!aaRelayerManager) {
@@ -247,13 +256,25 @@ const retryTransactionQueueMap: {
         const aaRelayService = new AARelayService(aaQueue);
         routeTransactionToRelayerMap[chainId][type] = aaRelayService;
 
-        simulatonServiceMap[chainId][type] = new AASimulationService(
+        aaSimulatonServiceMap[chainId] = new AASimulationService(
           networkService,
-          {
-            entryPointAbi,
-            entryPointAddress,
-          },
         );
+
+        const { entryPointData } = config;
+
+        for (let entryPointIndex = 0;
+          entryPointIndex < entryPointData[chainId].length;
+          entryPointIndex += 1) {
+          const entryPoint = entryPointData[chainId][entryPointIndex];
+
+          entryPointMap[chainId].push({
+            address: entryPoint.address,
+            entryPointContract: networkService.getContract(
+              JSON.stringify(entryPoint.abi),
+              entryPoint.address,
+            ),
+          });
+        }
       } else if (type === TransactionType.SCW) {
         // queue for scw
         const scwQueue: IQueue<SCWTransactionMessageType> = new SCWTransactionQueue({
@@ -280,12 +301,14 @@ const retryTransactionQueueMap: {
         const scwRelayService = new SCWRelayService(scwQueue);
         routeTransactionToRelayerMap[chainId][type] = scwRelayService;
 
-        simulatonServiceMap[chainId][type] = new SCWSimulationService(
+        const tenderlySimulationService = new TenderlySimulationService(gasPriceService, {
+          tenderlyUser: config.simulationData.tenderlyData.tenderlyUser,
+          tenderlyProject: config.simulationData.tenderlyData.tenderlyProject,
+          tenderlyAccessKey: config.simulationData.tenderlyData.tenderlyAccessKey,
+        });
+        scwSimulationServiceMap[chainId] = new SCWSimulationService(
           networkService,
-          {
-            entryPointAbi,
-            entryPointAddress,
-          },
+          tenderlySimulationService,
         );
       }
     }
@@ -296,6 +319,8 @@ const retryTransactionQueueMap: {
 export {
   routeTransactionToRelayerMap,
   feeOptionMap,
-  simulatonServiceMap,
+  aaSimulatonServiceMap,
+  scwSimulationServiceMap,
+  entryPointMap,
   EVMRelayerManagerMap,
 };

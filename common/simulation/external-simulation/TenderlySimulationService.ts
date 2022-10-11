@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ExternalSimulationResponseType, TenderlySimulationDataType } from '../types';
+import { ExternalSimulationResponseType, SCWSimulationDataType } from '../types';
 import { logger } from '../../log-config';
 import { IGasPrice } from '../../gas-price';
 import { GasPriceType } from '../../gas-price/types';
@@ -28,10 +28,10 @@ export class TenderlySimulationService implements IExternalSimulation {
   }
 
   async simulate(
-    simualtionData: TenderlySimulationDataType,
+    simualtionData: SCWSimulationDataType,
   ): Promise<ExternalSimulationResponseType> {
     const {
-      chainId, data, wallet, refundInfo,
+      chainId, data, to, refundInfo,
     } = simualtionData;
     const SIMULATE_URL = `https://api.tenderly.co/api/v1/account/${this.tenderlyUser}/project/${this.tenderlyProject}/simulate`;
     const tAxios = this.tenderlyInstance();
@@ -43,7 +43,7 @@ export class TenderlySimulationService implements IExternalSimulation {
       gas: 8000000,
       gas_price: '0',
       value: '0',
-      to: wallet,
+      to,
       // simulation config (tenderly specific)
       save: true,
     };
@@ -51,9 +51,9 @@ export class TenderlySimulationService implements IExternalSimulation {
 
     if (!response?.data?.transaction?.status) {
       return {
-        simulationSuccess: false,
-        simulationMessage: response?.data?.transaction?.error_message,
-        simualtionGasLimit: 0,
+        isSimulationSuccessful: false,
+        msgFromSimulation: response?.data?.transaction?.error_message,
+        gasLimitFromSimulation: 0,
       };
     }
 
@@ -69,16 +69,16 @@ export class TenderlySimulationService implements IExternalSimulation {
 
     if (!isRelayerPaidFully) {
       return {
-        simulationSuccess: false,
-        simulationMessage: `Payment to relayer is incorrect, with message: ${successOrRevertMsg}`,
-        simualtionGasLimit: 0,
+        isSimulationSuccessful: false,
+        msgFromSimulation: `Payment to relayer is incorrect, with message: ${successOrRevertMsg}`,
+        gasLimitFromSimulation: 0,
       };
     }
 
     return {
-      simulationSuccess: true,
-      simulationMessage: 'Fee options fetched successfully',
-      simualtionGasLimit: response?.data?.transaction?.gas_used,
+      isSimulationSuccessful: true,
+      msgFromSimulation: 'Fee options fetched successfully',
+      gasLimitFromSimulation: response?.data?.transaction?.gas_used,
     };
   }
 
@@ -123,8 +123,9 @@ export class TenderlySimulationService implements IExternalSimulation {
       log.info(`Payment sent in transaction: ${paymentValue}`);
 
       let refundToRelayer: number;
-      const nativeTokenGasPrice = parseInt(await
-      this.gasPriceService.getGasPrice(GasPriceType.DEFAULT), 10);
+      const gasPrice = await this.gasPriceService.getGasPrice(GasPriceType.DEFAULT);
+      // TODO // Review how to calculate this
+      const nativeTokenGasPrice = parseInt(gasPrice as string, 10);
 
       log.info(`Native token gas price: ${nativeTokenGasPrice}`);
       // ERC 20 token gas price should be in units of native asset

@@ -1,10 +1,11 @@
+import { BigNumber } from 'ethers';
 import { UserOperationType } from '../../types';
 
 // data response type that external simulation serivcereturns
 export type ExternalSimulationResponseType = {
-  simulationSuccess: boolean,
-  simulationMessage: string,
-  simualtionGasLimit: number,
+  isSimulationSuccessful: boolean,
+  msgFromSimulation?: string,
+  gasLimitFromSimulation: number | BigNumber,
 };
 
 // data type that simulation service expects
@@ -17,20 +18,13 @@ export type SCWSimulationDataType = {
 
 export type AASimulationDataType = {
   userOp: UserOperationType,
+  entryPointAddress: string,
+  entryPointAbi: string
 };
 
 // data response type that simulation service returns
 export type SimulationResponseType = {
   isSimulationSuccessful: boolean,
-  gasLimitFromSimulation: number,
-  msgFromSimulation: string,
-};
-
-// data type that tenderly simulation service expects
-export type TenderlySimulationDataType = {
-  chainId: number,
-  data: string,
-  wallet: string,
-  refundInfo: { tokenGasPrice: string, gasToken: string },
-  gasPriceMap: any
+  gasLimitFromSimulation: number | BigNumber,
+  msgFromSimulation?: string,
 };
