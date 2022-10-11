@@ -1936,7 +1936,7 @@ caniuse-lite@^1.0.30001400:
   resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001414.tgz#5f1715e506e71860b4b07c50060ea6462217611e"
   integrity sha512-t55jfSaWjCdocnFdKQoO+d2ct9C59UZg4dY3OnUlSZ447r8pUtIKdp0hpAzrGFultmTC+Us+KpKi4GZl/LXlFg==
 
-cent.js@^2.0.2:
+cent.js@^2.0.2, cent.js@^2.0.5:
   version "2.0.5"
   resolved "https://registry.yarnpkg.com/cent.js/-/cent.js-2.0.5.tgz#52bea742903b00ed980b9da92d99cf305cc5dc7c"
   integrity sha512-2h/Y5RmoxkEiPSg74FxMUrd0z2dj0QT1NwLoqiJ5nPX/zxGWnITTksru3I3NJqLdJhk3ff2zZZnB508h6WnaHQ==

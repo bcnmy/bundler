@@ -32,7 +32,7 @@ const data: ConfigType = {
   socketService: {
     wssUrl: 'ws://localhost:9000/connection/websocket',
     httpUrl: 'http://localhost:9000/api',
-    secret: '9edb7c38-0f55-4627-9bda-4cc050b5f6cb',
+    token: '9edb7c38-0f55-4627-9bda-4cc050b5f6cb',
     apiKey: 'a4c3c3df-4294-4719-a6a6-0c3416d68466',
   },
   supportedNetworks: [5, 80001],
@@ -80,12 +80,12 @@ const data: ConfigType = {
         2: 1700000, // NEON
       },
       minRelayerCount: {
-        5: 3,
+        5: 10,
         137: 3,
         80001: 3,
       },
       maxRelayerCount: {
-        5: 5,
+        5: 25,
         137: 5,
         80001: 5,
       },
@@ -100,7 +100,7 @@ const data: ConfigType = {
         80001: 15,
       },
       fundingRelayerAmount: {
-        5: 0.03,
+        5: 0.1,
         137: 0.5,
         80001: 0.2,
       },

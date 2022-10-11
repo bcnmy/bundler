@@ -2,7 +2,7 @@
 import { ethers } from 'ethers';
 import { config } from '../../config';
 import { EVMAccount } from '../../relayer/src/services/account';
-import { AAConsumer, SCWConsumer } from '../../relayer/src/services/consumer';
+import { AAConsumer, SCWConsumer, SocketConsumer } from '../../relayer/src/services/consumer';
 import { EVMNonceManager } from '../../relayer/src/services/nonce-manager';
 import {
   EVMRelayerManager,
@@ -17,6 +17,7 @@ import { RedisCacheService } from '../cache';
 import { Mongo, TransactionDAO } from '../db';
 import { GasPriceManager } from '../gas-price';
 import { IQueue } from '../interface';
+import { logger } from '../log-config';
 import { EVMNetworkService } from '../network';
 import {
   AATransactionQueue,
@@ -34,6 +35,8 @@ import {
   SCWTransactionMessageType,
   TransactionType,
 } from '../types';
+
+const log = logger(module);
 
 // change below to assign relayer manager to transaction type
 const relayerManagerTransactionTypeNameMap = {
@@ -80,6 +83,13 @@ const EVMRelayerManagerMap: {
 
 const transactionDao = new TransactionDAO();
 
+const socketConsumerMap: any = {};
+const retryTransactionSerivceMap: any = {};
+const transactionListenerMap: any = {};
+const retryTransactionQueueMap: {
+  [key: number]: RetryTransactionHandlerQueue,
+} = {};
+
 (async () => {
   await dbInstance.connect();
   await cacheService.connect();
@@ -109,10 +119,20 @@ const transactionDao = new TransactionDAO();
     });
     await transactionQueue.connect();
 
+    socketConsumerMap[chainId] = new SocketConsumer({
+      queue: transactionQueue,
+      options: {
+        chainId,
+        wssUrl: config.socketService.wssUrl,
+      },
+    });
+    transactionQueue.consume(socketConsumerMap[chainId].onMessageReceived);
+
     const retryTransactionQueue = new RetryTransactionHandlerQueue({
       chainId,
     });
-    await retryTransactionQueue.connect();
+    retryTransactionQueueMap[chainId] = retryTransactionQueue;
+    await retryTransactionQueueMap[chainId].connect();
 
     const nonceManager = new EVMNonceManager({
       options: {
@@ -131,6 +151,7 @@ const transactionDao = new TransactionDAO();
         chainId,
       },
     });
+    transactionListenerMap[chainId] = transactionListener;
 
     const transactionService = new EVMTransactionService({
       networkService,
@@ -143,14 +164,17 @@ const transactionDao = new TransactionDAO();
       },
     });
 
-    const retryTransactionSerivce = new EVMRetryTransactionService({
+    retryTransactionSerivceMap[chainId] = new EVMRetryTransactionService({
+      retryTransactionQueue,
       transactionService,
       networkService,
       options: {
         chainId,
       },
     });
-    retryTransactionQueue.consume(retryTransactionSerivce.onMessageReceived);
+    retryTransactionQueueMap[chainId].consume(
+      retryTransactionSerivceMap[chainId].onMessageReceived,
+    );
 
     const relayerQueue = new EVMRelayerQueue([]);
     for (const relayerManager of config.relayerManagers) {
@@ -186,6 +210,10 @@ const transactionDao = new TransactionDAO();
         },
       });
       EVMRelayerManagerMap[relayerManager.name][chainId] = relayerMangerInstance;
+
+      const addressList = await relayerMangerInstance.createRelayers();
+      log.info('Relayer address list length', addressList.length, relayerManager.minRelayerCount);
+      await relayerMangerInstance.fundRelayers(addressList);
     }
 
     const tokenService = new CMCTokenPriceManager(cacheService, {
@@ -285,16 +313,7 @@ const transactionDao = new TransactionDAO();
       }
     }
   }
-  for (const relayerManagerName of Object.keys(EVMRelayerManagerMap)) {
-    for (const chainId of supportedNetworks) {
-      const relayerManager = EVMRelayerManagerMap[relayerManagerName][chainId];
-      if (relayerManager) {
-        const addressList = await relayerManager.createRelayers();
-        console.log('Relayer address list length', addressList.length, relayerManager.minRelayerCount);
-        await relayerManager.fundRelayers(addressList);
-      }
-    }
-  }
+  log.info('<=== Config setup completed ===>');
 })();
 
 export {
