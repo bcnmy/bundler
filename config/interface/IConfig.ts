@@ -1,6 +1,5 @@
 import { ethers } from 'ethers';
-import { TransactionType } from '../../common/types';
-import { SymbolMapByChainIdType } from '../types';
+import { TransactionType, SymbolMapByChainIdType } from '../../common/types';
 
 type ChainIdWithStringValueType = {
   [key: number]: string
