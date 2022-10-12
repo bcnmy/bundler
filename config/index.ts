@@ -1,13 +1,168 @@
-import { ethers } from 'ethers';
-import _ from 'lodash';
-import { TransactionType } from '../common/types';
+import crypto from 'crypto-js';
+import fs, { existsSync } from 'fs';
+import _, { isNumber } from 'lodash';
+
 import { ConfigType, IConfig } from './interface/IConfig';
 
-class Config implements IConfig {
+const KEY_SIZE = 32;
+const PBKDF2_ITERATIONS = 100000;
+const AES_PADDING = crypto.pad.Pkcs7;
+const AES_MODE = crypto.mode.CBC;
+
+export class Config implements IConfig {
   config: ConfigType;
 
-  constructor(config: ConfigType) {
-    this.config = config;
+  constructor() {
+    // decrypt the config and load it
+    const encryptedEnvPath = './config.json.enc';
+    const passphrase = 'averystrongpassword';
+
+    if (!existsSync(encryptedEnvPath)) {
+      throw new Error(`Invalid ENV Path: ${encryptedEnvPath}`);
+    }
+    const ciphertext = fs.readFileSync(encryptedEnvPath, 'utf8');
+    // First 44 bits are Base64 encodded HMAC
+    const hashInBase64 = ciphertext.substr(0, 44);
+
+    // Next 32 bits are the salt
+    const salt = crypto.enc.Hex.parse(ciphertext.substr(44, 32));
+
+    // Next 32 bits are the initialization vector
+    const iv = crypto.enc.Hex.parse(ciphertext.substr(44 + 32, 32));
+
+    // Rest is encrypted .env
+    const encrypted = ciphertext.substr(44 + 32 + 32);
+
+    // Derive key from passphrase
+    const key = crypto.PBKDF2(passphrase, salt, {
+      keySize: KEY_SIZE / 32,
+      iterations: PBKDF2_ITERATIONS,
+    });
+
+    const bytes = crypto.AES.decrypt(encrypted, key, {
+      iv,
+      padding: AES_PADDING,
+      mode: AES_MODE,
+    });
+
+    const plaintext = bytes.toString(crypto.enc.Utf8);
+
+    // Verify HMAC
+    const decryptedHmac = crypto.HmacSHA256(plaintext, key);
+    const decryptedHmacInBase64 = crypto.enc.Base64.stringify(decryptedHmac);
+
+    if (decryptedHmacInBase64 !== hashInBase64) {
+      throw new Error('Error: HMAC does not match');
+    }
+    const data = JSON.parse(plaintext) as ConfigType;
+    this.config = data;
+    this.validate();
+  }
+
+  validate(): boolean {
+    // check for each supported networks if the config is valid
+    for (const chainId of this.config.supportedNetworks) {
+      if (!this.config.supportedTransactionType[chainId].length) {
+        throw new Error(`No supported transaction type for chain id ${chainId}`);
+      }
+
+      // check for chains config
+      if (!this.config.chains.currency[chainId]) {
+        throw new Error(`Signer for chain id ${chainId}`);
+      }
+      if (!this.config.chains.provider[chainId]) {
+        throw new Error(`Provider required for chain id ${chainId}`);
+      }
+      if (!this.config.chains.decimal[chainId]) {
+        throw new Error(`Decimals required for chain id ${chainId}`);
+      }
+      if (!this.config.chains.retryTransactionInterval[chainId]) {
+        throw new Error(`Retry transaction interval required for chain id ${chainId}`);
+      }
+
+      // check for transaction config
+      if (!this.config.transaction.errors.networkResponseCodes[chainId]) {
+        throw new Error(`Network response codes required for chain id ${chainId}`);
+      }
+      if (!this.config.transaction.errors.networksNonceError[chainId]) {
+        throw new Error(`Network nonce error required for chain id ${chainId}`);
+      }
+      if (!this.config.transaction.errors.networksInsufficientFundsError[chainId]) {
+        throw new Error(`Network insufficient funds error required for chain id ${chainId}`);
+      }
+
+      if (!this.config.entryPointData[chainId].length) {
+        throw new Error(`Entry point data address required for chain id ${chainId}`);
+      }
+
+      if (!isNumber(this.config.relayer.nodePathIndex)) {
+        throw new Error('Relayer node path index required');
+      }
+
+      if (!this.config.relayerManagers.length) {
+        throw new Error(`Relayer manager required for chain id ${chainId}`);
+      }
+
+      // check valid gas price config
+      if (!this.config.gasPrice[chainId]) {
+        throw new Error(`Gas price configuration required for chain id ${chainId}`);
+      }
+      if (!this.config.gasPrice[chainId].updateFrequencyInSeconds) {
+        throw new Error(`Gas price update frequency required for chain id ${chainId}`);
+      }
+      if (!this.config.gasPrice[chainId].updateFrequencyInSeconds) {
+        throw new Error(`Gas price update frequency required for chain id ${chainId}`);
+      }
+      if (!this.config.gasPrice[chainId].maxGasPrice) {
+        throw new Error(`Max gas price required for chain id ${chainId}`);
+      }
+      if (!this.config.gasPrice[chainId].minGasPrice) {
+        throw new Error(`Min gas price required for chain id ${chainId}`);
+      }
+      if (!this.config.gasPrice[chainId].baseFeeMultiplier) {
+        throw new Error(`Gas price base fee multiplier required for chain id ${chainId}`);
+      }
+
+      // check valid fee options config
+      if (!this.config.feeOption.supportedFeeTokens[chainId].length) {
+        throw new Error(`Supported fee tokens required for chain id ${chainId}`);
+      }
+      if (!this.config.feeOption.similarTokens[chainId].length) {
+        throw new Error(`Similar tokens required for chain id ${chainId}`);
+      }
+      if (!this.config.feeOption.offset[chainId]) {
+        throw new Error(`Offset required for chain id ${chainId}`);
+      }
+      if (!this.config.feeOption.logoUrl[chainId]) {
+        throw new Error(`Logo url required for chain id ${chainId}`);
+      }
+      if (!this.config.feeOption.tokenContractAddress[chainId]) {
+        throw new Error(`Token contract address required for chain id ${chainId}`);
+      }
+      if (!this.config.feeOption.decimals[chainId]) {
+        throw new Error(`Decimals required for chain id ${chainId}`);
+      }
+      if (!this.config.feeOption.feeTokenTransferGas[chainId]) {
+        throw new Error(`Decimals required for chain id ${chainId}`);
+      }
+      if (!this.config.feeOption.refundReceiver[chainId]) {
+        throw new Error(`Refund receiver required for chain id ${chainId}`);
+      }
+
+      if (!this.config.tokenPrice.coinMarketCapApi) {
+        throw new Error('Coin market cap API required');
+      }
+      if (!this.config.tokenPrice.networkSymbols) {
+        throw new Error('Network symbols required');
+      }
+      if (!this.config.tokenPrice.updateFrequencyInSeconds) {
+        throw new Error('Token price update frequency required');
+      }
+      if (!this.config.tokenPrice.symbolMapByChainId[chainId]) {
+        throw new Error(`Symbol map required for chain id ${chainId}`);
+      }
+    }
+    return true;
   }
 
   update(data: object): boolean {
@@ -18,655 +173,11 @@ class Config implements IConfig {
   get(): ConfigType {
     return this.config;
   }
+
+  active(): boolean {
+    return !!this.config.queueUrl;
+  }
 }
 
-const data: ConfigType = {
-  slack: {
-    token: '',
-    channel: '1BQKZLQ0Y',
-  },
-  dataSources: {
-    mongoUrl: 'mongodb://localhost:27017',
-    redisUrl: 'redis://localhost:6379',
-  },
-  socketService: {
-    wssUrl: 'ws://localhost:9000/connection/websocket',
-    httpUrl: 'http://localhost:9000/api',
-    token: '9edb7c38-0f55-4627-9bda-4cc050b5f6cb',
-    apiKey: 'a4c3c3df-4294-4719-a6a6-0c3416d68466',
-  },
-  supportedNetworks: [5, 80001],
-  EIP1559SupportedNetworks: [],
-  supportedTransactionType: {
-    5: [TransactionType.AA, TransactionType.SCW],
-    137: [TransactionType.AA, TransactionType.SCW],
-    80001: [TransactionType.AA, TransactionType.SCW],
-  },
-  chains: {
-    currency: {
-      5: 'ETH',
-      137: 'MATIC',
-      80001: 'MATIC',
-    },
-    decimal: {
-      5: 18,
-      137: 18,
-      80001: 18,
-    },
-    provider: {
-      5: 'https://goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
-      137: 'https://rpc-mainnet.maticvigil.com',
-      80001: 'https://rpc-mumbai.maticvigil.com',
-    },
-    fallbackUrls: {
-
-    },
-    retryTransactionInterval: {
-      5: 100,
-      80001: 100,
-      137: 100,
-    },
-  },
-  relayer: {
-    nodePathIndex: 0,
-  },
-  relayerManagers: [
-    {
-      name: 'RM1',
-      relayerSeed: 'd13c0fefe2d7639fff2e9c583bddabfc9d3dc3255e0f148fbfb2adbfe7f54488fca2bfd317de3181a4f898421d5580e04dc35eaad2646c7f2bf1531bca68b390',
-      gasLimitMap: {
-        0: 21000, // DEFAULT -> EVM
-        1: 710000, // Arbitrum
-        2: 1700000, // NEON
-      },
-      minRelayerCount: {
-        5: 10,
-        137: 3,
-        80001: 3,
-      },
-      maxRelayerCount: {
-        5: 25,
-        137: 5,
-        80001: 5,
-      },
-      inactiveRelayerCountThreshold: {
-        5: 2,
-        137: 2,
-        80001: 2,
-      },
-      pendingTransactionCountThreshold: {
-        5: 15,
-        137: 15,
-        80001: 15,
-      },
-      fundingRelayerAmount: {
-        5: 0.1,
-        137: 0.5,
-        80001: 0.2,
-      },
-      fundingBalanceThreshold: {
-        5: ethers.utils.parseEther('0.01'),
-        137: ethers.utils.parseEther('0.3'),
-        80001: ethers.utils.parseEther('0.1'),
-      },
-      newRelayerInstanceCount: {
-        5: 1,
-        137: 1,
-        80001: 1,
-      },
-      ownerAccountDetails: {
-        5: {
-          publicKey: '0x040a9cbC4453B0eeaE12f3210117B422B890C1ED',
-          privateKey: 'd952fa86f1e2fed30fb3a6da6e5c24d7deb65b6bb46da3ece5f56fd39e64bbd0',
-        },
-        137: {
-          publicKey: '0x040a9cbC4453B0eeaE12f3210117B422B890C1ED',
-          privateKey: 'd952fa86f1e2fed30fb3a6da6e5c24d7deb65b6bb46da3ece5f56fd39e64bbd0',
-        },
-        80001: {
-          publicKey: '0x040a9cbC4453B0eeaE12f3210117B422B890C1ED',
-          privateKey: 'd952fa86f1e2fed30fb3a6da6e5c24d7deb65b6bb46da3ece5f56fd39e64bbd0',
-        },
-      },
-    },
-  ],
-  transaction: {
-    errors: {
-      networkResponseCodes: {
-        5: '0x5',
-        137: '0x5',
-        80001: '0x5',
-      },
-      networksNonceError: {
-        5: '0x6',
-        137: '0x6',
-        80001: '0x6',
-      },
-      networksInsufficientFundsError: {
-        5: '0x3',
-        137: '0x3',
-        80001: '0x3',
-      },
-    },
-  },
-  gasPrice: {
-    5: {
-      updateFrequencyInSeconds: 60,
-      minGasPrice: 1000000000,
-      maxGasPrice: 10000000000,
-      baseFeeMultiplier: 1.1,
-      gasOracle: {
-        ethGasStation: 'https://ethgasstation.info/json/ethgasAPI.json',
-      },
-    },
-    137: {
-      updateFrequencyInSeconds: 60,
-      minGasPrice: 1000000000,
-      maxGasPrice: 10000000000,
-      baseFeeMultiplier: 1.1,
-      gasOracle: {
-        maticGasStationUrl: 'https://gasstation-mainnet.matic.network/v2',
-        polygonGasStation: '',
-      },
-    },
-    80001: {
-      updateFrequencyInSeconds: 60,
-      minGasPrice: 1000000000,
-      maxGasPrice: 10000000000,
-      baseFeeMultiplier: 1.1,
-      gasOracle: {
-        maticGasStationUrl: 'https://gasstation-mainnet.matic.network/v2',
-        polygonGasStation: '',
-      },
-    },
-  },
-  feeOption: {
-    supportedFeeTokens: {
-      5: ['ETH', 'USDC', 'USDT', 'DAI', 'WETH'],
-      80001: ['MATIC', 'USDC', 'USDT', 'DAI', 'WETH'],
-      137: ['MATIC', 'USDC', 'USDT', 'DAI', 'WETH'],
-    },
-    offset: {
-      5: {
-        USDC: 1000000,
-        USDT: 1000000,
-        WETH: 1,
-        DAI: 1,
-        MATIC: 1,
-      },
-      80001: {
-        USDC: 1000000,
-        USDT: 1000000,
-        WETH: 1,
-        DAI: 1,
-        MATIC: 1,
-      },
-      137: {
-        USDC: 1000000,
-        USDT: 1000000,
-        WETH: 1,
-        DAI: 1,
-        MATIC: 1,
-      },
-    },
-    similarTokens: {
-      1: ['ETH', 'WETH'],
-      5: ['ETH', 'WETH'],
-      137: ['MATIC', 'WMATIC'],
-      80001: ['MATIC', 'WMATIC'],
-    },
-    nativeChainIds: {
-      WETH: 1,
-      WMATIC: 137,
-    },
-    logoUrl: {
-      5: {
-        ETH: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png',
-        WETH: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png',
-        MATIC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png',
-        WMATIC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png',
-        USDC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdc.png',
-        USDT: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png',
-        XDAI: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xdai.png',
-      },
-      80001: {
-        ETH: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png',
-        WETH: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png',
-        MATIC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png',
-        WMATIC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png',
-        USDC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdc.png',
-        USDT: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png',
-        XDAI: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xdai.png',
-      },
-      137: {
-        ETH: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png',
-        WETH: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png',
-        MATIC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png',
-        WMATIC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png',
-        USDC: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdc.png',
-        USDT: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png',
-        XDAI: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xdai.png',
-      },
-    },
-    tokenContractAddress: {
-      5: {
-        ETH: '0x0000000000000000000000000000000000000000',
-        USDC: '0xb5B640E6414b6DeF4FC9B3C1EeF373925effeCcF',
-        USDT: '0x64Ef393b6846114Bad71E2cB2ccc3e10736b5716',
-        WETH: '0xb7e94Cce902E34e618A23Cb82432B95d03096146',
-        DAI: '0xE68104D83e647b7c1C15a91a8D8aAD21a51B3B3E',
-      },
-      80001: {
-        MATIC: '0x0000000000000000000000000000000000000000',
-        USDC: '0xdA5289fCAAF71d52a80A254da614a192b693e977',
-        USDT: '0xeaBc4b91d9375796AA4F69cC764A4aB509080A58',
-        WETH: '0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa',
-        DAI: '0xf61cBcaC6C5E4F27543495890536B799D18f7178',
-      },
-      137: {
-        MATIC: '0x0000000000000000000000000000000000000000',
-        USDC: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
-        USDT: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
-        WETH: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
-        DAI: '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063',
-      },
-    },
-    decimals: {
-      5: {
-        ETH: 18,
-        USDC: 6,
-        USDT: 18,
-        WETH: 18,
-        DAI: 18,
-      },
-      80001: {
-        MATIC: 18,
-        USDC: 6,
-        USDT: 18,
-        WETH: 18,
-        DAI: 18,
-      },
-      137: {
-        MATIC: 18,
-        USDC: 6,
-        USDT: 6,
-        WETH: 18,
-        DAI: 18,
-      },
-    },
-    feeTokenTransferGas: {
-      5: {
-        ETH: 7300,
-        USDC: 22975,
-        USDT: 22975,
-        WETH: 22975,
-        DAI: 22975,
-      },
-      80001: {
-        MATIC: 21000,
-        USDC: 21000,
-        USDT: 21000,
-        WETH: 21000,
-        DAI: 21000,
-      },
-      137: {
-        MATIC: 21000,
-        USDC: 21000,
-        USDT: 21000,
-        WETH: 21000,
-        DAI: 21000,
-      },
-    },
-    refundReceiver: {
-      5: '0x040a9cbC4453B0eeaE12f3210117B422B890C1ED',
-      80001: '0x040a9cbC4453B0eeaE12f3210117B422B890C1ED',
-      137: '0x040a9cbC4453B0eeaE12f3210117B422B890C1ED',
-    },
-  },
-  tokenPrice: {
-    coinMarketCapApi: 'a305bb95-7c48-4fb6-bc65-4de8c9193f2f',
-    networkSymbols: {
-      ETH: [1, 3, 4, 42, 5, 421611, 42161, 420, 10],
-      MATIC: [8995, 80001, 15001, 16110, 137],
-      DAI: [77, 100],
-      RBTC: [31],
-      AVAX: [43113, 43114],
-      BNB: [97, 56],
-      GLMR: [1287, 1284],
-      EDG: [2021],
-      MOVR: [1285],
-      FTM: [250, 4002],
-      CELO: [42220, 44787],
-      NEON: [245022926],
-      BOBA: [1294],
-    },
-    updateFrequencyInSeconds: 60,
-    symbolMapByChainId: {
-      1: {
-        '0x6B175474E89094C44Da98b954EedeAC495271d0F': 'DAI',
-        '0x0D8775F648430679A709E98d2b0Cb6250d2887EF': 'BAT',
-        '0x514910771AF9Ca656af840dff83E8264EcF986CA': 'LINK',
-        '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599': 'WBTC',
-      },
-    },
-  },
-  queueUrl: 'amqp://localhost:5672?heartbeat=30',
-  entryPointData: {
-    5: [{
-      abi: [{ inputs: [{ internalType: 'address', name: '_create2factory', type: 'address' }, { internalType: 'uint256', name: '_paymasterStake', type: 'uint256' }, { internalType: 'uint32', name: '_unstakeDelaySec', type: 'uint32' }], stateMutability: 'nonpayable', type: 'constructor' }, { inputs: [{ internalType: 'uint256', name: 'opIndex', type: 'uint256' }, { internalType: 'address', name: 'paymaster', type: 'address' }, { internalType: 'string', name: 'reason', type: 'string' }], name: 'FailedOp', type: 'error' }, {
-        anonymous: false,
-        inputs: [{
-          indexed: true, internalType: 'address', name: 'account', type: 'address',
-        }, {
-          indexed: false, internalType: 'uint256', name: 'totalDeposit', type: 'uint256',
-        }],
-        name: 'Deposited',
-        type: 'event',
-      }, {
-        anonymous: false,
-        inputs: [{
-          indexed: true, internalType: 'address', name: 'account', type: 'address',
-        }, {
-          indexed: false, internalType: 'uint256', name: 'totalStaked', type: 'uint256',
-        }, {
-          indexed: false, internalType: 'uint256', name: 'withdrawTime', type: 'uint256',
-        }],
-        name: 'StakeLocked',
-        type: 'event',
-      }, {
-        anonymous: false,
-        inputs: [{
-          indexed: true, internalType: 'address', name: 'account', type: 'address',
-        }, {
-          indexed: false, internalType: 'uint256', name: 'withdrawTime', type: 'uint256',
-        }],
-        name: 'StakeUnlocked',
-        type: 'event',
-      }, {
-        anonymous: false,
-        inputs: [{
-          indexed: true, internalType: 'address', name: 'account', type: 'address',
-        }, {
-          indexed: false, internalType: 'address', name: 'withdrawAddress', type: 'address',
-        }, {
-          indexed: false, internalType: 'uint256', name: 'amount', type: 'uint256',
-        }],
-        name: 'StakeWithdrawn',
-        type: 'event',
-      }, {
-        anonymous: false,
-        inputs: [{
-          indexed: true, internalType: 'bytes32', name: 'requestId', type: 'bytes32',
-        }, {
-          indexed: true, internalType: 'address', name: 'sender', type: 'address',
-        }, {
-          indexed: true, internalType: 'address', name: 'paymaster', type: 'address',
-        }, {
-          indexed: false, internalType: 'uint256', name: 'nonce', type: 'uint256',
-        }, {
-          indexed: false, internalType: 'uint256', name: 'actualGasCost', type: 'uint256',
-        }, {
-          indexed: false, internalType: 'uint256', name: 'actualGasPrice', type: 'uint256',
-        }, {
-          indexed: false, internalType: 'bool', name: 'success', type: 'bool',
-        }],
-        name: 'UserOperationEvent',
-        type: 'event',
-      }, {
-        anonymous: false,
-        inputs: [{
-          indexed: true, internalType: 'bytes32', name: 'requestId', type: 'bytes32',
-        }, {
-          indexed: true, internalType: 'address', name: 'sender', type: 'address',
-        }, {
-          indexed: false, internalType: 'uint256', name: 'nonce', type: 'uint256',
-        }, {
-          indexed: false, internalType: 'bytes', name: 'revertReason', type: 'bytes',
-        }],
-        name: 'UserOperationRevertReason',
-        type: 'event',
-      }, {
-        anonymous: false,
-        inputs: [{
-          indexed: true, internalType: 'address', name: 'account', type: 'address',
-        }, {
-          indexed: false, internalType: 'address', name: 'withdrawAddress', type: 'address',
-        }, {
-          indexed: false, internalType: 'uint256', name: 'amount', type: 'uint256',
-        }],
-        name: 'Withdrawn',
-        type: 'event',
-      }, {
-        inputs: [{ internalType: 'uint32', name: '_unstakeDelaySec', type: 'uint32' }], name: 'addStake', outputs: [], stateMutability: 'payable', type: 'function',
-      }, {
-        inputs: [{ internalType: 'address', name: 'account', type: 'address' }], name: 'balanceOf', outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }], stateMutability: 'view', type: 'function',
-      }, {
-        inputs: [], name: 'create2factory', outputs: [{ internalType: 'address', name: '', type: 'address' }], stateMutability: 'view', type: 'function',
-      }, {
-        inputs: [{ internalType: 'address', name: 'account', type: 'address' }], name: 'depositTo', outputs: [], stateMutability: 'payable', type: 'function',
-      }, {
-        inputs: [{ internalType: 'address', name: '', type: 'address' }], name: 'deposits', outputs: [{ internalType: 'uint112', name: 'deposit', type: 'uint112' }, { internalType: 'bool', name: 'staked', type: 'bool' }, { internalType: 'uint112', name: 'stake', type: 'uint112' }, { internalType: 'uint32', name: 'unstakeDelaySec', type: 'uint32' }, { internalType: 'uint64', name: 'withdrawTime', type: 'uint64' }], stateMutability: 'view', type: 'function',
-      }, {
-        inputs: [{ internalType: 'address', name: 'account', type: 'address' }],
-        name: 'getDepositInfo',
-        outputs: [{
-          components: [{ internalType: 'uint112', name: 'deposit', type: 'uint112' }, { internalType: 'bool', name: 'staked', type: 'bool' }, { internalType: 'uint112', name: 'stake', type: 'uint112' }, { internalType: 'uint32', name: 'unstakeDelaySec', type: 'uint32' }, { internalType: 'uint64', name: 'withdrawTime', type: 'uint64' }], internalType: 'struct StakeManager.DepositInfo', name: 'info', type: 'tuple',
-        }],
-        stateMutability: 'view',
-        type: 'function',
-      }, {
-        inputs: [{
-          components: [{ internalType: 'address', name: 'sender', type: 'address' }, { internalType: 'uint256', name: 'nonce', type: 'uint256' }, { internalType: 'bytes', name: 'initCode', type: 'bytes' }, { internalType: 'bytes', name: 'callData', type: 'bytes' }, { internalType: 'uint256', name: 'callGas', type: 'uint256' }, { internalType: 'uint256', name: 'verificationGas', type: 'uint256' }, { internalType: 'uint256', name: 'preVerificationGas', type: 'uint256' }, { internalType: 'uint256', name: 'maxFeePerGas', type: 'uint256' }, { internalType: 'uint256', name: 'maxPriorityFeePerGas', type: 'uint256' }, { internalType: 'address', name: 'paymaster', type: 'address' }, { internalType: 'bytes', name: 'paymasterData', type: 'bytes' }, { internalType: 'bytes', name: 'signature', type: 'bytes' }], internalType: 'struct UserOperation', name: 'userOp', type: 'tuple',
-        }],
-        name: 'getRequestId',
-        outputs: [{ internalType: 'bytes32', name: '', type: 'bytes32' }],
-        stateMutability: 'view',
-        type: 'function',
-      }, {
-        inputs: [{ internalType: 'bytes', name: 'initCode', type: 'bytes' }, { internalType: 'uint256', name: 'salt', type: 'uint256' }], name: 'getSenderAddress', outputs: [{ internalType: 'address', name: '', type: 'address' }], stateMutability: 'view', type: 'function',
-      }, {
-        inputs: [{ internalType: 'address', name: 'sender', type: 'address' }], name: 'getSenderStorage', outputs: [{ internalType: 'uint256[]', name: 'senderStorageCells', type: 'uint256[]' }], stateMutability: 'view', type: 'function',
-      }, {
-        inputs: [{
-          components: [{ internalType: 'address', name: 'sender', type: 'address' }, { internalType: 'uint256', name: 'nonce', type: 'uint256' }, { internalType: 'bytes', name: 'initCode', type: 'bytes' }, { internalType: 'bytes', name: 'callData', type: 'bytes' }, { internalType: 'uint256', name: 'callGas', type: 'uint256' }, { internalType: 'uint256', name: 'verificationGas', type: 'uint256' }, { internalType: 'uint256', name: 'preVerificationGas', type: 'uint256' }, { internalType: 'uint256', name: 'maxFeePerGas', type: 'uint256' }, { internalType: 'uint256', name: 'maxPriorityFeePerGas', type: 'uint256' }, { internalType: 'address', name: 'paymaster', type: 'address' }, { internalType: 'bytes', name: 'paymasterData', type: 'bytes' }, { internalType: 'bytes', name: 'signature', type: 'bytes' }], internalType: 'struct UserOperation[]', name: 'ops', type: 'tuple[]',
-        }, { internalType: 'address payable', name: 'beneficiary', type: 'address' }],
-        name: 'handleOps',
-        outputs: [],
-        stateMutability: 'nonpayable',
-        type: 'function',
-      }, {
-        inputs: [{
-          components: [{ internalType: 'address', name: 'sender', type: 'address' }, { internalType: 'uint256', name: 'nonce', type: 'uint256' }, { internalType: 'bytes', name: 'initCode', type: 'bytes' }, { internalType: 'bytes', name: 'callData', type: 'bytes' }, { internalType: 'uint256', name: 'callGas', type: 'uint256' }, { internalType: 'uint256', name: 'verificationGas', type: 'uint256' }, { internalType: 'uint256', name: 'preVerificationGas', type: 'uint256' }, { internalType: 'uint256', name: 'maxFeePerGas', type: 'uint256' }, { internalType: 'uint256', name: 'maxPriorityFeePerGas', type: 'uint256' }, { internalType: 'address', name: 'paymaster', type: 'address' }, { internalType: 'bytes', name: 'paymasterData', type: 'bytes' }, { internalType: 'bytes', name: 'signature', type: 'bytes' }], internalType: 'struct UserOperation', name: 'op', type: 'tuple',
-        }, {
-          components: [{ internalType: 'bytes32', name: 'requestId', type: 'bytes32' }, { internalType: 'uint256', name: 'prefund', type: 'uint256' }, { internalType: 'enum EntryPoint.PaymentMode', name: 'paymentMode', type: 'uint8' }, { internalType: 'uint256', name: 'contextOffset', type: 'uint256' }, { internalType: 'uint256', name: 'preOpGas', type: 'uint256' }], internalType: 'struct EntryPoint.UserOpInfo', name: 'opInfo', type: 'tuple',
-        }, { internalType: 'bytes', name: 'context', type: 'bytes' }],
-        name: 'innerHandleOp',
-        outputs: [{ internalType: 'uint256', name: 'actualGasCost', type: 'uint256' }],
-        stateMutability: 'nonpayable',
-        type: 'function',
-      }, {
-        inputs: [], name: 'paymasterStake', outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }], stateMutability: 'view', type: 'function',
-      }, {
-        inputs: [{
-          components: [{ internalType: 'address', name: 'sender', type: 'address' }, { internalType: 'uint256', name: 'nonce', type: 'uint256' }, { internalType: 'bytes', name: 'initCode', type: 'bytes' }, { internalType: 'bytes', name: 'callData', type: 'bytes' }, { internalType: 'uint256', name: 'callGas', type: 'uint256' }, { internalType: 'uint256', name: 'verificationGas', type: 'uint256' }, { internalType: 'uint256', name: 'preVerificationGas', type: 'uint256' }, { internalType: 'uint256', name: 'maxFeePerGas', type: 'uint256' }, { internalType: 'uint256', name: 'maxPriorityFeePerGas', type: 'uint256' }, { internalType: 'address', name: 'paymaster', type: 'address' }, { internalType: 'bytes', name: 'paymasterData', type: 'bytes' }, { internalType: 'bytes', name: 'signature', type: 'bytes' }], internalType: 'struct UserOperation', name: 'userOp', type: 'tuple',
-        }],
-        name: 'simulateValidation',
-        outputs: [{ internalType: 'uint256', name: 'preOpGas', type: 'uint256' }, { internalType: 'uint256', name: 'prefund', type: 'uint256' }],
-        stateMutability: 'nonpayable',
-        type: 'function',
-      }, {
-        inputs: [], name: 'unlockStake', outputs: [], stateMutability: 'nonpayable', type: 'function',
-      }, {
-        inputs: [], name: 'unstakeDelaySec', outputs: [{ internalType: 'uint32', name: '', type: 'uint32' }], stateMutability: 'view', type: 'function',
-      }, {
-        inputs: [{ internalType: 'address payable', name: 'withdrawAddress', type: 'address' }], name: 'withdrawStake', outputs: [], stateMutability: 'nonpayable', type: 'function',
-      }, {
-        inputs: [{ internalType: 'address payable', name: 'withdrawAddress', type: 'address' }, { internalType: 'uint256', name: 'withdrawAmount', type: 'uint256' }], name: 'withdrawTo', outputs: [], stateMutability: 'nonpayable', type: 'function',
-      }, { stateMutability: 'payable', type: 'receive' }],
-      address: '0x602aB3881Ff3Fa8dA60a8F44Cf633e91bA1FdB69',
-    }],
-    80001: [{
-      abi: [{ inputs: [{ internalType: 'address', name: '_create2factory', type: 'address' }, { internalType: 'uint256', name: '_paymasterStake', type: 'uint256' }, { internalType: 'uint32', name: '_unstakeDelaySec', type: 'uint32' }], stateMutability: 'nonpayable', type: 'constructor' }, { inputs: [{ internalType: 'uint256', name: 'opIndex', type: 'uint256' }, { internalType: 'address', name: 'paymaster', type: 'address' }, { internalType: 'string', name: 'reason', type: 'string' }], name: 'FailedOp', type: 'error' }, {
-        anonymous: false,
-        inputs: [{
-          indexed: true, internalType: 'address', name: 'account', type: 'address',
-        }, {
-          indexed: false, internalType: 'uint256', name: 'totalDeposit', type: 'uint256',
-        }],
-        name: 'Deposited',
-        type: 'event',
-      }, {
-        anonymous: false,
-        inputs: [{
-          indexed: true, internalType: 'address', name: 'account', type: 'address',
-        }, {
-          indexed: false, internalType: 'uint256', name: 'totalStaked', type: 'uint256',
-        }, {
-          indexed: false, internalType: 'uint256', name: 'withdrawTime', type: 'uint256',
-        }],
-        name: 'StakeLocked',
-        type: 'event',
-      }, {
-        anonymous: false,
-        inputs: [{
-          indexed: true, internalType: 'address', name: 'account', type: 'address',
-        }, {
-          indexed: false, internalType: 'uint256', name: 'withdrawTime', type: 'uint256',
-        }],
-        name: 'StakeUnlocked',
-        type: 'event',
-      }, {
-        anonymous: false,
-        inputs: [{
-          indexed: true, internalType: 'address', name: 'account', type: 'address',
-        }, {
-          indexed: false, internalType: 'address', name: 'withdrawAddress', type: 'address',
-        }, {
-          indexed: false, internalType: 'uint256', name: 'amount', type: 'uint256',
-        }],
-        name: 'StakeWithdrawn',
-        type: 'event',
-      }, {
-        anonymous: false,
-        inputs: [{
-          indexed: true, internalType: 'bytes32', name: 'requestId', type: 'bytes32',
-        }, {
-          indexed: true, internalType: 'address', name: 'sender', type: 'address',
-        }, {
-          indexed: true, internalType: 'address', name: 'paymaster', type: 'address',
-        }, {
-          indexed: false, internalType: 'uint256', name: 'nonce', type: 'uint256',
-        }, {
-          indexed: false, internalType: 'uint256', name: 'actualGasCost', type: 'uint256',
-        }, {
-          indexed: false, internalType: 'uint256', name: 'actualGasPrice', type: 'uint256',
-        }, {
-          indexed: false, internalType: 'bool', name: 'success', type: 'bool',
-        }],
-        name: 'UserOperationEvent',
-        type: 'event',
-      }, {
-        anonymous: false,
-        inputs: [{
-          indexed: true, internalType: 'bytes32', name: 'requestId', type: 'bytes32',
-        }, {
-          indexed: true, internalType: 'address', name: 'sender', type: 'address',
-        }, {
-          indexed: false, internalType: 'uint256', name: 'nonce', type: 'uint256',
-        }, {
-          indexed: false, internalType: 'bytes', name: 'revertReason', type: 'bytes',
-        }],
-        name: 'UserOperationRevertReason',
-        type: 'event',
-      }, {
-        anonymous: false,
-        inputs: [{
-          indexed: true, internalType: 'address', name: 'account', type: 'address',
-        }, {
-          indexed: false, internalType: 'address', name: 'withdrawAddress', type: 'address',
-        }, {
-          indexed: false, internalType: 'uint256', name: 'amount', type: 'uint256',
-        }],
-        name: 'Withdrawn',
-        type: 'event',
-      }, {
-        inputs: [{ internalType: 'uint32', name: '_unstakeDelaySec', type: 'uint32' }], name: 'addStake', outputs: [], stateMutability: 'payable', type: 'function',
-      }, {
-        inputs: [{ internalType: 'address', name: 'account', type: 'address' }], name: 'balanceOf', outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }], stateMutability: 'view', type: 'function',
-      }, {
-        inputs: [], name: 'create2factory', outputs: [{ internalType: 'address', name: '', type: 'address' }], stateMutability: 'view', type: 'function',
-      }, {
-        inputs: [{ internalType: 'address', name: 'account', type: 'address' }], name: 'depositTo', outputs: [], stateMutability: 'payable', type: 'function',
-      }, {
-        inputs: [{ internalType: 'address', name: '', type: 'address' }], name: 'deposits', outputs: [{ internalType: 'uint112', name: 'deposit', type: 'uint112' }, { internalType: 'bool', name: 'staked', type: 'bool' }, { internalType: 'uint112', name: 'stake', type: 'uint112' }, { internalType: 'uint32', name: 'unstakeDelaySec', type: 'uint32' }, { internalType: 'uint64', name: 'withdrawTime', type: 'uint64' }], stateMutability: 'view', type: 'function',
-      }, {
-        inputs: [{ internalType: 'address', name: 'account', type: 'address' }],
-        name: 'getDepositInfo',
-        outputs: [{
-          components: [{ internalType: 'uint112', name: 'deposit', type: 'uint112' }, { internalType: 'bool', name: 'staked', type: 'bool' }, { internalType: 'uint112', name: 'stake', type: 'uint112' }, { internalType: 'uint32', name: 'unstakeDelaySec', type: 'uint32' }, { internalType: 'uint64', name: 'withdrawTime', type: 'uint64' }], internalType: 'struct StakeManager.DepositInfo', name: 'info', type: 'tuple',
-        }],
-        stateMutability: 'view',
-        type: 'function',
-      }, {
-        inputs: [{
-          components: [{ internalType: 'address', name: 'sender', type: 'address' }, { internalType: 'uint256', name: 'nonce', type: 'uint256' }, { internalType: 'bytes', name: 'initCode', type: 'bytes' }, { internalType: 'bytes', name: 'callData', type: 'bytes' }, { internalType: 'uint256', name: 'callGas', type: 'uint256' }, { internalType: 'uint256', name: 'verificationGas', type: 'uint256' }, { internalType: 'uint256', name: 'preVerificationGas', type: 'uint256' }, { internalType: 'uint256', name: 'maxFeePerGas', type: 'uint256' }, { internalType: 'uint256', name: 'maxPriorityFeePerGas', type: 'uint256' }, { internalType: 'address', name: 'paymaster', type: 'address' }, { internalType: 'bytes', name: 'paymasterData', type: 'bytes' }, { internalType: 'bytes', name: 'signature', type: 'bytes' }], internalType: 'struct UserOperation', name: 'userOp', type: 'tuple',
-        }],
-        name: 'getRequestId',
-        outputs: [{ internalType: 'bytes32', name: '', type: 'bytes32' }],
-        stateMutability: 'view',
-        type: 'function',
-      }, {
-        inputs: [{ internalType: 'bytes', name: 'initCode', type: 'bytes' }, { internalType: 'uint256', name: 'salt', type: 'uint256' }], name: 'getSenderAddress', outputs: [{ internalType: 'address', name: '', type: 'address' }], stateMutability: 'view', type: 'function',
-      }, {
-        inputs: [{ internalType: 'address', name: 'sender', type: 'address' }], name: 'getSenderStorage', outputs: [{ internalType: 'uint256[]', name: 'senderStorageCells', type: 'uint256[]' }], stateMutability: 'view', type: 'function',
-      }, {
-        inputs: [{
-          components: [{ internalType: 'address', name: 'sender', type: 'address' }, { internalType: 'uint256', name: 'nonce', type: 'uint256' }, { internalType: 'bytes', name: 'initCode', type: 'bytes' }, { internalType: 'bytes', name: 'callData', type: 'bytes' }, { internalType: 'uint256', name: 'callGas', type: 'uint256' }, { internalType: 'uint256', name: 'verificationGas', type: 'uint256' }, { internalType: 'uint256', name: 'preVerificationGas', type: 'uint256' }, { internalType: 'uint256', name: 'maxFeePerGas', type: 'uint256' }, { internalType: 'uint256', name: 'maxPriorityFeePerGas', type: 'uint256' }, { internalType: 'address', name: 'paymaster', type: 'address' }, { internalType: 'bytes', name: 'paymasterData', type: 'bytes' }, { internalType: 'bytes', name: 'signature', type: 'bytes' }], internalType: 'struct UserOperation[]', name: 'ops', type: 'tuple[]',
-        }, { internalType: 'address payable', name: 'beneficiary', type: 'address' }],
-        name: 'handleOps',
-        outputs: [],
-        stateMutability: 'nonpayable',
-        type: 'function',
-      }, {
-        inputs: [{
-          components: [{ internalType: 'address', name: 'sender', type: 'address' }, { internalType: 'uint256', name: 'nonce', type: 'uint256' }, { internalType: 'bytes', name: 'initCode', type: 'bytes' }, { internalType: 'bytes', name: 'callData', type: 'bytes' }, { internalType: 'uint256', name: 'callGas', type: 'uint256' }, { internalType: 'uint256', name: 'verificationGas', type: 'uint256' }, { internalType: 'uint256', name: 'preVerificationGas', type: 'uint256' }, { internalType: 'uint256', name: 'maxFeePerGas', type: 'uint256' }, { internalType: 'uint256', name: 'maxPriorityFeePerGas', type: 'uint256' }, { internalType: 'address', name: 'paymaster', type: 'address' }, { internalType: 'bytes', name: 'paymasterData', type: 'bytes' }, { internalType: 'bytes', name: 'signature', type: 'bytes' }], internalType: 'struct UserOperation', name: 'op', type: 'tuple',
-        }, {
-          components: [{ internalType: 'bytes32', name: 'requestId', type: 'bytes32' }, { internalType: 'uint256', name: 'prefund', type: 'uint256' }, { internalType: 'enum EntryPoint.PaymentMode', name: 'paymentMode', type: 'uint8' }, { internalType: 'uint256', name: 'contextOffset', type: 'uint256' }, { internalType: 'uint256', name: 'preOpGas', type: 'uint256' }], internalType: 'struct EntryPoint.UserOpInfo', name: 'opInfo', type: 'tuple',
-        }, { internalType: 'bytes', name: 'context', type: 'bytes' }],
-        name: 'innerHandleOp',
-        outputs: [{ internalType: 'uint256', name: 'actualGasCost', type: 'uint256' }],
-        stateMutability: 'nonpayable',
-        type: 'function',
-      }, {
-        inputs: [], name: 'paymasterStake', outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }], stateMutability: 'view', type: 'function',
-      }, {
-        inputs: [{
-          components: [{ internalType: 'address', name: 'sender', type: 'address' }, { internalType: 'uint256', name: 'nonce', type: 'uint256' }, { internalType: 'bytes', name: 'initCode', type: 'bytes' }, { internalType: 'bytes', name: 'callData', type: 'bytes' }, { internalType: 'uint256', name: 'callGas', type: 'uint256' }, { internalType: 'uint256', name: 'verificationGas', type: 'uint256' }, { internalType: 'uint256', name: 'preVerificationGas', type: 'uint256' }, { internalType: 'uint256', name: 'maxFeePerGas', type: 'uint256' }, { internalType: 'uint256', name: 'maxPriorityFeePerGas', type: 'uint256' }, { internalType: 'address', name: 'paymaster', type: 'address' }, { internalType: 'bytes', name: 'paymasterData', type: 'bytes' }, { internalType: 'bytes', name: 'signature', type: 'bytes' }], internalType: 'struct UserOperation', name: 'userOp', type: 'tuple',
-        }],
-        name: 'simulateValidation',
-        outputs: [{ internalType: 'uint256', name: 'preOpGas', type: 'uint256' }, { internalType: 'uint256', name: 'prefund', type: 'uint256' }],
-        stateMutability: 'nonpayable',
-        type: 'function',
-      }, {
-        inputs: [], name: 'unlockStake', outputs: [], stateMutability: 'nonpayable', type: 'function',
-      }, {
-        inputs: [], name: 'unstakeDelaySec', outputs: [{ internalType: 'uint32', name: '', type: 'uint32' }], stateMutability: 'view', type: 'function',
-      }, {
-        inputs: [{ internalType: 'address payable', name: 'withdrawAddress', type: 'address' }], name: 'withdrawStake', outputs: [], stateMutability: 'nonpayable', type: 'function',
-      }, {
-        inputs: [{ internalType: 'address payable', name: 'withdrawAddress', type: 'address' }, { internalType: 'uint256', name: 'withdrawAmount', type: 'uint256' }], name: 'withdrawTo', outputs: [], stateMutability: 'nonpayable', type: 'function',
-      }, { stateMutability: 'payable', type: 'receive' }],
-      address: '0x602aB3881Ff3Fa8dA60a8F44Cf633e91bA1FdB69',
-    }],
-  },
-  zeroAddress: '0x0000000000000000000000000000000000000000',
-  simulationData: {
-    tenderlyData: {
-      tenderlyUser: 'yashasvi_yc7',
-      tenderlyProject: 'project',
-      tenderlyAccessKey: 'b9uE5Wu4AC0HHNSQMJX0EZoo5YLuVTyW',
-    },
-  },
-};
-const configInstance = new Config(data);
+export const configInstance = new Config();
 export const config = configInstance.get();

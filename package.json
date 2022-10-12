@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@ethersproject/bignumber": "^5.5.0",
+    "@types/crypto-js": "^4.1.1",
     "amqplib": "^0.10.1",
     "async-mutex": "^0.3.2",
     "axios": "^0.27.2",
@@ -22,6 +23,7 @@
     "cent.js": "^2.0.5",
     "cls-rtracer": "^2.6.2",
     "cors": "^2.8.5",
+    "crypto-js": "^4.1.1",
     "cryptr": "^6.0.3",
     "dotenv": "^16.0.1",
     "ethereumjs-util": "^7.1.5",

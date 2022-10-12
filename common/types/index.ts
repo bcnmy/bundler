@@ -104,3 +104,9 @@ export type UserOperationType = {
   paymasterAndData: string;
   signature: string;
 };
+
+export type SymbolMapByChainIdType = {
+  [key: number]: {
+    [key: string]: string,
+  }
+};
