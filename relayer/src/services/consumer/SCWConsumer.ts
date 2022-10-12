@@ -56,7 +56,8 @@ ITransactionConsumer<EVMAccount, EVMRawTransactionType> {
           log.error(`Transaction failed with error: ${transactionServiceResponse?.error || 'unknown error'} for ${this.transactionType} on chain ${this.chainId}`);
         }
       } else {
-        throw new Error(`No active relayer for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);
+        this.queue.publish(JSON.parse(msg.content.toString()));
+        log.info(`No active relayer for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);
       }
     } else {
       throw new Error(`No msg received from queue for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);
