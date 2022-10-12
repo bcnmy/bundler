@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { SymbolMapByChainIdType } from '../../config/types';
+import { SymbolMapByChainIdType } from '../types';
 import { ICacheService } from '../cache';
 import { logger } from '../log-config';
 import { IScheduler } from '../scheduler';
