@@ -62,7 +62,7 @@ export class TransactionHandlerQueue implements IQueue<TransactionMessageType> {
       this.channel.bindQueue(transactionQueue.queue, this.exchangeName, key);
       await this.channel.consume(
         transactionQueue.queue,
-        onMessageReceived.bind(this),
+        onMessageReceived,
       );
 
       return true;
