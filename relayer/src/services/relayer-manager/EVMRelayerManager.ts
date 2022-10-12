@@ -9,6 +9,7 @@ import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
 import { EVMRawTransactionType } from '../../../../common/types';
 import { config } from '../../../../config';
+import { generateTransactionId } from '../../../../server/src/utils/tx-id-generator';
 import { EVMAccount, IEVMAccount } from '../account';
 import { INonceManager } from '../nonce-manager';
 import { EVMRelayerMetaDataType, IRelayerQueue } from '../relayer-queue';
@@ -78,7 +79,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount, EVMRawTran
     evmRelayerManagerServiceParams: EVMRelayerManagerServiceParamsType,
   ) {
     const {
-      options, networkService, gasPriceService, transactionService, nonceManager, relayerQueue,
+      options, networkService, gasPriceService, nonceManager, relayerQueue, transactionService,
     } = evmRelayerManagerServiceParams;
     this.chainId = options.chainId;
     this.name = options.name;
@@ -109,12 +110,14 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount, EVMRawTran
   }
 
   async addActiveRelayer(address: string): Promise<void> {
+    log.info(`Adding relayer: ${address} to active relayer map on chainId: ${this.chainId}`);
     const relayer = this.transactionProcessingRelayerMap[address];
     if (relayer) {
       await this.relayerQueue.push(relayer);
-      log.info(`Relayer ${address} added to active relayer map`);
+      delete this.transactionProcessingRelayerMap[address];
+      log.info(`Relayer ${address} added to active relayer map on chainId: ${this.chainId}`);
     } else {
-      log.error(`Relayer ${address} not found in processing relayer map`);
+      log.error(`Relayer ${address} not found in processing relayer map on chainId: ${this.chainId}`);
     }
   }
 
@@ -129,9 +132,9 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount, EVMRawTran
 
   // return list of created list of relayers address
   async createRelayers(numberOfRelayers: number = this.minRelayerCount): Promise<string[]> {
-    log.info(`Waiting for lock to create relayers on ${this.chainId}`);
+    log.info(`Waiting for lock to create relayers on chainId: ${this.chainId}`);
     const release = await createRelayerMutex.acquire();
-    log.info(`Received lock to create relayers on ${this.chainId}`);
+    log.info(`Received lock to create relayers on chainId ${this.chainId}`);
     const relayersMasterSeed = this.ownerAccountDetails.getPublicKey();
     const relayers: EVMAccount[] = [];
     const relayersAddressList: string[] = [];
@@ -172,15 +175,15 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount, EVMRawTran
           relayersAddressList.push(relayerAddress);
         } catch (error) {
           log.error(error);
-          log.info(`Error while getting balance and nonce for relayer ${relayerAddress} on chain id ${this.chainId}`);
+          log.info(`Error while getting balance and nonce for relayer ${relayerAddress} on chainId: ${this.chainId}`);
         }
       }
     } catch (error) {
-      log.error(`failed to create relayers ${JSON.stringify(error)} on network id ${this.chainId}`);
+      log.error(`failed to create relayers ${JSON.stringify(error)} on chainId: ${this.chainId}`);
     }
 
     release();
-    log.info(`Lock released after creating relayers on ${this.chainId}`);
+    log.info(`Lock released after creating relayers on chainId: ${this.chainId}`);
     return relayersAddressList;
   }
 
@@ -188,7 +191,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount, EVMRawTran
     const relayerData = this.relayerQueue.list().find((relayer) => relayer.address === address);
     if (relayerData) {
       const relayerBalance = relayerData.balance;
-      log.info(`Relayer ${address} balance is ${relayerBalance} on chain id ${this.chainId}`);
+      log.info(`Relayer ${address} balance is ${relayerBalance} on chainId: ${this.chainId}`);
       if (relayerBalance.lte(this.fundingBalanceThreshold)) {
         return true;
       }
@@ -197,14 +200,14 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount, EVMRawTran
   }
 
   async fundRelayers(addressList: string[]): Promise<any> {
-    log.info(`Waiting for lock to fund relayers on ${this.chainId}`);
+    log.info(`Waiting for lock to fund relayers on chainId: ${this.chainId}`);
     for (const address of addressList) {
       const release = await fundRelayerMutex.acquire();
       if (!this.hasBalanceBelowThreshold(address)) {
-        log.info(`Has sufficient funds in relayer ${address} on network id ${this.chainId}`);
+        log.info(`Has sufficient funds in relayer ${address} on chainId: ${this.chainId}`);
       } else {
         // eslint-disable-next-line no-await-in-loop
-        log.info(`Funding relayer ${address} on network id ${this.chainId}`);
+        log.info(`Funding relayer ${address} on chainId: ${this.chainId}`);
         let gasLimitIndex = 0;
         // different gas limit for arbitrum
         if ([42161, 421611].includes(this.chainId)) gasLimitIndex = 1;
@@ -229,8 +232,11 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount, EVMRawTran
           nonce: ethers.BigNumber.from(ownerAccountNonce.toString()).toHexString(),
           chainId: this.chainId,
         };
-        log.info(`Funding relayer ${address} on network id ${this.chainId} with raw tx ${JSON.stringify(rawTx)}`);
-        await this.transactionService.sendTransaction(rawTx, this.ownerAccountDetails);
+        const transactionId = generateTransactionId(JSON.stringify(rawTx));
+        log.info(`Funding relayer ${address} on chainId: ${this.chainId} with raw tx ${JSON.stringify(rawTx)}`);
+        await this.transactionService.sendTransaction({
+          ...rawTx, transactionId,
+        }, this.ownerAccountDetails);
       }
       release();
     }

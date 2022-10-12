@@ -24,5 +24,10 @@ export type NotifyTransactionListenerParamsType = {
   userAddress?: string
 };
 
+export type TransactionListenerNotifyReturnType = {
+  isTransactionRelayed: boolean,
+  transactionExecutionResponse: null | ethers.providers.TransactionResponse
+};
+
 export type OnTransactionSuccessParamsType = NotifyTransactionListenerParamsType;
 export type OnTransactionFailureParamsType = NotifyTransactionListenerParamsType;

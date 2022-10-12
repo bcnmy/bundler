@@ -105,7 +105,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       to, value, data, gasLimit,
       speed, transactionId, userAddress,
     } = transactionData;
-    log.info(`Transaction request received with transactionId: ${transactionId}`);
+    log.info(`Transaction request received with transactionId: ${transactionId} on chainId ${this.chainId}`);
     // create transaction
     const rawTransaction = await this.createTransaction({
       from: relayerAddress,
@@ -116,30 +116,31 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       speed,
       account,
     });
-    log.info(`Raw transaction for transactionId; ${JSON.stringify(rawTransaction)}`);
+    log.info(`Raw transaction for transactionId: ${JSON.stringify(rawTransaction)} on chainId ${this.chainId}`);
 
     try {
       const transactionExecutionResponse = await this.executeTransaction({
         rawTransaction,
         account,
       });
-      log.info(`Transaction execution response for transactionId: ${JSON.stringify(transactionExecutionResponse)}`);
+      log.info(`Transaction execution response for transactionId: ${JSON.stringify(transactionExecutionResponse)} on chainId ${this.chainId}`);
 
-      log.info(`Incrementing nonce for account: ${relayerAddress}`);
+      log.info(`Incrementing nonce for account: ${relayerAddress} on chainId ${this.chainId}`);
       await this.nonceManager.incrementNonce(relayerAddress);
-      log.info(`Incremented nonce for account: ${relayerAddress}`);
+      log.info(`Incremented nonce for account: ${relayerAddress} on chainId ${this.chainId}`);
 
-      log.info(`Notifying transaction listener for transactionId: ${transactionId}`);
-      await this.transactionListener.notify({
+      log.info(`Notifying transaction listener for transactionId: ${transactionId} on chainId ${this.chainId}`);
+      const transactionListenerNotifyResponse = await this.transactionListener.notify({
         transactionExecutionResponse,
         transactionId: transactionId as string,
         relayerAddress,
         userAddress,
       });
+
       return {
         state: 'success',
         code: 200,
-        ...transactionExecutionResponse,
+        ...transactionListenerNotifyResponse,
       };
     } catch (error) {
       log.info(`Error while sending transaction: ${error}`);

@@ -12,6 +12,7 @@ import {
   NotifyTransactionListenerParamsType,
   OnTransactionFailureParamsType,
   OnTransactionSuccessParamsType,
+  TransactionListenerNotifyReturnType,
   TransactionMessageType,
 } from './types';
 
@@ -58,10 +59,10 @@ ITransactionPublisher<TransactionMessageType> {
       transactionExecutionResponse, transactionId, relayerAddress, userAddress,
     } = onTranasctionSuccessParams;
 
-    log.info(`Publishing transaction data of transactionId: ${transactionId} to transaction queue`);
+    log.info(`Publishing transaction data of transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
     await this.publishToTransactionQueue(transactionExecutionResponse);
 
-    log.info(`Saving transaction data in database for ${transactionId}`);
+    log.info(`Saving transaction data in database for ${transactionId} on chainId ${this.chainId}`);
     await this.saveTransactionDataToDatabase(
       transactionExecutionResponse,
       transactionId,
@@ -75,10 +76,10 @@ ITransactionPublisher<TransactionMessageType> {
       transactionExecutionResponse, transactionId, relayerAddress, userAddress,
     } = onTranasctionFailureParams;
 
-    log.info(`Publishing transaction data of transactionId: ${transactionId} to transaction queue`);
+    log.info(`Publishing transaction data of transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
     await this.publishToTransactionQueue(transactionExecutionResponse);
 
-    log.info(`Saving transaction data in database for ${transactionId}`);
+    log.info(`Saving transaction data in database for ${transactionId} on chainId ${this.chainId}`);
     await this.saveTransactionDataToDatabase(
       transactionExecutionResponse,
       transactionId,
@@ -109,37 +110,53 @@ ITransactionPublisher<TransactionMessageType> {
     await this.transactionDao.save(this.chainId, transactionDataToBeSaveInDatabase);
   }
 
-  async notify(
+  private async waitForTransaction(
     notifyTransactionListenerParams: NotifyTransactionListenerParamsType,
-  ): Promise<void> {
+  ) {
     const {
       transactionExecutionResponse, transactionId, relayerAddress, userAddress,
     } = notifyTransactionListenerParams;
-    if (!transactionExecutionResponse) {
-      log.error('transactionExecutionResponse is null');
-      return;
-    }
-    const tranasctionHash = transactionExecutionResponse.hash;
-    log.info(`Transaction hash is: ${tranasctionHash} for transactionId: ${transactionId}`);
 
-    // publish to queue with expiry header
-    log.info(`Publishing transaction data of transactionId: ${transactionId} to retry transaction queue`);
-    await this.publishToRetryTransactionQueue(transactionExecutionResponse);
-    // pop happens when expiry header expires
-    // retry txn service will check for receipt
+    const tranasctionHash = transactionExecutionResponse.hash;
+    log.info(`Transaction hash is: ${tranasctionHash} for transactionId: ${transactionId} on chainId ${this.chainId}`);
+
     const transactionReceipt = await this.networkService.waitForTransaction(tranasctionHash);
-    log.info(`Transaction receipt is: ${JSON.stringify(transactionReceipt)} for transactionId: ${transactionId}`);
+    log.info(`Transaction receipt is: ${JSON.stringify(transactionReceipt)} for transactionId: ${transactionId} on chainId ${this.chainId}`);
 
     if (transactionReceipt.status === 1) {
-      log.info(`Transaction is a success for transactionId: ${transactionId}`);
+      log.info(`Transaction is a success for transactionId: ${transactionId} on chainId ${this.chainId}`);
       this.onTransactionSuccess({
         transactionExecutionResponse, transactionId, relayerAddress, userAddress,
       });
-    } else if (transactionReceipt.status === 0) {
-      log.info(`Transaction is a failure for transactionId: ${transactionId}`);
+    }
+    if (transactionReceipt.status === 0) {
+      log.info(`Transaction is a failure for transactionId: ${transactionId} on chainId ${this.chainId}`);
       this.onTransactionFailure({
         transactionExecutionResponse, transactionId, relayerAddress, userAddress,
       });
     }
+  }
+
+  async notify(
+    notifyTransactionListenerParams: NotifyTransactionListenerParamsType,
+  ): Promise<TransactionListenerNotifyReturnType> {
+    const {
+      transactionExecutionResponse, transactionId,
+    } = notifyTransactionListenerParams;
+    if (!transactionExecutionResponse) {
+      log.error('transactionExecutionResponse is null');
+    }
+
+    // publish to queue with expiry header
+    // pop happens when expiry header expires
+    // retry txn service will check for receipt
+    log.info(`Publishing transaction data of transactionId: ${transactionId} to retry transaction queue on chainId ${this.chainId}`);
+    await this.publishToRetryTransactionQueue(transactionExecutionResponse);
+    // wait for transaction
+    this.waitForTransaction(notifyTransactionListenerParams);
+    return {
+      isTransactionRelayed: true,
+      transactionExecutionResponse,
+    };
   }
 }

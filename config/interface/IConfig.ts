@@ -40,7 +40,7 @@ type OwnerAccountDetailsType = {
 type SocketServiceConfigType = {
   wssUrl: string,
   httpUrl: string,
-  secret: string,
+  token: string,
   apiKey: string,
 };
 
@@ -128,13 +128,20 @@ type ChainIdSupportedTransactionType = {
 };
 
 type EntryPointDataConfigType = {
-  abi: string,
-  address: ChainIdWithStringValueType,
+  [key: number]: Array<{
+    abi: Array<any>,
+    address: string,
+  }>
 };
 
 type DataSourcesConfigType = {
   mongoUrl: string,
   redisUrl: string,
+};
+
+// TODO // Review how to make it generic
+type SimulationDataConfigType = {
+  [key: string]: any
 };
 
 export type ConfigType = {
@@ -153,6 +160,8 @@ export type ConfigType = {
   feeOption: FeeOptionConfigType,
   tokenPrice: TokenPriceConfigType,
   entryPointData: EntryPointDataConfigType,
+  zeroAddress: string,
+  simulationData: SimulationDataConfigType
 };
 
 export interface IConfig {
