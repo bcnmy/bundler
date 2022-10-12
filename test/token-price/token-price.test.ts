@@ -12,15 +12,17 @@ describe('get token price', () => {
     symbolMapByChainId: config.tokenPrice.symbolMapByChainId,
   });
 
-  it('should return token price for chain id 5', async () => {
+  beforeAll(async () => {
     await cacheService.connect();
-    const d = await cacheService.get('NETWORK_PRICE_DATA');
-    // d to be a string
-    expect(d).toBeDefined();
+  });
 
+  it('should return token price for chain id 5', async () => {
+    const tokenPrice = await tokenService.getTokenPrice('5');
+    expect(typeof tokenPrice).toBe('string');
+    expect(Number(tokenPrice)).toBeGreaterThan(0);
+  });
+
+  afterAll(async () => {
     await cacheService.close();
-
-    // const tokenPrice = await tokenService.getTokenPrice('ETH');
-    // expect(tokenPrice).toBeGreaterThan(0);
   });
 });
