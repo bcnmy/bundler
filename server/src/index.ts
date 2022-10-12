@@ -1,11 +1,11 @@
 import 'dotenv/config';
+import { configInstance } from '../../config';
 
 (async () => {
-  // call config class to setup config
-  // can update config using the config instance.
-  const server = await import('./server');
-  // if ( === 'done') {
-  server.init();
-  // await import('./service-manager');
-  // }
+  if (configInstance.active()) {
+    const server = await import('./server');
+    server.init();
+  } else {
+    console.log('Config not active');
+  }
 })();
