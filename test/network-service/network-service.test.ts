@@ -1,4 +1,5 @@
 /* eslint-disable no-await-in-loop */
+import { BigNumber, ethers } from 'ethers';
 import { config } from '../../config';
 import { EVMNetworkService } from '../../common/network';
 import { logger } from '../../common/log-config';
@@ -66,23 +67,67 @@ describe('Network Service: Gas Prices', () => {
   });
 
   it('Type 0 transaction type gas price is not null/zero for chainId: 80001', async () => {
-
+    const gasPrice = networkServiceMap[80001].getGasPrice();
+    expect(gasPrice).not.toBeNull();
+    expect(typeof gasPrice).toBe('string');
+    expect(Number(gasPrice)).toBeGreaterThan(0);
   });
 
   it('Type 2 transaction type gas price is not null/zero for chainId: 5', async () => {
+    const {
+      maxPriorityFeePerGas,
+      maxFeePerGas,
+    } = await networkServiceMap[5].getEIP1559GasPrice();
+    expect(maxPriorityFeePerGas).not.toBeNull();
+    expect(typeof maxPriorityFeePerGas).toBe('string');
+    expect(Number(maxPriorityFeePerGas)).toBeGreaterThan(0);
 
+    expect(maxFeePerGas).not.toBeNull();
+    expect(typeof maxFeePerGas).toBe('string');
+    expect(Number(maxFeePerGas)).toBeGreaterThan(0);
   });
 
   it('Type 2 transaction type gas price is not null/zero for chainId: 80001', async () => {
+    const {
+      maxPriorityFeePerGas,
+      maxFeePerGas,
+    } = await networkServiceMap[80001].getEIP1559GasPrice();
+    expect(maxPriorityFeePerGas).not.toBeNull();
+    expect(typeof maxPriorityFeePerGas).toBe('string');
+    expect(Number(maxPriorityFeePerGas)).toBeGreaterThan(0);
 
+    expect(maxFeePerGas).not.toBeNull();
+    expect(typeof maxFeePerGas).toBe('string');
+    expect(Number(maxFeePerGas)).toBeGreaterThan(0);
   });
 });
 
 describe('Network Service: Native Asset Balance', () => {
   it('Fetches the correct native asset balance on chainId: 80001', async () => {
-    // create a new eth address
+    // test wallet
+    const wallet = ethers.Wallet.createRandom();
+
+    // owner address
+    const ownerAddressPublicKey = '';
+    const ownerAddressPrivateKey = '';
+    const ownerWallet = new ethers.Wallet(ownerAddressPrivateKey);
+
     // transfer 0.00001 native token from main account
+    await ownerWallet.sendTransaction({
+      to: wallet.address,
+      from: ownerWallet.address,
+      nonce: networkServiceMap[80001].getNonce(ownerWallet.address),
+      gasLimit: 21000,
+      gasPrice: BigNumber.from(await networkServiceMap[80001].getGasPrice()),
+      value: BigNumber.from('10000000'),
+    });
+
     // check if the getBalance gets 0.00001
+    const walletBalance = await networkServiceMap[80001].getBalance(wallet.address);
+
+    expect(walletBalance).not.toBeNull();
+    expect(typeof walletBalance).toBe('string');
+    expect(walletBalance).toBe('10000000');
   });
 
   it('Fetches the correct native asset balance on chainId: 5', async () => {
@@ -99,8 +144,10 @@ describe('Network Service: Nonce Check', () => {
   });
 
   it('Check if nonce is correct on chaindId: 5', async () => {
-    // use an address that we now the nonce of
-    // then call getNonce() on that address
+    // create a user address
+    // then call getNonce() on that address, nonce should 0
+    // do a transaction
+    // then call getNonce() on that address, nonce should 1
   });
 });
 
