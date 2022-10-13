@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import { CCMPMessage } from '../../../../types/ccmp';
+import { CCMPMessage } from '../../../../common/types';
 import { CCMPWatchTower } from '../../services/ccmp/ccmp-watch-tower';
 
 export const hookApi = async (req: Request, res: Response) => {

@@ -1,6 +1,6 @@
-import { config } from "../../../config";
+import { config } from "../../../../config";
 import { WatchTower } from "../watch-tower";
-import { CCMPMessage } from "../../../../types/ccmp"
+import { CCMPMessage } from "../../../../common/types"
 import { CCMPTransactionHandler } from "./ccmp-transaction-handler";
 
 class CCMPWatchTower implements WatchTower {
@@ -33,7 +33,7 @@ class CCMPWatchTower implements WatchTower {
         //     payload
         // } = eventData;
 
-        const txnHandler = new CCMPTransactionHandler(config.provider[chainId]);
+        const txnHandler = new CCMPTransactionHandler(config.chains.provider[chainId]);
         txnHandler.handleMessage(txHash, gasUsage, eventData);
     }
 
