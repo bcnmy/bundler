@@ -13,7 +13,7 @@ import { EVMTransactionListener } from '../../relayer/src/services/transaction-l
 import { EVMTransactionService } from '../../relayer/src/services/transaction-service';
 
 // test relayer manager
-describe('relayer manager', async () => {
+describe('relayer manager', () => {
   const chainId = 5;
 
   const EVMRelayerManagerMap: {
@@ -36,19 +36,14 @@ describe('relayer manager', async () => {
   });
 
   const gasPriceService = gasPriceManager.setup();
-  if (gasPriceService) {
-    gasPriceService.schedule();
-  }
 
   const transactionQueue = new TransactionHandlerQueue({
     chainId,
   });
-  await transactionQueue.connect();
 
   const retryTransactionQueue = new RetryTransactionHandlerQueue({
     chainId,
   });
-  await retryTransactionQueue.connect();
 
   const transactionDao = new TransactionDAO();
 
@@ -70,19 +65,20 @@ describe('relayer manager', async () => {
     cacheService,
   });
 
-  const transactionService = new EVMTransactionService({
-    networkService,
-    transactionListener,
-    nonceManager,
-    gasPriceService,
-    transactionDao,
-    options: {
-      chainId,
-    },
-  });
+  if (gasPriceService) {
+    const transactionService = new EVMTransactionService({
+      networkService,
+      transactionListener,
+      nonceManager,
+      gasPriceService,
+      transactionDao,
+      options: {
+        chainId,
+      },
+    });
 
-  const relayerQueue = new EVMRelayerQueue([]);
-  for (const relayerManager of config.relayerManagers) {
+    const relayerQueue = new EVMRelayerQueue([]);
+    const relayerManager = config.relayerManagers[0];
     if (!EVMRelayerManagerMap[relayerManager.name]) {
       EVMRelayerManagerMap[relayerManager.name] = {};
     }
@@ -99,13 +95,13 @@ describe('relayer manager', async () => {
         minRelayerCount: relayerManager.minRelayerCount[chainId],
         maxRelayerCount: relayerManager.maxRelayerCount[chainId],
         inactiveRelayerCountThreshold:
-          relayerManager.inactiveRelayerCountThreshold[chainId],
+            relayerManager.inactiveRelayerCountThreshold[chainId],
         pendingTransactionCountThreshold:
-          relayerManager.pendingTransactionCountThreshold[chainId],
+            relayerManager.pendingTransactionCountThreshold[chainId],
         newRelayerInstanceCount:
-          relayerManager.newRelayerInstanceCount[chainId],
+            relayerManager.newRelayerInstanceCount[chainId],
         fundingBalanceThreshold:
-          relayerManager.fundingBalanceThreshold[chainId],
+            relayerManager.fundingBalanceThreshold[chainId],
         fundingRelayerAmount: relayerManager.fundingRelayerAmount[chainId],
         ownerAccountDetails: new EVMAccount(
           relayerManager.ownerAccountDetails[chainId].publicKey,
@@ -115,5 +111,86 @@ describe('relayer manager', async () => {
       },
     });
     EVMRelayerManagerMap[relayerManager.name][chainId] = relayerMangerInstance;
+
+    let addressList: string[] = [];
+    beforeAll(async () => {
+      await transactionQueue.connect();
+      await retryTransactionQueue.connect();
+      addressList = await relayerMangerInstance.createRelayers();
+    });
+
+    it('should return a list of relayers', async () => {
+      expect(addressList.length).toBeGreaterThan(0);
+    });
+
+    it('should get total relayer count', () => {
+      const totalRelayerCount = relayerMangerInstance.getRelayersCount();
+      expect(typeof totalRelayerCount).toBe('number');
+      expect(totalRelayerCount).toBeGreaterThan(0);
+    });
+
+    it('should get active relayer count', () => {
+      const activeRelayerCount = relayerMangerInstance.getRelayersCount(true);
+      expect(typeof activeRelayerCount).toBe('number');
+      expect(activeRelayerCount).toBeGreaterThan(0);
+    });
+
+    it('should fund relayers', async () => {
+      await relayerMangerInstance.fundRelayers(addressList);
+      for (const address of addressList) {
+        const isBalanceBelowThreshold = relayerMangerInstance.hasBalanceBelowThreshold(address);
+        expect(isBalanceBelowThreshold).toBe(false);
+        const relayerData = relayerMangerInstance.relayerQueue.list().find(
+          (relayer) => relayer.address === address,
+        );
+        expect(relayerData).toBeDefined();
+        // check balance above threshold
+        expect(relayerData?.balance).toBeGreaterThan(0);
+        expect(relayerData?.pendingCount).toBe(0);
+      }
+    });
+
+    it('should get an active relayer', async () => {
+      const relayer = relayerMangerInstance.getActiveRelayer();
+      expect(relayer).toBeDefined();
+    });
+
+    it('should not add a new relayer', async () => {
+      const address = '0x0000000000000000000000000000000000000000';
+      await relayerMangerInstance.addActiveRelayer(address);
+      const relayerData = relayerMangerInstance.relayerQueue
+        .list().find((relayer) => relayer.address === address);
+      expect(relayerData).toBeUndefined();
+    });
+
+    it('should set and fetch min relayer count', async () => {
+      const minRelayerCount = 5;
+      relayerMangerInstance.setMinRelayerCount(minRelayerCount);
+      const updatedMinRelayerCount = relayerMangerInstance.getMinRelayerCount();
+      expect(updatedMinRelayerCount).toBe(minRelayerCount);
+    });
+
+    it('should set and fetch max relayer count', async () => {
+      const maxRelayerCount = 10;
+      relayerMangerInstance.setMaxRelayerCount(maxRelayerCount);
+      const updatedMaxRelayerCount = relayerMangerInstance.getMaxRelayerCount();
+      expect(updatedMaxRelayerCount).toBe(maxRelayerCount);
+    });
+
+    it('should set and fetch inactive relayer count threshold', async () => {
+      const inactiveRelayerCountThreshold = 10;
+      relayerMangerInstance.setInactiveRelayerCountThreshold(inactiveRelayerCountThreshold);
+      const updatedInactiveRelayerCountThreshold = relayerMangerInstance
+        .getInactiveRelayerCountThreshold();
+      expect(updatedInactiveRelayerCountThreshold).toBe(inactiveRelayerCountThreshold);
+    });
+
+    it('should set and fetch pending transaction count threshold', async () => {
+      const pendingTransactionCountThreshold = 10;
+      relayerMangerInstance.setPendingTransactionCountThreshold(pendingTransactionCountThreshold);
+      const updatedPendingTransactionCountThreshold = relayerMangerInstance
+        .getPendingTransactionCountThreshold();
+      expect(updatedPendingTransactionCountThreshold).toBe(pendingTransactionCountThreshold);
+    });
   }
 });
