@@ -1,4 +1,4 @@
-import { config } from '../../../config';
+import { config } from '../../../../config';
 import { logger } from "../../../../common/log-config";
 import { ethers } from "ethers";
 
@@ -12,9 +12,9 @@ import {
 } from "@certusone/wormhole-sdk";
 
 import { sendToQueue, IDataToPushInQueue } from '../../service-manager/queue';
-import { CCMPMessage } from "../../../../types/ccmp";
+import { CCMPMessage } from "../../../../common/types";
 import { Network } from "network-sdk";
-import { simulateService } from '../simulate';
+// import { simulateService } from '../simulate';
 import { AddGasOptions, AxelarGMPRecoveryAPI, AxelarQueryAPI, Environment, EvmChain, GasPaidStatus, GasToken, GMPStatus } from "@axelar-network/axelarjs-sdk";
 
 import { chainIds } from "./wormhole/chainIds";
@@ -58,12 +58,12 @@ class CCMPTransactionHandler {
                 console.log("emitter address is", emmitter);
 
                 const { vaaBytes } = await getSignedVAA(
-                    ccmpConfig.wormholeHostURL,
+                    ccmpConfig.bridges.wormhole.hostURL,
                     this.getWormholeMappedChainName(ccmpEventData.sourceChainId.toString()),
                     emmitter,
                     parseSequenceFromLogEth(
                         await this.getTransactionReceipt(txHash),
-                        CONTRACTS.TESTNET.avalanche.core // TODO: toggle environment
+                        CONTRACTS.TESTNET.polygon.core // TODO: toggle environment
                     ),
                     {
                         transport: NodeHttpTransport(),

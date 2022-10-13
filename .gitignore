@@ -9,3 +9,4 @@ coverage
 dist/
 
 *.dump
+config/config.json

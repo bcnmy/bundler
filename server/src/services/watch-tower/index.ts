@@ -1,4 +1,4 @@
-import { CCMPMessage } from "../../../../types/ccmp"
+import { CCMPMessage } from "../../../../common/types"
 
 /**
  * @interface WatchTower // TODO: ...
