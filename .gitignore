@@ -10,3 +10,5 @@ dist/
 
 *.dump
 config/config.json
+centrifugo.config.json
+.DS_Store
