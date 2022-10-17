@@ -43,7 +43,7 @@ export class AATransactionQueue implements IQueue<AATransactionMessageType> {
   }
 
   async publish(data: AATransactionMessageType) {
-    const key = `chainid.${this.chainId}`;
+    const key = `chainid.${this.chainId}.type.${this.transactionType}`;
     this.channel.publish(this.exchangeName, key, Buffer.from(JSON.stringify(data)), {
       persistent: true,
     });
