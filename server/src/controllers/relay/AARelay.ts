@@ -26,25 +26,28 @@ export const relayAATransaction = async (req: Request, res: Response) => {
     }
 
     const entryPointContracts = entryPointMap[chainId];
+
     let entryPointContract;
     for (let entryPointContractIndex = 0;
       entryPointContractIndex < entryPointContracts.length;
       entryPointContractIndex += 1) {
-      if (entryPointContracts[entryPointContractIndex].address === entryPointAddress) {
+      if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
+       === entryPointAddress.toLowerCase()) {
         entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
         break;
       }
     }
+
     // eslint-disable-next-line no-unsafe-optional-chaining
     const { data } = await (entryPointContract as ethers.Contract)
-      .populateTransaction.handleOps([userOp]);
+      .populateTransaction.handleOps([userOp], config.feeOption.refundReceiver[chainId]);
 
     const response = await routeTransactionToRelayerMap[chainId][TransactionType.AA]
       .sendTransactionToRelayer({
         type: TransactionType.AA,
         to: entryPointAddress,
         data: data as string,
-        gasLimit: userOp.callGasLimit + userOp.verificationGasLimit,
+        gasLimit: (Number(userOp.callGasLimit) + Number(userOp.verificationGasLimit)).toString(),
         chainId,
         value: '0x0',
         transactionId,

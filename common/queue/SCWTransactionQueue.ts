@@ -40,7 +40,6 @@ export class SCWTransactionQueue implements IQueue<SCWTransactionMessageType> {
 
   async publish(data: SCWTransactionMessageType) {
     const key = `chainid.${this.chainId}.type.${this.transactionType}`;
-    this.channel.prefetch(1);
     this.channel.publish(this.exchangeName, key, Buffer.from(JSON.stringify(data)), {
       persistent: true,
     });

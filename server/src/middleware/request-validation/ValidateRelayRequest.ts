@@ -11,6 +11,8 @@ export const validateRelayRequest = () => async (
   next: NextFunction,
 ) => {
   try {
+    console.log(req);
+    console.log('req.body', req.body);
     const { method } = req.body;
     switch (method) {
       case TransactionMethodType.SCW:
