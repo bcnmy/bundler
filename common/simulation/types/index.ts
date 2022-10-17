@@ -1,3 +1,4 @@
+import { AxiosResponse } from 'axios';
 import { BigNumber } from 'ethers';
 import { UserOperationType } from '../../types';
 
@@ -6,15 +7,22 @@ export type ExternalSimulationResponseType = {
   isSimulationSuccessful: boolean,
   msgFromSimulation?: string,
   gasLimitFromSimulation: number | BigNumber,
+  rawResponse: AxiosResponse
 };
 
-// data type that simulation service expects
-export type SCWSimulationDataType = {
+export type BaseSimulationDataType = {
   chainId: number,
   data: string,
   to: string,
-  refundInfo: any,
 };
+
+// data type that simulation service expects
+export type SCWSimulationDataType = BaseSimulationDataType & {
+  refundInfo?: any,
+};
+
+export type CCMPSimulationDataType = BaseSimulationDataType;
+
 
 export type AASimulationDataType = {
   userOp: UserOperationType,

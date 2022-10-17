@@ -27,7 +27,7 @@ export const validateRelayRequest = () => async (
           params: req.params,
         });
         break;
-      case TransactionMethodType.CROSS_CHAIN:
+      case TransactionMethodType.CCMP:
         await crossChainRequestSchema.validate({
           body: req.body,
           query: req.query,

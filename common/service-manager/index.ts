@@ -2,7 +2,7 @@
 import { ethers } from 'ethers';
 import { config } from '../../config';
 import { EVMAccount } from '../../relayer/src/services/account';
-import { AAConsumer, SCWConsumer, SocketConsumer } from '../../relayer/src/services/consumer';
+import { AAConsumer, CCMPConsumer, SCWConsumer, SocketConsumer } from '../../relayer/src/services/consumer';
 import { EVMNonceManager } from '../../relayer/src/services/nonce-manager';
 import {
   EVMRelayerManager,
@@ -21,16 +21,19 @@ import { logger } from '../log-config';
 import { EVMNetworkService } from '../network';
 import {
   AATransactionQueue,
+  CCMPTransactionQueue,
   RetryTransactionHandlerQueue,
   SCWTransactionQueue,
   TransactionHandlerQueue,
 } from '../queue';
-import { AARelayService, SCWRelayService } from '../relay-service';
+import { AARelayService, CCMPRelayService, SCWRelayService } from '../relay-service';
 import { AASimulationService, SCWSimulationService } from '../simulation';
+import { CCMPSimulationService } from '../simulation/CCMPSimualtionService';
 import { TenderlySimulationService } from '../simulation/external-simulation';
 import { CMCTokenPriceManager } from '../token-price';
 import {
   AATransactionMessageType,
+  CCMPTransactionMessageType,
   EVMRawTransactionType,
   SCWTransactionMessageType,
   TransactionType,
@@ -42,7 +45,7 @@ const log = logger(module);
 const relayerManagerTransactionTypeNameMap = {
   [TransactionType.AA]: 'RM1',
   [TransactionType.SCW]: 'RM1',
-  [TransactionType.CROSS_CHAIN]: 'RM2',
+  [TransactionType.CCMP]: 'RM2',
 };
 
 const routeTransactionToRelayerMap: {
@@ -61,6 +64,10 @@ const aaSimulatonServiceMap: {
 
 const scwSimulationServiceMap: {
   [chainId: number]: SCWSimulationService;
+} = {};
+
+const ccmpSimulationServiceMap: {
+  [chainId: number]: CCMPSimulationService;
 } = {};
 
 const entryPointMap: {
@@ -307,6 +314,41 @@ const retryTransactionQueueMap: {
           tenderlyAccessKey: config.simulationData.tenderlyData.tenderlyAccessKey,
         });
         scwSimulationServiceMap[chainId] = new SCWSimulationService(
+          networkService,
+          tenderlySimulationService,
+        );
+      } else if (type === TransactionType.CCMP) {
+        // queue for ccmp
+        const ccmpQueue: IQueue<CCMPTransactionMessageType> = new CCMPTransactionQueue({
+          chainId,
+        });
+        await ccmpQueue.connect();
+
+        const ccmpRelayerManager = EVMRelayerManagerMap[
+          relayerManagerTransactionTypeNameMap[type]][chainId];
+        if (!ccmpRelayerManager) {
+          throw new Error(`Relayer manager not found for ${type}`);
+        }
+
+        const ccmpConsumer = new CCMPConsumer({
+          queue: ccmpQueue,
+          relayerManager: ccmpRelayerManager,
+          transactionService,
+          options: {
+            chainId,
+          },
+        });
+        await ccmpQueue.consume(ccmpConsumer.onMessageReceived);
+
+        const ccmpRelayService = new CCMPRelayService(ccmpQueue);
+        routeTransactionToRelayerMap[chainId][type] = ccmpRelayService;
+
+        const tenderlySimulationService = new TenderlySimulationService(gasPriceService, {
+          tenderlyUser: config.simulationData.tenderlyData.tenderlyUser,
+          tenderlyProject: config.simulationData.tenderlyData.tenderlyProject,
+          tenderlyAccessKey: config.simulationData.tenderlyData.tenderlyAccessKey,
+        });
+        ccmpSimulationServiceMap[chainId] = new CCMPSimulationService(
           networkService,
           tenderlySimulationService,
         );

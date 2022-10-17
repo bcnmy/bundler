@@ -23,6 +23,15 @@ export type SCWConsumerParamsType = {
   },
 };
 
+export type CCMPConsumerParamsType = {
+  queue: IQueue<SCWTransactionMessageType>,
+  relayerManager: IRelayerManager<EVMAccount, EVMRawTransactionType>,
+  transactionService: ITransactionService<EVMAccount, EVMRawTransactionType>,
+  options: {
+    chainId: number,
+  },
+};
+
 export type SocketConsumerParamsType = {
   queue: IQueue<TransactionMessageType>;
   options: {

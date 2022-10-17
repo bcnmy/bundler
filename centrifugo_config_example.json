@@ -1,14 +1,13 @@
 {
-  "token_hmac_secret_key": "averylongsecret",
-  "admin_password": "averystrongpassword",
-  "admin_secret": "averystrongandlongsecret",
-  "api_key": "apikey",
+  "token_hmac_secret_key": "9edb7c38-0f55-4627-9bda-4cc050b5f6cb",
+  "admin_password": "12e39ddb-7aee-4278-bde3-9c1255978ef5",
+  "admin_secret": "2bc3d6f4-c2a1-4ca4-b98c-f45c9b53cc2b",
+  "api_key": "a4c3c3df-4294-4719-a6a6-0c3416d68466",
   "allowed_origins": ["*"],
-  "debug": true,
-  "admin": true,
   "log_level": "debug",
   "client_anonymous": true,
   "client_channel_limit": 512,
+  "port": 9000,
   "namespaces": [
     {
       "name": "relayer",
@@ -17,6 +16,14 @@
       "history_ttl": "300s",
       "recover": true,
       "anonymous": false
+    },
+    {
+      "name": "transaction",
+      "publish": true,
+      "history_size": 10,
+      "history_ttl": "300s",
+      "recover": true,
+      "anonymous": true
     }
   ]
 }

@@ -1,5 +1,7 @@
 import { ethers } from 'ethers';
+import { type } from 'os';
 import { TransactionType, SymbolMapByChainIdType } from '../../common/types';
+import { port } from '../../server/src/server';
 
 type ChainIdWithStringValueType = {
   [key: number]: string
@@ -142,6 +144,58 @@ type SimulationDataConfigType = {
   [key: string]: any
 };
 
+/* CCMP configurations */
+type CCMPBridgesConfigType = {
+  [key: string]: any
+};
+
+// { "contractName": "contractAddress" }
+type CCMPContractsAddressChainConfigType = {
+  [key: string]: string
+};
+
+// { "chainId": { "contractName": "contractAddress" } }
+type CCMPContractsConfigType = {
+  [key:string]: CCMPContractsAddressChainConfigType
+};
+
+type CCMPWebhookContractEventFilterConfigType = {
+  [key:string]: string
+};
+
+type CCMPWebhookContractEventsConfigType = {
+  name: string,
+  topicId: string,
+  blockConfirmations: number,
+  processTransferLogs: boolean,
+  filters: CCMPWebhookContractEventFilterConfigType[]
+};
+
+type CCMPWebhookContractsConfigType = {
+  scAddress: string,
+  events: CCMPWebhookContractEventsConfigType[]
+  abi: string,
+};
+
+type CCMPWebhookRequestType = {
+  auth: string,
+  chainId: number,
+  contracts: CCMPWebhookContractsConfigType[],
+  active: boolean
+};
+
+type CCMPWebhooksConfigType = {
+  endpoint: string,
+  registrationUrl: string,
+  requests: CCMPWebhookRequestType[]  
+};
+
+type CCMPConfigType = {
+  bridges: CCMPBridgesConfigType,
+  contracts: CCMPContractsConfigType,
+  webhooks: CCMPWebhooksConfigType
+};
+
 export type ConfigType = {
   queueUrl: string,
   slack: SlackConfigType,
@@ -153,6 +207,7 @@ export type ConfigType = {
   chains: ChainsConfigType,
   relayer: RelayerConfigType,
   relayerManagers: RelayerManagerConfigType,
+  ccmp: CCMPConfigType,
   transaction: TransactionConfigType,
   gasPrice: GasPriceConfigType,
   feeOption: FeeOptionConfigType,
