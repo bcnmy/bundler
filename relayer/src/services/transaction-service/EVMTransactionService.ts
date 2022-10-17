@@ -148,6 +148,10 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         state: 'failed',
         code: 500,
         error: JSON.stringify(error),
+        ...{
+          isTransactionRelayed: false,
+          transactionExecutionResponse: null,
+        },
       };
     }
   }

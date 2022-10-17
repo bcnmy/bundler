@@ -3,6 +3,7 @@ import { BigNumber, ethers } from 'ethers';
 import { config } from '../../config';
 import { EVMNetworkService } from '../../common/network';
 import { logger } from '../../common/log-config';
+import { EVMAccount } from '../../relayer/src/services/account';
 
 const log = logger(module);
 
@@ -20,12 +21,14 @@ for (const supportedNetwork of config.supportedNetworks) {
 
 describe('Network Service: Rpc Urls', () => {
   it('Main rpc url should be active for chainId: 5', async () => {
-    const blockNumber = await networkServiceMap[5].sendRpcCall('eth_blockNumber', []);
+    const { data } = await networkServiceMap[5].sendRpcCall('eth_blockNumber', []);
+    const blockNumber = Number(BigNumber.from(data.result));
     expect(blockNumber).toBeGreaterThan(0);
   });
 
   it('Main rpc url should be active for chainId: 80001', async () => {
-    const blockNumber = await networkServiceMap[80001].sendRpcCall('eth_blockNumber', []);
+    const { data } = await networkServiceMap[80001].sendRpcCall('eth_blockNumber', []);
+    const blockNumber = Number(BigNumber.from(data.result));
     expect(blockNumber).toBeGreaterThan(0);
   });
 
@@ -38,7 +41,8 @@ describe('Network Service: Rpc Urls', () => {
       const fallBackRpcUrl = networkServiceMap[5].fallbackRpcUrls[fallBackRpcUrlIndex];
       log.info(`Checking rpcUrl: ${fallBackRpcUrl}`);
       networkServiceMap[5].setActiveRpcUrl(fallBackRpcUrl);
-      const blockNumber = await networkServiceMap[5].sendRpcCall('eth_blockNumber', []);
+      const { data } = await networkServiceMap[5].sendRpcCall('eth_blockNumber', []);
+      const blockNumber = Number(BigNumber.from(data.result));
       expect(blockNumber).toBeGreaterThan(0);
     }
   });
@@ -52,7 +56,8 @@ describe('Network Service: Rpc Urls', () => {
       const fallBackRpcUrl = networkServiceMap[80001].fallbackRpcUrls[fallBackRpcUrlIndex];
       log.info(`Checking rpcUrl: ${fallBackRpcUrl}`);
       networkServiceMap[80001].setActiveRpcUrl(fallBackRpcUrl);
-      const blockNumber = await networkServiceMap[80001].sendRpcCall('eth_blockNumber', []);
+      const { data } = await networkServiceMap[80001].sendRpcCall('eth_blockNumber', []);
+      const blockNumber = Number(BigNumber.from(data.result));
       expect(blockNumber).toBeGreaterThan(0);
     }
   });
@@ -60,14 +65,14 @@ describe('Network Service: Rpc Urls', () => {
 
 describe('Network Service: Gas Prices', () => {
   it('Type 0 transaction type gas price is not null/zero for chainId: 5', async () => {
-    const gasPrice = networkServiceMap[5].getGasPrice();
+    const { gasPrice } = await networkServiceMap[5].getGasPrice();
     expect(gasPrice).not.toBeNull();
     expect(typeof gasPrice).toBe('string');
     expect(Number(gasPrice)).toBeGreaterThan(0);
   });
 
   it('Type 0 transaction type gas price is not null/zero for chainId: 80001', async () => {
-    const gasPrice = networkServiceMap[80001].getGasPrice();
+    const { gasPrice } = await networkServiceMap[80001].getGasPrice();
     expect(gasPrice).not.toBeNull();
     expect(typeof gasPrice).toBe('string');
     expect(Number(gasPrice)).toBeGreaterThan(0);
@@ -103,14 +108,20 @@ describe('Network Service: Gas Prices', () => {
 });
 
 describe('Network Service: Native Asset Balance', () => {
+  beforeAll(() => jest.setTimeout(30000));
+
   it('Fetches the correct native asset balance on chainId: 80001', async () => {
     // test wallet
     const wallet = ethers.Wallet.createRandom();
 
     // owner address
-    const ownerAddressPublicKey = '';
-    const ownerAddressPrivateKey = '';
-    const ownerWallet = new ethers.Wallet(ownerAddressPrivateKey);
+    // const ownerAddressPublicKey = '0x4C07E2fa10f9871142883139B32Cb03F2A180494';
+    const ownerAddressPrivateKey = 'e3b3818b1b604cf6dfc3133faa9a524f1e2ea0d5894a003c4b857952f6b146f6';
+    const ownerWallet = new ethers.Wallet(
+      ownerAddressPrivateKey,
+      networkServiceMap[80001].ethersProvider,
+    );
+    const { gasPrice } = await networkServiceMap[80001].getGasPrice();
 
     // transfer 0.00001 native token from main account
     await ownerWallet.sendTransaction({
@@ -118,7 +129,7 @@ describe('Network Service: Native Asset Balance', () => {
       from: ownerWallet.address,
       nonce: networkServiceMap[80001].getNonce(ownerWallet.address),
       gasLimit: 21000,
-      gasPrice: BigNumber.from(await networkServiceMap[80001].getGasPrice()),
+      gasPrice,
       value: BigNumber.from('10000000'),
     });
 
@@ -131,32 +142,165 @@ describe('Network Service: Native Asset Balance', () => {
   });
 
   it('Fetches the correct native asset balance on chainId: 5', async () => {
-    // create a new eth address
+    // test wallet
+    const wallet = ethers.Wallet.createRandom();
+
+    // owner address
+    // const ownerAddressPublicKey = '0x4C07E2fa10f9871142883139B32Cb03F2A180494';
+    const ownerAddressPrivateKey = 'e3b3818b1b604cf6dfc3133faa9a524f1e2ea0d5894a003c4b857952f6b146f6';
+    const ownerWallet = new ethers.Wallet(
+      ownerAddressPrivateKey,
+      networkServiceMap[5].ethersProvider,
+    );
+    const { gasPrice } = await networkServiceMap[5].getGasPrice();
+
     // transfer 0.00001 native token from main account
+    await ownerWallet.sendTransaction({
+      to: wallet.address,
+      from: ownerWallet.address,
+      nonce: networkServiceMap[5].getNonce(ownerWallet.address),
+      gasLimit: 21000,
+      gasPrice,
+      value: BigNumber.from('10000000'),
+    });
+
     // check if the getBalance gets 0.00001
+    const walletBalance = await networkServiceMap[80001].getBalance(wallet.address);
+
+    expect(walletBalance).not.toBeNull();
+    expect(typeof walletBalance).toBe('string');
+    expect(walletBalance).toBe('10000000');
   });
 });
 
 describe('Network Service: Nonce Check', () => {
   it('Check if nonce is correct on chaindId: 80001', async () => {
-    // use an address that we now the nonce of
-    // then call getNonce() on that address
+    // call getNonce() on an address, nonce should x
+
+    // owner address
+    const ownerAddressPublicKey = '0x4C07E2fa10f9871142883139B32Cb03F2A180494';
+    const ownerAddressPrivateKey = 'e3b3818b1b604cf6dfc3133faa9a524f1e2ea0d5894a003c4b857952f6b146f6';
+    const ownerWallet = new ethers.Wallet(
+      ownerAddressPrivateKey,
+      networkServiceMap[80001].ethersProvider,
+    );
+
+    const nonceBeforeTransaction = await networkServiceMap[80001].getNonce(ownerAddressPublicKey);
+    const { gasPrice } = await networkServiceMap[80001].getGasPrice();
+
+    // do a transaction
+    // transfer 0.00001 native token from main account
+    await ownerWallet.sendTransaction({
+      to: ownerAddressPublicKey,
+      from: ownerAddressPublicKey,
+      nonce: networkServiceMap[80001].getNonce(ownerAddressPublicKey),
+      gasLimit: 21000,
+      gasPrice,
+      value: BigNumber.from('10000000'),
+    });
+
+    // then call getNonce() on that address, nonce should x + 1
+    const nonceAfterTransaction = await networkServiceMap[80001].getNonce(ownerAddressPublicKey);
+    const nonceDifference = nonceAfterTransaction - nonceBeforeTransaction;
+    expect(nonceDifference).toBe(1);
   });
 
   it('Check if nonce is correct on chaindId: 5', async () => {
-    // create a user address
-    // then call getNonce() on that address, nonce should 0
+    // call getNonce() on an address, nonce should x
+
+    // owner address
+    const ownerAddressPublicKey = '0x4C07E2fa10f9871142883139B32Cb03F2A180494';
+    const ownerAddressPrivateKey = 'e3b3818b1b604cf6dfc3133faa9a524f1e2ea0d5894a003c4b857952f6b146f6';
+    const ownerWallet = new ethers.Wallet(
+      ownerAddressPrivateKey,
+      networkServiceMap[5].ethersProvider,
+    );
+
+    const nonceBeforeTransaction = await networkServiceMap[5].getNonce(ownerAddressPublicKey);
+    const { gasPrice } = await networkServiceMap[5].getGasPrice();
+
     // do a transaction
-    // then call getNonce() on that address, nonce should 1
+    // transfer 0.00001 native token from main account
+    await ownerWallet.sendTransaction({
+      to: ownerAddressPublicKey,
+      from: ownerAddressPublicKey,
+      nonce: networkServiceMap[5].getNonce(ownerAddressPublicKey),
+      gasLimit: 21000,
+      gasPrice,
+      value: BigNumber.from('10000000'),
+    });
+
+    // then call getNonce() on that address, nonce should x + 1
+    const nonceAfterTransaction = await networkServiceMap[5].getNonce(ownerAddressPublicKey);
+    const nonceDifference = nonceAfterTransaction - nonceBeforeTransaction;
+    expect(nonceDifference).toBe(1);
   });
 });
 
 describe('Network Service: Sending Transaction', () => {
   it('Transaction should be sent and confirm on chainId: 80001', async () => {
+    const wallet = ethers.Wallet.createRandom();
 
+    // owner address
+    const ownerAddressPublicKey = '0x4C07E2fa10f9871142883139B32Cb03F2A180494';
+    const ownerAddressPrivateKey = 'e3b3818b1b604cf6dfc3133faa9a524f1e2ea0d5894a003c4b857952f6b146f6';
+
+    const evmAccount = new EVMAccount(ownerAddressPublicKey, ownerAddressPrivateKey);
+
+    const { gasPrice } = await networkServiceMap[80001].getGasPrice();
+    const nonce = await networkServiceMap[80001].getNonce(ownerAddressPublicKey);
+
+    const rawTransactionData = {
+      from: ownerAddressPublicKey,
+      gasPrice,
+      data: '0x0',
+      gasLimit: '100000',
+      to: wallet.address,
+      value: '10000000',
+      chainId: 80001,
+      nonce,
+    };
+
+    const transactionExecutionResponse = await networkServiceMap[80001]
+      .sendTransaction(rawTransactionData, evmAccount);
+
+    const { hash } = transactionExecutionResponse;
+
+    const transactionReceipt = await networkServiceMap[80001].waitForTransaction(hash);
+    expect(transactionReceipt).not.toBeNull();
+    expect(transactionReceipt.status).toBe(1);
   });
 
   it('Transaction should be sent and confirm on chainId: 5', async () => {
+    const wallet = ethers.Wallet.createRandom();
 
+    // owner address
+    const ownerAddressPublicKey = '0x4C07E2fa10f9871142883139B32Cb03F2A180494';
+    const ownerAddressPrivateKey = 'e3b3818b1b604cf6dfc3133faa9a524f1e2ea0d5894a003c4b857952f6b146f6';
+
+    const evmAccount = new EVMAccount(ownerAddressPublicKey, ownerAddressPrivateKey);
+
+    const { gasPrice } = await networkServiceMap[5].getGasPrice();
+    const nonce = await networkServiceMap[5].getNonce(ownerAddressPublicKey);
+
+    const rawTransactionData = {
+      from: ownerAddressPublicKey,
+      gasPrice,
+      data: '0x0',
+      gasLimit: '100000',
+      to: wallet.address,
+      value: '10000000',
+      chainId: 5,
+      nonce,
+    };
+
+    const transactionExecutionResponse = await networkServiceMap[5]
+      .sendTransaction(rawTransactionData, evmAccount);
+
+    const { hash } = transactionExecutionResponse;
+
+    const transactionReceipt = await networkServiceMap[5].waitForTransaction(hash);
+    expect(transactionReceipt).not.toBeNull();
+    expect(transactionReceipt.status).toBe(1);
   });
 });
