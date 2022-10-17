@@ -1,4 +1,6 @@
 import {
+  array,
+  mixed,
   number,
   object,
   string,
@@ -26,23 +28,28 @@ export const scwRequestSchema = object({
 export const aaRequestSchema = object({
   body: object({
     method: string().matches(/eth_sendUserOperation/),
-    params: object({
-      userOp: object({
-        sender: string().matches(/^0x[a-fA-F0-9]{40}$/).required('sender address is required'),
-        nonce: number().required('nonce is required'),
-        initCode: string(),
-        callData: string().required('callData is required'),
-        callGasLimit: number().required('callGasLimit is required'),
-        verificationGasLimit: number().required('verificationGas is required'),
-        preVerificationGas: number().required('preVerificationGas is required'),
-        maxFeePerGas: number().required('maxFeePerGas is required'),
-        maxPriorityFeePerGas: number().required('maxPriorityFeePerGas is required'),
-        paymasterAndData: string(),
-        signature: string().required('signature is required'),
-      }),
-      entryPointAddress: string().required('entryPointAddress is required'),
-      chainId: number().required('chainId is required'),
-    }),
+    params: array().of(
+      mixed().oneOf([
+        {
+          sender: string().matches(/^0x[a-fA-F0-9]{40}$/).required('sender address is required'),
+          nonce: string().required('nonce is required and should be a hex string'),
+          initCode: string(),
+          callData: string().required('callData is required and should be a hex string'),
+          callGasLimit: string().required('callGasLimit is required and should be a hex string'),
+          verificationGasLimit: string().required('verificationGasLimit is required and should be a hex string'),
+          preVerificationGas: number().required('preVerificationGas is required and should be a hex string'),
+          maxFeePerGas: string().required('maxFeePerGas is required and should be a hex string'),
+          maxPriorityFeePerGas: string().required('maxPriorityFeePerGas is required and should be a hex string'),
+          paymasterAndData: string(),
+          signature: string().required('signature is required'),
+        }, {
+          entryPointAddress: string().required('entryPointAddress is required'),
+        }, {
+          chainId: number().required('chainId is required'),
+        },
+      ]),
+
+    ),
     jsonrpc: string().required('jsonrpc is required'),
     id: number().required('id is required'),
   }),
