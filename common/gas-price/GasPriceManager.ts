@@ -40,7 +40,7 @@ export class GasPriceManager implements IGasPriceManager<GasPriceServiceType> {
       case 80001:
         return new MumbaiGasPrice(this.cacheService, this.networkService, this.options);
       default:
-        return new MaticGasPrice(this.cacheService, this.networkService, this.options);
+        return undefined;
     }
   }
 }

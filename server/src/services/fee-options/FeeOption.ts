@@ -108,9 +108,10 @@ export class FeeOption {
         response,
       };
     } catch (error) {
+      console.log(error);
       return {
         code: 500,
-        error: `Error occured in getting fee options service. Error: ${JSON.stringify(error)}`,
+        error: `Error occured in getting fee options service. Error: ${error}`,
       };
     }
   }
