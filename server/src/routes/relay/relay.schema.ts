@@ -55,6 +55,12 @@ addMethod(array, 'oneOfSchemas', function oneOfSchemas(
   );
 });
 
+declare module 'yup' {
+  export interface ArraySchema<T> {
+    oneOfSchemas<U>(schemas: U[]): this;
+  }
+}
+
 export const aaRequestSchema = object({
   body: object({
     method: string().matches(/eth_sendUserOperation/),
