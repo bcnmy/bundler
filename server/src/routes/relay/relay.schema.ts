@@ -47,7 +47,8 @@ const aaArrayParam1 = object({
 const entryPointAddress = string().required('entryPointAddress is required');
 const chainId = string().required('chainId is required');
 
-addMethod(array, 'oneOfSchemas', function oneOfSchemas(this: any, 
+addMethod(array, 'oneOfSchemas', function oneOfSchemas(
+  this: any,
   schemas: MixedSchema[],
   message?: any,
 ) {
