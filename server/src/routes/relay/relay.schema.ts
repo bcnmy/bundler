@@ -1,15 +1,10 @@
 import {
   addMethod,
   array,
-  mixed,
   number,
   object,
   string,
-  ValidationError,
-  MixedSchema,
-  TestOptions,
 } from 'yup';
-import * as Yup from 'yup';
 
 export const scwRequestSchema = object({
   body: object({
@@ -49,14 +44,14 @@ const chainId = string().required('chainId is required');
 
 addMethod(array, 'oneOfSchemas', function oneOfSchemas(
   this: any,
-  schemas: MixedSchema[],
+  schemas: any,
   message?: any,
 ) {
   return this.test(
     'one-of-schemas',
     message || 'Not all items match one of the allowed schemas',
     // eslint-disable-next-line max-len
-    (items: any[]) => items.every((item) => schemas.some((schema) => schema.isValidSync(item, { strict: true }))),
+    (items: any[]) => items.every((item) => schemas.some((schema: any) => schema.isValidSync(item, { strict: true }))),
   );
 });
 
