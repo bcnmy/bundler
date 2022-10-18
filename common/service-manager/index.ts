@@ -98,6 +98,9 @@ const retryTransactionQueueMap: {
     routeTransactionToRelayerMap[chainId] = {};
     entryPointMap[chainId] = [];
 
+    if (!config.chains.provider[chainId]) {
+      throw new Error(`No provider for chainId ${chainId}`);
+    }
     const networkService = new EVMNetworkService({
       chainId,
       rpcUrl: config.chains.provider[chainId],
@@ -112,6 +115,9 @@ const retryTransactionQueueMap: {
     const gasPriceService = gasPriceManager.setup();
     if (gasPriceService) {
       gasPriceService.schedule();
+    }
+    if (!gasPriceService) {
+      throw new Error(`Gasprice service is not setup for chainId ${chainId}`);
     }
 
     const transactionQueue = new TransactionHandlerQueue({

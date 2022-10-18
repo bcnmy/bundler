@@ -56,7 +56,7 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
           case RpcMethod.getGasPrice:
             return await this.ethersProvider.getGasPrice();
           case RpcMethod.getEIP1159GasPrice:
-            return await this.ethersProvider.getGasPrice();
+            return await this.ethersProvider.getFeeData();
           case RpcMethod.getBalance:
             return await this.ethersProvider.getBalance(params.address);
           case RpcMethod.estimateGas:
@@ -307,7 +307,7 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
     return decimal;
   }
 
-  async sendRpcCall(method: string, params: Array<object>): Promise<object> {
+  async sendRpcCall(method: string, params: Array<object>): Promise<any> {
     const data = {
       method,
       params,

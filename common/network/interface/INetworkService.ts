@@ -26,7 +26,7 @@ export interface INetworkService<AccountType, RawTransactionType> {
   // REVIEW
   // remove any
   useProvider(tag: RpcMethod, params?: any): Promise<any>
-  sendRpcCall(method: string, params: Array<object>): Promise<object>
+  sendRpcCall(method: string, params: Array<object>): Promise<any>
   getGasPrice(): Promise<Type0TransactionGasPriceType>;
   getEIP1559GasPrice(): Promise<Type2TransactionGasPriceType>;
   getBalance(address: string): Promise<BigNumber>;

@@ -51,5 +51,5 @@ export class SocketConsumer implements ISocketConsumer {
     } else {
       throw new Error(`No msg received from queue in socket service on chainId: ${this.chainId}`);
     }
-  }
+  };
 }

@@ -100,6 +100,7 @@ export class FeeOption {
           logoUrl: config.feeOption.logoUrl[this.chainId][token],
           feeTokenTransferGas: config.feeOption.feeTokenTransferGas[this.chainId][token],
           refundReceiver: config.feeOption.refundReceiver[this.chainId],
+          commission: config.feeOption.commission[this.chainId] || 0,
         });
       }
       return {
@@ -107,9 +108,10 @@ export class FeeOption {
         response,
       };
     } catch (error) {
+      console.log(error);
       return {
         code: 500,
-        error: `Error occured in getting fee options service. Error: ${JSON.stringify(error)}`,
+        error: `Error occured in getting fee options service. Error: ${error}`,
       };
     }
   }

@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
 import { aaSimulatonServiceMap, entryPointMap } from '../../../../common/service-manager';
-import { config } from '../../../../config';
 
 const log = logger(module);
 
@@ -24,6 +23,12 @@ export const simulateAATransaction = async (req: Request, res: Response, next: N
         break;
       }
     }
+    if (!entryPointContract) {
+      return res.status(400).json({
+        error: 'Entry point not found in relayer node',
+      });
+    }
+
     await aaSimulatonServiceMap[chainId]
       .simulate({ userOp, entryPointContract });
     next();

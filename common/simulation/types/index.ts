@@ -1,4 +1,4 @@
-import { BigNumber } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 import { UserOperationType } from '../../types';
 
 // data response type that external simulation serivcereturns
@@ -18,8 +18,7 @@ export type SCWSimulationDataType = {
 
 export type AASimulationDataType = {
   userOp: UserOperationType,
-  entryPointAddress: string,
-  entryPointAbi: string
+  entryPointContract: ethers.Contract
 };
 
 // data response type that simulation service returns
