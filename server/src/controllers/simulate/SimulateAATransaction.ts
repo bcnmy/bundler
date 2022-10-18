@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
-import { aaSimulatonServiceMap } from '../../../../common/service-manager';
-import { config } from '../../../../config';
+import { aaSimulatonServiceMap, entryPointMap } from '../../../../common/service-manager';
 
 const log = logger(module);
 
@@ -12,21 +11,26 @@ export const simulateAATransaction = async (req: Request, res: Response, next: N
       userOp, entryPointAddress, chainId,
     } = req.body.params;
 
-    const entryPointData = config.entryPointData[chainId];
-    let entryPointAbi;
-    for (const entryPoint of entryPointData) {
-      if (entryPointAddress === entryPoint.address) {
-        entryPointAbi = entryPoint.abi;
+    const entryPointContracts = entryPointMap[chainId];
+
+    let entryPointContract;
+    for (let entryPointContractIndex = 0;
+      entryPointContractIndex < entryPointContracts.length;
+      entryPointContractIndex += 1) {
+      if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
+       === entryPointAddress.toLowerCase()) {
+        entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
+        break;
       }
     }
-    if (!entryPointAbi) {
+    if (!entryPointContract) {
       return res.status(400).json({
         error: 'Entry point not found in relayer node',
       });
     }
-    entryPointAbi = entryPointAbi.toString();
+
     await aaSimulatonServiceMap[chainId]
-      .simulate({ userOp, entryPointAddress, entryPointAbi });
+      .simulate({ userOp, entryPointContract });
     next();
   } catch (error) {
     log.error(`Error in simulateAATransaction ${error}`);
