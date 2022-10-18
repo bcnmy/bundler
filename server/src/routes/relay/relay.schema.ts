@@ -6,6 +6,8 @@ import {
   object,
   string,
   ValidationError,
+  MixedSchema,
+  TestOptions,
 } from 'yup';
 import * as Yup from 'yup';
 
@@ -28,27 +30,6 @@ export const scwRequestSchema = object({
   }),
 });
 
-Yup.addMethod(Yup.array, 'tuple', function(schema) {
-  if (!this.isType(schema)) new Yup.ValidationError();
-  return Yup.object({
-    tuple: Yup.array().min(schema.length).max(schema.length),
-    ...Object.fromEntries(Object.entries(schema)),
-  }).transform((value, originalValue) => {
-    if (!this.isType(originalValue)) new Yup.ValidationError();
-    return {
-      tuple: originalValue,
-      ...Object.fromEntries(Object.entries(originalValue))
-    };
-  });
-});
-
-// Create your schema
-const MySchema = array().tuple([
-  number(),
-  string(),
-  boolean(),
-]);
-
 const aaArrayParam1 = object({
   sender: string().matches(/^0x[a-fA-F0-9]{40}$/).required('sender address is required'),
   nonce: string().required('nonce is required and should be a hex string'),
@@ -66,10 +47,22 @@ const aaArrayParam1 = object({
 const entryPointAddress = string().required('entryPointAddress is required');
 const chainId = string().required('chainId is required');
 
+addMethod(array, 'oneOfSchemas', function oneOfSchemas(this: any, 
+  schemas: MixedSchema[],
+  message?: any,
+) {
+  return this.test(
+    'one-of-schemas',
+    message || 'Not all items match one of the allowed schemas',
+    // eslint-disable-next-line max-len
+    (items: any[]) => items.every((item) => schemas.some((schema) => schema.isValidSync(item, { strict: true }))),
+  );
+});
+
 export const aaRequestSchema = object({
   body: object({
     method: string().matches(/eth_sendUserOperation/),
-    params:
+    params: array().oneOfSchemas([aaArrayParam1, entryPointAddress, chainId]),
     jsonrpc: string().required('jsonrpc is required'),
     id: number().required('id is required'),
   }),
