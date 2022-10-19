@@ -32,7 +32,7 @@ const aaArrayParam1 = object({
   callData: string().required('callData is required and should be a hex string'),
   callGasLimit: string().required('callGasLimit is required and should be a hex string'),
   verificationGasLimit: string().required('verificationGasLimit is required and should be a hex string'),
-  preVerificationGas: number().required('preVerificationGas is required and should be a hex string'),
+  preVerificationGas: string().required('preVerificationGas is required and should be a hex string'),
   maxFeePerGas: string().required('maxFeePerGas is required and should be a hex string'),
   maxPriorityFeePerGas: string().required('maxPriorityFeePerGas is required and should be a hex string'),
   paymasterAndData: string(),

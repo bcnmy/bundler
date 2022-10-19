@@ -4,7 +4,7 @@ import { UserOperationType } from '../../types';
 // data response type that external simulation serivcereturns
 export type ExternalSimulationResponseType = {
   isSimulationSuccessful: boolean,
-  msgFromSimulation?: string,
+  msgFromSimulation: string,
   gasLimitFromSimulation: number | BigNumber,
 };
 
@@ -18,12 +18,13 @@ export type SCWSimulationDataType = {
 
 export type AASimulationDataType = {
   userOp: UserOperationType,
-  entryPointContract: ethers.Contract
+  entryPointContract: ethers.Contract,
+  chainId: number
 };
 
 // data response type that simulation service returns
 export type SimulationResponseType = {
   isSimulationSuccessful: boolean,
   gasLimitFromSimulation: number | BigNumber,
-  msgFromSimulation?: string,
+  msgFromSimulation: string,
 };

@@ -7,4 +7,4 @@ import { feeOptionsSchema } from './relay.schema';
 export const relayApiRouter = Router();
 
 relayApiRouter.get('/feeOptions', validateRequest(feeOptionsSchema), feeOptionsApi);
-relayApiRouter.post('/', simulateTransaction(), validateRelayRequest(), requestHandler);
+relayApiRouter.post('/', simulateTransaction(), requestHandler);

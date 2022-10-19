@@ -16,9 +16,10 @@ const log = logger(module);
 
 export const relayAATransaction = async (req: Request, res: Response) => {
   try {
-    const {
-      userOp, entryPointAddress, chainId,
-    } = req.body.params;
+    const userOp = req.body.params[0];
+    const entryPointAddress = req.body.params[1];
+    const chainId = req.body.params[2];
+    const gasLimitFromSimulation = req.body.params[3];
 
     const transactionId = generateTransactionId(userOp);
     if (!clientMessenger.socketClient.isConnected()) {
@@ -47,7 +48,7 @@ export const relayAATransaction = async (req: Request, res: Response) => {
         type: TransactionType.AA,
         to: entryPointAddress,
         data: data as string,
-        gasLimit: (Number(userOp.callGasLimit) + Number(userOp.verificationGasLimit)).toString(),
+        gasLimit: `0x${Number(gasLimitFromSimulation).toString(16)}`,
         chainId,
         value: '0x0',
         transactionId,
@@ -58,10 +59,10 @@ export const relayAATransaction = async (req: Request, res: Response) => {
         error: response.error,
       });
     }
-    return res.json({
+    return {
       transactionId,
       connectionUrl: websocketUrl,
-    });
+    };
   } catch (error) {
     log.error(`Error in AA relay ${error}`);
     return res.status(500).json({

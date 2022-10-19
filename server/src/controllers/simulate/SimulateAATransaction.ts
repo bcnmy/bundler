@@ -7,9 +7,9 @@ const log = logger(module);
 // eslint-disable-next-line consistent-return
 export const simulateAATransaction = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const {
-      userOp, entryPointAddress, chainId,
-    } = req.body.params;
+    const userOp = req.body.params[0];
+    const entryPointAddress = req.body.params[1];
+    const chainId = req.body.params[2];
 
     const entryPointContracts = entryPointMap[chainId];
 
@@ -29,8 +29,16 @@ export const simulateAATransaction = async (req: Request, res: Response, next: N
       });
     }
 
-    await aaSimulatonServiceMap[chainId]
-      .simulate({ userOp, entryPointContract });
+    const aaSimulationResponse = await aaSimulatonServiceMap[chainId]
+      .simulate({ userOp, entryPointContract, chainId });
+
+    if (!aaSimulationResponse.isSimulationSuccessful) {
+      const { msgFromSimulation } = aaSimulationResponse;
+      return res.status(400).json({
+        msgFromSimulation,
+      });
+    }
+    req.body.params[3] = aaSimulationResponse.gasLimitFromSimulation;
     next();
   } catch (error) {
     log.error(`Error in simulateAATransaction ${error}`);
