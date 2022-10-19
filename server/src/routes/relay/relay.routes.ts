@@ -6,4 +6,4 @@ import { validateRelayRequest, validateFeeOption } from '../../middleware';
 export const relayApiRouter = Router();
 
 relayApiRouter.get('/feeOptions', validateFeeOption, feeOptionsApi);
-relayApiRouter.post('/', validateRelayRequest, simulateTransaction(), requestHandler);
+relayApiRouter.post('/', validateRelayRequest(), simulateTransaction(), requestHandler);

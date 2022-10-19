@@ -4,6 +4,8 @@ const {
   number,
   object,
   string,
+  alternatives,
+  array,
 } = Joi.types();
 
 export const scwRequestSchema = object.keys({
@@ -30,7 +32,7 @@ const aaObject = object.keys({
   callData: string.required().error(new Error('callData is required and should be a hex string')),
   callGasLimit: string.required().error(new Error('callGasLimit is required and should be a hex string')),
   verificationGasLimit: string.required().error(new Error('verificationGasLimit is required and should be a hex string')),
-  preVerificationGas: number.required().error(new Error('preVerificationGas is required and should be a hex string')),
+  preVerificationGas: string.required().error(new Error('preVerificationGas is required and should be a hex string')),
   maxFeePerGas: string.required().error(new Error('maxFeePerGas is required and should be a hex string')),
   maxPriorityFeePerGas: string.required().error(new Error('maxPriorityFeePerGas is required and should be a hex string')),
   paymasterAndData: string,
@@ -38,15 +40,15 @@ const aaObject = object.keys({
 });
 
 const entryPointAddress = string.required().error(new Error('entryPointAddress is required'));
-const chainId = string.required().error(new Error('chainId is required'));
+const chainId = number.required().error(new Error('chainId is required'));
 
 export const aaRequestSchema = object.keys({
   method: string.regex(/eth_sendUserOperation/),
-  params: [
+  params: array.items(alternatives.try(
     aaObject,
     entryPointAddress,
     chainId,
-  ],
+  )),
   jsonrpc: string.required().error(new Error('jsonrpc is required')),
   id: number.required().error(new Error('id is required')),
 });
