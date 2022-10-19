@@ -62,7 +62,7 @@ ITransactionPublisher<TransactionMessageType> {
     log.info(`Publishing transaction data of transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
     await this.publishToTransactionQueue(transactionExecutionResponse);
 
-    log.info(`Saving transaction data in database for ${transactionId} on chainId ${this.chainId}`);
+    log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
     await this.saveTransactionDataToDatabase(
       transactionExecutionResponse,
       transactionId,
@@ -80,7 +80,7 @@ ITransactionPublisher<TransactionMessageType> {
     log.info(`Publishing transaction data of transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
     await this.publishToTransactionQueue(transactionExecutionResponse);
 
-    log.info(`Saving transaction data in database for ${transactionId} on chainId ${this.chainId}`);
+    log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
     await this.saveTransactionDataToDatabase(
       transactionExecutionResponse,
       transactionId,

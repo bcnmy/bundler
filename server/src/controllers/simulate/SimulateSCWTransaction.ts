@@ -1,23 +1,33 @@
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
 import { scwSimulationServiceMap } from '../../../../common/service-manager';
 
 const log = logger(module);
 
 // eslint-disable-next-line consistent-return
-export const simulateSCWTransaction = async (req: Request, res: Response, next: NextFunction) => {
+export const simulateSCWTransaction = async (req: Request, res: Response) => {
   try {
     const {
       to, data, chainId, refundInfo,
-    } = req.body.params;
+    } = req.body.params[0];
 
-    await scwSimulationServiceMap[chainId].simulate({
+    const scwSimulationResponse = await scwSimulationServiceMap[chainId].simulate({
       to,
       data,
       chainId,
       refundInfo,
     });
-    next();
+
+    if (!scwSimulationResponse.isSimulationSuccessful) {
+      const { msgFromSimulation } = scwSimulationResponse;
+      return {
+        code: 400,
+        msgFromSimulation,
+      };
+    }
+    const { gasLimitFromSimulation } = scwSimulationResponse;
+    req.body.params[1] = gasLimitFromSimulation;
+    log.info('Transaction successfully simulated');
   } catch (error) {
     log.error(`Error in fetching fee otpions ${error}`);
     return res.status(500).json({

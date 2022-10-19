@@ -33,6 +33,7 @@ export class TenderlySimulationService implements IExternalSimulation {
     const {
       chainId, data, to, refundInfo,
     } = simualtionData;
+    log.info('Sending request to alchemy to run simulation');
     const SIMULATE_URL = `https://api.tenderly.co/api/v1/account/${this.tenderlyUser}/project/${this.tenderlyProject}/simulate`;
     const tAxios = this.tenderlyInstance();
     const body = {
@@ -67,6 +68,8 @@ export class TenderlySimulationService implements IExternalSimulation {
       refundInfo,
     );
 
+    log.info(`isRelayerPaidFully: ${isRelayerPaidFully}`);
+
     if (!isRelayerPaidFully) {
       return {
         isSimulationSuccessful: false,
@@ -98,15 +101,17 @@ export class TenderlySimulationService implements IExternalSimulation {
     refundInfo: { tokenGasPrice: string, gasToken: string },
   ) {
     try {
-      log.info(`Refund info received: ${refundInfo}`);
-      const executionSuccessLog = transactionLogs.find((transactionLog: any) => transactionLog.name === 'ExecutionSuccess');
-      if (!executionSuccessLog) {
+      log.info(`Refund info received: ${JSON.stringify(refundInfo)}`);
+      log.info('Checking if relayer is being paid fully');
+      const walletHandlePaymentLog = transactionLogs.find((transactionLog: any) => transactionLog.name === 'WalletHandlePayment');
+      if (!walletHandlePaymentLog) {
         return {
           isRelayerPaidFully: false,
-          successOrRevertMsg: 'ExecutionSuccess event not found in simulation logs',
+          successOrRevertMsg: 'WalletHandlePayment event not found in simulation logs',
         };
       }
-      const paymentEventData = executionSuccessLog.inputs.find((input: any) => input.soltype.name === 'payment');
+
+      const paymentEventData = walletHandlePaymentLog.inputs.find((input: any) => input.soltype.name === 'payment');
       if (!paymentEventData) {
         return {
           isRelayerPaidFully: false,
@@ -132,17 +137,17 @@ export class TenderlySimulationService implements IExternalSimulation {
       // TODO get price feeds
       const erc20TokenGasPrice = parseInt(refundInfo.tokenGasPrice, 10);
       if (refundInfo.gasToken === '0x0000000000000000000000000000000000000000') {
-        refundToRelayer = paymentValue * nativeTokenGasPrice;
+        refundToRelayer = Number(paymentValue) * nativeTokenGasPrice;
       } else {
         // decimals
         // paymentValue is in smallest unit?
-        refundToRelayer = paymentValue * erc20TokenGasPrice;
+        refundToRelayer = Number(paymentValue) * erc20TokenGasPrice;
       }
 
       log.info(`Refund being sent to relayer in the transaction: ${refundToRelayer}`);
       log.info(`Asset consumption calculated from simulation: ${gasUsedInSimulation * nativeTokenGasPrice}`);
 
-      if (!(refundToRelayer < gasUsedInSimulation * nativeTokenGasPrice)) {
+      if ((Number(refundToRelayer) < Number(gasUsedInSimulation * nativeTokenGasPrice))) {
         return {
           isRelayerPaidFully: false,
           successOrRevertMsg: `Refund to relayer: ${refundToRelayer} is less than what will be consumed in the transaction: ${gasUsedInSimulation * nativeTokenGasPrice}`,
