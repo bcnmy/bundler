@@ -6,8 +6,6 @@ const log = logger(module);
 
 export const feeOptionsApi = async (req: Request, res: Response) => {
   const chainId = req.query.chainId as string;
-  console.log(chainId, typeof chainId);
-
   const response = await feeOptionMap[Number(chainId)].get();
   try {
     if (response.error) {

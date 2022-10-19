@@ -66,7 +66,7 @@ export const relayAATransaction = async (req: Request, res: Response) => {
   } catch (error) {
     log.error(`Error in AA relay ${error}`);
     return res.status(500).json({
-      error,
+      error: JSON.stringify(error) || 'Internal server error',
     });
   }
 };
