@@ -4,6 +4,7 @@
     "format:common": "eslint 'common/**' --ext .ts --fix",
     "format:server": "eslint 'server/src/**' --ext .ts --fix",
     "format:relayer": "eslint 'relayer/src/**' --ext .ts --fix",
+    "dev:server": "ts-node server/src/index.ts",
     "build": "yarn run build:server",
     "start": "node server/dist/server/src/index.js",
     "test": "jest"
