@@ -9,10 +9,6 @@ export interface IRelayerManager<AccountType, RawTransactionType> {
   name: string;
   chainId: number;
   transactionService: ITransactionService<AccountType, RawTransactionType>;
-  minRelayerCount: number;
-  maxRelayerCount: number;
-  inactiveRelayerCountThreshold: number;
-  pendingTransactionCountThreshold: number;
   newRelayerInstanceCount: number;
   fundingBalanceThreshold: ethers.BigNumber;
   fundingRelayerAmount: number;
@@ -34,7 +30,11 @@ export interface IRelayerManager<AccountType, RawTransactionType> {
   getRelayersCount(active: boolean): number;
   hasBalanceBelowThreshold(address: string): boolean;
   setMinRelayerCount(minRelayerCount: number): void
+  getMinRelayerCount(): number
   setMaxRelayerCount(maxRelayerCount: number): void
+  getMaxRelayerCount(): number
   setInactiveRelayerCountThreshold(inactiveRelayerCountThreshold: number): void
+  getInactiveRelayerCountThreshold(): number
   setPendingTransactionCountThreshold(pendingTransactionCountThreshold: number): void
+  getPendingTransactionCountThreshold(): number
 }

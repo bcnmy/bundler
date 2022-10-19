@@ -8,7 +8,6 @@ import { MaticGasPrice } from './networks/PolygonGasPrice';
 import { MumbaiGasPrice } from './networks/MumbaiGasPrice';
 
 export type GasPriceServiceType = MaticGasPrice | GoerliGasPrice | MumbaiGasPrice | undefined;
-
 export class GasPriceManager implements IGasPriceManager<GasPriceServiceType> {
   cacheService: ICacheService;
 
@@ -41,7 +40,7 @@ export class GasPriceManager implements IGasPriceManager<GasPriceServiceType> {
       case 80001:
         return new MumbaiGasPrice(this.cacheService, this.networkService, this.options);
       default:
-        return new MaticGasPrice(this.cacheService, this.networkService, this.options);
+        return undefined;
     }
   }
 }

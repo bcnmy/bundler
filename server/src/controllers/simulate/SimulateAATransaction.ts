@@ -1,32 +1,44 @@
 import { NextFunction, Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
-import { aaSimulatonServiceMap } from '../../../../common/service-manager';
-import { config } from '../../../../config';
+import { aaSimulatonServiceMap, entryPointMap } from '../../../../common/service-manager';
 
 const log = logger(module);
 
 // eslint-disable-next-line consistent-return
 export const simulateAATransaction = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const {
-      userOp, entryPointAddress, chainId,
-    } = req.body.params;
+    const userOp = req.body.params[0];
+    const entryPointAddress = req.body.params[1];
+    const chainId = req.body.params[2];
 
-    const entryPointData = config.entryPointData[chainId];
-    let entryPointAbi;
-    for (const entryPoint of entryPointData) {
-      if (entryPointAddress === entryPoint.address) {
-        entryPointAbi = entryPoint.abi;
+    const entryPointContracts = entryPointMap[chainId];
+
+    let entryPointContract;
+    for (let entryPointContractIndex = 0;
+      entryPointContractIndex < entryPointContracts.length;
+      entryPointContractIndex += 1) {
+      if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
+       === entryPointAddress.toLowerCase()) {
+        entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
+        break;
       }
     }
-    if (!entryPointAbi) {
+    if (!entryPointContract) {
       return res.status(400).json({
         error: 'Entry point not found in relayer node',
       });
     }
-    entryPointAbi = entryPointAbi.toString();
-    await aaSimulatonServiceMap[chainId]
-      .simulate({ userOp, entryPointAddress, entryPointAbi });
+
+    const aaSimulationResponse = await aaSimulatonServiceMap[chainId]
+      .simulate({ userOp, entryPointContract, chainId });
+
+    if (!aaSimulationResponse.isSimulationSuccessful) {
+      const { msgFromSimulation } = aaSimulationResponse;
+      return res.status(400).json({
+        msgFromSimulation,
+      });
+    }
+    req.body.params[3] = aaSimulationResponse.gasLimitFromSimulation;
     next();
   } catch (error) {
     log.error(`Error in simulateAATransaction ${error}`);

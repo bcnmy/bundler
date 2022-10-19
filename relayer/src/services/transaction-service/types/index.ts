@@ -36,7 +36,7 @@ export type TransactionDataType = {
   transactionId: string;
 };
 
-export type ErrorTransactionResponseType = {
+export type ErrorTransactionResponseType = TransactionListenerNotifyReturnType & {
   state: 'failed';
   code: number;
   error: string;
