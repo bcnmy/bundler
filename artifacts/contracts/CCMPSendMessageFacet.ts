@@ -1,295 +1,289 @@
 const abi = [
   {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "uint256",
-        "name": "_amount",
-        "type": "uint256"
+        internalType: "uint256",
+        name: "_amount",
+        type: "uint256",
       },
       {
-        "internalType": "uint256",
-        "name": "balance",
-        "type": "uint256"
-      }
+        internalType: "uint256",
+        name: "balance",
+        type: "uint256",
+      },
     ],
-    "name": "AmountExceedsBalance",
-    "type": "error"
+    name: "AmountExceedsBalance",
+    type: "error",
   },
   {
-    "inputs": [],
-    "name": "AmountIsZero",
-    "type": "error"
+    inputs: [],
+    name: "AmountIsZero",
+    type: "error",
   },
   {
-    "inputs": [],
-    "name": "ContractIsPaused",
-    "type": "error"
-  },
-  {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "uint256",
-        "name": "requiredAmount",
-        "type": "uint256"
+        internalType: "uint256",
+        name: "requiredAmount",
+        type: "uint256",
       },
       {
-        "internalType": "uint256",
-        "name": "actualAmount",
-        "type": "uint256"
-      }
+        internalType: "uint256",
+        name: "actualAmount",
+        type: "uint256",
+      },
     ],
-    "name": "InsufficientNativeAmount",
-    "type": "error"
+    name: "InsufficientNativeAmount",
+    type: "error",
   },
   {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "string",
-        "name": "reason",
-        "type": "string"
-      }
+        internalType: "string",
+        name: "reason",
+        type: "string",
+      },
     ],
-    "name": "InvalidPayload",
-    "type": "error"
+    name: "InvalidPayload",
+    type: "error",
   },
   {
-    "inputs": [],
-    "name": "NativeAmountMismatch",
-    "type": "error"
+    inputs: [],
+    name: "NativeAmountMismatch",
+    type: "error",
   },
   {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "address",
-        "name": "relayer",
-        "type": "address"
+        internalType: "address",
+        name: "relayer",
+        type: "address",
       },
       {
-        "internalType": "bytes",
-        "name": "data",
-        "type": "bytes"
-      }
+        internalType: "bytes",
+        name: "data",
+        type: "bytes",
+      },
     ],
-    "name": "NativeTransferFailed",
-    "type": "error"
+    name: "NativeTransferFailed",
+    type: "error",
   },
   {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "string",
-        "name": "adaptorName",
-        "type": "string"
-      }
+        internalType: "string",
+        name: "adaptorName",
+        type: "string",
+      },
     ],
-    "name": "UnsupportedAdapter",
-    "type": "error"
+    name: "UnsupportedAdapter",
+    type: "error",
   },
   {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "uint256",
-        "name": "destinationChainId",
-        "type": "uint256"
-      }
+        internalType: "uint256",
+        name: "destinationChainId",
+        type: "uint256",
+      },
     ],
-    "name": "UnsupportedDestinationChain",
-    "type": "error"
+    name: "UnsupportedDestinationChain",
+    type: "error",
   },
   {
-    "anonymous": false,
-    "inputs": [
+    anonymous: false,
+    inputs: [
       {
-        "indexed": true,
-        "internalType": "bytes32",
-        "name": "hash",
-        "type": "bytes32"
+        indexed: true,
+        internalType: "bytes32",
+        name: "hash",
+        type: "bytes32",
       },
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "sender",
-        "type": "address"
+        indexed: true,
+        internalType: "address",
+        name: "sender",
+        type: "address",
       },
       {
-        "indexed": false,
-        "internalType": "contract ICCMPGateway",
-        "name": "sourceGateway",
-        "type": "address"
+        indexed: false,
+        internalType: "contract ICCMPGateway",
+        name: "sourceGateway",
+        type: "address",
       },
       {
-        "indexed": false,
-        "internalType": "contract ICCMPRouterAdaptor",
-        "name": "sourceAdaptor",
-        "type": "address"
+        indexed: false,
+        internalType: "contract ICCMPRouterAdaptor",
+        name: "sourceAdaptor",
+        type: "address",
       },
       {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "sourceChainId",
-        "type": "uint256"
+        indexed: false,
+        internalType: "uint256",
+        name: "sourceChainId",
+        type: "uint256",
       },
       {
-        "indexed": false,
-        "internalType": "contract ICCMPGateway",
-        "name": "destinationGateway",
-        "type": "address"
+        indexed: false,
+        internalType: "contract ICCMPGateway",
+        name: "destinationGateway",
+        type: "address",
       },
       {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "destinationChainId",
-        "type": "uint256"
+        indexed: true,
+        internalType: "uint256",
+        name: "destinationChainId",
+        type: "uint256",
       },
       {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "nonce",
-        "type": "uint256"
+        indexed: false,
+        internalType: "uint256",
+        name: "nonce",
+        type: "uint256",
       },
       {
-        "indexed": false,
-        "internalType": "string",
-        "name": "routerAdaptor",
-        "type": "string"
+        indexed: false,
+        internalType: "string",
+        name: "routerAdaptor",
+        type: "string",
       },
       {
-        "components": [
+        components: [
           {
-            "internalType": "address",
-            "name": "feeTokenAddress",
-            "type": "address"
+            internalType: "address",
+            name: "feeTokenAddress",
+            type: "address",
           },
           {
-            "internalType": "uint256",
-            "name": "feeAmount",
-            "type": "uint256"
+            internalType: "uint256",
+            name: "feeAmount",
+            type: "uint256",
           },
           {
-            "internalType": "address",
-            "name": "relayer",
-            "type": "address"
-          }
+            internalType: "address",
+            name: "relayer",
+            type: "address",
+          },
         ],
-        "indexed": false,
-        "internalType": "struct GasFeePaymentArgs",
-        "name": "gasFeePaymentArgs",
-        "type": "tuple"
+        indexed: false,
+        internalType: "struct GasFeePaymentArgs",
+        name: "gasFeePaymentArgs",
+        type: "tuple",
       },
       {
-        "components": [
+        components: [
           {
-            "internalType": "address",
-            "name": "to",
-            "type": "address"
+            internalType: "address",
+            name: "to",
+            type: "address",
           },
           {
-            "internalType": "bytes",
-            "name": "_calldata",
-            "type": "bytes"
-          }
+            internalType: "bytes",
+            name: "_calldata",
+            type: "bytes",
+          },
         ],
-        "indexed": false,
-        "internalType": "struct CCMPMessagePayload[]",
-        "name": "payload",
-        "type": "tuple[]"
-      }
+        indexed: false,
+        internalType: "struct CCMPMessagePayload[]",
+        name: "payload",
+        type: "tuple[]",
+      },
     ],
-    "name": "CCMPMessageRouted",
-    "type": "event"
+    name: "CCMPMessageRouted",
+    type: "event",
   },
   {
-    "anonymous": false,
-    "inputs": [
+    anonymous: false,
+    inputs: [
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "_tokenAddress",
-        "type": "address"
+        indexed: true,
+        internalType: "address",
+        name: "_tokenAddress",
+        type: "address",
       },
       {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "_amount",
-        "type": "uint256"
+        indexed: true,
+        internalType: "uint256",
+        name: "_amount",
+        type: "uint256",
       },
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "_relayer",
-        "type": "address"
-      }
+        indexed: true,
+        internalType: "address",
+        name: "_relayer",
+        type: "address",
+      },
     ],
-    "name": "FeePaid",
-    "type": "event"
+    name: "FeePaid",
+    type: "event",
   },
   {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "uint256",
-        "name": "_destinationChainId",
-        "type": "uint256"
+        internalType: "uint256",
+        name: "_destinationChainId",
+        type: "uint256",
       },
       {
-        "internalType": "string",
-        "name": "_adaptorName",
-        "type": "string"
+        internalType: "string",
+        name: "_adaptorName",
+        type: "string",
       },
       {
-        "components": [
+        components: [
           {
-            "internalType": "address",
-            "name": "to",
-            "type": "address"
+            internalType: "address",
+            name: "to",
+            type: "address",
           },
           {
-            "internalType": "bytes",
-            "name": "_calldata",
-            "type": "bytes"
-          }
+            internalType: "bytes",
+            name: "_calldata",
+            type: "bytes",
+          },
         ],
-        "internalType": "struct CCMPMessagePayload[]",
-        "name": "_payloads",
-        "type": "tuple[]"
+        internalType: "struct CCMPMessagePayload[]",
+        name: "_payloads",
+        type: "tuple[]",
       },
       {
-        "components": [
+        components: [
           {
-            "internalType": "address",
-            "name": "feeTokenAddress",
-            "type": "address"
+            internalType: "address",
+            name: "feeTokenAddress",
+            type: "address",
           },
           {
-            "internalType": "uint256",
-            "name": "feeAmount",
-            "type": "uint256"
+            internalType: "uint256",
+            name: "feeAmount",
+            type: "uint256",
           },
           {
-            "internalType": "address",
-            "name": "relayer",
-            "type": "address"
-          }
+            internalType: "address",
+            name: "relayer",
+            type: "address",
+          },
         ],
-        "internalType": "struct GasFeePaymentArgs",
-        "name": "_gasFeePaymentArgs",
-        "type": "tuple"
+        internalType: "struct GasFeePaymentArgs",
+        name: "_gasFeePaymentArgs",
+        type: "tuple",
       },
       {
-        "internalType": "bytes",
-        "name": "_routerArgs",
-        "type": "bytes"
-      }
+        internalType: "bytes",
+        name: "_routerArgs",
+        type: "bytes",
+      },
     ],
-    "name": "sendMessage",
-    "outputs": [
+    name: "sendMessage",
+    outputs: [
       {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
+        internalType: "bool",
+        name: "sent",
+        type: "bool",
+      },
     ],
-    "stateMutability": "payable",
-    "type": "function"
-  }
+    stateMutability: "payable",
+    type: "function",
+  },
 ];
-
 export { abi };

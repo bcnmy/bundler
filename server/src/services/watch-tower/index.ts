@@ -1,12 +1,20 @@
-import { CCMPMessage } from "../../../../common/types"
+import { CCMPMessage } from '../../../../common/types';
 
 /**
  * @interface WatchTower // TODO: ...
  */
 interface WatchTower {
-    subscribe(indexerURL: string, eventName: string): void
-    validateEvent(): void
-    processTransaction(txHash: string, gasUsage: number, chainId: number, from: string, scAddress: string, eventName: string, eventData: CCMPMessage): void
-};
+  subscribe(indexerURL: string, eventName: string): void;
+  validateEvent(): void;
+  processTransaction(
+    txHash: string,
+    gasUsage: number,
+    chainId: number,
+    from: string,
+    scAddress: string,
+    eventName: string,
+    eventData: CCMPMessage
+  ): void;
+}
 
 export { WatchTower };

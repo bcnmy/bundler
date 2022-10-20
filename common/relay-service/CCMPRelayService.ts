@@ -14,7 +14,7 @@ export class CCMPRelayService implements IRelayService<CCMPTransactionMessageTyp
   async sendTransactionToRelayer(
     data: CCMPTransactionMessageType,
   ): Promise<RelayServiceResponseType> {
-    log.info('Publishing to relayer for CCMP');
+    log.info(`Sending transaction to CCMP queue with transactionId: ${data.transactionId}, chainId: ${data.chainId}`);
     await this.queue.publish(data);
     let response : RelayServiceResponseType;
     try {

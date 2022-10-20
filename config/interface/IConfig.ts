@@ -1,7 +1,5 @@
 import { ethers } from 'ethers';
-import { type } from 'os';
 import { TransactionType, SymbolMapByChainIdType } from '../../common/types';
-import { port } from '../../server/src/server';
 
 type ChainIdWithStringValueType = {
   [key: number]: string

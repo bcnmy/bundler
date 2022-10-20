@@ -25,6 +25,8 @@ const registerWebhook = async (destinationUrl: string, auth: string, chainId: nu
         }, 
         json: true,
     };
+
+    console.log(JSON.stringify(registerWebhookReq))
     
     let registerWebhookRes = await rp(registerWebhookReq);
     console.log(`registerWebhookRes is ${JSON.stringify(registerWebhookRes)}`);

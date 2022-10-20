@@ -143,7 +143,7 @@ export class Config implements IConfig {
         throw new Error(`Decimals required for chain id ${chainId}`);
       }
       if (!this.config.feeOption.feeTokenTransferGas[chainId]) {
-        throw new Error(`Decimals required for chain id ${chainId}`);
+        throw new Error(`Fee Token Transfer Gas required for chain id ${chainId}`);
       }
       if (!this.config.feeOption.refundReceiver[chainId]) {
         throw new Error(`Refund receiver required for chain id ${chainId}`);

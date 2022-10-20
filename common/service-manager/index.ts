@@ -2,7 +2,9 @@
 import { ethers } from 'ethers';
 import { config } from '../../config';
 import { EVMAccount } from '../../relayer/src/services/account';
-import { AAConsumer, CCMPConsumer, SCWConsumer, SocketConsumer } from '../../relayer/src/services/consumer';
+import {
+  AAConsumer, CCMPConsumer, SCWConsumer, SocketConsumer,
+} from '../../relayer/src/services/consumer';
 import { EVMNonceManager } from '../../relayer/src/services/nonce-manager';
 import {
   EVMRelayerManager,
@@ -45,7 +47,7 @@ const log = logger(module);
 const relayerManagerTransactionTypeNameMap = {
   [TransactionType.AA]: 'RM1',
   [TransactionType.SCW]: 'RM1',
-  [TransactionType.CCMP]: 'RM2',
+  [TransactionType.CCMP]: 'RM1',
 };
 
 const routeTransactionToRelayerMap: {
