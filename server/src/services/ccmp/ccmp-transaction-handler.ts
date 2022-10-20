@@ -76,11 +76,11 @@ class CCMPTransactionHandler {
           emmitter,
           parseSequenceFromLogEth(
             await this.getTransactionReceipt(txHash),
-            CONTRACTS.TESTNET.avalanche.core // TODO: toggle environment
+            CONTRACTS.TESTNET.avalanche.core, // TODO: toggle environment
           ),
           {
             transport: NodeHttpTransport(),
-          }
+          },
         );
 
         // console.log(`received VAA from Wormhole Guardians: ${vaaBytes.toString()}`);
@@ -100,7 +100,7 @@ class CCMPTransactionHandler {
             const gasFee = await axelarQuerySdk.estimateGasFee(
               EvmChain.AVALANCHE,
               EvmChain.POLYGON,
-              GasToken.AVAX
+              GasToken.AVAX,
             );
             const options: AddGasOptions = {
               // amount: gasFee, // The amount of gas to be added. If not specified,
@@ -122,7 +122,7 @@ class CCMPTransactionHandler {
             const { success, transaction, error } = await axelarRecoverySDK.addNativeGas(
               EvmChain.AVALANCHE,
               txHash,
-              options
+              options,
             );
 
             if (success) {

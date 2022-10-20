@@ -1,4 +1,6 @@
-import { number, object, string, array } from 'joi';
+import {
+  number, object, string, array,
+} from 'joi';
 
 /**
  * @dev hookSchema - derived from the Webhookoutput struct
@@ -24,27 +26,27 @@ export const hookSchema = object({
     topicId: string().required().error(new Error('topic id is required')),
     event: string().required().error(new Error('event name is required')),
     data: object({
-      sender: string(), //.required("sender is required"),
-      sourceGateway: string(), //.required("source gateway is required"),
-      sourceAdaptor: string(), //.required("source adaptor is required"),
-      sourceChainId: string(), //.required("source chain id is required"),
-      destinationGateway: string(), //.required("destination chain gateway contract address is required"),
-      destinationChainId: string(), //.required("destination chain id is required"),
-      nonce: string(), //.required("nonce is required"),
-      routerAdaptor: string(), //.required("router adaptor is required"),
+      sender: string(), // .required("sender is required"),
+      sourceGateway: string(), // .required("source gateway is required"),
+      sourceAdaptor: string(), // .required("source adaptor is required"),
+      sourceChainId: string(), // .required("source chain id is required"),
+      destinationGateway: string(), // .required("destination chain gateway contract address is required"),
+      destinationChainId: string(), // .required("destination chain id is required"),
+      nonce: string(), // .required("nonce is required"),
+      routerAdaptor: string(), // .required("router adaptor is required"),
       gasFeePaymentArgs: object({
-        feeTokenAddress: string(), //.required("fee token address is required"),
-        feeAmount: string(), //.required("fee amount is required"),
-        relayer: string(), //.required("relayer is required"),
-      }), //.required("gas fee payment args are required"),
+        feeTokenAddress: string(), // .required("fee token address is required"),
+        feeAmount: string(), // .required("fee amount is required"),
+        relayer: string(), // .required("relayer is required"),
+      }), // .required("gas fee payment args are required"),
       payload: array().items(
         object({
-          operationType: number(), //.required("payload operation type is required"),
-          data: string(), //.required("payload data is required")
-        })
-      ), //.required("amount is required"),
-    }), //.required("event data is required"),
-    queuedAt: string(), //.required('queued at timestamp is required'),
-    dispatchedAt: string(), //.required("dispatched at timestamp is required"),
+          operationType: number(), // .required("payload operation type is required"),
+          data: string(), // .required("payload data is required")
+        }),
+      ), // .required("amount is required"),
+    }), // .required("event data is required"),
+    queuedAt: string(), // .required('queued at timestamp is required'),
+    dispatchedAt: string(), // .required("dispatched at timestamp is required"),
   }),
 });

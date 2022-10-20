@@ -20,17 +20,16 @@ class CCMPWatchTower implements WatchTower {
     }, {});
   }
 
-  transformIndexerEvent = (event: Record<string, any>): CCMPMessage =>
-    ({
-      ...event,
-      gasFeePaymentArgs: this.keysToLowerCase(event.gasFeePaymentArgs) as GasFeePaymentArgsStruct,
-      payload: event.payload
-        .map((payload: any) => this.keysToLowerCase(payload))
-        .map((payload: any) => ({
-          to: payload.to,
-          _calldata: payload.calldata,
-        })),
-    } as CCMPMessage);
+  transformIndexerEvent = (event: Record<string, any>): CCMPMessage => ({
+    ...event,
+    gasFeePaymentArgs: this.keysToLowerCase(event.gasFeePaymentArgs) as GasFeePaymentArgsStruct,
+    payload: event.payload
+      .map((payload: any) => this.keysToLowerCase(payload))
+      .map((payload: any) => ({
+        to: payload.to,
+        _calldata: payload.calldata,
+      })),
+  } as CCMPMessage);
 
   // TODO: cleanup signature
   processTransaction(
@@ -40,7 +39,7 @@ class CCMPWatchTower implements WatchTower {
     from: string,
     scAddress: string,
     eventName: string,
-    eventData: any
+    eventData: any,
   ): void {
     const configInstance = new Config();
     const config = configInstance.get();

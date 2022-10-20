@@ -20,7 +20,7 @@ import { configInstance } from '../../config';
         topicid: '0xd104ea90f9fae928714248aaeace6818d814f775ed2883b9286841dc71b66ada',
         blockConfirmations: 1, // TODO: get from config instead
         processTransferLogs: true,
-      }
+      },
     );
   } else {
     console.log('Config not active');

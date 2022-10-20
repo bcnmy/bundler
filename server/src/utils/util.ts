@@ -1,4 +1,3 @@
-
 export const stringify = (data: any) => {
   let dataString = data;
   if (typeof data === 'object') {

@@ -1,4 +1,3 @@
-
 import { createClient } from 'redis';
 import { config } from '../../../config';
 import { logger } from '../../log-config';

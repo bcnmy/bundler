@@ -67,7 +67,7 @@ const init = async () => {
 
   server = http.createServer(app);
 
-  // TODO: subscribe to indexer from here 
+  // TODO: subscribe to indexer from here
 
   (async () => {
     try {
@@ -82,5 +82,5 @@ const init = async () => {
 
 export {
   init,
-  port
+  port,
 };

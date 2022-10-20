@@ -186,7 +186,7 @@ type CCMPWebhookRequestType = {
 type CCMPWebhooksConfigType = {
   endpoint: string,
   registrationUrl: string,
-  requests: CCMPWebhookRequestType[]  
+  requests: CCMPWebhookRequestType[]
 };
 
 type CCMPConfigType = {

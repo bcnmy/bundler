@@ -4,7 +4,9 @@ import { CCMPWatchTower } from '../../services/ccmp/ccmp-watch-tower';
 
 export const hookApi = async (req: Request, res: Response) => {
   // TODO: what data is needed exactly (storage vs processing)
-  const { chainId, from, scAddress, event: eventName, data, txHash, gasUsage } = req.body;
+  const {
+    chainId, from, scAddress, event: eventName, data, txHash, gasUsage,
+  } = req.body;
 
   const watchTower = new CCMPWatchTower(); // TODO: add watchtower to servicemanager?
 
