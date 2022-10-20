@@ -21,8 +21,7 @@ import {
   GasToken,
   GMPStatus,
 } from '@axelar-network/axelarjs-sdk';
-import { sendToQueue, IDataToPushInQueue } from '../../service-manager/queue';
-import { CCMPMessage, CCMPTransactionMessageType, isError, TransactionType } from '../../../../common/types';
+import { CCMPMessage, isError, TransactionType } from '../../../../common/types';
 // import { simulateService } from '../simulate';
 import { logger } from '../../../../common/log-config';
 import { config } from '../../../../config';

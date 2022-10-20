@@ -62,11 +62,12 @@ ITransactionPublisher<TransactionMessageType> {
     log.info(`Publishing transaction data of transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
     await this.publishToTransactionQueue(transactionExecutionResponse);
 
-    log.info(`Saving transaction data in database for ${transactionId} on chainId ${this.chainId}`);
+    log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
     await this.saveTransactionDataToDatabase(
       transactionExecutionResponse,
       transactionId,
       relayerAddress,
+      TransactionStatus.SUCCESS,
       userAddress,
     );
   }
@@ -79,11 +80,12 @@ ITransactionPublisher<TransactionMessageType> {
     log.info(`Publishing transaction data of transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
     await this.publishToTransactionQueue(transactionExecutionResponse);
 
-    log.info(`Saving transaction data in database for ${transactionId} on chainId ${this.chainId}`);
+    log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
     await this.saveTransactionDataToDatabase(
       transactionExecutionResponse,
       transactionId,
       relayerAddress,
+      TransactionStatus.FAILED,
       userAddress,
     );
   }
@@ -92,12 +94,13 @@ ITransactionPublisher<TransactionMessageType> {
     transactionExecutionResponse: ethers.providers.TransactionResponse,
     transactionId: string,
     relayerAddress: string,
+    status: TransactionStatus,
     userAddress?: string,
   ): Promise<void> {
     const transactionDataToBeSaveInDatabase = {
       transactionId,
       transactionHash: transactionExecutionResponse.hash,
-      status: TransactionStatus.PENDING,
+      status,
       rawTransaction: transactionExecutionResponse,
       chainId: this.chainId,
       gasPrice: transactionExecutionResponse.gasPrice,

@@ -41,13 +41,13 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount, EVMRawTran
 
   transactionService: ITransactionService<EVMAccount, EVMRawTransactionType>;
 
-  minRelayerCount: number;
+  private minRelayerCount: number;
 
-  maxRelayerCount: number;
+  private maxRelayerCount: number;
 
-  inactiveRelayerCountThreshold: number;
+  private inactiveRelayerCountThreshold: number;
 
-  pendingTransactionCountThreshold: number;
+  private pendingTransactionCountThreshold: number;
 
   newRelayerInstanceCount: number;
 
@@ -246,15 +246,31 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount, EVMRawTran
     this.minRelayerCount = minRelayerCount;
   }
 
+  getMinRelayerCount(): number {
+    return this.minRelayerCount;
+  }
+
   setMaxRelayerCount(maxRelayerCount: number) {
     this.maxRelayerCount = maxRelayerCount;
+  }
+
+  getMaxRelayerCount(): number {
+    return this.maxRelayerCount;
   }
 
   setInactiveRelayerCountThreshold(threshold: number) {
     this.inactiveRelayerCountThreshold = threshold;
   }
 
+  getInactiveRelayerCountThreshold() {
+    return this.inactiveRelayerCountThreshold;
+  }
+
   setPendingTransactionCountThreshold(threshold: number) {
     this.pendingTransactionCountThreshold = threshold;
+  }
+
+  getPendingTransactionCountThreshold() {
+    return this.pendingTransactionCountThreshold;
   }
 }

@@ -8,7 +8,7 @@
       "cwd": "${workspaceFolder}",
       "runtimeExecutable": "yarn",
       "outputCapture": "std",
-      "runtimeArgs": ["dev:server"]
+      "runtimeArgs": ["dev"]
     }
   ]
 }

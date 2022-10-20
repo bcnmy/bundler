@@ -1,4 +1,6 @@
+
 import { createClient } from 'redis';
+import { config } from '../../../config';
 import { logger } from '../../log-config';
 import { parseError } from '../../utils';
 import { ICacheService } from '../interface';
@@ -12,7 +14,7 @@ export class RedisCacheService implements ICacheService {
 
   private constructor() {
     this.redisClient = createClient({
-      url: process.env.REDIS_URL,
+      url: config.dataSources.redisUrl,
     });
   }
 
@@ -30,6 +32,10 @@ export class RedisCacheService implements ICacheService {
     this.redisClient.on('error', (err: any) => {
       log.error(`Redis redisClient Error ${err}`);
     });
+  }
+
+  async close(): Promise<void> {
+    await this.redisClient.quit();
   }
 
   async decrement(key: string, decrementBy: number = 1): Promise<boolean> {

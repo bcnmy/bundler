@@ -1,83 +1,79 @@
-import {
-  array,
-  mixed,
+import Joi from 'joi';
+
+const {
   number,
   object,
   string,
-} from 'yup';
+  alternatives,
+  array,
+} = Joi.types();
 
-export const scwRequestSchema = object({
-  body: object({
-    method: string().matches(/eth_sendSmartContractWalletTransaction/),
-    params: object({
-      value: number(),
-      to: string().matches(/^0x[a-fA-F0-9]{40}$/).required('to address is required'),
-      gasLimit: string(), // in hex
-      data: string().required('data is required'),
-      chainId: number().required('chain id (network id) is required'),
-      refundInfo: object({
-        tokenGasPrice: string().required('tokenGasPrice is required'),
-        gasToken: string().required('gasTokenWrong transaction type sent in request is required'),
-      }).required('refundInfo is required'),
-    }),
-    jsonrpc: string().required('jsonrpc is required'),
-    id: number().required('id is required'),
-  }),
+export const scwRequestSchema = object.keys({
+  method: string.regex(/eth_sendSmartContractWalletTransaction/),
+  params: array.items(object.keys(
+    {
+      value: number,
+      to: string.regex(/^0x[a-fA-F0-9]{40}$/).required().error(new Error('to is required')),
+      gasLimit: string, // in hex
+      data: string.required().error(new Error('data is required')),
+      chainId: number.required().error(new Error('chainId is required')),
+      refundInfo: object.keys({
+        tokenGasPrice: string.required().error(new Error('tokenGasPrice is required')),
+        gasToken: string.required().error(new Error('gasToken is required')),
+      }).required().error(new Error('refundInfo is required')),
+    },
+  )),
+  jsonrpc: string.required().error(new Error('jsonrpc is required')),
+  id: number.required().error(new Error('id is required')),
 });
 
-export const aaRequestSchema = object({
-  body: object({
-    method: string().matches(/eth_sendUserOperation/),
-    params: array().of(
-      mixed().oneOf([
-        {
-          sender: string().matches(/^0x[a-fA-F0-9]{40}$/).required('sender address is required'),
-          nonce: string().required('nonce is required and should be a hex string'),
-          initCode: string(),
-          callData: string().required('callData is required and should be a hex string'),
-          callGasLimit: string().required('callGasLimit is required and should be a hex string'),
-          verificationGasLimit: string().required('verificationGasLimit is required and should be a hex string'),
-          preVerificationGas: number().required('preVerificationGas is required and should be a hex string'),
-          maxFeePerGas: string().required('maxFeePerGas is required and should be a hex string'),
-          maxPriorityFeePerGas: string().required('maxPriorityFeePerGas is required and should be a hex string'),
-          paymasterAndData: string(),
-          signature: string().required('signature is required'),
-        }, {
-          entryPointAddress: string().required('entryPointAddress is required'),
-        }, {
-          chainId: number().required('chainId is required'),
-        },
-      ]),
-
-    ),
-    jsonrpc: string().required('jsonrpc is required'),
-    id: number().required('id is required'),
-  }),
+const userOp = object.keys({
+  sender: string.regex(/^0x[a-fA-F0-9]{40}$/).required().error(new Error('sender address is required')),
+  nonce: string.required().error(new Error('nonce is required and should be a hex string')),
+  initCode: string,
+  callData: string.required().error(new Error('callData is required and should be a hex string')),
+  callGasLimit: string.required().error(new Error('callGasLimit is required and should be a hex string')),
+  verificationGasLimit: string.required().error(new Error('verificationGasLimit is required and should be a hex string')),
+  preVerificationGas: string.required().error(new Error('preVerificationGas is required and should be a hex string')),
+  maxFeePerGas: string.required().error(new Error('maxFeePerGas is required and should be a hex string')),
+  maxPriorityFeePerGas: string.required().error(new Error('maxPriorityFeePerGas is required and should be a hex string')),
+  paymasterAndData: string,
+  signature: string.required().error(new Error('signature is required')),
 });
 
-// REVIEW
-// Might change
-export const crossChainRequestSchema = object({
-  body: object({
-    method: string().matches(/eth_sendCrossChainTransaction/),
-    params: object({
-      value: number(),
-      to: string().matches(/^0x[a-fA-F0-9]{40}$/).required('to address is required'),
-      gasLimit: string(), // in hex
-      data: string().required('data is required'),
-      chainId: number().required('chain id (network id) is required'),
-      refundInfo: object({
-        tokenGasPrice: string().required('tokenGasPrice is required'),
-        gasToken: string().required('gasTokenWrong transaction type sent in request is required'),
-      }).required('refundInfo is required'),
-    }),
-    jsonrpc: string().required('jsonrpc is required'),
-    id: number().required('id is required'),
-  }),
+const entryPointAddress = string.required().error(new Error('entryPointAddress is required'));
+const chainId = number.required().error(new Error('chainId is required'));
+
+export const aaRequestSchema = object.keys({
+  method: string.regex(/eth_sendUserOperation/),
+  params: array.items(alternatives.try(
+    userOp,
+    entryPointAddress,
+    chainId,
+  )),
+  jsonrpc: string.required().error(new Error('jsonrpc is required')),
+  id: number.required().error(new Error('id is required')),
 });
 
-export const feeOptionsSchema = object({
-  query: object({
-    chainId: string().oneOf(['5', '80001']),
+// TODO: Update Schema & REVIEW
+export const crossChainRequestSchema = object.keys({
+  method: string.regex(/eth_sendCrossChainTransaction/),
+  params: object.keys({
+    value: number,
+    to: string.regex(/^0x[a-fA-F0-9]{40}$/).required().error(new Error('to address is required')),
+    gasLimit: string, // in hex
+    data: string.required().error(new Error('data is required')),
+    chainId: number.required().error(new Error('chainId is required')),
+    refundInfo: object.keys({
+      tokenGasPrice: string.required().error(new Error('tokenGasPrice is required')),
+      gasToken: string.required().error(new Error('gasToken type sent in request is required')),
+    }).required().error(new Error('refundInfo is required')),
   }),
+  jsonrpc: string.required().error(new Error('jsonrpc is required')),
+  id: number.required().error(new Error('id is required')),
+
+});
+
+export const feeOptionsSchema = object.keys({
+  chainId: string.valid('5', '80001'),
 });

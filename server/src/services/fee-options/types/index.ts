@@ -6,5 +6,6 @@ export type FeeOptionResponseType = {
   logoUrl: string;
   offset: number;
   feeTokenTransferGas: number;
-  refundReceiver?: string;
+  refundReceiver: string;
+  commission: number;
 };

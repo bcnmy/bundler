@@ -1,4 +1,4 @@
-import { number, object, string, array } from 'yup';
+import { number, object, string, array } from 'joi';
 
 /**
  * @dev hookSchema - derived from the Webhookoutput struct
@@ -6,23 +6,23 @@ import { number, object, string, array } from 'yup';
  */
 export const hookSchema = object({
   body: object({
-    id: string().required('id is required'),
-    chainId: number().required('chain id is required'),
-    from: string().required('from address is required'),
-    scAddress: string().required('smart contract address is required'),
-    blockHash: string().required('block hash is required'),
-    blockNumber: number().required('block number is required'),
-    txIndex: number().required('transaction index is required'),
-    txHash: string().required('transaction hash is required'),
-    txType: number().required('transaction type is required'),
-    txStatus: string().required('transaction status is required'),
-    txTimestamp: string().required('transaction timestamp is required'),
-    gasLimit: number().required('gas limit is required'),
-    gasUsage: number().required('gas usage is required'), // TODO: ensure changed to gasused
-    gasPrice: number().required('gas price is required'),
-    txFees: number().required('transaction fees is required'),
-    topicId: string().required('topic id is required'),
-    event: string().required('event name is required'),
+    id: string().required().error(new Error('id is required')),
+    chainId: number().required().error(new Error('chain id is required')),
+    from: string().required().error(new Error('from address is required')),
+    scAddress: string().required().error(new Error('smart contract address is required')),
+    blockHash: string().required().error(new Error('block hash is required')),
+    blockNumber: number().required().error(new Error('block number is required')),
+    txIndex: number().required().error(new Error('transaction index is required')),
+    txHash: string().required().error(new Error('transaction hash is required')),
+    txType: number().required().error(new Error('transaction type is required')),
+    txStatus: string().required().error(new Error('transaction status is required')),
+    txTimestamp: string().required().error(new Error('transaction timestamp is required')),
+    gasLimit: number().required().error(new Error('gas limit is required')),
+    gasUsage: number().required().error(new Error('gas usage is required')), // TODO: ensure changed to gasuse),
+    gasPrice: number().required().error(new Error('gas price is required')),
+    txFees: number().required().error(new Error('transaction fees is required')),
+    topicId: string().required().error(new Error('topic id is required')),
+    event: string().required().error(new Error('event name is required')),
     data: object({
       sender: string(), //.required("sender is required"),
       sourceGateway: string(), //.required("source gateway is required"),
@@ -37,14 +37,14 @@ export const hookSchema = object({
         feeAmount: string(), //.required("fee amount is required"),
         relayer: string(), //.required("relayer is required"),
       }), //.required("gas fee payment args are required"),
-      payload: array(
+      payload: array().items(
         object({
           operationType: number(), //.required("payload operation type is required"),
           data: string(), //.required("payload data is required")
         })
       ), //.required("amount is required"),
     }), //.required("event data is required"),
-    queuedAt: string(),//.required('queued at timestamp is required'),
+    queuedAt: string(), //.required('queued at timestamp is required'),
     dispatchedAt: string(), //.required("dispatched at timestamp is required"),
   }),
 });

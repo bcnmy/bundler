@@ -30,7 +30,6 @@ import {
 } from '../queue';
 import { AARelayService, CCMPRelayService, SCWRelayService } from '../relay-service';
 import { AASimulationService, SCWSimulationService } from '../simulation';
-import { CCMPSimulationService } from '../simulation/CCMPSimualtionService';
 import { TenderlySimulationService } from '../simulation/external-simulation';
 import { CMCTokenPriceManager } from '../token-price';
 import {
@@ -68,10 +67,6 @@ const scwSimulationServiceMap: {
   [chainId: number]: SCWSimulationService;
 } = {};
 
-const ccmpSimulationServiceMap: {
-  [chainId: number]: CCMPSimulationService;
-} = {};
-
 const entryPointMap: {
   [chainId: number]: Array<{
     address: string,
@@ -107,6 +102,9 @@ const retryTransactionQueueMap: {
     routeTransactionToRelayerMap[chainId] = {};
     entryPointMap[chainId] = [];
 
+    if (!config.chains.provider[chainId]) {
+      throw new Error(`No provider for chainId ${chainId}`);
+    }
     const networkService = new EVMNetworkService({
       chainId,
       rpcUrl: config.chains.provider[chainId],
@@ -121,6 +119,9 @@ const retryTransactionQueueMap: {
     const gasPriceService = gasPriceManager.setup();
     if (gasPriceService) {
       gasPriceService.schedule();
+    }
+    if (!gasPriceService) {
+      throw new Error(`Gasprice service is not setup for chainId ${chainId}`);
     }
 
     const transactionQueue = new TransactionHandlerQueue({
@@ -344,16 +345,6 @@ const retryTransactionQueueMap: {
 
         const ccmpRelayService = new CCMPRelayService(ccmpQueue);
         routeTransactionToRelayerMap[chainId][type] = ccmpRelayService;
-
-        const tenderlySimulationService = new TenderlySimulationService(gasPriceService, {
-          tenderlyUser: config.simulationData.tenderlyData.tenderlyUser,
-          tenderlyProject: config.simulationData.tenderlyData.tenderlyProject,
-          tenderlyAccessKey: config.simulationData.tenderlyData.tenderlyAccessKey,
-        });
-        ccmpSimulationServiceMap[chainId] = new CCMPSimulationService(
-          networkService,
-          tenderlySimulationService,
-        );
       }
     }
   }

@@ -5,9 +5,8 @@ import { feeOptionMap } from '../../../../common/service-manager';
 const log = logger(module);
 
 export const feeOptionsApi = async (req: Request, res: Response) => {
-  const chainIdInString = req.query.chainId as string;
-  const chainId = Number(chainIdInString);
-  const response = await feeOptionMap[chainId].get();
+  const chainId = req.query.chainId as string;
+  const response = await feeOptionMap[Number(chainId)].get();
   try {
     // if (response.error) {
     //   return res.status(400).json({

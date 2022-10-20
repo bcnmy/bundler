@@ -11,30 +11,17 @@ export const validateRelayRequest = () => async (
   next: NextFunction,
 ) => {
   try {
-    console.log(req);
-    console.log('req.body', req.body);
     const { method } = req.body;
+    let validationResponse;
     switch (method) {
       case TransactionMethodType.SCW:
-        await scwRequestSchema.validate({
-          body: req.body,
-          query: req.query,
-          params: req.params,
-        });
+        validationResponse = scwRequestSchema.validate(req.body);
         break;
       case TransactionMethodType.AA:
-        await aaRequestSchema.validate({
-          body: req.body,
-          query: req.query,
-          params: req.params,
-        });
+        validationResponse = aaRequestSchema.validate(req.body);
         break;
       case TransactionMethodType.CCMP:
-        await crossChainRequestSchema.validate({
-          body: req.body,
-          query: req.query,
-          params: req.params,
-        });
+        validationResponse = crossChainRequestSchema.validate(req.body);
         break;
       default:
         return res.status(400).send({
@@ -42,7 +29,14 @@ export const validateRelayRequest = () => async (
           message: 'Wrong transaction type sent in validate relay request',
         });
     }
-    return next();
+    const { error } = validationResponse;
+    const valid = error == null;
+    if (valid) {
+      return next();
+    }
+    const { details } = error;
+    const message = details.map((i) => i.message).join(',');
+    return res.status(422).json({ error: message });
   } catch (e: any) {
     log.error(e);
     return res.status(400).send({
