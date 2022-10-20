@@ -108,7 +108,7 @@ describe('Transaction Service: Sending Transaction on chainId: 5', async () => {
     gasLimit: '0x249F0',
     transactionId: '0xabcdefg',
   };
-  const { transactionExecutionResponse } = await transactionService.sendTransaction(
+  const { transactionExecutionResponse, transactionId } = await transactionService.sendTransaction(
     transactionData,
     evmAccount,
   );
@@ -125,9 +125,20 @@ describe('Transaction Service: Sending Transaction on chainId: 5', async () => {
     expect(nonceDifference).toBe(1);
   });
 
-  it('Transaction is confirmed on chainf ')
+  it('Transaction is confirmed on chain', async () => {
+    const transactionReceipt = await networkService.waitForTransaction(
+      (transactionExecutionResponse as ethers.providers.TransactionResponse).hash,
+    );
+    expect(transactionReceipt.status).toBe(1);
+  });
 
   it('Transaction Data is saved in database', async () => {
-
+    const transactionDataFromDatabase = await transactionDao.getByTransactionId(
+      chainId,
+      transactionId,
+    );
+    expect(transactionDataFromDatabase?.transactionHash).toBe(
+      (transactionExecutionResponse as ethers.providers.TransactionResponse).hash,
+    );
   });
 });

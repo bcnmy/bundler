@@ -40,11 +40,13 @@ export type ErrorTransactionResponseType = TransactionListenerNotifyReturnType &
   state: 'failed';
   code: number;
   error: string;
+  transactionId: string;
 };
 
 export type SuccessTransactionResponseType = TransactionListenerNotifyReturnType & {
   state: 'success';
   code: number;
+  transactionId: string
 };
 
 export type CreateRawTransactionParamsType = {

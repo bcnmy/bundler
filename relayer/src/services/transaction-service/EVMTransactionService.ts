@@ -140,6 +140,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       return {
         state: 'success',
         code: 200,
+        transactionId,
         ...transactionListenerNotifyResponse,
       };
     } catch (error) {
@@ -148,6 +149,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         state: 'failed',
         code: 500,
         error: JSON.stringify(error),
+        transactionId,
         ...{
           isTransactionRelayed: false,
           transactionExecutionResponse: null,
