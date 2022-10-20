@@ -46,7 +46,7 @@ const log = logger(module);
 const relayerManagerTransactionTypeNameMap = {
   [TransactionType.AA]: 'RM1',
   [TransactionType.SCW]: 'RM1',
-  [TransactionType.CCMP]: 'RM1',
+  [TransactionType.CROSS_CHAIN]: 'RM1',
 };
 
 const routeTransactionToRelayerMap: {
@@ -320,7 +320,7 @@ const retryTransactionQueueMap: {
           networkService,
           tenderlySimulationService,
         );
-      } else if (type === TransactionType.CCMP) {
+      } else if (type === TransactionType.CROSS_CHAIN) {
         // queue for ccmp
         const ccmpQueue: IQueue<CCMPTransactionMessageType> = new CCMPTransactionQueue({
           chainId,

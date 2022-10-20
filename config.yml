@@ -80,7 +80,7 @@ development:
       - "AA"
       - "SCW"
     137:
-      - "CCMP"
+      - "CROSS_CHAIN"
   
   relayers:
     funding_amount:

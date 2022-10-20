@@ -11,7 +11,7 @@ const { queueUrl } = config;
 export class CCMPTransactionQueue implements IQueue<CCMPTransactionMessageType> {
   private channel!: Channel;
 
-  private transactionType: TransactionType = TransactionType.CCMP;
+  private transactionType: TransactionType = TransactionType.CROSS_CHAIN;
 
   private exchangeName = `relayer_queue_exchange_${this.transactionType}`;
 

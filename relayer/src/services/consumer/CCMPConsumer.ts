@@ -11,7 +11,7 @@ import { CCMPConsumerParamsType } from './types';
 const log = logger(module);
 export class CCMPConsumer implements
 ITransactionConsumer<EVMAccount, EVMRawTransactionType> {
-  private transactionType: TransactionType = TransactionType.CCMP;
+  private transactionType: TransactionType = TransactionType.CROSS_CHAIN;
 
   private queue: IQueue<CCMPTransactionMessageType>;
 

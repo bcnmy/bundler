@@ -3,13 +3,13 @@ import { ethers, BigNumberish } from 'ethers';
 export enum TransactionType {
   AA = 'AA',
   SCW = 'SCW',
-  CCMP = 'CCMP',
+  CROSS_CHAIN = 'CROSS_CHAIN',
 }
 
 export enum TransactionMethodType {
   SCW = 'eth_sendSmartContractWalletTransaction',
   AA = 'eth_sendUserOperation',
-  CCMP = 'eth_sendCrossChainTransaction',
+  CROSS_CHAIN = 'eth_sendCrossChainTransaction',
 }
 
 export type TransactionQueueMessageType = ethers.providers.TransactionResponse;
@@ -25,7 +25,7 @@ export enum TransactionStatus {
 export enum RelayerManagerType {
   AA = 0,
   SCW = 0,
-  CCMP = 1,
+  CROSS_CHAIN = 0,
 }
 
 export type AccessListItem = {

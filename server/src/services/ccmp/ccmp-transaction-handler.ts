@@ -190,9 +190,9 @@ class CCMPTransactionHandler {
     // await sendToQueue(dataToEnqueue);
 
     const response = await routeTransactionToRelayerMap[toChainId][
-      TransactionType.CCMP
+      TransactionType.CROSS_CHAIN
     ].sendTransactionToRelayer({
-      type: TransactionType.CCMP,
+      type: TransactionType.CROSS_CHAIN,
       to: ccmpEventData.destinationGateway,
       data,
       gasLimit: '0xF4240',

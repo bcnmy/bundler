@@ -20,7 +20,7 @@ export const validateRelayRequest = () => async (
       case TransactionMethodType.AA:
         validationResponse = aaRequestSchema.validate(req.body);
         break;
-      case TransactionMethodType.CCMP:
+      case TransactionMethodType.CROSS_CHAIN:
         validationResponse = crossChainRequestSchema.validate(req.body);
         break;
       default:
