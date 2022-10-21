@@ -3,7 +3,12 @@ import { ITransactionDAO } from '../../../../common/db';
 import { IQueue } from '../../../../common/interface';
 import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
-import { EVMRawTransactionType, TransactionStatus } from '../../../../common/types';
+import {
+  EVMRawTransactionType,
+  SocketEventType,
+  TransactionQueueMessageType,
+  TransactionStatus,
+} from '../../../../common/types';
 import { IEVMAccount } from '../account';
 import { ITransactionPublisher } from '../transaction-publisher';
 import { ITransactionListener } from './interface/ITransactionListener';
@@ -13,21 +18,20 @@ import {
   OnTransactionFailureParamsType,
   OnTransactionSuccessParamsType,
   TransactionListenerNotifyReturnType,
-  TransactionMessageType,
 } from './types';
 
 const log = logger(module);
 
 export class EVMTransactionListener implements
 ITransactionListener<IEVMAccount, EVMRawTransactionType>,
-ITransactionPublisher<TransactionMessageType> {
+ITransactionPublisher<TransactionQueueMessageType> {
   chainId: number;
 
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
 
-  transactionQueue: IQueue<TransactionMessageType>;
+  transactionQueue: IQueue<TransactionQueueMessageType>;
 
-  retryTransactionQueue: IQueue<TransactionMessageType>;
+  retryTransactionQueue: IQueue<TransactionQueueMessageType>;
 
   transactionDao: ITransactionDAO;
 
@@ -44,12 +48,12 @@ ITransactionPublisher<TransactionMessageType> {
     this.transactionDao = transactionDao;
   }
 
-  async publishToTransactionQueue(data: TransactionMessageType): Promise<boolean> {
+  async publishToTransactionQueue(data: TransactionQueueMessageType): Promise<boolean> {
     await this.transactionQueue.publish(data);
     return true;
   }
 
-  async publishToRetryTransactionQueue(data: TransactionMessageType): Promise<boolean> {
+  async publishToRetryTransactionQueue(data: TransactionQueueMessageType): Promise<boolean> {
     await this.retryTransactionQueue.publish(data);
     return true;
   }
@@ -59,8 +63,12 @@ ITransactionPublisher<TransactionMessageType> {
       transactionExecutionResponse, transactionId, relayerAddress, userAddress,
     } = onTranasctionSuccessParams;
 
-    log.info(`Publishing transaction data of transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
-    await this.publishToTransactionQueue(transactionExecutionResponse);
+    log.info(`Publishing to transaction queue on success for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
+    await this.publishToTransactionQueue({
+      transactionId,
+      receipt: transactionExecutionResponse,
+      event: SocketEventType.onTransactionHashGenerated,
+    });
 
     log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
     await this.saveTransactionDataToDatabase(
@@ -77,8 +85,12 @@ ITransactionPublisher<TransactionMessageType> {
       transactionExecutionResponse, transactionId, relayerAddress, userAddress,
     } = onTranasctionFailureParams;
 
-    log.info(`Publishing transaction data of transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
-    await this.publishToTransactionQueue(transactionExecutionResponse);
+    log.info(`Publishing to transaction queue on failure for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
+    await this.publishToTransactionQueue({
+      transactionId,
+      receipt: transactionExecutionResponse,
+      event: SocketEventType.onTransactionError,
+    });
 
     log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
     await this.saveTransactionDataToDatabase(
@@ -120,6 +132,7 @@ ITransactionPublisher<TransactionMessageType> {
       transactionExecutionResponse, transactionId, relayerAddress, userAddress,
     } = notifyTransactionListenerParams;
 
+    // TODO : add error check
     const tranasctionHash = transactionExecutionResponse.hash;
     log.info(`Transaction hash is: ${tranasctionHash} for transactionId: ${transactionId} on chainId ${this.chainId}`);
 
@@ -153,8 +166,11 @@ ITransactionPublisher<TransactionMessageType> {
     // publish to queue with expiry header
     // pop happens when expiry header expires
     // retry txn service will check for receipt
-    log.info(`Publishing transaction data of transactionId: ${transactionId} to retry transaction queue on chainId ${this.chainId}`);
-    await this.publishToRetryTransactionQueue(transactionExecutionResponse);
+    await this.publishToRetryTransactionQueue({
+      transactionId,
+      receipt: transactionExecutionResponse,
+      event: SocketEventType.onTransactionHashGenerated,
+    });
     // wait for transaction
     this.waitForTransaction(notifyTransactionListenerParams);
     return {

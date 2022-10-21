@@ -1,7 +1,10 @@
 import { IQueue } from '../../../../../common/queue';
-import { TransactionMessageType } from '../../../../../common/queue/types';
 import {
-  AATransactionMessageType, EntryPointMapType, EVMRawTransactionType, SCWTransactionMessageType,
+  AATransactionMessageType,
+  EntryPointMapType,
+  EVMRawTransactionType,
+  SCWTransactionMessageType,
+  TransactionQueueMessageType,
 } from '../../../../../common/types';
 import { EVMAccount } from '../../account';
 import { IRelayerManager } from '../../relayer-manager';
@@ -27,7 +30,7 @@ export type SCWConsumerParamsType = {
 };
 
 export type SocketConsumerParamsType = {
-  queue: IQueue<TransactionMessageType>;
+  queue: IQueue<TransactionQueueMessageType>;
   options: {
     chainId: number,
     wssUrl: string,

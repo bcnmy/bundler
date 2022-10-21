@@ -19,7 +19,6 @@ export const requestHandler = async (
       message: 'Wrong transaction type sent in request',
     });
   }
-  console.log('///////', response);
   if (!response) {
     return res.status(500).send({
       code: 500,
