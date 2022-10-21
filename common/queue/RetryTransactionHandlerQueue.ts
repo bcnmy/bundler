@@ -41,7 +41,7 @@ export class RetryTransactionHandlerQueue implements IQueue<TransactionMessageTy
 
   async publish(data: TransactionMessageType) {
     const key = `retry_chainid.${this.chainId}`;
-    log.info(`Publishing data to retry queue on chain id ${this.chainId} with interval ${config.chains.retryTransactionInterval[this.chainId]} and key ${key}`);
+    log.info(`Publishing data to retry queue on chainId: ${this.chainId} with interval ${config.chains.retryTransactionInterval[this.chainId]} and key ${key}`);
     if (this.channel) {
       this.channel.publish(this.exchangeName, key, Buffer.from(JSON.stringify(data)), {
         persistent: true,
@@ -53,7 +53,7 @@ export class RetryTransactionHandlerQueue implements IQueue<TransactionMessageTy
   }
 
   async consume(onMessageReceived: () => void) {
-    log.info(`[x] Setting up consumer for queue with chain id ${this.chainId} for retry transaction`);
+    log.info(`[x] Setting up consumer for queue with chainId: ${this.chainId} for retry transaction queue`);
     this.channel.prefetch(1);
     try {
       // setup a consumer
@@ -62,7 +62,7 @@ export class RetryTransactionHandlerQueue implements IQueue<TransactionMessageTy
       );
       const key = `retry_chainid.${this.chainId}`;
 
-      log.info(`[*] Waiting for retry transactions on network id ${this.chainId}`);
+      log.info(`[*] Waiting for retry transactions on chaindId: ${this.chainId}`);
 
       this.channel.bindQueue(retryTransactionQueue.queue, this.exchangeName, key);
       await this.channel.consume(

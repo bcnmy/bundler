@@ -213,7 +213,7 @@ const retryTransactionQueueMap: {
       EVMRelayerManagerMap[relayerManager.name][chainId] = relayerMangerInstance;
 
       const addressList = await relayerMangerInstance.createRelayers();
-      log.info('Relayer address list length', addressList.length, relayerManager.minRelayerCount);
+      log.info(`Relayer address list length: ${addressList.length} and minRelayerCount: ${relayerManager.minRelayerCount}`);
       await relayerMangerInstance.fundRelayers(addressList);
     }
 

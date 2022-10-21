@@ -40,10 +40,10 @@ export class SCWTransactionQueue implements IQueue<SCWTransactionMessageType> {
 
   async publish(data: SCWTransactionMessageType) {
     const key = `chainid.${this.chainId}.type.${this.transactionType}`;
+    log.info(`Publishing data to retry queue on chainId: ${this.chainId} and key ${key}`);
     this.channel.publish(this.exchangeName, key, Buffer.from(JSON.stringify(data)), {
       persistent: true,
     });
-    log.info(`[x] Sent transaction to queue with transaction id ${data.transactionId}`);
     return true;
   }
 
