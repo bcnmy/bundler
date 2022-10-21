@@ -1,4 +1,4 @@
-FROM node:16.3.0-alpine
+FROM node:16.10.0-alpine
 
 # install dependencies
 RUN apk update
