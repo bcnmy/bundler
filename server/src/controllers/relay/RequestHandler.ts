@@ -13,11 +13,17 @@ export const requestHandler = async (
     response = await relayAATransaction(req, res);
   } else if (method === TransactionMethodType.SCW) {
     response = await relaySCWTransaction(req, res);
-  }
-  if (!response) {
+  } else {
     return res.status(400).send({
       code: 400,
       message: 'Wrong transaction type sent in request',
+    });
+  }
+  console.log('///////', response);
+  if (!response) {
+    return res.status(500).send({
+      code: 500,
+      message: 'Something went error. Could not get response',
     });
   }
   return response;
