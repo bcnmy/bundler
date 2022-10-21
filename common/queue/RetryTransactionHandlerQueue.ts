@@ -53,7 +53,7 @@ export class RetryTransactionHandlerQueue implements IQueue<TransactionMessageTy
   }
 
   async consume(onMessageReceived: () => void) {
-    log.info(`[x] Setting up consumer for queue with chainId: ${this.chainId} for retry transaction`);
+    log.info(`[x] Setting up consumer for queue with chainId: ${this.chainId} for retry transaction queue`);
     this.channel.prefetch(1);
     try {
       // setup a consumer

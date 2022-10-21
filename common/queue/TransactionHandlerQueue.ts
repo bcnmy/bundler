@@ -41,7 +41,7 @@ export class TransactionHandlerQueue implements IQueue<TransactionMessageType> {
 
   async publish(data: TransactionMessageType) {
     const key = `chainid.${this.chainId}`;
-    log.info(`Publishing data to retry queue on chain id ${this.chainId} with interval ${config.chains.retryTransactionInterval[this.chainId]} and key ${key}`);
+    log.info(`Publishing data to retry queue on chain id ${this.chainId} and key ${key}`);
     this.channel.prefetch(1);
     this.channel.publish(this.exchangeName, key, Buffer.from(JSON.stringify(data)), {
       persistent: true,
@@ -50,6 +50,7 @@ export class TransactionHandlerQueue implements IQueue<TransactionMessageType> {
   }
 
   async consume(onMessageReceived: () => void) {
+    log.info(`[x] Setting up consumer for queue with chainId: ${this.chainId} for transaction queue`);
     this.channel.prefetch(1);
     try {
       // setup a consumer
