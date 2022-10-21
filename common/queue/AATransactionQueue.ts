@@ -51,13 +51,13 @@ export class AATransactionQueue implements IQueue<AATransactionMessageType> {
   }
 
   async consume(onMessageReceived: () => void) {
-    log.info(`[x] Setting up consumer for queue with chain id ${this.chainId} for transaction type ${this.transactionType}`);
+    log.info(`[x] Setting up consumer for queue with chainId: ${this.chainId} for transaction type ${this.transactionType}`);
     this.channel.prefetch(1);
     try {
       // setup a consumer
       const queue: Replies.AssertQueue = await this.channel.assertQueue(`relayer_queue_${this.chainId}_type_${this.transactionType}`);
       const key = `chainid.${this.chainId}.type.${this.transactionType}`;
-      log.info(`[*] Waiting for transactions on network id ${this.chainId} with type ${this.transactionType}`);
+      log.info(`[*] Waiting for transactions on chaindId: ${this.chainId} for transaction type ${this.transactionType}`);
       this.channel.bindQueue(queue.queue, this.exchangeName, key);
       await this.channel.consume(
         queue.queue,

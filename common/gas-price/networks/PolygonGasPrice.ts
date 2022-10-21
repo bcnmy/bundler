@@ -62,9 +62,9 @@ export class MaticGasPrice extends GasPrice implements IScheduler {
     const fastestGasPrice = response.fastest;
     const fastestGasPriceInWei = fastestGasPrice * 1e9;
 
-    log.info(`Medium GasPrice for Mainnet from matic gas station is ${mediumGasPrice} gwei`);
-    log.info(`Fast GasPrice for Mainnet from matic gas station is ${fastGasPrice} gwei`);
-    log.info(`Fastest GasPrice for Mainnet from matic gas station is ${fastestGasPrice} gwei`);
+    log.info(`Medium GasPrice for Polygon from matic gas station is ${mediumGasPrice} gwei`);
+    log.info(`Fast GasPrice for Polygon from matic gas station is ${fastGasPrice} gwei`);
+    log.info(`Fastest GasPrice for Polygon from matic gas station is ${fastestGasPrice} gwei`);
     return { mediumGasPriceInWei, fastGasPriceInWei, fastestGasPriceInWei };
   }
 
@@ -94,14 +94,14 @@ export class MaticGasPrice extends GasPrice implements IScheduler {
     const fastMaxFeeInWei = fastMaxFee * 1e9;
     const estimatedBaseFeeInWei = estimatedBaseFee * 1e9;
 
-    log.info(`Safe Max Priority Fee for Mainnet from matic gas station is ${safeMaxPriorityFee} gwei`);
-    log.info(`Safe Max Fee for Mainnet from matic gas station is ${safeMaxFee} gwei`);
-    log.info(`Medium Max Priority Fee for Mainnet from matic gas station is ${mediumMaxPriorityFee} gwei`);
-    log.info(`Medium Max Fee for Mainnet from matic gas station is ${mediumMaxFee} gwei`);
-    log.info(`Fast Max Priority Fee for Mainnet from matic gas station is ${fastMaxPriorityFee} gwei`);
-    log.info(`Fast Max Fee for Mainnet from matic gas station is ${fastMaxFee} gwei`);
+    log.info(`Safe Max Priority Fee for Polygon from matic gas station is ${safeMaxPriorityFee} gwei`);
+    log.info(`Safe Max Fee for Polygon from matic gas station is ${safeMaxFee} gwei`);
+    log.info(`Medium Max Priority Fee for Polygon from matic gas station is ${mediumMaxPriorityFee} gwei`);
+    log.info(`Medium Max Fee for Polygon from matic gas station is ${mediumMaxFee} gwei`);
+    log.info(`Fast Max Priority Fee for Polygon from matic gas station is ${fastMaxPriorityFee} gwei`);
+    log.info(`Fast Max Fee for Polygon from matic gas station is ${fastMaxFee} gwei`);
 
-    log.info(`Estimated Base Fee for Mainnet from matic gas station is ${estimatedBaseFee} gwei`);
+    log.info(`Estimated Base Fee for Polygon from matic gas station is ${estimatedBaseFee} gwei`);
 
     const multiplier = config.gasPrice[this.chainId].baseFeeMultiplier
       ? config.gasPrice[this.chainId].baseFeeMultiplier : 1;

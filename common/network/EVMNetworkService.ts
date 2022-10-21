@@ -77,6 +77,7 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
             return null;
         }
       } catch (error) {
+        // TODO // Handle errors
         log.info(`Error in network service ${error}`);
         for (;rpcUrlIndex < this.fallbackRpcUrls.length; rpcUrlIndex += 1) {
           this.ethersProvider = new ethers.providers.JsonRpcProvider(
@@ -268,12 +269,10 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
   ): Promise<ethers.providers.TransactionResponse> {
     const rawTx: EVMRawTransactionType = rawTransactionData;
     rawTx.from = account.getPublicKey();
-    log.info(`raw transaction: ${JSON.stringify(rawTx)}`);
     const tx = await account.signTransaction(rawTx);
     const receipt = await this.useProvider(RpcMethod.sendTransaction, {
       tx,
     });
-    log.info(`Receipt: ${JSON.stringify(receipt)}`);
     return receipt;
   }
 
