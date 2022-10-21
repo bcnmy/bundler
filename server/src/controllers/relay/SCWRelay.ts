@@ -41,10 +41,62 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
         error: response.error,
       });
     }
-    return {
-      transactionId,
-      connectionUrl: websocketUrl,
-    };
+    clientMessenger.createTransactionNotifier(transactionId, {
+      onMined: (tx:any) => {
+        const txId = tx.transactionId;
+        clientMessenger.unsubscribe(txId);
+        log.info(`Tx Hash mined message received at client ${JSON.stringify({
+          id: txId,
+          hash: tx.transactionHash,
+          receipt: tx.receipt,
+        })}`);
+      },
+      onHashGenerated: async (tx:any) => {
+        const txHash = tx.transactionHash;
+        const txId = tx.transactionId;
+        log.info(`Tx Hash generated message received at client ${JSON.stringify({
+          id: txId,
+          hash: txHash,
+        })}`);
+
+        log.info(`Receive time for transaction id ${txId}: ${Date.now()}`);
+        if (!res.writableEnded) {
+          log.info(`Response sent to client for transaction id on success ${txId}`);
+          return res.json(
+            {
+              code: 200,
+              flag: 200,
+              log: 'Meta transaction sent to blockchain',
+              message: 'Meta transaction sent to blockchain',
+              retryDuration: 100,
+              transactionId: txId,
+              txHash,
+              connectionUrl: websocketUrl,
+            },
+          );
+        }
+      },
+      onError: async (tx:any) => {
+        const err = tx.error;
+        const txId = tx.transactionId;
+        log.info(`Error message received at client is ${err}`);
+        clientMessenger.unsubscribe(txId);
+        if (!res.writableEnded) {
+          log.info(`Response sent to client for transaction id on error ${txId}`);
+          return res.json(
+            {
+              code: 417,
+              flag: 417,
+              log: 'Transaction failed',
+              message: 'Transaction failed',
+              transactionId: txId,
+              error: err,
+              connectionUrl: websocketUrl,
+            },
+          );
+        }
+      },
+    });
   } catch (error) {
     log.error(`Error in SCW relay ${error}`);
     return res.status(500).json({

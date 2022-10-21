@@ -8,7 +8,6 @@ export const requestHandler = async (
   res: Response,
 ) => {
   const { method } = req.body;
-  console.log('method', method);
   let response = null;
   if (method === TransactionMethodType.AA) {
     response = await relayAATransaction(req, res);
