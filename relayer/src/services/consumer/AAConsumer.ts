@@ -1,7 +1,10 @@
 import { ConsumeMessage } from 'amqplib';
+import { ethers } from 'ethers';
 import { logger } from '../../../../common/log-config';
 import { IQueue } from '../../../../common/queue';
-import { AATransactionMessageType, EVMRawTransactionType, TransactionType } from '../../../../common/types';
+import {
+  AATransactionMessageType, EntryPointMapType, EVMRawTransactionType, TransactionType,
+} from '../../../../common/types';
 import { IEVMAccount } from '../account';
 import { IRelayerManager } from '../relayer-manager';
 import { ITransactionService } from '../transaction-service';
@@ -17,6 +20,8 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
 
   chainId: number;
 
+  entryPointMap: EntryPointMapType;
+
   relayerManager: IRelayerManager<IEVMAccount, EVMRawTransactionType>;
 
   transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>;
@@ -30,6 +35,7 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
     this.queue = queue;
     this.relayerManager = relayerManager;
     this.chainId = options.chainId;
+    this.entryPointMap = options.entryPointMap;
     this.transactionService = transactionService;
   }
 
@@ -44,9 +50,29 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
       const activeRelayer = await this.relayerManager.getActiveRelayer();
       log.info(`Active relayer for ${this.transactionType} is ${activeRelayer?.getPublicKey()}`);
 
+      log.info('Setting active relayer as beneficiary for userOp');
+
       if (activeRelayer) {
-      // call transaction service
-      // TODO check on return logic
+        const { userOp, to } = transactionDataReceivedFromQueue;
+        const entryPointContracts = this.entryPointMap[this.chainId];
+
+        let entryPointContract;
+        for (let entryPointContractIndex = 0;
+          entryPointContractIndex < entryPointContracts.length;
+          entryPointContractIndex += 1) {
+          if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
+           === to.toLowerCase()) {
+            entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
+            break;
+          }
+        }
+
+        // eslint-disable-next-line no-unsafe-optional-chaining
+        const { data } = await (entryPointContract as ethers.Contract)
+          .populateTransaction.handleOps([userOp], activeRelayer.getPublicKey());
+        transactionDataReceivedFromQueue.data = data;
+        // call transaction service
+        // TODO check on return logic
         await this.transactionService.sendTransaction(
           transactionDataReceivedFromQueue,
           activeRelayer,
