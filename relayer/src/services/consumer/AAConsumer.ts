@@ -50,8 +50,6 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
       const activeRelayer = await this.relayerManager.getActiveRelayer();
       log.info(`Active relayer for ${this.transactionType} is ${activeRelayer?.getPublicKey()}`);
 
-      log.info('Setting active relayer as beneficiary for userOp');
-
       if (activeRelayer) {
         const { userOp, to } = transactionDataReceivedFromQueue;
         const entryPointContracts = this.entryPointMap[this.chainId];
@@ -66,6 +64,8 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
             break;
           }
         }
+
+        log.info(`Setting active relayer: ${activeRelayer?.getPublicKey()} as beneficiary for userOp: ${JSON.stringify(userOp)}`);
 
         // eslint-disable-next-line no-unsafe-optional-chaining
         const { data } = await (entryPointContract as ethers.Contract)
