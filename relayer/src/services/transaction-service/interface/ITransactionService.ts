@@ -2,7 +2,11 @@ import { IGasPrice } from '../../../../../common/gas-price';
 import { INetworkService } from '../../../../../common/network';
 import { INonceManager } from '../../nonce-manager';
 import { ITransactionListener } from '../../transaction-listener';
-import { ErrorTransactionResponseType, SuccessTransactionResponseType, TransactionDataType } from '../types';
+import {
+  ErrorTransactionResponseType,
+  RetryTransactionDataType,
+  SuccessTransactionResponseType, TransactionDataType,
+} from '../types';
 
 export interface ITransactionService<AccountType, RawTransactionType> {
   chainId: number;
@@ -14,5 +18,8 @@ export interface ITransactionService<AccountType, RawTransactionType> {
   sendTransaction(
     transaction: TransactionDataType,
     account: AccountType
+  ): Promise<SuccessTransactionResponseType | ErrorTransactionResponseType>;
+  retryTransaction(
+    transaction: RetryTransactionDataType
   ): Promise<SuccessTransactionResponseType | ErrorTransactionResponseType>;
 }

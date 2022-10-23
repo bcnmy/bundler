@@ -3,7 +3,8 @@ import { RawTransactionType } from 'network-sdk/dist/types';
 import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
 import { IQueue } from '../../../../common/queue';
-import { EVMRawTransactionType, TransactionQueueMessageType } from '../../../../common/types';
+import { RetryTransactionQueueData } from '../../../../common/queue/types';
+import { EVMRawTransactionType } from '../../../../common/types';
 import { IEVMAccount } from '../account';
 import { ITransactionService } from '../transaction-service/interface/ITransactionService';
 import { IRetryTransactionService } from './interface/IRetryTransactionService';
@@ -18,7 +19,7 @@ IRetryTransactionService<IEVMAccount, EVMRawTransactionType> {
 
   chainId: number;
 
-  queue: IQueue<TransactionQueueMessageType>;
+  queue: IQueue<RetryTransactionQueueData>;
 
   constructor(evmRetryTransactionServiceParams: EVMRetryTransactionServiceParamsType) {
     const {
@@ -36,6 +37,20 @@ IRetryTransactionService<IEVMAccount, EVMRawTransactionType> {
     if (msg) {
       log.info(`Message received from retry transction queue on chainId: ${this.chainId}: ${JSON.stringify(msg.content.toString())}`);
       this.queue.ack(msg);
+      const transactionDataReceivedFromRetryQueue = JSON.parse(msg.content.toString());
+
+      const {
+        transactionHash,
+        transactionId,
+      } = transactionDataReceivedFromRetryQueue;
+
+      const transactionReceipt = await this.networkService.waitForTransaction(transactionHash);
+
+      if (transactionReceipt) {
+        log.info(`Transaction receipt receivied for transactionHash: ${transactionHash} and tranasctionId: ${transactionId}. Hence not retrying the transaction.`);
+      } else {
+        await this.transactionService.retryTransaction(transactionDataReceivedFromRetryQueue);
+      }
     } else {
       log.info(`Message not received on retry transaction queue on chainId: ${this.chainId}`);
     }

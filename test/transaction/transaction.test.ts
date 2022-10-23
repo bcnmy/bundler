@@ -108,10 +108,14 @@ describe('Transaction Service: Sending Transaction on chainId: 5', async () => {
     gasLimit: '0x249F0',
     transactionId: '0xabcdefg',
   };
+
+  // TODO // Set high gas price in cache
   const { transactionExecutionResponse } = await transactionService.sendTransaction(
     transactionData,
     evmAccount,
   );
+
+  // TODO // Delete high gas price value from cache
 
   it('Transaction hash is generated', async () => {
     expect((transactionExecutionResponse as ethers.providers.TransactionResponse).hash)
@@ -125,9 +129,18 @@ describe('Transaction Service: Sending Transaction on chainId: 5', async () => {
     expect(nonceDifference).toBe(1);
   });
 
-  it('Transaction is confirmed on chainf ')
+  it('Transaction is confirmed', async () => {
+    const transactionReceipt = await networkService.waitForTransaction(
+      (transactionExecutionResponse as ethers.providers.TransactionResponse).hash,
+    );
+    expect(transactionReceipt.status).toBe(1);
+  });
 
   it('Transaction Data is saved in database', async () => {
 
   });
+});
+
+describe('Transaction Service: Transaction should be retried and then confimred on chainId: 5', async () => {
+
 });

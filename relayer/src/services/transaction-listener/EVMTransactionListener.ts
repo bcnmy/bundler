@@ -3,6 +3,7 @@ import { ITransactionDAO } from '../../../../common/db';
 import { IQueue } from '../../../../common/interface';
 import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
+import { RetryTransactionQueueData } from '../../../../common/queue/types';
 import { EVMRawTransactionType, TransactionStatus } from '../../../../common/types';
 import { IEVMAccount } from '../account';
 import { ITransactionPublisher } from '../transaction-publisher';
@@ -27,7 +28,7 @@ ITransactionPublisher<TransactionMessageType> {
 
   transactionQueue: IQueue<TransactionMessageType>;
 
-  retryTransactionQueue: IQueue<TransactionMessageType>;
+  retryTransactionQueue: IQueue<RetryTransactionQueueData>;
 
   transactionDao: ITransactionDAO;
 
@@ -49,15 +50,21 @@ ITransactionPublisher<TransactionMessageType> {
     return true;
   }
 
-  async publishToRetryTransactionQueue(data: TransactionMessageType): Promise<boolean> {
+  async publishToRetryTransactionQueue(data: RetryTransactionQueueData): Promise<boolean> {
     await this.retryTransactionQueue.publish(data);
     return true;
   }
 
   private async onTransactionSuccess(onTranasctionSuccessParams: OnTransactionSuccessParamsType) {
     const {
-      transactionExecutionResponse, transactionId, relayerAddress, userAddress,
+      transactionExecutionResponse,
+      transactionId,
+      relayerAccount,
+      previousTransactionHash,
+      userAddress,
     } = onTranasctionSuccessParams;
+
+    const relayerAddress = relayerAccount.getPublicKey();
 
     log.info(`Publishing transaction data of transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
     await this.publishToTransactionQueue(transactionExecutionResponse);
@@ -68,14 +75,21 @@ ITransactionPublisher<TransactionMessageType> {
       transactionId,
       relayerAddress,
       TransactionStatus.SUCCESS,
+      previousTransactionHash,
       userAddress,
     );
   }
 
   private async onTransactionFailure(onTranasctionFailureParams: OnTransactionFailureParamsType) {
     const {
-      transactionExecutionResponse, transactionId, relayerAddress, userAddress,
+      transactionExecutionResponse,
+      transactionId,
+      relayerAccount,
+      previousTransactionHash,
+      userAddress,
     } = onTranasctionFailureParams;
+
+    const relayerAddress = relayerAccount.getPublicKey();
 
     log.info(`Publishing transaction data of transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
     await this.publishToTransactionQueue(transactionExecutionResponse);
@@ -86,6 +100,7 @@ ITransactionPublisher<TransactionMessageType> {
       transactionId,
       relayerAddress,
       TransactionStatus.FAILED,
+      previousTransactionHash,
       userAddress,
     );
   }
@@ -95,11 +110,13 @@ ITransactionPublisher<TransactionMessageType> {
     transactionId: string,
     relayerAddress: string,
     status: TransactionStatus,
+    previousTransactionHash: string | null,
     userAddress?: string,
   ): Promise<void> {
     const transactionDataToBeSaveInDatabase = {
       transactionId,
       transactionHash: transactionExecutionResponse.hash,
+      previousTransactionHash,
       status,
       rawTransaction: transactionExecutionResponse,
       chainId: this.chainId,
@@ -117,7 +134,11 @@ ITransactionPublisher<TransactionMessageType> {
     notifyTransactionListenerParams: NotifyTransactionListenerParamsType,
   ) {
     const {
-      transactionExecutionResponse, transactionId, relayerAddress, userAddress,
+      transactionExecutionResponse,
+      transactionId,
+      relayerAccount,
+      previousTransactionHash,
+      userAddress,
     } = notifyTransactionListenerParams;
 
     const tranasctionHash = transactionExecutionResponse.hash;
@@ -129,13 +150,21 @@ ITransactionPublisher<TransactionMessageType> {
     if (transactionReceipt.status === 1) {
       log.info(`Transaction is a success for transactionId: ${transactionId} on chainId ${this.chainId}`);
       this.onTransactionSuccess({
-        transactionExecutionResponse, transactionId, relayerAddress, userAddress,
+        transactionExecutionResponse,
+        transactionId,
+        relayerAccount,
+        previousTransactionHash,
+        userAddress,
       });
     }
     if (transactionReceipt.status === 0) {
       log.info(`Transaction is a failure for transactionId: ${transactionId} on chainId ${this.chainId}`);
       this.onTransactionFailure({
-        transactionExecutionResponse, transactionId, relayerAddress, userAddress,
+        transactionExecutionResponse,
+        transactionId,
+        relayerAccount,
+        previousTransactionHash,
+        userAddress,
       });
     }
   }
@@ -144,7 +173,11 @@ ITransactionPublisher<TransactionMessageType> {
     notifyTransactionListenerParams: NotifyTransactionListenerParamsType,
   ): Promise<TransactionListenerNotifyReturnType> {
     const {
-      transactionExecutionResponse, transactionId,
+      transactionExecutionResponse,
+      transactionId,
+      rawTransaction,
+      relayerAccount,
+      userAddress,
     } = notifyTransactionListenerParams;
     if (!transactionExecutionResponse) {
       log.error('transactionExecutionResponse is null');
@@ -154,7 +187,13 @@ ITransactionPublisher<TransactionMessageType> {
     // pop happens when expiry header expires
     // retry txn service will check for receipt
     log.info(`Publishing transaction data of transactionId: ${transactionId} to retry transaction queue on chainId ${this.chainId}`);
-    await this.publishToRetryTransactionQueue(transactionExecutionResponse);
+    await this.publishToRetryTransactionQueue({
+      relayerAccount,
+      transactionHash: transactionExecutionResponse.hash,
+      transactionId,
+      rawTransaction: rawTransaction as EVMRawTransactionType,
+      userAddress: userAddress as string,
+    });
     // wait for transaction
     this.waitForTransaction(notifyTransactionListenerParams);
     return {

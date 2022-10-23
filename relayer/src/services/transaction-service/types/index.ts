@@ -2,8 +2,9 @@ import { ITransactionDAO } from '../../../../../common/db';
 import { IGasPrice } from '../../../../../common/gas-price';
 import { GasPriceType } from '../../../../../common/gas-price/types';
 import { INetworkService } from '../../../../../common/network';
+import { RetryTransactionQueueData } from '../../../../../common/queue/types';
 import { EVMRawTransactionType } from '../../../../../common/types';
-import { IEVMAccount } from '../../account';
+import { EVMAccount, IEVMAccount } from '../../account';
 import { INonceManager } from '../../nonce-manager';
 import { ITransactionListener } from '../../transaction-listener';
 import { TransactionListenerNotifyReturnType } from '../../transaction-listener/types';
@@ -61,7 +62,9 @@ export type CreateRawTransactionReturnType = EVMRawTransactionType;
 
 export type ExecuteTransactionParamsType = {
   rawTransaction: EVMRawTransactionType,
-  account: IEVMAccount
+  account: EVMAccount
 };
 
 export type EVMTransactionResponseType = TransactionResponseType;
+
+export type RetryTransactionDataType = RetryTransactionQueueData;

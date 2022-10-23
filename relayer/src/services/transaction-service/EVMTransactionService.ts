@@ -1,9 +1,9 @@
 import { ethers } from 'ethers';
 import { IGasPrice } from '../../../../common/gas-price';
 import { logger } from '../../../../common/log-config';
-import { INetworkService } from '../../../../common/network';
+import { EVMNetworkService, INetworkService, Type0TransactionGasPriceType } from '../../../../common/network';
 import { EVMRawTransactionType } from '../../../../common/types';
-import { IEVMAccount } from '../account';
+import { EVMAccount, IEVMAccount } from '../account';
 import { INonceManager } from '../nonce-manager';
 import { ITransactionListener } from '../transaction-listener';
 import { ITransactionService } from './interface/ITransactionService';
@@ -13,6 +13,7 @@ import {
   ErrorTransactionResponseType,
   EVMTransactionServiceParamsType,
   ExecuteTransactionParamsType,
+  RetryTransactionDataType,
   SuccessTransactionResponseType,
   TransactionDataType,
 } from './types';
@@ -98,7 +99,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
 
   async sendTransaction(
     transactionData: TransactionDataType,
-    account: IEVMAccount,
+    account: EVMAccount,
   ): Promise<SuccessTransactionResponseType | ErrorTransactionResponseType> {
     const relayerAddress = account.getPublicKey();
     const {
@@ -133,7 +134,62 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       const transactionListenerNotifyResponse = await this.transactionListener.notify({
         transactionExecutionResponse,
         transactionId: transactionId as string,
-        relayerAddress,
+        relayerAccount: account,
+        previousTransactionHash: null,
+        rawTransaction,
+        userAddress,
+      });
+
+      return {
+        state: 'success',
+        code: 200,
+        ...transactionListenerNotifyResponse,
+      };
+    } catch (error) {
+      log.info(`Error while sending transaction: ${error}`);
+      return {
+        state: 'failed',
+        code: 500,
+        error: JSON.stringify(error),
+        ...{
+          isTransactionRelayed: false,
+          transactionExecutionResponse: null,
+        },
+      };
+    }
+  }
+
+  async retryTransaction(
+    retryTransactionData: RetryTransactionDataType,
+  ): Promise<SuccessTransactionResponseType | ErrorTransactionResponseType> {
+    try {
+      const {
+        relayerAccount,
+        transactionHash,
+        transactionId,
+        rawTransaction,
+        userAddress,
+      } = retryTransactionData;
+
+      // TODO // Add EIP 1559
+      const bumpedUpGasPrice = EVMNetworkService.getBumpedUpGasPrice(
+        { gasPrice: rawTransaction.gasPrice } as Type0TransactionGasPriceType,
+        0.5,
+      );
+
+      rawTransaction.gasPrice = bumpedUpGasPrice.gasPrice;
+      const retryTransactionExecutionResponse = await this.executeTransaction({
+        rawTransaction,
+        account: relayerAccount,
+      });
+
+      log.info(`Notifying transaction listener for transactionId: ${transactionId} on chainId ${this.chainId}`);
+      const transactionListenerNotifyResponse = await this.transactionListener.notify({
+        transactionExecutionResponse: retryTransactionExecutionResponse,
+        transactionId: transactionId as string,
+        relayerAccount,
+        rawTransaction,
+        previousTransactionHash: transactionHash,
         userAddress,
       });
 

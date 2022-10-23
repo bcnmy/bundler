@@ -2,13 +2,13 @@ import amqp, { Channel, ConsumeMessage, Replies } from 'amqplib';
 import { config } from '../../config';
 import { logger } from '../log-config';
 import { IQueue } from './interface/IQueue';
-import { TransactionMessageType } from './types';
+import { RetryTransactionQueueData } from './types';
 
 const log = logger(module);
 
 const { queueUrl } = config;
 
-export class RetryTransactionHandlerQueue implements IQueue<TransactionMessageType> {
+export class RetryTransactionHandlerQueue implements IQueue<RetryTransactionQueueData> {
   private channel!: Channel;
 
   private exchangeName = 'retry_transaction_queue_exchange';
@@ -39,7 +39,7 @@ export class RetryTransactionHandlerQueue implements IQueue<TransactionMessageTy
     }
   }
 
-  async publish(data: TransactionMessageType) {
+  async publish(data: RetryTransactionQueueData) {
     const key = `retry_chainid.${this.chainId}`;
     log.info(`Publishing data to retry queue on chainId: ${this.chainId} with interval ${config.chains.retryTransactionInterval[this.chainId]} and key ${key}`);
     if (this.channel) {
