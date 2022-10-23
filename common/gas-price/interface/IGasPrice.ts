@@ -19,4 +19,8 @@ export interface IGasPrice {
   setMaxPriorityFeeGasPrice(gasType: GasPriceType, price: string): Promise<void>
   getMaxPriorityFeeGasPrice(gasType: GasPriceType): Promise<string>
 
+  getBumpedUpGasPrice(
+    pastGasPrice: NetworkBasedGasPriceType,
+    bumpingPercentage: number
+  ): NetworkBasedGasPriceType
 }

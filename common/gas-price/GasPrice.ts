@@ -1,4 +1,5 @@
 import * as ethers from 'ethers';
+import { BigNumber } from 'ethers';
 import { EVMAccount } from '../../relayer/src/services/account/EVMAccount';
 import { ICacheService } from '../cache';
 import { logger } from '../log-config';
@@ -50,7 +51,74 @@ export class GasPrice implements IGasPrice {
       };
     } else {
       result = await this.cacheService.get(this.getGasPriceKey(gasType));
+      // TODO // If not found in cache get from network
     }
+    return result;
+  }
+
+  getBumpedUpGasPrice(
+    pastGasPrice: NetworkBasedGasPriceType,
+    bumpingPercentage: number,
+  ): NetworkBasedGasPriceType {
+    let result;
+    if (this.EIP1559SupportedNetworks.includes(this.chainId)) {
+      let resubmitMaxFeePerGas: number;
+      let resubmitMaxPriorityFeePerGas: number;
+      const { maxPriorityFeePerGas, maxFeePerGas } = pastGasPrice;
+      const pastMaxPriorityFeePerGas = maxPriorityFeePerGas;
+      const pastMaxFeePerGas = maxFeePerGas;
+
+      const bumpedUpMaxPriorityFeePerGas = ethers.utils.hexValue(
+        BigNumber.from(maxPriorityFeePerGas)
+          .mul(bumpingPercentage + 100)
+          .div(100),
+      );
+
+      const bumpedUpMaxFeePerGas = ethers.utils.hexValue(
+        BigNumber.from(pastMaxFeePerGas)
+          .mul(bumpingPercentage + 100)
+          .div(100),
+      );
+
+      if (
+        parseInt(bumpedUpMaxPriorityFeePerGas as string, 10)
+         < parseInt(pastMaxPriorityFeePerGas as string, 10) * 1.11) {
+        resubmitMaxPriorityFeePerGas = parseInt(pastMaxPriorityFeePerGas as string, 10) * 1.11;
+      } else {
+        resubmitMaxPriorityFeePerGas = parseInt(pastMaxPriorityFeePerGas as string, 10);
+      }
+
+      if (
+        parseInt(bumpedUpMaxFeePerGas as string, 10)
+         < parseInt(pastMaxFeePerGas as string, 10) * 1.11) {
+        resubmitMaxFeePerGas = parseInt(pastMaxFeePerGas as string, 10) * 1.11;
+      } else {
+        resubmitMaxFeePerGas = parseInt(pastMaxFeePerGas as string, 10);
+      }
+
+      result = {
+        maxFeePerGas: ethers.BigNumber.from(resubmitMaxPriorityFeePerGas.toString()).toHexString(),
+        maxPriorityFeePerGas: ethers.BigNumber.from(resubmitMaxFeePerGas.toString()).toHexString(),
+      };
+    }
+    let resubmitGasPrice: number;
+    const bumpedUpPrice = ethers.utils.hexValue(
+      BigNumber.from(pastGasPrice)
+        .mul(bumpingPercentage + 100)
+        .div(100),
+    );
+
+    if (
+      parseInt(bumpedUpPrice as string, 10)
+           < 1.1 * parseInt(pastGasPrice as string, 10)
+    ) {
+      resubmitGasPrice = 1.1 * parseInt(pastGasPrice as string, 10);
+    } else {
+      resubmitGasPrice = parseInt(bumpedUpPrice as string, 10);
+    }
+
+    result = ethers.BigNumber.from(resubmitGasPrice.toString()).toHexString();
+
     return result;
   }
 

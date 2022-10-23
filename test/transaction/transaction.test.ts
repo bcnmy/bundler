@@ -108,6 +108,9 @@ describe('Transaction Service: Sending Transaction on chainId: 5', async () => {
     gasLimit: '0x249F0',
     transactionId: '0xabcdefg',
   };
+
+  // TODO // Set high gas price value from cache
+
   const { transactionExecutionResponse, transactionId } = await transactionService.sendTransaction(
     transactionData,
     evmAccount,
@@ -143,8 +146,4 @@ describe('Transaction Service: Sending Transaction on chainId: 5', async () => {
       (transactionExecutionResponse as ethers.providers.TransactionResponse).hash,
     );
   });
-});
-
-describe('Transaction Service: Transaction should be retried and then confimred on chainId: 5', async () => {
-
 });

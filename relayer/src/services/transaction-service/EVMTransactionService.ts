@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 import { IGasPrice } from '../../../../common/gas-price';
 import { logger } from '../../../../common/log-config';
-import { EVMNetworkService, INetworkService, Type0TransactionGasPriceType } from '../../../../common/network';
+import { INetworkService } from '../../../../common/network';
 import { EVMRawTransactionType } from '../../../../common/types';
 import { EVMAccount, IEVMAccount } from '../account';
 import { INonceManager } from '../nonce-manager';
@@ -143,6 +143,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       return {
         state: 'success',
         code: 200,
+        transactionId,
         ...transactionListenerNotifyResponse,
       };
     } catch (error) {
@@ -151,6 +152,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         state: 'failed',
         code: 500,
         error: JSON.stringify(error),
+        transactionId,
         ...{
           isTransactionRelayed: false,
           transactionExecutionResponse: null,
@@ -162,19 +164,18 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
   async retryTransaction(
     retryTransactionData: RetryTransactionDataType,
   ): Promise<SuccessTransactionResponseType | ErrorTransactionResponseType> {
-    try {
-      const {
-        relayerAccount,
-        transactionHash,
-        transactionId,
-        rawTransaction,
-        userAddress,
-      } = retryTransactionData;
+    const {
+      relayerAccount,
+      transactionHash,
+      transactionId,
+      rawTransaction,
+      userAddress,
+    } = retryTransactionData;
 
-      // TODO // Add EIP 1559
-      const bumpedUpGasPrice = EVMNetworkService.getBumpedUpGasPrice(
-        { gasPrice: rawTransaction.gasPrice } as Type0TransactionGasPriceType,
-        0.5,
+    try {
+      const bumpedUpGasPrice = this.gasPriceService.getBumpedUpGasPrice(
+        
+        ,
       );
 
       rawTransaction.gasPrice = bumpedUpGasPrice.gasPrice;

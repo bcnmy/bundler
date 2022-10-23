@@ -33,10 +33,10 @@ export type AccessListItem = {
   storageKeys: string[];
 };
 
-export type NetworkBasedGasPriceType = string | {
+export type NetworkBasedGasPriceType = {
   maxPriorityFeePerGas: string;
   maxFeePerGas: string;
-};
+} | string;
 
 export type EVMRawTransactionType = {
   from: string;
