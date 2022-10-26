@@ -5,17 +5,17 @@ import { INetworkService } from '../../../../common/network';
 import { IQueue } from '../../../../common/queue';
 import { RetryTransactionQueueData } from '../../../../common/queue/types';
 import { EVMRawTransactionType } from '../../../../common/types';
-import { IEVMAccount } from '../account';
+import { EVMAccount } from '../account';
 import { ITransactionService } from '../transaction-service/interface/ITransactionService';
 import { IRetryTransactionService } from './interface/IRetryTransactionService';
 import { EVMRetryTransactionServiceParamsType } from './types';
 
 const log = logger(module);
 export class EVMRetryTransactionService implements
-IRetryTransactionService<IEVMAccount, EVMRawTransactionType> {
-  transactionService: ITransactionService<IEVMAccount, RawTransactionType>;
+IRetryTransactionService<EVMAccount, EVMRawTransactionType> {
+  transactionService: ITransactionService<EVMAccount, RawTransactionType>;
 
-  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
+  networkService: INetworkService<EVMAccount, EVMRawTransactionType>;
 
   chainId: number;
 
@@ -38,17 +38,21 @@ IRetryTransactionService<IEVMAccount, EVMRawTransactionType> {
       log.info(`Message received from retry transction queue on chainId: ${this.chainId}: ${JSON.stringify(msg.content.toString())}`);
       this.queue.ack(msg);
       const transactionDataReceivedFromRetryQueue = JSON.parse(msg.content.toString());
-
+      // TODO // Account loses its identity
+      console.log('//// RELAYER ADDRESS', transactionDataReceivedFromRetryQueue.account.getPublicKey());
       const {
         transactionHash,
         transactionId,
       } = transactionDataReceivedFromRetryQueue;
 
-      const transactionReceipt = await this.networkService.waitForTransaction(transactionHash);
+      log.info(`Checking transaction status of transactionHash: ${transactionHash} with transactionId: ${transactionId} on chaindId: ${this.chainId}`);
+      const transactionReceipt = await this.networkService.getTransactionReceipt(transactionHash);
+      log.info(`Transaction receipt for transactionHash: ${transactionHash} with transactionId: ${transactionId} on chainId: ${this.chainId} is ${JSON.stringify(transactionReceipt)}`);
 
       if (transactionReceipt) {
         log.info(`Transaction receipt receivied for transactionHash: ${transactionHash} and tranasctionId: ${transactionId}. Hence not retrying the transaction.`);
       } else {
+        log.info(`Transaction receipt not receivied for transactionHash: ${transactionHash} and tranasctionId: ${transactionId}. Hence retrying the transaction.`);
         await this.transactionService.retryTransaction(transactionDataReceivedFromRetryQueue);
       }
     } else {

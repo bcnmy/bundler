@@ -3,7 +3,7 @@ import { IGasPrice } from '../../../../common/gas-price';
 import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
 import { EVMRawTransactionType } from '../../../../common/types';
-import { EVMAccount, IEVMAccount } from '../account';
+import { EVMAccount } from '../account';
 import { INonceManager } from '../nonce-manager';
 import { ITransactionListener } from '../transaction-listener';
 import { ITransactionService } from './interface/ITransactionService';
@@ -21,14 +21,14 @@ import {
 const log = logger(module);
 
 export class EVMTransactionService implements
-ITransactionService<IEVMAccount, EVMRawTransactionType> {
+ITransactionService<EVMAccount, EVMRawTransactionType> {
   chainId: number;
 
-  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
+  networkService: INetworkService<EVMAccount, EVMRawTransactionType>;
 
-  transactionListener: ITransactionListener<IEVMAccount, EVMRawTransactionType>;
+  transactionListener: ITransactionListener<EVMAccount, EVMRawTransactionType>;
 
-  nonceManager: INonceManager<IEVMAccount, EVMRawTransactionType>;
+  nonceManager: INonceManager<EVMAccount, EVMRawTransactionType>;
 
   gasPriceService: IGasPrice;
 
@@ -131,10 +131,11 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       log.info(`Incremented nonce for account: ${relayerAddress} on chainId ${this.chainId}`);
 
       log.info(`Notifying transaction listener for transactionId: ${transactionId} on chainId ${this.chainId}`);
+
       const transactionListenerNotifyResponse = await this.transactionListener.notify({
         transactionExecutionResponse,
         transactionId: transactionId as string,
-        relayerAccount: account,
+        account,
         previousTransactionHash: null,
         rawTransaction,
         userAddress,
@@ -165,30 +166,32 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     retryTransactionData: RetryTransactionDataType,
   ): Promise<SuccessTransactionResponseType | ErrorTransactionResponseType> {
     const {
-      relayerAccount,
+      account,
       transactionHash,
       transactionId,
       rawTransaction,
       userAddress,
     } = retryTransactionData;
-
     try {
+      // TODO // Make it generel and EIP 1559 specific and get bump up from config
       const bumpedUpGasPrice = this.gasPriceService.getBumpedUpGasPrice(
-        
-        ,
+        rawTransaction.gasPrice as string,
+        50,
       );
 
-      rawTransaction.gasPrice = bumpedUpGasPrice.gasPrice;
+      rawTransaction.gasPrice = bumpedUpGasPrice as string;
+      console.log(typeof account);
+      log.info(`Executing retry transaction for transactionId: ${transactionId}`);
       const retryTransactionExecutionResponse = await this.executeTransaction({
         rawTransaction,
-        account: relayerAccount,
+        account,
       });
 
       log.info(`Notifying transaction listener for transactionId: ${transactionId} on chainId ${this.chainId}`);
       const transactionListenerNotifyResponse = await this.transactionListener.notify({
         transactionExecutionResponse: retryTransactionExecutionResponse,
         transactionId: transactionId as string,
-        relayerAccount,
+        account,
         rawTransaction,
         previousTransactionHash: transactionHash,
         userAddress,
@@ -201,7 +204,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         ...transactionListenerNotifyResponse,
       };
     } catch (error) {
-      log.info(`Error while sending transaction: ${error}`);
+      log.info(`Error while retrying transaction: ${error} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
       return {
         state: 'failed',
         code: 500,

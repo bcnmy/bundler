@@ -5,7 +5,7 @@ import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
 import { RetryTransactionQueueData } from '../../../../common/queue/types';
 import { EVMRawTransactionType, TransactionStatus } from '../../../../common/types';
-import { IEVMAccount } from '../account';
+import { EVMAccount } from '../account';
 import { ITransactionPublisher } from '../transaction-publisher';
 import { ITransactionListener } from './interface/ITransactionListener';
 import {
@@ -20,11 +20,11 @@ import {
 const log = logger(module);
 
 export class EVMTransactionListener implements
-ITransactionListener<IEVMAccount, EVMRawTransactionType>,
+ITransactionListener<EVMAccount, EVMRawTransactionType>,
 ITransactionPublisher<TransactionMessageType> {
   chainId: number;
 
-  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
+  networkService: INetworkService<EVMAccount, EVMRawTransactionType>;
 
   transactionQueue: IQueue<TransactionMessageType>;
 
@@ -59,12 +59,12 @@ ITransactionPublisher<TransactionMessageType> {
     const {
       transactionExecutionResponse,
       transactionId,
-      relayerAccount,
+      account,
       previousTransactionHash,
       userAddress,
     } = onTranasctionSuccessParams;
 
-    const relayerAddress = relayerAccount.getPublicKey();
+    const relayerAddress = account.getPublicKey();
 
     log.info(`Publishing transaction data of transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
     await this.publishToTransactionQueue(transactionExecutionResponse);
@@ -84,12 +84,12 @@ ITransactionPublisher<TransactionMessageType> {
     const {
       transactionExecutionResponse,
       transactionId,
-      relayerAccount,
+      account,
       previousTransactionHash,
       userAddress,
     } = onTranasctionFailureParams;
 
-    const relayerAddress = relayerAccount.getPublicKey();
+    const relayerAddress = account.getPublicKey();
 
     log.info(`Publishing transaction data of transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
     await this.publishToTransactionQueue(transactionExecutionResponse);
@@ -136,7 +136,7 @@ ITransactionPublisher<TransactionMessageType> {
     const {
       transactionExecutionResponse,
       transactionId,
-      relayerAccount,
+      account,
       previousTransactionHash,
       userAddress,
     } = notifyTransactionListenerParams;
@@ -152,7 +152,7 @@ ITransactionPublisher<TransactionMessageType> {
       this.onTransactionSuccess({
         transactionExecutionResponse,
         transactionId,
-        relayerAccount,
+        account,
         previousTransactionHash,
         userAddress,
       });
@@ -162,7 +162,7 @@ ITransactionPublisher<TransactionMessageType> {
       this.onTransactionFailure({
         transactionExecutionResponse,
         transactionId,
-        relayerAccount,
+        account,
         previousTransactionHash,
         userAddress,
       });
@@ -176,7 +176,7 @@ ITransactionPublisher<TransactionMessageType> {
       transactionExecutionResponse,
       transactionId,
       rawTransaction,
-      relayerAccount,
+      account,
       userAddress,
     } = notifyTransactionListenerParams;
     if (!transactionExecutionResponse) {
@@ -188,7 +188,7 @@ ITransactionPublisher<TransactionMessageType> {
     // retry txn service will check for receipt
     log.info(`Publishing transaction data of transactionId: ${transactionId} to retry transaction queue on chainId ${this.chainId}`);
     await this.publishToRetryTransactionQueue({
-      relayerAccount,
+      account,
       transactionHash: transactionExecutionResponse.hash,
       transactionId,
       rawTransaction: rawTransaction as EVMRawTransactionType,

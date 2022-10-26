@@ -5,7 +5,7 @@ import { IQueue } from '../../../../common/queue';
 import {
   AATransactionMessageType, EntryPointMapType, EVMRawTransactionType, TransactionType,
 } from '../../../../common/types';
-import { IEVMAccount } from '../account';
+import { EVMAccount } from '../account';
 import { IRelayerManager } from '../relayer-manager';
 import { ITransactionService } from '../transaction-service';
 import { ITransactionConsumer } from './interface/ITransactionConsumer';
@@ -13,7 +13,7 @@ import { AAConsumerParamsType } from './types';
 
 const log = logger(module);
 export class AAConsumer implements
-ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
+ITransactionConsumer<EVMAccount, EVMRawTransactionType> {
   private transactionType: TransactionType = TransactionType.AA;
 
   private queue: IQueue<AATransactionMessageType>;
@@ -22,9 +22,9 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
 
   entryPointMap: EntryPointMapType;
 
-  relayerManager: IRelayerManager<IEVMAccount, EVMRawTransactionType>;
+  relayerManager: IRelayerManager<EVMAccount, EVMRawTransactionType>;
 
-  transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>;
+  transactionService: ITransactionService<EVMAccount, EVMRawTransactionType>;
 
   constructor(
     aaConsumerParams: AAConsumerParamsType,

@@ -62,7 +62,7 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
           case RpcMethod.estimateGas:
             return await this.ethersProvider.estimateGas(params);
           case RpcMethod.getTransactionReceipt:
-            return await this.ethersProvider.getTransactionReceipt(params.transactionHash);
+            return await this.ethersProvider.getTransactionReceipt(params);
           case RpcMethod.getTransactionCount:
             if (params.pendingNonce === true) {
               return await this.ethersProvider.getTransactionCount(params.address, 'pending');

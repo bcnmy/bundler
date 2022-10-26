@@ -64,7 +64,7 @@ export class GasPrice implements IGasPrice {
     if (this.EIP1559SupportedNetworks.includes(this.chainId)) {
       let resubmitMaxFeePerGas: number;
       let resubmitMaxPriorityFeePerGas: number;
-      const { maxPriorityFeePerGas, maxFeePerGas } = pastGasPrice;
+      const { maxPriorityFeePerGas, maxFeePerGas } = pastGasPrice as any;
       const pastMaxPriorityFeePerGas = maxPriorityFeePerGas;
       const pastMaxFeePerGas = maxFeePerGas;
 
@@ -102,23 +102,22 @@ export class GasPrice implements IGasPrice {
       };
     }
     let resubmitGasPrice: number;
+
     const bumpedUpPrice = ethers.utils.hexValue(
       BigNumber.from(pastGasPrice)
         .mul(bumpingPercentage + 100)
         .div(100),
     );
-
     if (
-      parseInt(bumpedUpPrice as string, 10)
-           < 1.1 * parseInt(pastGasPrice as string, 10)
+      Number(bumpedUpPrice)
+           < 1.1 * Number(pastGasPrice)
     ) {
-      resubmitGasPrice = 1.1 * parseInt(pastGasPrice as string, 10);
+      resubmitGasPrice = 1.1 * Number(pastGasPrice);
     } else {
-      resubmitGasPrice = parseInt(bumpedUpPrice as string, 10);
+      resubmitGasPrice = Number(bumpedUpPrice);
     }
 
     result = ethers.BigNumber.from(resubmitGasPrice.toString()).toHexString();
-
     return result;
   }
 

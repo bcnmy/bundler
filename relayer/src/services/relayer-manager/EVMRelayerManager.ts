@@ -10,7 +10,7 @@ import { INetworkService } from '../../../../common/network';
 import { EVMRawTransactionType } from '../../../../common/types';
 import { config } from '../../../../config';
 import { generateTransactionId } from '../../../../server/src/utils/tx-id-generator';
-import { EVMAccount, IEVMAccount } from '../account';
+import { EVMAccount } from '../account';
 import { INonceManager } from '../nonce-manager';
 import { EVMRelayerMetaDataType, IRelayerQueue } from '../relayer-queue';
 import { ITransactionService } from '../transaction-service/interface/ITransactionService';
@@ -69,9 +69,9 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount, EVMRawTran
 
   transactionProcessingRelayerMap: Record<string, EVMRelayerMetaDataType> = {};
 
-  nonceManager: INonceManager<IEVMAccount, EVMRawTransactionType>;
+  nonceManager: INonceManager<EVMAccount, EVMRawTransactionType>;
 
-  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
+  networkService: INetworkService<EVMAccount, EVMRawTransactionType>;
 
   gasPriceService: IGasPrice;
 

@@ -1,4 +1,4 @@
-import { IEVMAccount } from '../../../relayer/src/services/account';
+import { EVMAccount } from '../../../relayer/src/services/account';
 import { ICacheService } from '../../cache';
 import { INetworkService } from '../../network';
 import { EVMRawTransactionType, NetworkBasedGasPriceType } from '../../types';
@@ -7,7 +7,7 @@ import { GasPriceType } from '../types';
 // TODO // DO we differentiate Gas price interface on EVM/Non EVM
 export interface IGasPrice {
   chainId: number;
-  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
+  networkService: INetworkService<EVMAccount, EVMRawTransactionType>;
   cacheService: ICacheService;
 
   setGasPrice(gasType: GasPriceType, price: string): Promise<void>

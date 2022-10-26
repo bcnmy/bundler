@@ -5,7 +5,7 @@ import { EVMRawTransactionType } from '../../types';
 export type TransactionMessageType = ethers.providers.TransactionResponse;
 
 export type RetryTransactionQueueData = {
-  relayerAccount: EVMAccount,
+  account: EVMAccount,
   transactionHash: string,
   transactionId: string,
   rawTransaction: EVMRawTransactionType,
