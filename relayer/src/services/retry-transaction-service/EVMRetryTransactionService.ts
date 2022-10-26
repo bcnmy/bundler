@@ -39,7 +39,6 @@ IRetryTransactionService<EVMAccount, EVMRawTransactionType> {
       this.queue.ack(msg);
       const transactionDataReceivedFromRetryQueue = JSON.parse(msg.content.toString());
       // TODO // Account loses its identity
-      console.log('//// RELAYER ADDRESS', transactionDataReceivedFromRetryQueue.account.getPublicKey());
       const {
         transactionHash,
         transactionId,

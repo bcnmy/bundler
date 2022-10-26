@@ -180,7 +180,6 @@ ITransactionService<EVMAccount, EVMRawTransactionType> {
       );
 
       rawTransaction.gasPrice = bumpedUpGasPrice as string;
-      console.log(typeof account);
       log.info(`Executing retry transaction for transactionId: ${transactionId}`);
       const retryTransactionExecutionResponse = await this.executeTransaction({
         rawTransaction,
