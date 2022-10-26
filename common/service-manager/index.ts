@@ -3,18 +3,25 @@ import { ethers } from 'ethers';
 import { config } from '../../config';
 import { EVMAccount } from '../../relayer/src/services/account';
 import {
-  AAConsumer, CCMPConsumer, SCWConsumer, SocketConsumer,
+  AAConsumer,
+  CCMPConsumer,
+  SCWConsumer,
+  SocketConsumer,
 } from '../../relayer/src/services/consumer';
 import { EVMNonceManager } from '../../relayer/src/services/nonce-manager';
-import {
-  EVMRelayerManager,
-  IRelayerManager,
-} from '../../relayer/src/services/relayer-manager';
+import { EVMRelayerManager, IRelayerManager } from '../../relayer/src/services/relayer-manager';
 import { EVMRelayerQueue } from '../../relayer/src/services/relayer-queue';
 import { EVMRetryTransactionService } from '../../relayer/src/services/retry-transaction-service';
 import { EVMTransactionListener } from '../../relayer/src/services/transaction-listener';
 import { EVMTransactionService } from '../../relayer/src/services/transaction-service';
 import { FeeOption } from '../../server/src/services';
+import { CCMPService } from '../../server/src/services/ccmp/ccmp-service';
+import {
+  AxelarRouterService,
+  HyperlaneRouterService,
+  WormholeRouterService,
+} from '../../server/src/services/ccmp/router-service';
+import { ICCMPRouterService } from '../../server/src/services/ccmp/types';
 import { RedisCacheService } from '../cache';
 import { Mongo, TransactionDAO } from '../db';
 import { GasPriceManager } from '../gas-price';
@@ -34,6 +41,7 @@ import { TenderlySimulationService } from '../simulation/external-simulation';
 import { CMCTokenPriceManager } from '../token-price';
 import {
   AATransactionMessageType,
+  CCMPRouterName,
   CCMPTransactionMessageType,
   EVMRawTransactionType,
   SCWTransactionMessageType,
@@ -51,7 +59,7 @@ const relayerManagerTransactionTypeNameMap = {
 
 const routeTransactionToRelayerMap: {
   [chainId: number]: {
-    [transactionType: string]: AARelayService | SCWRelayService;
+    [transactionType: string]: AARelayService | SCWRelayService | CCMPRelayService;
   };
 } = {};
 
@@ -69,10 +77,26 @@ const scwSimulationServiceMap: {
 
 const entryPointMap: {
   [chainId: number]: Array<{
-    address: string,
-    entryPointContract: ethers.Contract
-  }>
+    address: string;
+    entryPointContract: ethers.Contract;
+  }>;
 } = {};
+
+const ccmpServiceMap: {
+  [chainId: number]: CCMPService;
+} = {};
+
+const ccmpRouterMap: {
+  [chainId: number]: {
+    [key in CCMPRouterName]?: ICCMPRouterService;
+  };
+} = {};
+
+const ccmpRouterServiceClassMap = {
+  [CCMPRouterName.WORMHOLE]: WormholeRouterService,
+  [CCMPRouterName.AXELAR]: AxelarRouterService,
+  [CCMPRouterName.HYPERLANE]: HyperlaneRouterService,
+};
 
 const dbInstance = Mongo.getInstance();
 const cacheService = RedisCacheService.getInstance();
@@ -80,9 +104,9 @@ const cacheService = RedisCacheService.getInstance();
 const { supportedNetworks, supportedTransactionType } = config;
 
 const EVMRelayerManagerMap: {
-  [name: string] : {
+  [name: string]: {
     [chainId: number]: IRelayerManager<EVMAccount, EVMRawTransactionType>;
-  }
+  };
 } = {};
 
 const transactionDao = new TransactionDAO();
@@ -91,7 +115,7 @@ const socketConsumerMap: any = {};
 const retryTransactionSerivceMap: any = {};
 const transactionListenerMap: any = {};
 const retryTransactionQueueMap: {
-  [key: number]: RetryTransactionHandlerQueue,
+  [key: number]: RetryTransactionHandlerQueue;
 } = {};
 
 (async () => {
@@ -183,7 +207,7 @@ const retryTransactionQueueMap: {
       },
     });
     retryTransactionQueueMap[chainId].consume(
-      retryTransactionSerivceMap[chainId].onMessageReceived,
+      retryTransactionSerivceMap[chainId].onMessageReceived
     );
 
     const relayerQueue = new EVMRelayerQueue([]);
@@ -203,18 +227,15 @@ const retryTransactionQueueMap: {
           relayerSeed: relayerManager.relayerSeed,
           minRelayerCount: relayerManager.minRelayerCount[chainId],
           maxRelayerCount: relayerManager.maxRelayerCount[chainId],
-          inactiveRelayerCountThreshold:
-            relayerManager.inactiveRelayerCountThreshold[chainId],
+          inactiveRelayerCountThreshold: relayerManager.inactiveRelayerCountThreshold[chainId],
           pendingTransactionCountThreshold:
             relayerManager.pendingTransactionCountThreshold[chainId],
-          newRelayerInstanceCount:
-            relayerManager.newRelayerInstanceCount[chainId],
-          fundingBalanceThreshold:
-            relayerManager.fundingBalanceThreshold[chainId],
+          newRelayerInstanceCount: relayerManager.newRelayerInstanceCount[chainId],
+          fundingBalanceThreshold: relayerManager.fundingBalanceThreshold[chainId],
           fundingRelayerAmount: relayerManager.fundingRelayerAmount[chainId],
           ownerAccountDetails: new EVMAccount(
             relayerManager.ownerAccountDetails[chainId].publicKey,
-            relayerManager.ownerAccountDetails[chainId].privateKey,
+            relayerManager.ownerAccountDetails[chainId].privateKey
           ),
           gasLimitMap: relayerManager.gasLimitMap,
         },
@@ -240,8 +261,8 @@ const retryTransactionQueueMap: {
     feeOptionMap[chainId] = feeOptionService;
     // for each network get transaction type
     for (const type of supportedTransactionType[chainId]) {
-      const aaRelayerManager = EVMRelayerManagerMap[
-        relayerManagerTransactionTypeNameMap[type]][chainId];
+      const aaRelayerManager =
+        EVMRelayerManagerMap[relayerManagerTransactionTypeNameMap[type]][chainId];
       if (!aaRelayerManager) {
         throw new Error(`Relayer manager not found for ${type}`);
       }
@@ -266,22 +287,22 @@ const retryTransactionQueueMap: {
         const aaRelayService = new AARelayService(aaQueue);
         routeTransactionToRelayerMap[chainId][type] = aaRelayService;
 
-        aaSimulatonServiceMap[chainId] = new AASimulationService(
-          networkService,
-        );
+        aaSimulatonServiceMap[chainId] = new AASimulationService(networkService);
 
         const { entryPointData } = config;
 
-        for (let entryPointIndex = 0;
+        for (
+          let entryPointIndex = 0;
           entryPointIndex < entryPointData[chainId].length;
-          entryPointIndex += 1) {
+          entryPointIndex += 1
+        ) {
           const entryPoint = entryPointData[chainId][entryPointIndex];
 
           entryPointMap[chainId].push({
             address: entryPoint.address,
             entryPointContract: networkService.getContract(
               JSON.stringify(entryPoint.abi),
-              entryPoint.address,
+              entryPoint.address
             ),
           });
         }
@@ -292,8 +313,8 @@ const retryTransactionQueueMap: {
         });
         await scwQueue.connect();
 
-        const scwRelayerManager = EVMRelayerManagerMap[
-          relayerManagerTransactionTypeNameMap[type]][chainId];
+        const scwRelayerManager =
+          EVMRelayerManagerMap[relayerManagerTransactionTypeNameMap[type]][chainId];
         if (!scwRelayerManager) {
           throw new Error(`Relayer manager not found for ${type}`);
         }
@@ -318,7 +339,7 @@ const retryTransactionQueueMap: {
         });
         scwSimulationServiceMap[chainId] = new SCWSimulationService(
           networkService,
-          tenderlySimulationService,
+          tenderlySimulationService
         );
       } else if (type === TransactionType.CROSS_CHAIN) {
         // queue for ccmp
@@ -327,8 +348,8 @@ const retryTransactionQueueMap: {
         });
         await ccmpQueue.connect();
 
-        const ccmpRelayerManager = EVMRelayerManagerMap[
-          relayerManagerTransactionTypeNameMap[type]][chainId];
+        const ccmpRelayerManager =
+          EVMRelayerManagerMap[relayerManagerTransactionTypeNameMap[type]][chainId];
         if (!ccmpRelayerManager) {
           throw new Error(`Relayer manager not found for ${type}`);
         }
@@ -345,6 +366,19 @@ const retryTransactionQueueMap: {
 
         const ccmpRelayService = new CCMPRelayService(ccmpQueue);
         routeTransactionToRelayerMap[chainId][type] = ccmpRelayService;
+
+        ccmpRouterMap[chainId] = Object.fromEntries(
+          config.ccmp.supportedRouters[chainId].map((routerName) => [
+            routerName,
+            new ccmpRouterServiceClassMap[routerName](chainId, networkService),
+          ])
+        );
+
+        ccmpServiceMap[chainId] = new CCMPService(
+          chainId,
+          ccmpRouterMap[chainId],
+          routeTransactionToRelayerMap
+        );
       }
     }
   }
@@ -358,4 +392,6 @@ export {
   scwSimulationServiceMap,
   entryPointMap,
   EVMRelayerManagerMap,
+  ccmpRouterMap,
+  ccmpServiceMap,
 };

@@ -1,6 +1,7 @@
 import crypto from 'crypto-js';
 import fs, { existsSync } from 'fs';
 import _, { isNumber } from 'lodash';
+import { TransactionType } from '../common/types';
 
 import { ConfigType, IConfig } from './interface/IConfig';
 
@@ -161,7 +162,54 @@ export class Config implements IConfig {
       if (!this.config.tokenPrice.symbolMapByChainId[chainId]) {
         throw new Error(`Symbol map required for chain id ${chainId}`);
       }
+
+      // Validate chain specific CCMP config
+      if (this.config.supportedTransactionType[chainId].includes(TransactionType.CROSS_CHAIN)) {
+        const ccmpMessageRoutedConfig = this.config.ccmp.events.CCMPMessageRouted[chainId];
+        if (!ccmpMessageRoutedConfig?.name || !ccmpMessageRoutedConfig?.topicId) {
+          throw new Error(`CCMPMessgeRouted configuration required for chain id ${chainId}`);
+        }
+
+        if (!this.config.ccmp.indexerWebhookBlockConfirmation[chainId]) {
+          throw new Error(`Indexer webhook block confirmation required for chain id ${chainId}`);
+        }
+
+        const contracts = this.config.ccmp.contracts[chainId];
+        if (!contracts?.CCMPGateway) {
+          throw new Error(`CCMPGateway contract required for chain id ${chainId}`);
+        }
+
+        if (!(this.config.ccmp.supportedRouters[chainId]?.length > 0)) {
+          throw new Error(`Supported ccmp routers required for chain id ${chainId}`);
+        }
+      }
     }
+
+    // Validate Chain Agnostic CCMP Config - Wormhole
+    if (!this.config.ccmp.bridges.wormole?.hostUrl) {
+      throw new Error('Wormhole bridge host url required');
+    }
+    if (!this.config.ccmp.bridges.wormole?.chainId) {
+      throw new Error('Wormhole bridge host url required');
+    }
+    if (!this.config.ccmp.bridges.wormole?.bridgeAddress) {
+      throw new Error('Wormhole bridge addresses required');
+    }
+    if (!this.config.ccmp.bridges.wormole?.pollingIntervalMs) {
+      throw new Error('Wormhole polling interval required');
+    }
+    if (!this.config.ccmp.bridges.wormole?.maxPollingCount) {
+      throw new Error('Wormhole max polling count required');
+    }
+
+    // Validata Indexer Config
+    if (!this.config.indexer?.baseUrl) {
+      throw new Error('Indexer base url required');
+    }
+    if (!this.config.indexer?.auth) {
+      throw new Error('Indexer auth required');
+    }
+
     return true;
   }
 

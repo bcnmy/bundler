@@ -6,6 +6,12 @@ export enum TransactionType {
   CROSS_CHAIN = 'CROSS_CHAIN',
 }
 
+export enum CCMPRouterName {
+  WORMHOLE = 'wormhole',
+  AXELAR = 'axelar',
+  HYPERLANE = 'hyperlane',
+}
+
 export enum TransactionMethodType {
   SCW = 'eth_sendSmartContractWalletTransaction',
   AA = 'eth_sendUserOperation',
@@ -33,10 +39,12 @@ export type AccessListItem = {
   storageKeys: string[];
 };
 
-export type NetworkBasedGasPriceType = string | {
-  maxPriorityFeePerGas: string;
-  maxFeePerGas: string;
-};
+export type NetworkBasedGasPriceType =
+  | string
+  | {
+      maxPriorityFeePerGas: string;
+      maxFeePerGas: string;
+    };
 
 export type EVMRawTransactionType = {
   from: string;
@@ -95,9 +103,7 @@ type ErrorType = {
 
 export type RelayServiceResponseType = ResponseType | ErrorType;
 
-export function isError<T>(
-  response: T | ErrorType,
-): response is ErrorType {
+export function isError<T>(response: T | ErrorType): response is ErrorType {
   return (response as ErrorType).error !== undefined;
 }
 
@@ -117,8 +123,8 @@ export type UserOperationType = {
 
 export type SymbolMapByChainIdType = {
   [key: number]: {
-    [key: string]: string,
-  }
+    [key: string]: string;
+  };
 };
 
 type PromiseOrValue<T> = T | Promise<T>;
@@ -145,4 +151,5 @@ export type CCMPMessage = {
   routerAdaptor: string;
   gasFeePaymentArgs: GasFeePaymentArgsStruct;
   payload: CCMPMessagePayload[];
+  hash: string;
 };
