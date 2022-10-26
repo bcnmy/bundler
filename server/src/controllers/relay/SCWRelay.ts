@@ -15,19 +15,26 @@ const log = logger(module);
 
 export const relaySCWTransaction = async (req: Request, res: Response) => {
   try {
-    log.info('relaySCWTransaction', req.body);
     const {
       type, to, data, gasLimit, chainId, value,
     } = req.body.params[0];
-    const gasLimitFromSimulation = `0x${(req.body.params[1]).toString(16)}`;
+    log.info(`Relaying SCW Transaction for SCW: ${to} on chainId: ${chainId}`);
+
+    const gasLimitFromSimulation = req.body.params[1] ? `0x${(req.body.params[1]).toString(16)}` : null;
     const transactionId = generateTransactionId(data);
     if (!clientMessenger.socketClient.isConnected()) {
       await clientMessenger.connect();
     }
-    log.info(`Sending transaction to relayer with transactionId: ${transactionId}`);
+    log.info(`Sending transaction to relayer with transactionId: ${transactionId} for SCW: ${to} on chainId: ${chainId}`);
     const response = await routeTransactionToRelayerMap[chainId][TransactionType.SCW]
       .sendTransactionToRelayer({
-        type, to, data, gasLimit: gasLimit || gasLimitFromSimulation, chainId, value, transactionId,
+        type,
+        to,
+        data,
+        gasLimit: gasLimit || gasLimitFromSimulation,
+        chainId,
+        value,
+        transactionId,
       });
     if (isError(response)) {
       return res.status(400).json({

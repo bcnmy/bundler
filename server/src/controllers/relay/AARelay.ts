@@ -1,8 +1,7 @@
-import { ethers } from 'ethers';
 import { Request, Response } from 'express';
 import { ClientMessenger } from 'gasless-messaging-sdk';
 import { logger } from '../../../../common/log-config';
-import { entryPointMap, routeTransactionToRelayerMap } from '../../../../common/service-manager';
+import { routeTransactionToRelayerMap } from '../../../../common/service-manager';
 import { isError, TransactionType } from '../../../../common/types';
 import { config } from '../../../../config';
 import { generateTransactionId } from '../../utils/tx-id-generator';
@@ -26,31 +25,15 @@ export const relayAATransaction = async (req: Request, res: Response) => {
       await clientMessenger.connect();
     }
 
-    const entryPointContracts = entryPointMap[chainId];
-
-    let entryPointContract;
-    for (let entryPointContractIndex = 0;
-      entryPointContractIndex < entryPointContracts.length;
-      entryPointContractIndex += 1) {
-      if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
-       === entryPointAddress.toLowerCase()) {
-        entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
-        break;
-      }
-    }
-
-    // eslint-disable-next-line no-unsafe-optional-chaining
-    const { data } = await (entryPointContract as ethers.Contract)
-      .populateTransaction.handleOps([userOp], config.feeOption.refundReceiver[chainId]);
-
     const response = await routeTransactionToRelayerMap[chainId][TransactionType.AA]
       .sendTransactionToRelayer({
         type: TransactionType.AA,
         to: entryPointAddress,
-        data: data as string,
+        data: '0x0',
         gasLimit: `0x${Number(gasLimitFromSimulation).toString(16)}`,
         chainId,
         value: '0x0',
+        userOp,
         transactionId,
       });
     if (isError(response)) {

@@ -69,6 +69,7 @@ export type AATransactionMessageType = {
   chainId: number;
   value: string;
   transactionId: string;
+  userOp?: UserOperationType
 };
 
 export type SCWTransactionMessageType = {
@@ -152,4 +153,11 @@ export type CCMPMessage = {
   gasFeePaymentArgs: GasFeePaymentArgsStruct;
   payload: CCMPMessagePayload[];
   hash: string;
+};
+
+export type EntryPointMapType = {
+  [chainId: number]: Array<{
+    address: string,
+    entryPointContract: ethers.Contract
+  }>
 };

@@ -1,5 +1,4 @@
 /* eslint-disable no-await-in-loop */
-import { ethers } from 'ethers';
 import { config } from '../../config';
 import { EVMAccount } from '../../relayer/src/services/account';
 import {
@@ -43,6 +42,7 @@ import {
   AATransactionMessageType,
   CCMPRouterName,
   CCMPTransactionMessageType,
+  EntryPointMapType,
   EVMRawTransactionType,
   SCWTransactionMessageType,
   TransactionType,
@@ -75,12 +75,7 @@ const scwSimulationServiceMap: {
   [chainId: number]: SCWSimulationService;
 } = {};
 
-const entryPointMap: {
-  [chainId: number]: Array<{
-    address: string;
-    entryPointContract: ethers.Contract;
-  }>;
-} = {};
+const entryPointMap: EntryPointMapType = {};
 
 const ccmpServiceMap: {
   [chainId: number]: CCMPService;
@@ -243,7 +238,7 @@ const retryTransactionQueueMap: {
       EVMRelayerManagerMap[relayerManager.name][chainId] = relayerMangerInstance;
 
       const addressList = await relayerMangerInstance.createRelayers();
-      log.info('Relayer address list length', addressList.length, relayerManager.minRelayerCount);
+      log.info(`Relayer address list length: ${addressList.length} and minRelayerCount: ${relayerManager.minRelayerCount}`);
       await relayerMangerInstance.fundRelayers(addressList);
     }
 
@@ -273,21 +268,6 @@ const retryTransactionQueueMap: {
         });
 
         await aaQueue.connect();
-        const aaConsumer = new AAConsumer({
-          queue: aaQueue,
-          relayerManager: aaRelayerManager,
-          transactionService,
-          options: {
-            chainId,
-          },
-        });
-        // start listening for transaction
-        await aaQueue.consume(aaConsumer.onMessageReceived);
-
-        const aaRelayService = new AARelayService(aaQueue);
-        routeTransactionToRelayerMap[chainId][type] = aaRelayService;
-
-        aaSimulatonServiceMap[chainId] = new AASimulationService(networkService);
 
         const { entryPointData } = config;
 
@@ -306,6 +286,25 @@ const retryTransactionQueueMap: {
             ),
           });
         }
+
+        const aaConsumer = new AAConsumer({
+          queue: aaQueue,
+          relayerManager: aaRelayerManager,
+          transactionService,
+          options: {
+            chainId,
+            entryPointMap,
+          },
+        });
+        // start listening for transaction
+        await aaQueue.consume(aaConsumer.onMessageReceived);
+
+        const aaRelayService = new AARelayService(aaQueue);
+        routeTransactionToRelayerMap[chainId][type] = aaRelayService;
+
+        aaSimulatonServiceMap[chainId] = new AASimulationService(
+          networkService,
+        );
       } else if (type === TransactionType.SCW) {
         // queue for scw
         const scwQueue: IQueue<SCWTransactionMessageType> = new SCWTransactionQueue({
