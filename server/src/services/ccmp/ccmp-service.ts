@@ -10,10 +10,8 @@ import {
   CCMPRouterName,
 } from '../../../../common/types';
 import { logger } from '../../../../common/log-config';
-import type {
-  routeTransactionToRelayerMap as globalRouteTransactionToRelayerMap,
-  ccmpRouterMap,
-} from '../../../../common/service-manager';
+import type { routeTransactionToRelayerMap as globalRouteTransactionToRelayerMap } from '../../../../common/service-manager';
+import { ICCMPRouterService } from './types';
 
 const log = logger(module);
 
@@ -22,12 +20,15 @@ class CCMPService {
 
   private readonly indexerService: IndexerService;
 
+  private readonly webHookEndpoint: string;
+
   constructor(
     private readonly chainId: number,
-    private readonly routerServiceMap: typeof ccmpRouterMap,
+    private readonly routerServiceMap: { [key in CCMPRouterName]?: ICCMPRouterService },
     private readonly routeTransactionToRelayerMap: typeof globalRouteTransactionToRelayerMap
   ) {
     this.indexerService = new IndexerService(config.indexer.baseUrl);
+    this.webHookEndpoint = config.ccmp.webhookEndpoint;
   }
 
   async init() {
@@ -41,27 +42,30 @@ class CCMPService {
       throw new Error(`Indexer Block confirmations not found for chain ${this.chainId}`);
     }
 
-    const response = await this.indexerService.registerWebhook(
-      '',
-      config.indexer.auth,
-      this.chainId,
-      [
-        {
-          scAddress: config.ccmp.contracts[this.chainId].CCMPGateway,
-          abi: config.ccmp.abi.CCMPGateway,
-          events: [
-            {
-              name: config.ccmp.events.CCMPMessageRouted[this.chainId].name,
-              topicid: config.ccmp.events.CCMPMessageRouted[this.chainId].topicId,
-              blockConfirmations: config.ccmp.indexerWebhookBlockConfirmation[this.chainId],
-              processTransferLogs: true,
-            },
-          ],
-        },
-      ]
-    );
-
-    return response;
+    try {
+      await this.indexerService.registerWebhook(
+        this.webHookEndpoint,
+        config.indexer.auth,
+        this.chainId,
+        [
+          {
+            scAddress: config.ccmp.contracts[this.chainId].CCMPGateway,
+            abi: JSON.stringify(config.ccmp.abi.CCMPGateway),
+            events: [
+              {
+                name: config.ccmp.events.CCMPMessageRouted[this.chainId].name,
+                topicid: config.ccmp.events.CCMPMessageRouted[this.chainId].topicId,
+                blockConfirmations: config.ccmp.indexerWebhookBlockConfirmation[this.chainId],
+                processTransferLogs: true,
+              },
+            ],
+          },
+        ]
+      );
+    } catch (e) {
+      log.error(`Failed to register webhook for chain ${this.chainId}`, e);
+      throw new Error(`Failed to register webhook for chain ${this.chainId}`);
+    }
   }
 
   private static keysToLowerCase(obj: any): any {
@@ -123,10 +127,7 @@ class CCMPService {
     // TODO: Add to DB
     const message = CCMPService.parseIndexerEvent(tx.eventData);
 
-    const routerService =
-      this.routerServiceMap[Number(message.sourceChainId.toString())]?.[
-        message.routerAdaptor as CCMPRouterName
-      ];
+    const routerService = this.routerServiceMap[message.routerAdaptor as CCMPRouterName];
 
     if (!routerService) {
       throw new Error(

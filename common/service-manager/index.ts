@@ -117,6 +117,8 @@ const retryTransactionQueueMap: {
   await dbInstance.connect();
   await cacheService.connect();
 
+  const ccmpServiceInitPromises: Promise<void>[] = [];
+
   for (const chainId of supportedNetworks) {
     routeTransactionToRelayerMap[chainId] = {};
     entryPointMap[chainId] = [];
@@ -238,7 +240,9 @@ const retryTransactionQueueMap: {
       EVMRelayerManagerMap[relayerManager.name][chainId] = relayerMangerInstance;
 
       const addressList = await relayerMangerInstance.createRelayers();
-      log.info(`Relayer address list length: ${addressList.length} and minRelayerCount: ${relayerManager.minRelayerCount}`);
+      log.info(
+        `Relayer address list length: ${addressList.length} and minRelayerCount: ${relayerManager.minRelayerCount}`
+      );
       await relayerMangerInstance.fundRelayers(addressList);
     }
 
@@ -302,9 +306,7 @@ const retryTransactionQueueMap: {
         const aaRelayService = new AARelayService(aaQueue);
         routeTransactionToRelayerMap[chainId][type] = aaRelayService;
 
-        aaSimulatonServiceMap[chainId] = new AASimulationService(
-          networkService,
-        );
+        aaSimulatonServiceMap[chainId] = new AASimulationService(networkService);
       } else if (type === TransactionType.SCW) {
         // queue for scw
         const scwQueue: IQueue<SCWTransactionMessageType> = new SCWTransactionQueue({
@@ -378,9 +380,20 @@ const retryTransactionQueueMap: {
           ccmpRouterMap[chainId],
           routeTransactionToRelayerMap
         );
+
+        ccmpServiceInitPromises.push(ccmpServiceMap[chainId].init());
       }
     }
   }
+
+  // Wait for CCMP Service to be initialized
+  try {
+    await Promise.all(ccmpServiceInitPromises);
+    log.info('CCMP Services initialized');
+  } catch (e) {
+    log.error(`Error initializing CCMP Services: ${e}`);
+  }
+
   log.info('<=== Config setup completed ===>');
 })();
 

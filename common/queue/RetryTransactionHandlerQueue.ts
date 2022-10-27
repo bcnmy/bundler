@@ -62,7 +62,7 @@ export class RetryTransactionHandlerQueue implements IQueue<TransactionMessageTy
       );
       const key = `retry_chainid.${this.chainId}`;
 
-      log.info(`[*] Waiting for retry transactions on chaindId: ${this.chainId}`);
+      log.info(`[*] Waiting for retry transactions on chainId: ${this.chainId}`);
 
       this.channel.bindQueue(retryTransactionQueue.queue, this.exchangeName, key);
       await this.channel.consume(

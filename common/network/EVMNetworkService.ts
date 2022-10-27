@@ -250,7 +250,7 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
   ): Promise<ethers.providers.TransactionReceipt> {
     const transactionReceipt = await this.useProvider(
       RpcMethod.getTransactionReceipt,
-      transactionHash,
+      { transactionHash },
     );
     return transactionReceipt;
   }

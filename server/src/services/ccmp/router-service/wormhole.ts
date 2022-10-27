@@ -18,6 +18,8 @@ export class WormholeRouterService implements ICCMPRouterService {
 
   private readonly emitterAddress: string;
 
+  private readonly womrholeBridgeAddress: string;
+
   private readonly emitterChain: string;
 
   private readonly pollingIntervalMs: number;
@@ -28,17 +30,21 @@ export class WormholeRouterService implements ICCMPRouterService {
     private readonly chainId: number,
     private readonly networkService: EVMNetworkService
   ) {
-    this.rpcUrl = config.ccmp.bridges.wormole.hostUrl;
-    this.emitterAddress = getEmitterAddressEth(config.ccmp.bridges.wormole.bridgeAddress[chainId]);
-    this.emitterChain = config.ccmp.bridges.wormole.chainId[chainId];
-    this.pollingIntervalMs = config.ccmp.bridges.wormole.pollingIntervalMs;
-    this.maxPollingCount = config.ccmp.bridges.wormole.maxPollingCount;
+    this.rpcUrl = config.ccmp.bridges.wormhole.hostUrl;
+    this.womrholeBridgeAddress = config.ccmp.bridges.wormhole.bridgeAddress[chainId];
+    this.emitterAddress = getEmitterAddressEth(config.ccmp.contracts[chainId].WormholeAdaptor);
+    this.emitterChain = config.ccmp.bridges.wormhole.chainId[chainId];
+    this.pollingIntervalMs = config.ccmp.bridges.wormhole.pollingIntervalMs;
+    this.maxPollingCount = config.ccmp.bridges.wormhole.maxPollingCount;
     this.validate();
   }
 
   validate() {
     if (!this.rpcUrl) {
       throw new Error('Missing rpcUrl for wormhole bridge');
+    }
+    if (!this.womrholeBridgeAddress) {
+      throw new Error('Missing womrholeBridgeAddress for wormhole bridge');
     }
     if (!this.emitterAddress) {
       throw new Error('Missing emitterAddress for wormhole bridge');
@@ -61,7 +67,8 @@ export class WormholeRouterService implements ICCMPRouterService {
 
   async getVerificationData(txHash: string, message: CCMPMessage): Promise<Uint8Array> {
     const receipt = await this.networkService.getTransactionReceipt(txHash);
-    const sequence = parseSequenceFromLogEth(receipt, this.emitterAddress);
+    const sequence = parseSequenceFromLogEth(receipt, this.womrholeBridgeAddress);
+    log.info(`Found wormhole sequence ${sequence} for message hash ${message.hash}`);
 
     return new Promise<Uint8Array>((resolve, reject) => {
       let counter = 0;

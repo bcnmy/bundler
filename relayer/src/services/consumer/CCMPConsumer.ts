@@ -48,7 +48,7 @@ ITransactionConsumer<EVMAccount, EVMRawTransactionType> {
           transactionDataReceivedFromQueue,
           activeRelayer,
         );
-        log.info(`Response from transaction service after sending transaction on chaindId: ${this.chainId}: ${JSON.stringify(transactionServiceResponse)}`);
+        log.info(`Response from transaction service after sending transaction on chainId: ${this.chainId}: ${JSON.stringify(transactionServiceResponse)}`);
         this.relayerManager.addActiveRelayer(activeRelayer.getPublicKey());
         if (transactionServiceResponse.state === 'success') {
           log.info(`Transaction sent successfully for ${this.transactionType} on chain ${this.chainId}`);

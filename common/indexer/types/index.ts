@@ -19,5 +19,5 @@ export type IIndexerEventData = {
 export type IIndexerContractsRegistrationList = {
   scAddress: string;
   events: IIndexerEventData[];
-  abi: Record<string, any>[];
+  abi: string;
 }[];

@@ -22,14 +22,14 @@ export class IndexerService implements IIndexerService {
       `Registering webhooks for ${webhookUrl} on chain ${chainId} with ${contracts.length} contracts`
     );
 
-    const response = axios.post(`${this.indexerBaseUrl}/registerWebhook`, {
+    const response = await axios.post(`${this.indexerBaseUrl}/registerWebhook`, {
       destination: webhookUrl,
       auth,
       chainId,
       contracts,
     });
 
-    log.info(`Response from indexer registerWebhook: ${response}`);
+    log.info(`Response code from indexer registerWebhook: ${response.status}`);
 
     return response;
   }

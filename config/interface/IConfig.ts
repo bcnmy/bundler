@@ -145,15 +145,15 @@ type SimulationDataConfigType = {
 
 /* CCMP configurations */
 type CCMPBridgesConfigType = {
-  wormole: {
+  [CCMPRouterName.WORMHOLE]: {
     hostUrl: string;
     chainId: Record<string, string>;
     bridgeAddress: Record<string, string>;
     pollingIntervalMs: number;
     maxPollingCount: number;
   };
-  axelar: {};
-  hyperlane: {};
+  [CCMPRouterName.AXELAR]: {};
+  [CCMPRouterName.HYPERLANE]: {};
 };
 
 // { "contractName": "contractAddress" }
@@ -219,6 +219,7 @@ type CCMPConfigType = {
   events: Record<string, CCMPEventType>;
   indexerWebhookBlockConfirmation: IndexerWebhookBlockConfirmationType;
   supportedRouters: Record<string, CCMPRouterName[]>;
+  webhookEndpoint: string;
 };
 
 type IndexerConfigType = {

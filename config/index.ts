@@ -186,19 +186,19 @@ export class Config implements IConfig {
     }
 
     // Validate Chain Agnostic CCMP Config - Wormhole
-    if (!this.config.ccmp.bridges.wormole?.hostUrl) {
+    if (!this.config.ccmp.bridges.wormhole?.hostUrl) {
       throw new Error('Wormhole bridge host url required');
     }
-    if (!this.config.ccmp.bridges.wormole?.chainId) {
-      throw new Error('Wormhole bridge host url required');
+    if (!this.config.ccmp.bridges.wormhole?.chainId) {
+      throw new Error('Wormhole bridge chain id mapping required');
     }
-    if (!this.config.ccmp.bridges.wormole?.bridgeAddress) {
+    if (!this.config.ccmp.bridges.wormhole?.bridgeAddress) {
       throw new Error('Wormhole bridge addresses required');
     }
-    if (!this.config.ccmp.bridges.wormole?.pollingIntervalMs) {
+    if (!this.config.ccmp.bridges.wormhole?.pollingIntervalMs) {
       throw new Error('Wormhole polling interval required');
     }
-    if (!this.config.ccmp.bridges.wormole?.maxPollingCount) {
+    if (!this.config.ccmp.bridges.wormhole?.maxPollingCount) {
       throw new Error('Wormhole max polling count required');
     }
 
@@ -208,6 +208,9 @@ export class Config implements IConfig {
     }
     if (!this.config.indexer?.auth) {
       throw new Error('Indexer auth required');
+    }
+    if (!this.config.ccmp.webhookEndpoint) {
+      throw new Error('CCMP webhook endpoint required');
     }
 
     return true;
