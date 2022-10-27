@@ -47,7 +47,6 @@ export class SocketConsumer implements ISocketConsumer {
           },
         });
       } catch (error) {
-        console.log(error);
         log.error(`Failed to send to client on socket server with error: ${JSON.stringify(error)}`);
       }
     } else {

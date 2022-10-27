@@ -33,7 +33,7 @@ export class AASimulationService {
       isSimulationSuccessful = false;
     }
     const estimatedGasForUserOp = await this.networkService.estimateGas(entryPointContract, 'handleOps', [[userOp], config.feeOption.refundReceiver[chainId]], config.zeroAddress);
-    log.info(`Estimated gas for userOp: ${estimatedGasForUserOp}`);
+    log.info(`Estimated gas is: ${estimatedGasForUserOp} for userOp: ${JSON.stringify(userOp)}`);
     return {
       isSimulationSuccessful,
       gasLimitFromSimulation: estimatedGasForUserOp,

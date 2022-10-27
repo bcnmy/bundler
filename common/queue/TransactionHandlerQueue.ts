@@ -49,6 +49,7 @@ export class TransactionHandlerQueue implements IQueue<TransactionQueueMessageTy
   }
 
   async consume(onMessageReceived: () => void) {
+    log.info(`[x] Setting up consumer for queue with chainId: ${this.chainId} for transaction queue`);
     this.channel.prefetch(1);
     try {
       // setup a consumer

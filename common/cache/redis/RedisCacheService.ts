@@ -38,15 +38,15 @@ export class RedisCacheService implements ICacheService {
   }
 
   async decrement(key: string, decrementBy: number = 1): Promise<boolean> {
-    log.info(`Decrementing cache value by ${decrementBy} => Key: ${key}`);
-    log.info('checking if the key exists');
+    log.info(`Checking if the key: ${key} exists`);
     // could use get service also here
     const val = await this.redisClient.get(key);
     if (val == null || val === 'undefined') {
-      log.info('key does not exist, nothing to decrement');
+      log.info('Key does not exist. Nothing to decrement');
       return false;
     }
     try {
+      log.info(`Key exists. Decrementing cache value by ${decrementBy} => Key: ${key}`);
       await this.redisClient.decrBy(key, decrementBy);
       return true;
     } catch (error) {
@@ -69,6 +69,7 @@ export class RedisCacheService implements ICacheService {
 
   async expire(key: string, expiryTime: number): Promise<boolean> {
     try {
+      log.info(`Setting expirtyTime: ${expiryTime} for key: ${key}`);
       const result = await this.redisClient.expire(key, expiryTime);
       if (result) return true;
       return false;
@@ -80,6 +81,7 @@ export class RedisCacheService implements ICacheService {
 
   async get(key: string): Promise<string> {
     try {
+      log.info(`Getting key: ${key} from cache`);
       const result = await this.redisClient.get(key) || '';
       return result;
     } catch (error) {
@@ -89,15 +91,15 @@ export class RedisCacheService implements ICacheService {
   }
 
   async increment(key: string, incrementBy: number = 1): Promise<boolean> {
-    log.info(`Inrementing cache value by ${incrementBy} => Key: ${key}`);
-    log.info('checking if the key exists');
+    log.info(`Checking if the key: ${key} exists`);
     try {
       const val = await this.redisClient.get(key);
       if (!val) {
-        log.info('key does not exist, nothing to increment');
+        log.info('Key does not exist. Nothing to increment');
         return false;
       }
 
+      log.info(`Inrementing cache value by ${incrementBy} => Key: ${key}`);
       const result = await this.redisClient.incrBy(key, incrementBy);
       if (result) {
         log.info(`Incremented cache value by ${incrementBy} => Key: ${key}`);
@@ -118,6 +120,7 @@ export class RedisCacheService implements ICacheService {
     }
     try {
       await this.redisClient.set(key, value);
+      log.info(`Cache value set in logs for key: ${key}`);
       return true;
     } catch (error) {
       log.error(`Error setting value $${value} for key ${key} - ${parseError(error)}`);
