@@ -5,7 +5,7 @@ import type { EVMNetworkService } from '../../../../../common/network';
 export class AxelarRouterService implements ICCMPRouterService {
   constructor(
     private readonly chainId: number,
-    private readonly networkService: EVMNetworkService
+    private readonly networkService: EVMNetworkService,
   ) {}
 
   // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars

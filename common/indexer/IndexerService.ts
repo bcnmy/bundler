@@ -16,10 +16,10 @@ export class IndexerService implements IIndexerService {
     webhookUrl: string,
     auth: string,
     chainId: number,
-    contracts: IIndexerContractsRegistrationList
+    contracts: IIndexerContractsRegistrationList,
   ): Promise<IndexerRegistrationResponse> {
     log.info(
-      `Registering webhooks for ${webhookUrl} on chain ${chainId} with ${contracts.length} contracts`
+      `Registering webhooks for ${webhookUrl} on chain ${chainId} with ${contracts.length} contracts`,
     );
 
     const response = await axios.post(`${this.indexerBaseUrl}/registerWebhook`, {

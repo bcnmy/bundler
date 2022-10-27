@@ -6,7 +6,9 @@ import { logger } from '../../../../common/log-config';
 const log = logger(module);
 
 export const hookApi = async (req: Request, res: Response) => {
-  const { chainId, from, scAddress, event: eventName, data, txHash, gasUsage } = req.body;
+  const {
+    chainId, from, scAddress, event: eventName, data, txHash, gasUsage,
+  } = req.body;
 
   const ccmpService = ccmpServiceMap[chainId];
   if (ccmpService) {

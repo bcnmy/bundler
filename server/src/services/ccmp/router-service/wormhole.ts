@@ -28,7 +28,7 @@ export class WormholeRouterService implements ICCMPRouterService {
 
   constructor(
     private readonly chainId: number,
-    private readonly networkService: EVMNetworkService
+    private readonly networkService: EVMNetworkService,
   ) {
     this.rpcUrl = config.ccmp.bridges.wormhole.hostUrl;
     this.womrholeBridgeAddress = config.ccmp.bridges.wormhole.bridgeAddress[chainId];
@@ -76,7 +76,7 @@ export class WormholeRouterService implements ICCMPRouterService {
         try {
           counter += 1;
           log.info(
-            `Polling for wormhole VAA for message hash ${message.hash} with sequence ${sequence} on chain ${this.emitterChain}`
+            `Polling for wormhole VAA for message hash ${message.hash} with sequence ${sequence} on chain ${this.emitterChain}`,
           );
           const { vaaBytes } = await getSignedVAA(
             this.rpcUrl,
@@ -85,7 +85,7 @@ export class WormholeRouterService implements ICCMPRouterService {
             sequence,
             {
               transport: NodeHttpTransport(),
-            }
+            },
           );
           clearInterval(id);
           resolve(vaaBytes);
@@ -95,8 +95,8 @@ export class WormholeRouterService implements ICCMPRouterService {
             clearInterval(id);
             reject(
               new Error(
-                `Max Polling count exceeded for message hash ${message.hash}, last error: ${e}`
-              )
+                `Max Polling count exceeded for message hash ${message.hash}, last error: ${e}`,
+              ),
             );
           }
         }

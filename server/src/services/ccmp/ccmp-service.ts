@@ -25,7 +25,7 @@ class CCMPService {
   constructor(
     private readonly chainId: number,
     private readonly routerServiceMap: { [key in CCMPRouterName]?: ICCMPRouterService },
-    private readonly routeTransactionToRelayerMap: typeof globalRouteTransactionToRelayerMap
+    private readonly routeTransactionToRelayerMap: typeof globalRouteTransactionToRelayerMap,
   ) {
     this.indexerService = new IndexerService(config.indexer.baseUrl);
     this.webHookEndpoint = config.ccmp.webhookEndpoint;
@@ -60,7 +60,7 @@ class CCMPService {
               },
             ],
           },
-        ]
+        ],
       );
     } catch (e) {
       log.error(`Failed to register webhook for chain ${this.chainId}`, e);
@@ -76,23 +76,22 @@ class CCMPService {
     }, {});
   }
 
-  private static parseIndexerEvent = (event: Record<string, any>): CCMPMessage =>
-    ({
-      ...event,
-      gasFeePaymentArgs: CCMPService.keysToLowerCase(
-        event.gasFeePaymentArgs
-      ) as GasFeePaymentArgsStruct,
-      payload: event.payload
-        .map((payload: any) => CCMPService.keysToLowerCase(payload))
-        .map((payload: any) => ({
-          to: payload.to,
-          _calldata: payload.calldata,
-        })),
-    } as CCMPMessage);
+  private static parseIndexerEvent = (event: Record<string, any>): CCMPMessage => ({
+    ...event,
+    gasFeePaymentArgs: CCMPService.keysToLowerCase(
+      event.gasFeePaymentArgs,
+    ) as GasFeePaymentArgsStruct,
+    payload: event.payload
+      .map((payload: any) => CCMPService.keysToLowerCase(payload))
+      .map((payload: any) => ({
+        to: payload.to,
+        _calldata: payload.calldata,
+      })),
+  } as CCMPMessage);
 
   private static createTransaction = (
     message: CCMPMessage,
-    verificationData: string | Uint8Array
+    verificationData: string | Uint8Array,
   ): CCMPTransactionMessageType => {
     const CCMPGatewayInterface = new ethers.utils.Interface(config.ccmp.abi.CCMPGateway);
 
@@ -131,14 +130,14 @@ class CCMPService {
 
     if (!routerService) {
       throw new Error(
-        `CCMP Router service not found for chain ${message.sourceChainId} and router ${message.routerAdaptor}`
+        `CCMP Router service not found for chain ${message.sourceChainId} and router ${message.routerAdaptor}`,
       );
     }
 
     // TODO: Update DB
     // Pay Gas Fee to the underlying protocol if required and perform other steps as needed
     log.info(
-      `CCMP: Pre-Verification for source tx hash ${tx.txHash} message hash: ${message.hash}`
+      `CCMP: Pre-Verification for source tx hash ${tx.txHash} message hash: ${message.hash}`,
     );
     try {
       await routerService.handlePreVerification(tx.txHash, message);

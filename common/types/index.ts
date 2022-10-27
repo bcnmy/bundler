@@ -42,9 +42,9 @@ export type AccessListItem = {
 export type NetworkBasedGasPriceType =
   | string
   | {
-      maxPriorityFeePerGas: string;
-      maxFeePerGas: string;
-    };
+    maxPriorityFeePerGas: string;
+    maxFeePerGas: string;
+  };
 
 export type EVMRawTransactionType = {
   from: string;
