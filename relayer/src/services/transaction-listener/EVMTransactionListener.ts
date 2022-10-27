@@ -67,7 +67,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
     await this.publishToTransactionQueue({
       transactionId,
       receipt: transactionExecutionResponse,
-      event: SocketEventType.onTransactionHashGenerated,
+      event: SocketEventType.onTransactionMined,
     });
 
     log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
@@ -89,7 +89,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
     await this.publishToTransactionQueue({
       transactionId,
       receipt: transactionExecutionResponse,
-      event: SocketEventType.onTransactionError,
+      event: SocketEventType.onTransactionMined,
     });
 
     log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
@@ -163,8 +163,12 @@ ITransactionPublisher<TransactionQueueMessageType> {
       log.error('transactionExecutionResponse is null');
     }
 
-    // publish to queue with expiry header
-    // pop happens when expiry header expires
+    // transaction queue is being listened by socket service to notify the client about the hash
+    await this.publishToTransactionQueue({
+      transactionId,
+      receipt: transactionExecutionResponse,
+      event: SocketEventType.onTransactionHashGenerated,
+    });
     // retry txn service will check for receipt
     await this.publishToRetryTransactionQueue({
       transactionId,
