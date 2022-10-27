@@ -4,15 +4,15 @@ import { GasPriceType } from '../../../../../common/gas-price/types';
 import { INetworkService } from '../../../../../common/network';
 import { RetryTransactionQueueData } from '../../../../../common/queue/types';
 import { EVMRawTransactionType } from '../../../../../common/types';
-import { EVMAccount } from '../../account';
+import { IEVMAccount } from '../../account';
 import { INonceManager } from '../../nonce-manager';
 import { ITransactionListener } from '../../transaction-listener';
 import { TransactionListenerNotifyReturnType } from '../../transaction-listener/types';
 
 export type EVMTransactionServiceParamsType = {
-  networkService: INetworkService<EVMAccount, EVMRawTransactionType>,
-  transactionListener: ITransactionListener<EVMAccount, EVMRawTransactionType>,
-  nonceManager: INonceManager<EVMAccount, EVMRawTransactionType>,
+  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
+  transactionListener: ITransactionListener<IEVMAccount, EVMRawTransactionType>,
+  nonceManager: INonceManager<IEVMAccount, EVMRawTransactionType>,
   gasPriceService: IGasPrice,
   transactionDao: ITransactionDAO,
   options: {
@@ -57,14 +57,14 @@ export type CreateRawTransactionParamsType = {
   data: string;
   gasLimit: string;
   speed?: GasPriceType;
-  account: EVMAccount;
+  account: IEVMAccount;
 };
 
 export type CreateRawTransactionReturnType = EVMRawTransactionType;
 
 export type ExecuteTransactionParamsType = {
   rawTransaction: EVMRawTransactionType,
-  account: EVMAccount
+  account: IEVMAccount
 };
 
 export type EVMTransactionResponseType = TransactionResponseType;

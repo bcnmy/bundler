@@ -3,13 +3,13 @@ import { ITransactionDAO } from '../../../../../common/db';
 import { IQueue } from '../../../../../common/interface';
 import { INetworkService } from '../../../../../common/network';
 import { RetryTransactionQueueData } from '../../../../../common/queue/types';
-import { EVMRawTransactionType } from '../../../../../common/types';
-import { EVMAccount } from '../../account';
+import { EVMRawTransactionType, TransactionType } from '../../../../../common/types';
+import { IEVMAccount } from '../../account';
 
 export type TransactionMessageType = ethers.providers.TransactionResponse;
 
 export type EVMTransactionListenerParamsType = {
-  networkService: INetworkService<EVMAccount, EVMRawTransactionType>,
+  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
   transactionQueue: IQueue<TransactionMessageType>,
   retryTransactionQueue: IQueue<RetryTransactionQueueData>,
   transactionDao: ITransactionDAO,
@@ -21,7 +21,8 @@ export type EVMTransactionListenerParamsType = {
 export type NotifyTransactionListenerParamsType = {
   transactionExecutionResponse: ethers.providers.TransactionResponse,
   transactionId: string,
-  account: EVMAccount,
+  relayerAddress: string,
+  transactionType: TransactionType,
   previousTransactionHash: string | null,
   rawTransaction?: EVMRawTransactionType,
   userAddress?: string

@@ -2,7 +2,7 @@
 import axios from 'axios';
 import { BigNumber, ethers } from 'ethers';
 import EventEmitter from 'events';
-import { EVMAccount } from '../../relayer/src/services/account';
+import { IEVMAccount } from '../../relayer/src/services/account';
 import { EVMRawTransactionType } from '../types';
 import { ERC20_ABI } from '../constants';
 import { IERC20NetworkService, INetworkService, RpcMethod } from './interface';
@@ -10,7 +10,7 @@ import { Type0TransactionGasPriceType, Type2TransactionGasPriceType } from './ty
 import { logger } from '../log-config';
 
 const log = logger(module);
-export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTransactionType>,
+export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTransactionType>,
  IERC20NetworkService {
   chainId: number;
 
@@ -26,7 +26,10 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
     this.chainId = options.chainId;
     this.rpcUrl = options.rpcUrl;
     this.fallbackRpcUrls = options.fallbackRpcUrls;
-    this.ethersProvider = new ethers.providers.JsonRpcProvider(options.rpcUrl);
+    this.ethersProvider = new ethers.providers.JsonRpcProvider({
+      url: options.rpcUrl,
+      timeout: 10000,
+    });
   }
 
   getActiveRpcUrl(): string {
@@ -52,6 +55,7 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
     // eslint-disable-next-line consistent-return
     const withFallbackRetry = async () => {
       try {
+        // TODO Add null checks on params
         switch (tag) {
           case RpcMethod.getGasPrice:
             return await this.ethersProvider.getGasPrice();
@@ -76,15 +80,17 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
           default:
             return null;
         }
-      } catch (error) {
-        // TODO // Handle errors
-        log.info(`Error in network service ${error}`);
-        for (;rpcUrlIndex < this.fallbackRpcUrls.length; rpcUrlIndex += 1) {
-          this.ethersProvider = new ethers.providers.JsonRpcProvider(
-            this.fallbackRpcUrls[rpcUrlIndex],
-          );
-          withFallbackRetry();
+      } catch (error: any) {
+        if (error.toString().toLowerCase().includes() === 'timeout error') {
+          log.info(`Error in network service ${error}`);
+          for (;rpcUrlIndex < this.fallbackRpcUrls.length; rpcUrlIndex += 1) {
+            this.ethersProvider = new ethers.providers.JsonRpcProvider(
+              this.fallbackRpcUrls[rpcUrlIndex],
+            );
+            withFallbackRetry();
+          }
         }
+        return new Error(error);
       }
     };
     return withFallbackRetry();
@@ -195,13 +201,14 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
 
   async sendTransaction(
     rawTransactionData: EVMRawTransactionType,
-    account: EVMAccount,
+    account: IEVMAccount,
   ): Promise<ethers.providers.TransactionResponse> {
     const rawTx: EVMRawTransactionType = rawTransactionData;
     rawTx.from = account.getPublicKey();
     const tx = await account.signTransaction(rawTx);
     const receipt = await this.useProvider(RpcMethod.sendTransaction, {
       tx,
+      rawTx,
     });
     return receipt;
   }

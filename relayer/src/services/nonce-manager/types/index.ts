@@ -1,12 +1,12 @@
 import { ICacheService } from '../../../../../common/cache';
 import { INetworkService } from '../../../../../common/network';
 import { EVMRawTransactionType } from '../../../../../common/types';
-import { EVMAccount } from '../../account';
+import { IEVMAccount } from '../../account';
 
 export type EVMNonceManagerParamsType = {
   options: {
     chainId: number;
   },
-  networkService: INetworkService<EVMAccount, EVMRawTransactionType>;
+  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
   cacheService: ICacheService;
 };

@@ -1,11 +1,11 @@
 import { ethers } from 'ethers';
-import { EVMAccount } from '../../../relayer/src/services/account';
-import { EVMRawTransactionType } from '../../types';
+import { EVMRawTransactionType, TransactionType } from '../../types';
 
 export type TransactionMessageType = ethers.providers.TransactionResponse;
 
 export type RetryTransactionQueueData = {
-  account: EVMAccount,
+  relayerAddress: string,
+  transactionType: TransactionType,
   transactionHash: string,
   transactionId: string,
   rawTransaction: EVMRawTransactionType,

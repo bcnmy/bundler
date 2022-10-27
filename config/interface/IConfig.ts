@@ -63,6 +63,10 @@ type NativeChainIdMapType = {
   [key: string]: number
 };
 
+type NetworkResponseMessagesType = {
+  [key: string]: string
+};
+
 type FeeOptionConfigType = {
   supportedFeeTokens: ChainIdWithArrayStringValueType,
   similarTokens: ChainIdWithArrayStringValueType,
@@ -99,7 +103,7 @@ type RelayerManagerConfigType = Array<{
 
 type TransactionConfigType = {
   errors: {
-    networkResponseCodes: ChainIdWithStringValueType,
+    networkResponseMessages: NetworkResponseMessagesType,
     networksNonceError: ChainIdWithStringValueType,
     networksInsufficientFundsError: ChainIdWithStringValueType,
   }

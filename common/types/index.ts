@@ -4,6 +4,7 @@ export enum TransactionType {
   AA = 'AA',
   SCW = 'SCW',
   CROSS_CHAIN = 'CROSS_CHAIN',
+  FUNDING = 'FUNDING',
 }
 
 export enum TransactionMethodType {

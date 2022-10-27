@@ -5,7 +5,7 @@ import { IQueue } from '../../../../common/queue';
 import {
   AATransactionMessageType, EntryPointMapType, EVMRawTransactionType, TransactionType,
 } from '../../../../common/types';
-import { EVMAccount } from '../account';
+import { IEVMAccount } from '../account';
 import { IRelayerManager } from '../relayer-manager';
 import { ITransactionService } from '../transaction-service';
 import { ITransactionConsumer } from './interface/ITransactionConsumer';
@@ -13,7 +13,7 @@ import { AAConsumerParamsType } from './types';
 
 const log = logger(module);
 export class AAConsumer implements
-ITransactionConsumer<EVMAccount, EVMRawTransactionType> {
+ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
   private transactionType: TransactionType = TransactionType.AA;
 
   private queue: IQueue<AATransactionMessageType>;
@@ -22,9 +22,9 @@ ITransactionConsumer<EVMAccount, EVMRawTransactionType> {
 
   entryPointMap: EntryPointMapType;
 
-  relayerManager: IRelayerManager<EVMAccount, EVMRawTransactionType>;
+  relayerManager: IRelayerManager<IEVMAccount, EVMRawTransactionType>;
 
-  transactionService: ITransactionService<EVMAccount, EVMRawTransactionType>;
+  transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>;
 
   constructor(
     aaConsumerParams: AAConsumerParamsType,
@@ -76,6 +76,7 @@ ITransactionConsumer<EVMAccount, EVMRawTransactionType> {
         await this.transactionService.sendTransaction(
           transactionDataReceivedFromQueue,
           activeRelayer,
+          this.transactionType,
         );
       } else {
         throw new Error(`No active relayer for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);

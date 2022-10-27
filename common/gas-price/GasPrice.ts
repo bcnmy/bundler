@@ -1,6 +1,6 @@
 import * as ethers from 'ethers';
 import { BigNumber } from 'ethers';
-import { EVMAccount } from '../../relayer/src/services/account/EVMAccount';
+import { IEVMAccount } from '../../relayer/src/services/account';
 import { ICacheService } from '../cache';
 import { logger } from '../log-config';
 import { INetworkService } from '../network';
@@ -12,7 +12,7 @@ const log = logger(module);
 export class GasPrice implements IGasPrice {
   chainId: number;
 
-  networkService: INetworkService<EVMAccount, EVMRawTransactionType>;
+  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
 
   cacheService: ICacheService;
 
@@ -20,7 +20,7 @@ export class GasPrice implements IGasPrice {
 
   constructor(
     cacheService: ICacheService,
-    networkService: INetworkService<EVMAccount, EVMRawTransactionType>,
+    networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
     options: {
       chainId: number,
       EIP1559SupportedNetworks: Array<number>
@@ -45,13 +45,24 @@ export class GasPrice implements IGasPrice {
   async getGasPrice(gasType = GasPriceType.DEFAULT): Promise<NetworkBasedGasPriceType> {
     let result: NetworkBasedGasPriceType;
     if (this.EIP1559SupportedNetworks.includes(this.chainId)) {
-      result = {
-        maxFeePerGas: await this.getMaxFeeGasPrice(gasType),
-        maxPriorityFeePerGas: await this.getMaxPriorityFeeGasPrice(gasType),
-      };
+      const maxFeePerGas = await this.getMaxFeeGasPrice(gasType);
+      const maxPriorityFeePerGas = await this.getMaxPriorityFeeGasPrice(gasType);
+      if (!maxFeePerGas || !maxPriorityFeePerGas) {
+        result = await this.networkService.getEIP1559GasPrice();
+      } else {
+        result = {
+          maxFeePerGas,
+          maxPriorityFeePerGas,
+        };
+      }
     } else {
-      result = await this.cacheService.get(this.getGasPriceKey(gasType));
-      // TODO // If not found in cache get from network
+      const gasPrice = await this.cacheService.get(this.getGasPriceKey(gasType));
+      if (!gasPrice) {
+        const response = await this.networkService.getGasPrice();
+        result = response.gasPrice;
+      } else {
+        result = gasPrice;
+      }
     }
     return result;
   }
@@ -61,10 +72,10 @@ export class GasPrice implements IGasPrice {
     bumpingPercentage: number,
   ): NetworkBasedGasPriceType {
     let result;
-    if (this.EIP1559SupportedNetworks.includes(this.chainId)) {
+    if (this.EIP1559SupportedNetworks.includes(this.chainId) && (typeof pastGasPrice === 'object')) {
       let resubmitMaxFeePerGas: number;
       let resubmitMaxPriorityFeePerGas: number;
-      const { maxPriorityFeePerGas, maxFeePerGas } = pastGasPrice as any;
+      const { maxPriorityFeePerGas, maxFeePerGas } = pastGasPrice;
       const pastMaxPriorityFeePerGas = maxPriorityFeePerGas;
       const pastMaxFeePerGas = maxFeePerGas;
 
@@ -81,19 +92,19 @@ export class GasPrice implements IGasPrice {
       );
 
       if (
-        parseInt(bumpedUpMaxPriorityFeePerGas as string, 10)
-         < parseInt(pastMaxPriorityFeePerGas as string, 10) * 1.11) {
-        resubmitMaxPriorityFeePerGas = parseInt(pastMaxPriorityFeePerGas as string, 10) * 1.11;
+        Number(bumpedUpMaxPriorityFeePerGas)
+         < Number(pastMaxPriorityFeePerGas) * 1.11) {
+        resubmitMaxPriorityFeePerGas = Number(pastMaxPriorityFeePerGas) * 1.11;
       } else {
-        resubmitMaxPriorityFeePerGas = parseInt(pastMaxPriorityFeePerGas as string, 10);
+        resubmitMaxPriorityFeePerGas = Number(pastMaxPriorityFeePerGas);
       }
 
       if (
-        parseInt(bumpedUpMaxFeePerGas as string, 10)
-         < parseInt(pastMaxFeePerGas as string, 10) * 1.11) {
-        resubmitMaxFeePerGas = parseInt(pastMaxFeePerGas as string, 10) * 1.11;
+        Number(bumpedUpMaxFeePerGas)
+         < Number(pastMaxFeePerGas) * 1.11) {
+        resubmitMaxFeePerGas = Number(pastMaxFeePerGas) * 1.11;
       } else {
-        resubmitMaxFeePerGas = parseInt(pastMaxFeePerGas as string, 10);
+        resubmitMaxFeePerGas = Number(pastMaxFeePerGas);
       }
 
       result = {

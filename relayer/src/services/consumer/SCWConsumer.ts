@@ -2,7 +2,7 @@ import { ConsumeMessage } from 'amqplib';
 import { logger } from '../../../../common/log-config';
 import { IQueue } from '../../../../common/queue';
 import { EVMRawTransactionType, SCWTransactionMessageType, TransactionType } from '../../../../common/types';
-import { EVMAccount } from '../account';
+import { IEVMAccount } from '../account';
 import { IRelayerManager } from '../relayer-manager/interface/IRelayerManager';
 import { ITransactionService } from '../transaction-service';
 import { ITransactionConsumer } from './interface/ITransactionConsumer';
@@ -10,16 +10,16 @@ import { SCWConsumerParamsType } from './types';
 
 const log = logger(module);
 export class SCWConsumer implements
-ITransactionConsumer<EVMAccount, EVMRawTransactionType> {
+ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
   private transactionType: TransactionType = TransactionType.SCW;
 
   private queue: IQueue<SCWTransactionMessageType>;
 
   chainId: number;
 
-  relayerManager: IRelayerManager<EVMAccount, EVMRawTransactionType>;
+  relayerManager: IRelayerManager<IEVMAccount, EVMRawTransactionType>;
 
-  transactionService: ITransactionService<EVMAccount, EVMRawTransactionType>;
+  transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>;
 
   constructor(
     scwConsumerParamsType: SCWConsumerParamsType,
@@ -47,6 +47,7 @@ ITransactionConsumer<EVMAccount, EVMRawTransactionType> {
         const transactionServiceResponse = await this.transactionService.sendTransaction(
           transactionDataReceivedFromQueue,
           activeRelayer,
+          this.transactionType,
         );
         log.info(`Response from transaction service after sending transaction on chaindId: ${this.chainId}: ${JSON.stringify(transactionServiceResponse)}`);
         this.relayerManager.addActiveRelayer(activeRelayer.getPublicKey());

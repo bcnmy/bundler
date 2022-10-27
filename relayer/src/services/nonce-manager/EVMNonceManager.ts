@@ -2,15 +2,15 @@ import { ICacheService } from '../../../../common/cache';
 import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
 import { EVMRawTransactionType } from '../../../../common/types';
-import { EVMAccount } from '../account';
+import { IEVMAccount } from '../account';
 import { INonceManager } from './interface/INonceManager';
 import { EVMNonceManagerParamsType } from './types';
 
 const log = logger(module);
-export class EVMNonceManager implements INonceManager<EVMAccount, EVMRawTransactionType> {
+export class EVMNonceManager implements INonceManager<IEVMAccount, EVMRawTransactionType> {
   chainId: number;
 
-  networkService: INetworkService<EVMAccount, EVMRawTransactionType>;
+  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
 
   cacheService: ICacheService;
 

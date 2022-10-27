@@ -50,7 +50,7 @@ describe('SCW transactions', () => {
     // Import SDK?
   });
 
-  it('Simualtion should fail due to relayer beign under paid', async () => {
+  it('Simualtion should fail due to relayer being under paid', async () => {
     // TODO
     // Import SDK?
   });

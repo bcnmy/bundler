@@ -2,16 +2,16 @@ import { ethers } from 'ethers';
 import { IGasPrice } from '../../../../../common/gas-price';
 import { INetworkService } from '../../../../../common/network';
 import { EVMRawTransactionType } from '../../../../../common/types';
-import { EVMAccount } from '../../account';
+import { IEVMAccount } from '../../account';
 import { INonceManager } from '../../nonce-manager';
 import { EVMRelayerMetaDataType, IRelayerQueue } from '../../relayer-queue';
 import { ITransactionService } from '../../transaction-service';
 
 export type EVMRelayerManagerServiceParamsType = {
-  networkService: INetworkService<EVMAccount, EVMRawTransactionType>,
+  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
   gasPriceService: IGasPrice,
-  transactionService: ITransactionService<EVMAccount, EVMRawTransactionType>,
-  nonceManager: INonceManager<EVMAccount, EVMRawTransactionType>,
+  transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>,
+  nonceManager: INonceManager<IEVMAccount, EVMRawTransactionType>,
   relayerQueue: IRelayerQueue<EVMRelayerMetaDataType>,
   options: {
     name: string;
@@ -27,6 +27,6 @@ export type EVMRelayerManagerServiceParamsType = {
     gasLimitMap: {
       [key: number]: number
     },
-    ownerAccountDetails: EVMAccount,
+    ownerAccountDetails: IEVMAccount,
   },
 };
