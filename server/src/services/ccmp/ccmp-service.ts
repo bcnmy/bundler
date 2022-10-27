@@ -122,7 +122,7 @@ class CCMPService {
     eventName: string;
     eventData: any;
   }) {
-    // TODO: Validation?
+    // TODO: Validation (deduplication etc)?
 
     // TODO: Add to DB
     const message = CCMPService.parseIndexerEvent(tx.eventData);
