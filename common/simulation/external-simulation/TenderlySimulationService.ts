@@ -42,7 +42,7 @@ export class TenderlySimulationService implements IExternalSimulation {
       from: '0xb3d1f43ec5249538c6c0fd4fd6e06b4215ce3000',
       input: data,
       gas: 8000000,
-      gas_price: '0', // TODO get value from cache
+      gas_price: '100000000000000000000', // TODO get value from cache
       value: '0',
       to,
       // simulation config (tenderly specific)
