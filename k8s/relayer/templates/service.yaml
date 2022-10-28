@@ -7,7 +7,7 @@ metadata:
     {{- include "relayers-service.labels" . | nindent 4 }}
 spec:
   selector:
-    app: {{ .Values.server.name }}
+    app: {{ .Values.relayer.name }}
   ports:
     - port: 3000
-      targetPort: {{ .Values.server.port }}
+      targetPort: {{ .Values.relayer.port }}
