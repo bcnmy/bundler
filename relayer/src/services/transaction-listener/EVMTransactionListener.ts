@@ -5,7 +5,9 @@ import { IQueue } from '../../../../common/interface';
 import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
 import { RetryTransactionQueueData } from '../../../../common/queue/types';
-import { EVMRawTransactionType, SocketEventType, TransactionQueueMessageType, TransactionStatus } from '../../../../common/types';
+import {
+  EVMRawTransactionType, SocketEventType, TransactionQueueMessageType, TransactionStatus,
+} from '../../../../common/types';
 import { IEVMAccount } from '../account';
 import { ITransactionPublisher } from '../transaction-publisher';
 import { ITransactionListener } from './interface/ITransactionListener';
@@ -38,11 +40,11 @@ ITransactionPublisher<TransactionQueueMessageType> {
     evmTransactionListenerParams: EVMTransactionListenerParamsType,
   ) {
     const {
-      options, 
-      networkService, 
-      transactionQueue, 
-      retryTransactionQueue, 
-      transactionDao, 
+      options,
+      networkService,
+      transactionQueue,
+      retryTransactionQueue,
+      transactionDao,
       cacheService,
     } = evmTransactionListenerParams;
     this.chainId = options.chainId;
