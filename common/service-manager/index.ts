@@ -78,6 +78,9 @@ const transactionListenerMap: any = {};
 const retryTransactionQueueMap: {
   [key: number]: RetryTransactionHandlerQueue,
 } = {};
+const transactionQueueMap: {
+  [key: number]: TransactionHandlerQueue,
+} = {};
 
 (async () => {
   await dbInstance.connect();
@@ -113,6 +116,7 @@ const retryTransactionQueueMap: {
       chainId,
     });
     await transactionQueue.connect();
+    transactionQueueMap[chainId] = transactionQueue;
 
     socketConsumerMap[chainId] = new SocketConsumer({
       queue: transactionQueue,
@@ -121,7 +125,7 @@ const retryTransactionQueueMap: {
         wssUrl: config.socketService.wssUrl,
       },
     });
-    transactionQueue.consume(socketConsumerMap[chainId].onMessageReceived);
+    transactionQueueMap[chainId].consume(socketConsumerMap[chainId].onMessageReceived);
 
     const retryTransactionQueue = new RetryTransactionHandlerQueue({
       chainId,

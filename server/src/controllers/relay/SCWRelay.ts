@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import { ClientMessenger } from 'gasless-messaging-sdk';
 import { logger } from '../../../../common/log-config';
 import { routeTransactionToRelayerMap } from '../../../../common/service-manager';
 import { isError, TransactionType } from '../../../../common/types';
@@ -7,9 +6,6 @@ import { config } from '../../../../config';
 import { generateTransactionId } from '../../utils/tx-id-generator';
 
 const websocketUrl = config.socketService.wssUrl;
-const clientMessenger = new ClientMessenger(
-  websocketUrl,
-);
 
 const log = logger(module);
 
@@ -22,9 +18,6 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
 
     const gasLimitFromSimulation = req.body.params[1] ? `0x${(req.body.params[1]).toString(16)}` : null;
     const transactionId = generateTransactionId(data);
-    if (!clientMessenger.socketClient.isConnected()) {
-      await clientMessenger.connect();
-    }
     log.info(`Sending transaction to relayer with transactionId: ${transactionId} for SCW: ${to} on chainId: ${chainId}`);
     const response = await routeTransactionToRelayerMap[chainId][TransactionType.SCW]
       .sendTransactionToRelayer({
@@ -42,6 +35,7 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
         error: response.error,
       });
     }
+
     return {
       transactionId,
       connectionUrl: websocketUrl,

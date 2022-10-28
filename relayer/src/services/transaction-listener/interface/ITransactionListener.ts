@@ -3,13 +3,14 @@ import { ITransactionDAO } from '../../../../../common/db';
 import { IQueue } from '../../../../../common/interface';
 import { INetworkService } from '../../../../../common/network';
 import { RetryTransactionQueueData } from '../../../../../common/queue/types';
-import { NotifyTransactionListenerParamsType, TransactionListenerNotifyReturnType, TransactionMessageType } from '../types';
+import { TransactionQueueMessageType } from '../../../../../common/types';
+import { NotifyTransactionListenerParamsType, TransactionListenerNotifyReturnType } from '../types';
 
 export interface ITransactionListener<AccountType, RawTransactionType> {
   chainId: number;
   networkService: INetworkService<AccountType, RawTransactionType>;
   transactionDao: ITransactionDAO;
-  transactionQueue: IQueue<TransactionMessageType>;
+  transactionQueue: IQueue<TransactionQueueMessageType>;
   retryTransactionQueue: IQueue<RetryTransactionQueueData>;
   cacheService: ICacheService;
 

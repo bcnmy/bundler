@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { EVMRawTransactionType, TransactionType } from '../../types';
+import { EVMRawTransactionType, SocketEventType, TransactionType } from '../../types';
 
 export type TransactionMessageType = ethers.providers.TransactionResponse;
 
@@ -10,5 +10,6 @@ export type RetryTransactionQueueData = {
   transactionId: string,
   rawTransaction: EVMRawTransactionType,
   userAddress: string,
-  relayerManagerName: string
+  relayerManagerName: string,
+  event: SocketEventType
 };

@@ -13,7 +13,18 @@ export enum TransactionMethodType {
   CROSS_CHAIN = 'eth_sendCrossChainTransaction',
 }
 
-export type TransactionQueueMessageType = ethers.providers.TransactionResponse;
+export enum SocketEventType {
+  onTransactionHashGenerated = 'onTransactionHashGenerated',
+  onTransactionHashChanged = 'onTransactionHashChanged',
+  onTransactionMined = 'onTransactionMined',
+  onTransactionError = 'onTransactionError',
+}
+
+export type TransactionQueueMessageType = {
+  transactionId: string,
+  event: SocketEventType,
+  receipt: ethers.providers.TransactionResponse,
+};
 
 export enum TransactionStatus {
   IN_PROCESS = 'IN_PROCESS',

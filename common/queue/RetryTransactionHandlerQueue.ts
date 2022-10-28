@@ -13,7 +13,7 @@ export class RetryTransactionHandlerQueue implements IQueue<RetryTransactionQueu
 
   private exchangeName = 'retry_transaction_queue_exchange';
 
-  private exchangeType = 'direct';
+  private exchangeType = 'x-delayed-message';
 
   chainId: number;
 
@@ -35,6 +35,9 @@ export class RetryTransactionHandlerQueue implements IQueue<RetryTransactionQueu
       this.channel = await connection.createChannel();
       this.channel.assertExchange(this.exchangeName, this.exchangeType, {
         durable: true,
+        arguments: {
+          'x-delayed-type': 'direct',
+        },
       });
     }
   }
