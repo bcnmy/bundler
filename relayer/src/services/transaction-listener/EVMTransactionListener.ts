@@ -1,14 +1,14 @@
 import { ethers } from 'ethers';
+import { ICacheService } from '../../../../common/cache';
 import { ITransactionDAO } from '../../../../common/db';
 import { IQueue } from '../../../../common/interface';
 import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
+import { RetryTransactionQueueData } from '../../../../common/queue/types';
 import {
-  EVMRawTransactionType,
-  SocketEventType,
-  TransactionQueueMessageType,
-  TransactionStatus,
+  EVMRawTransactionType, SocketEventType, TransactionQueueMessageType, TransactionStatus,
 } from '../../../../common/types';
+import { getRetryTransactionCountKey } from '../../../../common/utils';
 import { IEVMAccount } from '../account';
 import { ITransactionPublisher } from '../transaction-publisher';
 import { ITransactionListener } from './interface/ITransactionListener';
@@ -31,21 +31,29 @@ ITransactionPublisher<TransactionQueueMessageType> {
 
   transactionQueue: IQueue<TransactionQueueMessageType>;
 
-  retryTransactionQueue: IQueue<TransactionQueueMessageType>;
+  retryTransactionQueue: IQueue<RetryTransactionQueueData>;
 
   transactionDao: ITransactionDAO;
+
+  cacheService: ICacheService;
 
   constructor(
     evmTransactionListenerParams: EVMTransactionListenerParamsType,
   ) {
     const {
-      options, networkService, transactionQueue, retryTransactionQueue, transactionDao,
+      options,
+      networkService,
+      transactionQueue,
+      retryTransactionQueue,
+      transactionDao,
+      cacheService,
     } = evmTransactionListenerParams;
     this.chainId = options.chainId;
     this.networkService = networkService;
     this.transactionQueue = transactionQueue;
     this.retryTransactionQueue = retryTransactionQueue;
     this.transactionDao = transactionDao;
+    this.cacheService = cacheService;
   }
 
   async publishToTransactionQueue(data: TransactionQueueMessageType): Promise<boolean> {
@@ -53,14 +61,18 @@ ITransactionPublisher<TransactionQueueMessageType> {
     return true;
   }
 
-  async publishToRetryTransactionQueue(data: TransactionQueueMessageType): Promise<boolean> {
+  async publishToRetryTransactionQueue(data: RetryTransactionQueueData): Promise<boolean> {
     await this.retryTransactionQueue.publish(data);
     return true;
   }
 
   private async onTransactionSuccess(onTranasctionSuccessParams: OnTransactionSuccessParamsType) {
     const {
-      transactionExecutionResponse, transactionId, relayerAddress, userAddress,
+      transactionExecutionResponse,
+      transactionId,
+      relayerAddress,
+      previousTransactionHash,
+      userAddress,
     } = onTranasctionSuccessParams;
 
     log.info(`Publishing to transaction queue on success for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
@@ -76,13 +88,18 @@ ITransactionPublisher<TransactionQueueMessageType> {
       transactionId,
       relayerAddress,
       TransactionStatus.SUCCESS,
+      previousTransactionHash,
       userAddress,
     );
   }
 
   private async onTransactionFailure(onTranasctionFailureParams: OnTransactionFailureParamsType) {
     const {
-      transactionExecutionResponse, transactionId, relayerAddress, userAddress,
+      transactionExecutionResponse,
+      transactionId,
+      relayerAddress,
+      previousTransactionHash,
+      userAddress,
     } = onTranasctionFailureParams;
 
     log.info(`Publishing to transaction queue on failure for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
@@ -98,6 +115,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       transactionId,
       relayerAddress,
       TransactionStatus.FAILED,
+      previousTransactionHash,
       userAddress,
     );
   }
@@ -107,11 +125,13 @@ ITransactionPublisher<TransactionQueueMessageType> {
     transactionId: string,
     relayerAddress: string,
     status: TransactionStatus,
+    previousTransactionHash: string | null,
     userAddress?: string,
   ): Promise<void> {
     const transactionDataToBeSaveInDatabase = {
       transactionId,
       transactionHash: transactionExecutionResponse.hash,
+      previousTransactionHash,
       status,
       rawTransaction: transactionExecutionResponse,
       chainId: this.chainId,
@@ -129,7 +149,13 @@ ITransactionPublisher<TransactionQueueMessageType> {
     notifyTransactionListenerParams: NotifyTransactionListenerParamsType,
   ) {
     const {
-      transactionExecutionResponse, transactionId, relayerAddress, userAddress,
+      transactionExecutionResponse,
+      transactionId,
+      relayerAddress,
+      previousTransactionHash,
+      userAddress,
+      transactionType,
+      relayerManagerName,
     } = notifyTransactionListenerParams;
 
     // TODO : add error check
@@ -139,16 +165,30 @@ ITransactionPublisher<TransactionQueueMessageType> {
     const transactionReceipt = await this.networkService.waitForTransaction(tranasctionHash);
     log.info(`Transaction receipt is: ${JSON.stringify(transactionReceipt)} for transactionId: ${transactionId} on chainId ${this.chainId}`);
 
+    await this.cacheService.delete(getRetryTransactionCountKey(transactionId, this.chainId));
+
     if (transactionReceipt.status === 1) {
       log.info(`Transaction is a success for transactionId: ${transactionId} on chainId ${this.chainId}`);
       this.onTransactionSuccess({
-        transactionExecutionResponse, transactionId, relayerAddress, userAddress,
+        transactionExecutionResponse,
+        transactionId,
+        relayerAddress,
+        transactionType,
+        previousTransactionHash,
+        userAddress,
+        relayerManagerName,
       });
     }
     if (transactionReceipt.status === 0) {
       log.info(`Transaction is a failure for transactionId: ${transactionId} on chainId ${this.chainId}`);
       this.onTransactionFailure({
-        transactionExecutionResponse, transactionId, relayerAddress, userAddress,
+        transactionExecutionResponse,
+        transactionId,
+        relayerAddress,
+        transactionType,
+        previousTransactionHash,
+        userAddress,
+        relayerManagerName,
       });
     }
   }
@@ -157,10 +197,20 @@ ITransactionPublisher<TransactionQueueMessageType> {
     notifyTransactionListenerParams: NotifyTransactionListenerParamsType,
   ): Promise<TransactionListenerNotifyReturnType> {
     const {
-      transactionExecutionResponse, transactionId,
+      transactionExecutionResponse,
+      transactionId,
+      rawTransaction,
+      relayerAddress,
+      transactionType,
+      userAddress,
+      relayerManagerName,
     } = notifyTransactionListenerParams;
     if (!transactionExecutionResponse) {
       log.error('transactionExecutionResponse is null');
+      return {
+        isTransactionRelayed: false,
+        transactionExecutionResponse: null,
+      };
     }
 
     // transaction queue is being listened by socket service to notify the client about the hash
@@ -170,9 +220,15 @@ ITransactionPublisher<TransactionQueueMessageType> {
       event: SocketEventType.onTransactionHashGenerated,
     });
     // retry txn service will check for receipt
+    log.info(`Publishing transaction data of transactionId: ${transactionId} to retry transaction queue on chainId ${this.chainId}`);
     await this.publishToRetryTransactionQueue({
+      relayerAddress,
+      transactionType,
+      transactionHash: transactionExecutionResponse.hash,
       transactionId,
-      receipt: transactionExecutionResponse,
+      rawTransaction: rawTransaction as EVMRawTransactionType,
+      userAddress: userAddress as string,
+      relayerManagerName,
       event: SocketEventType.onTransactionHashGenerated,
     });
     // wait for transaction

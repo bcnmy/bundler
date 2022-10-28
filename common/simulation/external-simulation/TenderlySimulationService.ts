@@ -36,19 +36,32 @@ export class TenderlySimulationService implements IExternalSimulation {
     log.info(`Sending request to alchemy to run simulation for SCW: ${to} with data: ${data}`);
     const SIMULATE_URL = `https://api.tenderly.co/api/v1/account/${this.tenderlyUser}/project/${this.tenderlyProject}/simulate`;
     const tAxios = this.tenderlyInstance();
+
+    const gasPriceForSimulation = await this.gasPriceService.getGasPriceForSimulation();
+    log.info(`Gas price to be used in simulation: ${gasPriceForSimulation}`);
     const body = {
       // standard TX fields
       network_id: chainId.toString(),
       from: '0xb3d1f43ec5249538c6c0fd4fd6e06b4215ce3000',
       input: data,
       gas: 8000000,
-      gas_price: '100000000000000000000', // TODO get value from cache
+      gas_price: gasPriceForSimulation.toString(), // TODO get value from cache
       value: '0',
       to,
       // simulation config (tenderly specific)
       save: true,
     };
-    const response = await tAxios.post(SIMULATE_URL, body);
+    let response;
+    try {
+      response = await tAxios.post(SIMULATE_URL, body);
+    } catch (error) {
+      log.info(`Error in Tenderly Simulation: ${JSON.stringify(error)}`);
+      return {
+        isSimulationSuccessful: false,
+        msgFromSimulation: `Error in Tenderly Simulation: ${JSON.stringify(error)}`,
+        gasLimitFromSimulation: 0,
+      };
+    }
 
     if (!response?.data?.transaction?.status) {
       return {
@@ -148,7 +161,7 @@ export class TenderlySimulationService implements IExternalSimulation {
 
       log.info(`Refund being sent to relayer in the transaction: ${refundToRelayer} or SCW: ${to} with data: ${data}`);
       log.info(`Asset consumption calculated from simulation: ${gasUsedInSimulation * nativeTokenGasPrice} or SCW: ${to} with data: ${data}`);
-      refundToRelayer = 8143088484392278;
+
       if ((Number(refundToRelayer) < Number(gasUsedInSimulation * nativeTokenGasPrice))) {
         return {
           isRelayerPaidFully: false,

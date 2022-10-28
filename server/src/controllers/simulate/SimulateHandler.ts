@@ -22,9 +22,9 @@ export const simulateTransaction = () => async (
         message: 'Wrong transaction type sent in request',
       });
     }
-    if ((response as any).code === 400) {
-      return res.status(400).send({
-        code: 400,
+    if ((response as any).code !== 200) {
+      return res.status((response as any).code).send({
+        code: (response as any).code,
         message: (response as any).msgFromSimulation,
       });
     }

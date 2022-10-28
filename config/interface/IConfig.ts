@@ -104,7 +104,13 @@ type TransactionConfigType = {
     },
     networksNonceError: ChainIdWithStringValueType,
     networksInsufficientFundsError: ChainIdWithStringValueType,
-  }
+  },
+  retryCount: {
+    [key: string]: {
+      [key: number]: number
+    }
+  },
+  bumpGasPriceMultiplier: ChainIdWithNumberValueType,
 };
 
 type ChainsConfigType = {

@@ -76,6 +76,8 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
         await this.transactionService.sendTransaction(
           transactionDataReceivedFromQueue,
           activeRelayer,
+          this.transactionType,
+          this.relayerManager.name,
         );
       } else {
         throw new Error(`No active relayer for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);

@@ -1,7 +1,10 @@
+import { ethers } from 'ethers';
+import { ICacheService } from '../../../../../common/cache';
 import { ITransactionDAO } from '../../../../../common/db';
 import { IGasPrice } from '../../../../../common/gas-price';
 import { GasPriceType } from '../../../../../common/gas-price/types';
 import { INetworkService } from '../../../../../common/network';
+import { RetryTransactionQueueData } from '../../../../../common/queue/types';
 import { EVMRawTransactionType } from '../../../../../common/types';
 import { IEVMAccount } from '../../account';
 import { INonceManager } from '../../nonce-manager';
@@ -14,6 +17,7 @@ export type EVMTransactionServiceParamsType = {
   nonceManager: INonceManager<IEVMAccount, EVMRawTransactionType>,
   gasPriceService: IGasPrice,
   transactionDao: ITransactionDAO,
+  cacheService: ICacheService,
   options: {
     chainId: number,
   }
@@ -40,11 +44,13 @@ export type ErrorTransactionResponseType = TransactionListenerNotifyReturnType &
   state: 'failed';
   code: number;
   error: string;
+  transactionId: string;
 };
 
 export type SuccessTransactionResponseType = TransactionListenerNotifyReturnType & {
   state: 'success';
   code: number;
+  transactionId: string
 };
 
 export type CreateRawTransactionParamsType = {
@@ -64,4 +70,14 @@ export type ExecuteTransactionParamsType = {
   account: IEVMAccount
 };
 
+export type ExecuteTransactionResponseType = {
+  success: true;
+  transactionResponse: ethers.providers.TransactionResponse,
+} | {
+  success: false;
+  error: string;
+};
+
 export type EVMTransactionResponseType = TransactionResponseType;
+
+export type RetryTransactionDataType = RetryTransactionQueueData;

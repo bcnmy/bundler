@@ -5,7 +5,7 @@ import { EVMNetworkService } from '../../common/network';
 import { RetryTransactionHandlerQueue, TransactionHandlerQueue } from '../../common/queue';
 import { EVMRawTransactionType } from '../../common/types';
 import { config } from '../../config';
-import { EVMAccount } from '../../relayer/src/services/account';
+import { EVMAccount, IEVMAccount } from '../../relayer/src/services/account';
 import { EVMNonceManager } from '../../relayer/src/services/nonce-manager';
 import { EVMRelayerManager, IRelayerManager } from '../../relayer/src/services/relayer-manager';
 import { EVMRelayerQueue } from '../../relayer/src/services/relayer-queue';
@@ -18,7 +18,7 @@ describe('relayer manager', () => {
 
   const EVMRelayerManagerMap: {
     [name: string] : {
-      [chainId: number]: IRelayerManager<EVMAccount, EVMRawTransactionType>;
+      [chainId: number]: IRelayerManager<IEVMAccount, EVMRawTransactionType>;
     }
   } = {};
 
