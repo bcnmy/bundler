@@ -2,7 +2,7 @@ import { ethers } from 'ethers';
 import { IGasPrice } from '../../../../../common/gas-price';
 import { INetworkService } from '../../../../../common/network';
 import { EVMRawTransactionType } from '../../../../../common/types';
-import { EVMAccount, IEVMAccount } from '../../account';
+import { IEVMAccount } from '../../account';
 import { INonceManager } from '../../nonce-manager';
 import { EVMRelayerMetaDataType, IRelayerQueue } from '../../relayer-queue';
 import { ITransactionService } from '../../transaction-service';
@@ -27,6 +27,6 @@ export type EVMRelayerManagerServiceParamsType = {
     gasLimitMap: {
       [key: number]: number
     },
-    ownerAccountDetails: EVMAccount,
+    ownerAccountDetails: IEVMAccount,
   },
 };

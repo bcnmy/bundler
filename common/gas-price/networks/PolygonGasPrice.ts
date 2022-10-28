@@ -1,6 +1,6 @@
 import { schedule } from 'node-cron';
 import { config } from '../../../config';
-import { EVMAccount } from '../../../relayer/src/services/account';
+import { IEVMAccount } from '../../../relayer/src/services/account';
 import { ICacheService } from '../../cache';
 import { logger } from '../../log-config';
 import { INetworkService } from '../../network';
@@ -17,7 +17,7 @@ export class MaticGasPrice extends GasPrice implements IScheduler {
 
   constructor(
     cacheService: ICacheService,
-    networkService: INetworkService<EVMAccount, EVMRawTransactionType>,
+    networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
     options: {
       chainId: number,
       EIP1559SupportedNetworks: Array<number>

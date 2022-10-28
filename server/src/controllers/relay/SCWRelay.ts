@@ -2,8 +2,8 @@ import { Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
 import { routeTransactionToRelayerMap } from '../../../../common/service-manager';
 import { isError, TransactionType } from '../../../../common/types';
+import { generateTransactionId } from '../../../../common/utils';
 import { config } from '../../../../config';
-import { generateTransactionId } from '../../utils/tx-id-generator';
 
 const websocketUrl = config.socketService.wssUrl;
 

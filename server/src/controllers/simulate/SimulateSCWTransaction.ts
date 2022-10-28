@@ -29,7 +29,7 @@ export const simulateSCWTransaction = async (req: Request, res: Response) => {
     req.body.params[1] = gasLimitFromSimulation;
     log.info(`Transaction successfully simulated for SCW: ${to} on chainId: ${chainId}`);
   } catch (error) {
-    log.error(`Error in fetching fee otpions ${error}`);
+    log.error(`Error in SCW simulation ${error}`);
     return res.status(500).json({
       error,
     });

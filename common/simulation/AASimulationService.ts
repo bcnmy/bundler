@@ -1,5 +1,5 @@
 import { config } from '../../config';
-import { EVMAccount } from '../../relayer/src/services/account';
+import { IEVMAccount } from '../../relayer/src/services/account';
 import { logger } from '../log-config';
 import { INetworkService } from '../network';
 import { EVMRawTransactionType } from '../types';
@@ -7,10 +7,10 @@ import { AASimulationDataType, SimulationResponseType } from './types';
 
 const log = logger(module);
 export class AASimulationService {
-  networkService: INetworkService<EVMAccount, EVMRawTransactionType>;
+  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
 
   constructor(
-    networkService: INetworkService<EVMAccount, EVMRawTransactionType>,
+    networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
   ) {
     this.networkService = networkService;
   }
