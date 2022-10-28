@@ -147,11 +147,9 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           gasPrice = rawTransaction.gasPrice;
         }
         log.info(`transaction sent with gas price ${rawTransaction.gasPrice} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
-        log.info(`bump gas price ${config.bumpGasPrice} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
+        log.info(`Bumping up gas price with multiplier ${config.transaction.bumpGasPriceMultiplier[this.chainId]} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
         log.info(`gasPriceInNumber ${gasPriceInNumber} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
-        rawTransaction.gasPrice = (
-          gasPriceInNumber * config.bumpGasPrice
-        ) + gasPriceInNumber;
+        rawTransaction.gasPrice = Math.round(config.transaction.bumpGasPriceMultiplier[this.chainId] * gasPriceInNumber).toString();
         log.info(`increasing gas price for the resubmit transaction ${rawTransaction.gasPrice} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
       } else if (errInString.indexOf(alreadyKnownMessage) > -1) {
         log.info(

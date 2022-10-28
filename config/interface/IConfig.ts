@@ -111,7 +111,8 @@ type TransactionConfigType = {
     [key: string]: {
       [key: number]: number
     }
-  }
+  },
+  bumpGasPriceMultiplier: ChainIdWithNumberValueType,
 };
 
 type ChainsConfigType = {
