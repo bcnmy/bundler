@@ -1,3 +1,4 @@
+import { ICacheService } from '../../../../../common/cache';
 import { IGasPrice } from '../../../../../common/gas-price';
 import { INetworkService } from '../../../../../common/network';
 import { TransactionType } from '../../../../../common/types';
@@ -16,6 +17,7 @@ export interface ITransactionService<AccountType, RawTransactionType> {
   transactionListener: ITransactionListener<AccountType, RawTransactionType>;
   nonceManager: INonceManager<AccountType, RawTransactionType>;
   gasPriceService: IGasPrice;
+  cacheService: ICacheService
 
   sendTransaction(
     transaction: TransactionDataType,

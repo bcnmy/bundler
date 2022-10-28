@@ -1,4 +1,5 @@
 import { ethers } from 'ethers';
+import { ICacheService } from '../../../../../common/cache';
 import { ITransactionDAO } from '../../../../../common/db';
 import { IQueue } from '../../../../../common/interface';
 import { INetworkService } from '../../../../../common/network';
@@ -13,6 +14,7 @@ export type EVMTransactionListenerParamsType = {
   transactionQueue: IQueue<TransactionMessageType>,
   retryTransactionQueue: IQueue<RetryTransactionQueueData>,
   transactionDao: ITransactionDAO,
+  cacheService: ICacheService,
   options: {
     chainId: number
   }

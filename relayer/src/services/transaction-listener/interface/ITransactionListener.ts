@@ -1,3 +1,4 @@
+import { ICacheService } from '../../../../../common/cache';
 import { ITransactionDAO } from '../../../../../common/db';
 import { IQueue } from '../../../../../common/interface';
 import { INetworkService } from '../../../../../common/network';
@@ -10,6 +11,7 @@ export interface ITransactionListener<AccountType, RawTransactionType> {
   transactionDao: ITransactionDAO;
   transactionQueue: IQueue<TransactionMessageType>;
   retryTransactionQueue: IQueue<RetryTransactionQueueData>;
+  cacheService: ICacheService;
 
   notify(notifyTransactionListenerParams: NotifyTransactionListenerParamsType):
   Promise<TransactionListenerNotifyReturnType>

@@ -1,3 +1,4 @@
+import { ICacheService } from '../../../../../common/cache';
 import { ITransactionDAO } from '../../../../../common/db';
 import { IGasPrice } from '../../../../../common/gas-price';
 import { GasPriceType } from '../../../../../common/gas-price/types';
@@ -15,6 +16,7 @@ export type EVMTransactionServiceParamsType = {
   nonceManager: INonceManager<IEVMAccount, EVMRawTransactionType>,
   gasPriceService: IGasPrice,
   transactionDao: ITransactionDAO,
+  cacheService: ICacheService,
   options: {
     chainId: number,
   }

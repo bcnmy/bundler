@@ -1,4 +1,5 @@
 import { ethers } from 'ethers';
+import { ICacheService } from '../../../../common/cache';
 import { ITransactionDAO } from '../../../../common/db';
 import { IQueue } from '../../../../common/interface';
 import { logger } from '../../../../common/log-config';
@@ -32,17 +33,20 @@ ITransactionPublisher<TransactionMessageType> {
 
   transactionDao: ITransactionDAO;
 
+  cacheService: ICacheService;
+
   constructor(
     evmTransactionListenerParams: EVMTransactionListenerParamsType,
   ) {
     const {
-      options, networkService, transactionQueue, retryTransactionQueue, transactionDao,
+      options, networkService, transactionQueue, retryTransactionQueue, transactionDao, cacheService,
     } = evmTransactionListenerParams;
     this.chainId = options.chainId;
     this.networkService = networkService;
     this.transactionQueue = transactionQueue;
     this.retryTransactionQueue = retryTransactionQueue;
     this.transactionDao = transactionDao;
+    this.cacheService = cacheService;
   }
 
   async publishToTransactionQueue(data: TransactionMessageType): Promise<boolean> {
@@ -144,6 +148,10 @@ ITransactionPublisher<TransactionMessageType> {
 
     const transactionReceipt = await this.networkService.waitForTransaction(tranasctionHash);
     log.info(`Transaction receipt is: ${JSON.stringify(transactionReceipt)} for transactionId: ${transactionId} on chainId ${this.chainId}`);
+
+    const retryTransactionCount = parseInt(await this.cacheService.delete(
+      getRetryTransactionCountKey(transactionId, this.chainId),
+    ), 10);
 
     if (transactionReceipt.status === 1) {
       log.info(`Transaction is a success for transactionId: ${transactionId} on chainId ${this.chainId}`);

@@ -154,6 +154,7 @@ const retryTransactionQueueMap: {
       nonceManager,
       gasPriceService,
       transactionDao,
+      cacheService,
       options: {
         chainId,
       },

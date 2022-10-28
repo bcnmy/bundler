@@ -11,3 +11,5 @@ export const generateTransactionId = (data: string) => {
 };
 
 export const getGasUsedInSimulationKey = (wallet: string, to: string, data: string) => generateTransactionId(`GasUsed_${wallet}_${to}_${data}`);
+
+export const getRetryTransactionCountKey = (transactionId: string, chainId: number) => `RetryTransactionCount_${transactionId}_${chainId}`;
