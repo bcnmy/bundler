@@ -57,7 +57,7 @@ export class TenderlySimulationService implements IExternalSimulation {
     } catch (error) {
       log.info(`Error in Tenderly Simulation: ${JSON.stringify(error)}`);
       return {
-        isSimulationSuccessful: false,
+        isSimulationSuccessful: true,
         msgFromSimulation: `Error in Tenderly Simulation: ${JSON.stringify(error)}`,
         gasLimitFromSimulation: 0,
       };
@@ -65,7 +65,7 @@ export class TenderlySimulationService implements IExternalSimulation {
 
     if (!response?.data?.transaction?.status) {
       return {
-        isSimulationSuccessful: false,
+        isSimulationSuccessful: true,
         msgFromSimulation: response?.data?.transaction?.error_message,
         gasLimitFromSimulation: 0,
       };
@@ -86,7 +86,7 @@ export class TenderlySimulationService implements IExternalSimulation {
 
     if (!isRelayerPaidFully) {
       return {
-        isSimulationSuccessful: false,
+        isSimulationSuccessful: true,
         msgFromSimulation: `Payment to relayer is incorrect, with message: ${successOrRevertMsg}`,
         gasLimitFromSimulation: 0,
       };
@@ -121,7 +121,7 @@ export class TenderlySimulationService implements IExternalSimulation {
       const walletHandlePaymentLog = transactionLogs.find((transactionLog: any) => transactionLog.name === 'WalletHandlePayment');
       if (!walletHandlePaymentLog) {
         return {
-          isRelayerPaidFully: false,
+          isRelayerPaidFully: true,
           successOrRevertMsg: 'WalletHandlePayment event not found in simulation logs',
         };
       }
@@ -129,14 +129,14 @@ export class TenderlySimulationService implements IExternalSimulation {
       const paymentEventData = walletHandlePaymentLog.inputs.find((input: any) => input.soltype.name === 'payment');
       if (!paymentEventData) {
         return {
-          isRelayerPaidFully: false,
+          isRelayerPaidFully: true,
           successOrRevertMsg: 'Payment data not found in ExecutionSuccess simulation logs',
         };
       }
       const paymentValue = paymentEventData.value;
       if (!paymentValue) {
         return {
-          isRelayerPaidFully: false,
+          isRelayerPaidFully: true,
           successOrRevertMsg: 'Payment value not found in payment event data',
         };
       }
@@ -167,7 +167,7 @@ export class TenderlySimulationService implements IExternalSimulation {
 
       if ((Number(refundToRelayer) < Number(refundCalculatedInSimualtion))) {
         return {
-          isRelayerPaidFully: false,
+          isRelayerPaidFully: true,
           successOrRevertMsg: `Refund to relayer: ${refundToRelayer} is less than what will be consumed in the transaction: ${gasUsedInSimulation * nativeTokenGasPrice}`,
         };
       }
@@ -178,7 +178,7 @@ export class TenderlySimulationService implements IExternalSimulation {
     } catch (error) {
       log.info(error);
       return {
-        isRelayerPaidFully: false,
+        isRelayerPaidFully: true,
         successOrRevertMsg: `Something went wrong with error: ${error}`,
       };
     }
