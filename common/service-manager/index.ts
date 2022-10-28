@@ -139,6 +139,7 @@ const retryTransactionQueueMap: {
 
     const transactionListener = new EVMTransactionListener({
       networkService,
+      cacheService,
       transactionQueue,
       retryTransactionQueue,
       transactionDao,

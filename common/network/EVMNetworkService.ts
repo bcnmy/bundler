@@ -3,11 +3,11 @@ import axios from 'axios';
 import { BigNumber, ethers } from 'ethers';
 import EventEmitter from 'events';
 import { IEVMAccount } from '../../relayer/src/services/account';
-import { EVMRawTransactionType } from '../types';
 import { ERC20_ABI } from '../constants';
+import { logger } from '../log-config';
+import { EVMRawTransactionType } from '../types';
 import { IERC20NetworkService, INetworkService, RpcMethod } from './interface';
 import { Type0TransactionGasPriceType, Type2TransactionGasPriceType } from './types';
-import { logger } from '../log-config';
 
 const log = logger(module);
 export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTransactionType>,

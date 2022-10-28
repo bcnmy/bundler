@@ -64,7 +64,7 @@ type NativeChainIdMapType = {
 };
 
 type NetworkResponseMessagesType = {
-  [key: string]: string
+  [key: string]: string //
 };
 
 type FeeOptionConfigType = {
@@ -111,7 +111,8 @@ type TransactionConfigType = {
     [key: string]: {
       [key: number]: number
     }
-  }
+  },
+  bumpGasPriceMultiplier: ChainIdWithNumberValueType,
 };
 
 type ChainsConfigType = {

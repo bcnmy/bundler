@@ -1,3 +1,4 @@
+import { ethers } from 'ethers';
 import { ICacheService } from '../../../../../common/cache';
 import { ITransactionDAO } from '../../../../../common/db';
 import { IGasPrice } from '../../../../../common/gas-price';
@@ -67,6 +68,14 @@ export type CreateRawTransactionReturnType = EVMRawTransactionType;
 export type ExecuteTransactionParamsType = {
   rawTransaction: EVMRawTransactionType,
   account: IEVMAccount
+};
+
+export type ExecuteTransactionResponseType = {
+  success: true;
+  transactionResponse: ethers.providers.TransactionResponse,
+} | {
+  success: false;
+  error: string;
 };
 
 export type EVMTransactionResponseType = TransactionResponseType;

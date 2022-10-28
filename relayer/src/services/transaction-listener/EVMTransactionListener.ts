@@ -8,6 +8,7 @@ import { RetryTransactionQueueData } from '../../../../common/queue/types';
 import {
   EVMRawTransactionType, SocketEventType, TransactionQueueMessageType, TransactionStatus,
 } from '../../../../common/types';
+import { getRetryTransactionCountKey } from '../../../../common/utils';
 import { IEVMAccount } from '../account';
 import { ITransactionPublisher } from '../transaction-publisher';
 import { ITransactionListener } from './interface/ITransactionListener';
@@ -164,9 +165,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
     const transactionReceipt = await this.networkService.waitForTransaction(tranasctionHash);
     log.info(`Transaction receipt is: ${JSON.stringify(transactionReceipt)} for transactionId: ${transactionId} on chainId ${this.chainId}`);
 
-    const retryTransactionCount = parseInt(await this.cacheService.delete(
-      getRetryTransactionCountKey(transactionId, this.chainId),
-    ), 10);
+    await this.cacheService.delete(getRetryTransactionCountKey(transactionId, this.chainId));
 
     if (transactionReceipt.status === 1) {
       log.info(`Transaction is a success for transactionId: ${transactionId} on chainId ${this.chainId}`);
