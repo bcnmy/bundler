@@ -48,6 +48,7 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
           transactionDataReceivedFromQueue,
           activeRelayer,
           this.transactionType,
+          this.relayerManager.name,
         );
         log.info(`Response from transaction service after sending transaction on chaindId: ${this.chainId}: ${JSON.stringify(transactionServiceResponse)}`);
         this.relayerManager.addActiveRelayer(activeRelayer.getPublicKey());

@@ -236,7 +236,7 @@ export class EVMRelayerManager implements IRelayerManager<IEVMAccount, EVMRawTra
         log.info(`Funding relayer ${address} on chainId: ${this.chainId} with raw tx ${JSON.stringify(rawTx)}`);
         await this.transactionService.sendTransaction({
           ...rawTx, transactionId,
-        }, this.ownerAccountDetails, TransactionType.FUNDING);
+        }, this.ownerAccountDetails, TransactionType.FUNDING, this.name);
       }
       release();
     }

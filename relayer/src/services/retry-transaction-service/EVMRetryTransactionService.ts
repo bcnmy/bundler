@@ -1,7 +1,6 @@
 import { ConsumeMessage } from 'amqplib';
 import { RawTransactionType } from 'network-sdk/dist/types';
 import { logger } from '../../../../common/log-config';
-import { relayerManagerTransactionTypeNameMap } from '../../../../common/maps';
 import { INetworkService } from '../../../../common/network';
 import { IQueue } from '../../../../common/queue';
 import { RetryTransactionQueueData } from '../../../../common/queue/types';
@@ -47,23 +46,20 @@ IRetryTransactionService<IEVMAccount, EVMRawTransactionType> {
       log.info(`Message received from retry transction queue on chainId: ${this.chainId}: ${JSON.stringify(msg.content.toString())}`);
       this.queue.ack(msg);
       const transactionDataReceivedFromRetryQueue = JSON.parse(msg.content.toString());
-      // TODO // Account loses its identity
+
       const {
         transactionHash,
         transactionId,
         relayerAddress,
         transactionType,
+        relayerManagerName,
       } = transactionDataReceivedFromRetryQueue;
 
       let account: IEVMAccount;
       if (transactionType === TransactionType.FUNDING) {
-        account = this.EVMRelayerManagerMap[
-          relayerManagerTransactionTypeNameMap[
-            transactionType as TransactionType]
-        ][this.chainId].ownerAccountDetails;
+        account = this.EVMRelayerManagerMap[relayerManagerName][this.chainId].ownerAccountDetails;
       } else {
-        account = this.EVMRelayerManagerMap[relayerManagerTransactionTypeNameMap[
-          transactionType as TransactionType]][this.chainId]
+        account = this.EVMRelayerManagerMap[relayerManagerName][this.chainId]
           .relayerMap[relayerAddress];
       }
 
@@ -79,6 +75,7 @@ IRetryTransactionService<IEVMAccount, EVMRawTransactionType> {
           transactionDataReceivedFromRetryQueue,
           account,
           transactionType,
+          relayerManagerName,
         );
       }
     } else {

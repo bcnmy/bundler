@@ -136,6 +136,7 @@ ITransactionPublisher<TransactionMessageType> {
       previousTransactionHash,
       userAddress,
       transactionType,
+      relayerManagerName,
     } = notifyTransactionListenerParams;
 
     const tranasctionHash = transactionExecutionResponse.hash;
@@ -153,6 +154,7 @@ ITransactionPublisher<TransactionMessageType> {
         transactionType,
         previousTransactionHash,
         userAddress,
+        relayerManagerName,
       });
     }
     if (transactionReceipt.status === 0) {
@@ -164,6 +166,7 @@ ITransactionPublisher<TransactionMessageType> {
         transactionType,
         previousTransactionHash,
         userAddress,
+        relayerManagerName,
       });
     }
   }
@@ -178,6 +181,7 @@ ITransactionPublisher<TransactionMessageType> {
       relayerAddress,
       transactionType,
       userAddress,
+      relayerManagerName,
     } = notifyTransactionListenerParams;
     if (!transactionExecutionResponse) {
       log.error('transactionExecutionResponse is null');
@@ -194,6 +198,7 @@ ITransactionPublisher<TransactionMessageType> {
       transactionId,
       rawTransaction: rawTransaction as EVMRawTransactionType,
       userAddress: userAddress as string,
+      relayerManagerName,
     });
     // wait for transaction
     this.waitForTransaction(notifyTransactionListenerParams);

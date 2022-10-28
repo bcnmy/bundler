@@ -165,6 +165,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     transactionData: TransactionDataType,
     account: IEVMAccount,
     transactionType: TransactionType,
+    relayerManagerName: string,
   ): Promise<SuccessTransactionResponseType | ErrorTransactionResponseType> {
     const relayerAddress = account.getPublicKey();
     const {
@@ -211,6 +212,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         previousTransactionHash: null,
         rawTransaction,
         userAddress,
+        relayerManagerName,
       });
 
       return {
@@ -244,6 +246,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       transactionId,
       rawTransaction,
       userAddress,
+      relayerManagerName,
     } = retryTransactionData;
     try {
       // TODO // Make it generel and EIP 1559 specific and get bump up from config
@@ -268,6 +271,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         transactionType,
         previousTransactionHash: transactionHash,
         userAddress,
+        relayerManagerName,
       });
 
       return {

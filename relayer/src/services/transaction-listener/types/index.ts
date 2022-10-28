@@ -25,7 +25,8 @@ export type NotifyTransactionListenerParamsType = {
   transactionType: TransactionType,
   previousTransactionHash: string | null,
   rawTransaction?: EVMRawTransactionType,
-  userAddress?: string
+  userAddress?: string,
+  relayerManagerName: string
 };
 
 export type TransactionListenerNotifyReturnType = {
