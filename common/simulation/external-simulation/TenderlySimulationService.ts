@@ -151,18 +151,21 @@ export class TenderlySimulationService implements IExternalSimulation {
       // ERC 20 token gas price should be in units of native asset
       // TODO get price feeds
       const erc20TokenGasPrice = parseInt(refundInfo.tokenGasPrice, 10);
+      let refundCalculatedInSimualtion: number = 0;
       if (refundInfo.gasToken === '0x0000000000000000000000000000000000000000') {
         refundToRelayer = Number(paymentValue) * nativeTokenGasPrice;
+        refundCalculatedInSimualtion = gasUsedInSimulation * nativeTokenGasPrice;
       } else {
         // decimals
         // paymentValue is in smallest unit?
         refundToRelayer = Number(paymentValue) * erc20TokenGasPrice;
+        refundCalculatedInSimualtion = gasUsedInSimulation * erc20TokenGasPrice;
       }
 
       log.info(`Refund being sent to relayer in the transaction: ${refundToRelayer} or SCW: ${to} with data: ${data}`);
-      log.info(`Asset consumption calculated from simulation: ${gasUsedInSimulation * nativeTokenGasPrice} or SCW: ${to} with data: ${data}`);
+      log.info(`Asset consumption calculated from simulation: ${refundCalculatedInSimualtion} or SCW: ${to} with data: ${data}`);
 
-      if ((Number(refundToRelayer) < Number(gasUsedInSimulation * nativeTokenGasPrice))) {
+      if ((Number(refundToRelayer) < Number(refundCalculatedInSimualtion))) {
         return {
           isRelayerPaidFully: false,
           successOrRevertMsg: `Refund to relayer: ${refundToRelayer} is less than what will be consumed in the transaction: ${gasUsedInSimulation * nativeTokenGasPrice}`,
