@@ -207,6 +207,10 @@ ITransactionPublisher<TransactionQueueMessageType> {
     } = notifyTransactionListenerParams;
     if (!transactionExecutionResponse) {
       log.error('transactionExecutionResponse is null');
+      return {
+        isTransactionRelayed: false,
+        transactionExecutionResponse: null,
+      };
     }
 
     // transaction queue is being listened by socket service to notify the client about the hash

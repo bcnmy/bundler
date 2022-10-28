@@ -67,6 +67,18 @@ export class GasPrice implements IGasPrice {
     return result;
   }
 
+  async getGasPriceForSimulation(gasType = GasPriceType.DEFAULT): Promise<string> {
+    let result: string;
+    const gasPrice = await this.cacheService.get(this.getGasPriceKey(gasType));
+    if (!gasPrice) {
+      const response = await this.networkService.getGasPrice();
+      result = response.gasPrice;
+    } else {
+      result = gasPrice;
+    }
+    return result;
+  }
+
   getBumpedUpGasPrice(
     pastGasPrice: NetworkBasedGasPriceType,
     bumpingPercentage: number,

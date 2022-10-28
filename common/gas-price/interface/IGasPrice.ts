@@ -11,6 +11,7 @@ export interface IGasPrice {
 
   setGasPrice(gasType: GasPriceType, price: string): Promise<void>
   getGasPrice(gasType?: GasPriceType): Promise<NetworkBasedGasPriceType>
+  getGasPriceForSimulation(gasType?: GasPriceType): Promise<string>
 
   setMaxFeeGasPrice(gasType: GasPriceType, price: string): Promise<void>
   getMaxFeeGasPrice(gasType: GasPriceType): Promise<string>
