@@ -143,7 +143,6 @@ const retryTransactionQueueMap: {
       transactionQueue,
       retryTransactionQueue,
       transactionDao,
-      cacheService,
       options: {
         chainId,
       },
