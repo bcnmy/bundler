@@ -99,10 +99,18 @@ type RelayerManagerConfigType = Array<{
 
 type TransactionConfigType = {
   errors: {
-    networkResponseCodes: ChainIdWithStringValueType;
-    networksNonceError: ChainIdWithStringValueType;
-    networksInsufficientFundsError: ChainIdWithStringValueType;
-  };
+    networkResponseMessages: {
+      [key: string]: string,
+    },
+    networksNonceError: ChainIdWithStringValueType,
+    networksInsufficientFundsError: ChainIdWithStringValueType,
+  },
+  retryCount: {
+    [key: string]: {
+      [key: number]: number
+    }
+  },
+  bumpGasPriceMultiplier: ChainIdWithNumberValueType,
 };
 
 type ChainsConfigType = {

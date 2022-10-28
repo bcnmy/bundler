@@ -1,7 +1,6 @@
 import { createClient } from 'redis';
 import { config } from '../../../config';
 import { logger } from '../../log-config';
-import { parseError } from '../../utils';
 import { ICacheService } from '../interface';
 
 const log = logger(module);
@@ -50,7 +49,7 @@ export class RedisCacheService implements ICacheService {
       await this.redisClient.decrBy(key, decrementBy);
       return true;
     } catch (error) {
-      log.error(`Error in decrement value ${parseError(error)}`);
+      log.error(`Error in decrement value ${JSON.stringify(error)}`);
     }
     return false;
   }
@@ -62,7 +61,7 @@ export class RedisCacheService implements ICacheService {
       if (result) return true;
       return false;
     } catch (error) {
-      log.error(`Error in deleting key ${key} - ${parseError(error)}`);
+      log.error(`Error in deleting key ${key} - ${JSON.stringify(error)}`);
       return false;
     }
   }
@@ -74,7 +73,7 @@ export class RedisCacheService implements ICacheService {
       if (result) return true;
       return false;
     } catch (error) {
-      log.error(parseError(error));
+      log.error(JSON.stringify(error));
       return false;
     }
   }
@@ -85,7 +84,7 @@ export class RedisCacheService implements ICacheService {
       const result = await this.redisClient.get(key) || '';
       return result;
     } catch (error) {
-      log.error(`Error getting value for key ${key} - ${parseError(error)}`);
+      log.error(`Error getting value for key ${key} - ${JSON.stringify(error)}`);
     }
     return '';
   }
@@ -107,7 +106,7 @@ export class RedisCacheService implements ICacheService {
       }
       return false;
     } catch (error) {
-      log.error(`Error in increment value - ${parseError(error)}`);
+      log.error(`Error in increment value - ${JSON.stringify(error)}`);
       return false;
     }
   }
@@ -123,7 +122,7 @@ export class RedisCacheService implements ICacheService {
       log.info(`Cache value set in logs for key: ${key}`);
       return true;
     } catch (error) {
-      log.error(`Error setting value $${value} for key ${key} - ${parseError(error)}`);
+      log.error(`Error setting value $${value} for key ${key} - ${JSON.stringify(error)}`);
       return false;
     }
   }

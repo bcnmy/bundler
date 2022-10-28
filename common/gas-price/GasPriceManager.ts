@@ -1,4 +1,4 @@
-import { EVMAccount } from '../../relayer/src/services/account';
+import { IEVMAccount } from '../../relayer/src/services/account';
 import { ICacheService } from '../cache';
 import { INetworkService } from '../network';
 import { EVMRawTransactionType } from '../types';
@@ -12,7 +12,7 @@ export type GasPriceServiceType = MaticGasPrice | GoerliGasPrice | MumbaiGasPric
 export class GasPriceManager implements IGasPriceManager<GasPriceServiceType> {
   cacheService: ICacheService;
 
-  networkService: INetworkService<EVMAccount, EVMRawTransactionType>;
+  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
 
   options: {
     chainId: number,
@@ -21,7 +21,7 @@ export class GasPriceManager implements IGasPriceManager<GasPriceServiceType> {
 
   constructor(
     cacheService: ICacheService,
-    networkService: INetworkService<EVMAccount, EVMRawTransactionType>,
+    networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
     options: {
       chainId: number,
       EIP1559SupportedNetworks: Array<number>

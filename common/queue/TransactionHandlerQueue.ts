@@ -1,14 +1,14 @@
 import amqp, { Channel, ConsumeMessage, Replies } from 'amqplib';
 import { config } from '../../config';
 import { logger } from '../log-config';
+import { TransactionQueueMessageType } from '../types';
 import { IQueue } from './interface/IQueue';
-import { TransactionMessageType } from './types';
 
 const log = logger(module);
 
 const { queueUrl } = config;
 
-export class TransactionHandlerQueue implements IQueue<TransactionMessageType> {
+export class TransactionHandlerQueue implements IQueue<TransactionQueueMessageType> {
   private channel!: Channel;
 
   private exchangeName = 'transaction_queue_exchange';
@@ -39,10 +39,9 @@ export class TransactionHandlerQueue implements IQueue<TransactionMessageType> {
     }
   }
 
-  async publish(data: TransactionMessageType) {
+  async publish(data: TransactionQueueMessageType) {
     const key = `chainid.${this.chainId}`;
-    log.info(`Publishing data to retry queue on chain id ${this.chainId} and key ${key}`);
-    this.channel.prefetch(1);
+    log.info(`Publishing data to transaction queue on chain id ${this.chainId} and key ${key}`);
     this.channel.publish(this.exchangeName, key, Buffer.from(JSON.stringify(data)), {
       persistent: true,
     });

@@ -82,8 +82,8 @@ export class Config implements IConfig {
       }
 
       // check for transaction config
-      if (!this.config.transaction.errors.networkResponseCodes[chainId]) {
-        throw new Error(`Network response codes required for chain id ${chainId}`);
+      if (!this.config.transaction.errors.networkResponseMessages) {
+        throw new Error('Network response messages are required');
       }
       if (!this.config.transaction.errors.networksNonceError[chainId]) {
         throw new Error(`Network nonce error required for chain id ${chainId}`);

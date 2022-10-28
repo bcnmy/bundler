@@ -14,10 +14,7 @@ const dbInstance = Mongo.getInstance();
 const transactionDao = new TransactionDAO();
 const cacheService = RedisCacheService.getInstance();
 
-describe('Transaction Service: Sending Transaction on chainId: 5', async () => {
-  await dbInstance.connect();
-  await cacheService.connect();
-
+describe('Transaction Service: Sending Transaction on chainId: 5', () => {
   const chainId = 5;
 
   const networkService = new EVMNetworkService({
@@ -29,7 +26,6 @@ describe('Transaction Service: Sending Transaction on chainId: 5', async () => {
   const transactionQueue = new TransactionHandlerQueue({
     chainId,
   });
-  await transactionQueue.connect();
 
   const gasPriceManager = new GasPriceManager(cacheService, networkService, {
     chainId,
@@ -82,8 +78,6 @@ describe('Transaction Service: Sending Transaction on chainId: 5', async () => {
   const accountPrivateKey = 'e3b3818b1b604cf6dfc3133faa9a524f1e2ea0d5894a003c4b857952f6b146f6';
   const evmAccount = new EVMAccount(accountPublicKey, accountPrivateKey);
 
-  const nonceBeforeTransaction = await nonceManager.getNonce(accountPublicKey);
-
   const setQuoteAbi = [{
     inputs: [{ internalType: 'string', name: 'newQuote', type: 'string' }], name: 'setQuote', outputs: [], stateMutability: 'nonpayable', type: 'function',
   }, { inputs: [], stateMutability: 'nonpayable', type: 'constructor' }, {
@@ -97,21 +91,38 @@ describe('Transaction Service: Sending Transaction on chainId: 5', async () => {
   }];
   const setQuoteAddress = '0xe31b0bcbda693bff2529f4a1d9f7e8f6d924c6ab';
 
-  const setQuoteContract = networkService.getContract(setQuoteAbi.toString(), setQuoteAddress);
+  const setQuoteContract = networkService.getContract(JSON.stringify(setQuoteAbi), setQuoteAddress);
 
-  const { data } = await setQuoteContract.populateTransaction.setQuote(`Current time: ${Date.now()}`);
+  let nonceBeforeTransaction: number;
+  let transactionExecutionResponse: ethers.providers.TransactionResponse | null;
+  let transactionId: string;
 
-  const transactionData = {
-    to: accountPublicKey,
-    value: '0x0',
-    data: data as string,
-    gasLimit: '0x249F0',
-    transactionId: '0xabcdefg',
-  };
-  const { transactionExecutionResponse } = await transactionService.sendTransaction(
-    transactionData,
-    evmAccount,
-  );
+  beforeAll(async () => {
+    await dbInstance.connect();
+    await cacheService.connect();
+    await transactionQueue.connect();
+    nonceBeforeTransaction = await nonceManager.getNonce(accountPublicKey);
+    const { data } = await setQuoteContract.populateTransaction.setQuote(`Current time: ${Date.now()}`);
+
+    const transactionData = {
+      to: accountPublicKey,
+      value: '0x0',
+      data: data as string,
+      gasLimit: '0x249F0',
+      transactionId: '0xabcdefg',
+    };
+
+    // TODO // Set high gas price value from cache
+
+    const response = await transactionService.sendTransaction(
+      transactionData,
+      evmAccount,
+    );
+    transactionExecutionResponse = response.transactionExecutionResponse;
+    transactionId = response.transactionId;
+
+    // TODO // Delete high gas price value from cache
+  });
 
   it('Transaction hash is generated', async () => {
     expect((transactionExecutionResponse as ethers.providers.TransactionResponse).hash)
@@ -125,9 +136,20 @@ describe('Transaction Service: Sending Transaction on chainId: 5', async () => {
     expect(nonceDifference).toBe(1);
   });
 
-  it('Transaction is confirmed on chainf ');
+  it('Transaction is confirmed on chain', async () => {
+    const transactionReceipt = await networkService.waitForTransaction(
+      (transactionExecutionResponse as ethers.providers.TransactionResponse).hash,
+    );
+    expect(transactionReceipt.status).toBe(1);
+  });
 
   it('Transaction Data is saved in database', async () => {
-
+    const transactionDataFromDatabase = await transactionDao.getByTransactionId(
+      chainId,
+      transactionId,
+    );
+    expect(transactionDataFromDatabase?.transactionHash).toBe(
+      (transactionExecutionResponse as ethers.providers.TransactionResponse).hash,
+    );
   });
 });

@@ -1,44 +1,45 @@
 import { ConsumeMessage } from 'amqplib';
 import { logger } from '../../../../common/log-config';
 import { IQueue } from '../../../../common/queue';
-import { EVMRawTransactionType, CCMPTransactionMessageType, TransactionType } from '../../../../common/types';
-import { EVMAccount } from '../account';
+import {
+  EVMRawTransactionType,
+  CCMPTransactionMessageType,
+  TransactionType,
+} from '../../../../common/types';
+import { IEVMAccount } from '../account';
 import { IRelayerManager } from '../relayer-manager/interface/IRelayerManager';
 import { ITransactionService } from '../transaction-service';
 import { ITransactionConsumer } from './interface/ITransactionConsumer';
 import { CCMPConsumerParamsType } from './types';
 
 const log = logger(module);
-export class CCMPConsumer implements
-ITransactionConsumer<EVMAccount, EVMRawTransactionType> {
+export class CCMPConsumer implements ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
   private transactionType: TransactionType = TransactionType.CROSS_CHAIN;
 
   private queue: IQueue<CCMPTransactionMessageType>;
 
   chainId: number;
 
-  relayerManager: IRelayerManager<EVMAccount, EVMRawTransactionType>;
+  relayerManager: IRelayerManager<IEVMAccount, EVMRawTransactionType>;
 
-  transactionService: ITransactionService<EVMAccount, EVMRawTransactionType>;
+  transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>;
 
-  constructor(
-    ccmpConsumerParamsType: CCMPConsumerParamsType,
-  ) {
-    const {
-      options, queue, relayerManager, transactionService,
-    } = ccmpConsumerParamsType;
+  constructor(ccmpConsumerParamsType: CCMPConsumerParamsType) {
+    const { options, queue, relayerManager, transactionService } = ccmpConsumerParamsType;
     this.queue = queue;
     this.relayerManager = relayerManager;
     this.transactionService = transactionService;
     this.chainId = options.chainId;
   }
 
-  onMessageReceived = async (
-    msg?: ConsumeMessage,
-  ): Promise<void> => {
+  onMessageReceived = async (msg?: ConsumeMessage): Promise<void> => {
     if (msg) {
       const transactionDataReceivedFromQueue = JSON.parse(msg.content.toString());
-      log.info(`onMessage received in ${this.transactionType}: ${JSON.stringify(transactionDataReceivedFromQueue)}`);
+      log.info(
+        `onMessage received in ${this.transactionType}: ${JSON.stringify(
+          transactionDataReceivedFromQueue
+        )}`
+      );
       this.queue.ack(msg);
       // get active relayer
       const activeRelayer = await this.relayerManager.getActiveRelayer();
@@ -47,20 +48,36 @@ ITransactionConsumer<EVMAccount, EVMRawTransactionType> {
         const transactionServiceResponse = await this.transactionService.sendTransaction(
           transactionDataReceivedFromQueue,
           activeRelayer,
+          this.transactionType,
+          this.relayerManager.name
         );
-        log.info(`Response from transaction service after sending transaction on chainId: ${this.chainId}: ${JSON.stringify(transactionServiceResponse)}`);
+        log.info(
+          `Response from transaction service after sending transaction on chainId: ${
+            this.chainId
+          }: ${JSON.stringify(transactionServiceResponse)}`
+        );
         this.relayerManager.addActiveRelayer(activeRelayer.getPublicKey());
         if (transactionServiceResponse.state === 'success') {
-          log.info(`Transaction sent successfully for ${this.transactionType} on chain ${this.chainId}`);
+          log.info(
+            `Transaction sent successfully for ${this.transactionType} on chain ${this.chainId}`
+          );
         } else {
-          log.error(`Transaction failed with error: ${transactionServiceResponse?.error || 'unknown error'} for ${this.transactionType} on chain ${this.chainId}`);
+          log.error(
+            `Transaction failed with error: ${
+              transactionServiceResponse?.error || 'unknown error'
+            } for ${this.transactionType} on chain ${this.chainId}`
+          );
         }
       } else {
         this.queue.publish(JSON.parse(msg.content.toString()));
-        log.info(`No active relayer for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);
+        log.info(
+          `No active relayer for transactionType: ${this.transactionType} on chainId: ${this.chainId}`
+        );
       }
     } else {
-      throw new Error(`No msg received from queue for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);
+      throw new Error(
+        `No msg received from queue for transactionType: ${this.transactionType} on chainId: ${this.chainId}`
+      );
     }
   };
 }

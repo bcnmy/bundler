@@ -7,9 +7,9 @@ import { IGasPrice } from '../../../../common/gas-price';
 import { GasPriceType } from '../../../../common/gas-price/types';
 import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
-import { EVMRawTransactionType } from '../../../../common/types';
+import { EVMRawTransactionType, TransactionType } from '../../../../common/types';
+import { generateTransactionId } from '../../../../common/utils';
 import { config } from '../../../../config';
-import { generateTransactionId } from '../../../../server/src/utils/tx-id-generator';
 import { EVMAccount, IEVMAccount } from '../account';
 import { INonceManager } from '../nonce-manager';
 import { EVMRelayerMetaDataType, IRelayerQueue } from '../relayer-queue';
@@ -34,12 +34,12 @@ const nodePathRoot = "m/44'/60'/0'/";
  * Convert either from main account or convert per relayer
  */
 
-export class EVMRelayerManager implements IRelayerManager<EVMAccount, EVMRawTransactionType> {
+export class EVMRelayerManager implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
   name: string;
 
   chainId: number;
 
-  transactionService: ITransactionService<EVMAccount, EVMRawTransactionType>;
+  transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>;
 
   private minRelayerCount: number;
 
@@ -57,7 +57,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount, EVMRawTran
 
   relayerSeed: string;
 
-  ownerAccountDetails: EVMAccount;
+  ownerAccountDetails: IEVMAccount;
 
   gasLimitMap: {
     [key: number]: number
@@ -65,7 +65,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount, EVMRawTran
 
   relayerQueue: IRelayerQueue<EVMRelayerMetaDataType>;
 
-  relayerMap: Record<string, EVMAccount> = {};
+  relayerMap: Record<string, IEVMAccount> = {};
 
   transactionProcessingRelayerMap: Record<string, EVMRelayerMetaDataType> = {};
 
@@ -100,7 +100,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount, EVMRawTran
     this.nonceManager = nonceManager;
   }
 
-  async getActiveRelayer(): Promise<EVMAccount | null> {
+  async getActiveRelayer(): Promise<IEVMAccount | null> {
     const activeRelayer = await this.relayerQueue.pop();
     if (activeRelayer) {
       this.transactionProcessingRelayerMap[activeRelayer.address] = activeRelayer;
@@ -136,7 +136,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount, EVMRawTran
     const release = await createRelayerMutex.acquire();
     log.info(`Received lock to create relayers on chainId ${this.chainId}`);
     const relayersMasterSeed = this.ownerAccountDetails.getPublicKey();
-    const relayers: EVMAccount[] = [];
+    const relayers: IEVMAccount[] = [];
     const relayersAddressList: string[] = [];
     try {
       const index = this.getRelayersCount();
@@ -236,7 +236,7 @@ export class EVMRelayerManager implements IRelayerManager<EVMAccount, EVMRawTran
         log.info(`Funding relayer ${address} on chainId: ${this.chainId} with raw tx ${JSON.stringify(rawTx)}`);
         await this.transactionService.sendTransaction({
           ...rawTx, transactionId,
-        }, this.ownerAccountDetails);
+        }, this.ownerAccountDetails, TransactionType.FUNDING, this.name);
       }
       release();
     }

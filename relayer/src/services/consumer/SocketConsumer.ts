@@ -34,14 +34,16 @@ export class SocketConsumer implements ISocketConsumer {
     msg?: ConsumeMessage,
   ) => {
     if (msg) {
-      const transactionDataReceivedFromQueue = JSON.parse(msg.content.toString());
-      log.info(`onMessage received in socket service on chain Id ${this.chainId}: ${JSON.stringify(transactionDataReceivedFromQueue)}`);
+      const transactionDataReceivedFromQueue: TransactionQueueMessageType = JSON.parse(
+        msg.content.toString(),
+      );
+      log.info(`Message received from transction queue in socket service on chain Id ${this.chainId}: ${JSON.stringify(transactionDataReceivedFromQueue)}`);
       this.queue.ack(msg);
       try {
         this.socketClient.publish({
           channel: `transaction:${transactionDataReceivedFromQueue.transactionId}`,
           data: {
-            event: 'transactionMined',
+            event: transactionDataReceivedFromQueue.event,
           },
         });
       } catch (error) {

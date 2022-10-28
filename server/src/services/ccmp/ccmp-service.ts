@@ -11,7 +11,7 @@ import {
 } from '../../../../common/types';
 import { logger } from '../../../../common/log-config';
 import type { routeTransactionToRelayerMap as globalRouteTransactionToRelayerMap } from '../../../../common/service-manager';
-import { ICCMPRouterService } from './types';
+import type { ICCMPRouterService } from './types';
 
 const log = logger(module);
 

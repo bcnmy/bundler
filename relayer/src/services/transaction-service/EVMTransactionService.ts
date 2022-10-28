@@ -1,8 +1,12 @@
+/* eslint-disable max-len */
 import { ethers } from 'ethers';
+import { ICacheService } from '../../../../common/cache';
 import { IGasPrice } from '../../../../common/gas-price';
 import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
-import { EVMRawTransactionType } from '../../../../common/types';
+import { EVMRawTransactionType, TransactionType } from '../../../../common/types';
+import { getRetryTransactionCountKey } from '../../../../common/utils';
+import { config } from '../../../../config';
 import { IEVMAccount } from '../account';
 import { INonceManager } from '../nonce-manager';
 import { ITransactionListener } from '../transaction-listener';
@@ -13,6 +17,8 @@ import {
   ErrorTransactionResponseType,
   EVMTransactionServiceParamsType,
   ExecuteTransactionParamsType,
+  ExecuteTransactionResponseType,
+  RetryTransactionDataType,
   SuccessTransactionResponseType,
   TransactionDataType,
 } from './types';
@@ -31,15 +37,18 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
 
   gasPriceService: IGasPrice;
 
+  cacheService: ICacheService;
+
   constructor(evmTransactionServiceParams: EVMTransactionServiceParamsType) {
     const {
-      options, networkService, transactionListener, nonceManager, gasPriceService,
+      options, networkService, transactionListener, nonceManager, gasPriceService, cacheService,
     } = evmTransactionServiceParams;
     this.chainId = options.chainId;
     this.networkService = networkService;
     this.transactionListener = transactionListener;
     this.nonceManager = nonceManager;
     this.gasPriceService = gasPriceService;
+    this.cacheService = cacheService;
   }
 
   private async createTransaction(
@@ -87,24 +96,111 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
 
   private async executeTransaction(
     executeTransactionParams: ExecuteTransactionParamsType,
-  ): Promise<ethers.providers.TransactionResponse> {
+  ): Promise<ExecuteTransactionResponseType> {
     const { rawTransaction, account } = executeTransactionParams;
-    const transactionExecutionResponse = await this.networkService.sendTransaction(
-      rawTransaction,
-      account,
-    );
-    return transactionExecutionResponse;
+    try {
+      const transactionExecutionResponse = await this.networkService.sendTransaction(
+        rawTransaction,
+        account,
+      );
+      return {
+        success: true,
+        transactionResponse: transactionExecutionResponse,
+      };
+    } catch (error: any) {
+      const errInString = error.toString();
+      log.info(errInString);
+      const nonceErrorMessage = config.transaction.errors.networksNonceError[this.chainId];
+      const replacementFeeLowMessage = config.transaction.errors.networkResponseMessages
+        .REPLACEMENT_UNDERPRICED;
+      const alreadyKnownMessage = config.transaction
+        .errors.networkResponseMessages.ALREADY_KNOWN;
+      const insufficientFundsErrorMessage = config
+        .transaction.errors.networksInsufficientFundsError[this.chainId]
+      || config.transaction.errors.networkResponseMessages.INSUFFICIENT_FUNDS;
+
+      if (errInString.indexOf(nonceErrorMessage) > -1
+    || errInString.indexOf('increasing the gas price or incrementing the nonce') > -1) {
+        log.info(
+          `Nonce too low error for relayer ${rawTransaction.from}
+    on network id ${this.chainId}. Removing nonce from cache and retrying`,
+        );
+        rawTransaction.nonce = await this.networkService
+          .getNonce(rawTransaction.from, true);
+        log.info(`updating the nonce to ${rawTransaction.nonce}
+     for relayer ${rawTransaction.from} on network id ${this.chainId}`);
+      } else if (errInString.indexOf(replacementFeeLowMessage) > -1) {
+        log.info(
+          `Replacement underpriced error for relayer ${rawTransaction.from}
+     on network id ${this.chainId}`,
+        );
+        let { gasPrice } = await this.networkService.getGasPrice();
+
+        log.info(`gas price from network ${gasPrice}`);
+        const gasPriceInNumber = ethers.BigNumber.from(
+          gasPrice.toString(),
+        ).toNumber();
+
+        log.info(`rawTransaction.gasPrice ${rawTransaction.gasPrice} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
+
+        if (rawTransaction.gasPrice && gasPrice < rawTransaction.gasPrice) {
+          gasPrice = rawTransaction.gasPrice;
+        }
+        log.info(`transaction sent with gas price ${rawTransaction.gasPrice} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
+        log.info(`Bumping up gas price with multiplier ${config.transaction.bumpGasPriceMultiplier[this.chainId]} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
+        log.info(`gasPriceInNumber ${gasPriceInNumber} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
+        rawTransaction.gasPrice = Math.round(config.transaction.bumpGasPriceMultiplier[this.chainId] * gasPriceInNumber).toString();
+        log.info(`increasing gas price for the resubmit transaction ${rawTransaction.gasPrice} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
+      } else if (errInString.indexOf(alreadyKnownMessage) > -1) {
+        log.info(
+          `Already known transaction hash with same payload and nonce for relayer ${rawTransaction.from} on network id ${this.chainId}. Removing nonce from cache and retrying`,
+        );
+      } else if (errInString.indexOf(insufficientFundsErrorMessage) > -1) {
+        log.info(`Relayer ${rawTransaction.from} has insufficient funds`);
+        // Send previous relayer for funding
+      } else {
+        log.info('transaction not being retried');
+        return {
+          success: false,
+          error: 'transaction not being retried',
+        };
+      }
+      return {
+        success: false,
+        error: errInString,
+      };
+    }
   }
 
   async sendTransaction(
     transactionData: TransactionDataType,
     account: IEVMAccount,
+    transactionType: TransactionType,
+    relayerManagerName: string,
   ): Promise<SuccessTransactionResponseType | ErrorTransactionResponseType> {
     const relayerAddress = account.getPublicKey();
     const {
       to, value, data, gasLimit,
       speed, transactionId, userAddress,
     } = transactionData;
+
+    const retryTransactionCount = parseInt(await this.cacheService.get(getRetryTransactionCountKey(transactionId, this.chainId)), 10);
+
+    const maxRetryCount = config.transaction.retryCount[transactionType][this.chainId];
+
+    if (retryTransactionCount > maxRetryCount) {
+      return {
+        state: 'failed',
+        code: 404, // TODO custom code for max retry
+        error: 'Max retry count exceeded',
+        transactionId,
+        ...{
+          isTransactionRelayed: false,
+          transactionExecutionResponse: null,
+        },
+      };
+    }
+
     log.info(`Transaction request received with transactionId: ${transactionId} on chainId ${this.chainId}`);
     // create transaction
     const rawTransaction = await this.createTransaction({
@@ -123,23 +219,32 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         rawTransaction,
         account,
       });
-      log.info(`Transaction execution response for transactionId: ${JSON.stringify(transactionExecutionResponse)} on chainId ${this.chainId}`);
+      log.info(`Transaction execution response for transactionId ${transactionData.transactionId}: ${JSON.stringify(transactionExecutionResponse)} on chainId ${this.chainId}`);
 
       log.info(`Incrementing nonce for account: ${relayerAddress} on chainId ${this.chainId}`);
       await this.nonceManager.incrementNonce(relayerAddress);
       log.info(`Incremented nonce for account: ${relayerAddress} on chainId ${this.chainId}`);
 
+      if (!transactionExecutionResponse.success) {
+        throw new Error('Error in transaction execution');
+      }
       log.info(`Notifying transaction listener for transactionId: ${transactionId} on chainId ${this.chainId}`);
+
       const transactionListenerNotifyResponse = await this.transactionListener.notify({
-        transactionExecutionResponse,
+        transactionExecutionResponse: transactionExecutionResponse.transactionResponse,
         transactionId: transactionId as string,
         relayerAddress,
+        transactionType,
+        previousTransactionHash: null,
+        rawTransaction,
         userAddress,
+        relayerManagerName,
       });
 
       return {
         state: 'success',
         code: 200,
+        transactionId,
         ...transactionListenerNotifyResponse,
       };
     } catch (error) {
@@ -148,6 +253,81 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         state: 'failed',
         code: 500,
         error: JSON.stringify(error),
+        transactionId,
+        ...{
+          isTransactionRelayed: false,
+          transactionExecutionResponse: null,
+        },
+      };
+    }
+  }
+
+  async retryTransaction(
+    retryTransactionData: RetryTransactionDataType,
+    account: IEVMAccount,
+    transactionType: TransactionType,
+  ): Promise<SuccessTransactionResponseType | ErrorTransactionResponseType> {
+    const {
+      transactionHash,
+      transactionId,
+      rawTransaction,
+      userAddress,
+      relayerManagerName,
+    } = retryTransactionData;
+    try {
+      // TODO // Make it generel and EIP 1559 specific and get bump up from config
+      const bumpedUpGasPrice = this.gasPriceService.getBumpedUpGasPrice(
+        rawTransaction.gasPrice as string,
+        50,
+      );
+
+      rawTransaction.gasPrice = bumpedUpGasPrice as string;
+      log.info(`Executing retry transaction for transactionId: ${transactionId}`);
+      const retryTransactionExecutionResponse = await this.executeTransaction({
+        rawTransaction,
+        account,
+      });
+      let transactionExecutionResponse;
+      if (retryTransactionExecutionResponse.success) {
+        transactionExecutionResponse = retryTransactionExecutionResponse.transactionResponse;
+      } else {
+        return {
+          state: 'failed',
+          code: 500,
+          error: JSON.stringify(retryTransactionExecutionResponse.error),
+          transactionId,
+          ...{
+            isTransactionRelayed: false,
+            transactionExecutionResponse: null,
+          },
+        };
+      }
+
+      log.info(`Notifying transaction listener for transactionId: ${transactionId} on chainId ${this.chainId}`);
+      const transactionListenerNotifyResponse = await this.transactionListener.notify({
+        transactionExecutionResponse,
+        transactionId: transactionId as string,
+        relayerAddress: account.getPublicKey(),
+        rawTransaction,
+        transactionType,
+        previousTransactionHash: transactionHash,
+        userAddress,
+        relayerManagerName,
+      });
+
+      return {
+        state: 'success',
+        code: 200,
+        transactionId,
+        ...transactionListenerNotifyResponse,
+      };
+    } catch (error) {
+      log.info(`Error while retrying transaction: ${error} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+      return {
+        state: 'failed',
+        code: 500,
+        error: JSON.stringify(error),
+        transactionId,
         ...{
           isTransactionRelayed: false,
           transactionExecutionResponse: null,
