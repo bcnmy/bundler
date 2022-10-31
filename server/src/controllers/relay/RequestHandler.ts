@@ -8,7 +8,7 @@ export const requestHandler = async (
   res: Response,
 ) => {
   const { method } = req.body;
-  let response = null;
+  let response;
   if (method === TransactionMethodType.AA) {
     response = await relayAATransaction(req, res);
   } else if (method === TransactionMethodType.SCW) {
@@ -17,12 +17,6 @@ export const requestHandler = async (
     return res.status(400).send({
       code: 400,
       message: 'Wrong transaction type sent in request',
-    });
-  }
-  if (!response) {
-    return res.status(500).send({
-      code: 500,
-      message: 'Something went error. Could not get response',
     });
   }
   return response;

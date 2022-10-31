@@ -35,11 +35,13 @@ export const relayAATransaction = async (req: Request, res: Response) => {
         error: response.error,
       });
     }
-
-    return {
-      transactionId,
-      connectionUrl: websocketUrl,
-    };
+    return res.status(200).json({
+      msg: 'success',
+      data: {
+        transactionId,
+        connectionUrl: websocketUrl,
+      },
+    });
   } catch (error) {
     log.error(`Error in AA relay ${error}`);
     return res.status(500).json({

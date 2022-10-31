@@ -58,6 +58,7 @@ describe('Transaction Service: Sending Transaction on chainId: 5', () => {
     transactionQueue,
     retryTransactionQueue,
     transactionDao,
+    cacheService,
     options: {
       chainId,
     },
@@ -112,7 +113,7 @@ describe('Transaction Service: Sending Transaction on chainId: 5', () => {
       transactionId: '0xabcdefg',
     };
 
-    // TODO // Set high gas price value from cache
+    // TODO // Set high gas price value in cache
 
     const response = await transactionService.sendTransaction(
       transactionData,

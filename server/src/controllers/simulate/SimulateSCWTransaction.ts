@@ -4,7 +4,6 @@ import { scwSimulationServiceMap } from '../../../../common/service-manager';
 
 const log = logger(module);
 
-// eslint-disable-next-line consistent-return
 export const simulateSCWTransaction = async (req: Request, res: Response) => {
   try {
     const {
@@ -28,6 +27,10 @@ export const simulateSCWTransaction = async (req: Request, res: Response) => {
     const { gasLimitFromSimulation } = scwSimulationResponse;
     req.body.params[1] = gasLimitFromSimulation;
     log.info(`Transaction successfully simulated for SCW: ${to} on chainId: ${chainId}`);
+    return {
+      code: 200,
+      msgFromSimulation: 'Transaction successfully simulated',
+    };
   } catch (error) {
     log.error(`Error in SCW simulation ${error}`);
     return res.status(500).json({

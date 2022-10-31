@@ -123,6 +123,7 @@ describe('Network Service: Native Asset Balance', () => {
     );
     const { gasPrice } = await networkServiceMap[80001].getGasPrice();
 
+    // TODO: review test case for timeout issue
     // transfer 0.00001 native token from main account
     await ownerWallet.sendTransaction({
       to: wallet.address,

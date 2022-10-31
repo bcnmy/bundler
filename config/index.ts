@@ -1,6 +1,7 @@
 import crypto from 'crypto-js';
 import fs, { existsSync } from 'fs';
 import _, { isNumber } from 'lodash';
+import path from 'path';
 import { TransactionType } from '../common/types';
 
 import { ConfigType, IConfig } from './interface/IConfig';
@@ -56,7 +57,9 @@ export class Config implements IConfig {
       throw new Error('Error: HMAC does not match');
     }
     const data = JSON.parse(plaintext) as ConfigType;
-    this.config = data;
+    const staticConfig = JSON.parse(fs.readFileSync(path.resolve('./config/static-config.json'), 'utf8'));
+
+    this.config = _.merge(data, staticConfig);
     this.validate();
   }
 
