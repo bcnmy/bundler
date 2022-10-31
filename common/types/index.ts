@@ -27,9 +27,9 @@ export enum SocketEventType {
 }
 
 export type TransactionQueueMessageType = {
-  transactionId: string,
-  event: SocketEventType,
-  receipt: ethers.providers.TransactionResponse,
+  transactionId: string;
+  event: SocketEventType;
+  receipt: ethers.providers.TransactionResponse;
 };
 
 export enum TransactionStatus {
@@ -38,6 +38,19 @@ export enum TransactionStatus {
   SUCCESS = 'SUCCESS',
   FAILED = 'FAILED',
   DROPPED = 'DROPPED',
+}
+
+export enum CrossChainTransationStatus {
+  SOURCE_TX_RECEIVED = 'SOURCE_TX_RECEIVED',
+  PROTOCOL_FEE_PAID = 'PROTOCOL_FEE_PAID',
+  PROTOCOL_CONFIRMATION_RECEIVED = 'PROTOCOL_CONFIRMATION_RECEIVED',
+  DESTINATION_TRANSACTION_RELAYED = 'DESTINATION_TRANSACTION_RELAYED',
+}
+
+export enum CrossChainTransactionError {
+  INSUFFICIENT_GAS_FEE = 'ERR_INSUFFICIENT_GAS_FEE_PAID',
+  UNSUPPORTED_ROUTE = 'ERR_UNSUPPORTED_ROUTE',
+  UNKNOWN_ERROR = 'ERR_UNKNOWN_ERR',
 }
 
 export enum RelayerManagerType {
@@ -51,10 +64,12 @@ export type AccessListItem = {
   storageKeys: string[];
 };
 
-export type NetworkBasedGasPriceType = {
-  maxPriorityFeePerGas: string;
-  maxFeePerGas: string;
-} | string;
+export type NetworkBasedGasPriceType =
+  | {
+    maxPriorityFeePerGas: string;
+    maxFeePerGas: string;
+  }
+  | string;
 
 export type EVMRawTransactionType = {
   from: string;
@@ -79,7 +94,7 @@ export type AATransactionMessageType = {
   chainId: number;
   value: string;
   transactionId: string;
-  userOp?: UserOperationType
+  userOp?: UserOperationType;
 };
 
 export type SCWTransactionMessageType = {
@@ -159,7 +174,7 @@ export type CCMPMessage = {
   destinationGateway: string;
   destinationChainId: BigNumberish;
   nonce: BigNumberish;
-  routerAdaptor: string;
+  routerAdaptor: CCMPRouterName;
   gasFeePaymentArgs: GasFeePaymentArgsStruct;
   payload: CCMPMessagePayload[];
   hash: string;
@@ -167,7 +182,7 @@ export type CCMPMessage = {
 
 export type EntryPointMapType = {
   [chainId: number]: Array<{
-    address: string,
-    entryPointContract: ethers.Contract
-  }>
+    address: string;
+    entryPointContract: ethers.Contract;
+  }>;
 };

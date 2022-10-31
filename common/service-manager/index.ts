@@ -14,7 +14,7 @@ import { EVMRetryTransactionService } from '../../relayer/src/services/retry-tra
 import { EVMTransactionListener } from '../../relayer/src/services/transaction-listener';
 import { EVMTransactionService } from '../../relayer/src/services/transaction-service';
 import { FeeOption } from '../../server/src/services';
-import { CCMPService } from '../../server/src/services/ccmp/ccmp-service';
+import { CCMPService } from '../../server/src/services/ccmp/CCMPService';
 import {
   AxelarRouterService,
   HyperlaneRouterService,
@@ -48,6 +48,7 @@ import {
   SCWTransactionMessageType,
   TransactionType,
 } from '../types';
+import { CrossChainTransactionDAO } from '../db/dao/CrossChainTransactionDao';
 
 const log = logger(module);
 
@@ -376,7 +377,8 @@ const retryTransactionQueueMap: {
         ccmpServiceMap[chainId] = new CCMPService(
           chainId,
           ccmpRouterMap[chainId],
-          routeTransactionToRelayerMap
+          routeTransactionToRelayerMap,
+          new CrossChainTransactionDAO(),
         );
 
         ccmpServiceInitPromises.push(ccmpServiceMap[chainId].init());
