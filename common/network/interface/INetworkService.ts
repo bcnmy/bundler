@@ -43,7 +43,7 @@ export interface INetworkService<AccountType, RawTransactionType> {
     methodName: string,
     params: object,
     from: string
-  ): Promise<BigNumber>
+  ): Promise<BigNumber | object>
   sendTransaction(
     rawTransactionData: RawTransactionType,
     account: AccountType,
