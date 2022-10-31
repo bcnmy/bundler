@@ -25,15 +25,23 @@ export class AASimulationService {
       this.networkService.ethersProvider.getSigner(config.zeroAddress),
     );
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let isSimulationSuccessful = true;
     try {
       await entryPointStatic.callStatic.simulateValidation(userOp, false);
     } catch (error) {
       isSimulationSuccessful = false;
     }
+
     const estimatedGasForUserOp = await this.networkService.estimateGas(entryPointContract, 'handleOps', [[userOp], config.feeOption.refundReceiver[chainId]], config.zeroAddress);
+
     log.info(`Estimated gas is: ${estimatedGasForUserOp} for userOp: ${JSON.stringify(userOp)}`);
+    if (typeof estimatedGasForUserOp === 'object') {
+      return {
+        isSimulationSuccessful: false,
+        gasLimitFromSimulation: 0,
+        msgFromSimulation: JSON.stringify(estimatedGasForUserOp),
+      };
+    }
     return {
       isSimulationSuccessful,
       gasLimitFromSimulation: estimatedGasForUserOp,
