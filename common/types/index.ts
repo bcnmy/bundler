@@ -41,6 +41,8 @@ export enum TransactionStatus {
 }
 
 export enum CrossChainTransationStatus {
+  __START = 'START',
+  TRANSACTION_VALIDATED = 'TRANSACTION_VALIDATED',
   SOURCE_TX_RECEIVED = 'SOURCE_TX_RECEIVED',
   PROTOCOL_FEE_PAID = 'PROTOCOL_FEE_PAID',
   PROTOCOL_CONFIRMATION_RECEIVED = 'PROTOCOL_CONFIRMATION_RECEIVED',
@@ -66,9 +68,9 @@ export type AccessListItem = {
 
 export type NetworkBasedGasPriceType =
   | {
-    maxPriorityFeePerGas: string;
-    maxFeePerGas: string;
-  }
+      maxPriorityFeePerGas: string;
+      maxFeePerGas: string;
+    }
   | string;
 
 export type EVMRawTransactionType = {

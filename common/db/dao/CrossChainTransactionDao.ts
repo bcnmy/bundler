@@ -15,14 +15,17 @@ export class CrossChainTransactionDAO implements ICrossChainTransactionDAO {
   async updateByTransactionId(
     chainId: number,
     id: string,
-    data: ICrossChainTransaction,
+    data: ICrossChainTransaction
   ): Promise<void> {
     await this._db
       .getCrossChainTransaction(chainId)
-      .updateOne({
-        transactionId: id,
-      })
-      .update(data);
+      .updateOne(
+        {
+          transactionId: id,
+        },
+        data,
+      )
+      .setOptions({ upsert: true });
   }
 
   async getByTransactionId(chainId: number, id: string): Promise<ICrossChainTransaction | null> {

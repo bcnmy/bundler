@@ -59,7 +59,7 @@ export class Config implements IConfig {
     const data = JSON.parse(plaintext) as ConfigType;
     const staticConfig = JSON.parse(fs.readFileSync(path.resolve('./config/static-config.json'), 'utf8'));
 
-    this.config = _.merge(data, staticConfig);
+    this.config = _.merge(staticConfig, data);
     this.validate();
   }
 
