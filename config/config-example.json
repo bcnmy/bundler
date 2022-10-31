@@ -13,5 +13,12 @@
     "token": "averystrongtoken",
     "apiKey": "somerandomstring"
   },
-  "queueUrl": "amqp://localhost:5672?heartbeat=30"
+  "queueUrl": "amqp://localhost:5672?heartbeat=30",
+  "simulationData": {
+    "tenderlyData": {
+      "tenderlyUser": "username",
+      "tenderlyProject": "projectname",
+      "tenderlyAccessKey": "accesskey"
+    }
+  }
 }
