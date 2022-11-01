@@ -1,4 +1,8 @@
 {
+  "socketService": {
+    "wssUrl": "wss://sdk-testing-ws.staging.biconomy.io/connection/websocket",
+    "httpUrl": "https://sdk-testing-ws.staging.biconomy.io/api"
+  },
   "supportedNetworks": [5, 80001],
   "EIP1559SupportedNetworks": [],
   "supportedTransactionType": {
