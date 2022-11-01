@@ -75,6 +75,10 @@ ITransactionPublisher<TransactionQueueMessageType> {
       previousTransactionHash,
       userAddress,
     } = onTranasctionSuccessParams;
+    if (!transactionReceipt) {
+      log.error(`Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
+      return;
+    }
 
     log.info(`Publishing to transaction queue on success for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
     await this.publishToTransactionQueue({
@@ -104,7 +108,10 @@ ITransactionPublisher<TransactionQueueMessageType> {
       previousTransactionHash,
       userAddress,
     } = onTranasctionFailureParams;
-
+    if (!transactionReceipt) {
+      log.error(`Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
+      return;
+    }
     log.info(`Publishing to transaction queue on failure for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
     await this.publishToTransactionQueue({
       transactionId,
