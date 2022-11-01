@@ -69,6 +69,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
   private async onTransactionSuccess(onTranasctionSuccessParams: OnTransactionSuccessParamsType) {
     const {
       transactionExecutionResponse,
+      transactionReceipt,
       transactionId,
       relayerAddress,
       previousTransactionHash,
@@ -86,6 +87,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
     await this.saveTransactionDataToDatabase(
       transactionExecutionResponse,
       transactionId,
+      transactionReceipt,
       relayerAddress,
       TransactionStatus.SUCCESS,
       previousTransactionHash,
@@ -97,6 +99,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
     const {
       transactionExecutionResponse,
       transactionId,
+      transactionReceipt,
       relayerAddress,
       previousTransactionHash,
       userAddress,
@@ -113,6 +116,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
     await this.saveTransactionDataToDatabase(
       transactionExecutionResponse,
       transactionId,
+      transactionReceipt,
       relayerAddress,
       TransactionStatus.FAILED,
       previousTransactionHash,
@@ -123,6 +127,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
   private async saveTransactionDataToDatabase(
     transactionExecutionResponse: ethers.providers.TransactionResponse,
     transactionId: string,
+    transactionReceipt: ethers.providers.TransactionReceipt,
     relayerAddress: string,
     status: TransactionStatus,
     previousTransactionHash: string | null,
@@ -136,13 +141,17 @@ ITransactionPublisher<TransactionQueueMessageType> {
       rawTransaction: transactionExecutionResponse,
       chainId: this.chainId,
       gasPrice: transactionExecutionResponse.gasPrice,
-      receipt: {},
+      receipt: transactionReceipt,
       relayerAddress,
       userAddress,
       creationTime: Date.now(),
       updationTime: Date.now(),
     };
-    await this.transactionDao.save(this.chainId, transactionDataToBeSaveInDatabase);
+    await this.transactionDao.updateByTransactionId(
+      this.chainId,
+      transactionId,
+      transactionDataToBeSaveInDatabase,
+    );
   }
 
   private async waitForTransaction(
@@ -172,6 +181,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       this.onTransactionSuccess({
         transactionExecutionResponse,
         transactionId,
+        transactionReceipt,
         relayerAddress,
         transactionType,
         previousTransactionHash,
@@ -184,6 +194,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       this.onTransactionFailure({
         transactionExecutionResponse,
         transactionId,
+        transactionReceipt,
         relayerAddress,
         transactionType,
         previousTransactionHash,
