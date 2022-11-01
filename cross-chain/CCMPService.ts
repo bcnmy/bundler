@@ -213,7 +213,7 @@ export class CCMPService implements ICCMPService {
       sourceChainTxHash,
       sourceChainId,
       message,
-      state?.statusLog.length || 1,
+      state?.statusLog.length ? state.statusLog.length + 1 : 1,
       state,
     );
 

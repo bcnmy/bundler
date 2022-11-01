@@ -176,6 +176,7 @@ const retryTransactionQueueMap: {
       transactionQueue,
       retryTransactionQueue,
       transactionDao,
+      crossChainTransactionDAO: new CrossChainTransactionDAO(),
       options: {
         chainId,
       },

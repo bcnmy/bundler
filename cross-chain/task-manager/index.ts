@@ -28,12 +28,13 @@ export class CCMPTaskManager implements ICCMPTaskManager {
     public readonly sourceChainId: number,
     public readonly message: CCMPMessage,
     public readonly executionIndex: number,
-    private readonly dbState: ICrossChainTransaction | null,
+    private readonly dbState: ICrossChainTransaction | null
   ) {
     // Load State from DB, create if not present
-    this.logs = dbState && executionIndex <= dbState?.statusLog.length
-      ? dbState?.statusLog[executionIndex - 1].logs
-      : [{ status: CrossChainTransationStatus.__START, timestamp: Date.now() }];
+    this.logs =
+      dbState && executionIndex <= dbState?.statusLog.length
+        ? dbState?.statusLog[executionIndex - 1].logs
+        : [{ status: CrossChainTransationStatus.__START, timestamp: Date.now() }];
   }
 
   setVerificationData(data: CCMPVerificationData) {
@@ -54,9 +55,9 @@ export class CCMPTaskManager implements ICCMPTaskManager {
       };
     } else {
       statusLog = [
-        ...(this.dbState?.statusLog || []),
+        ...statusLog,
         {
-          executionIndex: (this.dbState?.statusLog?.length || 0) + 1,
+          executionIndex: this.executionIndex,
           sourceTxHash: this.sourceTxHash,
           logs: this.logs as any,
         },
@@ -65,13 +66,7 @@ export class CCMPTaskManager implements ICCMPTaskManager {
     return {
       transactionId: this.message.hash,
       sourceTransactionHash: this.sourceTxHash,
-      statusLog: [
-        ...(this.dbState?.statusLog || []),
-        {
-          executionIndex: (this.dbState?.statusLog?.length || 0) + 1,
-          logs: this.logs as any,
-        },
-      ],
+      statusLog,
       creationTime: this.dbState?.creationTime || Date.now(),
       updationTime: Date.now(),
       message: this.message,
@@ -83,7 +78,7 @@ export class CCMPTaskManager implements ICCMPTaskManager {
   async run(
     name: string,
     handler: IHandler,
-    handlerExpectedPostCompletionStatus: CrossChainTransationStatus,
+    handlerExpectedPostCompletionStatus: CrossChainTransationStatus
   ): Promise<ICCMPTaskManager> {
     const latestEntry = this.logs[this.logs.length - 1];
 
@@ -120,7 +115,7 @@ export class CCMPTaskManager implements ICCMPTaskManager {
     await this.crossChainTransactionDAO.updateByTransactionId(
       this.sourceChainId,
       updatedDao.transactionId,
-      updatedDao,
+      updatedDao
     );
     log.info(`Updated state saved for ${name} handler to DB`);
     return this;

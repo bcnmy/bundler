@@ -7,9 +7,7 @@ import { parseIndexerEvent } from '../../../../cross-chain/utils';
 const log = logger(module);
 
 export const hookApi = async (req: Request, res: Response) => {
-  const {
-    chainId, from, scAddress, event: eventName, data, txHash, gasUsage,
-  } = req.body;
+  const { chainId, data, txHash } = req.body;
 
   const ccmpService = ccmpServiceMap[chainId];
   if (ccmpService) {
@@ -21,18 +19,7 @@ export const hookApi = async (req: Request, res: Response) => {
 
   (async () => {
     try {
-      await ccmpService.processTransaction(
-        parseIndexerEvent({
-          txHash,
-          gasUsage,
-          chainId,
-          from,
-          scAddress,
-          eventName,
-          eventData: data,
-        }),
-        txHash,
-      );
+      await ccmpService.processTransaction(parseIndexerEvent(data), txHash);
     } catch (e) {
       log.error(`Error processing transaction ${txHash} on chain ${chainId}`, e);
     }

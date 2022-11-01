@@ -91,7 +91,7 @@ export class CCMPConsumer implements ITransactionConsumer<IEVMAccount, EVMRawTra
           );
           await taskManager.run(
             'Handle Relay Error',
-            CCMPConsumer.handleOnTransactionSuccessFailureFactory(
+            CCMPConsumer.handleOnTransactionFailureFactory(
               transactionServiceResponse.transactionExecutionResponse?.hash,
               transactionServiceResponse?.error,
             ),
@@ -136,7 +136,7 @@ export class CCMPConsumer implements ITransactionConsumer<IEVMAccount, EVMRawTra
       }
       return {
         ...data,
-        status: CrossChainTransationStatus.DESTINATION_TRANSACTION_CONFIRMED,
+        status: CrossChainTransationStatus.DESTINATION_TRANSACTION_RELAYED,
         context: {
           destinationTxHash,
         },
@@ -145,7 +145,7 @@ export class CCMPConsumer implements ITransactionConsumer<IEVMAccount, EVMRawTra
     return handler;
   };
 
-  private static handleOnTransactionSuccessFailureFactory = (
+  private static handleOnTransactionFailureFactory = (
     destinationTxHash?: string,
     error?: string,
   ): IHandler => {

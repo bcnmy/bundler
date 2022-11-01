@@ -57,3 +57,47 @@ export const createCCMPGatewayTransaction = (
     sourceTxHash,
   };
 };
+
+export const getCCMPMessagePayloadFromDestTx = async (
+  chainId: number,
+  receipt: ethers.providers.TransactionReceipt,
+): Promise<CCMPMessage> => {
+  log.info(
+    `Getting CCMP Message Payload on chain ${chainId} transaction ${receipt.transactionHash}`,
+  );
+  const abi = config.ccmp.abi.CCMPGateway;
+  const contractInterface = new ethers.utils.Interface(abi);
+  const messageLog = receipt.logs.find(
+    (_log) => _log.topics[0] === config.ccmp.events.CCMPMessageExecuted[chainId].topicId,
+  );
+  if (!messageLog) {
+    throw new Error(`No CCMP message routed log found for transaction ${receipt.transactionHash}`);
+  }
+  const data = contractInterface.parseLog(messageLog);
+  const {
+    sender,
+    sourceGateway,
+    sourceAdaptor,
+    sourceChainId,
+    destinationGateway,
+    destinationChainId,
+    nonce,
+    routerAdaptor,
+    payload,
+    gasFeePaymentArgs,
+    hash,
+  } = data.args;
+  return {
+    sender,
+    sourceGateway,
+    sourceChainId,
+    sourceAdaptor,
+    destinationChainId,
+    destinationGateway,
+    nonce,
+    routerAdaptor,
+    payload,
+    gasFeePaymentArgs,
+    hash,
+  };
+};
