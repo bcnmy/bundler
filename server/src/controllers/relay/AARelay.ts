@@ -18,7 +18,7 @@ export const relayAATransaction = async (req: Request, res: Response) => {
 
     const transactionId = generateTransactionId(userOp);
 
-    const response = routeTransactionToRelayerMap[chainId][TransactionType.AA]
+    const response = routeTransactionToRelayerMap[chainId][TransactionType.AA]!
       .sendTransactionToRelayer({
         type: TransactionType.AA,
         to: entryPointAddress,

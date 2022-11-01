@@ -1,11 +1,8 @@
-import { ethers } from 'ethers';
 import { config } from '../config';
 import { IndexerService } from '../common/indexer/IndexerService';
 import {
   CCMPMessage,
-  GasFeePaymentArgsStruct,
   TransactionType,
-  CCMPTransactionMessageType,
   CCMPRouterName,
   CrossChainTransationStatus,
   CrossChainTransactionError,
@@ -13,14 +10,15 @@ import {
 } from '../common/types';
 import { logger } from '../common/log-config';
 import type { routeTransactionToRelayerMap as globalRouteTransactionToRelayerMap } from '../common/service-manager';
-import type { ICCMPRouterService, IIndexerTxData } from './types';
+import type { ICCMPRouterService } from './types';
 import type { ICrossChainTransactionDAO } from '../common/db';
-import type { IHandler } from './task-manager/types';
+import type { ICCMPService, IHandler } from './task-manager/types';
 import { CCMPTaskManager } from './task-manager';
+import { createCCMPGatewayTransaction } from './utils';
 
 const log = logger(module);
 
-export class CCMPService {
+export class CCMPService implements ICCMPService {
   private readonly eventName = 'CCMPMessageRouted';
 
   private readonly indexerService: IndexerService;
@@ -73,51 +71,6 @@ export class CCMPService {
       throw new Error(`Failed to register webhook for chain ${this.chainId}`);
     }
   }
-
-  private static keysToLowerCase(obj: any): any {
-    return Object.keys(obj).reduce((acc: any, key) => {
-      const newKey = key.charAt(0).toLowerCase() + key.slice(1);
-      acc[newKey] = obj[key];
-      return acc;
-    }, {});
-  }
-
-  private static parseIndexerEvent = (event: Record<string, any>): CCMPMessage => ({
-    ...event,
-    gasFeePaymentArgs: CCMPService.keysToLowerCase(
-      event.gasFeePaymentArgs,
-    ) as GasFeePaymentArgsStruct,
-    payload: event.payload
-      .map((payload: any) => CCMPService.keysToLowerCase(payload))
-      .map((payload: any) => ({
-        to: payload.to,
-        _calldata: payload.calldata,
-      })),
-  } as CCMPMessage);
-
-  private static createTransaction = (
-    message: CCMPMessage,
-    verificationData: string | Uint8Array,
-  ): CCMPTransactionMessageType => {
-    const CCMPGatewayInterface = new ethers.utils.Interface(config.ccmp.abi.CCMPGateway);
-
-    const data = CCMPGatewayInterface.encodeFunctionData('receiveMessage', [
-      message,
-      verificationData,
-      false,
-    ]);
-
-    return {
-      type: TransactionType.CROSS_CHAIN,
-      to: message.destinationGateway,
-      data,
-      // TODO: Generalize
-      gasLimit: '0xF4240',
-      chainId: parseInt(message.destinationChainId.toString(), 10),
-      value: '0x0',
-      transactionId: message.hash,
-    };
-  };
 
   private handleValidation: IHandler = async (data, ctx) => {
     const { supportedRouters } = config.ccmp;
@@ -214,10 +167,15 @@ export class CCMPService {
     }
 
     const toChain = Number(message.destinationChainId.toString());
-    const transaction = CCMPService.createTransaction(message, verificationData);
+    const transaction = createCCMPGatewayTransaction(
+      message,
+      verificationData,
+      ctx.executionIndex,
+      ctx.sourceTxHash,
+    );
     const response = await this.routeTransactionToRelayerMap[toChain][
       TransactionType.CROSS_CHAIN
-    ].sendTransactionToRelayer(transaction);
+    ]!.sendTransactionToRelayer(transaction);
     if (isError(response)) {
       return {
         ...data,
@@ -237,22 +195,25 @@ export class CCMPService {
 
     return {
       ...data,
-      status: CrossChainTransationStatus.DESTINATION_TRANSACTION_RELAYED,
+      status: CrossChainTransationStatus.DESTINATION_TRANSACTION_QUEUED,
     };
   };
 
-  async processTransaction(tx: IIndexerTxData) {
-    const message = CCMPService.parseIndexerEvent(tx.eventData);
-
+  async processTransaction(message: CCMPMessage, sourceChainTxHash: string) {
     // Check for previous runs
-    const state = await this.crossChainTransactionDAO.getByTransactionId(tx.chainId, message.hash);
+    const sourceChainId = parseInt(message.sourceChainId.toString(), 10);
+    const state = await this.crossChainTransactionDAO.getByTransactionId(
+      sourceChainId,
+      message.hash,
+    );
 
     // Build the monad
     const taskManager = new CCMPTaskManager(
       this.crossChainTransactionDAO,
-      tx.txHash,
-      tx.chainId,
+      sourceChainTxHash,
+      sourceChainId,
       message,
+      state?.statusLog.length || 1,
       state,
     );
 
@@ -260,7 +221,7 @@ export class CCMPService {
       TRANSACTION_VALIDATED,
       PROTOCOL_FEE_PAID,
       PROTOCOL_CONFIRMATION_RECEIVED,
-      DESTINATION_TRANSACTION_RELAYED,
+      DESTINATION_TRANSACTION_QUEUED,
     } = CrossChainTransationStatus;
 
     // Process the transaction
@@ -275,7 +236,7 @@ export class CCMPService {
       .then((t) => t.run(
         'Relay Destination Transaction',
         this.handleRelayTransaction,
-        DESTINATION_TRANSACTION_RELAYED,
+        DESTINATION_TRANSACTION_QUEUED,
       ));
   }
 }

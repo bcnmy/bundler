@@ -25,4 +25,5 @@ export interface ICrossChainTransaction {
   sourceTransactionHash: string;
   message: CCMPMessage;
   verificationData?: CCMPVerificationData;
+  destinationTxHash?: string;
 }

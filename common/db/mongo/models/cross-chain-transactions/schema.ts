@@ -120,4 +120,7 @@ export const CrossChainTransactionSchema = new Schema<ICrossChainTransaction>({
   verificationData: {
     type: String,
   },
+  destinationTxHash: {
+    type: String,
+  }
 });

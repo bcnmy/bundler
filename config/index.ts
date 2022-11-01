@@ -185,6 +185,16 @@ export class Config implements IConfig {
         if (!(this.config.ccmp.supportedRouters[chainId]?.length > 0)) {
           throw new Error(`Supported ccmp routers required for chain id ${chainId}`);
         }
+
+        const supportedRouters = this.config.ccmp.supportedRouters[chainId];
+
+        for (const router of supportedRouters) {
+          if (!this.config.ccmp.retryInterval[chainId][router]) {
+            throw new Error(
+              `CCMP Retry interval required for chain id ${chainId}, router ${router}`,
+            );
+          }
+        }
       }
     }
 

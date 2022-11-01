@@ -219,6 +219,8 @@ number,
 
 type IndexerWebhookBlockConfirmationType = Record<number, number>;
 
+type CCMPRetryIntervalType = Record<number, Record<CCMPRouterName, number>>;
+
 type CCMPConfigType = {
   bridges: CCMPBridgesConfigType;
   contracts: CCMPContractsConfigType;
@@ -228,6 +230,7 @@ type CCMPConfigType = {
   indexerWebhookBlockConfirmation: IndexerWebhookBlockConfirmationType;
   supportedRouters: Record<string, CCMPRouterName[]>;
   webhookEndpoint: string;
+  retryInterval: CCMPRetryIntervalType;
 };
 
 type IndexerConfigType = {

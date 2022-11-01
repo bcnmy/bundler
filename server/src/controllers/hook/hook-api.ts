@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { ccmpServiceMap } from '../../../../common/service-manager';
 import { logger } from '../../../../common/log-config';
+import { parseIndexerEvent } from '../../../../cross-chain/utils';
 
 const log = logger(module);
 
@@ -20,15 +21,18 @@ export const hookApi = async (req: Request, res: Response) => {
 
   (async () => {
     try {
-      await ccmpService.processTransaction({
+      await ccmpService.processTransaction(
+        parseIndexerEvent({
+          txHash,
+          gasUsage,
+          chainId,
+          from,
+          scAddress,
+          eventName,
+          eventData: data,
+        }),
         txHash,
-        gasUsage,
-        chainId,
-        from,
-        scAddress,
-        eventName,
-        eventData: data,
-      });
+      );
     } catch (e) {
       log.error(`Error processing transaction ${txHash} on chain ${chainId}`, e);
     }

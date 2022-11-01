@@ -1,18 +1,18 @@
 import { IQueue } from '../interface';
 import { logger } from '../log-config';
-import { CCMPTransactionMessageType, RelayServiceResponseType } from '../types';
+import { CrossChainTransactionMessageType, RelayServiceResponseType } from '../types';
 import { IRelayService } from './interface/IRelayService';
 
 const log = logger(module);
-export class CCMPRelayService implements IRelayService<CCMPTransactionMessageType> {
-  queue: IQueue<CCMPTransactionMessageType>;
+export class CCMPRelayService implements IRelayService<CrossChainTransactionMessageType> {
+  queue: IQueue<CrossChainTransactionMessageType>;
 
-  constructor(queue: IQueue<CCMPTransactionMessageType>) {
+  constructor(queue: IQueue<CrossChainTransactionMessageType>) {
     this.queue = queue;
   }
 
   async sendTransactionToRelayer(
-    data: CCMPTransactionMessageType,
+    data: CrossChainTransactionMessageType,
   ): Promise<RelayServiceResponseType> {
     log.info(`Sending transaction to CCMP queue with transactionId: ${data.transactionId}, chainId: ${data.chainId}`);
     await this.queue.publish(data);

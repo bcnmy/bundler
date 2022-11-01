@@ -1,6 +1,8 @@
+import type { ICrossChainTransactionDAO } from '../../../../../common/db';
 import { IQueue } from '../../../../../common/queue';
 import {
   AATransactionMessageType,
+  CrossChainTransactionMessageType,
   EntryPointMapType,
   EVMRawTransactionType,
   SCWTransactionMessageType,
@@ -30,9 +32,10 @@ export type SCWConsumerParamsType = {
 };
 
 export type CCMPConsumerParamsType = {
-  queue: IQueue<SCWTransactionMessageType>,
+  queue: IQueue<CrossChainTransactionMessageType>,
   relayerManager: IRelayerManager<IEVMAccount, EVMRawTransactionType>,
   transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>,
+  crossChainTransactionDAO: ICrossChainTransactionDAO;
   options: {
     chainId: number,
   },

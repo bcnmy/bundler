@@ -20,35 +20,63 @@ export class CCMPTaskManager implements ICCMPTaskManager {
 
   public logs: ICrossChainTransactionStatusLogEntry[];
 
+  public destinationTxHash?: string | undefined;
+
   constructor(
     private readonly crossChainTransactionDAO: ICrossChainTransactionDAO,
     public readonly sourceTxHash: string,
     public readonly sourceChainId: number,
     public readonly message: CCMPMessage,
-    private readonly lastRunState: ICrossChainTransaction | null,
+    public readonly executionIndex: number,
+    private readonly dbState: ICrossChainTransaction | null,
   ) {
-    this.logs = [{ status: CrossChainTransationStatus.__START, timestamp: Date.now() }];
+    // Load State from DB, create if not present
+    this.logs = dbState && executionIndex <= dbState?.statusLog.length
+      ? dbState?.statusLog[executionIndex - 1].logs
+      : [{ status: CrossChainTransationStatus.__START, timestamp: Date.now() }];
   }
 
   setVerificationData(data: CCMPVerificationData) {
     this.verificationData = data;
   }
 
+  setDestinationTxHash(txHash: string) {
+    this.destinationTxHash = txHash;
+  }
+
   private getUpdatedDAO() {
+    let statusLog = [...(this.dbState?.statusLog || [])];
+    if (this.executionIndex <= statusLog.length) {
+      statusLog[this.executionIndex - 1] = {
+        executionIndex: this.executionIndex,
+        sourceTxHash: this.sourceTxHash,
+        logs: this.logs as any,
+      };
+    } else {
+      statusLog = [
+        ...(this.dbState?.statusLog || []),
+        {
+          executionIndex: (this.dbState?.statusLog?.length || 0) + 1,
+          sourceTxHash: this.sourceTxHash,
+          logs: this.logs as any,
+        },
+      ];
+    }
     return {
       transactionId: this.message.hash,
       sourceTransactionHash: this.sourceTxHash,
       statusLog: [
-        ...(this.lastRunState?.statusLog || []),
+        ...(this.dbState?.statusLog || []),
         {
-          executionIndex: (this.lastRunState?.statusLog?.length || 0) + 1,
+          executionIndex: (this.dbState?.statusLog?.length || 0) + 1,
           logs: this.logs as any,
         },
       ],
-      creationTime: this.lastRunState?.creationTime || Date.now(),
+      creationTime: this.dbState?.creationTime || Date.now(),
       updationTime: Date.now(),
       message: this.message,
       verificationData: this.verificationData?.toString(),
+      destinationTxHash: this.destinationTxHash,
     };
   }
 

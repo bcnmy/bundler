@@ -1,14 +1,14 @@
 import amqp, { Channel, ConsumeMessage, Replies } from 'amqplib';
 import { config } from '../../config';
 import { logger } from '../log-config';
-import { CCMPTransactionMessageType, TransactionType } from '../types';
+import { CrossChainTransactionMessageType, TransactionType } from '../types';
 import { IQueue } from './interface/IQueue';
 
 const log = logger(module);
 
 const { queueUrl } = config;
 
-export class CCMPTransactionQueue implements IQueue<CCMPTransactionMessageType> {
+export class CCMPTransactionQueue implements IQueue<CrossChainTransactionMessageType> {
   private channel!: Channel;
 
   private transactionType: TransactionType = TransactionType.CROSS_CHAIN;
@@ -38,7 +38,7 @@ export class CCMPTransactionQueue implements IQueue<CCMPTransactionMessageType> 
     }
   }
 
-  async publish(data: CCMPTransactionMessageType) {
+  async publish(data: CrossChainTransactionMessageType) {
     const key = `chainid.${this.chainId}.type.${this.transactionType}`;
     this.channel.prefetch(1);
     this.channel.publish(this.exchangeName, key, Buffer.from(JSON.stringify(data)), {

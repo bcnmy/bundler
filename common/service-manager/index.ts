@@ -42,7 +42,7 @@ import { CMCTokenPriceManager } from '../token-price';
 import {
   AATransactionMessageType,
   CCMPRouterName,
-  CCMPTransactionMessageType,
+  CrossChainTransactionMessageType,
   EntryPointMapType,
   EVMRawTransactionType,
   SCWTransactionMessageType,
@@ -54,7 +54,9 @@ const log = logger(module);
 
 const routeTransactionToRelayerMap: {
   [chainId: number]: {
-    [transactionType: string]: AARelayService | SCWRelayService | CCMPRelayService;
+    [TransactionType.AA]?: AARelayService,
+    [TransactionType.SCW]?: SCWRelayService,
+    [TransactionType.CROSS_CHAIN]?: CCMPRelayService,
   };
 } = {};
 
@@ -341,7 +343,7 @@ const retryTransactionQueueMap: {
         );
       } else if (type === TransactionType.CROSS_CHAIN) {
         // queue for ccmp
-        const ccmpQueue: IQueue<CCMPTransactionMessageType> = new CCMPTransactionQueue({
+        const ccmpQueue: IQueue<CrossChainTransactionMessageType> = new CCMPTransactionQueue({
           chainId,
         });
         await ccmpQueue.connect();
@@ -355,6 +357,7 @@ const retryTransactionQueueMap: {
           queue: ccmpQueue,
           relayerManager: ccmpRelayerManager,
           transactionService,
+          crossChainTransactionDAO: new CrossChainTransactionDAO(),
           options: {
             chainId,
           },
