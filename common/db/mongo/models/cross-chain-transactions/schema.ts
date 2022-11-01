@@ -19,11 +19,11 @@ export const CrossChainTransactionSchema = new Schema<ICrossChainTransaction>({
           type: Number,
           required: true,
         },
+        sourceTxHash: {
+          type: String,
+        },
         logs: [
           {
-            sourceTxHash: {
-              type: String,
-            },
             status: {
               type: String,
               required: true,

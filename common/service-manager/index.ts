@@ -14,13 +14,13 @@ import { EVMRetryTransactionService } from '../../relayer/src/services/retry-tra
 import { EVMTransactionListener } from '../../relayer/src/services/transaction-listener';
 import { EVMTransactionService } from '../../relayer/src/services/transaction-service';
 import { FeeOption } from '../../server/src/services';
-import { CCMPService } from '../../server/src/services/ccmp/CCMPService';
+import { CCMPService } from '../../cross-chain/CCMPService';
 import {
   AxelarRouterService,
   HyperlaneRouterService,
   WormholeRouterService,
-} from '../../server/src/services/ccmp/router-service';
-import { ICCMPRouterService } from '../../server/src/services/ccmp/types';
+} from '../../cross-chain/router-service';
+import { ICCMPRouterService } from '../../cross-chain/types';
 import { RedisCacheService } from '../cache';
 import { Mongo, TransactionDAO } from '../db';
 import { GasPriceManager } from '../gas-price';
@@ -217,7 +217,7 @@ const retryTransactionQueueMap: {
           fundingRelayerAmount: relayerManager.fundingRelayerAmount[chainId],
           ownerAccountDetails: new EVMAccount(
             relayerManager.ownerAccountDetails[chainId].publicKey,
-            relayerManager.ownerAccountDetails[chainId].privateKey
+            relayerManager.ownerAccountDetails[chainId].privateKey,
           ),
           gasLimitMap: relayerManager.gasLimitMap,
         },
@@ -226,7 +226,7 @@ const retryTransactionQueueMap: {
 
       const addressList = await relayerMangerInstance.createRelayers();
       log.info(
-        `Relayer address list length: ${addressList.length} and minRelayerCount: ${relayerManager.minRelayerCount}`
+        `Relayer address list length: ${addressList.length} and minRelayerCount: ${relayerManager.minRelayerCount}`,
       );
       await relayerMangerInstance.fundRelayers(addressList);
     }
@@ -242,7 +242,7 @@ const retryTransactionQueueMap: {
     });
 
     retryTransactionQueueMap[chainId].consume(
-      retryTransactionSerivceMap[chainId].onMessageReceived
+      retryTransactionSerivceMap[chainId].onMessageReceived,
     );
 
     const tokenService = new CMCTokenPriceManager(cacheService, {
@@ -259,8 +259,7 @@ const retryTransactionQueueMap: {
     feeOptionMap[chainId] = feeOptionService;
     // for each network get transaction type
     for (const type of supportedTransactionType[chainId]) {
-      const aaRelayerManager =
-        EVMRelayerManagerMap[relayerManagerTransactionTypeNameMap[type]][chainId];
+      const aaRelayerManager = EVMRelayerManagerMap[relayerManagerTransactionTypeNameMap[type]][chainId];
       if (!aaRelayerManager) {
         throw new Error(`Relayer manager not found for ${type}`);
       }
@@ -285,7 +284,7 @@ const retryTransactionQueueMap: {
             address: entryPoint.address,
             entryPointContract: networkService.getContract(
               JSON.stringify(entryPoint.abi),
-              entryPoint.address
+              entryPoint.address,
             ),
           });
         }
@@ -313,8 +312,7 @@ const retryTransactionQueueMap: {
         });
         await scwQueue.connect();
 
-        const scwRelayerManager =
-          EVMRelayerManagerMap[relayerManagerTransactionTypeNameMap[type]][chainId];
+        const scwRelayerManager = EVMRelayerManagerMap[relayerManagerTransactionTypeNameMap[type]][chainId];
         if (!scwRelayerManager) {
           throw new Error(`Relayer manager not found for ${type}`);
         }
@@ -339,7 +337,7 @@ const retryTransactionQueueMap: {
         });
         scwSimulationServiceMap[chainId] = new SCWSimulationService(
           networkService,
-          tenderlySimulationService
+          tenderlySimulationService,
         );
       } else if (type === TransactionType.CROSS_CHAIN) {
         // queue for ccmp
@@ -348,8 +346,7 @@ const retryTransactionQueueMap: {
         });
         await ccmpQueue.connect();
 
-        const ccmpRelayerManager =
-          EVMRelayerManagerMap[relayerManagerTransactionTypeNameMap[type]][chainId];
+        const ccmpRelayerManager = EVMRelayerManagerMap[relayerManagerTransactionTypeNameMap[type]][chainId];
         if (!ccmpRelayerManager) {
           throw new Error(`Relayer manager not found for ${type}`);
         }
@@ -371,7 +368,7 @@ const retryTransactionQueueMap: {
           config.ccmp.supportedRouters[chainId].map((routerName) => [
             routerName,
             new ccmpRouterServiceClassMap[routerName](chainId, networkService),
-          ])
+          ]),
         );
 
         ccmpServiceMap[chainId] = new CCMPService(

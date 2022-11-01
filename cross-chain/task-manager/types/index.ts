@@ -1,0 +1,26 @@
+import type {
+  CCMPVerificationData,
+  ICrossChainTransactionStatusLogEntry,
+} from '../../../common/db';
+import type { CCMPMessage } from '../../../common/types';
+import { CrossChainTransationStatus } from '../../../common/types';
+
+export interface IHandler {
+  (
+    prev: ICrossChainTransactionStatusLogEntry,
+    ctx: ICCMPTaskManager
+  ): Promise<ICrossChainTransactionStatusLogEntry>;
+}
+
+export interface ICCMPTaskManager {
+  message: CCMPMessage;
+  sourceTxHash: string;
+  verificationData: CCMPVerificationData;
+  setVerificationData: (data: CCMPVerificationData) => void;
+  logs: ICrossChainTransactionStatusLogEntry[];
+  run: (
+    name: string,
+    handler: IHandler,
+    handlerExpectedPostCompletionStatus: CrossChainTransationStatus
+  ) => Promise<ICCMPTaskManager>;
+}

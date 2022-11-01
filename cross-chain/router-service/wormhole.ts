@@ -5,11 +5,11 @@ import {
   parseSequenceFromLogEth,
   ChainId,
 } from '@certusone/wormhole-sdk';
-import { config } from '../../../../../config';
-import { logger } from '../../../../../common/log-config';
+import { config } from '../../config';
+import { logger } from '../../common/log-config';
 import type { ICCMPRouterService } from '../types';
-import type { CCMPMessage } from '../../../../../common/types';
-import type { EVMNetworkService } from '../../../../../common/network';
+import type { CCMPMessage } from '../../common/types';
+import type { EVMNetworkService } from '../../common/network';
 
 const log = logger(module);
 

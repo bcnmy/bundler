@@ -1,6 +1,6 @@
 import type { ICCMPRouterService } from '../types';
-import type { CCMPMessage } from '../../../../../common/types';
-import type { EVMNetworkService } from '../../../../../common/network';
+import type { CCMPMessage } from '../../common/types';
+import type { EVMNetworkService } from '../../common/network';
 
 export class HyperlaneRouterService implements ICCMPRouterService {
   constructor(

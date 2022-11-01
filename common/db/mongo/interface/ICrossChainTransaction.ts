@@ -4,21 +4,25 @@ import {
   CrossChainTransationStatus,
 } from '../../../types';
 
+export type CCMPVerificationData = string | Uint8Array | undefined;
+
+export interface ICrossChainTransactionStatusLogEntry {
+  status: CrossChainTransationStatus | CrossChainTransactionError;
+  timestamp: number;
+  context?: Object;
+  error?: boolean;
+}
+
 export interface ICrossChainTransaction {
   transactionId: string;
   statusLog: {
     executionIndex: number;
-    logs: {
-      sourceTxHash: string;
-      status: CrossChainTransationStatus | CrossChainTransactionError;
-      timestamp: number;
-      context?: Object;
-      error?: boolean;
-    }[];
+    sourceTxHash: string;
+    logs: ICrossChainTransactionStatusLogEntry[];
   }[];
   creationTime: number;
   updationTime: number;
   sourceTransactionHash: string;
   message: CCMPMessage;
-  verificationData?: string;
+  verificationData?: CCMPVerificationData;
 }

@@ -25,7 +25,9 @@ export class CCMPConsumer implements ITransactionConsumer<IEVMAccount, EVMRawTra
   transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>;
 
   constructor(ccmpConsumerParamsType: CCMPConsumerParamsType) {
-    const { options, queue, relayerManager, transactionService } = ccmpConsumerParamsType;
+    const {
+      options, queue, relayerManager, transactionService,
+    } = ccmpConsumerParamsType;
     this.queue = queue;
     this.relayerManager = relayerManager;
     this.transactionService = transactionService;
@@ -37,8 +39,8 @@ export class CCMPConsumer implements ITransactionConsumer<IEVMAccount, EVMRawTra
       const transactionDataReceivedFromQueue = JSON.parse(msg.content.toString());
       log.info(
         `onMessage received in ${this.transactionType}: ${JSON.stringify(
-          transactionDataReceivedFromQueue
-        )}`
+          transactionDataReceivedFromQueue,
+        )}`,
       );
       this.queue.ack(msg);
       // get active relayer
@@ -49,34 +51,34 @@ export class CCMPConsumer implements ITransactionConsumer<IEVMAccount, EVMRawTra
           transactionDataReceivedFromQueue,
           activeRelayer,
           this.transactionType,
-          this.relayerManager.name
+          this.relayerManager.name,
         );
         log.info(
           `Response from transaction service after sending transaction on chainId: ${
             this.chainId
-          }: ${JSON.stringify(transactionServiceResponse)}`
+          }: ${JSON.stringify(transactionServiceResponse)}`,
         );
         this.relayerManager.addActiveRelayer(activeRelayer.getPublicKey());
         if (transactionServiceResponse.state === 'success') {
           log.info(
-            `Transaction sent successfully for ${this.transactionType} on chain ${this.chainId}`
+            `Transaction sent successfully for ${this.transactionType} on chain ${this.chainId}`,
           );
         } else {
           log.error(
             `Transaction failed with error: ${
               transactionServiceResponse?.error || 'unknown error'
-            } for ${this.transactionType} on chain ${this.chainId}`
+            } for ${this.transactionType} on chain ${this.chainId}`,
           );
         }
       } else {
         this.queue.publish(JSON.parse(msg.content.toString()));
         log.info(
-          `No active relayer for transactionType: ${this.transactionType} on chainId: ${this.chainId}`
+          `No active relayer for transactionType: ${this.transactionType} on chainId: ${this.chainId}`,
         );
       }
     } else {
       throw new Error(
-        `No msg received from queue for transactionType: ${this.transactionType} on chainId: ${this.chainId}`
+        `No msg received from queue for transactionType: ${this.transactionType} on chainId: ${this.chainId}`,
       );
     }
   };

@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
-import { config } from '../../../../config';
-import { IndexerService } from '../../../../common/indexer/IndexerService';
+import { config } from '../config';
+import { IndexerService } from '../common/indexer/IndexerService';
 import {
   CCMPMessage,
   GasFeePaymentArgsStruct,
@@ -10,58 +10,17 @@ import {
   CrossChainTransationStatus,
   CrossChainTransactionError,
   isError,
-} from '../../../../common/types';
-import { logger } from '../../../../common/log-config';
-import type { routeTransactionToRelayerMap as globalRouteTransactionToRelayerMap } from '../../../../common/service-manager';
-import type { ICCMPRouterService } from './types';
-import type { ICrossChainTransaction, ICrossChainTransactionDAO } from '../../../../common/db';
+} from '../common/types';
+import { logger } from '../common/log-config';
+import type { routeTransactionToRelayerMap as globalRouteTransactionToRelayerMap } from '../common/service-manager';
+import type { ICCMPRouterService, IIndexerTxData } from './types';
+import type { ICrossChainTransactionDAO } from '../common/db';
+import type { IHandler } from './task-manager/types';
+import { CCMPTaskManager } from './task-manager';
 
 const log = logger(module);
 
-interface ISourceTx {
-  txHash: string;
-  gasUsage: number;
-  chainId: number;
-  from: string;
-  scAddress: string;
-  eventName: string;
-  eventData: any;
-}
-
-interface IStatus {
-  readonly sourceTxHash: string;
-  context?: Object;
-  timestamp?: number;
-  status?: CrossChainTransationStatus | CrossChainTransactionError;
-  error?: boolean;
-}
-
-interface IStatusLogCtx {
-  readonly message: CCMPMessage;
-  readonly sourceTxHash: string;
-  verificationData?: string | Uint8Array;
-}
-
-interface IStatusLogDeps {
-  readonly crossChainTransactionDAO: ICrossChainTransactionDAO;
-}
-
-interface IHandler {
-  (data: IStatus, ctx: IStatusLogCtx): Promise<IStatus>;
-}
-
-interface IStatusLog {
-  logs: IStatus[];
-  ctx: IStatusLogCtx;
-  deps: IStatusLogDeps;
-  run: (
-    name: string,
-    handler: IHandler,
-    handlerExpectedPostCompletionStatus: CrossChainTransationStatus
-  ) => Promise<IStatusLog>;
-}
-
-class CCMPService {
+export class CCMPService {
   private readonly eventName = 'CCMPMessageRouted';
 
   private readonly indexerService: IndexerService;
@@ -72,7 +31,7 @@ class CCMPService {
     private readonly chainId: number,
     private readonly routerServiceMap: { [key in CCMPRouterName]?: ICCMPRouterService },
     private readonly routeTransactionToRelayerMap: typeof globalRouteTransactionToRelayerMap,
-    private readonly crossChainTransactionDAO: ICrossChainTransactionDAO
+    private readonly crossChainTransactionDAO: ICrossChainTransactionDAO,
   ) {
     this.indexerService = new IndexerService(config.indexer.baseUrl);
     this.webHookEndpoint = config.ccmp.webhookEndpoint;
@@ -107,7 +66,7 @@ class CCMPService {
               },
             ],
           },
-        ]
+        ],
       );
     } catch (e) {
       log.error(`Failed to register webhook for chain ${this.chainId}`, e);
@@ -123,23 +82,22 @@ class CCMPService {
     }, {});
   }
 
-  private static parseIndexerEvent = (event: Record<string, any>): CCMPMessage =>
-    ({
-      ...event,
-      gasFeePaymentArgs: CCMPService.keysToLowerCase(
-        event.gasFeePaymentArgs
-      ) as GasFeePaymentArgsStruct,
-      payload: event.payload
-        .map((payload: any) => CCMPService.keysToLowerCase(payload))
-        .map((payload: any) => ({
-          to: payload.to,
-          _calldata: payload.calldata,
-        })),
-    } as CCMPMessage);
+  private static parseIndexerEvent = (event: Record<string, any>): CCMPMessage => ({
+    ...event,
+    gasFeePaymentArgs: CCMPService.keysToLowerCase(
+      event.gasFeePaymentArgs,
+    ) as GasFeePaymentArgsStruct,
+    payload: event.payload
+      .map((payload: any) => CCMPService.keysToLowerCase(payload))
+      .map((payload: any) => ({
+        to: payload.to,
+        _calldata: payload.calldata,
+      })),
+  } as CCMPMessage);
 
   private static createTransaction = (
     message: CCMPMessage,
-    verificationData: string | Uint8Array
+    verificationData: string | Uint8Array,
   ): CCMPTransactionMessageType => {
     const CCMPGatewayInterface = new ethers.utils.Interface(config.ccmp.abi.CCMPGateway);
 
@@ -153,6 +111,7 @@ class CCMPService {
       type: TransactionType.CROSS_CHAIN,
       to: message.destinationGateway,
       data,
+      // TODO: Generalize
       gasLimit: '0xF4240',
       chainId: parseInt(message.destinationChainId.toString(), 10),
       value: '0x0',
@@ -213,11 +172,11 @@ class CCMPService {
 
     // Pay Gas Fee to the underlying protocol if required and perform other steps as needed
     log.info(
-      `CCMP: Starting Pre-Verification for source tx hash ${sourceTxHash} message hash: ${message.hash}`
+      `CCMP: Starting Pre-Verification for source tx hash ${sourceTxHash} message hash: ${message.hash}`,
     );
     await routerService.handlePreVerification(sourceTxHash, message);
     log.info(
-      `CCMP: Pre-Verification for source tx hash ${sourceTxHash} message hash: ${message.hash} completed`
+      `CCMP: Pre-Verification for source tx hash ${sourceTxHash} message hash: ${message.hash} completed`,
     );
 
     return {
@@ -232,7 +191,7 @@ class CCMPService {
 
     // Wait for the Actual Verification to be done, and get any data required to
     // prove the authenticity of the message
-    ctx.verificationData = await routerService.getVerificationData(sourceTxHash, message);
+    ctx.setVerificationData(await routerService.getVerificationData(sourceTxHash, message));
     log.info(`Verification data for message ${message.hash}: ${ctx.verificationData}`);
 
     return {
@@ -265,7 +224,7 @@ class CCMPService {
         status: CrossChainTransactionError.UNKNOWN_ERROR,
         context: {
           error: `Error while sending transaction to CCMP relayer: ${JSON.stringify(
-            response.error
+            response.error,
           )}`,
         },
       };
@@ -273,7 +232,7 @@ class CCMPService {
     log.info(
       `Transaction sent to CCMP relayer: ${JSON.stringify(response)} for message hash ${
         message.hash
-      }`
+      }`,
     );
 
     return {
@@ -282,101 +241,20 @@ class CCMPService {
     };
   };
 
-  private static wrap = (
-    tx: ISourceTx,
-    state: ICrossChainTransaction | null,
-    message: CCMPMessage,
-    deps: IStatusLogDeps
-  ): IStatusLog => ({
-    deps,
-    ctx: {
-      sourceTxHash: tx.txHash,
-      message,
-    },
-    logs: [{ sourceTxHash: tx.txHash, status: CrossChainTransationStatus.__START }],
-    async run(
-      name: string,
-      handler: IHandler,
-      handlerExpectedPostCompletionStatus: CrossChainTransationStatus
-    ): Promise<IStatusLog> {
-      const latestEntry = this.logs[this.logs.length - 1];
-
-      // If an error occured in the previous step, skip this step
-      if (latestEntry.error) {
-        return this;
-      }
-
-      // Run the Handler
-      let partialStatusLog: IStatus;
-      try {
-        log.info(
-          `Running ${name} handler with data ${JSON.stringify(
-            latestEntry
-          )} and context ${JSON.stringify(this.ctx)}`
-        );
-        partialStatusLog = await handler(latestEntry, this.ctx);
-      } catch (e) {
-        partialStatusLog = {
-          ...latestEntry,
-          status: CrossChainTransactionError.UNKNOWN_ERROR,
-          context: {
-            exception: JSON.stringify(e),
-          },
-        };
-      }
-      const statusLog = {
-        ...partialStatusLog,
-        timestamp: Date.now(),
-        error: partialStatusLog.status !== handlerExpectedPostCompletionStatus,
-      };
-      log.info(`Status Log from ${name} handler is ${JSON.stringify(statusLog)}`);
-      this.logs.push(statusLog);
-
-      // Updating state in DB:
-      log.info(`Saving updated state for ${name} handler to DB...`);
-      const updatedState = CCMPService.mergeState(message, tx, this, state);
-      await deps.crossChainTransactionDAO.updateByTransactionId(
-        tx.chainId,
-        updatedState.transactionId,
-        updatedState
-      );
-      log.info(`Updated state saved for ${name} handler to DB`);
-      return this;
-    },
-  });
-
-  private static mergeState = (
-    message: CCMPMessage,
-    tx: ISourceTx,
-    txLog: IStatusLog,
-    state: ICrossChainTransaction | null
-  ): ICrossChainTransaction => ({
-    transactionId: message.hash,
-    sourceTransactionHash: tx.txHash,
-    statusLog: [
-      ...(state?.statusLog || []),
-      {
-        executionIndex: (state?.statusLog?.length || 0) + 1,
-        logs: txLog.logs as any,
-      },
-    ],
-    creationTime: state?.creationTime || Date.now(),
-    updationTime: Date.now(),
-    message,
-    // TODO: Verify if this works in case of wormhole
-    verificationData: txLog.ctx.verificationData?.toString(),
-  });
-
-  async processTransaction(tx: ISourceTx) {
+  async processTransaction(tx: IIndexerTxData) {
     const message = CCMPService.parseIndexerEvent(tx.eventData);
 
     // Check for previous runs
     const state = await this.crossChainTransactionDAO.getByTransactionId(tx.chainId, message.hash);
 
     // Build the monad
-    const txLog = CCMPService.wrap(tx, state, message, {
-      crossChainTransactionDAO: this.crossChainTransactionDAO,
-    });
+    const taskManager = new CCMPTaskManager(
+      this.crossChainTransactionDAO,
+      tx.txHash,
+      tx.chainId,
+      message,
+      state,
+    );
 
     const {
       TRANSACTION_VALIDATED,
@@ -386,22 +264,18 @@ class CCMPService {
     } = CrossChainTransationStatus;
 
     // Process the transaction
-    await txLog.run('Validation', this.handleValidation, TRANSACTION_VALIDATED);
-
-    await txLog.run('Router Pre-Verfication', this.handleRouterPreVerification, PROTOCOL_FEE_PAID);
-
-    await txLog.run(
-      'Fetch Verification Data',
-      this.handleFetchVerificationData,
-      PROTOCOL_CONFIRMATION_RECEIVED
-    );
-
-    await txLog.run(
-      'Relay Destination Transaction',
-      this.handleRelayTransaction,
-      DESTINATION_TRANSACTION_RELAYED
-    );
+    await taskManager
+      .run('Validation', this.handleValidation, TRANSACTION_VALIDATED)
+      .then((t) => t.run('Router Pre-Verfication', this.handleRouterPreVerification, PROTOCOL_FEE_PAID))
+      .then((t) => t.run(
+        'Fetch Verification Data',
+        this.handleFetchVerificationData,
+        PROTOCOL_CONFIRMATION_RECEIVED,
+      ))
+      .then((t) => t.run(
+        'Relay Destination Transaction',
+        this.handleRelayTransaction,
+        DESTINATION_TRANSACTION_RELAYED,
+      ));
   }
 }
-
-export { CCMPService };

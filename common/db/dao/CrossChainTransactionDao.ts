@@ -15,7 +15,7 @@ export class CrossChainTransactionDAO implements ICrossChainTransactionDAO {
   async updateByTransactionId(
     chainId: number,
     id: string,
-    data: ICrossChainTransaction
+    data: ICrossChainTransaction,
   ): Promise<void> {
     await this._db
       .getCrossChainTransaction(chainId)
