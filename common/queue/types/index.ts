@@ -6,7 +6,7 @@ export type TransactionMessageType = ethers.providers.TransactionResponse;
 export type RetryTransactionQueueData = {
   relayerAddress: string,
   transactionType: TransactionType,
-  transactionHash: string,
+  transactionHash?: string,
   transactionId: string,
   rawTransaction: EVMRawTransactionType,
   userAddress: string,

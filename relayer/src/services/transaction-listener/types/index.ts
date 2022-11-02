@@ -19,7 +19,7 @@ export type EVMTransactionListenerParamsType = {
 };
 
 export type NotifyTransactionListenerParamsType = {
-  transactionExecutionResponse: ethers.providers.TransactionResponse,
+  transactionExecutionResponse?: ethers.providers.TransactionResponse,
   transactionId: string,
   transactionReceipt?: ethers.providers.TransactionReceipt,
   relayerAddress: string,
@@ -27,7 +27,8 @@ export type NotifyTransactionListenerParamsType = {
   previousTransactionHash: string | null,
   rawTransaction?: EVMRawTransactionType,
   userAddress?: string,
-  relayerManagerName: string
+  relayerManagerName: string,
+  error?: string,
 };
 
 export type TransactionListenerNotifyReturnType = {
