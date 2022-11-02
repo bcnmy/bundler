@@ -1,13 +1,19 @@
+{{- $replicas := .Values.replicas | int -}}
+{{- $values := .Values }}
+{{- range $i,$e := until $replicas }}
+---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.name }}
-  namespace: {{ .Values.namespace }}
+  name: {{ $values.name }}{{$i}}
+  namespace: {{ $values.namespace }}
   labels:
-    {{- include "relayers-service.labels" . | nindent 4 }}
+    {{- include "relayers-service.labels" $ | nindent 4 }}
 spec:
   selector:
-    app: {{ .Values.relayer.name }}
+    app: {{ $values.relayer.name }}
+    component: {{ $values.relayer.name }}{{$i}}
   ports:
     - port: 3000
-      targetPort: {{ .Values.relayer.port }}
+      targetPort: {{ $values.relayer.port }}
+{{- end}}
