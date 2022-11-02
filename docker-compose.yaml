@@ -17,18 +17,7 @@ services:
       - redis
       - rabbitmq
     build:
-      dockerfile: server.Dockerfile
-    restart: always
-
-  relayers-service:
-    container_name: relayer-service
-    build:
-      dockerfile: relayer.Dockerfile
-    depends_on:
-      - mongo
-      - redis
-      - centrifugo
-      - rabbitmq
+      dockerfile: Dockerfile
     restart: always
 
   redis:

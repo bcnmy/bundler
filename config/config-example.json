@@ -1,0 +1,24 @@
+{
+  "slack": {
+    "token": "slacktoken",
+    "channel": "channelid"
+  },
+  "dataSources": {
+    "mongoUrl": "mongodb://localhost:27017",
+    "redisUrl": "redis://localhost:6379"
+  },
+  "socketService": {
+    "wssUrl": "ws://localhost:9000/connection/websocket",
+    "httpUrl": "http://localhost:9000/api",
+    "token": "averystrongtoken",
+    "apiKey": "somerandomstring"
+  },
+  "queueUrl": "amqp://localhost:5672?heartbeat=30",
+  "simulationData": {
+    "tenderlyData": {
+      "tenderlyUser": "username",
+      "tenderlyProject": "projectname",
+      "tenderlyAccessKey": "accesskey"
+    }
+  }
+}
