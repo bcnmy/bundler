@@ -1,38 +1,38 @@
 /* eslint-disable no-await-in-loop */
-import { config } from "../../config";
-import { EVMAccount, IEVMAccount } from "../../relayer/src/services/account";
-import { AAConsumer, SCWConsumer, SocketConsumer } from "../../relayer/src/services/consumer";
-import { EVMNonceManager } from "../../relayer/src/services/nonce-manager";
-import { EVMRelayerManager, IRelayerManager } from "../../relayer/src/services/relayer-manager";
-import { EVMRelayerQueue } from "../../relayer/src/services/relayer-queue";
-import { EVMRetryTransactionService } from "../../relayer/src/services/retry-transaction-service";
-import { EVMTransactionListener } from "../../relayer/src/services/transaction-listener";
-import { EVMTransactionService } from "../../relayer/src/services/transaction-service";
-import { FeeOption } from "../../server/src/services";
-import { RedisCacheService } from "../cache";
-import { Mongo, TransactionDAO } from "../db";
-import { GasPriceManager } from "../gas-price";
-import { IQueue } from "../interface";
-import { logger } from "../log-config";
-import { relayerManagerTransactionTypeNameMap } from "../maps";
-import { EVMNetworkService } from "../network";
+import { config } from '../../config';
+import { EVMAccount, IEVMAccount } from '../../relayer/src/services/account';
+import { AAConsumer, SCWConsumer, SocketConsumer } from '../../relayer/src/services/consumer';
+import { EVMNonceManager } from '../../relayer/src/services/nonce-manager';
+import { EVMRelayerManager, IRelayerManager } from '../../relayer/src/services/relayer-manager';
+import { EVMRelayerQueue } from '../../relayer/src/services/relayer-queue';
+import { EVMRetryTransactionService } from '../../relayer/src/services/retry-transaction-service';
+import { EVMTransactionListener } from '../../relayer/src/services/transaction-listener';
+import { EVMTransactionService } from '../../relayer/src/services/transaction-service';
+import { FeeOption } from '../../server/src/services';
+import { RedisCacheService } from '../cache';
+import { Mongo, TransactionDAO } from '../db';
+import { GasPriceManager } from '../gas-price';
+import { IQueue } from '../interface';
+import { logger } from '../log-config';
+import { relayerManagerTransactionTypeNameMap } from '../maps';
+import { EVMNetworkService } from '../network';
 import {
   AATransactionQueue,
   RetryTransactionHandlerQueue,
   SCWTransactionQueue,
   TransactionHandlerQueue,
-} from "../queue";
-import { AARelayService, SCWRelayService } from "../relay-service";
-import { AASimulationService, SCWSimulationService } from "../simulation";
-import { TenderlySimulationService } from "../simulation/external-simulation";
-import { CMCTokenPriceManager } from "../token-price";
+} from '../queue';
+import { AARelayService, SCWRelayService } from '../relay-service';
+import { AASimulationService, SCWSimulationService } from '../simulation';
+import { TenderlySimulationService } from '../simulation/external-simulation';
+import { CMCTokenPriceManager } from '../token-price';
 import {
   AATransactionMessageType,
   EntryPointMapType,
   EVMRawTransactionType,
   SCWTransactionMessageType,
   TransactionType,
-} from "../types";
+} from '../types';
 
 const log = logger(module);
 
@@ -298,7 +298,7 @@ const retryTransactionQueueMap: {
       }
     }
   }
-  log.info("<=== Config setup completed ===>");
+  log.info('<=== Config setup completed ===>');
 })();
 
 export {
