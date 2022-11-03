@@ -11,16 +11,18 @@ export interface ICrossChainTransactionStatusLogEntry {
   timestamp: number;
   context?: Object;
   error?: boolean;
+  scheduleRetry?: boolean;
   sourceTxHash: string;
 }
 
 export interface ICrossChainTransaction {
   transactionId: string;
-  status: ICrossChainTransactionStatusLogEntry;
+  status: CrossChainTransationStatus | CrossChainTransactionError;
   statusLog: ICrossChainTransactionStatusLogEntry[];
   creationTime: number;
   updationTime: number;
   sourceTransactionHash: string;
+  retryCount: number;
   message: CCMPMessage;
   verificationData?: CCMPVerificationData;
   destinationTxHash?: string;

@@ -15,6 +15,7 @@ import type { ICrossChainTransactionDAO } from '../common/db';
 import type { ICCMPService, IHandler } from './task-manager/types';
 import { CCMPTaskManager } from './task-manager';
 import { createCCMPGatewayTransaction } from './utils';
+import { CrossChainRetryHandlerQueue } from '../common/queue/CrossChainRetryHandlerQueue';
 
 const log = logger(module);
 
@@ -30,6 +31,7 @@ export class CCMPService implements ICCMPService {
     private readonly routerServiceMap: { [key in CCMPRouterName]?: ICCMPRouterService },
     private readonly routeTransactionToRelayerMap: typeof globalRouteTransactionToRelayerMap,
     private readonly crossChainTransactionDAO: ICrossChainTransactionDAO,
+    private readonly crossChainRetryTransactionQueue: CrossChainRetryHandlerQueue,
   ) {
     this.indexerService = new IndexerService(config.indexer.baseUrl);
     this.webHookEndpoint = config.ccmp.webhookEndpoint;
@@ -74,8 +76,19 @@ export class CCMPService implements ICCMPService {
 
   private handleValidation: IHandler = async (data, ctx) => {
     const { supportedRouters } = config.ccmp;
-    const { message } = ctx;
+    const { message, status, sourceTxHash } = ctx;
     const { sourceChainId, destinationChainId, routerAdaptor } = message;
+
+    // Check if the message has been processed already
+    if (status.status === CrossChainTransationStatus.DESTINATION_TRANSACTION_CONFIRMED) {
+      log.info(
+        `Transaction ${sourceTxHash} with messageHash ${message} has been processed already`,
+      );
+      return {
+        ...data,
+        status: CrossChainTransationStatus.DESTINATION_TRANSACTION_CONFIRMED,
+      };
+    }
 
     // Check Source Chain
     if (!supportedRouters[sourceChainId.toString()]?.includes(routerAdaptor)) {
@@ -167,11 +180,7 @@ export class CCMPService implements ICCMPService {
     }
 
     const toChain = Number(message.destinationChainId.toString());
-    const transaction = createCCMPGatewayTransaction(
-      message,
-      verificationData,
-      ctx.sourceTxHash,
-    );
+    const transaction = createCCMPGatewayTransaction(message, verificationData, ctx.sourceTxHash);
     const response = await this.routeTransactionToRelayerMap[toChain][
       TransactionType.CROSS_CHAIN
     ]!.sendTransactionToRelayer(transaction);
@@ -204,6 +213,7 @@ export class CCMPService implements ICCMPService {
     // Build the monad
     const taskManager = new CCMPTaskManager(
       this.crossChainTransactionDAO,
+      this.crossChainRetryTransactionQueue,
       sourceChainTxHash,
       sourceChainId,
       message,

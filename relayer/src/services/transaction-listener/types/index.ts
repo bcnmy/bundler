@@ -3,8 +3,11 @@ import { ICacheService } from '../../../../../common/cache';
 import { ICrossChainTransactionDAO, ITransactionDAO } from '../../../../../common/db';
 import { IQueue } from '../../../../../common/interface';
 import { INetworkService } from '../../../../../common/network';
+import { CrossChainRetryHandlerQueue } from '../../../../../common/queue/CrossChainRetryHandlerQueue';
 import { RetryTransactionQueueData } from '../../../../../common/queue/types';
-import { CCMPMessage, EVMRawTransactionType, TransactionQueueMessageType, TransactionType } from '../../../../../common/types';
+import {
+  CCMPMessage, EVMRawTransactionType, TransactionQueueMessageType, TransactionType,
+} from '../../../../../common/types';
 import { IEVMAccount } from '../../account';
 
 export type EVMTransactionListenerParamsType = {
@@ -14,6 +17,7 @@ export type EVMTransactionListenerParamsType = {
   transactionDao: ITransactionDAO,
   cacheService: ICacheService,
   crossChainTransactionDAO: ICrossChainTransactionDAO;
+  crossChainRetryHandlerQueueMap: Record<number, CrossChainRetryHandlerQueue>;
   options: {
     chainId: number
   }

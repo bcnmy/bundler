@@ -1,5 +1,6 @@
 import type { ICrossChainTransactionDAO } from '../../../../../common/db';
 import { IQueue } from '../../../../../common/queue';
+import { CrossChainRetryHandlerQueue } from '../../../../../common/queue/CrossChainRetryHandlerQueue';
 import {
   AATransactionMessageType,
   CrossChainTransactionMessageType,
@@ -36,6 +37,7 @@ export type CCMPConsumerParamsType = {
   relayerManager: IRelayerManager<IEVMAccount, EVMRawTransactionType>,
   transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>,
   crossChainTransactionDAO: ICrossChainTransactionDAO;
+  crossChainRetryHandlerQueue: CrossChainRetryHandlerQueue;
   options: {
     chainId: number,
   },

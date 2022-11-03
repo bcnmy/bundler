@@ -4,6 +4,7 @@ import {
 } from '../../../../common/db';
 import { logger } from '../../../../common/log-config';
 import { IQueue } from '../../../../common/queue';
+import { CrossChainRetryHandlerQueue } from '../../../../common/queue/CrossChainRetryHandlerQueue';
 import {
   EVMRawTransactionType,
   CrossChainTransactionMessageType,
@@ -33,15 +34,23 @@ export class CCMPConsumer implements ITransactionConsumer<IEVMAccount, EVMRawTra
 
   crossChainTransactionDAO: ICrossChainTransactionDAO;
 
+  crossChainRetryHandlerQueue: CrossChainRetryHandlerQueue;
+
   constructor(ccmpConsumerParamsType: CCMPConsumerParamsType) {
     const {
-      options, queue, relayerManager, transactionService, crossChainTransactionDAO,
+      options,
+      queue,
+      relayerManager,
+      transactionService,
+      crossChainTransactionDAO,
+      crossChainRetryHandlerQueue,
     } = ccmpConsumerParamsType;
     this.queue = queue;
     this.relayerManager = relayerManager;
     this.transactionService = transactionService;
     this.chainId = options.chainId;
     this.crossChainTransactionDAO = crossChainTransactionDAO;
+    this.crossChainRetryHandlerQueue = crossChainRetryHandlerQueue;
   }
 
   onMessageReceived = async (msg?: ConsumeMessage): Promise<void> => {
@@ -120,6 +129,7 @@ export class CCMPConsumer implements ITransactionConsumer<IEVMAccount, EVMRawTra
     const sourceChainId = parseInt(data.message.sourceChainId.toString(), 10);
     return new CCMPTaskManager(
       this.crossChainTransactionDAO,
+      this.crossChainRetryHandlerQueue,
       data.sourceTxHash,
       sourceChainId,
       data.message,

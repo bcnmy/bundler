@@ -4,6 +4,7 @@ import { ICrossChainTransactionDAO, ITransactionDAO } from '../../../../common/d
 import { IQueue } from '../../../../common/interface';
 import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
+import { CrossChainRetryHandlerQueue } from '../../../../common/queue/CrossChainRetryHandlerQueue';
 import { RetryTransactionQueueData } from '../../../../common/queue/types';
 import {
   CCMPMessage,
@@ -49,6 +50,8 @@ implements
 
   crossChainTransactionDAO: ICrossChainTransactionDAO;
 
+  crossChainRetryHandlerQueueMap: Record<number, CrossChainRetryHandlerQueue>;
+
   constructor(evmTransactionListenerParams: EVMTransactionListenerParamsType) {
     const {
       options,
@@ -58,6 +61,7 @@ implements
       transactionDao,
       cacheService,
       crossChainTransactionDAO,
+      crossChainRetryHandlerQueueMap,
     } = evmTransactionListenerParams;
     this.chainId = options.chainId;
     this.networkService = networkService;
@@ -66,6 +70,7 @@ implements
     this.transactionDao = transactionDao;
     this.cacheService = cacheService;
     this.crossChainTransactionDAO = crossChainTransactionDAO;
+    this.crossChainRetryHandlerQueueMap = crossChainRetryHandlerQueueMap;
   }
 
   async publishToTransactionQueue(data: TransactionQueueMessageType): Promise<boolean> {
@@ -113,6 +118,10 @@ implements
 
     try {
       if (transactionType === TransactionType.CROSS_CHAIN) {
+        if (!ccmpMessage) {
+          // TODO Needs Investigation, this randomly becomes undefined
+          throw new Error(`CCMP message not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
+        }
         log.info(
           `Processing onTransactionSuccess for cross chain transactionId: ${transactionId} on chainId ${this.chainId}`,
         );
@@ -173,6 +182,9 @@ implements
 
     try {
       if (transactionType === TransactionType.CROSS_CHAIN) {
+        if (!ccmpMessage) {
+          throw new Error(`CCMP message not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
+        }
         log.info(
           `Processing onTransactionFailure for cross chain transactionId: ${transactionId} on chainId ${this.chainId}`,
         );
@@ -299,6 +311,7 @@ implements
       transactionType,
       userAddress,
       relayerManagerName,
+      ccmpMessage,
     } = notifyTransactionListenerParams;
     if (!transactionExecutionResponse) {
       log.error('transactionExecutionResponse is null');
@@ -351,6 +364,7 @@ implements
     }
     return new CCMPTaskManager(
       this.crossChainTransactionDAO,
+      this.crossChainRetryHandlerQueueMap[sourceChainId],
       state.sourceTransactionHash,
       sourceChainId,
       state.message,
@@ -385,6 +399,7 @@ implements
       return {
         ...data,
         status: CrossChainTransactionError.DESTINATION_TRANSACTION_REVERTED,
+        scheduleRetry: true,
         context: {
           destinationTxHash,
           error,

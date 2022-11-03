@@ -49,6 +49,8 @@ import {
   TransactionType,
 } from '../types';
 import { CrossChainTransactionDAO } from '../db/dao/CrossChainTransactionDao';
+import { CrossChainRetryHandlerQueue } from '../queue/CrossChainRetryHandlerQueue';
+import { CrossChainRetryTransactionService } from '../../cross-chain/retry-transaction-service';
 
 const log = logger(module);
 
@@ -109,6 +111,12 @@ const transactionListenerMap: any = {};
 const retryTransactionQueueMap: {
   [key: number]: RetryTransactionHandlerQueue;
 } = {};
+const crossChainRetryTransactionQueueMap: {
+  [key: number]: CrossChainRetryHandlerQueue;
+} = {};
+const crossChainRetryTransactionServiceMap: {
+  [key: number]: CrossChainRetryTransactionService,
+} = {};
 
 (async () => {
   await dbInstance.connect();
@@ -162,6 +170,9 @@ const retryTransactionQueueMap: {
     retryTransactionQueueMap[chainId] = retryTransactionQueue;
     await retryTransactionQueueMap[chainId].connect();
 
+    crossChainRetryTransactionQueueMap[chainId] = new CrossChainRetryHandlerQueue({ chainId });
+    await crossChainRetryTransactionQueueMap[chainId].connect();
+
     const nonceManager = new EVMNonceManager({
       options: {
         chainId,
@@ -176,6 +187,7 @@ const retryTransactionQueueMap: {
       transactionQueue,
       retryTransactionQueue,
       transactionDao,
+      crossChainRetryHandlerQueueMap: crossChainRetryTransactionQueueMap,
       crossChainTransactionDAO: new CrossChainTransactionDAO(),
       options: {
         chainId,
@@ -359,6 +371,7 @@ const retryTransactionQueueMap: {
           relayerManager: ccmpRelayerManager,
           transactionService,
           crossChainTransactionDAO: new CrossChainTransactionDAO(),
+          crossChainRetryHandlerQueue: crossChainRetryTransactionQueueMap[chainId],
           options: {
             chainId,
           },
@@ -380,9 +393,20 @@ const retryTransactionQueueMap: {
           ccmpRouterMap[chainId],
           routeTransactionToRelayerMap,
           new CrossChainTransactionDAO(),
+          crossChainRetryTransactionQueueMap[chainId],
         );
 
         ccmpServiceInitPromises.push(ccmpServiceMap[chainId].init());
+
+        crossChainRetryTransactionServiceMap[chainId] = new CrossChainRetryTransactionService(
+          chainId,
+          crossChainRetryTransactionQueueMap[chainId],
+          ccmpServiceMap[chainId],
+        );
+
+        await crossChainRetryTransactionQueueMap[chainId].consume(
+          crossChainRetryTransactionServiceMap[chainId].onMessageReceived,
+        );
       }
     }
   }

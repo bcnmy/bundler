@@ -13,25 +13,8 @@ export const CrossChainTransactionSchema = new Schema<ICrossChainTransaction>({
     required: true,
   },
   status: {
-    type: {
-      sourceTxHash: {
-        type: String,
-      },
-      status: {
-        type: String,
-        required: true,
-      },
-      timestamp: {
-        type: Number,
-        required: true,
-      },
-      context: {
-        type: Object,
-      },
-      error: {
-        type: Boolean,
-      },
-    },
+    type: String,
+    required: true,
   },
   statusLog: {
     type: [
@@ -134,5 +117,10 @@ export const CrossChainTransactionSchema = new Schema<ICrossChainTransaction>({
   },
   destinationTxHash: {
     type: String,
+  },
+  retryCount: {
+    type: Number,
+    required: true,
+    default: 0,
   },
 });
