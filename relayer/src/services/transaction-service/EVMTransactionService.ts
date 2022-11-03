@@ -219,17 +219,27 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         rawTransaction,
         account,
       });
+      if (!transactionExecutionResponse.success) {
+        await this.transactionListener.notify({
+          transactionId: transactionId as string,
+          relayerAddress,
+          transactionType,
+          previousTransactionHash: null,
+          rawTransaction,
+          userAddress,
+          relayerManagerName,
+          error: transactionExecutionResponse.error,
+        });
+        throw new Error('Error in transaction execution');
+      }
+
       log.info(`Transaction execution response for transactionId ${transactionData.transactionId}: ${JSON.stringify(transactionExecutionResponse)} on chainId ${this.chainId}`);
 
       log.info(`Incrementing nonce for account: ${relayerAddress} on chainId ${this.chainId}`);
       await this.nonceManager.incrementNonce(relayerAddress);
       log.info(`Incremented nonce for account: ${relayerAddress} on chainId ${this.chainId}`);
 
-      if (!transactionExecutionResponse.success) {
-        throw new Error('Error in transaction execution');
-      }
       log.info(`Notifying transaction listener for transactionId: ${transactionId} on chainId ${this.chainId}`);
-
       const transactionListenerNotifyResponse = await this.transactionListener.notify({
         transactionExecutionResponse: transactionExecutionResponse.transactionResponse,
         transactionId: transactionId as string,
@@ -268,7 +278,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     transactionType: TransactionType,
   ): Promise<SuccessTransactionResponseType | ErrorTransactionResponseType> {
     const {
-      transactionHash,
+      transactionHash = null,
       transactionId,
       rawTransaction,
       userAddress,

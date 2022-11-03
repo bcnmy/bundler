@@ -28,14 +28,15 @@ export class AASimulationService {
     let isSimulationSuccessful = true;
     try {
       await entryPointStatic.callStatic.simulateValidation(userOp, false);
-    } catch (error) {
+    } catch (error: any) {
+      log.info(`AA Simulation failed: ${JSON.stringify(error)}`);
       isSimulationSuccessful = false;
     }
 
     const estimatedGasForUserOp = await this.networkService.estimateGas(entryPointContract, 'handleOps', [[userOp], config.feeOption.refundReceiver[chainId]], config.zeroAddress);
 
     log.info(`Estimated gas is: ${estimatedGasForUserOp} for userOp: ${JSON.stringify(userOp)}`);
-    if (typeof estimatedGasForUserOp === 'object') {
+    if (!estimatedGasForUserOp._isBigNumber) {
       return {
         isSimulationSuccessful: false,
         gasLimitFromSimulation: 0,

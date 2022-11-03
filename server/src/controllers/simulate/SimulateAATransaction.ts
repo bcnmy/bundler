@@ -33,6 +33,8 @@ export const simulateAATransaction = async (req: Request, res: Response) => {
     const aaSimulationResponse = await aaSimulatonServiceMap[chainId]
       .simulate({ userOp, entryPointContract, chainId });
 
+    log.info(`AA simulation response: ${JSON.stringify(aaSimulationResponse)}`);
+
     if (!aaSimulationResponse.isSimulationSuccessful) {
       const { msgFromSimulation } = aaSimulationResponse;
       return {
@@ -41,7 +43,7 @@ export const simulateAATransaction = async (req: Request, res: Response) => {
       };
     }
     req.body.params[3] = aaSimulationResponse.gasLimitFromSimulation;
-    log.info(`Transaction successfully simulated for uerOpd: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
+    log.info(`Transaction successfully simulated for userOp: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
     return {
       code: 200,
       msgFromSimulation: 'AA transaction successfully simulated',

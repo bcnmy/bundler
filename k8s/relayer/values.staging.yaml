@@ -1,5 +1,5 @@
 name: "relayer-server"
-
+replicas: 1
 relayer:
   name: "relayer-server"
   image: "gcr.io/biconomy-staging/sdk/relayer-node-service:latest"
@@ -17,7 +17,7 @@ namespace: "sdk-staging"
 
 secret:
   projectID: biconomy-staging
-  key: sdk-staging-relayer-node-service-0
+  key: sdk-staging-relayer-node-service
   config:
     name: config.json.enc
 

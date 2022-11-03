@@ -75,24 +75,30 @@ ITransactionPublisher<TransactionQueueMessageType> {
       previousTransactionHash,
       userAddress,
     } = onTranasctionSuccessParams;
+    if (!transactionReceipt) {
+      log.error(`Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
+      return;
+    }
 
     log.info(`Publishing to transaction queue on success for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
     await this.publishToTransactionQueue({
       transactionId,
+      transactionHash: transactionExecutionResponse?.hash,
       receipt: transactionExecutionResponse,
       event: SocketEventType.onTransactionMined,
     });
-
-    log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
-    await this.saveTransactionDataToDatabase(
-      transactionExecutionResponse,
-      transactionId,
-      transactionReceipt,
-      relayerAddress,
-      TransactionStatus.SUCCESS,
-      previousTransactionHash,
-      userAddress,
-    );
+    if (transactionExecutionResponse) {
+      log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
+      await this.saveTransactionDataToDatabase(
+        transactionExecutionResponse,
+        transactionId,
+        transactionReceipt,
+        relayerAddress,
+        TransactionStatus.SUCCESS,
+        previousTransactionHash,
+        userAddress,
+      );
+    }
   }
 
   private async onTransactionFailure(onTranasctionFailureParams: OnTransactionFailureParamsType) {
@@ -104,24 +110,30 @@ ITransactionPublisher<TransactionQueueMessageType> {
       previousTransactionHash,
       userAddress,
     } = onTranasctionFailureParams;
-
+    if (!transactionReceipt) {
+      log.error(`Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
+      return;
+    }
     log.info(`Publishing to transaction queue on failure for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
     await this.publishToTransactionQueue({
       transactionId,
+      transactionHash: transactionExecutionResponse?.hash,
       receipt: transactionExecutionResponse,
       event: SocketEventType.onTransactionMined,
     });
 
-    log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
-    await this.saveTransactionDataToDatabase(
-      transactionExecutionResponse,
-      transactionId,
-      transactionReceipt,
-      relayerAddress,
-      TransactionStatus.FAILED,
-      previousTransactionHash,
-      userAddress,
-    );
+    if (transactionExecutionResponse) {
+      log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
+      await this.saveTransactionDataToDatabase(
+        transactionExecutionResponse,
+        transactionId,
+        transactionReceipt,
+        relayerAddress,
+        TransactionStatus.FAILED,
+        previousTransactionHash,
+        userAddress,
+      );
+    }
   }
 
   private async saveTransactionDataToDatabase(
@@ -135,12 +147,12 @@ ITransactionPublisher<TransactionQueueMessageType> {
   ): Promise<void> {
     const transactionDataToBeSaveInDatabase = {
       transactionId,
-      transactionHash: transactionExecutionResponse.hash,
+      transactionHash: transactionExecutionResponse?.hash,
       previousTransactionHash,
       status,
       rawTransaction: transactionExecutionResponse,
       chainId: this.chainId,
-      gasPrice: transactionExecutionResponse.gasPrice,
+      gasPrice: transactionExecutionResponse?.gasPrice,
       receipt: transactionReceipt,
       relayerAddress,
       userAddress,
@@ -166,7 +178,9 @@ ITransactionPublisher<TransactionQueueMessageType> {
       transactionType,
       relayerManagerName,
     } = notifyTransactionListenerParams;
-
+    if (!transactionExecutionResponse) {
+      return;
+    }
     // TODO : add error check
     const tranasctionHash = transactionExecutionResponse.hash;
     log.info(`Transaction hash is: ${tranasctionHash} for transactionId: ${transactionId} on chainId ${this.chainId}`);
@@ -215,20 +229,28 @@ ITransactionPublisher<TransactionQueueMessageType> {
       transactionType,
       userAddress,
       relayerManagerName,
+      previousTransactionHash,
+      error,
     } = notifyTransactionListenerParams;
     if (!transactionExecutionResponse) {
+      await this.publishToTransactionQueue({
+        transactionId,
+        error,
+        event: SocketEventType.onTransactionError,
+      });
       log.error('transactionExecutionResponse is null');
       return {
         isTransactionRelayed: false,
         transactionExecutionResponse: null,
       };
     }
-
     // transaction queue is being listened by socket service to notify the client about the hash
     await this.publishToTransactionQueue({
       transactionId,
+      transactionHash: transactionExecutionResponse?.hash,
       receipt: transactionExecutionResponse,
-      event: SocketEventType.onTransactionHashGenerated,
+      event: previousTransactionHash
+        ? SocketEventType.onTransactionHashChanged : SocketEventType.onTransactionHashGenerated,
     });
     // retry txn service will check for receipt
     log.info(`Publishing transaction data of transactionId: ${transactionId} to retry transaction queue on chainId ${this.chainId}`);

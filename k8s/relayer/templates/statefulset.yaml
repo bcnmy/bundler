@@ -1,41 +1,48 @@
+{{- $replicas := .Values.replicas | int -}}
+{{- $values := .Values }}
+{{- range $i,$e := until $replicas }}
+
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ .Values.relayer.name }}
-  namespace: {{ .Values.namespace }}
+  name: {{ $values.relayer.name }}{{ $i }}
+  namespace: {{ $values.namespace }}
   labels:
-    app: {{ .Values.relayer.name }}
-    {{- include "relayers-service.labels" . | nindent 4 }}
+    app: {{ $values.relayer.name }}
+    component: {{ $values.relayer.name }}{{ $i }}
+    {{- include "relayers-service.labels" $ | nindent 4 }}
 spec:
-  serviceName: {{ .Values.name }}
-  replicas: {{ .Values.relayer.replicaCount }}
+  serviceName: {{ $values.name }}
+  replicas: {{ $values.relayer.replicaCount }}
   selector:
     matchLabels:
-      app: {{ .Values.relayer.name }}
+      app: {{ $values.relayer.name }}
   template:
     metadata:
       labels:
-        app: {{ .Values.relayer.name }}
+        app: {{ $values.relayer.name }}
       annotations:
         releaseTime: {{ dateInZone "2006-01-02 15:04:05Z" (now) "UTC"| quote }} 
     spec:
       containers:
-      - name: {{ .Values.relayer.name }}
-        image: {{ .Values.relayer.image }}
+      - name: {{ $values.relayer.name }}{{ $i }}
+        image: {{ $values.relayer.image }}
         ports:
-        - containerPort: {{ .Values.relayer.port }}
+        - containerPort: {{ $values.relayer.port }}
         volumeMounts:
           - mountPath: "/relayer-node/config.json.enc"
             name: secret
             subPath: "config.json.enc"
         resources:
           requests:
-            memory: {{ .Values.relayer.resource.requests.memory }}
-            cpu: {{ .Values.relayer.resource.requests.cpu }}
+            memory: {{ $values.relayer.resource.requests.memory }}
+            cpu: {{ $values.relayer.resource.requests.cpu }}
           limits:
-            memory: {{ .Values.relayer.resource.limits.memory }}
-            cpu: {{ .Values.relayer.resource.limits.cpu }}
+            memory: {{ $values.relayer.resource.limits.memory }}
+            cpu: {{ $values.relayer.resource.limits.cpu }}
       volumes:
       - name: secret
         secret:
-          secretName: {{ .Values.name }}
+          secretName: {{ $values.name }}{{ $i }}
+{{- end}}
