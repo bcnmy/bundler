@@ -1,7 +1,7 @@
 {
   "socketService": {
-    "wssUrl": "wss://sdk-testing-ws.staging.biconomy.io/connection/websocket",
-    "httpUrl": "https://sdk-testing-ws.staging.biconomy.io/api"
+    "wssUrl": "wss://sdk-ws.prod.biconomy.io/connection/websocket",
+    "httpUrl": "https://sdk-ws.prod.biconomy.io/api"
   },
   "supportedNetworks": [5, 80001],
   "EIP1559SupportedNetworks": [],
@@ -32,9 +32,6 @@
       "137": 100000,
       "80001": 100000
     }
-  },
-  "relayer": {
-    "nodePathIndex": 0
   },
   "relayerManagers": [{
     "name": "RM1",
