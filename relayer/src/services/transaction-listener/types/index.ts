@@ -24,16 +24,17 @@ export type EVMTransactionListenerParamsType = {
 };
 
 export type NotifyTransactionListenerParamsType = {
-  transactionExecutionResponse: ethers.providers.TransactionResponse,
+  transactionExecutionResponse?: ethers.providers.TransactionResponse,
   transactionId: string,
+  transactionReceipt?: ethers.providers.TransactionReceipt,
   relayerAddress: string,
   transactionType: TransactionType,
   previousTransactionHash: string | null,
   rawTransaction?: EVMRawTransactionType,
   userAddress?: string,
   relayerManagerName: string,
-  transactionReceipt?: ethers.providers.TransactionReceipt,
   ccmpMessage?: CCMPMessage
+  error?: string,
 };
 
 export type TransactionListenerNotifyReturnType = {

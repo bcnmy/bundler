@@ -94,27 +94,33 @@ implements
       transactionReceipt,
       ccmpMessage,
     } = onTranasctionSuccessParams;
+    if (!transactionReceipt) {
+      log.error(`Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
+      return;
+    }
 
     log.info(
       `Publishing to transaction queue on success for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`,
     );
     await this.publishToTransactionQueue({
       transactionId,
+      transactionHash: transactionExecutionResponse?.hash,
       receipt: transactionExecutionResponse,
       event: SocketEventType.onTransactionMined,
     });
 
-    log.info(
-      `Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`,
-    );
-    await this.saveTransactionDataToDatabase(
-      transactionExecutionResponse,
-      transactionId,
-      relayerAddress,
-      TransactionStatus.SUCCESS,
-      previousTransactionHash,
-      userAddress,
-    );
+    if (transactionExecutionResponse) {
+      log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
+      await this.saveTransactionDataToDatabase(
+        transactionExecutionResponse,
+        transactionId,
+        transactionReceipt,
+        relayerAddress,
+        TransactionStatus.SUCCESS,
+        previousTransactionHash,
+        userAddress,
+      );
+    }
 
     try {
       if (transactionType === TransactionType.CROSS_CHAIN) {
@@ -153,32 +159,37 @@ implements
     const {
       transactionExecutionResponse,
       transactionId,
+      transactionReceipt,
       relayerAddress,
       previousTransactionHash,
       transactionType,
-      transactionReceipt,
       ccmpMessage,
+      userAddress,
     } = onTranasctionFailureParams;
-
-    log.info(
-      `Publishing to transaction queue on failure for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`,
-    );
+    if (!transactionReceipt) {
+      log.error(`Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
+      return;
+    }
+    log.info(`Publishing to transaction queue on failure for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
     await this.publishToTransactionQueue({
       transactionId,
+      transactionHash: transactionExecutionResponse?.hash,
       receipt: transactionExecutionResponse,
       event: SocketEventType.onTransactionMined,
     });
 
-    log.info(
-      `Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`,
-    );
-    await this.saveTransactionDataToDatabase(
-      transactionExecutionResponse,
-      transactionId,
-      relayerAddress,
-      TransactionStatus.FAILED,
-      previousTransactionHash,
-    );
+    if (transactionExecutionResponse) {
+      log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
+      await this.saveTransactionDataToDatabase(
+        transactionExecutionResponse,
+        transactionId,
+        transactionReceipt,
+        relayerAddress,
+        TransactionStatus.FAILED,
+        previousTransactionHash,
+        userAddress,
+      );
+    }
 
     try {
       if (transactionType === TransactionType.CROSS_CHAIN) {
@@ -215,6 +226,7 @@ implements
   private async saveTransactionDataToDatabase(
     transactionExecutionResponse: ethers.providers.TransactionResponse,
     transactionId: string,
+    transactionReceipt: ethers.providers.TransactionReceipt,
     relayerAddress: string,
     status: TransactionStatus,
     previousTransactionHash: string | null,
@@ -222,19 +234,23 @@ implements
   ): Promise<void> {
     const transactionDataToBeSaveInDatabase = {
       transactionId,
-      transactionHash: transactionExecutionResponse.hash,
+      transactionHash: transactionExecutionResponse?.hash,
       previousTransactionHash,
       status,
       rawTransaction: transactionExecutionResponse,
       chainId: this.chainId,
-      gasPrice: transactionExecutionResponse.gasPrice,
-      receipt: {},
+      gasPrice: transactionExecutionResponse?.gasPrice,
+      receipt: transactionReceipt,
       relayerAddress,
       userAddress,
       creationTime: Date.now(),
       updationTime: Date.now(),
     };
-    await this.transactionDao.save(this.chainId, transactionDataToBeSaveInDatabase);
+    await this.transactionDao.updateByTransactionId(
+      this.chainId,
+      transactionId,
+      transactionDataToBeSaveInDatabase,
+    );
   }
 
   private async waitForTransaction(
@@ -250,7 +266,9 @@ implements
       relayerManagerName,
       ccmpMessage,
     } = notifyTransactionListenerParams;
-
+    if (!transactionExecutionResponse) {
+      return;
+    }
     // TODO : add error check
     const tranasctionHash = transactionExecutionResponse.hash;
     log.info(
@@ -273,12 +291,12 @@ implements
       await this.onTransactionSuccess({
         transactionExecutionResponse,
         transactionId,
+        transactionReceipt,
         relayerAddress,
         transactionType,
         previousTransactionHash,
         userAddress,
         relayerManagerName,
-        transactionReceipt,
         ccmpMessage,
       });
     }
@@ -289,12 +307,12 @@ implements
       await this.onTransactionFailure({
         transactionExecutionResponse,
         transactionId,
+        transactionReceipt,
         relayerAddress,
         transactionType,
         previousTransactionHash,
         userAddress,
         relayerManagerName,
-        transactionReceipt,
         ccmpMessage,
       });
     }
@@ -312,20 +330,28 @@ implements
       userAddress,
       relayerManagerName,
       ccmpMessage,
+      previousTransactionHash,
+      error,
     } = notifyTransactionListenerParams;
     if (!transactionExecutionResponse) {
+      await this.publishToTransactionQueue({
+        transactionId,
+        error,
+        event: SocketEventType.onTransactionError,
+      });
       log.error('transactionExecutionResponse is null');
       return {
         isTransactionRelayed: false,
         transactionExecutionResponse: null,
       };
     }
-
     // transaction queue is being listened by socket service to notify the client about the hash
     await this.publishToTransactionQueue({
       transactionId,
+      transactionHash: transactionExecutionResponse?.hash,
       receipt: transactionExecutionResponse,
-      event: SocketEventType.onTransactionHashGenerated,
+      event: previousTransactionHash
+        ? SocketEventType.onTransactionHashChanged : SocketEventType.onTransactionHashGenerated,
     });
     // retry txn service will check for receipt
     log.info(

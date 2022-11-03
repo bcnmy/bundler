@@ -2,10 +2,7 @@
 import { config } from '../../config';
 import { EVMAccount, IEVMAccount } from '../../relayer/src/services/account';
 import {
-  AAConsumer,
-  SCWConsumer,
-  SocketConsumer,
-  CCMPConsumer,
+  AAConsumer, SCWConsumer, SocketConsumer, CCMPConsumer,
 } from '../../relayer/src/services/consumer';
 import { EVMNonceManager } from '../../relayer/src/services/nonce-manager';
 import { EVMRelayerManager, IRelayerManager } from '../../relayer/src/services/relayer-manager';
@@ -105,9 +102,10 @@ const EVMRelayerManagerMap: {
 
 const transactionDao = new TransactionDAO();
 
-const socketConsumerMap: any = {};
-const retryTransactionSerivceMap: any = {};
-const transactionListenerMap: any = {};
+const socketConsumerMap: Record<number, SocketConsumer> = {};
+const retryTransactionSerivceMap: Record<number, EVMRetryTransactionService> = {};
+const transactionSerivceMap: Record<number, EVMTransactionService> = {};
+const transactionListenerMap: Record<number, EVMTransactionListener> = {};
 const retryTransactionQueueMap: {
   [key: number]: RetryTransactionHandlerQueue;
 } = {};
@@ -207,6 +205,8 @@ const crossChainRetryTransactionServiceMap: {
       },
     });
 
+    transactionSerivceMap[chainId] = transactionService;
+
     const relayerQueue = new EVMRelayerQueue([]);
     for (const relayerManager of config.relayerManagers) {
       if (!EVMRelayerManagerMap[relayerManager.name]) {
@@ -226,7 +226,7 @@ const crossChainRetryTransactionServiceMap: {
           maxRelayerCount: relayerManager.maxRelayerCount[chainId],
           inactiveRelayerCountThreshold: relayerManager.inactiveRelayerCountThreshold[chainId],
           pendingTransactionCountThreshold:
-            relayerManager.pendingTransactionCountThreshold[chainId],
+          relayerManager.pendingTransactionCountThreshold[chainId],
           newRelayerInstanceCount: relayerManager.newRelayerInstanceCount[chainId],
           fundingBalanceThreshold: relayerManager.fundingBalanceThreshold[chainId],
           fundingRelayerAmount: relayerManager.fundingRelayerAmount[chainId],
@@ -431,4 +431,5 @@ export {
   EVMRelayerManagerMap,
   ccmpRouterMap,
   ccmpServiceMap,
+  transactionSerivceMap,
 };

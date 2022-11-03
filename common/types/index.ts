@@ -20,16 +20,19 @@ export enum TransactionMethodType {
 }
 
 export enum SocketEventType {
-  onTransactionHashGenerated = 'onTransactionHashGenerated',
-  onTransactionHashChanged = 'onTransactionHashChanged',
-  onTransactionMined = 'onTransactionMined',
-  onTransactionError = 'onTransactionError',
+  onTransactionHashGenerated = 'transactionHashGenerated',
+  onTransactionHashChanged = 'transactionHashChanged',
+  onTransactionMined = 'transactionMined',
+  onTransactionError = 'error',
 }
 
 export type TransactionQueueMessageType = {
-  transactionId: string;
-  event: SocketEventType;
-  receipt: ethers.providers.TransactionResponse;
+  transactionId: string,
+  event: SocketEventType,
+  transactionHash?: string,
+  previousTransactionHash?: string,
+  receipt?: ethers.providers.TransactionResponse,
+  error?: string,
 };
 
 export enum TransactionStatus {

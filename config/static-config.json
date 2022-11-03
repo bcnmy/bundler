@@ -1,4 +1,8 @@
 {
+  "socketService": {
+    "wssUrl": "wss://sdk-testing-ws.staging.biconomy.io/connection/websocket",
+    "httpUrl": "https://sdk-testing-ws.staging.biconomy.io/api"
+  },
   "supportedNetworks": [5, 80001],
   "EIP1559SupportedNetworks": [],
   "supportedTransactionType": {
@@ -24,13 +28,10 @@
     },
     "fallbackUrls": {},
     "retryTransactionInterval": {
-      "5": 100,
-      "137": 100,
-      "80001": 100
+      "5": 100000,
+      "137": 100000,
+      "80001": 100000
     }
-  },
-  "relayer": {
-    "nodePathIndex": 0
   },
   "relayerManagers": [{
     "name": "RM1",
