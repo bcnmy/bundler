@@ -1,48 +1,45 @@
 /* eslint-disable no-await-in-loop */
-import { config } from '../../config';
-import { EVMAccount } from '../../relayer/src/services/account';
-import { AAConsumer, SCWConsumer, SocketConsumer } from '../../relayer/src/services/consumer';
-import { EVMNonceManager } from '../../relayer/src/services/nonce-manager';
-import {
-  EVMRelayerManager,
-  IRelayerManager,
-} from '../../relayer/src/services/relayer-manager';
-import { EVMRelayerQueue } from '../../relayer/src/services/relayer-queue';
-import { EVMRetryTransactionService } from '../../relayer/src/services/retry-transaction-service';
-import { EVMTransactionListener } from '../../relayer/src/services/transaction-listener';
-import { EVMTransactionService } from '../../relayer/src/services/transaction-service';
-import { FeeOption } from '../../server/src/services';
-import { RedisCacheService } from '../cache';
-import { Mongo, TransactionDAO } from '../db';
-import { GasPriceManager } from '../gas-price';
-import { IQueue } from '../interface';
-import { logger } from '../log-config';
-import { EVMNetworkService } from '../network';
+import { config } from "../../config";
+import { EVMAccount } from "../../relayer/src/services/account";
+import { AAConsumer, SCWConsumer, SocketConsumer } from "../../relayer/src/services/consumer";
+import { EVMNonceManager } from "../../relayer/src/services/nonce-manager";
+import { EVMRelayerManager, IRelayerManager } from "../../relayer/src/services/relayer-manager";
+import { EVMRelayerQueue } from "../../relayer/src/services/relayer-queue";
+import { EVMRetryTransactionService } from "../../relayer/src/services/retry-transaction-service";
+import { EVMTransactionListener } from "../../relayer/src/services/transaction-listener";
+import { EVMTransactionService } from "../../relayer/src/services/transaction-service";
+import { FeeOption } from "../../server/src/services";
+import { RedisCacheService } from "../cache";
+import { Mongo, TransactionDAO } from "../db";
+import { GasPriceManager } from "../gas-price";
+import { IQueue } from "../interface";
+import { logger } from "../log-config";
+import { EVMNetworkService } from "../network";
 import {
   AATransactionQueue,
   RetryTransactionHandlerQueue,
   SCWTransactionQueue,
   TransactionHandlerQueue,
-} from '../queue';
-import { AARelayService, SCWRelayService } from '../relay-service';
-import { AASimulationService, SCWSimulationService } from '../simulation';
-import { TenderlySimulationService } from '../simulation/external-simulation';
-import { CMCTokenPriceManager } from '../token-price';
+} from "../queue";
+import { AARelayService, SCWRelayService } from "../relay-service";
+import { AASimulationService, SCWSimulationService } from "../simulation";
+import { TenderlySimulationService } from "../simulation/external-simulation";
+import { CMCTokenPriceManager } from "../token-price";
 import {
   AATransactionMessageType,
   EntryPointMapType,
   EVMRawTransactionType,
   SCWTransactionMessageType,
   TransactionType,
-} from '../types';
+} from "../types";
 
 const log = logger(module);
 
 // change below to assign relayer manager to transaction type
 const relayerManagerTransactionTypeNameMap = {
-  [TransactionType.AA]: 'RM1',
-  [TransactionType.SCW]: 'RM1',
-  [TransactionType.CROSS_CHAIN]: 'RM2',
+  [TransactionType.AA]: "RM1",
+  [TransactionType.SCW]: "RM1",
+  [TransactionType.CROSS_CHAIN]: "RM2",
 };
 
 const routeTransactionToRelayerMap: {
@@ -71,21 +68,22 @@ const cacheService = RedisCacheService.getInstance();
 const { supportedNetworks, supportedTransactionType } = config;
 
 const EVMRelayerManagerMap: {
-  [name: string] : {
+  [name: string]: {
     [chainId: number]: IRelayerManager<EVMAccount, EVMRawTransactionType>;
-  }
+  };
 } = {};
 
 const transactionDao = new TransactionDAO();
 
-const socketConsumerMap: any = {};
-const retryTransactionSerivceMap: any = {};
-const transactionListenerMap: any = {};
+const socketConsumerMap: Record<number, SocketConsumer> = {};
+const retryTransactionSerivceMap: Record<number, EVMRetryTransactionService> = {};
+const transactionSerivceMap: Record<number, EVMTransactionService> = {};
+const transactionListenerMap: Record<number, EVMTransactionListener> = {};
 const retryTransactionQueueMap: {
-  [key: number]: RetryTransactionHandlerQueue,
+  [key: number]: RetryTransactionHandlerQueue;
 } = {};
 const transactionQueueMap: {
-  [key: number]: TransactionHandlerQueue,
+  [key: number]: TransactionHandlerQueue;
 } = {};
 
 (async () => {
@@ -169,6 +167,8 @@ const transactionQueueMap: {
       },
     });
 
+    transactionSerivceMap[chainId] = transactionService;
+
     retryTransactionSerivceMap[chainId] = new EVMRetryTransactionService({
       retryTransactionQueue,
       transactionService,
@@ -177,9 +177,7 @@ const transactionQueueMap: {
         chainId,
       },
     });
-    retryTransactionQueueMap[chainId].consume(
-      retryTransactionSerivceMap[chainId].onMessageReceived,
-    );
+    retryTransactionQueueMap[chainId].consume(retryTransactionSerivceMap[chainId].onMessageReceived);
 
     const relayerQueue = new EVMRelayerQueue([]);
     for (const relayerManager of config.relayerManagers) {
@@ -198,18 +196,14 @@ const transactionQueueMap: {
           relayerSeed: relayerManager.relayerSeed,
           minRelayerCount: relayerManager.minRelayerCount[chainId],
           maxRelayerCount: relayerManager.maxRelayerCount[chainId],
-          inactiveRelayerCountThreshold:
-            relayerManager.inactiveRelayerCountThreshold[chainId],
-          pendingTransactionCountThreshold:
-            relayerManager.pendingTransactionCountThreshold[chainId],
-          newRelayerInstanceCount:
-            relayerManager.newRelayerInstanceCount[chainId],
-          fundingBalanceThreshold:
-            relayerManager.fundingBalanceThreshold[chainId],
+          inactiveRelayerCountThreshold: relayerManager.inactiveRelayerCountThreshold[chainId],
+          pendingTransactionCountThreshold: relayerManager.pendingTransactionCountThreshold[chainId],
+          newRelayerInstanceCount: relayerManager.newRelayerInstanceCount[chainId],
+          fundingBalanceThreshold: relayerManager.fundingBalanceThreshold[chainId],
           fundingRelayerAmount: relayerManager.fundingRelayerAmount[chainId],
           ownerAccountDetails: new EVMAccount(
             relayerManager.ownerAccountDetails[chainId].publicKey,
-            relayerManager.ownerAccountDetails[chainId].privateKey,
+            relayerManager.ownerAccountDetails[chainId].privateKey
           ),
           gasLimitMap: relayerManager.gasLimitMap,
         },
@@ -217,7 +211,9 @@ const transactionQueueMap: {
       EVMRelayerManagerMap[relayerManager.name][chainId] = relayerMangerInstance;
 
       const addressList = await relayerMangerInstance.createRelayers();
-      log.info(`Relayer address list length: ${addressList.length} and minRelayerCount: ${relayerManager.minRelayerCount}`);
+      log.info(
+        `Relayer address list length: ${addressList.length} and minRelayerCount: ${relayerManager.minRelayerCount}`
+      );
       await relayerMangerInstance.fundRelayers(addressList);
     }
 
@@ -235,8 +231,7 @@ const transactionQueueMap: {
     feeOptionMap[chainId] = feeOptionService;
     // for each network get transaction type
     for (const type of supportedTransactionType[chainId]) {
-      const aaRelayerManager = EVMRelayerManagerMap[
-        relayerManagerTransactionTypeNameMap[type]][chainId];
+      const aaRelayerManager = EVMRelayerManagerMap[relayerManagerTransactionTypeNameMap[type]][chainId];
       if (!aaRelayerManager) {
         throw new Error(`Relayer manager not found for ${type}`);
       }
@@ -250,17 +245,12 @@ const transactionQueueMap: {
 
         const { entryPointData } = config;
 
-        for (let entryPointIndex = 0;
-          entryPointIndex < entryPointData[chainId].length;
-          entryPointIndex += 1) {
+        for (let entryPointIndex = 0; entryPointIndex < entryPointData[chainId].length; entryPointIndex += 1) {
           const entryPoint = entryPointData[chainId][entryPointIndex];
 
           entryPointMap[chainId].push({
             address: entryPoint.address,
-            entryPointContract: networkService.getContract(
-              JSON.stringify(entryPoint.abi),
-              entryPoint.address,
-            ),
+            entryPointContract: networkService.getContract(JSON.stringify(entryPoint.abi), entryPoint.address),
           });
         }
 
@@ -279,9 +269,7 @@ const transactionQueueMap: {
         const aaRelayService = new AARelayService(aaQueue);
         routeTransactionToRelayerMap[chainId][type] = aaRelayService;
 
-        aaSimulatonServiceMap[chainId] = new AASimulationService(
-          networkService,
-        );
+        aaSimulatonServiceMap[chainId] = new AASimulationService(networkService);
       } else if (type === TransactionType.SCW) {
         // queue for scw
         const scwQueue: IQueue<SCWTransactionMessageType> = new SCWTransactionQueue({
@@ -289,8 +277,7 @@ const transactionQueueMap: {
         });
         await scwQueue.connect();
 
-        const scwRelayerManager = EVMRelayerManagerMap[
-          relayerManagerTransactionTypeNameMap[type]][chainId];
+        const scwRelayerManager = EVMRelayerManagerMap[relayerManagerTransactionTypeNameMap[type]][chainId];
         if (!scwRelayerManager) {
           throw new Error(`Relayer manager not found for ${type}`);
         }
@@ -313,14 +300,11 @@ const transactionQueueMap: {
           tenderlyProject: config.simulationData.tenderlyData.tenderlyProject,
           tenderlyAccessKey: config.simulationData.tenderlyData.tenderlyAccessKey,
         });
-        scwSimulationServiceMap[chainId] = new SCWSimulationService(
-          networkService,
-          tenderlySimulationService,
-        );
+        scwSimulationServiceMap[chainId] = new SCWSimulationService(networkService, tenderlySimulationService);
       }
     }
   }
-  log.info('<=== Config setup completed ===>');
+  log.info("<=== Config setup completed ===>");
 })();
 
 export {
@@ -330,4 +314,5 @@ export {
   scwSimulationServiceMap,
   entryPointMap,
   EVMRelayerManagerMap,
+  transactionSerivceMap,
 };

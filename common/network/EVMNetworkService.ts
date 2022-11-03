@@ -62,7 +62,7 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
           case RpcMethod.estimateGas:
             return await this.ethersProvider.estimateGas(params);
           case RpcMethod.getTransactionReceipt:
-            return await this.ethersProvider.getTransactionReceipt(params.transactionHash);
+            return await this.ethersProvider.getTransactionReceipt(params);
           case RpcMethod.getTransactionCount:
             if (params.pendingNonce === true) {
               return await this.ethersProvider.getTransactionCount(params.address, 'pending');
@@ -177,6 +177,7 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
     };
   }
 
+  // TODO: Add Comments
   async getBalance(address: string): Promise<BigNumber> {
     const balance = await this.useProvider(RpcMethod.getBalance, {
       address,
@@ -184,6 +185,7 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
     return balance;
   }
 
+  // TODO: Avoid creating new contract instance Every time. Save & get from cache
   getContract(_abi: string, contractAddress: string) : ethers.Contract {
     const abi = new ethers.utils.Interface(_abi);
     const contract = new ethers.Contract(
@@ -194,12 +196,14 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
     return contract;
   }
 
+  // TODO: Add Comments
   async getTokenBalance(userAddress: string, tokenAddress: string): Promise<BigNumber> {
     const erc20Contract = this.getContract(JSON.stringify(ERC20_ABI), tokenAddress);
     const tokenBalance = await erc20Contract.balanceOf(userAddress);
     return tokenBalance;
   }
 
+  // TODO: Add Comments
   async checkAllowance(
     tokenAddress: string,
     ownerAddress: string,
