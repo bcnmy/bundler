@@ -4,7 +4,7 @@ import { ICrossChainTransactionDAO, ITransactionDAO } from '../../../../../commo
 import { IQueue } from '../../../../../common/interface';
 import { INetworkService } from '../../../../../common/network';
 import { RetryTransactionQueueData } from '../../../../../common/queue/types';
-import { EVMRawTransactionType, TransactionQueueMessageType, TransactionType } from '../../../../../common/types';
+import { CCMPMessage, EVMRawTransactionType, TransactionQueueMessageType, TransactionType } from '../../../../../common/types';
 import { IEVMAccount } from '../../account';
 
 export type EVMTransactionListenerParamsType = {
@@ -29,6 +29,7 @@ export type NotifyTransactionListenerParamsType = {
   userAddress?: string,
   relayerManagerName: string,
   transactionReceipt?: ethers.providers.TransactionReceipt,
+  ccmpMessage?: CCMPMessage
 };
 
 export type TransactionListenerNotifyReturnType = {

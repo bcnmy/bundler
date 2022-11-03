@@ -182,6 +182,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     const {
       to, value, data, gasLimit,
       speed, transactionId, userAddress,
+      ccmpMessage,
     } = transactionData;
 
     const retryTransactionCount = parseInt(await this.cacheService.get(getRetryTransactionCountKey(transactionId, this.chainId)), 10);
@@ -239,6 +240,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         rawTransaction,
         userAddress,
         relayerManagerName,
+        ccmpMessage,
       });
 
       return {

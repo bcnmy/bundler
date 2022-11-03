@@ -120,7 +120,6 @@ export type CrossChainTransactionMessageType = {
   chainId: number;
   value: string;
   transactionId: string;
-  executionIndex: number;
   message: CCMPMessage;
   sourceTxHash: string;
 };

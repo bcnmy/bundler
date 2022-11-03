@@ -170,7 +170,6 @@ export class CCMPService implements ICCMPService {
     const transaction = createCCMPGatewayTransaction(
       message,
       verificationData,
-      ctx.executionIndex,
       ctx.sourceTxHash,
     );
     const response = await this.routeTransactionToRelayerMap[toChain][
@@ -200,12 +199,7 @@ export class CCMPService implements ICCMPService {
   };
 
   async processTransaction(message: CCMPMessage, sourceChainTxHash: string) {
-    // Check for previous runs
     const sourceChainId = parseInt(message.sourceChainId.toString(), 10);
-    const state = await this.crossChainTransactionDAO.getByTransactionId(
-      sourceChainId,
-      message.hash,
-    );
 
     // Build the monad
     const taskManager = new CCMPTaskManager(
@@ -213,8 +207,6 @@ export class CCMPService implements ICCMPService {
       sourceChainTxHash,
       sourceChainId,
       message,
-      state?.statusLog.length ? state.statusLog.length + 1 : 1,
-      state,
     );
 
     const {

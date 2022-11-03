@@ -30,11 +30,10 @@ export const parseIndexerEvent = (event: Record<string, any>): CCMPMessage => ({
 export const createCCMPGatewayTransaction = (
   message: CCMPMessage,
   verificationData: string | Uint8Array,
-  executionIndex: number,
   sourceTxHash: string,
 ): CrossChainTransactionMessageType => {
   log.info(
-    `Creating CCMP Gateway Transaction for message ${message.hash} with verification data ${verificationData} and execution index ${executionIndex}`,
+    `Creating CCMP Gateway Transaction for message ${message.hash} with verification data ${verificationData}`,
   );
   const CCMPGatewayInterface = new ethers.utils.Interface(config.ccmp.abi.CCMPGateway);
   const data = CCMPGatewayInterface.encodeFunctionData('receiveMessage', [
@@ -52,7 +51,6 @@ export const createCCMPGatewayTransaction = (
     gasLimit: '0xF4240',
     chainId: parseInt(message.destinationChainId.toString(), 10),
     value: '0x0',
-    executionIndex,
     message,
     sourceTxHash,
   };

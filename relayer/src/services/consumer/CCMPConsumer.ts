@@ -61,7 +61,10 @@ export class CCMPConsumer implements ITransactionConsumer<IEVMAccount, EVMRawTra
       log.info(`Active relayer for ${this.transactionType} is ${activeRelayer?.getPublicKey()}`);
       if (activeRelayer) {
         const transactionServiceResponse = await this.transactionService.sendTransaction(
-          transactionDataReceivedFromQueue,
+          {
+            ...transactionDataReceivedFromQueue,
+            ccmpMessage: transactionDataReceivedFromQueue.message,
+          },
           activeRelayer,
           this.transactionType,
           this.relayerManager.name,
@@ -115,17 +118,11 @@ export class CCMPConsumer implements ITransactionConsumer<IEVMAccount, EVMRawTra
     data: CrossChainTransactionMessageType,
   ): Promise<ICCMPTaskManager> => {
     const sourceChainId = parseInt(data.message.sourceChainId.toString(), 10);
-    const state = await this.crossChainTransactionDAO.getByTransactionId(
-      sourceChainId,
-      data.message.hash,
-    );
     return new CCMPTaskManager(
       this.crossChainTransactionDAO,
       data.sourceTxHash,
       sourceChainId,
       data.message,
-      data.executionIndex,
-      state,
     );
   };
 

@@ -18,23 +18,23 @@ const log = logger(module);
 export class CCMPTaskManager implements ICCMPTaskManager {
   public verificationData: CCMPVerificationData;
 
-  public logs: ICrossChainTransactionStatusLogEntry[];
-
   public destinationTxHash?: string | undefined;
+
+  public status: ICrossChainTransactionStatusLogEntry;
+
+  public creationTime: number | undefined;
 
   constructor(
     private readonly crossChainTransactionDAO: ICrossChainTransactionDAO,
     public readonly sourceTxHash: string,
     public readonly sourceChainId: number,
     public readonly message: CCMPMessage,
-    public readonly executionIndex: number,
-    private readonly dbState: ICrossChainTransaction | null
   ) {
-    // Load State from DB, create if not present
-    this.logs =
-      dbState && executionIndex <= dbState?.statusLog.length
-        ? dbState?.statusLog[executionIndex - 1].logs
-        : [{ status: CrossChainTransationStatus.__START, timestamp: Date.now() }];
+    this.status = {
+      status: CrossChainTransationStatus.__START,
+      timestamp: Date.now(),
+      sourceTxHash: this.sourceTxHash,
+    };
   }
 
   setVerificationData(data: CCMPVerificationData) {
@@ -45,29 +45,12 @@ export class CCMPTaskManager implements ICCMPTaskManager {
     this.destinationTxHash = txHash;
   }
 
-  private getUpdatedDAO() {
-    let statusLog = [...(this.dbState?.statusLog || [])];
-    if (this.executionIndex <= statusLog.length) {
-      statusLog[this.executionIndex - 1] = {
-        executionIndex: this.executionIndex,
-        sourceTxHash: this.sourceTxHash,
-        logs: this.logs as any,
-      };
-    } else {
-      statusLog = [
-        ...statusLog,
-        {
-          executionIndex: this.executionIndex,
-          sourceTxHash: this.sourceTxHash,
-          logs: this.logs as any,
-        },
-      ];
-    }
+  private getPartialDAO() {
     return {
+      status: this.status,
       transactionId: this.message.hash,
       sourceTransactionHash: this.sourceTxHash,
-      statusLog,
-      creationTime: this.dbState?.creationTime || Date.now(),
+      creationTime: this.creationTime || Date.now(),
       updationTime: Date.now(),
       message: this.message,
       verificationData: this.verificationData?.toString(),
@@ -75,49 +58,72 @@ export class CCMPTaskManager implements ICCMPTaskManager {
     };
   }
 
+  public async getState(): Promise<ICrossChainTransaction | null> {
+    return this.crossChainTransactionDAO.getByTransactionId(this.sourceChainId, this.message.hash);
+  }
+
   async run(
     name: string,
     handler: IHandler,
-    handlerExpectedPostCompletionStatus: CrossChainTransationStatus
+    handlerExpectedPostCompletionStatus: CrossChainTransationStatus,
   ): Promise<ICCMPTaskManager> {
-    const latestEntry = this.logs[this.logs.length - 1];
-
-    // If an error occured in the previous step, skip this step
-    if (latestEntry.error) {
-      return this;
+    let state = await this.getState();
+    if (!state) {
+      state = {
+        ...this.getPartialDAO(),
+        statusLog: [this.status],
+      };
+      await this.crossChainTransactionDAO.updateByTransactionId(
+        this.sourceChainId,
+        this.message.hash,
+        state,
+      );
     }
+
+    // Remove Mongo specific fields from the result if any before assigning to this.status
+    const {
+      status, timestamp, context, sourceTxHash, error,
+    } = state.statusLog[state.statusLog.length - 1];
+    this.status = {
+      status, timestamp, context, sourceTxHash, error,
+    };
 
     // Run the Handler
     let partialStatusLog: ICrossChainTransactionStatusLogEntry;
     try {
       log.info(`Running ${name} handler`);
-      partialStatusLog = await handler(latestEntry, this);
+      partialStatusLog = await handler(this.status, this);
     } catch (e) {
       partialStatusLog = {
-        ...latestEntry,
+        ...this.status,
         status: CrossChainTransactionError.UNKNOWN_ERROR,
         context: {
           exception: JSON.stringify(e),
         },
       };
     }
-    const statusLog = {
+    this.status = {
       ...partialStatusLog,
       timestamp: Date.now(),
       error: partialStatusLog.status !== handlerExpectedPostCompletionStatus,
     };
-    log.info(`Status Log from ${name} handler is ${JSON.stringify(statusLog)}`);
-    this.logs.push(statusLog);
+    log.info(`Status Log from ${name} handler is ${JSON.stringify(this.status)}`);
 
-    // Update state in DB:
+    // Update state in DB
     log.info(`Saving updated state for ${name} handler to DB...`);
-    const updatedDao = this.getUpdatedDAO();
+    const updatedDao = this.getPartialDAO();
     await this.crossChainTransactionDAO.updateByTransactionId(
       this.sourceChainId,
       updatedDao.transactionId,
-      updatedDao
+      {
+        $set: updatedDao,
+        $push: {
+          statusLog: this.status,
+        },
+      },
     );
     log.info(`Updated state saved for ${name} handler to DB`);
+
     return this;
   }
 }

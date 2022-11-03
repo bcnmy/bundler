@@ -11,15 +11,13 @@ export interface ICrossChainTransactionStatusLogEntry {
   timestamp: number;
   context?: Object;
   error?: boolean;
+  sourceTxHash: string;
 }
 
 export interface ICrossChainTransaction {
   transactionId: string;
-  statusLog: {
-    executionIndex: number;
-    sourceTxHash: string;
-    logs: ICrossChainTransactionStatusLogEntry[];
-  }[];
+  status: ICrossChainTransactionStatusLogEntry;
+  statusLog: ICrossChainTransactionStatusLogEntry[];
   creationTime: number;
   updationTime: number;
   sourceTransactionHash: string;

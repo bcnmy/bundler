@@ -6,6 +6,7 @@ import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
 import { RetryTransactionQueueData } from '../../../../common/queue/types';
 import {
+  CCMPMessage,
   CrossChainTransactionError,
   CrossChainTransationStatus,
   EVMRawTransactionType,
@@ -17,7 +18,6 @@ import {
 import { getRetryTransactionCountKey } from '../../../../common/utils';
 import { CCMPTaskManager } from '../../../../cross-chain/task-manager';
 import { ICCMPTaskManager, IHandler } from '../../../../cross-chain/task-manager/types';
-import { getCCMPMessagePayloadFromDestTx } from '../../../../cross-chain/utils';
 import { IEVMAccount } from '../account';
 import { ITransactionPublisher } from '../transaction-publisher';
 import { ITransactionListener } from './interface/ITransactionListener';
@@ -87,6 +87,7 @@ implements
       userAddress,
       transactionType,
       transactionReceipt,
+      ccmpMessage,
     } = onTranasctionSuccessParams;
 
     log.info(
@@ -121,7 +122,7 @@ implements
           );
           return;
         }
-        const ccmpTaskManager = await this.getCCMPTaskManagerInstance(transactionReceipt);
+        const ccmpTaskManager = await this.getCCMPTaskManagerInstance(ccmpMessage!);
 
         await ccmpTaskManager.run(
           'Handle Relayed',
@@ -145,9 +146,9 @@ implements
       transactionId,
       relayerAddress,
       previousTransactionHash,
-      userAddress,
       transactionType,
       transactionReceipt,
+      ccmpMessage,
     } = onTranasctionFailureParams;
 
     log.info(
@@ -181,7 +182,7 @@ implements
           );
           return;
         }
-        const ccmpTaskManager = await this.getCCMPTaskManagerInstance(transactionReceipt);
+        const ccmpTaskManager = await this.getCCMPTaskManagerInstance(ccmpMessage!);
 
         await ccmpTaskManager.run(
           'Handle Failed',
@@ -193,7 +194,7 @@ implements
       }
     } catch (e) {
       log.error(
-        `Error while processing onTransactionSuccess for cross chain transactionId: ${transactionId} on chainId ${this.chainId}`,
+        `Error while processing onTransactionFailure for cross chain transactionId: ${transactionId} on chainId ${this.chainId}`,
         e,
       );
     }
@@ -235,6 +236,7 @@ implements
       userAddress,
       transactionType,
       relayerManagerName,
+      ccmpMessage,
     } = notifyTransactionListenerParams;
 
     // TODO : add error check
@@ -256,7 +258,7 @@ implements
       log.info(
         `Transaction is a success for transactionId: ${transactionId} on chainId ${this.chainId}`,
       );
-      this.onTransactionSuccess({
+      await this.onTransactionSuccess({
         transactionExecutionResponse,
         transactionId,
         relayerAddress,
@@ -265,13 +267,14 @@ implements
         userAddress,
         relayerManagerName,
         transactionReceipt,
+        ccmpMessage,
       });
     }
     if (transactionReceipt.status === 0) {
       log.info(
         `Transaction is a failure for transactionId: ${transactionId} on chainId ${this.chainId}`,
       );
-      this.onTransactionFailure({
+      await this.onTransactionFailure({
         transactionExecutionResponse,
         transactionId,
         relayerAddress,
@@ -280,6 +283,7 @@ implements
         userAddress,
         relayerManagerName,
         transactionReceipt,
+        ccmpMessage,
       });
     }
   }
@@ -333,17 +337,16 @@ implements
   }
 
   private getCCMPTaskManagerInstance = async (
-    receipt: ethers.providers.TransactionReceipt,
+    ccmpMessage: CCMPMessage,
   ): Promise<ICCMPTaskManager> => {
-    const message = await getCCMPMessagePayloadFromDestTx(this.chainId, receipt);
-    const sourceChainId = parseInt(message.sourceChainId.toString(), 10);
+    const sourceChainId = parseInt(ccmpMessage.sourceChainId.toString(), 10);
     const state = await this.crossChainTransactionDAO.getByTransactionId(
       sourceChainId,
-      message.hash,
+      ccmpMessage.hash,
     );
     if (!state) {
       throw new Error(
-        `No state found for transactionId: ${message.hash} on chainId ${sourceChainId}`,
+        `No state found for transactionId: ${ccmpMessage.hash} on chainId ${sourceChainId}`,
       );
     }
     return new CCMPTaskManager(
@@ -351,8 +354,6 @@ implements
       state.sourceTransactionHash,
       sourceChainId,
       state.message,
-      state.statusLog.length || 1,
-      state,
     );
   };
 
