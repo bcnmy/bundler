@@ -179,13 +179,14 @@ const retryTransactionQueueMap: {
           minRelayerCount: relayerManager.minRelayerCount[chainId],
           maxRelayerCount: relayerManager.maxRelayerCount[chainId],
           inactiveRelayerCountThreshold: relayerManager.inactiveRelayerCountThreshold[chainId],
-          pendingTransactionCountThreshold: relayerManager.pendingTransactionCountThreshold[chainId],
+          pendingTransactionCountThreshold:
+          relayerManager.pendingTransactionCountThreshold[chainId],
           newRelayerInstanceCount: relayerManager.newRelayerInstanceCount[chainId],
           fundingBalanceThreshold: relayerManager.fundingBalanceThreshold[chainId],
           fundingRelayerAmount: relayerManager.fundingRelayerAmount[chainId],
           ownerAccountDetails: new EVMAccount(
             relayerManager.ownerAccountDetails[chainId].publicKey,
-            relayerManager.ownerAccountDetails[chainId].privateKey
+            relayerManager.ownerAccountDetails[chainId].privateKey,
           ),
           gasLimitMap: relayerManager.gasLimitMap,
         },
@@ -194,7 +195,7 @@ const retryTransactionQueueMap: {
 
       const addressList = await relayerMangerInstance.createRelayers();
       log.info(
-        `Relayer address list length: ${addressList.length} and minRelayerCount: ${relayerManager.minRelayerCount}`
+        `Relayer address list length: ${addressList.length} and minRelayerCount: ${relayerManager.minRelayerCount}`,
       );
       await relayerMangerInstance.fundRelayers(addressList);
     }
@@ -209,7 +210,9 @@ const retryTransactionQueueMap: {
       },
     });
 
-    retryTransactionQueueMap[chainId].consume(retryTransactionSerivceMap[chainId].onMessageReceived);
+    retryTransactionQueueMap[chainId].consume(
+      retryTransactionSerivceMap[chainId].onMessageReceived,
+    );
 
     const tokenService = new CMCTokenPriceManager(cacheService, {
       apiKey: config.tokenPrice.coinMarketCapApi,
@@ -225,7 +228,8 @@ const retryTransactionQueueMap: {
     feeOptionMap[chainId] = feeOptionService;
     // for each network get transaction type
     for (const type of supportedTransactionType[chainId]) {
-      const aaRelayerManager = EVMRelayerManagerMap[relayerManagerTransactionTypeNameMap[type]][chainId];
+      const aaRelayerManager = EVMRelayerManagerMap[
+        relayerManagerTransactionTypeNameMap[type]][chainId];
       if (!aaRelayerManager) {
         throw new Error(`Relayer manager not found for ${type}`);
       }
@@ -239,12 +243,19 @@ const retryTransactionQueueMap: {
 
         const { entryPointData } = config;
 
-        for (let entryPointIndex = 0; entryPointIndex < entryPointData[chainId].length; entryPointIndex += 1) {
+        for (
+          let entryPointIndex = 0;
+          entryPointIndex < entryPointData[chainId].length;
+          entryPointIndex += 1
+        ) {
           const entryPoint = entryPointData[chainId][entryPointIndex];
 
           entryPointMap[chainId].push({
             address: entryPoint.address,
-            entryPointContract: networkService.getContract(JSON.stringify(entryPoint.abi), entryPoint.address),
+            entryPointContract: networkService.getContract(
+              JSON.stringify(entryPoint.abi),
+              entryPoint.address,
+            ),
           });
         }
 
@@ -271,7 +282,8 @@ const retryTransactionQueueMap: {
         });
         await scwQueue.connect();
 
-        const scwRelayerManager = EVMRelayerManagerMap[relayerManagerTransactionTypeNameMap[type]][chainId];
+        const scwRelayerManager = EVMRelayerManagerMap[
+          relayerManagerTransactionTypeNameMap[type]][chainId];
         if (!scwRelayerManager) {
           throw new Error(`Relayer manager not found for ${type}`);
         }
@@ -294,7 +306,10 @@ const retryTransactionQueueMap: {
           tenderlyProject: config.simulationData.tenderlyData.tenderlyProject,
           tenderlyAccessKey: config.simulationData.tenderlyData.tenderlyAccessKey,
         });
-        scwSimulationServiceMap[chainId] = new SCWSimulationService(networkService, tenderlySimulationService);
+        scwSimulationServiceMap[chainId] = new SCWSimulationService(
+          networkService,
+          tenderlySimulationService,
+        );
       }
     }
   }

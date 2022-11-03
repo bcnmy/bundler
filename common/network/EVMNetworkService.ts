@@ -10,7 +10,8 @@ import { IERC20NetworkService, INetworkService, RpcMethod } from './interface';
 import { Type0TransactionGasPriceType, Type2TransactionGasPriceType } from './types';
 
 const log = logger(module);
-export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTransactionType>, IERC20NetworkService {
+export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTransactionType>,
+ IERC20NetworkService {
   chainId: number;
 
   rpcUrl: string;
@@ -81,7 +82,9 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
         if (error.toString().toLowerCase().includes() === 'timeout error') {
           log.info(`Error in network service ${error}`);
           for (; rpcUrlIndex < this.fallbackRpcUrls.length; rpcUrlIndex += 1) {
-            this.ethersProvider = new ethers.providers.JsonRpcProvider(this.fallbackRpcUrls[rpcUrlIndex]);
+            this.ethersProvider = new ethers.providers.JsonRpcProvider(
+              this.fallbackRpcUrls[rpcUrlIndex],
+            );
             withFallbackRetry();
           }
         }
@@ -134,7 +137,7 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
     tokenAddress: string,
     ownerAddress: string,
     spenderAddress: string,
-    value: BigNumber
+    value: BigNumber,
   ): Promise<boolean> {
     const erc20Contract = this.getContract(JSON.stringify(ERC20_ABI), tokenAddress);
     let isSpenderAllowed = false;
@@ -145,13 +148,23 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
     return isSpenderAllowed;
   }
 
-  async executeReadMethod(abi: string, address: string, methodName: string, params: any): Promise<object> {
+  async executeReadMethod(
+    abi: string,
+    address: string,
+    methodName: string,
+    params: any,
+  ): Promise<object> {
     const contract = this.getContract(abi, address);
     const contractReadMethodValue = await contract[methodName].apply(null, params);
     return contractReadMethodValue;
   }
 
-  async estimateGas(contract: ethers.Contract, methodName: string, params: any, from: string): Promise<BigNumber> {
+  async estimateGas(
+    contract: ethers.Contract,
+    methodName: string,
+    params: any,
+    from: string,
+  ): Promise<BigNumber> {
     const contractInterface = contract.interface;
     const functionSignature = contractInterface.encodeFunctionData(methodName, params);
     const estimatedGas = await this.useProvider(RpcMethod.estimateGas, {
@@ -162,8 +175,13 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
     return estimatedGas;
   }
 
-  async getTransactionReceipt(transactionHash: string): Promise<ethers.providers.TransactionReceipt> {
-    const transactionReceipt = await this.useProvider(RpcMethod.getTransactionReceipt, transactionHash);
+  async getTransactionReceipt(
+    transactionHash: string,
+  ): Promise<ethers.providers.TransactionReceipt> {
+    const transactionReceipt = await this.useProvider(
+      RpcMethod.getTransactionReceipt,
+      transactionHash,
+    );
     return transactionReceipt;
   }
 
@@ -177,7 +195,7 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
 
   async sendTransaction(
     rawTransactionData: EVMRawTransactionType,
-    account: IEVMAccount
+    account: IEVMAccount,
   ): Promise<ethers.providers.TransactionResponse> {
     const rawTx: EVMRawTransactionType = rawTransactionData;
     rawTx.from = account.getPublicKey();
@@ -200,7 +218,7 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
     contractAddress: string,
     contractAbi: string,
     topic: string,
-    contractEventName: string
+    contractEventName: string,
   ): Promise<EventEmitter> {
     const filter = EVMNetworkService.createFilter(contractAddress, topic);
     const iFace = new ethers.utils.Interface(contractAbi);
