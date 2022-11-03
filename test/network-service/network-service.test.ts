@@ -108,8 +108,6 @@ describe('Network Service: Gas Prices', () => {
 });
 
 describe('Network Service: Native Asset Balance', () => {
-  beforeAll(() => jest.setTimeout(30000));
-
   it('Fetches the correct native asset balance on chainId: 80001', async () => {
     // test wallet
     const wallet = ethers.Wallet.createRandom();
@@ -123,9 +121,8 @@ describe('Network Service: Native Asset Balance', () => {
     );
     const { gasPrice } = await networkServiceMap[80001].getGasPrice();
 
-    // TODO: review test case for timeout issue
     // transfer 0.00001 native token from main account
-    await ownerWallet.sendTransaction({
+    const transactionResponse = await ownerWallet.sendTransaction({
       to: wallet.address,
       from: ownerWallet.address,
       nonce: networkServiceMap[80001].getNonce(ownerWallet.address),
@@ -134,9 +131,11 @@ describe('Network Service: Native Asset Balance', () => {
       value: BigNumber.from('10000000'),
     });
 
+    await networkServiceMap[80001].waitForTransaction(transactionResponse.hash);
+
     // check if the getBalance gets 0.00001
     const walletBalance = await networkServiceMap[80001].getBalance(wallet.address);
-
+    console.log('walletBalance', walletBalance);
     expect(walletBalance).not.toBeNull();
     expect(typeof walletBalance).toBe('string');
     expect(walletBalance).toBe('10000000');
@@ -156,7 +155,7 @@ describe('Network Service: Native Asset Balance', () => {
     const { gasPrice } = await networkServiceMap[5].getGasPrice();
 
     // transfer 0.00001 native token from main account
-    await ownerWallet.sendTransaction({
+    const transactionResponse = await ownerWallet.sendTransaction({
       to: wallet.address,
       from: ownerWallet.address,
       nonce: networkServiceMap[5].getNonce(ownerWallet.address),
@@ -164,6 +163,8 @@ describe('Network Service: Native Asset Balance', () => {
       gasPrice,
       value: BigNumber.from('10000000'),
     });
+
+    await networkServiceMap[80001].waitForTransaction(transactionResponse.hash);
 
     // check if the getBalance gets 0.00001
     const walletBalance = await networkServiceMap[80001].getBalance(wallet.address);
