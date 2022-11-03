@@ -1,13 +1,13 @@
 /* eslint-disable no-await-in-loop */
-import axios from "axios";
-import { BigNumber, ethers } from "ethers";
-import EventEmitter from "events";
-import { IEVMAccount } from "../../relayer/src/services/account";
-import { ERC20_ABI } from "../constants";
-import { logger } from "../log-config";
-import { EVMRawTransactionType } from "../types";
-import { IERC20NetworkService, INetworkService, RpcMethod } from "./interface";
-import { Type0TransactionGasPriceType, Type2TransactionGasPriceType } from "./types";
+import axios from 'axios';
+import { BigNumber, ethers } from 'ethers';
+import EventEmitter from 'events';
+import { IEVMAccount } from '../../relayer/src/services/account';
+import { ERC20_ABI } from '../constants';
+import { logger } from '../log-config';
+import { EVMRawTransactionType } from '../types';
+import { IERC20NetworkService, INetworkService, RpcMethod } from './interface';
+import { Type0TransactionGasPriceType, Type2TransactionGasPriceType } from './types';
 
 const log = logger(module);
 export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTransactionType>, IERC20NetworkService {
@@ -66,7 +66,7 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
             return await this.ethersProvider.getTransactionReceipt(params);
           case RpcMethod.getTransactionCount:
             if (params.pendingNonce === true) {
-              return await this.ethersProvider.getTransactionCount(params.address, "pending");
+              return await this.ethersProvider.getTransactionCount(params.address, 'pending');
             }
             return await this.ethersProvider.getTransactionCount(params.address);
           // TODO: Check error type
@@ -78,7 +78,7 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
             return null;
         }
       } catch (error: any) {
-        if (error.toString().toLowerCase().includes() === "timeout error") {
+        if (error.toString().toLowerCase().includes() === 'timeout error') {
           log.info(`Error in network service ${error}`);
           for (; rpcUrlIndex < this.fallbackRpcUrls.length; rpcUrlIndex += 1) {
             this.ethersProvider = new ethers.providers.JsonRpcProvider(this.fallbackRpcUrls[rpcUrlIndex]);
@@ -223,7 +223,7 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
     const data = {
       method,
       params,
-      jsonrpc: "2.0",
+      jsonrpc: '2.0',
       id: 1,
     };
     const response = await axios.post(this.rpcUrl, data);
