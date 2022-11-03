@@ -2,8 +2,8 @@ import { Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
 import { routeTransactionToRelayerMap } from '../../../../common/service-manager';
 import { isError, TransactionType } from '../../../../common/types';
+import { generateTransactionId } from '../../../../common/utils';
 import { config } from '../../../../config';
-import { generateTransactionId } from '../../utils/tx-id-generator';
 
 const websocketUrl = config.socketService.wssUrl;
 
@@ -35,11 +35,13 @@ export const relayAATransaction = async (req: Request, res: Response) => {
         error: response.error,
       });
     }
-
-    return {
-      transactionId,
-      connectionUrl: websocketUrl,
-    };
+    return res.status(200).json({
+      msg: 'success',
+      data: {
+        transactionId,
+        connectionUrl: websocketUrl,
+      },
+    });
   } catch (error) {
     log.error(`Error in AA relay ${error}`);
     return res.status(500).json({

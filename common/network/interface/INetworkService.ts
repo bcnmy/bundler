@@ -32,8 +32,6 @@ export interface INetworkService<AccountType, RawTransactionType> {
   getBalance(address: string): Promise<BigNumber>;
   getContract(abi: string, contractAddress: string): ethers.Contract;
   getNonce(address: string, pendingNonce?: boolean): Promise<number>
-  // TODO
-  // Find a better return type than object
   executeReadMethod(
     abi: string,
     contractAddress: string,

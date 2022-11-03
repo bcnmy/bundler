@@ -1,5 +1,5 @@
 import { config } from '../../config';
-import { EVMAccount } from '../../relayer/src/services/account';
+import { IEVMAccount } from '../../relayer/src/services/account';
 import { logger } from '../log-config';
 import { INetworkService } from '../network';
 import { EVMRawTransactionType } from '../types';
@@ -7,10 +7,10 @@ import { AASimulationDataType, SimulationResponseType } from './types';
 
 const log = logger(module);
 export class AASimulationService {
-  networkService: INetworkService<EVMAccount, EVMRawTransactionType>;
+  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
 
   constructor(
-    networkService: INetworkService<EVMAccount, EVMRawTransactionType>,
+    networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
   ) {
     this.networkService = networkService;
   }
@@ -25,15 +25,24 @@ export class AASimulationService {
       this.networkService.ethersProvider.getSigner(config.zeroAddress),
     );
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let isSimulationSuccessful = true;
     try {
       await entryPointStatic.callStatic.simulateValidation(userOp, false);
-    } catch (error) {
+    } catch (error: any) {
+      log.info(`AA Simulation failed: ${JSON.stringify(error)}`);
       isSimulationSuccessful = false;
     }
+
     const estimatedGasForUserOp = await this.networkService.estimateGas(entryPointContract, 'handleOps', [[userOp], config.feeOption.refundReceiver[chainId]], config.zeroAddress);
+
     log.info(`Estimated gas is: ${estimatedGasForUserOp} for userOp: ${JSON.stringify(userOp)}`);
+    if (!estimatedGasForUserOp._isBigNumber) {
+      return {
+        isSimulationSuccessful: false,
+        gasLimitFromSimulation: 0,
+        msgFromSimulation: JSON.stringify(estimatedGasForUserOp),
+      };
+    }
     return {
       isSimulationSuccessful,
       gasLimitFromSimulation: estimatedGasForUserOp,

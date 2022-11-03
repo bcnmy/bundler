@@ -19,12 +19,12 @@ export const simulateTransaction = () => async (
     if (!response) {
       return res.status(400).send({
         code: 400,
-        message: 'Wrong transaction type sent in request',
+        message: 'Response not received from simulation service',
       });
     }
-    if ((response as any).code === 400) {
-      return res.status(400).send({
-        code: 400,
+    if ((response as any).code !== 200) {
+      return res.status((response as any).code).send({
+        code: (response as any).code,
         message: (response as any).msgFromSimulation,
       });
     }

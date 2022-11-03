@@ -9,7 +9,7 @@ metadata:
     kubernetes.io/tls-acme: "true"
   labels:
     {{- include "relayers-service.labels" . | nindent 4 }}
-  name: {{ .Values.server.name }}-ingress
+  name: {{ .Values.relayer.name }}-ingress
   namespace: {{ .Values.namespace }}
 spec:
   rules:

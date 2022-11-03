@@ -43,7 +43,10 @@ export class SocketConsumer implements ISocketConsumer {
         this.socketClient.publish({
           channel: `transaction:${transactionDataReceivedFromQueue.transactionId}`,
           data: {
+            transactionId: transactionDataReceivedFromQueue.transactionId,
+            transactionHash: transactionDataReceivedFromQueue.receipt?.hash,
             event: transactionDataReceivedFromQueue.event,
+            receipt: transactionDataReceivedFromQueue.receipt,
           },
         });
       } catch (error) {

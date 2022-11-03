@@ -4,6 +4,7 @@ export enum TransactionType {
   AA = 'AA',
   SCW = 'SCW',
   CROSS_CHAIN = 'CROSS_CHAIN',
+  FUNDING = 'FUNDING',
 }
 
 export enum TransactionMethodType {
@@ -13,16 +14,19 @@ export enum TransactionMethodType {
 }
 
 export enum SocketEventType {
-  onTransactionHashGenerated = 'onTransactionHashGenerated',
-  onTransactionHashChanged = 'onTransactionHashChanged',
-  onTransactionMined = 'onTransactionMined',
-  onTransactionError = 'onTransactionError',
+  onTransactionHashGenerated = 'transactionHashGenerated',
+  onTransactionHashChanged = 'transactionHashChanged',
+  onTransactionMined = 'transactionMined',
+  onTransactionError = 'error',
 }
 
 export type TransactionQueueMessageType = {
   transactionId: string,
   event: SocketEventType,
-  receipt: ethers.providers.TransactionResponse,
+  transactionHash?: string,
+  previousTransactionHash?: string,
+  receipt?: ethers.providers.TransactionResponse,
+  error?: string,
 };
 
 export enum TransactionStatus {
@@ -44,10 +48,10 @@ export type AccessListItem = {
   storageKeys: string[];
 };
 
-export type NetworkBasedGasPriceType = string | {
+export type NetworkBasedGasPriceType = {
   maxPriorityFeePerGas: string;
   maxFeePerGas: string;
-};
+} | string;
 
 export type EVMRawTransactionType = {
   from: string;
@@ -105,14 +109,14 @@ export function isError<T>(
 
 export type UserOperationType = {
   sender: string;
-  nonce: number;
+  nonce: string;
   initCode: string;
   callData: string;
-  callGasLimit: number;
-  verificationGasLimit: number;
-  preVerificationGas: number;
-  maxFeePerGas: number;
-  maxPriorityFeePerGas: number;
+  callGasLimit: string;
+  verificationGasLimit: string;
+  preVerificationGas: string;
+  maxFeePerGas: string;
+  maxPriorityFeePerGas: string;
   paymasterAndData: string;
   signature: string;
 };

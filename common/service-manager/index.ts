@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import { config } from "../../config";
-import { EVMAccount } from "../../relayer/src/services/account";
+import { EVMAccount, IEVMAccount } from "../../relayer/src/services/account";
 import { AAConsumer, SCWConsumer, SocketConsumer } from "../../relayer/src/services/consumer";
 import { EVMNonceManager } from "../../relayer/src/services/nonce-manager";
 import { EVMRelayerManager, IRelayerManager } from "../../relayer/src/services/relayer-manager";
@@ -14,6 +14,7 @@ import { Mongo, TransactionDAO } from "../db";
 import { GasPriceManager } from "../gas-price";
 import { IQueue } from "../interface";
 import { logger } from "../log-config";
+import { relayerManagerTransactionTypeNameMap } from "../maps";
 import { EVMNetworkService } from "../network";
 import {
   AATransactionQueue,
@@ -34,13 +35,6 @@ import {
 } from "../types";
 
 const log = logger(module);
-
-// change below to assign relayer manager to transaction type
-const relayerManagerTransactionTypeNameMap = {
-  [TransactionType.AA]: "RM1",
-  [TransactionType.SCW]: "RM1",
-  [TransactionType.CROSS_CHAIN]: "RM2",
-};
 
 const routeTransactionToRelayerMap: {
   [chainId: number]: {
@@ -69,7 +63,7 @@ const { supportedNetworks, supportedTransactionType } = config;
 
 const EVMRelayerManagerMap: {
   [name: string]: {
-    [chainId: number]: IRelayerManager<EVMAccount, EVMRawTransactionType>;
+    [chainId: number]: IRelayerManager<IEVMAccount, EVMRawTransactionType>;
   };
 } = {};
 
@@ -81,9 +75,6 @@ const transactionSerivceMap: Record<number, EVMTransactionService> = {};
 const transactionListenerMap: Record<number, EVMTransactionListener> = {};
 const retryTransactionQueueMap: {
   [key: number]: RetryTransactionHandlerQueue;
-} = {};
-const transactionQueueMap: {
-  [key: number]: TransactionHandlerQueue;
 } = {};
 
 (async () => {
@@ -120,7 +111,6 @@ const transactionQueueMap: {
       chainId,
     });
     await transactionQueue.connect();
-    transactionQueueMap[chainId] = transactionQueue;
 
     socketConsumerMap[chainId] = new SocketConsumer({
       queue: transactionQueue,
@@ -129,7 +119,7 @@ const transactionQueueMap: {
         wssUrl: config.socketService.wssUrl,
       },
     });
-    transactionQueueMap[chainId].consume(socketConsumerMap[chainId].onMessageReceived);
+    transactionQueue.consume(socketConsumerMap[chainId].onMessageReceived);
 
     const retryTransactionQueue = new RetryTransactionHandlerQueue({
       chainId,
@@ -147,6 +137,7 @@ const transactionQueueMap: {
 
     const transactionListener = new EVMTransactionListener({
       networkService,
+      cacheService,
       transactionQueue,
       retryTransactionQueue,
       transactionDao,
@@ -162,22 +153,13 @@ const transactionQueueMap: {
       nonceManager,
       gasPriceService,
       transactionDao,
+      cacheService,
       options: {
         chainId,
       },
     });
 
     transactionSerivceMap[chainId] = transactionService;
-
-    retryTransactionSerivceMap[chainId] = new EVMRetryTransactionService({
-      retryTransactionQueue,
-      transactionService,
-      networkService,
-      options: {
-        chainId,
-      },
-    });
-    retryTransactionQueueMap[chainId].consume(retryTransactionSerivceMap[chainId].onMessageReceived);
 
     const relayerQueue = new EVMRelayerQueue([]);
     for (const relayerManager of config.relayerManagers) {
@@ -216,6 +198,18 @@ const transactionQueueMap: {
       );
       await relayerMangerInstance.fundRelayers(addressList);
     }
+
+    retryTransactionSerivceMap[chainId] = new EVMRetryTransactionService({
+      retryTransactionQueue,
+      transactionService,
+      networkService,
+      options: {
+        chainId,
+        EVMRelayerManagerMap, // TODO // Review a better way
+      },
+    });
+
+    retryTransactionQueueMap[chainId].consume(retryTransactionSerivceMap[chainId].onMessageReceived);
 
     const tokenService = new CMCTokenPriceManager(cacheService, {
       apiKey: config.tokenPrice.coinMarketCapApi,

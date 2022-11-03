@@ -19,6 +19,7 @@ declare global {
   }
 }
 
+app.options('*', cors()); // include before other routes
 app.use(cors());
 app.use(rTracer.expressMiddleware());
 

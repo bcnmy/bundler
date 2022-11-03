@@ -35,13 +35,18 @@ export const validateRelayRequest = () => async (
       return next();
     }
     const { details } = error;
-    const message = details.map((i) => i.message).join(',');
-    return res.status(422).json({ error: message });
+    let message;
+    if (details) {
+      message = details.map((i) => i.message).join(',');
+    } else {
+      message = error.message || error.toString();
+    }
+    return res.status(400).json({ error: message });
   } catch (e: any) {
     log.error(e);
     return res.status(400).send({
       code: 400,
-      message: e.errors,
+      message: JSON.stringify(e),
     });
   }
 };
