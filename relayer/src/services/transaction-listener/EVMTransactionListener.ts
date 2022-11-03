@@ -229,6 +229,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       transactionType,
       userAddress,
       relayerManagerName,
+      previousTransactionHash,
       error,
     } = notifyTransactionListenerParams;
     if (!transactionExecutionResponse) {
@@ -248,7 +249,8 @@ ITransactionPublisher<TransactionQueueMessageType> {
       transactionId,
       transactionHash: transactionExecutionResponse?.hash,
       receipt: transactionExecutionResponse,
-      event: SocketEventType.onTransactionHashGenerated,
+      event: previousTransactionHash
+        ? SocketEventType.onTransactionHashChanged : SocketEventType.onTransactionHashGenerated,
     });
     // retry txn service will check for receipt
     log.info(`Publishing transaction data of transactionId: ${transactionId} to retry transaction queue on chainId ${this.chainId}`);
