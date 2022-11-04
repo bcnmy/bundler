@@ -6,9 +6,11 @@ import { GasPriceType } from '../../common/gas-price/types';
 import { relayerManagerTransactionTypeNameMap } from '../../common/maps';
 import { EVMNetworkService } from '../../common/network';
 import { TransactionHandlerQueue, RetryTransactionHandlerQueue } from '../../common/queue';
+import { EVMRelayerManagerMap } from '../../common/service-manager';
 import { TransactionType } from '../../common/types';
+import { generateTransactionId } from '../../common/utils';
 import { config } from '../../config';
-import { EVMAccount } from '../../relayer/src/services/account';
+import { EVMAccount, IEVMAccount } from '../../relayer/src/services/account';
 import { EVMNonceManager } from '../../relayer/src/services/nonce-manager';
 import { EVMTransactionListener } from '../../relayer/src/services/transaction-listener';
 import { EVMTransactionService } from '../../relayer/src/services/transaction-service';
@@ -79,10 +81,6 @@ describe('Transaction Service: Sending Transaction on chainId: 5', () => {
     },
   });
 
-  const accountPublicKey = '0x4C07E2fa10f9871142883139B32Cb03F2A180494';
-  const accountPrivateKey = 'e3b3818b1b604cf6dfc3133faa9a524f1e2ea0d5894a003c4b857952f6b146f6';
-  const evmAccount = new EVMAccount(accountPublicKey, accountPrivateKey);
-
   const setQuoteAbi = [{
     inputs: [{ internalType: 'string', name: 'newQuote', type: 'string' }], name: 'setQuote', outputs: [], stateMutability: 'nonpayable', type: 'function',
   }, { inputs: [], stateMutability: 'nonpayable', type: 'constructor' }, {
@@ -101,34 +99,46 @@ describe('Transaction Service: Sending Transaction on chainId: 5', () => {
   let nonceBeforeTransaction: number;
   let transactionExecutionResponse: ethers.providers.TransactionResponse | null;
   let transactionId: string;
+  let activeRelayer: IEVMAccount | null;
 
   // check for null gasLimit
   // same nonce of relayer
-  
   beforeAll(async () => {
     await dbInstance.connect();
     await cacheService.connect();
     await transactionQueue.connect();
-    nonceBeforeTransaction = await nonceManager.getNonce(accountPublicKey);
+
+    const scwRelayerManager = EVMRelayerManagerMap[
+      relayerManagerTransactionTypeNameMap[TransactionType.SCW]][chainId];
+
+    activeRelayer = await scwRelayerManager.getActiveRelayer();
+
+    if (!activeRelayer) {
+      throw new Error(`No active relayer for transactionType: ${TransactionType.SCW} on chainId: ${chainId}`);
+    }
+
+    nonceBeforeTransaction = await nonceManager.getNonce(activeRelayer.getPublicKey());
     const { data } = await setQuoteContract.populateTransaction.setQuote(`Current time: ${Date.now()}`);
 
-    const transactionData = {
-      to: accountPublicKey,
+    const transactionData: any = {
+      to: setQuoteAddress,
       value: '0x0',
       data: data as string,
       gasLimit: '0x249F0',
-      transactionId: '0xabcdefg',
     };
+
+    transactionId = generateTransactionId(transactionData.toString());
+
+    transactionData.transactionId = transactionId;
 
     const response = await transactionService.sendTransaction(
       transactionData,
-      evmAccount,
+      activeRelayer,
       TransactionType.SCW,
       relayerManagerTransactionTypeNameMap.SCW,
     );
     transactionExecutionResponse = response.transactionExecutionResponse;
     transactionId = response.transactionId;
-    console.log('response', response);
   });
 
   it('Transaction hash is generated', async () => {
@@ -138,7 +148,9 @@ describe('Transaction Service: Sending Transaction on chainId: 5', () => {
   });
 
   it('Nonce should have been incremented by 1', async () => {
-    const nonceAfterTransaction = await nonceManager.getNonce(accountPublicKey);
+    const nonceAfterTransaction = await nonceManager.getNonce(
+      (activeRelayer as IEVMAccount).getPublicKey(),
+    );
     const nonceDifference = nonceAfterTransaction - nonceBeforeTransaction;
     expect(nonceDifference).toBe(1);
   });
@@ -223,10 +235,6 @@ describe('Retry Transaction Service: Transaction should be bumped up and confimr
     },
   });
 
-  const accountPublicKey = '0x4C07E2fa10f9871142883139B32Cb03F2A180494';
-  const accountPrivateKey = 'e3b3818b1b604cf6dfc3133faa9a524f1e2ea0d5894a003c4b857952f6b146f6';
-  const evmAccount = new EVMAccount(accountPublicKey, accountPrivateKey);
-
   const setQuoteAbi = [{
     inputs: [{ internalType: 'string', name: 'newQuote', type: 'string' }], name: 'setQuote', outputs: [], stateMutability: 'nonpayable', type: 'function',
   }, { inputs: [], stateMutability: 'nonpayable', type: 'constructor' }, {
@@ -245,21 +253,34 @@ describe('Retry Transaction Service: Transaction should be bumped up and confimr
   let nonceBeforeTransaction: number;
   let transactionExecutionResponse: ethers.providers.TransactionResponse | null;
   let transactionId: string;
+  let activeRelayer: IEVMAccount | null;
 
   beforeAll(async () => {
     await dbInstance.connect();
     await cacheService.connect();
     await transactionQueue.connect();
-    nonceBeforeTransaction = await nonceManager.getNonce(accountPublicKey);
+    const scwRelayerManager = EVMRelayerManagerMap[
+      relayerManagerTransactionTypeNameMap[TransactionType.SCW]][chainId];
+
+    activeRelayer = await scwRelayerManager.getActiveRelayer();
+
+    if (!activeRelayer) {
+      throw new Error(`No active relayer for transactionType: ${TransactionType.SCW} on chainId: ${chainId}`);
+    }
+
+    nonceBeforeTransaction = await nonceManager.getNonce(activeRelayer.getPublicKey());
     const { data } = await setQuoteContract.populateTransaction.setQuote(`Current time: ${Date.now()}`);
 
-    const transactionData = {
-      to: accountPublicKey,
+    const transactionData: any = {
+      to: setQuoteAddress,
       value: '0x0',
       data: data as string,
       gasLimit: '0x249F0',
-      transactionId: '0xabcdefg',
     };
+
+    transactionId = generateTransactionId(transactionData.toString());
+
+    transactionData.transactionId = transactionId;
 
     const currentGasPrice = await gasPriceService.getGasPrice(GasPriceType.DEFAULT);
 
@@ -271,7 +292,7 @@ describe('Retry Transaction Service: Transaction should be bumped up and confimr
 
     const response = await transactionService.sendTransaction(
       transactionData,
-      evmAccount,
+      activeRelayer,
       TransactionType.SCW,
       relayerManagerTransactionTypeNameMap.SCW,
     );
@@ -292,7 +313,9 @@ describe('Retry Transaction Service: Transaction should be bumped up and confimr
   });
 
   it('Nonce should have been incremented by 1', async () => {
-    const nonceAfterTransaction = await nonceManager.getNonce(accountPublicKey);
+    const nonceAfterTransaction = await nonceManager.getNonce(
+      (activeRelayer as IEVMAccount).getPublicKey(),
+    );
     const nonceDifference = nonceAfterTransaction - nonceBeforeTransaction;
     expect(nonceDifference).toBe(1);
   });

@@ -175,6 +175,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
   ): Promise<void> {
     const transactionDataToBeSavedInDatabase = {
       transactionId,
+      transactionHash: transactionExecutionResponse.hash,
       rawTransaction: transactionExecutionResponse,
       relayerAddress,
       status,
