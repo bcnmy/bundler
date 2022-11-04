@@ -134,11 +134,10 @@ describe('Network Service: Native Asset Balance', () => {
     await networkServiceMap[80001].waitForTransaction(transactionResponse.hash);
 
     // check if the getBalance gets 0.00001
-    const walletBalance = await networkServiceMap[80001].getBalance(wallet.address);
-    console.log('walletBalance', walletBalance);
+    const walletBalance = Number(await networkServiceMap[80001].getBalance(wallet.address));
     expect(walletBalance).not.toBeNull();
-    expect(typeof walletBalance).toBe('string');
-    expect(walletBalance).toBe('10000000');
+    expect(typeof walletBalance).toBe('number');
+    expect(walletBalance).toBe(10000000);
   });
 
   it('Fetches the correct native asset balance on chainId: 5', async () => {
@@ -164,19 +163,19 @@ describe('Network Service: Native Asset Balance', () => {
       value: BigNumber.from('10000000'),
     });
 
-    await networkServiceMap[80001].waitForTransaction(transactionResponse.hash);
+    await networkServiceMap[5].waitForTransaction(transactionResponse.hash);
 
     // check if the getBalance gets 0.00001
-    const walletBalance = await networkServiceMap[80001].getBalance(wallet.address);
+    const walletBalance = Number(await networkServiceMap[5].getBalance(wallet.address));
 
     expect(walletBalance).not.toBeNull();
-    expect(typeof walletBalance).toBe('string');
-    expect(walletBalance).toBe('10000000');
+    expect(typeof walletBalance).toBe('number');
+    expect(walletBalance).toBe(10000000);
   });
 });
 
 describe('Network Service: Nonce Check', () => {
-  it('Check if nonce is correct on chaindId: 80001', async () => {
+  it('Check if nonce is correctly incremented on chaindId: 80001', async () => {
     // call getNonce() on an address, nonce should x
 
     // owner address
@@ -207,7 +206,7 @@ describe('Network Service: Nonce Check', () => {
     expect(nonceDifference).toBe(1);
   });
 
-  it('Check if nonce is correct on chaindId: 5', async () => {
+  it('Check if nonce is correctly incremented on chaindId: 5', async () => {
     // call getNonce() on an address, nonce should x
 
     // owner address
@@ -255,10 +254,10 @@ describe('Network Service: Sending Transaction', () => {
     const rawTransactionData = {
       from: ownerAddressPublicKey,
       gasPrice,
-      data: '0x0',
-      gasLimit: '100000',
+      data: '0x',
+      gasLimit: '0x989680',
       to: wallet.address,
-      value: '10000000',
+      value: '0x989680',
       chainId: 80001,
       nonce,
     };
@@ -288,10 +287,10 @@ describe('Network Service: Sending Transaction', () => {
     const rawTransactionData = {
       from: ownerAddressPublicKey,
       gasPrice,
-      data: '0x0',
-      gasLimit: '100000',
+      data: '0x',
+      gasLimit: '0x989680',
       to: wallet.address,
-      value: '10000000',
+      value: '0x989680',
       chainId: 5,
       nonce,
     };

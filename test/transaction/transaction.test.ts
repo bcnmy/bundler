@@ -105,7 +105,6 @@ describe('Transaction Service: Sending Transaction on chainId: 5', () => {
   // check for null gasLimit
   // same nonce of relayer
   
-
   beforeAll(async () => {
     await dbInstance.connect();
     await cacheService.connect();
