@@ -1,36 +1,21 @@
-// add health check for providers
-// check if cmc key is expired
-// check if gas price oracle is working
-// get all relayers and their status
+import { ICacheService } from '../cache';
+import { IHealthService } from './interface/IHealthService';
+import { HealthServiceParamsType } from './types';
 
-import { IHealthService } from './interface';
+export class HealthService implements IHealthService {
+  cacheService: ICacheService;
 
-class HealthService implements IHealthService {
-
-  constructor(cache) {
-
-  }
-  checkRedis(): Promise<Boolean> {
-    throw new Error('Method not implemented.');
+  constructor(params: HealthServiceParamsType) {
+    const { cacheService } = params;
+    this.cacheService = cacheService;
   }
 
-  checkDB(): Promise<Boolean> {
-    throw new Error('Method not implemented.');
+  async checkRedis(): Promise<boolean> {
+    const result = await this.cacheService.get('health');
+    return result === 'ok';
   }
 
-  checkRabbitmq(): Promise<Boolean> {
-    throw new Error('Method not implemented.');
-  }
-
-  checkServer(): Promise<Boolean> {
-    throw new Error('Method not implemented.');
-  }
-
-  checkCoinMarketCap(): Promise<Boolean> {
-    throw new Error('Method not implemented.');
-  }
-
-  checkProviderUrl(): Promise<Boolean> {
-    throw new Error('Method not implemented.');
+  async checkMongo(): Promise<boolean> {
+    return true;
   }
 }
