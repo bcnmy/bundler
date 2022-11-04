@@ -10,7 +10,7 @@ import { EVMRelayerManagerMap } from '../../common/service-manager';
 import { TransactionType } from '../../common/types';
 import { generateTransactionId } from '../../common/utils';
 import { config } from '../../config';
-import { EVMAccount, IEVMAccount } from '../../relayer/src/services/account';
+import { IEVMAccount } from '../../relayer/src/services/account';
 import { EVMNonceManager } from '../../relayer/src/services/nonce-manager';
 import { EVMTransactionListener } from '../../relayer/src/services/transaction-listener';
 import { EVMTransactionService } from '../../relayer/src/services/transaction-service';
