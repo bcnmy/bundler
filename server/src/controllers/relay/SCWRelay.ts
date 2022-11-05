@@ -31,12 +31,12 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
       });
     if (isError(response)) {
       return res.status(400).json({
-        msg: 'bad request',
+        code: 400,
         error: response.error,
       });
     }
     return res.status(200).json({
-      msg: 'success',
+      code: 200,
       data: {
         transactionId,
         connectionUrl: websocketUrl,
@@ -45,6 +45,7 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
   } catch (error) {
     log.error(`Error in SCW relay ${error}`);
     return res.status(500).json({
+      code: 500,
       error: JSON.stringify(error),
     });
   }
