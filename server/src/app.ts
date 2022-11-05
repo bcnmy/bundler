@@ -1,10 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import rTracer from 'cls-rtracer';
 import cors from 'cors';
 import express, {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   NextFunction, Request, Response, ErrorRequestHandler,
 } from 'express';
-import { morganMiddleware } from '../../common/log-config/index';
+import { morganMiddleware } from '../../common/log-config';
 
 import { routes } from './routes';
 

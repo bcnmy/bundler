@@ -43,7 +43,7 @@ Your basic commit messages should have a **jira-issue-id**, **type**, **scope**,
 ```
 
 
-## Locad deployment 
+## Local deployment 
 
 ### Requirements:
 
