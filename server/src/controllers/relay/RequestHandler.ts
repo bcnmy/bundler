@@ -16,7 +16,7 @@ export const requestHandler = async (
   } else {
     return res.status(400).send({
       code: 400,
-      message: 'Wrong transaction type sent in request',
+      error: 'Wrong transaction type sent in request',
     });
   }
   return response;
