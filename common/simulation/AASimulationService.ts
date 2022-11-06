@@ -3,6 +3,7 @@ import { IEVMAccount } from '../../relayer/src/services/account';
 import { logger } from '../log-config';
 import { INetworkService } from '../network';
 import { EVMRawTransactionType } from '../types';
+import { parseError } from '../utils';
 import { AASimulationDataType, SimulationResponseType } from './types';
 
 const log = logger(module);
@@ -40,7 +41,7 @@ export class AASimulationService {
       return {
         isSimulationSuccessful: false,
         gasLimitFromSimulation: 0,
-        msgFromSimulation: JSON.stringify(estimatedGasForUserOp),
+        msgFromSimulation: parseError(estimatedGasForUserOp),
       };
     }
     return {
