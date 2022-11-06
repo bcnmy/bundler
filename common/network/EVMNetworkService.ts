@@ -20,9 +20,7 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
 
   fallbackRpcUrls: string[];
 
-  constructor(options: {
-    chainId: number, rpcUrl: string, fallbackRpcUrls: string[]
-  }) {
+  constructor(options: { chainId: number; rpcUrl: string; fallbackRpcUrls: string[] }) {
     this.chainId = options.chainId;
     this.rpcUrl = options.rpcUrl;
     this.fallbackRpcUrls = options.fallbackRpcUrls;
@@ -83,7 +81,7 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
       } catch (error: any) {
         if (error.toString().toLowerCase().includes() === 'timeout error') {
           log.info(`Error in network service ${error}`);
-          for (;rpcUrlIndex < this.fallbackRpcUrls.length; rpcUrlIndex += 1) {
+          for (; rpcUrlIndex < this.fallbackRpcUrls.length; rpcUrlIndex += 1) {
             this.ethersProvider = new ethers.providers.JsonRpcProvider(
               this.fallbackRpcUrls[rpcUrlIndex],
             );
@@ -106,7 +104,7 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
     };
   }
 
-  async getGasPrice() :Promise<Type0TransactionGasPriceType> {
+  async getGasPrice(): Promise<Type0TransactionGasPriceType> {
     const gasPrice = (await this.useProvider(RpcMethod.getGasPrice)).toHexString();
     return {
       gasPrice,
@@ -120,22 +118,21 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
     return balance;
   }
 
-  getContract(_abi: string, contractAddress: string) : ethers.Contract {
+  // TODO: Avoid creating new contract instance Every time. Save & get from cache
+  getContract(_abi: string, contractAddress: string): ethers.Contract {
     const abi = new ethers.utils.Interface(_abi);
-    const contract = new ethers.Contract(
-      contractAddress,
-      abi,
-      this.ethersProvider,
-    );
+    const contract = new ethers.Contract(contractAddress, abi, this.ethersProvider);
     return contract;
   }
 
+  // TODO: Add Comments
   async getTokenBalance(userAddress: string, tokenAddress: string): Promise<BigNumber> {
     const erc20Contract = this.getContract(JSON.stringify(ERC20_ABI), tokenAddress);
     const tokenBalance = await erc20Contract.balanceOf(userAddress);
     return tokenBalance;
   }
 
+  // TODO: Add Comments
   async checkAllowance(
     tokenAddress: string,
     ownerAddress: string,
@@ -156,7 +153,7 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
     address: string,
     methodName: string,
     params: any,
-  ):Promise<object> {
+  ): Promise<object> {
     const contract = this.getContract(abi, address);
     const contractReadMethodValue = await contract[methodName].apply(null, params);
     return contractReadMethodValue;
@@ -169,10 +166,7 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
     from: string,
   ): Promise<BigNumber> {
     const contractInterface = contract.interface;
-    const functionSignature = contractInterface.encodeFunctionData(
-      methodName,
-      params,
-    );
+    const functionSignature = contractInterface.encodeFunctionData(methodName, params);
     const estimatedGas = await this.useProvider(RpcMethod.estimateGas, {
       from,
       to: contract.address,
@@ -257,9 +251,7 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
   static createFilter(contractAddress: string, topic: string) {
     return {
       address: contractAddress,
-      topics: [
-        topic,
-      ],
+      topics: [topic],
     };
   }
 }
