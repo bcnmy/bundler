@@ -3,10 +3,7 @@ import { config } from '../../config';
 import { EVMAccount, IEVMAccount } from '../../relayer/src/services/account';
 import { AAConsumer, SCWConsumer, SocketConsumer } from '../../relayer/src/services/consumer';
 import { EVMNonceManager } from '../../relayer/src/services/nonce-manager';
-import {
-  EVMRelayerManager,
-  IRelayerManager,
-} from '../../relayer/src/services/relayer-manager';
+import { EVMRelayerManager, IRelayerManager } from '../../relayer/src/services/relayer-manager';
 import { EVMRelayerQueue } from '../../relayer/src/services/relayer-queue';
 import { EVMRetryTransactionService } from '../../relayer/src/services/retry-transaction-service';
 import { EVMTransactionListener } from '../../relayer/src/services/transaction-listener';
@@ -65,18 +62,19 @@ const cacheService = RedisCacheService.getInstance();
 const { supportedNetworks, supportedTransactionType } = config;
 
 const EVMRelayerManagerMap: {
-  [name: string] : {
+  [name: string]: {
     [chainId: number]: IRelayerManager<IEVMAccount, EVMRawTransactionType>;
-  }
+  };
 } = {};
 
 const transactionDao = new TransactionDAO();
 
-const socketConsumerMap: any = {};
-const retryTransactionSerivceMap: any = {};
-const transactionListenerMap: any = {};
+const socketConsumerMap: Record<number, SocketConsumer> = {};
+const retryTransactionSerivceMap: Record<number, EVMRetryTransactionService> = {};
+const transactionSerivceMap: Record<number, EVMTransactionService> = {};
+const transactionListenerMap: Record<number, EVMTransactionListener> = {};
 const retryTransactionQueueMap: {
-  [key: number]: RetryTransactionHandlerQueue,
+  [key: number]: RetryTransactionHandlerQueue;
 } = {};
 
 (async () => {
@@ -161,6 +159,8 @@ const retryTransactionQueueMap: {
       },
     });
 
+    transactionSerivceMap[chainId] = transactionService;
+
     const relayerQueue = new EVMRelayerQueue([]);
     for (const relayerManager of config.relayerManagers) {
       if (!EVMRelayerManagerMap[relayerManager.name]) {
@@ -178,14 +178,11 @@ const retryTransactionQueueMap: {
           relayerSeed: relayerManager.relayerSeed,
           minRelayerCount: relayerManager.minRelayerCount[chainId],
           maxRelayerCount: relayerManager.maxRelayerCount[chainId],
-          inactiveRelayerCountThreshold:
-            relayerManager.inactiveRelayerCountThreshold[chainId],
+          inactiveRelayerCountThreshold: relayerManager.inactiveRelayerCountThreshold[chainId],
           pendingTransactionCountThreshold:
-            relayerManager.pendingTransactionCountThreshold[chainId],
-          newRelayerInstanceCount:
-            relayerManager.newRelayerInstanceCount[chainId],
-          fundingBalanceThreshold:
-            relayerManager.fundingBalanceThreshold[chainId],
+          relayerManager.pendingTransactionCountThreshold[chainId],
+          newRelayerInstanceCount: relayerManager.newRelayerInstanceCount[chainId],
+          fundingBalanceThreshold: relayerManager.fundingBalanceThreshold[chainId],
           fundingRelayerAmount: relayerManager.fundingRelayerAmount[chainId],
           ownerAccountDetails: new EVMAccount(
             relayerManager.ownerAccountDetails[chainId].publicKey,
@@ -197,7 +194,9 @@ const retryTransactionQueueMap: {
       EVMRelayerManagerMap[relayerManager.name][chainId] = relayerMangerInstance;
 
       const addressList = await relayerMangerInstance.createRelayers();
-      log.info(`Relayer address list length: ${addressList.length} and minRelayerCount: ${relayerManager.minRelayerCount}`);
+      log.info(
+        `Relayer address list length: ${addressList.length} and minRelayerCount: ${relayerManager.minRelayerCount}`,
+      );
       await relayerMangerInstance.fundRelayers(addressList);
     }
 
@@ -244,9 +243,11 @@ const retryTransactionQueueMap: {
 
         const { entryPointData } = config;
 
-        for (let entryPointIndex = 0;
+        for (
+          let entryPointIndex = 0;
           entryPointIndex < entryPointData[chainId].length;
-          entryPointIndex += 1) {
+          entryPointIndex += 1
+        ) {
           const entryPoint = entryPointData[chainId][entryPointIndex];
 
           entryPointMap[chainId].push({
@@ -273,9 +274,7 @@ const retryTransactionQueueMap: {
         const aaRelayService = new AARelayService(aaQueue);
         routeTransactionToRelayerMap[chainId][type] = aaRelayService;
 
-        aaSimulatonServiceMap[chainId] = new AASimulationService(
-          networkService,
-        );
+        aaSimulatonServiceMap[chainId] = new AASimulationService(networkService);
       } else if (type === TransactionType.SCW) {
         // queue for scw
         const scwQueue: IQueue<SCWTransactionMessageType> = new SCWTransactionQueue({
@@ -324,4 +323,5 @@ export {
   scwSimulationServiceMap,
   entryPointMap,
   EVMRelayerManagerMap,
+  transactionSerivceMap,
 };

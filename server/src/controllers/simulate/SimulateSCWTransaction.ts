@@ -34,6 +34,7 @@ export const simulateSCWTransaction = async (req: Request, res: Response) => {
   } catch (error) {
     log.error(`Error in SCW simulation ${error}`);
     return res.status(500).json({
+      code: 500,
       error,
     });
   }

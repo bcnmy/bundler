@@ -4,6 +4,7 @@ import express, {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   NextFunction, Request, Response, ErrorRequestHandler,
 } from 'express';
+import { morganMiddleware } from '../../common/log-config';
 
 import { routes } from './routes';
 
@@ -22,6 +23,7 @@ declare global {
 app.options('*', cors()); // include before other routes
 app.use(cors());
 app.use(rTracer.expressMiddleware());
+app.use(morganMiddleware);
 
 // Add headers
 app.use((
