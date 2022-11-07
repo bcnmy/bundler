@@ -10,6 +10,7 @@ export type RetryTransactionQueueData = {
   transactionId: string,
   rawTransaction: EVMRawTransactionType,
   walletAddress: string,
+  metaData: any,
   relayerManagerName: string,
   event: SocketEventType
 };

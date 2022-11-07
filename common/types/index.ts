@@ -76,7 +76,10 @@ export type AATransactionMessageType = {
   chainId: number;
   value: string;
   transactionId: string;
-  userOp?: UserOperationType
+  userOp?: UserOperationType;
+  metaData?: {
+    dappAPIKey: string
+  }
 };
 
 export type SCWTransactionMessageType = {

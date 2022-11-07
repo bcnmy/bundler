@@ -27,6 +27,9 @@ export type NotifyTransactionListenerParamsType = {
   previousTransactionHash: string | null,
   rawTransaction?: EVMRawTransactionType,
   walletAddress: string,
+  metaData?: {
+    dappAPIKey: string
+  },
   relayerManagerName: string,
   error?: string,
 };

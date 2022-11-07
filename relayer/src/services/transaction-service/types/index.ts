@@ -38,6 +38,9 @@ export type TransactionDataType = {
   speed?: GasPriceType;
   walletAddress: string,
   transactionId: string;
+  metaData?: {
+    dappAPIKey: string
+  }
 };
 
 export type ErrorTransactionResponseType = TransactionListenerNotifyReturnType & {
