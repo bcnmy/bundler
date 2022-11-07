@@ -5,6 +5,7 @@ metadata:
     cert-manager.io/acme-challenge-type: http01
     cert-manager.io/cluster-issuer: letsencrypt
     ingress.kubernetes.io/force-ssl-redirect: "true"
+    konghq.com/plugins: vpn-ip-restriction
     kubernetes.io/ingress.class: kong
     kubernetes.io/tls-acme: "true"
   labels:
