@@ -10,12 +10,12 @@ export const feeOptionsApi = async (req: Request, res: Response) => {
   try {
     if (response.error) {
       return res.status(400).json({
-        msg: 'bad request',
+        code: 400,
         error: response.error,
       });
     }
     return res.json({
-      msg: 'all ok',
+      code: 200,
       data: {
         chainId,
         ...response,
@@ -24,6 +24,7 @@ export const feeOptionsApi = async (req: Request, res: Response) => {
   } catch (error) {
     log.error(`Error in fee option ${error}`);
     return res.status(500).json({
+      code: 500,
       error,
     });
   }
