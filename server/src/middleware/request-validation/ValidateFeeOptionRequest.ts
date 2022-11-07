@@ -18,12 +18,15 @@ export const validateFeeOption = async (
     }
     const { details } = error;
     const message = details.map((i) => i.message).join(',');
-    return res.status(422).json({ error: message });
+    return res.status(422).json({
+      code: 422,
+      error: message,
+    });
   } catch (e: any) {
     log.error(e);
     return res.status(400).send({
       code: 400,
-      message: e.errors,
+      error: e.errors,
     });
   }
 };

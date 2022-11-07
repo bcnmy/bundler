@@ -51,6 +51,7 @@ export const simulateAATransaction = async (req: Request, res: Response) => {
   } catch (error) {
     log.error(`Error in simulateAATransaction ${error}`);
     return res.status(500).json({
+      code: 500,
       error,
     });
   }
