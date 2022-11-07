@@ -381,8 +381,19 @@ let feeManagerCCMP: FeeManager;
       transactionServiceMap,
     });
 
-    await feeManagerSCW.init();
-    await feeManagerCCMP.init();
+    try {
+      await feeManagerSCW.init();
+    } catch (error) {
+      log.error('Error while initiating feeManagerSCW instance');
+      // TODO send slack notification
+    }
+
+    try {
+      await feeManagerCCMP.init();
+    } catch (error) {
+      log.error('Error while initiating feeManagerCCMP instance');
+      // TODO send slack notification
+    }
   } catch (error: unknown) {
     log.error(error);
   }
