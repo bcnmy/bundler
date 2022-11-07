@@ -7,9 +7,6 @@
     "mongoUrl": "mongodb://localhost:27017",
     "redisUrl": "redis://localhost:6379"
   },
-  "relayer": {
-    "nodePathIndex": 0
-  },
   "socketService": {
     "wssUrl": "ws://localhost:9000/connection/websocket",
     "httpUrl": "http://localhost:9000/api",
