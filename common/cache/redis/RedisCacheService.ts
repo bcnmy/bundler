@@ -11,7 +11,7 @@ export class RedisCacheService implements ICacheService {
 
   private redisClient;
 
-  private redLock;
+  private redLock: Redlock;
 
   private constructor() {
     this.redisClient = createClient({
@@ -19,6 +19,14 @@ export class RedisCacheService implements ICacheService {
     });
 
     this.redLock = this.connectRedLock();
+
+    this.redLock.on('clientError', (err: object) => {
+      try {
+        log.info(`Failed to get redis lock ${err.toString()}`);
+      } catch (error) {
+        log.error(error);
+      }
+    });
   }
 
   public static getInstance(): ICacheService {
@@ -63,14 +71,6 @@ export class RedisCacheService implements ICacheService {
   getRedLock(): Redlock {
     return this.redLock;
   }
-
-  // this.redlock.on('clientError', (err: object) => {
-  //   try {
-  //     log.info(`Failed to get redis lock ${err.toString()}`);
-  //   } catch (error) {
-  //     log.error(error);
-  //   }
-  // });
 
   async close(): Promise<void> {
     await this.redisClient.quit();
