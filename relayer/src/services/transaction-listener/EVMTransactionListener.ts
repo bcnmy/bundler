@@ -73,7 +73,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       transactionId,
       relayerAddress,
       previousTransactionHash,
-      userAddress,
+      walletAddress,
     } = onTranasctionSuccessParams;
     if (!transactionReceipt) {
       log.error(`Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
@@ -96,7 +96,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
         relayerAddress,
         TransactionStatus.SUCCESS,
         previousTransactionHash,
-        userAddress,
+        walletAddress,
       );
     }
   }
@@ -108,7 +108,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       transactionReceipt,
       relayerAddress,
       previousTransactionHash,
-      userAddress,
+      walletAddress,
     } = onTranasctionFailureParams;
     if (!transactionReceipt) {
       log.error(`Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
@@ -131,7 +131,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
         relayerAddress,
         TransactionStatus.FAILED,
         previousTransactionHash,
-        userAddress,
+        walletAddress,
       );
     }
   }
@@ -196,7 +196,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       transactionId,
       relayerAddress,
       previousTransactionHash,
-      userAddress,
+      walletAddress,
       transactionType,
       relayerManagerName,
     } = notifyTransactionListenerParams;
@@ -221,7 +221,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
         relayerAddress,
         transactionType,
         previousTransactionHash,
-        userAddress,
+        walletAddress,
         relayerManagerName,
       });
     }
@@ -234,7 +234,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
         relayerAddress,
         transactionType,
         previousTransactionHash,
-        userAddress,
+        walletAddress,
         relayerManagerName,
       });
     }
@@ -249,7 +249,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       rawTransaction,
       relayerAddress,
       transactionType,
-      userAddress,
+      walletAddress,
       relayerManagerName,
       previousTransactionHash,
       error,
@@ -275,7 +275,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       relayerAddress,
       TransactionStatus.PENDING,
       null,
-      userAddress,
+      walletAddress,
     );
 
     // transaction queue is being listened by socket service to notify the client about the hash
@@ -294,7 +294,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       transactionHash: transactionExecutionResponse.hash,
       transactionId,
       rawTransaction: rawTransaction as EVMRawTransactionType,
-      userAddress: userAddress as string,
+      walletAddress,
       relayerManagerName,
       event: SocketEventType.onTransactionHashGenerated,
     });

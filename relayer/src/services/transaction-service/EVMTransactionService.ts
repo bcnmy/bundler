@@ -181,7 +181,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     const relayerAddress = account.getPublicKey();
     const {
       to, value, data, gasLimit,
-      speed, transactionId, userAddress,
+      speed, transactionId, walletAddress,
     } = transactionData;
 
     const retryTransactionCount = parseInt(await this.cacheService.get(getRetryTransactionCountKey(transactionId, this.chainId)), 10);
@@ -226,7 +226,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           transactionType,
           previousTransactionHash: null,
           rawTransaction,
-          userAddress,
+          walletAddress,
           relayerManagerName,
           error: transactionExecutionResponse.error,
         });
@@ -247,7 +247,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         transactionType,
         previousTransactionHash: null,
         rawTransaction,
-        userAddress,
+        walletAddress,
         relayerManagerName,
       });
 
@@ -281,7 +281,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       transactionHash = null,
       transactionId,
       rawTransaction,
-      userAddress,
+      walletAddress,
       relayerManagerName,
     } = retryTransactionData;
     try {
@@ -321,7 +321,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         rawTransaction,
         transactionType,
         previousTransactionHash: transactionHash,
-        userAddress,
+        walletAddress,
         relayerManagerName,
       });
 

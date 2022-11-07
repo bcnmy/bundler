@@ -87,6 +87,7 @@ export type SCWTransactionMessageType = {
   chainId: number;
   value: string;
   transactionId: string;
+  walletAddress: string;
 };
 
 type ResponseType = {
