@@ -1,3 +1,5 @@
+/* eslint-disable import/no-cycle */
+/* eslint-disable max-len */
 import { ethers } from 'ethers';
 import { ICacheService } from '../../../../common/cache';
 import { ITransactionDAO } from '../../../../common/db';
@@ -5,8 +7,9 @@ import { IQueue } from '../../../../common/interface';
 import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
 import { RetryTransactionQueueData } from '../../../../common/queue/types';
+import { feeManagerSCW, feeManagerCCMP } from '../../../../common/service-manager';
 import {
-  EVMRawTransactionType, SocketEventType, TransactionQueueMessageType, TransactionStatus,
+  EVMRawTransactionType, SocketEventType, TransactionQueueMessageType, TransactionStatus, TransactionType
 } from '../../../../common/types';
 import { getRetryTransactionCountKey } from '../../../../common/utils';
 import { IEVMAccount } from '../account';
@@ -23,8 +26,8 @@ import {
 const log = logger(module);
 
 export class EVMTransactionListener implements
-ITransactionListener<IEVMAccount, EVMRawTransactionType>,
-ITransactionPublisher<TransactionQueueMessageType> {
+  ITransactionListener<IEVMAccount, EVMRawTransactionType>,
+  ITransactionPublisher<TransactionQueueMessageType> {
   chainId: number;
 
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
@@ -215,6 +218,12 @@ ITransactionPublisher<TransactionQueueMessageType> {
         userAddress,
         relayerManagerName,
       });
+    }
+
+    if (transactionType === TransactionType.CROSS_CHAIN) {
+      feeManagerCCMP.onTransaction(transactionReceipt, this.chainId);
+    } else if (transactionType === TransactionType.SCW) {
+      feeManagerSCW.onTransaction(transactionReceipt, this.chainId);
     }
   }
 

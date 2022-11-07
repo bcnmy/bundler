@@ -1,4 +1,9 @@
+/* eslint-disable import/no-cycle */
+/* eslint-disable import/no-mutable-exports */
+/* eslint-disable max-len */
+/* eslint-disable guard-for-in */
 /* eslint-disable no-await-in-loop */
+import { FeeManager } from '@biconomy/fee-management';
 import { config } from '../../config';
 import { EVMAccount, IEVMAccount } from '../../relayer/src/services/account';
 import { AAConsumer, SCWConsumer, SocketConsumer } from '../../relayer/src/services/consumer';
@@ -30,6 +35,7 @@ import {
   AATransactionMessageType,
   EntryPointMapType,
   EVMRawTransactionType,
+  FeeSupportedToken,
   SCWTransactionMessageType,
   TransactionType,
 } from '../types';
@@ -71,16 +77,28 @@ const transactionDao = new TransactionDAO();
 
 const socketConsumerMap: Record<number, SocketConsumer> = {};
 const retryTransactionSerivceMap: Record<number, EVMRetryTransactionService> = {};
-const transactionSerivceMap: Record<number, EVMTransactionService> = {};
+const transactionServiceMap: any = {};
 const transactionListenerMap: Record<number, EVMTransactionListener> = {};
 const retryTransactionQueueMap: {
   [key: number]: RetryTransactionHandlerQueue;
 } = {};
+let scwRelayerList: string[] = [];
+let ccmpRelayerList: string[] = [];
+const relayerInstanceMap: Record<string, EVMRelayerManager> = {};
+let feeManagerSCW: FeeManager;
+let feeManagerCCMP: FeeManager;
 
 (async () => {
   await dbInstance.connect();
   await cacheService.connect();
 
+  const tokenService = new CMCTokenPriceManager(cacheService, {
+    apiKey: config.tokenPrice.coinMarketCapApi,
+    networkSymbolCategories: config.tokenPrice.networkSymbols,
+    updateFrequencyInSeconds: config.tokenPrice.updateFrequencyInSeconds,
+    symbolMapByChainId: config.tokenPrice.symbolMapByChainId,
+  });
+  tokenService.schedule();
   for (const chainId of supportedNetworks) {
     routeTransactionToRelayerMap[chainId] = {};
     entryPointMap[chainId] = [];
@@ -159,7 +177,7 @@ const retryTransactionQueueMap: {
       },
     });
 
-    transactionSerivceMap[chainId] = transactionService;
+    transactionServiceMap[chainId] = transactionService;
 
     const relayerQueue = new EVMRelayerQueue([]);
     for (const relayerManager of config.relayerManagers) {
@@ -180,7 +198,7 @@ const retryTransactionQueueMap: {
           maxRelayerCount: relayerManager.maxRelayerCount[chainId],
           inactiveRelayerCountThreshold: relayerManager.inactiveRelayerCountThreshold[chainId],
           pendingTransactionCountThreshold:
-          relayerManager.pendingTransactionCountThreshold[chainId],
+            relayerManager.pendingTransactionCountThreshold[chainId],
           newRelayerInstanceCount: relayerManager.newRelayerInstanceCount[chainId],
           fundingBalanceThreshold: relayerManager.fundingBalanceThreshold[chainId],
           fundingRelayerAmount: relayerManager.fundingRelayerAmount[chainId],
@@ -194,6 +212,14 @@ const retryTransactionQueueMap: {
       EVMRelayerManagerMap[relayerManager.name][chainId] = relayerMangerInstance;
 
       const addressList = await relayerMangerInstance.createRelayers();
+
+      if (relayerManagerTransactionTypeNameMap.CROSS_CHAIN === relayerManager.name) {
+        ccmpRelayerList = addressList;
+        relayerInstanceMap[relayerManagerTransactionTypeNameMap.CROSS_CHAIN] = relayerMangerInstance;
+      } else if (relayerManagerTransactionTypeNameMap.SCW === relayerManager.name) {
+        scwRelayerList = addressList;
+        relayerInstanceMap[relayerManagerTransactionTypeNameMap.SCW] = relayerMangerInstance;
+      }
       log.info(
         `Relayer address list length: ${addressList.length} and minRelayerCount: ${relayerManager.minRelayerCount}`,
       );
@@ -213,14 +239,6 @@ const retryTransactionQueueMap: {
     retryTransactionQueueMap[chainId].consume(
       retryTransactionSerivceMap[chainId].onMessageReceived,
     );
-
-    const tokenService = new CMCTokenPriceManager(cacheService, {
-      apiKey: config.tokenPrice.coinMarketCapApi,
-      networkSymbolCategories: config.tokenPrice.networkSymbols,
-      updateFrequencyInSeconds: config.tokenPrice.updateFrequencyInSeconds,
-      symbolMapByChainId: config.tokenPrice.symbolMapByChainId,
-    });
-    tokenService.schedule();
 
     const feeOptionService = new FeeOption(gasPriceService, cacheService, {
       chainId,
@@ -313,6 +331,62 @@ const retryTransactionQueueMap: {
       }
     }
   }
+  const feeSupportedTokenList: Record<number, FeeSupportedToken[]> = {};
+  if (config.feeOption && config.feeOption.tokenContractAddress) {
+    for (const chainId in config.feeOption.tokenContractAddress) {
+      // eslint-disable-next-line prefer-const
+      let feeSupportedTokenArray: FeeSupportedToken[] = [];
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      for (const symbol in config.feeOption.tokenContractAddress[chainId]) {
+        // eslint-disable-next-line prefer-const
+        let token = {
+          address: config.feeOption.tokenContractAddress[chainId][symbol],
+          symbol,
+          decimal: config.feeOption.decimals[chainId][symbol],
+        };
+        feeSupportedTokenArray.push(token);
+      }
+      feeSupportedTokenList[Number(chainId)] = feeSupportedTokenArray;
+    }
+  }
+  try {
+    // Initialise Fee management SDK
+    feeManagerSCW = new FeeManager({
+      masterFundingAccount:
+        relayerInstanceMap[relayerManagerTransactionTypeNameMap.SCW].ownerAccountDetails,
+      relayerAddresses: scwRelayerList,
+      appConfig: {
+        tokenList: feeSupportedTokenList,
+        feeSpendThreshold: config.feeOption.feeSpendThreshold,
+        InitialFundingAmountInUsd: config.feeOption.initialFundingAmountInUsd,
+      },
+      dbService: transactionDao,
+      tokenPriceService: tokenService,
+      cacheService,
+      transactionServiceMap,
+    });
+
+    feeManagerCCMP = new FeeManager({
+      masterFundingAccount:
+        relayerInstanceMap[relayerManagerTransactionTypeNameMap.CROSS_CHAIN].ownerAccountDetails,
+      relayerAddresses: ccmpRelayerList,
+      appConfig: {
+        tokenList: feeSupportedTokenList,
+        feeSpendThreshold: config.feeOption.feeSpendThreshold,
+        InitialFundingAmountInUsd: config.feeOption.initialFundingAmountInUsd,
+      },
+      dbService: transactionDao,
+      tokenPriceService: tokenService,
+      cacheService,
+      transactionServiceMap,
+    });
+
+    await feeManagerSCW.init();
+    await feeManagerCCMP.init();
+  } catch (error: unknown) {
+    log.error(error);
+  }
+
   log.info('<=== Config setup completed ===>');
 })();
 
@@ -323,5 +397,6 @@ export {
   scwSimulationServiceMap,
   entryPointMap,
   EVMRelayerManagerMap,
-  transactionSerivceMap,
+  feeManagerSCW,
+  feeManagerCCMP,
 };

@@ -64,6 +64,7 @@ type NativeChainIdMapType = {
 };
 
 type FeeOptionConfigType = {
+  feeSpendThreshold: Record<number, number>;
   supportedFeeTokens: ChainIdWithArrayStringValueType,
   similarTokens: ChainIdWithArrayStringValueType,
   nativeChainIds: NativeChainIdMapType,
@@ -74,6 +75,7 @@ type FeeOptionConfigType = {
   feeTokenTransferGas: ChainIdAndTokenWithNumberValueType,
   refundReceiver: ChainIdWithStringValueType,
   commission: ChainIdWithNumberValueType,
+  initialFundingAmountInUsd: Record<number, number>;
 };
 
 type TokenPriceConfigType = {

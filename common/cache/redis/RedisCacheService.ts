@@ -1,4 +1,5 @@
 import { createClient } from 'redis';
+import Redlock from 'redlock';
 import { config } from '../../../config';
 import { logger } from '../../log-config';
 import { ICacheService } from '../interface';
@@ -10,10 +11,14 @@ export class RedisCacheService implements ICacheService {
 
   private redisClient;
 
+  private redLock;
+
   private constructor() {
     this.redisClient = createClient({
       url: config.dataSources.redisUrl,
     });
+
+    this.redLock = this.connectRedLock();
   }
 
   public static getInstance(): ICacheService {
@@ -31,6 +36,41 @@ export class RedisCacheService implements ICacheService {
       log.error(`Redis redisClient Error ${err}`);
     });
   }
+
+  connectRedLock(): Redlock {
+    return new Redlock(
+      [this.redisClient],
+      {
+        // the expected clock drift; for more details
+        // see http://redis.io/topics/distlock
+        driftFactor: 0.01, // multiplied by lock ttl to determine drift time
+
+        // the max number of times Redlock will attempt
+        // to lock a resource before erroring
+        retryCount: 1,
+
+        // the time in ms between attempts
+        retryDelay: 200, // time in ms
+
+        // the max time in ms randomly added to retries
+        // to improve performance under high contention
+        // see https://www.awsarchitectureblog.com/2015/03/backoff.html
+        retryJitter: 200, // time in ms
+      },
+    );
+  }
+
+  getRedLock(): Redlock {
+    return this.redLock;
+  }
+
+  // this.redlock.on('clientError', (err: object) => {
+  //   try {
+  //     log.info(`Failed to get redis lock ${err.toString()}`);
+  //   } catch (error) {
+  //     log.error(error);
+  //   }
+  // });
 
   async close(): Promise<void> {
     await this.redisClient.quit();
