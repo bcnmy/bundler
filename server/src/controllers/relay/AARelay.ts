@@ -15,7 +15,7 @@ export const relayAATransaction = async (req: Request, res: Response) => {
     const entryPointAddress = req.body.params[1];
     const chainId = req.body.params[2];
     const metaData = req.body.params[3];
-    const gasLimitFromSimulation = req.body.params[3];
+    const gasLimitFromSimulation = req.body.params[4];
 
     const transactionId = generateTransactionId(userOp);
 
