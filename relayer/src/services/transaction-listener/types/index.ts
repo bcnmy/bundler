@@ -10,7 +10,6 @@ import { IEVMAccount } from '../../account';
 export type EVMTransactionListenerParamsType = {
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
   transactionQueue: IQueue<TransactionQueueMessageType>,
-  transactionReceipt: ethers.providers.TransactionReceipt,
   retryTransactionQueue: IQueue<RetryTransactionQueueData>,
   transactionDao: ITransactionDAO,
   cacheService: ICacheService,
