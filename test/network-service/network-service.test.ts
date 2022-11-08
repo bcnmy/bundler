@@ -108,8 +108,6 @@ describe('Network Service: Gas Prices', () => {
 });
 
 describe('Network Service: Native Asset Balance', () => {
-  beforeAll(() => jest.setTimeout(30000));
-
   it('Fetches the correct native asset balance on chainId: 80001', async () => {
     // test wallet
     const wallet = ethers.Wallet.createRandom();
@@ -123,9 +121,8 @@ describe('Network Service: Native Asset Balance', () => {
     );
     const { gasPrice } = await networkServiceMap[80001].getGasPrice();
 
-    // TODO: review test case for timeout issue
     // transfer 0.00001 native token from main account
-    await ownerWallet.sendTransaction({
+    const transactionResponse = await ownerWallet.sendTransaction({
       to: wallet.address,
       from: ownerWallet.address,
       nonce: networkServiceMap[80001].getNonce(ownerWallet.address),
@@ -134,12 +131,13 @@ describe('Network Service: Native Asset Balance', () => {
       value: BigNumber.from('10000000'),
     });
 
-    // check if the getBalance gets 0.00001
-    const walletBalance = await networkServiceMap[80001].getBalance(wallet.address);
+    await networkServiceMap[80001].waitForTransaction(transactionResponse.hash);
 
+    // check if the getBalance gets 0.00001
+    const walletBalance = Number(await networkServiceMap[80001].getBalance(wallet.address));
     expect(walletBalance).not.toBeNull();
-    expect(typeof walletBalance).toBe('string');
-    expect(walletBalance).toBe('10000000');
+    expect(typeof walletBalance).toBe('number');
+    expect(walletBalance).toBe(10000000);
   });
 
   it('Fetches the correct native asset balance on chainId: 5', async () => {
@@ -156,7 +154,7 @@ describe('Network Service: Native Asset Balance', () => {
     const { gasPrice } = await networkServiceMap[5].getGasPrice();
 
     // transfer 0.00001 native token from main account
-    await ownerWallet.sendTransaction({
+    const transactionResponse = await ownerWallet.sendTransaction({
       to: wallet.address,
       from: ownerWallet.address,
       nonce: networkServiceMap[5].getNonce(ownerWallet.address),
@@ -165,17 +163,19 @@ describe('Network Service: Native Asset Balance', () => {
       value: BigNumber.from('10000000'),
     });
 
+    await networkServiceMap[5].waitForTransaction(transactionResponse.hash);
+
     // check if the getBalance gets 0.00001
-    const walletBalance = await networkServiceMap[80001].getBalance(wallet.address);
+    const walletBalance = Number(await networkServiceMap[5].getBalance(wallet.address));
 
     expect(walletBalance).not.toBeNull();
-    expect(typeof walletBalance).toBe('string');
-    expect(walletBalance).toBe('10000000');
+    expect(typeof walletBalance).toBe('number');
+    expect(walletBalance).toBe(10000000);
   });
 });
 
 describe('Network Service: Nonce Check', () => {
-  it('Check if nonce is correct on chaindId: 80001', async () => {
+  it('Check if nonce is correctly incremented on chaindId: 80001', async () => {
     // call getNonce() on an address, nonce should x
 
     // owner address
@@ -206,7 +206,7 @@ describe('Network Service: Nonce Check', () => {
     expect(nonceDifference).toBe(1);
   });
 
-  it('Check if nonce is correct on chaindId: 5', async () => {
+  it('Check if nonce is correctly incremented on chaindId: 5', async () => {
     // call getNonce() on an address, nonce should x
 
     // owner address
@@ -254,10 +254,10 @@ describe('Network Service: Sending Transaction', () => {
     const rawTransactionData = {
       from: ownerAddressPublicKey,
       gasPrice,
-      data: '0x0',
-      gasLimit: '100000',
+      data: '0x',
+      gasLimit: '0x989680',
       to: wallet.address,
-      value: '10000000',
+      value: '0x989680',
       chainId: 80001,
       nonce,
     };
@@ -287,10 +287,10 @@ describe('Network Service: Sending Transaction', () => {
     const rawTransactionData = {
       from: ownerAddressPublicKey,
       gasPrice,
-      data: '0x0',
-      gasLimit: '100000',
+      data: '0x',
+      gasLimit: '0x989680',
       to: wallet.address,
-      value: '10000000',
+      value: '0x989680',
       chainId: 5,
       nonce,
     };

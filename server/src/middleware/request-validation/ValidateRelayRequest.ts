@@ -26,7 +26,7 @@ export const validateRelayRequest = () => async (
       default:
         return res.status(400).send({
           code: 400,
-          message: 'Wrong transaction type sent in validate relay request',
+          error: 'Wrong transaction type sent in validate relay request',
         });
     }
     const { error } = validationResponse;
@@ -41,12 +41,15 @@ export const validateRelayRequest = () => async (
     } else {
       message = error.message || error.toString();
     }
-    return res.status(400).json({ error: message });
+    return res.status(400).json({
+      code: 400,
+      error: message,
+    });
   } catch (e: any) {
     log.error(e);
     return res.status(400).send({
       code: 400,
-      message: JSON.stringify(e),
+      error: JSON.stringify(e),
     });
   }
 };
