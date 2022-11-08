@@ -51,6 +51,8 @@ import {
 import { CrossChainTransactionDAO } from '../db/dao/CrossChainTransactionDao';
 import { CrossChainRetryHandlerQueue } from '../queue/CrossChainRetryHandlerQueue';
 import { CrossChainRetryTransactionService } from '../../cross-chain/retry-transaction-service';
+import { IndexerService } from '../indexer/IndexerService';
+import { CCMPGatewayService } from '../../cross-chain/gateway';
 
 const log = logger(module);
 
@@ -91,6 +93,12 @@ const ccmpRouterServiceClassMap = {
   [CCMPRouterName.AXELAR]: AxelarRouterService,
   [CCMPRouterName.HYPERLANE]: HyperlaneRouterService,
 };
+
+const ccmpGatewayServiceMap: {
+  [chainId: number]: CCMPGatewayService;
+} = {};
+
+const indexerService = new IndexerService(config.indexer.baseUrl);
 
 const dbInstance = Mongo.getInstance();
 const cacheService = RedisCacheService.getInstance();
@@ -366,6 +374,13 @@ const crossChainRetryTransactionServiceMap: {
         });
         await ccmpQueue.connect();
 
+        ccmpGatewayServiceMap[chainId] = new CCMPGatewayService(
+          config.ccmp.contracts[chainId].Diamond,
+          chainId,
+          config.ccmp.abi.CCMPGateway,
+          networkService,
+        );
+
         const ccmpRelayerManager = EVMRelayerManagerMap[
           relayerManagerTransactionTypeNameMap[type]][chainId];
         if (!ccmpRelayerManager) {
@@ -400,6 +415,8 @@ const crossChainRetryTransactionServiceMap: {
           routeTransactionToRelayerMap,
           new CrossChainTransactionDAO(),
           crossChainRetryTransactionQueueMap[chainId],
+          ccmpGatewayServiceMap[chainId],
+          indexerService,
         );
 
         ccmpServiceInitPromises.push(ccmpServiceMap[chainId].init());
@@ -438,4 +455,5 @@ export {
   ccmpRouterMap,
   ccmpServiceMap,
   transactionSerivceMap,
+  indexerService,
 };

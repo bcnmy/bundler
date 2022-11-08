@@ -11,6 +11,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@abacus-network/sdk": "^0.4.3-processtest",
     "@axelar-network/axelarjs-sdk": "^0.9.2",
     "@certusone/wormhole-sdk": "^0.6.2",
     "@ethersproject/bignumber": "^5.5.0",

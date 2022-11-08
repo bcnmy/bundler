@@ -1,1 +1,1 @@
-export * from './ccmp-service';
+export * from './CCMPService';

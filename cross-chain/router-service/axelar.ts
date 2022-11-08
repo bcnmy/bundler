@@ -9,6 +9,11 @@ export class AxelarRouterService implements ICCMPRouterService {
   ) {}
 
   // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
+  estimateVerificationCostInNativeToken(txHash: string, message: CCMPMessage): Promise<number> {
+    throw new Error('Method not implemented.');
+  }
+
+  // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
   handlePreVerification(txhHash: string, message: CCMPMessage): Promise<void> {
     throw new Error('Method not implemented.');
   }

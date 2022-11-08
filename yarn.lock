@@ -2,6 +2,52 @@
 # yarn lockfile v1
 
 
+"@abacus-network/app@0.4.2-processtest":
+  version "0.4.2-processtest"
+  resolved "https://registry.yarnpkg.com/@abacus-network/app/-/app-0.4.2-processtest.tgz#b50e60f853492b1b102e855919ebfe16c2e1c92c"
+  integrity sha512-fr7du8xSwJDTcP4kN33nc77K2f+M1NYSlVvvrVV/o00HUf+20CZP2ybOLVSK/5GsJinpgNVjYHzPjqp1/DDmIQ==
+  dependencies:
+    "@abacus-network/core" "0.4.2-processtest"
+    "@abacus-network/utils" "0.4.2-processtest"
+    "@openzeppelin/contracts-upgradeable" "^4.5.0"
+
+"@abacus-network/celo-ethers-provider@^0.1.0":
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/@abacus-network/celo-ethers-provider/-/celo-ethers-provider-0.1.1.tgz#3e0e2b6f1af6e68835b17dd9ed0caa99f330e0df"
+  integrity sha512-Y/u6cxzCDTmqA9PVwAWRnLxPw7xbdLAgoCgp3NZUNKSN6R/QyLj/HbJ4Qibonx8Qmo6sTegu2xnItcsala5nMw==
+
+"@abacus-network/core@0.4.2-processtest":
+  version "0.4.2-processtest"
+  resolved "https://registry.yarnpkg.com/@abacus-network/core/-/core-0.4.2-processtest.tgz#a0bea2b43afd915fda9dd32f535ff1586358a126"
+  integrity sha512-bnssX4ZO8/iveI2oy5ffJcEAL7FSWyNlIUV9CrunIEVdkTu5OR0BxXgVGCs30A1fMSFXmdx1BeSoWgRw0/MFdA==
+  dependencies:
+    "@abacus-network/utils" "0.4.2-processtest"
+    "@openzeppelin/contracts" "^4.6.0"
+    "@openzeppelin/contracts-upgradeable" "^4.6.0"
+    "@summa-tx/memview-sol" "^2.0.0"
+
+"@abacus-network/sdk@^0.4.3-processtest":
+  version "0.4.3-processtest"
+  resolved "https://registry.yarnpkg.com/@abacus-network/sdk/-/sdk-0.4.3-processtest.tgz#6622fdc2bff47dac2607d9d144b55079afa54b20"
+  integrity sha512-eWBJYTepbHeqX/Kadg5+oCbxCdtYuP1hGR5Pwq6k2ahbNpuEi2s5Ume76fLsuMboFym0VzGCTxXjzCIZ+356jQ==
+  dependencies:
+    "@abacus-network/app" "0.4.2-processtest"
+    "@abacus-network/celo-ethers-provider" "^0.1.0"
+    "@abacus-network/core" "0.4.2-processtest"
+    "@abacus-network/utils" "0.4.2-processtest"
+    "@types/debug" "^4.1.7"
+    coingecko-api "^1.0.10"
+    cross-fetch "^3.1.5"
+    debug "^4.3.4"
+    ethers "^5.6.8"
+
+"@abacus-network/utils@0.4.2-processtest":
+  version "0.4.2-processtest"
+  resolved "https://registry.yarnpkg.com/@abacus-network/utils/-/utils-0.4.2-processtest.tgz#2f7e5528f3818478819aacb1ebbced1d49bfbde0"
+  integrity sha512-8XtxkgLyo2u9/pGQMx+iy5+HkI2edPNh3mgNyneB2hRX6ovmquMsGfDs+VgKNgQaQgMIlOZ2QS5lp+W9MSFagg==
+  dependencies:
+    ethers "^5.6.8"
+
 "@acuminous/bitsyntax@^0.1.2":
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/@acuminous/bitsyntax/-/bitsyntax-0.1.2.tgz#e0b31b9ee7ad1e4dd840c34864327c33d9f1f653"
@@ -2089,6 +2135,16 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
+"@openzeppelin/contracts-upgradeable@^4.5.0", "@openzeppelin/contracts-upgradeable@^4.6.0":
+  version "4.7.3"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-4.7.3.tgz#f1d606e2827d409053f3e908ba4eb8adb1dd6995"
+  integrity sha512-+wuegAMaLcZnLCJIvrVUDzA9z/Wp93f0Dla/4jJvIhijRrPabjQbZe6fWiECLaJyfn5ci9fqf9vTw3xpQOad2A==
+
+"@openzeppelin/contracts@^4.6.0":
+  version "4.7.3"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.7.3.tgz#939534757a81f8d69cc854c7692805684ff3111e"
+  integrity sha512-dGRS0agJzu8ybo44pCIf3xBaPQN/65AIXNgK8+4gzKd5kbvlqyxryUYVLJv7fK98Seyd2hDZzVEHSWAh0Bt1Yw==
+
 "@protobufjs/aspromise@^1.1.1", "@protobufjs/aspromise@^1.1.2":
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@protobufjs/aspromise/-/aspromise-1.1.2.tgz#9b8b0cc663d669a7d8f6f5d0893a14d348f30fbf"
@@ -2257,6 +2313,11 @@
     rpc-websockets "^7.5.0"
     superstruct "^0.14.2"
 
+"@summa-tx/memview-sol@^2.0.0":
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/@summa-tx/memview-sol/-/memview-sol-2.1.1.tgz#fa44b872e52269846df9a6561a9399461fac896e"
+  integrity sha512-Wfw6+Vn5evlCCK/aKLmZsPd9B6qi6UeIGHjC7mjhusp/3ansY/t96J9dCZzi+tAgzaE7WxCRR1aRXPQgVVxXsg==
+
 "@terra-money/legacy.proto@npm:@terra-money/terra.proto@^0.1.7":
   version "0.1.7"
   resolved "https://registry.yarnpkg.com/@terra-money/terra.proto/-/terra.proto-0.1.7.tgz#59c18f30da10d43200bab3ba8feb5b17e43a365f"
@@ -2386,6 +2447,13 @@
   resolved "https://registry.yarnpkg.com/@types/crypto-js/-/crypto-js-4.1.1.tgz#602859584cecc91894eb23a4892f38cfa927890d"
   integrity sha512-BG7fQKZ689HIoc5h+6D2Dgq1fABRa0RbBWKBd9SP/MVRVXROflpm5fhwyATX5duFmbStzyzyycPB8qUYKDH3NA==
 
+"@types/debug@^4.1.7":
+  version "4.1.7"
+  resolved "https://registry.yarnpkg.com/@types/debug/-/debug-4.1.7.tgz#7cc0ea761509124709b8b2d1090d8f6c17aadb82"
+  integrity sha512-9AonUzyTjXXhEOa0DnqpzZi6VHlqKMswga9EXjpXnnqxwLtdvPPtlO8evrI5D9S6asFRCQ6v+wpiUKbw+vKqyg==
+  dependencies:
+    "@types/ms" "*"
+
 "@types/eslint@^8.4.2":
   version "8.4.10"
   resolved "https://registry.yarnpkg.com/@types/eslint/-/eslint-8.4.10.tgz#19731b9685c19ed1552da7052b6f668ed7eb64bb"
@@ -2512,6 +2580,11 @@
   integrity sha512-BiLcfVqGBZCyNCnCH3F4o2GmDLrpy0HeBVnNlyZG4fo88ZiE9SoiBe3C+2ezuwbjlEyT+PDZ17//TAlRxAn75Q==
   dependencies:
     "@types/node" "*"
+
+"@types/ms@*":
+  version "0.7.31"
+  resolved "https://registry.yarnpkg.com/@types/ms/-/ms-0.7.31.tgz#31b7ca6407128a3d2bbc27fe2d21b345397f6197"
+  integrity sha512-iiUgKzV9AuaEkZqkOLDIvlQiL6ltuZd9tGcW3gwpnX8JbuiuhFlEGmmFXEXkN50Cvq7Os88IY2v0dkDqXYWVgA==
 
 "@types/node-cron@^3.0.4":
   version "3.0.5"
@@ -3481,6 +3554,11 @@ co@^4.6.0:
   resolved "https://registry.yarnpkg.com/co/-/co-4.6.0.tgz#6ea6bdf3d853ae54ccb8e47bfa0bf3f9031fb184"
   integrity sha512-QVb0dM5HvG+uaxitm8wONl7jltx8dqhfU33DcqtOZcLSVIKSDDLDi7+0LbAKiyI8hD9u42m2YxXSkMGWThaecQ==
 
+coingecko-api@^1.0.10:
+  version "1.0.10"
+  resolved "https://registry.yarnpkg.com/coingecko-api/-/coingecko-api-1.0.10.tgz#ac8694d5999f00727fe55f0078ce2917603076b2"
+  integrity sha512-7YLLC85+daxAw5QlBWoHVBVpJRwoPr4HtwanCr8V/WRjoyHTa1Lb9DQAvv4MDJZHiz4no6HGnDQnddtjV35oRA==
+
 collect-v8-coverage@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/collect-v8-coverage/-/collect-v8-coverage-1.0.1.tgz#cc2c8e94fc18bbdffe64d6534570c8a673b27f59"
@@ -4277,7 +4355,7 @@ ethereumjs-util@^6.0.0, ethereumjs-util@^6.2.1:
     ethjs-util "0.1.6"
     rlp "^2.2.3"
 
-ethers@5.7.2, ethers@^5.4.7, ethers@^5.5.4, ethers@^5.6.4, ethers@^5.7.1:
+ethers@5.7.2, ethers@^5.4.7, ethers@^5.5.4, ethers@^5.6.4, ethers@^5.6.8, ethers@^5.7.1:
   version "5.7.2"
   resolved "https://registry.yarnpkg.com/ethers/-/ethers-5.7.2.tgz#3a7deeabbb8c030d4126b24f84e525466145872e"
   integrity sha512-wswUsmWo1aOK8rR7DIKiWSw9DbLWe6x98Jrn8wcTflTVvaXhAMaB5zGAXy0GYQEQp9iO1iSHWVyARQm11zUtyg==

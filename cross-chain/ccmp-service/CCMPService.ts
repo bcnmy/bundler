@@ -1,5 +1,4 @@
 import { config } from '../../config';
-import { IndexerService } from '../../common/indexer/IndexerService';
 import {
   CCMPMessage,
   TransactionType,
@@ -9,20 +8,19 @@ import {
   isError,
 } from '../../common/types';
 import { logger } from '../../common/log-config';
+import { CCMPTaskManager } from '../task-manager';
+import type { IndexerService } from '../../common/indexer/IndexerService';
 import type { routeTransactionToRelayerMap as globalRouteTransactionToRelayerMap } from '../../common/service-manager';
 import type { ICCMPRouterService } from '../types';
 import type { ICrossChainTransactionDAO } from '../../common/db';
 import type { ICCMPService, IHandler } from '../task-manager/types';
-import { CCMPTaskManager } from '../task-manager';
-import { createCCMPGatewayTransaction } from '../utils';
-import { CrossChainRetryHandlerQueue } from '../../common/queue/CrossChainRetryHandlerQueue';
+import type { CrossChainRetryHandlerQueue } from '../../common/queue/CrossChainRetryHandlerQueue';
+import type { CCMPGatewayService } from '../gateway';
 
 const log = logger(module);
 
 export class CCMPService implements ICCMPService {
   private readonly eventName = 'CCMPMessageRouted';
-
-  private readonly indexerService: IndexerService;
 
   private readonly webHookEndpoint: string;
 
@@ -32,8 +30,9 @@ export class CCMPService implements ICCMPService {
     private readonly routeTransactionToRelayerMap: typeof globalRouteTransactionToRelayerMap,
     private readonly crossChainTransactionDAO: ICrossChainTransactionDAO,
     private readonly crossChainRetryTransactionQueue: CrossChainRetryHandlerQueue,
+    private readonly ccmpGatewayService: CCMPGatewayService,
+    private readonly indexerService: IndexerService,
   ) {
-    this.indexerService = new IndexerService(config.indexer.baseUrl);
     this.webHookEndpoint = config.ccmp.webhookEndpoint;
   }
 
@@ -180,7 +179,11 @@ export class CCMPService implements ICCMPService {
     }
 
     const toChain = Number(message.destinationChainId.toString());
-    const transaction = createCCMPGatewayTransaction(message, verificationData, ctx.sourceTxHash);
+    const transaction = this.ccmpGatewayService.createReceiveMessageTransaction(
+      message,
+      verificationData,
+      ctx.sourceTxHash,
+    );
     const response = await this.routeTransactionToRelayerMap[toChain][
       TransactionType.CROSS_CHAIN
     ]!.sendTransactionToRelayer(transaction);

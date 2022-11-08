@@ -65,6 +65,16 @@ export class WormholeRouterService implements ICCMPRouterService {
     // No need to do anything here, wormhole messages are free :P
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, class-methods-use-this
+  async estimateVerificationCostInNativeToken(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    txHash: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    message: CCMPMessage,
+  ): Promise<number> {
+    return 0;
+  }
+
   async getVerificationData(txHash: string, message: CCMPMessage): Promise<Uint8Array> {
     const receipt = await this.networkService.getTransactionReceipt(txHash);
     const sequence = parseSequenceFromLogEth(receipt, this.womrholeBridgeAddress);

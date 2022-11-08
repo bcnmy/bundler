@@ -9,12 +9,17 @@ export class HyperlaneRouterService implements ICCMPRouterService {
   ) {}
 
   // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
+  estimateVerificationCostInNativeToken(txHash: string, message: CCMPMessage): Promise<number> {
+    throw new Error('Method not implemented.');
+  }
+
+  // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
   handlePreVerification(txhHash: string, message: CCMPMessage): Promise<void> {
     throw new Error('Method not implemented.');
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars, class-methods-use-this
-  getVerificationData(txHash: string, message: CCMPMessage): Promise<string> {
-    throw new Error('Method not implemented.');
+  async getVerificationData(txHash: string, message: CCMPMessage): Promise<string> {
+    return '';
   }
 }

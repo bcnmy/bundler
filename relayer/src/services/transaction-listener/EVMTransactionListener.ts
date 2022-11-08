@@ -351,7 +351,6 @@ implements
       transactionType,
       userAddress,
       relayerManagerName,
-      ccmpMessage,
       previousTransactionHash,
       error,
     } = notifyTransactionListenerParams;
