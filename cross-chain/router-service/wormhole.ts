@@ -61,7 +61,7 @@ export class WormholeRouterService implements ICCMPRouterService {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars, class-methods-use-this
-  async handlePreVerification(txhHash: string, message: CCMPMessage): Promise<void> {
+  async handlePreVerification(txHash: string, message: CCMPMessage): Promise<void> {
     // No need to do anything here, wormhole messages are free :P
   }
 

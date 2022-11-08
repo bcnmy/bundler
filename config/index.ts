@@ -3,7 +3,7 @@ import crypto from 'crypto-js';
 import fs, { existsSync } from 'fs';
 import _, { isNumber } from 'lodash';
 import path from 'path';
-import { TransactionType } from '../common/types';
+import { CCMPRouterName, TransactionType } from '../common/types';
 
 import { ConfigType, IConfig } from './interface/IConfig';
 
@@ -190,7 +190,10 @@ export class Config implements IConfig {
         const supportedRouters = this.config.ccmp.supportedRouters[chainId];
 
         for (const router of supportedRouters) {
-          if (!this.config.ccmp.retryInterval[chainId][router]) {
+          if (
+            router === CCMPRouterName.WORMHOLE
+            && !this.config.ccmp.retryInterval[chainId][router]
+          ) {
             throw new Error(
               `CCMP Retry interval required for chain id ${chainId}, router ${router}`,
             );
@@ -214,6 +217,14 @@ export class Config implements IConfig {
     }
     if (!this.config.ccmp.bridges.wormhole?.maxPollingCount) {
       throw new Error('Wormhole max polling count required');
+    }
+
+    // Validate Chain Agnostic CCMP Config - Hyperlane
+    if (!this.config.ccmp.bridges.hyperlane?.chainName) {
+      throw new Error('Hyperlane bridge chain name mapping required');
+    }
+    if (!this.config.ccmp.bridges.hyperlane?.environment) {
+      throw new Error('Hyperlane bridge environment required');
     }
 
     // Validata Indexer Config

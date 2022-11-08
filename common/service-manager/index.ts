@@ -88,12 +88,6 @@ const ccmpRouterMap: {
   };
 } = {};
 
-const ccmpRouterServiceClassMap = {
-  [CCMPRouterName.WORMHOLE]: WormholeRouterService,
-  [CCMPRouterName.AXELAR]: AxelarRouterService,
-  [CCMPRouterName.HYPERLANE]: HyperlaneRouterService,
-};
-
 const ccmpGatewayServiceMap: {
   [chainId: number]: CCMPGatewayService;
 } = {};
@@ -285,8 +279,7 @@ const crossChainRetryTransactionServiceMap: {
     feeOptionMap[chainId] = feeOptionService;
     // for each network get transaction type
     for (const type of supportedTransactionType[chainId]) {
-      const aaRelayerManager = EVMRelayerManagerMap[
-        relayerManagerTransactionTypeNameMap[type]][chainId];
+      const aaRelayerManager = EVMRelayerManagerMap[relayerManagerTransactionTypeNameMap[type]][chainId];
       if (!aaRelayerManager) {
         throw new Error(`Relayer manager not found for ${type}`);
       }
@@ -339,8 +332,7 @@ const crossChainRetryTransactionServiceMap: {
         });
         await scwQueue.connect();
 
-        const scwRelayerManager = EVMRelayerManagerMap[
-          relayerManagerTransactionTypeNameMap[type]][chainId];
+        const scwRelayerManager = EVMRelayerManagerMap[relayerManagerTransactionTypeNameMap[type]][chainId];
         if (!scwRelayerManager) {
           throw new Error(`Relayer manager not found for ${type}`);
         }
@@ -381,8 +373,7 @@ const crossChainRetryTransactionServiceMap: {
           networkService,
         );
 
-        const ccmpRelayerManager = EVMRelayerManagerMap[
-          relayerManagerTransactionTypeNameMap[type]][chainId];
+        const ccmpRelayerManager = EVMRelayerManagerMap[relayerManagerTransactionTypeNameMap[type]][chainId];
         if (!ccmpRelayerManager) {
           throw new Error(`Relayer manager not found for ${type}`);
         }
@@ -402,12 +393,32 @@ const crossChainRetryTransactionServiceMap: {
         const ccmpRelayService = new CCMPRelayService(ccmpQueue);
         routeTransactionToRelayerMap[chainId][type] = ccmpRelayService;
 
-        ccmpRouterMap[chainId] = Object.fromEntries(
-          config.ccmp.supportedRouters[chainId].map((routerName) => [
-            routerName,
-            new ccmpRouterServiceClassMap[routerName](chainId, networkService),
-          ]),
-        );
+        ccmpRouterMap[chainId] = {};
+        for (const routerName of config.ccmp.supportedRouters[chainId]) {
+          switch (routerName) {
+            case CCMPRouterName.WORMHOLE: {
+              ccmpRouterMap[chainId][routerName] = new WormholeRouterService(
+                chainId,
+                networkService,
+              );
+              break;
+            }
+            case CCMPRouterName.AXELAR: {
+              ccmpRouterMap[chainId][routerName] = new AxelarRouterService(chainId, networkService);
+              break;
+            }
+            case CCMPRouterName.HYPERLANE: {
+              ccmpRouterMap[chainId][routerName] = new HyperlaneRouterService(
+                chainId,
+                networkService,
+              );
+              break;
+            }
+            default: {
+              throw new Error(`Router ${routerName} not supported`);
+            }
+          }
+        }
 
         ccmpServiceMap[chainId] = new CCMPService(
           chainId,

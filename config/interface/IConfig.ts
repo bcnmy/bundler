@@ -1,4 +1,5 @@
 import { ethers } from 'ethers';
+import type { Chains as HyperlaneChains } from '@abacus-network/sdk';
 import type { TransactionType, SymbolMapByChainIdType, CCMPRouterName } from '../../common/types';
 
 type ChainIdWithStringValueType = {
@@ -161,7 +162,10 @@ type CCMPBridgesConfigType = {
     maxPollingCount: number;
   };
   [CCMPRouterName.AXELAR]: {};
-  [CCMPRouterName.HYPERLANE]: {};
+  [CCMPRouterName.HYPERLANE]: {
+    chainName: Record<number, keyof typeof HyperlaneChains>;
+    environment: string;
+  };
 };
 
 // { "contractName": "contractAddress" }
