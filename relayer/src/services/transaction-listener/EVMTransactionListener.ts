@@ -7,9 +7,9 @@ import { IQueue } from '../../../../common/interface';
 import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
 import { RetryTransactionQueueData } from '../../../../common/queue/types';
-import { feeManagerSCW, feeManagerCCMP } from '../../../../common/service-manager';
+import { relayerBalanceManager } from '../../../../common/service-manager';
 import {
-  EVMRawTransactionType, SocketEventType, TransactionQueueMessageType, TransactionStatus, TransactionType
+  EVMRawTransactionType, SocketEventType, TransactionQueueMessageType, TransactionStatus,
 } from '../../../../common/types';
 import { getRetryTransactionCountKey } from '../../../../common/utils';
 import { IEVMAccount } from '../account';
@@ -220,11 +220,7 @@ export class EVMTransactionListener implements
       });
     }
 
-    if (transactionType === TransactionType.CROSS_CHAIN) {
-      feeManagerCCMP.onTransaction(transactionReceipt, this.chainId);
-    } else if (transactionType === TransactionType.SCW) {
-      feeManagerSCW.onTransaction(transactionReceipt, this.chainId);
-    }
+    relayerBalanceManager.onTransaction(transactionReceipt, transactionType, this.chainId);
   }
 
   async notify(

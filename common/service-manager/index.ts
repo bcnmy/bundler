@@ -1,9 +1,6 @@
-/* eslint-disable import/no-cycle */
 /* eslint-disable import/no-mutable-exports */
-/* eslint-disable max-len */
 /* eslint-disable guard-for-in */
-/* eslint-disable no-await-in-loop */
-import { FeeManager } from '@biconomy/fee-management';
+/* eslint-disable import/no-cycle */
 import { config } from '../../config';
 import { EVMAccount, IEVMAccount } from '../../relayer/src/services/account';
 import { AAConsumer, SCWConsumer, SocketConsumer } from '../../relayer/src/services/consumer';
@@ -39,6 +36,7 @@ import {
   SCWTransactionMessageType,
   TransactionType,
 } from '../types';
+import { RelayerBalanceManager } from './relayer-balance-manager';
 
 const log = logger(module);
 
@@ -85,8 +83,7 @@ const retryTransactionQueueMap: {
 let scwRelayerList: string[] = [];
 let ccmpRelayerList: string[] = [];
 const relayerInstanceMap: Record<string, EVMRelayerManager> = {};
-let feeManagerSCW: FeeManager;
-let feeManagerCCMP: FeeManager;
+let relayerBalanceManager: RelayerBalanceManager;
 
 (async () => {
   await dbInstance.connect();
@@ -334,12 +331,9 @@ let feeManagerCCMP: FeeManager;
   const feeSupportedTokenList: Record<number, FeeSupportedToken[]> = {};
   if (config.feeOption && config.feeOption.tokenContractAddress) {
     for (const chainId in config.feeOption.tokenContractAddress) {
-      // eslint-disable-next-line prefer-const
-      let feeSupportedTokenArray: FeeSupportedToken[] = [];
-      // eslint-disable-next-line @typescript-eslint/naming-convention
+      const feeSupportedTokenArray: FeeSupportedToken[] = [];
       for (const symbol in config.feeOption.tokenContractAddress[chainId]) {
-        // eslint-disable-next-line prefer-const
-        let token = {
+        const token = {
           address: config.feeOption.tokenContractAddress[chainId][symbol],
           symbol,
           decimal: config.feeOption.decimals[chainId][symbol],
@@ -350,26 +344,13 @@ let feeManagerCCMP: FeeManager;
     }
   }
   try {
-    // Initialise Fee management SDK
-    feeManagerSCW = new FeeManager({
-      masterFundingAccount:
+    relayerBalanceManager = new RelayerBalanceManager({
+      masterFundingAccountSCW:
         relayerInstanceMap[relayerManagerTransactionTypeNameMap.SCW].ownerAccountDetails,
-      relayerAddresses: scwRelayerList,
-      appConfig: {
-        tokenList: feeSupportedTokenList,
-        feeSpendThreshold: config.feeOption.feeSpendThreshold,
-        InitialFundingAmountInUsd: config.feeOption.initialFundingAmountInUsd,
-      },
-      dbService: transactionDao,
-      tokenPriceService: tokenService,
-      cacheService,
-      transactionServiceMap,
-    });
-
-    feeManagerCCMP = new FeeManager({
-      masterFundingAccount:
+      relayerAddressesSCW: scwRelayerList,
+      masterFundingAccountCCMP:
         relayerInstanceMap[relayerManagerTransactionTypeNameMap.CROSS_CHAIN].ownerAccountDetails,
-      relayerAddresses: ccmpRelayerList,
+      relayerAddressesCCMP: ccmpRelayerList,
       appConfig: {
         tokenList: feeSupportedTokenList,
         feeSpendThreshold: config.feeOption.feeSpendThreshold,
@@ -380,20 +361,6 @@ let feeManagerCCMP: FeeManager;
       cacheService,
       transactionServiceMap,
     });
-
-    try {
-      await feeManagerSCW.init();
-    } catch (error) {
-      log.error('Error while initiating feeManagerSCW instance');
-      // TODO send slack notification
-    }
-
-    try {
-      await feeManagerCCMP.init();
-    } catch (error) {
-      log.error('Error while initiating feeManagerCCMP instance');
-      // TODO send slack notification
-    }
   } catch (error: unknown) {
     log.error(error);
   }
@@ -408,6 +375,5 @@ export {
   scwSimulationServiceMap,
   entryPointMap,
   EVMRelayerManagerMap,
-  feeManagerSCW,
-  feeManagerCCMP,
+  relayerBalanceManager,
 };
