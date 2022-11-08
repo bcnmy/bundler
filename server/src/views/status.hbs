@@ -1,0 +1,72 @@
+<!-- status page of redis, mongo, rabbitmq, relayer service, network price and gas price  with readonly values-->
+<div>
+  <h2>Status</h2>
+  <div>
+    <h3>Redis</h3>
+    <div style="display: inline-block;">
+      <label for="redisStatus">Status</label>
+      <input type="text" id="redisStatus" name="redisStatus" value="{{redisStatus}}" readonly>
+    </div>
+    <div style="display: inline-block;">
+      <label for="redisVersion">Version</label>
+      <input type="text" id="redisVersion" name="redisVersion" value="{{redisVersion}}" readonly>
+    </div>
+  </div>
+  <div>
+    <h3>Mongo</h3>
+    <div style="display: inline-block;">
+      <label for="mongoStatus">Status</label>
+      <input type="text" id="mongoStatus" name="mongoStatus" value="{{mongoStatus}}" readonly>
+  </div>
+  <div style="display: inline-block;">
+    <label for="mongoVersion">Version</label>
+    <input type="text" id="mongoVersion" name="mongoVersion" value="{{mongoVersion}}" readonly>
+  </div>
+  <div>
+    <h3>RabbitMQ</h3>
+    <div style="display: inline-block;">
+      <label for="rabbitmqStatus">Status</label>
+      <input type="text" id="rabbitmqStatus" name="rabbitmqStatus" value="{{rabbitmqStatus}}" readonly>
+    </div>
+    <div style="display: inline-block;">
+      <label for="rabbitmqVersion">Version</label>
+      <input type="text" id="rabbitmqVersion" name="rabbitmqVersion" value="{{rabbitmqVersion}}" readonly>
+    </div>
+  </div>
+  <!-- iterate over list of relayers based on chain id with balance and status -->
+  <div>
+    <h3>Relayers</h3>
+    {{#each relayers}}
+    <div style="display: inline-block;">
+      <label for="relayerBalance">Balance</label>
+      <input type="text" id="relayerBalance" name="relayerBalance" value="{{this.balance}}" readonly>
+    </div>
+    <div style="display: inline-block;">
+      <label for="relayerStatus">Status</label>
+      <input type="text" id="relayerStatus" name="relayerStatus" value="{{this.status}}" readonly>
+    </div>
+    {{/each}}
+  </div>
+
+  <!-- network price of all chains with readonly values -->
+  <div>
+    <h3>Network Price</h3>
+    {{#each networkPrice}}
+    <div style="display: inline-block;">
+      <label for="networkPrice">Price</label>
+      <input type="text" id="networkPrice" name="networkPrice" value="{{this.price}}" readonly>
+    </div>
+    {{/each}}
+  </div>
+
+  <!-- gas price of all chains with readonly values -->
+  <div>
+    <h3>Gas Price</h3>
+    {{#each gasPrice}}
+    <div style="display: inline-block;">
+      <label for="gasPrice">Price</label>
+      <input type="text" id="gasPrice" name="gasPrice" value="{{this.price}}" readonly>
+    </div>
+    {{/each}}
+  </div>
+</div>

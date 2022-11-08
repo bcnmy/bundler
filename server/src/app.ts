@@ -27,7 +27,6 @@ app.use(morganMiddleware);
 
 app.engine('hbs', cons.handlebars);
 app.set('view engine', 'hbs');
-console.log(__dirname);
 app.set('views', `${__dirname}/views`);
 
 // Add headers
@@ -63,7 +62,7 @@ app.use(express.json());
 
 app.use(express.urlencoded({ extended: false }));
 
-app.use('/api/v1', routes);
+app.use('', routes);
 
 app.route('/health')
   .get((req, res) => {
