@@ -243,7 +243,6 @@ implements
       receipt: transactionReceipt,
       relayerAddress,
       userAddress,
-      creationTime: Date.now(),
       updationTime: Date.now(),
     };
     await this.transactionDao.updateByTransactionId(
@@ -251,6 +250,29 @@ implements
       transactionId,
       transactionDataToBeSaveInDatabase,
     );
+  }
+
+  private async saveInitialTransactionDataToDatabase(
+    transactionExecutionResponse: ethers.providers.TransactionResponse,
+    transactionId: string,
+    relayerAddress: string,
+    status: TransactionStatus,
+    previousTransactionHash: string | null,
+    userAddress?: string,
+  ): Promise<void> {
+    const transactionDataToBeSavedInDatabase = {
+      transactionId,
+      transactionHash: transactionExecutionResponse.hash,
+      rawTransaction: transactionExecutionResponse,
+      relayerAddress,
+      status,
+      previousTransactionHash,
+      userAddress,
+      receipt: null,
+      creationTime: Date.now(),
+    };
+
+    await this.transactionDao.save(this.chainId, transactionDataToBeSavedInDatabase);
   }
 
   private async waitForTransaction(
@@ -333,6 +355,7 @@ implements
       previousTransactionHash,
       error,
     } = notifyTransactionListenerParams;
+
     if (!transactionExecutionResponse) {
       await this.publishToTransactionQueue({
         transactionId,
@@ -345,6 +368,17 @@ implements
         transactionExecutionResponse: null,
       };
     }
+
+    // Save initial transaction data to database
+    this.saveInitialTransactionDataToDatabase(
+      transactionExecutionResponse,
+      transactionId,
+      relayerAddress,
+      TransactionStatus.PENDING,
+      null,
+      userAddress,
+    );
+
     // transaction queue is being listened by socket service to notify the client about the hash
     await this.publishToTransactionQueue({
       transactionId,
@@ -367,8 +401,10 @@ implements
       relayerManagerName,
       event: SocketEventType.onTransactionHashGenerated,
     });
+
     // wait for transaction
     this.waitForTransaction(notifyTransactionListenerParams);
+
     return {
       isTransactionRelayed: true,
       transactionExecutionResponse,

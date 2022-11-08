@@ -1,7 +1,7 @@
 {
   "socketService": {
-    "wssUrl": "wss://sdk-ws.prod.biconomy.io/connection/websocket",
-    "httpUrl": "https://sdk-ws.prod.biconomy.io/api"
+    "wssUrl": "wss://sdk-testing-ws.staging.biconomy.io/connection/websocket",
+    "httpUrl": "https://sdk-testing-ws.staging.biconomy.io/api"
   },
   "supportedNetworks": [5, 80001],
   "EIP1559SupportedNetworks": [],
@@ -120,6 +120,11 @@
       }
     },
     "retryCount": {
+      "FUNDING": {
+        "5": 5,
+        "137": 7,
+        "80001": 5
+      },
       "AA": {
         "5": 5,
         "137": 7,

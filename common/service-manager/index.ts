@@ -2,7 +2,10 @@
 import { config } from '../../config';
 import { EVMAccount, IEVMAccount } from '../../relayer/src/services/account';
 import {
-  AAConsumer, SCWConsumer, SocketConsumer, CCMPConsumer,
+  AAConsumer,
+  SCWConsumer,
+  SocketConsumer,
+  CCMPConsumer,
 } from '../../relayer/src/services/consumer';
 import { EVMNonceManager } from '../../relayer/src/services/nonce-manager';
 import { EVMRelayerManager, IRelayerManager } from '../../relayer/src/services/relayer-manager';
@@ -11,7 +14,7 @@ import { EVMRetryTransactionService } from '../../relayer/src/services/retry-tra
 import { EVMTransactionListener } from '../../relayer/src/services/transaction-listener';
 import { EVMTransactionService } from '../../relayer/src/services/transaction-service';
 import { FeeOption } from '../../server/src/services';
-import { CCMPService } from '../../cross-chain/CCMPService';
+import { CCMPService } from '../../cross-chain';
 import {
   AxelarRouterService,
   HyperlaneRouterService,
@@ -53,9 +56,9 @@ const log = logger(module);
 
 const routeTransactionToRelayerMap: {
   [chainId: number]: {
-    [TransactionType.AA]?: AARelayService,
-    [TransactionType.SCW]?: SCWRelayService,
-    [TransactionType.CROSS_CHAIN]?: CCMPRelayService,
+    [TransactionType.AA]?: AARelayService;
+    [TransactionType.SCW]?: SCWRelayService;
+    [TransactionType.CROSS_CHAIN]?: CCMPRelayService;
   };
 } = {};
 
@@ -113,7 +116,7 @@ const crossChainRetryTransactionQueueMap: {
   [key: number]: CrossChainRetryHandlerQueue;
 } = {};
 const crossChainRetryTransactionServiceMap: {
-  [key: number]: CrossChainRetryTransactionService,
+  [key: number]: CrossChainRetryTransactionService;
 } = {};
 
 (async () => {
@@ -226,7 +229,7 @@ const crossChainRetryTransactionServiceMap: {
           maxRelayerCount: relayerManager.maxRelayerCount[chainId],
           inactiveRelayerCountThreshold: relayerManager.inactiveRelayerCountThreshold[chainId],
           pendingTransactionCountThreshold:
-          relayerManager.pendingTransactionCountThreshold[chainId],
+            relayerManager.pendingTransactionCountThreshold[chainId],
           newRelayerInstanceCount: relayerManager.newRelayerInstanceCount[chainId],
           fundingBalanceThreshold: relayerManager.fundingBalanceThreshold[chainId],
           fundingRelayerAmount: relayerManager.fundingRelayerAmount[chainId],
@@ -274,7 +277,8 @@ const crossChainRetryTransactionServiceMap: {
     feeOptionMap[chainId] = feeOptionService;
     // for each network get transaction type
     for (const type of supportedTransactionType[chainId]) {
-      const aaRelayerManager = EVMRelayerManagerMap[relayerManagerTransactionTypeNameMap[type]][chainId];
+      const aaRelayerManager = EVMRelayerManagerMap[
+        relayerManagerTransactionTypeNameMap[type]][chainId];
       if (!aaRelayerManager) {
         throw new Error(`Relayer manager not found for ${type}`);
       }
@@ -327,7 +331,8 @@ const crossChainRetryTransactionServiceMap: {
         });
         await scwQueue.connect();
 
-        const scwRelayerManager = EVMRelayerManagerMap[relayerManagerTransactionTypeNameMap[type]][chainId];
+        const scwRelayerManager = EVMRelayerManagerMap[
+          relayerManagerTransactionTypeNameMap[type]][chainId];
         if (!scwRelayerManager) {
           throw new Error(`Relayer manager not found for ${type}`);
         }
@@ -361,7 +366,8 @@ const crossChainRetryTransactionServiceMap: {
         });
         await ccmpQueue.connect();
 
-        const ccmpRelayerManager = EVMRelayerManagerMap[relayerManagerTransactionTypeNameMap[type]][chainId];
+        const ccmpRelayerManager = EVMRelayerManagerMap[
+          relayerManagerTransactionTypeNameMap[type]][chainId];
         if (!ccmpRelayerManager) {
           throw new Error(`Relayer manager not found for ${type}`);
         }

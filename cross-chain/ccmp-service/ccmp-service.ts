@@ -1,5 +1,5 @@
-import { config } from '../config';
-import { IndexerService } from '../common/indexer/IndexerService';
+import { config } from '../../config';
+import { IndexerService } from '../../common/indexer/IndexerService';
 import {
   CCMPMessage,
   TransactionType,
@@ -7,15 +7,15 @@ import {
   CrossChainTransationStatus,
   CrossChainTransactionError,
   isError,
-} from '../common/types';
-import { logger } from '../common/log-config';
-import type { routeTransactionToRelayerMap as globalRouteTransactionToRelayerMap } from '../common/service-manager';
-import type { ICCMPRouterService } from './types';
-import type { ICrossChainTransactionDAO } from '../common/db';
-import type { ICCMPService, IHandler } from './task-manager/types';
-import { CCMPTaskManager } from './task-manager';
-import { createCCMPGatewayTransaction } from './utils';
-import { CrossChainRetryHandlerQueue } from '../common/queue/CrossChainRetryHandlerQueue';
+} from '../../common/types';
+import { logger } from '../../common/log-config';
+import type { routeTransactionToRelayerMap as globalRouteTransactionToRelayerMap } from '../../common/service-manager';
+import type { ICCMPRouterService } from '../types';
+import type { ICrossChainTransactionDAO } from '../../common/db';
+import type { ICCMPService, IHandler } from '../task-manager/types';
+import { CCMPTaskManager } from '../task-manager';
+import { createCCMPGatewayTransaction } from '../utils';
+import { CrossChainRetryHandlerQueue } from '../../common/queue/CrossChainRetryHandlerQueue';
 
 const log = logger(module);
 
