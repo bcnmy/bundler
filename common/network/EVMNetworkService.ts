@@ -2,16 +2,16 @@
 import axios from 'axios';
 import { BigNumber, ethers } from 'ethers';
 import EventEmitter from 'events';
-import { EVMAccount } from '../../relayer/src/services/account';
-import { EVMRawTransactionType } from '../types';
+import { IEVMAccount } from '../../relayer/src/services/account';
 import { ERC20_ABI } from '../constants';
+import { logger } from '../log-config';
+import { EVMRawTransactionType } from '../types';
 import { IERC20NetworkService, INetworkService, RpcMethod } from './interface';
 import { Type0TransactionGasPriceType, Type2TransactionGasPriceType } from './types';
-import { logger } from '../log-config';
 
 const log = logger(module);
-export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTransactionType>,
- IERC20NetworkService {
+export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTransactionType>,
+  IERC20NetworkService {
   chainId: number;
 
   rpcUrl: string;
@@ -20,13 +20,14 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
 
   fallbackRpcUrls: string[];
 
-  constructor(options: {
-    chainId: number, rpcUrl: string, fallbackRpcUrls: string[]
-  }) {
+  constructor(options: { chainId: number; rpcUrl: string; fallbackRpcUrls: string[] }) {
     this.chainId = options.chainId;
     this.rpcUrl = options.rpcUrl;
     this.fallbackRpcUrls = options.fallbackRpcUrls;
-    this.ethersProvider = new ethers.providers.JsonRpcProvider(options.rpcUrl);
+    this.ethersProvider = new ethers.providers.JsonRpcProvider({
+      url: options.rpcUrl,
+      timeout: 10000,
+    });
   }
 
   getActiveRpcUrl(): string {
@@ -52,6 +53,7 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
     // eslint-disable-next-line consistent-return
     const withFallbackRetry = async () => {
       try {
+        // TODO Add null checks on params
         switch (tag) {
           case RpcMethod.getGasPrice:
             return await this.ethersProvider.getGasPrice();
@@ -76,15 +78,17 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
           default:
             return null;
         }
-      } catch (error) {
-        // TODO // Handle errors
-        log.info(`Error in network service ${error}`);
-        for (;rpcUrlIndex < this.fallbackRpcUrls.length; rpcUrlIndex += 1) {
-          this.ethersProvider = new ethers.providers.JsonRpcProvider(
-            this.fallbackRpcUrls[rpcUrlIndex],
-          );
-          withFallbackRetry();
+      } catch (error: any) {
+        if (error.toString().toLowerCase().includes() === 'timeout error') {
+          log.info(`Error in network service ${error}`);
+          for (; rpcUrlIndex < this.fallbackRpcUrls.length; rpcUrlIndex += 1) {
+            this.ethersProvider = new ethers.providers.JsonRpcProvider(
+              this.fallbackRpcUrls[rpcUrlIndex],
+            );
+            withFallbackRetry();
+          }
         }
+        return new Error(error);
       }
     };
     return withFallbackRetry();
@@ -100,84 +104,13 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
     };
   }
 
-  async getGasPrice() :Promise<Type0TransactionGasPriceType> {
+  async getGasPrice(): Promise<Type0TransactionGasPriceType> {
     const gasPrice = (await this.useProvider(RpcMethod.getGasPrice)).toHexString();
     return {
       gasPrice,
     };
   }
 
-  static getBumpedUpGasPrice(
-    pastGasPrice: Type0TransactionGasPriceType,
-    bumpingPercentage: number,
-  ): Type0TransactionGasPriceType {
-    let resubmitGasPrice: number;
-    const bumpedUpPrice = {
-      gasPrice: ethers.utils.hexValue(
-        BigNumber.from(pastGasPrice.gasPrice)
-          .mul(bumpingPercentage + 100)
-          .div(100),
-      ),
-    };
-    if (
-      parseInt(bumpedUpPrice.gasPrice as string, 10)
-         < 1.1 * parseInt(pastGasPrice.gasPrice as string, 10)
-    ) {
-      resubmitGasPrice = 1.1 * parseInt(pastGasPrice.gasPrice as string, 10);
-    } else {
-      resubmitGasPrice = parseInt(bumpedUpPrice.gasPrice as string, 10);
-    }
-
-    return {
-      gasPrice: ethers.BigNumber.from(resubmitGasPrice.toString()).toHexString(),
-    };
-  }
-
-  static getEIP1559BumpedUpGasPrice(
-    pastGasPrice: Type2TransactionGasPriceType,
-    bumpingPercentage: number,
-  ): Type2TransactionGasPriceType {
-    let resubmitMaxFeePerGas: number;
-    let resubmitMaxPriorityFeePerGas: number;
-    const { maxPriorityFeePerGas, maxFeePerGas } = pastGasPrice;
-    const pastMaxPriorityFeePerGas = maxPriorityFeePerGas;
-    const pastMaxFeePerGas = maxFeePerGas;
-
-    const bumpedUpMaxPriorityFeePerGas = ethers.utils.hexValue(
-      BigNumber.from(maxPriorityFeePerGas)
-        .mul(bumpingPercentage + 100)
-        .div(100),
-    );
-
-    const bumpedUpMaxFeePerGas = ethers.utils.hexValue(
-      BigNumber.from(pastMaxFeePerGas)
-        .mul(bumpingPercentage + 100)
-        .div(100),
-    );
-
-    if (
-      parseInt(bumpedUpMaxPriorityFeePerGas as string, 10)
-       < parseInt(pastMaxPriorityFeePerGas as string, 10) * 1.11) {
-      resubmitMaxPriorityFeePerGas = parseInt(pastMaxPriorityFeePerGas as string, 10) * 1.11;
-    } else {
-      resubmitMaxPriorityFeePerGas = parseInt(pastMaxPriorityFeePerGas as string, 10);
-    }
-
-    if (
-      parseInt(bumpedUpMaxFeePerGas as string, 10)
-       < parseInt(pastMaxFeePerGas as string, 10) * 1.11) {
-      resubmitMaxFeePerGas = parseInt(pastMaxFeePerGas as string, 10) * 1.11;
-    } else {
-      resubmitMaxFeePerGas = parseInt(pastMaxFeePerGas as string, 10);
-    }
-
-    return {
-      maxFeePerGas: ethers.BigNumber.from(resubmitMaxPriorityFeePerGas.toString()).toHexString(),
-      maxPriorityFeePerGas: ethers.BigNumber.from(resubmitMaxFeePerGas.toString()).toHexString(),
-    };
-  }
-
-  // TODO: Add Comments
   async getBalance(address: string): Promise<BigNumber> {
     const balance = await this.useProvider(RpcMethod.getBalance, {
       address,
@@ -185,14 +118,10 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
     return balance;
   }
 
-  // TODO: Avoid creating new contract instance Every time. Save & get  cache
-  getContract(_abi: string, contractAddress: string) : ethers.Contract {
+  // TODO: Avoid creating new contract instance Every time. Save & get from cache
+  getContract(_abi: string, contractAddress: string): ethers.Contract {
     const abi = new ethers.utils.Interface(_abi);
-    const contract = new ethers.Contract(
-      contractAddress,
-      abi,
-      this.ethersProvider,
-    );
+    const contract = new ethers.Contract(contractAddress, abi, this.ethersProvider);
     return contract;
   }
 
@@ -224,7 +153,7 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
     address: string,
     methodName: string,
     params: any,
-  ):Promise<object> {
+  ): Promise<object> {
     const contract = this.getContract(abi, address);
     const contractReadMethodValue = await contract[methodName].apply(null, params);
     return contractReadMethodValue;
@@ -237,10 +166,7 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
     from: string,
   ): Promise<BigNumber> {
     const contractInterface = contract.interface;
-    const functionSignature = contractInterface.encodeFunctionData(
-      methodName,
-      params,
-    );
+    const functionSignature = contractInterface.encodeFunctionData(methodName, params);
     const estimatedGas = await this.useProvider(RpcMethod.estimateGas, {
       from,
       to: contract.address,
@@ -269,13 +195,14 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
 
   async sendTransaction(
     rawTransactionData: EVMRawTransactionType,
-    account: EVMAccount,
+    account: IEVMAccount,
   ): Promise<ethers.providers.TransactionResponse> {
     const rawTx: EVMRawTransactionType = rawTransactionData;
     rawTx.from = account.getPublicKey();
     const tx = await account.signTransaction(rawTx);
     const receipt = await this.useProvider(RpcMethod.sendTransaction, {
       tx,
+      rawTx,
     });
     return receipt;
   }
@@ -324,9 +251,7 @@ export class EVMNetworkService implements INetworkService<EVMAccount, EVMRawTran
   static createFilter(contractAddress: string, topic: string) {
     return {
       address: contractAddress,
-      topics: [
-        topic,
-      ],
+      topics: [topic],
     };
   }
 }
