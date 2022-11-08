@@ -73,7 +73,8 @@ ITransactionPublisher<TransactionQueueMessageType> {
       transactionId,
       relayerAddress,
       previousTransactionHash,
-      userAddress,
+      walletAddress,
+      metaData,
     } = onTranasctionSuccessParams;
     if (!transactionReceipt) {
       log.error(`Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
@@ -96,7 +97,8 @@ ITransactionPublisher<TransactionQueueMessageType> {
         relayerAddress,
         TransactionStatus.SUCCESS,
         previousTransactionHash,
-        userAddress,
+        walletAddress,
+        metaData,
       );
     }
   }
@@ -108,7 +110,8 @@ ITransactionPublisher<TransactionQueueMessageType> {
       transactionReceipt,
       relayerAddress,
       previousTransactionHash,
-      userAddress,
+      walletAddress,
+      metaData,
     } = onTranasctionFailureParams;
     if (!transactionReceipt) {
       log.error(`Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
@@ -131,7 +134,8 @@ ITransactionPublisher<TransactionQueueMessageType> {
         relayerAddress,
         TransactionStatus.FAILED,
         previousTransactionHash,
-        userAddress,
+        walletAddress,
+        metaData,
       );
     }
   }
@@ -143,7 +147,8 @@ ITransactionPublisher<TransactionQueueMessageType> {
     relayerAddress: string,
     status: TransactionStatus,
     previousTransactionHash: string | null,
-    userAddress?: string,
+    walletAddress: string,
+    metaData: any,
   ): Promise<void> {
     const transactionDataToBeSaveInDatabase = {
       transactionId,
@@ -155,7 +160,8 @@ ITransactionPublisher<TransactionQueueMessageType> {
       gasPrice: transactionExecutionResponse?.gasPrice,
       receipt: transactionReceipt,
       relayerAddress,
-      userAddress,
+      walletAddress,
+      metaData,
       updationTime: Date.now(),
     };
     await this.transactionDao.updateByTransactionId(
@@ -171,7 +177,8 @@ ITransactionPublisher<TransactionQueueMessageType> {
     relayerAddress: string,
     status: TransactionStatus,
     previousTransactionHash: string | null,
-    userAddress?: string,
+    walletAddress: string,
+    metaData: any,
   ): Promise<void> {
     const transactionDataToBeSavedInDatabase = {
       transactionId,
@@ -180,7 +187,8 @@ ITransactionPublisher<TransactionQueueMessageType> {
       relayerAddress,
       status,
       previousTransactionHash,
-      userAddress,
+      walletAddress,
+      metaData,
       receipt: null,
       creationTime: Date.now(),
     };
@@ -196,7 +204,8 @@ ITransactionPublisher<TransactionQueueMessageType> {
       transactionId,
       relayerAddress,
       previousTransactionHash,
-      userAddress,
+      walletAddress,
+      metaData,
       transactionType,
       relayerManagerName,
     } = notifyTransactionListenerParams;
@@ -221,7 +230,8 @@ ITransactionPublisher<TransactionQueueMessageType> {
         relayerAddress,
         transactionType,
         previousTransactionHash,
-        userAddress,
+        walletAddress,
+        metaData,
         relayerManagerName,
       });
     }
@@ -234,7 +244,8 @@ ITransactionPublisher<TransactionQueueMessageType> {
         relayerAddress,
         transactionType,
         previousTransactionHash,
-        userAddress,
+        walletAddress,
+        metaData,
         relayerManagerName,
       });
     }
@@ -249,7 +260,8 @@ ITransactionPublisher<TransactionQueueMessageType> {
       rawTransaction,
       relayerAddress,
       transactionType,
-      userAddress,
+      walletAddress,
+      metaData,
       relayerManagerName,
       previousTransactionHash,
       error,
@@ -275,7 +287,8 @@ ITransactionPublisher<TransactionQueueMessageType> {
       relayerAddress,
       TransactionStatus.PENDING,
       null,
-      userAddress,
+      walletAddress,
+      metaData,
     );
 
     // transaction queue is being listened by socket service to notify the client about the hash
@@ -294,7 +307,8 @@ ITransactionPublisher<TransactionQueueMessageType> {
       transactionHash: transactionExecutionResponse.hash,
       transactionId,
       rawTransaction: rawTransaction as EVMRawTransactionType,
-      userAddress: userAddress as string,
+      walletAddress,
+      metaData,
       relayerManagerName,
       event: SocketEventType.onTransactionHashGenerated,
     });
