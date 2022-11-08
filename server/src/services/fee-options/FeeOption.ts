@@ -59,7 +59,14 @@ export class FeeOption {
       const networkPriceDataInString = await this.cacheService.get(
         FeeOption.getNetworkPriceDataKey(),
       );
-      const networkPriceData = JSON.parse(networkPriceDataInString);
+      let networkPriceData;
+      if (!networkPriceDataInString) {
+        networkPriceData = {
+          1: '1652.34', 4: '1652.34', 5: '1652.34', 137: '0.80', 80001: '0.80',
+        };
+      } else {
+        networkPriceData = JSON.parse(networkPriceDataInString);
+      }
       const chainPriceDataInUSD = networkPriceData[this.chainId];
 
       for (const token of feeTokens) {

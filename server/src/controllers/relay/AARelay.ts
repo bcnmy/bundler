@@ -14,9 +14,12 @@ export const relayAATransaction = async (req: Request, res: Response) => {
     const userOp = req.body.params[0];
     const entryPointAddress = req.body.params[1];
     const chainId = req.body.params[2];
-    const gasLimitFromSimulation = req.body.params[3];
+    const metaData = req.body.params[3];
+    const gasLimitFromSimulation = req.body.params[4];
 
     const transactionId = generateTransactionId(userOp);
+
+    const walletAddress = userOp.sender;
 
     const response = routeTransactionToRelayerMap[chainId][TransactionType.AA]
       .sendTransactionToRelayer({
@@ -28,6 +31,8 @@ export const relayAATransaction = async (req: Request, res: Response) => {
         value: '0x0',
         userOp,
         transactionId,
+        walletAddress,
+        metaData,
       });
     if (isError(response)) {
       return res.status(400).json({
