@@ -12,6 +12,7 @@ import { FeeOption } from '../../server/src/services';
 import { RedisCacheService } from '../cache';
 import { Mongo, TransactionDAO } from '../db';
 import { GasPriceManager } from '../gas-price';
+import { HealthService } from '../health';
 import { IQueue } from '../interface';
 import { logger } from '../log-config';
 import { relayerManagerTransactionTypeNameMap } from '../maps';
@@ -76,6 +77,7 @@ const transactionListenerMap: Record<number, EVMTransactionListener> = {};
 const retryTransactionQueueMap: {
   [key: number]: RetryTransactionHandlerQueue;
 } = {};
+const networkServiceMap: Record<number, EVMNetworkService> = {};
 
 (async () => {
   await dbInstance.connect();
@@ -93,6 +95,9 @@ const retryTransactionQueueMap: {
       rpcUrl: config.chains.provider[chainId],
       fallbackRpcUrls: config.chains.fallbackUrls[chainId] || [],
     });
+    networkServiceMap[chainId] = networkService;
+
+
 
     const gasPriceManager = new GasPriceManager(cacheService, networkService, {
       chainId,
@@ -313,7 +318,12 @@ const retryTransactionQueueMap: {
       }
     }
   }
+  new HealthService({
+    cacheService,
+    networkServiceMap,
+  });
   log.info('<=== Config setup completed ===>');
+  
 })();
 
 export {
