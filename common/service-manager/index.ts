@@ -1,3 +1,5 @@
+/* eslint-disable max-len */
+/* eslint-disable no-await-in-loop */
 /* eslint-disable import/no-mutable-exports */
 /* eslint-disable guard-for-in */
 /* eslint-disable import/no-cycle */
@@ -84,6 +86,8 @@ let scwRelayerList: string[] = [];
 let ccmpRelayerList: string[] = [];
 const relayerInstanceMap: Record<string, EVMRelayerManager> = {};
 let relayerBalanceManager: RelayerBalanceManager;
+let labelCCMP;
+let labelSCW;
 
 (async () => {
   await dbInstance.connect();
@@ -213,9 +217,11 @@ let relayerBalanceManager: RelayerBalanceManager;
       if (relayerManagerTransactionTypeNameMap.CROSS_CHAIN === relayerManager.name) {
         ccmpRelayerList = addressList;
         relayerInstanceMap[relayerManagerTransactionTypeNameMap.CROSS_CHAIN] = relayerMangerInstance;
+        labelCCMP = relayerManager.name;
       } else if (relayerManagerTransactionTypeNameMap.SCW === relayerManager.name) {
         scwRelayerList = addressList;
         relayerInstanceMap[relayerManagerTransactionTypeNameMap.SCW] = relayerMangerInstance;
+        labelSCW = relayerManager.name;
       }
       log.info(
         `Relayer address list length: ${addressList.length} and minRelayerCount: ${relayerManager.minRelayerCount}`,
@@ -355,11 +361,14 @@ let relayerBalanceManager: RelayerBalanceManager;
         tokenList: feeSupportedTokenList,
         feeSpendThreshold: config.feeOption.feeSpendThreshold,
         InitialFundingAmountInUsd: config.feeOption.initialFundingAmountInUsd,
+        balanceThreshold: config.feeOption.balanceThreshold,
       },
       dbService: transactionDao,
       tokenPriceService: tokenService,
       cacheService,
       transactionServiceMap,
+      labelCCMP,
+      labelSCW,
     });
   } catch (error: unknown) {
     log.error(error);

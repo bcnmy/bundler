@@ -64,6 +64,7 @@ type NativeChainIdMapType = {
 };
 
 type FeeOptionConfigType = {
+  balanceThreshold: Record<number, number>;
   feeSpendThreshold: Record<number, number>;
   supportedFeeTokens: ChainIdWithArrayStringValueType,
   similarTokens: ChainIdWithArrayStringValueType,

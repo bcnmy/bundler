@@ -2,7 +2,7 @@
 import { FeeManager } from '@biconomy/fee-management';
 import { IEVMAccount } from '@biconomy/fee-management/dist/relayer-node-interfaces/IEVMAccount';
 import { ITransactionService } from '@biconomy/fee-management/dist/relayer-node-interfaces/ITransactionService';
-import { AppConfig } from '@biconomy/fee-management/dist/types';
+import { AppConfig, Mode } from '@biconomy/fee-management/dist/types';
 import { ethers } from 'ethers';
 import { ICacheService } from '../cache';
 import { ITransactionDAO } from '../db';
@@ -19,6 +19,8 @@ type FeeManagerParams = {
     tokenPriceService: ITokenPrice;
     cacheService: ICacheService;
     transactionServiceMap: Record<number, ITransactionService<IEVMAccount, EVMRawTransactionType>>;
+    labelSCW: string | undefined;
+    labelCCMP: string | undefined;
 };
 
 export class RelayerBalanceManager {
@@ -27,26 +29,34 @@ export class RelayerBalanceManager {
     feeManagerCCMP: any;
 
     constructor(feeManagerParams: FeeManagerParams) {
-        this.feeManagerSCW = new FeeManager({
-            masterFundingAccount: feeManagerParams.masterFundingAccountSCW,
-            relayerAddresses: feeManagerParams.relayerAddressesSCW,
-            appConfig: feeManagerParams.appConfig,
-            dbService: feeManagerParams.dbService,
-            tokenPriceService: feeManagerParams.tokenPriceService,
-            cacheService: feeManagerParams.cacheService,
-            transactionServiceMap: feeManagerParams.transactionServiceMap,
-        });
+        if (feeManagerParams.labelSCW) {
+            this.feeManagerSCW = new FeeManager({
+                masterFundingAccount: feeManagerParams.masterFundingAccountSCW,
+                relayerAddresses: feeManagerParams.relayerAddressesSCW,
+                appConfig: feeManagerParams.appConfig,
+                dbService: feeManagerParams.dbService,
+                tokenPriceService: feeManagerParams.tokenPriceService,
+                cacheService: feeManagerParams.cacheService,
+                transactionServiceMap: feeManagerParams.transactionServiceMap,
+                label: feeManagerParams.labelSCW,
+                mode: Mode.SINGLE_CHAIN,
+            });
+        }
 
-        this.feeManagerCCMP = new FeeManager({
-            masterFundingAccount:
-                feeManagerParams.masterFundingAccountCCMP,
-            relayerAddresses: feeManagerParams.relayerAddressesCCMP,
-            appConfig: feeManagerParams.appConfig,
-            dbService: feeManagerParams.dbService,
-            tokenPriceService: feeManagerParams.tokenPriceService,
-            cacheService: feeManagerParams.cacheService,
-            transactionServiceMap: feeManagerParams.transactionServiceMap,
-        });
+        if (feeManagerParams.labelCCMP) {
+            this.feeManagerCCMP = new FeeManager({
+                masterFundingAccount:
+                    feeManagerParams.masterFundingAccountCCMP,
+                relayerAddresses: feeManagerParams.relayerAddressesCCMP,
+                appConfig: feeManagerParams.appConfig,
+                dbService: feeManagerParams.dbService,
+                tokenPriceService: feeManagerParams.tokenPriceService,
+                cacheService: feeManagerParams.cacheService,
+                transactionServiceMap: feeManagerParams.transactionServiceMap,
+                label: feeManagerParams.labelCCMP,
+                mode: Mode.CROSS_CHAIN,
+            });
+        }
 
         this.feeManagerSCW.init();
 
@@ -59,9 +69,9 @@ export class RelayerBalanceManager {
         chainId: number,
     ) {
         if (transactionType === TransactionType.CROSS_CHAIN) {
-            this.feeManagerCCMP.onTransaction(transactionReceipt, chainId);
+            this.feeManagerCCMP.onTransactionCCMP(transactionReceipt, chainId);
         } else if (transactionType === TransactionType.SCW) {
-            this.feeManagerSCW.onTransaction(transactionReceipt, chainId);
+            this.feeManagerSCW.onTransactionSCW(transactionReceipt, chainId);
         }
     }
 }
