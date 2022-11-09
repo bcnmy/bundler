@@ -8,37 +8,39 @@ import { parseError } from '../../../../common/utils';
 const log = logger(module);
 
 export const transactionResubmitApi = async (req: Request, res: Response) => {
-  const chainIdInStr = req.query.chainId as string;
-  const chainId = parseInt(chainIdInStr, 10);
-  const transactionId = req.query.transactionId as string;
-  const gasPrice = req.query.gasPrice as string;
+  const { chainId, transactionId, gasPrice } = req.body;
 
-  const response = await transactionDao.getByTransactionId(chainId, transactionId);
+  // convert gas price to hex
+  const gasPriceInHex = `0x${parseInt(gasPrice, 10).toString(16)}`;
+
+  const transactions = await transactionDao.getByTransactionId(chainId, transactionId);
   try {
-    if (!response) {
+    if (transactions?.length !== 1) {
       return res.status(404).json({
         code: 404,
         error: 'Transaction not found',
       });
     }
-
+    const transaction = transactions[0];
+    log.info(`Transaction to be retried found of type ${transaction.transactionType}`);
     // find the relayer that has initiated the transaction using EVMRelayerManager
-    const relayer = await EVMRelayerManagerMap[
-      relayerManagerTransactionTypeNameMap[response.transactionType as TransactionType]][chainId]
+    const relayerManagerName = relayerManagerTransactionTypeNameMap[
+      transaction.transactionType as TransactionType];
+    log.info(`Relayer manager name: ${relayerManagerName}`);
+    const relayer = await EVMRelayerManagerMap[relayerManagerName][chainId]
       .getRelayer(
-        response.relayerAddress,
+        transaction.relayerAddress,
       );
-
     if (relayer) {
       const rawTransaction = {
         from: relayer.getPublicKey(),
-        gasPrice,
-        gasLimit: response.rawTransaction.gasLimit,
-        to: response.rawTransaction.to,
-        value: response.rawTransaction.value,
-        data: response.rawTransaction.data,
+        gasPrice: gasPriceInHex,
+        gasLimit: transaction.rawTransaction.gasLimit._hex,
+        to: transaction.rawTransaction.to,
+        value: transaction.rawTransaction.value._hex,
+        data: transaction.rawTransaction.data,
         chainId,
-        nonce: response.rawTransaction.nonce,
+        nonce: transaction.rawTransaction.nonce,
       };
       log.info(`Resubmitting transaction ${transactionId} with gasPrice ${gasPrice} on chainId ${chainId} and raw transaction data ${JSON.stringify(rawTransaction)}`);
       const result = await transactionSerivceMap[chainId].executeTransaction({

@@ -204,6 +204,7 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
       tx,
       rawTx,
     });
+    console.log('receipt', receipt);
     return receipt;
   }
 

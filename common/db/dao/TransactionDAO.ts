@@ -25,7 +25,7 @@ export class TransactionDAO implements ITransactionDAO {
   async getByTransactionId(chainId: number, id: string): Promise<IBlockchainTransaction[] | null> {
     const data = await this._db.getBlockchainTransaction(chainId).find({
       transactionId: id,
-    }).sort({ _id: -1 });
+    }).sort({ _id: -1 }).lean();
     if (data) {
       return data;
     }

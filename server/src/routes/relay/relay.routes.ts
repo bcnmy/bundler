@@ -1,7 +1,13 @@
 import { Router } from 'express';
 import { transactionStatusApi, feeOptionsApi, requestHandler } from '../../controllers';
 import { simulateTransaction } from '../../controllers/simulate';
-import { validateRelayRequest, validateFeeOption, validateTransactionStatus } from '../../middleware';
+import { transactionResubmitApi } from '../../controllers/transaction-resubmit';
+import {
+  validateRelayRequest,
+  validateFeeOption,
+  validateTransactionStatus,
+  validateTransactionResubmit,
+} from '../../middleware';
 
 export const relayApiRouter = Router();
 
@@ -11,4 +17,4 @@ relayApiRouter.get('/status', validateTransactionStatus, transactionStatusApi);
 
 relayApiRouter.post('/', validateRelayRequest(), simulateTransaction(), requestHandler);
 
-relayApiRouter.post('/resubmit', validateTransactionStatus, transactionStatusApi);
+relayApiRouter.post('/resubmit', validateTransactionResubmit, transactionResubmitApi);

@@ -87,12 +87,12 @@ export const feeOptionsSchema = object.keys({
 
 // validate schema with a query parameter of transactionId
 export const transactionStatusSchema = object.keys({
-  chainId: string.valid('5', '80001'),
+  chainId: string.required().valid('5', '80001'),
   transactionId: string.required().error(new Error('transactionId is required')),
 });
 
 export const transactionResubmitSchema = object.keys({
-  chainId: string.valid('5', '80001'),
+  chainId: number.required().valid(5, 80001),
   transactionId: string.required().error(new Error('transactionId is required')),
-  gasPrice: string.required().error(new Error('gasPrice is required')),
+  gasPrice: number.required().error(new Error('gasPrice is required')),
 });
