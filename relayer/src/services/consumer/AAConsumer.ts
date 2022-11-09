@@ -80,6 +80,7 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
           this.relayerManager.name,
         );
       } else {
+        this.queue.publish(JSON.parse(msg.content.toString()));
         throw new Error(`No active relayer for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);
       }
     } else {

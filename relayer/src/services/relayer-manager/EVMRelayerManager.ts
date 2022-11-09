@@ -122,6 +122,14 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
     return null;
   }
 
+  getRelayer(address: string): IEVMAccount | null {
+    const relayer = this.relayerMap[address];
+    if (relayer) {
+      return relayer;
+    }
+    return null;
+  }
+
   async addActiveRelayer(address: string): Promise<void> {
     log.info(
       `Adding relayer: ${address} to active relayer map on chainId: ${this.chainId}`,

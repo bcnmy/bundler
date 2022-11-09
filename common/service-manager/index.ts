@@ -324,4 +324,5 @@ export {
   entryPointMap,
   EVMRelayerManagerMap,
   transactionSerivceMap,
+  transactionDao,
 };
