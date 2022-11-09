@@ -122,7 +122,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
     return null;
   }
 
-  async getRelayer(address: string): Promise<IEVMAccount | null> {
+  getRelayer(address: string): IEVMAccount | null {
     const relayer = this.relayerMap[address];
     if (relayer) {
       return relayer;

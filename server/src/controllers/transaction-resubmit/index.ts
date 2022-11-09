@@ -27,7 +27,7 @@ export const transactionResubmitApi = async (req: Request, res: Response) => {
     const relayerManagerName = relayerManagerTransactionTypeNameMap[
       transaction.transactionType as TransactionType];
     log.info(`Relayer manager name: ${relayerManagerName}`);
-    const relayer = await EVMRelayerManagerMap[relayerManagerName][chainId]
+    const relayer = EVMRelayerManagerMap[relayerManagerName][chainId]
       .getRelayer(
         transaction.relayerAddress,
       );
