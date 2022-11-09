@@ -221,6 +221,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
     const transactionReceipt = await this.networkService.waitForTransaction(tranasctionHash);
     log.info(`Transaction receipt is: ${JSON.stringify(transactionReceipt)} for transactionId: ${transactionId} on chainId ${this.chainId}`);
 
+    // TODO: reduce pending count of relayer via RelayerManager
     await this.cacheService.delete(getRetryTransactionCountKey(transactionId, this.chainId));
 
     if (transactionReceipt.status === 1) {

@@ -116,10 +116,30 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
   async getActiveRelayer(): Promise<IEVMAccount | null> {
     const activeRelayer = await this.relayerQueue.pop();
     if (activeRelayer) {
+      activeRelayer.pendingCount += 1;
       this.transactionProcessingRelayerMap[activeRelayer.address] = activeRelayer;
       return this.relayerMap[activeRelayer.address];
     }
     return null;
+  }
+
+  async postTransactionMined(address: string) {
+    // decrease pending count
+    const relayerData = this.relayerQueue
+      .list()
+      .find((relayer) => relayer.address === address);
+    if (relayerData) {
+      relayerData.pendingCount -= 1;
+      const balance = await this.networkService.getBalance(address);
+      relayerData.balance = balance;
+      // if balance is less than threshold, fund the relayer
+      if (balance.lt(this.fundingBalanceThreshold)) {
+        await this.fundRelayers([address]);
+      }
+    }
+
+    // check if pending count is less than threshold
+    // if no, create new relayers
   }
 
   getRelayer(address: string): IEVMAccount | null {
