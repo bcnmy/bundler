@@ -5,13 +5,3 @@ export interface ICCMPRouterService {
   getVerificationData: (txHash: string, message: CCMPMessage) => Promise<string | Uint8Array>;
   estimateVerificationCostInNativeToken: (txHash: string, message: CCMPMessage) => Promise<number>;
 }
-
-export interface IIndexerTxData {
-  txHash: string;
-  gasUsage: number;
-  chainId: number;
-  from: string;
-  scAddress: string;
-  eventName: string;
-  eventData: any;
-}
