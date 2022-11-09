@@ -27,7 +27,7 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
         gasLimit: gasLimit || gasLimitFromSimulation,
         chainId,
         value,
-        walletAddress: walletInfo.walletAddress,
+        walletAddress: walletInfo.address,
         transactionId,
       });
     if (isError(response)) {
