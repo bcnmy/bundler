@@ -140,15 +140,27 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
     }
   }
 
+  // get all relayers
+  getRelayers(): any {
+    const relayerDataMap: any = {};
+    const relayers = Object.keys(this.relayerMap);
+    // iterate over relayers and get balance and nonce from relayer queue
+    for (const relayer of relayers) {
+      const data = this.relayerQueue.get(relayer);
+      if (data) {
+        relayerDataMap[relayer].balance = data.balance;
+        relayerDataMap[relayer].nonce = data.nonce;
+      }
+    }
+    return relayerDataMap;
+  }
+
   // get total number of relayers
   getRelayersCount(active: boolean = false): number {
     if (active) {
       return this.relayerQueue.size();
     }
-    return (
-      Object.keys(this.transactionProcessingRelayerMap).length
-      + this.relayerQueue.size()
-    );
+    return Object.keys(this.relayerMap).length;
   }
 
   // return list of created list of relayers address

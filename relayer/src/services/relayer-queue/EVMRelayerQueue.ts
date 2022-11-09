@@ -21,6 +21,14 @@ export class EVMRelayerQueue implements IRelayerQueue<EVMRelayerMetaDataType> {
     return this.items;
   }
 
+  get(address:string): EVMRelayerMetaDataType | undefined {
+    const filteredItem = this.items.filter((item) => item.address === address);
+    if (filteredItem.length > 0) {
+      return filteredItem[0];
+    }
+    return undefined;
+  }
+
   async pop(): Promise<EVMRelayerMetaDataType | undefined> {
     return popMutex.runExclusive(() => this.items.shift());
   }

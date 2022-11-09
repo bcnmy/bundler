@@ -12,7 +12,7 @@ import { FeeOption } from '../../server/src/services';
 import { RedisCacheService } from '../cache';
 import { Mongo, TransactionDAO } from '../db';
 import { GasPriceManager } from '../gas-price';
-import { HealthService } from '../health';
+import { StatusService } from '../status';
 import { IQueue } from '../interface';
 import { logger } from '../log-config';
 import { relayerManagerTransactionTypeNameMap } from '../maps';
@@ -96,8 +96,6 @@ const networkServiceMap: Record<number, EVMNetworkService> = {};
       fallbackRpcUrls: config.chains.fallbackUrls[chainId] || [],
     });
     networkServiceMap[chainId] = networkService;
-
-
 
     const gasPriceManager = new GasPriceManager(cacheService, networkService, {
       chainId,
@@ -318,12 +316,12 @@ const networkServiceMap: Record<number, EVMNetworkService> = {};
       }
     }
   }
-  new HealthService({
+  const h = new StatusService({
     cacheService,
     networkServiceMap,
+    EVMRelayerManagerMap,
   });
   log.info('<=== Config setup completed ===>');
-  
 })();
 
 export {
