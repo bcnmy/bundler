@@ -18,7 +18,7 @@ export const scwRequestSchema = object.keys({
       data: string.required().error(new Error('data is required')),
       chainId: number.required().error(new Error('chainId is required')),
       walletInfo: object.keys({
-        walletAddress: string.required().error(new Error('walletAddress is required')),
+        address: string.required().error(new Error('address is required')),
       }).error(new Error('walletAddress is required')),
       refundInfo: object.keys({
         tokenGasPrice: string.required().error(new Error('tokenGasPrice is required')),
