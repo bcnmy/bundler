@@ -94,7 +94,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     return { ...response, gasPrice: ethers.utils.hexlify(Number(gasPrice)) };
   }
 
-  private async executeTransaction(
+  async executeTransaction(
     executeTransactionParams: ExecuteTransactionParamsType,
   ): Promise<ExecuteTransactionResponseType> {
     const { rawTransaction, account } = executeTransactionParams;
