@@ -76,7 +76,10 @@ export type AATransactionMessageType = {
   chainId: number;
   value: string;
   transactionId: string;
-  userOp?: UserOperationType
+  userOp?: UserOperationType;
+  metaData?: {
+    dappAPIKey: string
+  }
 };
 
 export type SCWTransactionMessageType = {
@@ -87,6 +90,7 @@ export type SCWTransactionMessageType = {
   chainId: number;
   value: string;
   transactionId: string;
+  walletAddress: string;
 };
 
 type ResponseType = {

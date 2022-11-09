@@ -17,6 +17,9 @@ export const scwRequestSchema = object.keys({
       gasLimit: string, // in hex
       data: string.required().error(new Error('data is required')),
       chainId: number.required().error(new Error('chainId is required')),
+      walletInfo: object.keys({
+        address: string.required().error(new Error('address is required')),
+      }).error(new Error('walletAddress is required')),
       refundInfo: object.keys({
         tokenGasPrice: string.required().error(new Error('tokenGasPrice is required')),
         gasToken: string.required().error(new Error('gasToken is required')),
@@ -43,6 +46,9 @@ const userOp = object.keys({
 
 const entryPointAddress = string.required().error(new Error('entryPointAddress is required'));
 const chainId = number.required().error(new Error('chainId is required'));
+const metaData = object.keys({
+  dappAPIKey: string.required().error(new Error('dappAPIKey is required')),
+});
 
 export const aaRequestSchema = object.keys({
   method: string.regex(/eth_sendUserOperation/),
@@ -50,6 +56,7 @@ export const aaRequestSchema = object.keys({
     userOp,
     entryPointAddress,
     chainId,
+    metaData,
   )),
   jsonrpc: string.required().error(new Error('jsonrpc is required')),
   id: number.required().error(new Error('id is required')),

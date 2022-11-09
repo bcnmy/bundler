@@ -76,7 +76,8 @@ export class EVMTransactionListener implements
       transactionId,
       relayerAddress,
       previousTransactionHash,
-      userAddress,
+      walletAddress,
+      metaData,
     } = onTranasctionSuccessParams;
     if (!transactionReceipt) {
       log.error(`Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
@@ -99,7 +100,8 @@ export class EVMTransactionListener implements
         relayerAddress,
         TransactionStatus.SUCCESS,
         previousTransactionHash,
-        userAddress,
+        walletAddress,
+        metaData,
       );
     }
   }
@@ -111,7 +113,8 @@ export class EVMTransactionListener implements
       transactionReceipt,
       relayerAddress,
       previousTransactionHash,
-      userAddress,
+      walletAddress,
+      metaData,
     } = onTranasctionFailureParams;
     if (!transactionReceipt) {
       log.error(`Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
@@ -134,7 +137,8 @@ export class EVMTransactionListener implements
         relayerAddress,
         TransactionStatus.FAILED,
         previousTransactionHash,
-        userAddress,
+        walletAddress,
+        metaData,
       );
     }
   }
@@ -146,7 +150,8 @@ export class EVMTransactionListener implements
     relayerAddress: string,
     status: TransactionStatus,
     previousTransactionHash: string | null,
-    userAddress?: string,
+    walletAddress: string,
+    metaData: any,
   ): Promise<void> {
     const transactionDataToBeSaveInDatabase = {
       transactionId,
@@ -158,7 +163,8 @@ export class EVMTransactionListener implements
       gasPrice: transactionExecutionResponse?.gasPrice,
       receipt: transactionReceipt,
       relayerAddress,
-      userAddress,
+      walletAddress,
+      metaData,
       updationTime: Date.now(),
     };
     await this.transactionDao.updateByTransactionId(
@@ -174,7 +180,8 @@ export class EVMTransactionListener implements
     relayerAddress: string,
     status: TransactionStatus,
     previousTransactionHash: string | null,
-    userAddress?: string,
+    walletAddress: string,
+    metaData: any,
   ): Promise<void> {
     const transactionDataToBeSavedInDatabase = {
       transactionId,
@@ -183,7 +190,8 @@ export class EVMTransactionListener implements
       relayerAddress,
       status,
       previousTransactionHash,
-      userAddress,
+      walletAddress,
+      metaData,
       receipt: null,
       creationTime: Date.now(),
     };
@@ -199,7 +207,8 @@ export class EVMTransactionListener implements
       transactionId,
       relayerAddress,
       previousTransactionHash,
-      userAddress,
+      walletAddress,
+      metaData,
       transactionType,
       relayerManagerName,
     } = notifyTransactionListenerParams;
@@ -224,7 +233,8 @@ export class EVMTransactionListener implements
         relayerAddress,
         transactionType,
         previousTransactionHash,
-        userAddress,
+        walletAddress,
+        metaData,
         relayerManagerName,
       });
     }
@@ -237,7 +247,8 @@ export class EVMTransactionListener implements
         relayerAddress,
         transactionType,
         previousTransactionHash,
-        userAddress,
+        walletAddress,
+        metaData,
         relayerManagerName,
       });
     }
@@ -254,7 +265,8 @@ export class EVMTransactionListener implements
       rawTransaction,
       relayerAddress,
       transactionType,
-      userAddress,
+      walletAddress,
+      metaData,
       relayerManagerName,
       previousTransactionHash,
       error,
@@ -280,7 +292,8 @@ export class EVMTransactionListener implements
       relayerAddress,
       TransactionStatus.PENDING,
       null,
-      userAddress,
+      walletAddress,
+      metaData,
     );
 
     // transaction queue is being listened by socket service to notify the client about the hash
@@ -299,7 +312,8 @@ export class EVMTransactionListener implements
       transactionHash: transactionExecutionResponse.hash,
       transactionId,
       rawTransaction: rawTransaction as EVMRawTransactionType,
-      userAddress: userAddress as string,
+      walletAddress,
+      metaData,
       relayerManagerName,
       event: SocketEventType.onTransactionHashGenerated,
     });

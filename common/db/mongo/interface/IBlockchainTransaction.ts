@@ -7,7 +7,8 @@ export interface IBlockchainTransaction {
   gasPrice: string;
   receipt: object;
   relayerAddress: string;
-  userAddress: string;
+  walletAddress: string;
+  metaData: any;
   resubmitted: boolean;
   creationTime: number;
   updationTime: number;
