@@ -124,10 +124,13 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
   }
 
   async postTransactionMined(address: string) {
-    // decrease pending count
-    const relayerData = this.relayerQueue
+    // if relayer is performing transaction then it would not be available in relayer queue
+    let relayerData = this.relayerQueue
       .list()
       .find((relayer) => relayer.address === address);
+    if (!relayerData) {
+      relayerData = this.transactionProcessingRelayerMap[address];
+    }
     if (relayerData) {
       relayerData.pendingCount -= 1;
       const balance = await this.networkService.getBalance(address);
@@ -137,9 +140,6 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
         await this.fundRelayers([address]);
       }
     }
-
-    // check if pending count is less than threshold
-    // if no, create new relayers
   }
 
   getRelayer(address: string): IEVMAccount | null {
@@ -156,7 +156,14 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
     );
     const relayer = this.transactionProcessingRelayerMap[address];
     if (relayer) {
+      // check if pending count of relayer is greater than threshold
+      // if no, then add to relayer queue
       await this.relayerQueue.push(relayer);
+      // if yes, then do not add to relayer queue
+
+      // check if size of relayer queue is less than threshold
+      // if yes, then create new relayer
+      // if no, then do not create new relayer
       delete this.transactionProcessingRelayerMap[address];
       log.info(
         `Relayer ${address} added to active relayer map on chainId: ${this.chainId}`,
