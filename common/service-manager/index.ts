@@ -120,15 +120,6 @@ const retryTransactionQueueMap: {
     });
     await transactionQueue.connect();
 
-    socketConsumerMap[chainId] = new SocketConsumer({
-      queue: transactionQueue,
-      options: {
-        chainId,
-        wssUrl: config.socketService.wssUrl,
-      },
-    });
-    transactionQueue.consume(socketConsumerMap[chainId].onMessageReceived);
-
     const retryTransactionQueue = new RetryTransactionHandlerQueue({
       chainId,
     });
@@ -222,6 +213,16 @@ const retryTransactionQueueMap: {
     retryTransactionQueueMap[chainId].consume(
       retryTransactionSerivceMap[chainId].onMessageReceived,
     );
+
+    socketConsumerMap[chainId] = new SocketConsumer({
+      queue: transactionQueue,
+      options: {
+        chainId,
+        wssUrl: config.socketService.wssUrl,
+        EVMRelayerManagerMap,
+      },
+    });
+    transactionQueue.consume(socketConsumerMap[chainId].onMessageReceived);
 
     const tokenService = new CMCTokenPriceManager(cacheService, {
       apiKey: config.tokenPrice.coinMarketCapApi,

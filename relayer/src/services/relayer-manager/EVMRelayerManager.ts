@@ -116,10 +116,38 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
   async getActiveRelayer(): Promise<IEVMAccount | null> {
     const activeRelayer = await this.relayerQueue.pop();
     if (activeRelayer) {
+      activeRelayer.pendingCount += 1;
       this.transactionProcessingRelayerMap[activeRelayer.address] = activeRelayer;
       return this.relayerMap[activeRelayer.address];
     }
     return null;
+  }
+
+  async postTransactionMined(address: string) {
+    let relayerData = this.relayerQueue
+      .list()
+      .find((relayer) => relayer.address === address);
+    if (!relayerData) {
+      // if relayer is performing transaction then it would not be available in relayer queue
+      relayerData = this.transactionProcessingRelayerMap[address];
+    }
+    if (relayerData) {
+      relayerData.pendingCount -= 1;
+      log.info(`Pending count of relayer ${address} is ${relayerData.pendingCount}`);
+      const balance = await this.networkService.getBalance(address);
+      relayerData.balance = balance;
+      log.info(`Balance of relayer ${address} is ${balance}`);
+      // if balance is less than threshold, fund the relayer
+      if (balance.lt(this.fundingBalanceThreshold)) {
+        try {
+          await this.fundRelayers([address]);
+        } catch (error) {
+          log.info(`Error while funding relayer ${address}:- ${error}`);
+        }
+      }
+    } else {
+      log.info(`Relayer ${address} is not found in relayer queue or transaction processing relayer map`);
+    }
   }
 
   getRelayer(address: string): IEVMAccount | null {
@@ -136,8 +164,18 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
     );
     const relayer = this.transactionProcessingRelayerMap[address];
     if (relayer) {
-      await this.relayerQueue.push(relayer);
+      // check if pending count of relayer is less than threshold
+      // else you wait for the transaction to be mined
+      if (relayer.pendingCount < this.pendingTransactionCountThreshold) {
+        await this.relayerQueue.push(relayer);
+      }
       delete this.transactionProcessingRelayerMap[address];
+
+      // check if size of active relayer queue is
+      // greater than or equal to the inactiveRelayerCountThreshold
+      if ((this.minRelayerCount - this.relayerQueue.size()) >= this.inactiveRelayerCountThreshold) {
+        await this.createRelayers(this.newRelayerInstanceCount);
+      }
       log.info(
         `Relayer ${address} added to active relayer map on chainId: ${this.chainId}`,
       );
