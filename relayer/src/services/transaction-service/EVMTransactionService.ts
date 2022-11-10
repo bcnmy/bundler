@@ -7,7 +7,7 @@ import { INetworkService } from '../../../../common/network';
 import { getMaxRetryCountNotificationMessage } from '../../../../common/notification';
 import { INotificationManager } from '../../../../common/notification/interface/INotificationManager';
 import { EVMRawTransactionType, TransactionType } from '../../../../common/types';
-import { getRetryTransactionCountKey, parseError } from '../../../../common/utils';
+import { getRetryTransactionCountKey } from '../../../../common/utils';
 import { config } from '../../../../config';
 import { IEVMAccount } from '../account';
 import { INonceManager } from '../nonce-manager';
@@ -108,20 +108,13 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         rawTransaction,
         account,
       );
-      if (transactionExecutionResponse instanceof Error) {
-        return {
-          success: false,
-          error: parseError(transactionExecutionResponse),
-        };
-      }
       return {
         success: true,
         transactionResponse: transactionExecutionResponse,
       };
     } catch (error: any) {
-      // TODO: should we add transactionId here ?
-      log.info(`Error while executing transaction: ${error}`);
-      const errInString = parseError(error);
+      const errInString = error.toString();
+      log.info(errInString);
       const nonceErrorMessage = config.transaction.errors.networksNonceError[this.chainId];
       const replacementFeeLowMessage = config.transaction.errors.networkResponseMessages
         .REPLACEMENT_UNDERPRICED;
@@ -185,12 +178,12 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
   }
 
   private async sendMaxRetryCountExceededSlackNotification(
-    transactionData: TransactionDataType,
+    transactionId: string,
     account: IEVMAccount,
     transactionType: TransactionType,
   ) {
     const maxRetryCountNotificationMessage = getMaxRetryCountNotificationMessage(
-      transactionData,
+      transactionId,
       account,
       transactionType,
     );
@@ -217,7 +210,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     if (retryTransactionCount > maxRetryCount) {
       // send slack notification
       await this.sendMaxRetryCountExceededSlackNotification(
-        transactionData,
+        transactionData.transactionId,
         account,
         transactionType,
       );
@@ -321,6 +314,8 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       relayerManagerName,
     } = retryTransactionData;
     try {
+      await this.cacheService.increment(getRetryTransactionCountKey(transactionId, this.chainId));
+
       // TODO // Make it generel and EIP 1559 specific and get bump up from config
       const bumpedUpGasPrice = this.gasPriceService.getBumpedUpGasPrice(
         rawTransaction.gasPrice as string,

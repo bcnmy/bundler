@@ -1,7 +1,7 @@
 {
   "slack": {
-    "token": "slacktoken",
-    "channel": "channelid"
+    "token": "xapp-1-A04ABRD7R5H-4364647310689-8d4ed9bf329b29140ab8d22253bca4b55bc450c0269e2c32aa2f0b49d8151207",
+    "channel": "C04A9077TC5"
   },
   "dataSources": {
     "mongoUrl": "mongodb://localhost:27017",

@@ -1,4 +1,4 @@
-import slackWebAPI from '@slack/web-api';
+import { WebClient } from '@slack/web-api';
 import { logger } from '../../log-config';
 import { ISlackNotificationService } from '../interface/ISlackNotificationService';
 import { PostSlackMessageParamsType, SlackNotificationObjectType } from '../types';
@@ -6,7 +6,7 @@ import { PostSlackMessageParamsType, SlackNotificationObjectType } from '../type
 const log = logger(module);
 
 export class SlackNotificationService implements ISlackNotificationService {
-  web: slackWebAPI.WebClient;
+  web: WebClient;
 
   slackToken: string;
 
@@ -16,7 +16,7 @@ export class SlackNotificationService implements ISlackNotificationService {
     this.slackToken = slackToken;
     this.slackChannel = slackChannel;
     if (this.slackChannel && this.slackToken) {
-      this.web = new slackWebAPI.WebClient(this.slackToken);
+      this.web = new WebClient(this.slackToken);
       if (!this.web) {
         throw new Error('Slack web client is not initialized. Check if slack configurations are present');
       }

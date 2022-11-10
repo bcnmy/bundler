@@ -1,8 +1,8 @@
-import slackWebAPI from '@slack/web-api';
+import { WebClient } from '@slack/web-api';
 import { PostSlackMessageParamsType, SlackNotificationObjectType } from '../types';
 
 export interface ISlackNotificationService {
-  web: slackWebAPI.WebClient;
+  web: WebClient;
   slackToken: string;
   slackChannel: string;
 
