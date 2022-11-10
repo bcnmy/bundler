@@ -124,12 +124,13 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
   }
 
   async postTransactionMined(address: string) {
+    const addressInLowerCase = address.toLowerCase();
     let relayerData = this.relayerQueue
       .list()
-      .find((relayer) => relayer.address === address);
+      .find((relayer) => relayer.address === addressInLowerCase);
     if (!relayerData) {
       // if relayer is performing transaction then it would not be available in relayer queue
-      relayerData = this.transactionProcessingRelayerMap[address];
+      relayerData = this.transactionProcessingRelayerMap[addressInLowerCase];
     }
     if (relayerData) {
       relayerData.pendingCount -= 1;
