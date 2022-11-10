@@ -1,10 +1,12 @@
-import { ethers } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 import { ICacheService } from '../../../../../common/cache';
 import { ITransactionDAO } from '../../../../../common/db';
 import { IQueue } from '../../../../../common/interface';
 import { INetworkService } from '../../../../../common/network';
 import { RetryTransactionQueueData } from '../../../../../common/queue/types';
-import { EVMRawTransactionType, TransactionQueueMessageType, TransactionType } from '../../../../../common/types';
+import {
+  EVMRawTransactionType, TransactionQueueMessageType, TransactionStatus, TransactionType,
+} from '../../../../../common/types';
 import { IEVMAccount } from '../../account';
 
 export type EVMTransactionListenerParamsType = {
@@ -24,12 +26,10 @@ export type NotifyTransactionListenerParamsType = {
   transactionReceipt?: ethers.providers.TransactionReceipt,
   relayerAddress: string,
   transactionType: TransactionType,
-  previousTransactionHash: string | null,
+  previousTransactionHash?: string,
   rawTransaction?: EVMRawTransactionType,
   walletAddress: string,
-  metaData?: {
-    dappAPIKey: string
-  },
+  metaData?: any,
   relayerManagerName: string,
   error?: string,
 };
@@ -41,3 +41,14 @@ export type TransactionListenerNotifyReturnType = {
 
 export type OnTransactionSuccessParamsType = NotifyTransactionListenerParamsType;
 export type OnTransactionFailureParamsType = NotifyTransactionListenerParamsType;
+
+export type TransactionDataToBeUpdatedInDatabaseType = {
+  transactionHash?: string;
+  previousTransactionHash?: string;
+  status: TransactionStatus;
+  rawTransaction?: ethers.providers.TransactionResponse;
+  gasPrice?: BigNumber;
+  receipt?: object;
+  relayerAddress?: string;
+  updationTime?: number;
+};

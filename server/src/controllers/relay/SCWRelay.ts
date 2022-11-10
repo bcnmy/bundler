@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
-import { routeTransactionToRelayerMap } from '../../../../common/service-manager';
-import { isError, TransactionType } from '../../../../common/types';
+import { routeTransactionToRelayerMap, transactionDao } from '../../../../common/service-manager';
+import { isError, TransactionStatus, TransactionType } from '../../../../common/types';
 import { generateTransactionId } from '../../../../common/utils';
 import { config } from '../../../../config';
 
@@ -30,6 +30,17 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
         walletAddress: walletInfo.address,
         transactionId,
       });
+
+    transactionDao.save(chainId, {
+      transactionId,
+      transactionType: TransactionType.AA,
+      status: TransactionStatus.PENDING,
+      chainId,
+      walletAddress: walletInfo.address,
+      resubmitted: false,
+      creationTime: Date.now(),
+    });
+
     if (isError(response)) {
       return res.status(400).json({
         code: 400,

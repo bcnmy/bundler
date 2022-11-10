@@ -231,7 +231,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           transactionId: transactionId as string,
           relayerAddress,
           transactionType,
-          previousTransactionHash: null,
+          previousTransactionHash: undefined,
           rawTransaction,
           walletAddress,
           metaData,
@@ -253,7 +253,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         transactionId: transactionId as string,
         relayerAddress,
         transactionType,
-        previousTransactionHash: null,
+        previousTransactionHash: undefined,
         rawTransaction,
         walletAddress,
         metaData,
@@ -287,7 +287,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     transactionType: TransactionType,
   ): Promise<SuccessTransactionResponseType | ErrorTransactionResponseType> {
     const {
-      transactionHash = null,
+      transactionHash,
       transactionId,
       rawTransaction,
       walletAddress,
