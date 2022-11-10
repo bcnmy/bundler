@@ -7,7 +7,7 @@ import { INetworkService } from '../../../../common/network';
 import { getMaxRetryCountNotificationMessage } from '../../../../common/notification';
 import { INotificationManager } from '../../../../common/notification/interface/INotificationManager';
 import { EVMRawTransactionType, TransactionType } from '../../../../common/types';
-import { getRetryTransactionCountKey } from '../../../../common/utils';
+import { getRetryTransactionCountKey, parseError } from '../../../../common/utils';
 import { config } from '../../../../config';
 import { IEVMAccount } from '../account';
 import { INonceManager } from '../nonce-manager';
@@ -99,7 +99,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     return { ...response, gasPrice: ethers.utils.hexlify(Number(gasPrice)) };
   }
 
-  private async executeTransaction(
+  async executeTransaction(
     executeTransactionParams: ExecuteTransactionParamsType,
   ): Promise<ExecuteTransactionResponseType> {
     const { rawTransaction, account } = executeTransactionParams;
@@ -108,13 +108,20 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         rawTransaction,
         account,
       );
+      if (transactionExecutionResponse instanceof Error) {
+        return {
+          success: false,
+          error: parseError(transactionExecutionResponse),
+        };
+      }
       return {
         success: true,
         transactionResponse: transactionExecutionResponse,
       };
     } catch (error: any) {
-      const errInString = error.toString();
-      log.info(errInString);
+      // TODO: should we add transactionId here ?
+      log.info(`Error while executing transaction: ${error}`);
+      const errInString = parseError(error);
       const nonceErrorMessage = config.transaction.errors.networksNonceError[this.chainId];
       const replacementFeeLowMessage = config.transaction.errors.networkResponseMessages
         .REPLACEMENT_UNDERPRICED;

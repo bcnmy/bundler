@@ -174,6 +174,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
   private async saveInitialTransactionDataToDatabase(
     transactionExecutionResponse: ethers.providers.TransactionResponse,
     transactionId: string,
+    transactionType: string,
     relayerAddress: string,
     status: TransactionStatus,
     previousTransactionHash: string | null,
@@ -182,6 +183,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
   ): Promise<void> {
     const transactionDataToBeSavedInDatabase = {
       transactionId,
+      transactionType,
       transactionHash: transactionExecutionResponse.hash,
       rawTransaction: transactionExecutionResponse,
       relayerAddress,
@@ -284,6 +286,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
     this.saveInitialTransactionDataToDatabase(
       transactionExecutionResponse,
       transactionId,
+      transactionType,
       relayerAddress,
       TransactionStatus.PENDING,
       null,
