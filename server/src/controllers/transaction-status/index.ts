@@ -34,6 +34,10 @@ export const transactionStatusApi = async (req: Request, res: Response) => {
         },
       });
     }
+    return res.status(404).json({
+      code: 404,
+      error: 'Transaction not found',
+    });
   } catch (error) {
     log.error(`Error in transaction status ${parseError(error)}`);
     return res.status(500).json({
