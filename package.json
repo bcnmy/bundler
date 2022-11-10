@@ -10,6 +10,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@slack/web-api": "^6.8.0",
     "@types/crypto-js": "^4.1.1",
     "amqplib": "^0.10.3",
     "async-mutex": "^0.4.0",

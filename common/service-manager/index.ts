@@ -16,6 +16,8 @@ import { IQueue } from '../interface';
 import { logger } from '../log-config';
 import { relayerManagerTransactionTypeNameMap } from '../maps';
 import { EVMNetworkService } from '../network';
+import { NotificationManager } from '../notification';
+import { SlackNotificationService } from '../notification/slack/SlackNotificationService';
 import {
   AATransactionQueue,
   RetryTransactionHandlerQueue,
@@ -80,6 +82,12 @@ const retryTransactionQueueMap: {
 (async () => {
   await dbInstance.connect();
   await cacheService.connect();
+
+  const slackNotificationService = new SlackNotificationService(
+    config.slack.token,
+    config.slack.channel,
+  );
+  const notificationManager = new NotificationManager(slackNotificationService);
 
   for (const chainId of supportedNetworks) {
     routeTransactionToRelayerMap[chainId] = {};
@@ -154,6 +162,7 @@ const retryTransactionQueueMap: {
       gasPriceService,
       transactionDao,
       cacheService,
+      notificationManager,
       options: {
         chainId,
       },
