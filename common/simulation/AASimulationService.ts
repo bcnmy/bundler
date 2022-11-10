@@ -33,6 +33,11 @@ export class AASimulationService {
     } catch (error: any) {
       log.info(`AA Simulation failed: ${JSON.stringify(error)}`);
       isSimulationSuccessful = false;
+      return {
+        isSimulationSuccessful,
+        gasLimitFromSimulation: 0,
+        msgFromSimulation: parseError(error),
+      };
     }
 
     const estimatedGasForUserOpFromEthers = await this.networkService.estimateGas(
