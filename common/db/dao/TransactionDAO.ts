@@ -19,7 +19,7 @@ export class TransactionDAO implements ITransactionDAO {
   ): Promise<void> {
     await this._db.getBlockchainTransaction(chainId).updateOne({
       transactionId: id,
-    }).update(data);
+    }, data);
   }
 
   async getByTransactionId(chainId: number, id: string): Promise<IBlockchainTransaction[] | null> {

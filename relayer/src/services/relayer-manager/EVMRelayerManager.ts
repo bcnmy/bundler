@@ -123,7 +123,8 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
     return null;
   }
 
-  async postTransactionMined(address: string) {
+  async postTransactionMined(relayerAddress: string) {
+    const address = relayerAddress.toLowerCase();
     let relayerData = this.relayerQueue
       .list()
       .find((relayer) => relayer.address === address);
@@ -150,7 +151,8 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
     }
   }
 
-  getRelayer(address: string): IEVMAccount | null {
+  getRelayer(relayerAddress: string): IEVMAccount | null {
+    const address = relayerAddress.toLowerCase();
     const relayer = this.relayerMap[address];
     if (relayer) {
       return relayer;
@@ -158,7 +160,8 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
     return null;
   }
 
-  async addActiveRelayer(address: string): Promise<void> {
+  async addActiveRelayer(relayerAddress: string): Promise<void> {
+    const address = relayerAddress.toLowerCase();
     log.info(
       `Adding relayer: ${address} to active relayer map on chainId: ${this.chainId}`,
     );
@@ -265,7 +268,8 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
     return relayersAddressList;
   }
 
-  hasBalanceBelowThreshold(address: string): boolean {
+  hasBalanceBelowThreshold(relayerAddress: string): boolean {
+    const address = relayerAddress.toLowerCase();
     const relayerData = this.relayerQueue
       .list()
       .find((relayer) => relayer.address === address);
@@ -283,7 +287,8 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
 
   async fundRelayers(addressList: string[]): Promise<any> {
     log.info(`Waiting for lock to fund relayers on chainId: ${this.chainId}`);
-    for (const address of addressList) {
+    for (const relayerAddress of addressList) {
+      const address = relayerAddress.toLowerCase();
       const release = await fundRelayerMutex.acquire();
       if (!this.hasBalanceBelowThreshold(address)) {
         log.info(
