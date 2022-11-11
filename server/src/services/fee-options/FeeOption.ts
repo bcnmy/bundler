@@ -1,10 +1,11 @@
 /* eslint-disable no-await-in-loop */
 import Big from 'big.js';
-import { config } from '../../../../config';
-import { GasPriceType } from '../../../../common/gas-price/types';
-import { FeeOptionResponseType } from './types';
-import { IGasPrice } from '../../../../common/gas-price';
 import { ICacheService } from '../../../../common/cache';
+import { IGasPrice } from '../../../../common/gas-price';
+import { GasPriceType } from '../../../../common/gas-price/types';
+import { getNetworkPriceDataKey } from '../../../../common/utils';
+import { config } from '../../../../config';
+import { FeeOptionResponseType } from './types';
 
 const convertGasPriceToUSD = async (
   nativeChainId: number,
@@ -41,10 +42,6 @@ export class FeeOption {
     this.chainId = options.chainId;
   }
 
-  private static getNetworkPriceDataKey() {
-    return 'NETWORK_PRICE_DATA';
-  }
-
   async get() {
     try {
       const response: Array<FeeOptionResponseType> = [];
@@ -57,7 +54,7 @@ export class FeeOption {
       const gasPrice = Number(gasPriceInString);
 
       const networkPriceDataInString = await this.cacheService.get(
-        FeeOption.getNetworkPriceDataKey(),
+        getNetworkPriceDataKey(),
       );
       let networkPriceData;
       if (!networkPriceDataInString) {
