@@ -113,6 +113,10 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
     this.nonceManager = nonceManager;
   }
 
+  /**
+   * Fetches active relayer from the queue
+   * @returns An active relayer instance
+   */
   async getActiveRelayer(): Promise<IEVMAccount | null> {
     const activeRelayer = await this.relayerQueue.pop();
     if (activeRelayer) {
@@ -123,7 +127,12 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
     return null;
   }
 
-  async postTransactionMined(relayerAddress: string) {
+  /**
+   * Once a transaction is mined, the method decreases relayer's pending count,
+   * updates the balance and checks if funding is required for that relayer
+   * @param relayerAddress
+   */
+  async postTransactionMined(relayerAddress: string): Promise<void> {
     const address = relayerAddress.toLowerCase();
     let relayerData = this.relayerQueue
       .list()
@@ -134,23 +143,28 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
     }
     if (relayerData) {
       relayerData.pendingCount -= 1;
-      log.info(`Pending count of relayer ${address} is ${relayerData.pendingCount}`);
+      log.info(`Pending count of relayer ${address} is ${relayerData.pendingCount} on chainId: ${this.chainId}`);
       const balance = await this.networkService.getBalance(address);
       relayerData.balance = balance;
-      log.info(`Balance of relayer ${address} is ${balance}`);
+      log.info(`Balance of relayer ${address} is ${balance} on chainId: ${this.chainId}`);
       // if balance is less than threshold, fund the relayer
       if (balance.lt(this.fundingBalanceThreshold)) {
         try {
           await this.fundRelayers([address]);
         } catch (error) {
-          log.info(`Error while funding relayer ${address}:- ${error}`);
+          log.info(`Error while funding relayer ${address}:- ${error} on chainId: ${this.chainId}`);
         }
       }
     } else {
-      log.info(`Relayer ${address} is not found in relayer queue or transaction processing relayer map`);
+      log.info(`Relayer ${address} is not found in relayer queue or transaction processing relayer map on chainId: ${this.chainId}`);
     }
   }
 
+  /**
+   * Method fetches the instance of a relayer
+   * @param relayerAddress
+   * @returns Instance of a relayer
+   */
   getRelayer(relayerAddress: string): IEVMAccount | null {
     const address = relayerAddress.toLowerCase();
     const relayer = this.relayerMap[address];
@@ -160,6 +174,10 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
     return null;
   }
 
+  /**
+   * Method adds active relayer active relater queue
+   * @param relayerAddress
+   */
   async addActiveRelayer(relayerAddress: string): Promise<void> {
     const address = relayerAddress.toLowerCase();
     log.info(
@@ -189,7 +207,11 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
     }
   }
 
-  // get total number of relayers
+  /**
+   * Methods gets count of active relayers or total relayers
+   * @param active true if to get count of active relayers
+   * @returns count of active relayers or total relayers
+   */
   getRelayersCount(active: boolean = false): number {
     if (active) {
       return this.relayerQueue.size();
@@ -200,7 +222,11 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
     );
   }
 
-  // return list of created list of relayers address
+  /**
+   * Method creates relayers at run time basis on config values
+   * @param numberOfRelayers number of relayers to create, default set to value set in config
+   * @returns List of addresses of newly created relayers
+   */
   async createRelayers(
     numberOfRelayers: number = this.minRelayerCount,
   ): Promise<string[]> {
@@ -268,6 +294,11 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
     return relayersAddressList;
   }
 
+  /**
+   * Method checks if balance of relayer is below threshold or not
+   * @param relayerAddress
+   * @returns returns true or false basis on balance of relayer
+   */
   hasBalanceBelowThreshold(relayerAddress: string): boolean {
     const address = relayerAddress.toLowerCase();
     const relayerData = this.relayerQueue
@@ -285,6 +316,10 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
     return false;
   }
 
+  /**
+   * Method funds the relayers basis on config values
+   * @param addressList List of relayers to fund
+   */
   async fundRelayers(addressList: string[]): Promise<any> {
     log.info(`Waiting for lock to fund relayers on chainId: ${this.chainId}`);
     for (const relayerAddress of addressList) {
@@ -346,34 +381,67 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
     }
   }
 
+  /**
+   * Method sets minimum relayer count of the relayer manager
+   * @param minRelayerCount
+   */
   setMinRelayerCount(minRelayerCount: number) {
     this.minRelayerCount = minRelayerCount;
   }
 
+  /**
+   * Method gets minimum relayer count of the relayer manager
+   * @returns minimum relayer count
+   */
   getMinRelayerCount(): number {
     return this.minRelayerCount;
   }
 
+  /**
+   * Method sets maximum relayer count of the relayer manager
+   * @param maxRelayerCount maximum relayer count
+   */
   setMaxRelayerCount(maxRelayerCount: number) {
     this.maxRelayerCount = maxRelayerCount;
   }
 
+  /**
+   * Method gets maximum relayer count of the relayer manager
+   * @returns  maximum relayer count
+   */
   getMaxRelayerCount(): number {
     return this.maxRelayerCount;
   }
 
+  /**
+   * Method sets threshold for inactive relayer count below which relayers are scaled
+   * @param threshold
+   */
   setInactiveRelayerCountThreshold(threshold: number) {
     this.inactiveRelayerCountThreshold = threshold;
   }
 
+  /**
+   * Method gets threshold for inactive relayer count below which relayers are scaled
+   */
   getInactiveRelayerCountThreshold() {
     return this.inactiveRelayerCountThreshold;
   }
 
+  /**
+   * Methods sets threshold for pending transaction count
+   * for a single relayer above which relayer is marked as inactive
+   * @param threshold
+   */
   setPendingTransactionCountThreshold(threshold: number) {
     this.pendingTransactionCountThreshold = threshold;
   }
 
+  /**
+   * Methods gets threshold for pending transaction count
+   * for a single relayer above which relayer is marked as inactive
+   * @returns
+   */
   getPendingTransactionCountThreshold() {
     return this.pendingTransactionCountThreshold;
   }
