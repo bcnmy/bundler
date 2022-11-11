@@ -295,10 +295,12 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       relayerManagerName,
     } = retryTransactionData;
     try {
+      await this.cacheService.increment(getRetryTransactionCountKey(transactionId, this.chainId));
+
       // TODO // Make it generel and EIP 1559 specific and get bump up from config
       const bumpedUpGasPrice = this.gasPriceService.getBumpedUpGasPrice(
         rawTransaction.gasPrice as string,
-        50,
+        config.transaction.bumpGasPriceMultiplier[this.chainId],
       );
 
       rawTransaction.gasPrice = bumpedUpGasPrice as string;

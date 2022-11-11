@@ -45,10 +45,28 @@ export type OnTransactionFailureParamsType = NotifyTransactionListenerParamsType
 export type TransactionDataToBeUpdatedInDatabaseType = {
   transactionHash?: string;
   previousTransactionHash?: string;
-  status: TransactionStatus;
+  status?: TransactionStatus;
   rawTransaction?: ethers.providers.TransactionResponse;
   gasPrice?: BigNumber;
   receipt?: object;
+  resubmitted?: boolean;
   relayerAddress?: string;
   updationTime?: number;
+};
+
+export type NewTransactionDataToBeSavedInDatabaseType = {
+  transactionId: string,
+  transactionType: TransactionType,
+  transactionHash: string,
+  previousTransactionHash?: string,
+  status: TransactionStatus,
+  rawTransaction: ethers.providers.TransactionResponse,
+  chainId: number,
+  gasPrice?: BigNumber,
+  relayerAddress: string,
+  walletAddress: string,
+  metaData: any,
+  resubmitted: boolean,
+  creationTime: number,
+  updationTime: number,
 };

@@ -13,6 +13,7 @@ import { ITransactionPublisher } from '../transaction-publisher';
 import { ITransactionListener } from './interface/ITransactionListener';
 import {
   EVMTransactionListenerParamsType,
+  NewTransactionDataToBeSavedInDatabaseType,
   NotifyTransactionListenerParamsType,
   OnTransactionFailureParamsType,
   OnTransactionSuccessParamsType,
@@ -137,6 +138,28 @@ ITransactionPublisher<TransactionQueueMessageType> {
     );
   }
 
+  private async saveNewTransactionDataToDatabase(
+    newTransactionDataToBeSavedInDatabase: NewTransactionDataToBeSavedInDatabaseType,
+  ): Promise<void> {
+    await this.transactionDao.save(
+      this.chainId,
+      newTransactionDataToBeSavedInDatabase,
+    );
+  }
+
+  private async updateTransactionDataToDatabaseByTransactionIdAndTransactionHash(
+    transactionDataToBeUpdatedInDatabase: TransactionDataToBeUpdatedInDatabaseType,
+    transactionId: string,
+    transactionHash: string,
+  ): Promise<void> {
+    await this.transactionDao.updateByTransactionIdAndTransactionHash(
+      this.chainId,
+      transactionId,
+      transactionHash,
+      transactionDataToBeUpdatedInDatabase,
+    );
+  }
+
   private async waitForTransaction(
     notifyTransactionListenerParams: NotifyTransactionListenerParamsType,
   ) {
@@ -223,15 +246,40 @@ ITransactionPublisher<TransactionQueueMessageType> {
       };
     }
 
+    if (!previousTransactionHash) {
     // Save initial transaction data to database
-    this.updateTransactionDataToDatabase({
-      transactionHash: transactionExecutionResponse.hash,
-      rawTransaction: transactionExecutionResponse,
-      relayerAddress,
-      gasPrice: transactionExecutionResponse.gasPrice,
-      status: TransactionStatus.PENDING,
-      updationTime: Date.now(),
-    }, transactionId);
+      this.updateTransactionDataToDatabase({
+        transactionHash: transactionExecutionResponse.hash,
+        rawTransaction: transactionExecutionResponse,
+        relayerAddress,
+        previousTransactionHash,
+        gasPrice: transactionExecutionResponse.gasPrice,
+        status: TransactionStatus.PENDING,
+        updationTime: Date.now(),
+      }, transactionId);
+    } else {
+      this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
+        resubmitted: true,
+        status: TransactionStatus.DROPPED,
+        updationTime: Date.now(),
+      }, transactionId, previousTransactionHash);
+      this.saveNewTransactionDataToDatabase({
+        transactionId,
+        transactionType,
+        transactionHash: transactionExecutionResponse.hash,
+        previousTransactionHash,
+        status: TransactionStatus.PENDING,
+        rawTransaction: transactionExecutionResponse,
+        chainId: this.chainId,
+        gasPrice: transactionExecutionResponse.gasPrice,
+        relayerAddress,
+        walletAddress,
+        metaData,
+        resubmitted: false,
+        creationTime: Date.now(),
+        updationTime: Date.now(),
+      });
+    }
 
     // transaction queue is being listened by socket service to notify the client about the hash
     await this.publishToTransactionQueue({
