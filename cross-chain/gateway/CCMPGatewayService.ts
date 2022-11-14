@@ -6,10 +6,11 @@ import { TransactionType } from '../../common/types';
 import type { CrossChainTransactionMessageType, CCMPMessage } from '../../common/types';
 import { logger } from '../../common/log-config';
 import type { EVMNetworkService } from '../../common/network';
+import type { ICCMPGatewayService } from './interfaces/ICCMPGatewayService';
 
 const log = logger(module);
 
-export class CCMPGatewayService {
+export class CCMPGatewayService implements ICCMPGatewayService {
   private ccmpGateway: Contract;
 
   private interface: Interface;
@@ -52,7 +53,9 @@ export class CCMPGatewayService {
         verificationData,
         false,
       );
-      log.info(`Estimated gas for CCMP Gateway receiveMessage transaction: ${estimate} for message ${message.hash}`);
+      log.info(
+        `Estimated gas for CCMP Gateway receiveMessage transaction: ${estimate} for message ${message.hash}`,
+      );
       return {
         estimate,
       };
@@ -70,7 +73,10 @@ export class CCMPGatewayService {
     }
   }
 
-  buildReceiveMessageCalldata(message: CCMPMessage, verificationData: string | Uint8Array): string {
+  private buildReceiveMessageCalldata(
+    message: CCMPMessage,
+    verificationData: string | Uint8Array,
+  ): string {
     return this.interface.encodeFunctionData('receiveMessage', [message, verificationData, false]);
   }
 

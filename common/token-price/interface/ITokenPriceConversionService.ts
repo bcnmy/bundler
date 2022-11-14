@@ -1,4 +1,4 @@
-import type { BigNumberish } from 'ethers';
+import type { BigNumber } from 'ethers';
 import { TokenAmount } from '../types';
 
 export interface ITokenPriceConversionService {
@@ -7,5 +7,6 @@ export interface ITokenPriceConversionService {
     amounts: TokenAmount[],
     chainId: number,
     tokenSymbol: string
-  ) => Promise<BigNumberish>;
+  ) => Promise<BigNumber>;
+  getNativeTokenSymbol(chainId: number): string;
 }

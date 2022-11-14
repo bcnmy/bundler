@@ -61,19 +61,25 @@ export class WormholeRouterService implements ICCMPRouterService {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars, class-methods-use-this
+  async estimateVerificationFeePaymentTxGas(txHash: string, message: CCMPMessage): Promise<number> {
+    // No need to do anything here, wormhole messages are free :P
+    return 0;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, class-methods-use-this
   async handlePreVerification(txHash: string, message: CCMPMessage): Promise<void> {
     // No need to do anything here, wormhole messages are free :P
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars, class-methods-use-this
-  async estimateVerificationCost(
+  async estimateVerificationFee(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     txHash: string,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     message: CCMPMessage,
   ) {
     return {
-      amount: 0,
+      amount: '0',
       tokenSymbol: 'ETH',
     };
   }

@@ -9,18 +9,18 @@ import {
 } from '../../common/types';
 import { logger } from '../../common/log-config';
 import { CCMPTaskManager } from '../task-manager';
-import type { IndexerService } from '../../common/indexer/IndexerService';
 import type { routeTransactionToRelayerMap as globalRouteTransactionToRelayerMap } from '../../common/service-manager';
 import type { ICCMPRouterService } from '../router-service/interfaces';
 import type { ICrossChainTransactionDAO } from '../../common/db';
-import type { ICCMPService, IHandler } from '../task-manager/types';
+import type { ICrossChainTransactionHandlerService, IHandler } from '../task-manager/types';
 import type { CrossChainRetryHandlerQueue } from '../../common/queue/CrossChainRetryHandlerQueue';
 import type { CCMPGatewayService } from '../gateway';
-import type { ISDKBackendService } from '../../common/sdk-backend-service/types';
+import type { IIndexerService } from '../../common/indexer/types';
+import type { ICrossChainGasEstimationService } from '../gas-estimation/interfaces/ICrossChainGasEstimationService';
 
 const log = logger(module);
 
-export class CCMPService implements ICCMPService {
+export class CrossChainTransactionHandlerService implements ICrossChainTransactionHandlerService {
   private readonly eventName = 'CCMPMessageRouted';
 
   private readonly webHookEndpoint: string;
@@ -32,8 +32,11 @@ export class CCMPService implements ICCMPService {
     private readonly crossChainTransactionDAO: ICrossChainTransactionDAO,
     private readonly crossChainRetryTransactionQueue: CrossChainRetryHandlerQueue,
     private readonly ccmpGatewayService: CCMPGatewayService,
-    private readonly indexerService: IndexerService,
-    private readonly sdkBackendService: ISDKBackendService,
+    private readonly indexerService: IIndexerService,
+    private readonly crossChainGasEstimationServiceMap: Record<
+    number,
+    ICrossChainGasEstimationService
+    >,
   ) {
     this.webHookEndpoint = config.ccmp.webhookEndpoint;
   }
@@ -126,6 +129,40 @@ export class CCMPService implements ICCMPService {
         },
       };
     }
+
+    // Check Gas Fee Payment
+    // Get Estimated Gas Fee
+    log.info(`Checking gas fee payment for message ${message.hash}`);
+    const toChainId = parseInt(message.destinationChainId.toString(), 10);
+    const gasEstimationService = this.crossChainGasEstimationServiceMap[toChainId];
+    const gasFeeEstimate = await gasEstimationService.estimateCrossChainFee(sourceTxHash, message);
+    log.info(`Gas fee estimate for message ${message.hash} is ${gasFeeEstimate}`);
+    // Check how much is actually paid
+    const gasFeePaid = (
+      await this.ccmpGatewayService.getGasPaidByMessageHash(message.hash, [
+        message.gasFeePaymentArgs.feeTokenAddress,
+      ])
+    ).get(message.gasFeePaymentArgs.feeTokenAddress);
+    if (!gasFeePaid) {
+      throw new Error(`Gas fee paid not found for message ${message.hash}`);
+    }
+    // Compare
+    if (gasFeePaid.lt(gasFeeEstimate.amount)) {
+      log.info(
+        `Gas fee paid for message ${message.hash} is ${gasFeePaid} which is less than the estimated gas fee ${gasFeeEstimate.amount}`,
+      );
+      return {
+        ...data,
+        status: CrossChainTransactionError.INSUFFICIENT_GAS_FEE,
+        context: {
+          paid: gasFeePaid.toString(),
+          required: gasFeeEstimate.amount.toString(),
+        },
+      };
+    }
+    log.info(
+      `Gas fee paid for message ${message.hash} is ${gasFeePaid} which is greater than the estimated gas fee ${gasFeeEstimate.amount}`,
+    );
 
     return {
       ...data,

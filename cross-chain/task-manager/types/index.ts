@@ -29,6 +29,6 @@ export interface ICCMPTaskManager {
   ) => Promise<ICCMPTaskManager>;
 }
 
-export interface ICCMPService {
+export interface ICrossChainTransactionHandlerService {
   processTransaction(message: CCMPMessage, sourceChainTxHash: string): Promise<void>;
 }

@@ -34,16 +34,24 @@ export class HyperlaneRouterService implements ICCMPRouterService {
   }
 
   // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
-  estimateVerificationCost(
+  async estimateVerificationFeePaymentTxGas(txHash: string, message: CCMPMessage): Promise<number> {
+    // TODO: Implement
+    throw new Error('Method not implemented.');
+  }
+
+  // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
+  estimateVerificationFee(
     // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
     txHash: string,
     // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
     message: CCMPMessage,
-  ): Promise<{ tokenSymbol: string; amount: BigNumberish }> {
+  ): Promise<any> {
+    // TODO: Implement
     throw new Error('Method not implemented.');
   }
 
   async handlePreVerification(txHash: string, message: CCMPMessage): Promise<void> {
+    // TODO: Implement fee payment mechanism
     log.info(
       `Waiting for transaction ${txHash} with message ${message.hash} to be confirmed by Hyperlane...`,
     );

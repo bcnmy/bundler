@@ -27,7 +27,7 @@ export class TokenPriceConversionService implements ITokenPriceConversionService
     );
   }
 
-  private getNativeTokenSymbol(chainId: number): string {
+  getNativeTokenSymbol(chainId: number): string {
     log.info(`Getting native token symbol for chainId: ${chainId}`);
     const result = Object.entries(this.networkSymbolCategories).find(
       ([, networkIds]) => networkIds.includes(chainId),

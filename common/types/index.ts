@@ -169,12 +169,10 @@ export type SymbolMapByChainIdType = {
   };
 };
 
-type PromiseOrValue<T> = T | Promise<T>;
-
 export type GasFeePaymentArgsStruct = {
-  feeTokenAddress: PromiseOrValue<string>;
-  feeAmount: PromiseOrValue<BigNumberish>;
-  relayer: PromiseOrValue<string>;
+  feeTokenAddress: string;
+  feeAmount: BigNumberish;
+  relayer: string;
 };
 
 export type CCMPMessagePayload = {

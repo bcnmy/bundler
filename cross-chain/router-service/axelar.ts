@@ -9,7 +9,12 @@ export class AxelarRouterService implements ICCMPRouterService {
   ) {}
 
   // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
-  estimateVerificationCost(txHash: string, message: CCMPMessage): Promise<any> {
+  estimateVerificationFeePaymentTxGas(txHash: string, message: CCMPMessage): Promise<number> {
+    throw new Error('Method not implemented.');
+  }
+
+  // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
+  estimateVerificationFee(txHash: string, message: CCMPMessage): Promise<any> {
     throw new Error('Method not implemented.');
   }
 

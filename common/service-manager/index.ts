@@ -14,7 +14,7 @@ import { EVMRetryTransactionService } from '../../relayer/src/services/retry-tra
 import { EVMTransactionListener } from '../../relayer/src/services/transaction-listener';
 import { EVMTransactionService } from '../../relayer/src/services/transaction-service';
 import { FeeOption } from '../../server/src/services';
-import { CCMPService } from '../../cross-chain';
+import { CrossChainTransactionHandlerService } from '../../cross-chain';
 import {
   AxelarRouterService,
   HyperlaneRouterService,
@@ -54,6 +54,8 @@ import { CrossChainRetryTransactionService } from '../../cross-chain/retry-trans
 import { IndexerService } from '../indexer/IndexerService';
 import { CCMPGatewayService } from '../../cross-chain/gateway';
 import { SDKBackendService } from '../sdk-backend-service';
+import type { ICrossChainGasEstimationService } from '../../cross-chain/gas-estimation/interfaces/ICrossChainGasEstimationService';
+import { CrossChainGasEstimationService } from '../../cross-chain/gas-estimation';
 
 const log = logger(module);
 
@@ -80,7 +82,7 @@ const scwSimulationServiceMap: {
 const entryPointMap: EntryPointMapType = {};
 
 const ccmpServiceMap: {
-  [chainId: number]: CCMPService;
+  [chainId: number]: CrossChainTransactionHandlerService;
 } = {};
 
 const ccmpRouterMap: {
@@ -91,6 +93,10 @@ const ccmpRouterMap: {
 
 const ccmpGatewayServiceMap: {
   [chainId: number]: CCMPGatewayService;
+} = {};
+
+const crossChainGasEstimationServiceMap: {
+  [chainId: number]: ICrossChainGasEstimationService;
 } = {};
 
 const indexerService = new IndexerService(config.indexer.baseUrl);
@@ -439,7 +445,16 @@ const networkServiceMap: {
           }
         }
 
-        ccmpServiceMap[chainId] = new CCMPService(
+        crossChainGasEstimationServiceMap[chainId] = new CrossChainGasEstimationService(
+          chainId,
+          sdkBackendService,
+          tokenPriceConversionService,
+          ccmpRouterMap[chainId],
+          gasPriceService,
+          config.tokenPrice.symbolMapByChainId[chainId],
+        );
+
+        ccmpServiceMap[chainId] = new CrossChainTransactionHandlerService(
           chainId,
           ccmpRouterMap[chainId],
           routeTransactionToRelayerMap,
@@ -447,7 +462,7 @@ const networkServiceMap: {
           crossChainRetryTransactionQueueMap[chainId],
           ccmpGatewayServiceMap[chainId],
           indexerService,
-          sdkBackendService,
+          crossChainGasEstimationServiceMap,
         );
 
         ccmpServiceInitPromises.push(ccmpServiceMap[chainId].init());

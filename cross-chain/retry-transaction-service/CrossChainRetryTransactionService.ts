@@ -2,7 +2,7 @@ import { ConsumeMessage } from 'amqplib';
 import { IQueue } from '../../common/interface';
 import { logger } from '../../common/log-config';
 import { CrossChainRetryQueueData } from '../../common/queue/types';
-import { ICCMPService } from '../task-manager/types';
+import { ICrossChainTransactionHandlerService } from '../task-manager/types';
 import { IRetryTransactionService } from './interface/IRetryTransactionService';
 
 const log = logger(module);
@@ -10,7 +10,7 @@ export class CrossChainRetryTransactionService implements IRetryTransactionServi
   constructor(
     public readonly chainId: number,
     public readonly queue: IQueue<CrossChainRetryQueueData>,
-    public readonly ccmpService: ICCMPService,
+    public readonly ccmpService: ICrossChainTransactionHandlerService,
   ) {}
 
   onMessageReceived = async (msg?: ConsumeMessage) => {
