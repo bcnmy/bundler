@@ -1,6 +1,6 @@
 import { WebClient } from '@slack/web-api';
 import { logger } from '../../log-config';
-import { ISlackNotificationService } from '../interface/ISlackNotificationService';
+import { ISlackNotificationService } from '../interface';
 import { PostSlackMessageParamsType, SlackNotificationObjectType } from '../types';
 
 const log = logger(module);

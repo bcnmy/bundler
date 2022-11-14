@@ -5,7 +5,7 @@ import { IGasPrice } from '../../../../common/gas-price';
 import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
 import { getMaxRetryCountNotificationMessage } from '../../../../common/notification';
-import { INotificationManager } from '../../../../common/notification/interface/INotificationManager';
+import { INotificationManager } from '../../../../common/notification/interface';
 import { EVMRawTransactionType, TransactionType } from '../../../../common/types';
 import { getRetryTransactionCountKey, parseError } from '../../../../common/utils';
 import { config } from '../../../../config';

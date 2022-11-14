@@ -1,5 +1,4 @@
-import { INotificationManager } from './interface/INotificationManager';
-import { ISlackNotificationService } from './interface/ISlackNotificationService';
+import { INotificationManager, ISlackNotificationService } from './interface';
 import { SlackNotificationDataType, SlackNotificationObjectType } from './types';
 
 export class NotificationManager implements INotificationManager {
