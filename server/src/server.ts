@@ -1,7 +1,10 @@
 import http from 'http';
+import { logger } from '../../common/log-config';
 import app from './app';
 
 let server: any;
+
+const log = logger(module);
 
 function normalizePort(val: string) {
   const portNumber = parseInt(val, 10);
@@ -36,10 +39,10 @@ function onError(error: any) {
   // handle specific listen errors with friendly messages
   switch (error.code) {
     case 'EACCES':
-      console.error(`${bind} requires elevated privileges`);
+      log.error(`${bind} requires elevated privileges`);
       return process.exit(1);
     case 'EADDRINUSE':
-      console.error(`${bind} is already in use`);
+      log.error(`${bind} is already in use`);
       return process.exit(1);
     default:
       throw error;
@@ -55,7 +58,7 @@ function onListening() {
   const bind = typeof addr === 'string'
     ? `pipe ${addr}`
     : `port ${addr.port}`;
-  console.log(`App listening on ${bind}`);
+  log.info(`App listening on ${bind}`);
 }
 
 const init = async () => {
@@ -73,7 +76,7 @@ const init = async () => {
       server.on('listening', () => onListening());
     } catch (error) {
       server.on('error', onError(error));
-      console.log(error);
+      log.error(error);
     }
   })();
 };

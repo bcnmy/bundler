@@ -210,7 +210,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       speed, transactionId, walletAddress, metaData,
     } = transactionData;
 
-    const retryTransactionCount = parseInt(await this.cacheService.get(getRetryTransactionCountKey(transactionId, this.chainId)), 10);
+    const retryTransactionCount = 10;
 
     const maxRetryCount = config.transaction.retryCount[transactionType][this.chainId];
 
@@ -245,7 +245,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       speed,
       account,
     });
-    log.info(`Raw transaction for transactionId: ${JSON.stringify(rawTransaction)} on chainId ${this.chainId}`);
+    log.info(`Raw transaction for transactionId: ${transactionId} is ${JSON.stringify(rawTransaction)} on chainId ${this.chainId}`);
 
     try {
       const transactionExecutionResponse = await this.executeTransaction({
@@ -257,7 +257,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           transactionId: transactionId as string,
           relayerAddress,
           transactionType,
-          previousTransactionHash: null,
+          previousTransactionHash: undefined,
           rawTransaction,
           walletAddress,
           metaData,
@@ -279,7 +279,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         transactionId: transactionId as string,
         relayerAddress,
         transactionType,
-        previousTransactionHash: null,
+        previousTransactionHash: undefined,
         rawTransaction,
         walletAddress,
         metaData,
@@ -313,7 +313,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     transactionType: TransactionType,
   ): Promise<SuccessTransactionResponseType | ErrorTransactionResponseType> {
     const {
-      transactionHash = null,
+      transactionHash,
       transactionId,
       rawTransaction,
       walletAddress,
@@ -326,7 +326,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       // TODO // Make it generel and EIP 1559 specific and get bump up from config
       const bumpedUpGasPrice = this.gasPriceService.getBumpedUpGasPrice(
         rawTransaction.gasPrice as string,
-        50,
+        config.transaction.bumpGasPriceMultiplier[this.chainId],
       );
 
       rawTransaction.gasPrice = bumpedUpGasPrice as string;
