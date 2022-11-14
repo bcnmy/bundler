@@ -6,6 +6,5 @@ export type PostSlackMessageParamsType = {
 };
 
 export type SlackNotificationObjectType = {
-  name: string,
   data: PostSlackMessageParamsType
 };

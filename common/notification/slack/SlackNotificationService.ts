@@ -13,8 +13,6 @@ export class SlackNotificationService implements ISlackNotificationService {
   slackChannel: string;
 
   constructor(slackToken: string, slackChannel: string) {
-    console.log('slackToken', slackToken);
-    console.log('slackChannel', slackChannel);
     this.slackToken = slackToken;
     this.slackChannel = slackChannel;
     if (this.slackChannel && this.slackToken) {
@@ -52,7 +50,7 @@ export class SlackNotificationService implements ISlackNotificationService {
      *     text: "Message to be sent",
      *     channel: "Channel id of slack channel like C00279KO0QP"
      * }
-     * @param {object} data Object containing data to be sent in notification
+     * @param {object} postSlackMessageParams Object containing data to be sent in notification
      */
   async postMessage(
     postSlackMessageParams: PostSlackMessageParamsType,
@@ -69,10 +67,7 @@ export class SlackNotificationService implements ISlackNotificationService {
      * @param {string} text Message to be sent in notification
      */
   getNotifyObject(text: string): SlackNotificationObjectType {
-    console.log('///// slack token');
-    console.log(this.slackToken);
     const slackNotifyObject = {
-      name: 'slack',
       data: { text, channel: this.slackChannel },
     };
     return slackNotifyObject;

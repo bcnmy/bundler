@@ -188,11 +188,13 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     transactionId: string,
     account: IEVMAccount,
     transactionType: TransactionType,
+    chainId: number,
   ) {
     const maxRetryCountNotificationMessage = getMaxRetryCountNotificationMessage(
       transactionId,
       account,
       transactionType,
+      chainId,
     );
     const slackNotifyObject = this.notificationManager.getSlackNotifyObject(maxRetryCountNotificationMessage);
     await this.notificationManager.sendSlackNotification(slackNotifyObject);
@@ -210,7 +212,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       speed, transactionId, walletAddress, metaData,
     } = transactionData;
 
-    const retryTransactionCount = 10;
+    const retryTransactionCount = parseInt(await this.cacheService.get(getRetryTransactionCountKey(transactionId, this.chainId)), 10);
 
     const maxRetryCount = config.transaction.retryCount[transactionType][this.chainId];
 
@@ -220,6 +222,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         transactionData.transactionId,
         account,
         transactionType,
+        this.chainId,
       );
       // Should we send this response if we are manaully resubmitting transaction?
       return {
