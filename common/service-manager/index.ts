@@ -12,7 +12,7 @@ import { FeeOption } from '../../server/src/services';
 import { RedisCacheService } from '../cache';
 import { Mongo, TransactionDAO } from '../db';
 import { GasPriceManager } from '../gas-price';
-import { StatusService } from '../status';
+import { StatusService } from '../status/StatusService';
 import { IQueue } from '../interface';
 import { logger } from '../log-config';
 import { relayerManagerTransactionTypeNameMap } from '../maps';
@@ -34,6 +34,7 @@ import {
   SCWTransactionMessageType,
   TransactionType,
 } from '../types';
+import { IStatusService } from '../status';
 
 const log = logger(module);
 
@@ -78,6 +79,9 @@ const retryTransactionQueueMap: {
   [key: number]: RetryTransactionHandlerQueue;
 } = {};
 const networkServiceMap: Record<number, EVMNetworkService> = {};
+
+// eslint-disable-next-line import/no-mutable-exports
+let statusService: IStatusService;
 
 (async () => {
   await dbInstance.connect();
@@ -318,7 +322,7 @@ const networkServiceMap: Record<number, EVMNetworkService> = {};
     }
   }
   // eslint-disable-next-line no-new
-  new StatusService({
+  statusService = new StatusService({
     cacheService,
     networkServiceMap,
     evmRelayerManagerMap: EVMRelayerManagerMap,
@@ -336,4 +340,5 @@ export {
   EVMRelayerManagerMap,
   transactionSerivceMap,
   transactionDao,
+  statusService,
 };

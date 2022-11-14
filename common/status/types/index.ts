@@ -21,6 +21,11 @@ export type RedisStatusResponseType = {
   lastUpdated: string,
 };
 
+export type MongoStatusResponseType = {
+  active: boolean,
+  lastUpdated: string,
+};
+
 export type TokenPriceStatusResponseType = {
   active: boolean,
   data?: {
