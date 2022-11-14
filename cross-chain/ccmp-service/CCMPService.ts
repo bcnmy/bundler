@@ -11,11 +11,12 @@ import { logger } from '../../common/log-config';
 import { CCMPTaskManager } from '../task-manager';
 import type { IndexerService } from '../../common/indexer/IndexerService';
 import type { routeTransactionToRelayerMap as globalRouteTransactionToRelayerMap } from '../../common/service-manager';
-import type { ICCMPRouterService } from '../types';
+import type { ICCMPRouterService } from '../router-service/interfaces';
 import type { ICrossChainTransactionDAO } from '../../common/db';
 import type { ICCMPService, IHandler } from '../task-manager/types';
 import type { CrossChainRetryHandlerQueue } from '../../common/queue/CrossChainRetryHandlerQueue';
 import type { CCMPGatewayService } from '../gateway';
+import type { ISDKBackendService } from '../../common/sdk-backend-service/types';
 
 const log = logger(module);
 
@@ -32,6 +33,7 @@ export class CCMPService implements ICCMPService {
     private readonly crossChainRetryTransactionQueue: CrossChainRetryHandlerQueue,
     private readonly ccmpGatewayService: CCMPGatewayService,
     private readonly indexerService: IndexerService,
+    private readonly sdkBackendService: ISDKBackendService,
   ) {
     this.webHookEndpoint = config.ccmp.webhookEndpoint;
   }

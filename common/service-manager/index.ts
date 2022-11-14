@@ -20,7 +20,7 @@ import {
   HyperlaneRouterService,
   WormholeRouterService,
 } from '../../cross-chain/router-service';
-import { ICCMPRouterService } from '../../cross-chain/types';
+import { ICCMPRouterService } from '../../cross-chain/router-service/interfaces';
 import { RedisCacheService } from '../cache';
 import { Mongo, TransactionDAO } from '../db';
 import { GasPriceManager } from '../gas-price';
@@ -38,7 +38,7 @@ import {
 import { AARelayService, CCMPRelayService, SCWRelayService } from '../relay-service';
 import { AASimulationService, SCWSimulationService } from '../simulation';
 import { TenderlySimulationService } from '../simulation/external-simulation';
-import { CMCTokenPriceManager } from '../token-price';
+import { CMCTokenPriceManager, TokenPriceConversionService } from '../token-price';
 import {
   AATransactionMessageType,
   CCMPRouterName,
@@ -53,6 +53,7 @@ import { CrossChainRetryHandlerQueue } from '../queue/CrossChainRetryHandlerQueu
 import { CrossChainRetryTransactionService } from '../../cross-chain/retry-transaction-service';
 import { IndexerService } from '../indexer/IndexerService';
 import { CCMPGatewayService } from '../../cross-chain/gateway';
+import { SDKBackendService } from '../sdk-backend-service';
 
 const log = logger(module);
 
@@ -121,6 +122,12 @@ const crossChainRetryTransactionServiceMap: {
   [key: number]: CrossChainRetryTransactionService;
 } = {};
 
+const sdkBackendService = new SDKBackendService(config.sdkBackend.baseUrl);
+
+const networkServiceMap: {
+  [key: number]: EVMNetworkService;
+} = {};
+
 (async () => {
   await dbInstance.connect();
   await cacheService.connect();
@@ -139,6 +146,7 @@ const crossChainRetryTransactionServiceMap: {
       rpcUrl: config.chains.provider[chainId],
       fallbackRpcUrls: config.chains.fallbackUrls[chainId] || [],
     });
+    networkServiceMap[chainId] = networkService;
 
     const gasPriceManager = new GasPriceManager(cacheService, networkService, {
       chainId,
@@ -273,6 +281,13 @@ const crossChainRetryTransactionServiceMap: {
       symbolMapByChainId: config.tokenPrice.symbolMapByChainId,
     });
     tokenService.schedule();
+
+    const tokenPriceConversionService = new TokenPriceConversionService(
+      tokenService,
+      networkServiceMap,
+      config.tokenPrice.networkSymbols,
+      config.tokenPrice.symbolMapByChainId,
+    );
 
     const feeOptionService = new FeeOption(gasPriceService, cacheService, {
       chainId,
@@ -432,6 +447,7 @@ const crossChainRetryTransactionServiceMap: {
           crossChainRetryTransactionQueueMap[chainId],
           ccmpGatewayServiceMap[chainId],
           indexerService,
+          sdkBackendService,
         );
 
         ccmpServiceInitPromises.push(ccmpServiceMap[chainId].init());
@@ -472,4 +488,5 @@ export {
   transactionSerivceMap,
   indexerService,
   transactionDao,
+  sdkBackendService,
 };

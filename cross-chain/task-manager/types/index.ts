@@ -5,6 +5,8 @@ import type {
 import type { CCMPMessage } from '../../../common/types';
 import { CrossChainTransationStatus } from '../../../common/types';
 
+// TODO: Split interfaces and types into separate files
+
 export interface IHandler {
   (
     prev: ICrossChainTransactionStatusLogEntry,

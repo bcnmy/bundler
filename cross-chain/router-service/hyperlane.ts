@@ -1,7 +1,7 @@
 import { AbacusCore, MultiProvider, coreEnvironments } from '@abacus-network/sdk';
-import { ethers } from 'ethers';
+import { BigNumberish, ethers } from 'ethers';
 import { config } from '../../config';
-import type { ICCMPRouterService } from '../types';
+import type { ICCMPRouterService } from './interfaces';
 import type { CCMPMessage } from '../../common/types';
 import type { EVMNetworkService } from '../../common/network';
 import { logger } from '../../common/log-config';
@@ -34,7 +34,12 @@ export class HyperlaneRouterService implements ICCMPRouterService {
   }
 
   // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
-  estimateVerificationCostInNativeToken(txHash: string, message: CCMPMessage): Promise<number> {
+  estimateVerificationCost(
+    // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
+    txHash: string,
+    // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
+    message: CCMPMessage,
+  ): Promise<{ tokenSymbol: string; amount: BigNumberish }> {
     throw new Error('Method not implemented.');
   }
 

@@ -1,4 +1,4 @@
-import type { ICCMPRouterService } from '../types';
+import type { ICCMPRouterService } from './interfaces';
 import type { CCMPMessage } from '../../common/types';
 import type { EVMNetworkService } from '../../common/network';
 
@@ -9,7 +9,7 @@ export class AxelarRouterService implements ICCMPRouterService {
   ) {}
 
   // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
-  estimateVerificationCostInNativeToken(txHash: string, message: CCMPMessage): Promise<number> {
+  estimateVerificationCost(txHash: string, message: CCMPMessage): Promise<any> {
     throw new Error('Method not implemented.');
   }
 

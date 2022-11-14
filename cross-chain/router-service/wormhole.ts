@@ -7,7 +7,7 @@ import {
 } from '@certusone/wormhole-sdk';
 import { config } from '../../config';
 import { logger } from '../../common/log-config';
-import type { ICCMPRouterService } from '../types';
+import type { ICCMPRouterService } from './interfaces';
 import type { CCMPMessage } from '../../common/types';
 import type { EVMNetworkService } from '../../common/network';
 
@@ -66,13 +66,16 @@ export class WormholeRouterService implements ICCMPRouterService {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars, class-methods-use-this
-  async estimateVerificationCostInNativeToken(
+  async estimateVerificationCost(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     txHash: string,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     message: CCMPMessage,
-  ): Promise<number> {
-    return 0;
+  ) {
+    return {
+      amount: 0,
+      tokenSymbol: 'ETH',
+    };
   }
 
   async getVerificationData(txHash: string, message: CCMPMessage): Promise<Uint8Array> {

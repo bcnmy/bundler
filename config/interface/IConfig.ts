@@ -242,6 +242,10 @@ type IndexerConfigType = {
   auth: string;
 };
 
+export type SDKBackendConfigType = {
+  baseUrl: string;
+};
+
 export type ConfigType = {
   queueUrl: string;
   slack: SlackConfigType;
@@ -262,6 +266,7 @@ export type ConfigType = {
   zeroAddress: string;
   simulationData: SimulationDataConfigType;
   indexer: IndexerConfigType;
+  sdkBackend: SDKBackendConfigType;
 };
 
 export interface IConfig {

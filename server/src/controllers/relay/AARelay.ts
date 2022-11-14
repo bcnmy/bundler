@@ -19,9 +19,12 @@ export const relayAATransaction = async (req: Request, res: Response) => {
 
     const transactionId = generateTransactionId(userOp);
 
-    // const walletAddress = userOp.sender;
+    const relayer = routeTransactionToRelayerMap[chainId][TransactionType.AA];
+    if (!relayer) {
+      throw new Error(`No relayer found for chainId: ${chainId}`);
+    }
 
-    const response = routeTransactionToRelayerMap[chainId][TransactionType.AA]!
+    const response = relayer
       .sendTransactionToRelayer({
         type: TransactionType.AA,
         to: entryPointAddress,
@@ -31,7 +34,6 @@ export const relayAATransaction = async (req: Request, res: Response) => {
         value: '0x0',
         userOp,
         transactionId,
-        // walletAddress,
         metaData,
       });
     if (isError(response)) {

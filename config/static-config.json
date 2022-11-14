@@ -3,6 +3,9 @@
     "wssUrl": "wss://sdk-testing-ws.staging.biconomy.io/connection/websocket",
     "httpUrl": "https://sdk-testing-ws.staging.biconomy.io/api"
   },
+  "sdkBackend": {
+    "baseUrl": "http://localhost:3000"
+  },
   "supportedNetworks": [5, 80001],
   "EIP1559SupportedNetworks": [],
   "supportedTransactionType": {

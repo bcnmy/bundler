@@ -238,6 +238,11 @@ export class Config implements IConfig {
       throw new Error('CCMP webhook endpoint required');
     }
 
+    // Validate SDK Backend Config
+    if (!this.config.sdkBackend?.baseUrl) {
+      throw new Error('SDK Backend base url required');
+    }
+
     return true;
   }
 
