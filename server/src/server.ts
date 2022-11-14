@@ -1,6 +1,5 @@
 import http from 'http';
 import { logger } from '../../common/log-config';
-import { parseError } from '../../common/utils';
 import app from './app';
 
 let server: any;
@@ -77,7 +76,7 @@ const init = async () => {
       server.on('listening', () => onListening());
     } catch (error) {
       server.on('error', onError(error));
-      parseError(error);
+      log.error(error);
     }
   })();
 };
