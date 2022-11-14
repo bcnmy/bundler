@@ -15,6 +15,10 @@ export class Mongo implements IDBService {
     this.client = null;
   }
 
+  /**
+   * Method creates and returns new mongo instance
+   * @returns mongo instance
+   */
   public static getInstance(): Mongo {
     if (!Mongo.instance) {
       Mongo.instance = new Mongo();
@@ -22,6 +26,9 @@ export class Mongo implements IDBService {
     return Mongo.instance;
   }
 
+  /**
+   * Method connects to a mongo instance
+   */
   connect = async () => {
     const dbUrl = config.dataSources.mongoUrl || '';
     if (!dbUrl) {
@@ -40,6 +47,11 @@ export class Mongo implements IDBService {
     }
   };
 
+  /**
+   * Method returns blockchain transactions model for a given chain id
+   * @param networkId
+   * @returns blockchain transactions model for a given chain id
+   */
   getBlockchainTransaction(networkId: number): BlockchainTransactionsMapType[number] {
     if (!this.client) {
       throw new Error('Not connected to db');
