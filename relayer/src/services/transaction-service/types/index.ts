@@ -5,6 +5,7 @@ import { IGasPrice } from '../../../../../common/gas-price';
 import { GasPriceType } from '../../../../../common/gas-price/types';
 import { INetworkService } from '../../../../../common/network';
 import { RetryTransactionQueueData } from '../../../../../common/queue/types';
+import { INotificationManager } from '../../../../../common/notification/interface';
 import { EVMRawTransactionType } from '../../../../../common/types';
 import { IEVMAccount } from '../../account';
 import { INonceManager } from '../../nonce-manager';
@@ -18,6 +19,7 @@ export type EVMTransactionServiceParamsType = {
   gasPriceService: IGasPrice,
   transactionDao: ITransactionDAO,
   cacheService: ICacheService,
+  notificationManager: INotificationManager,
   options: {
     chainId: number,
   }
@@ -36,8 +38,11 @@ export type TransactionDataType = {
   data: string;
   gasLimit: string; // value will be in hex
   speed?: GasPriceType;
-  userAddress?: string,
+  walletAddress: string,
   transactionId: string;
+  metaData?: {
+    dappAPIKey: string
+  }
 };
 
 export type ErrorTransactionResponseType = TransactionListenerNotifyReturnType & {

@@ -12,9 +12,9 @@ export const simulateTransaction = () => async (
     const { method } = req.body;
     let response = null;
     if (method === TransactionMethodType.AA) {
-      response = await simulateAATransaction(req, res);
+      response = await simulateAATransaction(req);
     } else if (method === TransactionMethodType.SCW) {
-      response = await simulateSCWTransaction(req, res);
+      response = await simulateSCWTransaction(req);
     }
     if (!response) {
       return res.status(400).send({

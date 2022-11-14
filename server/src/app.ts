@@ -4,8 +4,8 @@ import express, {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   NextFunction, Request, Response, ErrorRequestHandler,
 } from 'express';
+import cons from 'consolidate';
 import { morganMiddleware } from '../../common/log-config';
-
 import { routes } from './routes';
 
 const app = express();
@@ -24,6 +24,10 @@ app.options('*', cors()); // include before other routes
 app.use(cors());
 app.use(rTracer.expressMiddleware());
 app.use(morganMiddleware);
+
+app.engine('hbs', cons.handlebars);
+app.set('view engine', 'hbs');
+app.set('views', `${__dirname}/views`);
 
 // Add headers
 app.use((
@@ -58,7 +62,7 @@ app.use(express.json());
 
 app.use(express.urlencoded({ extended: false }));
 
-app.use('/api/v1', routes);
+app.use('', routes);
 
 app.route('/health')
   .get((req, res) => {

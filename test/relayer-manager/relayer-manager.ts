@@ -52,6 +52,7 @@ describe('relayer manager', () => {
     transactionQueue,
     retryTransactionQueue,
     transactionDao,
+    cacheService,
     options: {
       chainId,
     },
@@ -68,6 +69,7 @@ describe('relayer manager', () => {
   if (gasPriceService) {
     const transactionService = new EVMTransactionService({
       networkService,
+      cacheService,
       transactionListener,
       nonceManager,
       gasPriceService,

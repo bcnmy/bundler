@@ -4,8 +4,10 @@ import { ICacheService } from '../../../../common/cache';
 import { IGasPrice } from '../../../../common/gas-price';
 import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
+import { getMaxRetryCountNotificationMessage } from '../../../../common/notification';
+import { INotificationManager } from '../../../../common/notification/interface';
 import { EVMRawTransactionType, TransactionType } from '../../../../common/types';
-import { getRetryTransactionCountKey } from '../../../../common/utils';
+import { getRetryTransactionCountKey, parseError } from '../../../../common/utils';
 import { config } from '../../../../config';
 import { IEVMAccount } from '../account';
 import { INonceManager } from '../nonce-manager';
@@ -39,9 +41,11 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
 
   cacheService: ICacheService;
 
+  notificationManager: INotificationManager;
+
   constructor(evmTransactionServiceParams: EVMTransactionServiceParamsType) {
     const {
-      options, networkService, transactionListener, nonceManager, gasPriceService, cacheService,
+      options, networkService, transactionListener, nonceManager, gasPriceService, cacheService, notificationManager,
     } = evmTransactionServiceParams;
     this.chainId = options.chainId;
     this.networkService = networkService;
@@ -49,6 +53,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     this.nonceManager = nonceManager;
     this.gasPriceService = gasPriceService;
     this.cacheService = cacheService;
+    this.notificationManager = notificationManager;
   }
 
   private async createTransaction(
@@ -94,7 +99,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     return { ...response, gasPrice: ethers.utils.hexlify(Number(gasPrice)) };
   }
 
-  private async executeTransaction(
+  async executeTransaction(
     executeTransactionParams: ExecuteTransactionParamsType,
   ): Promise<ExecuteTransactionResponseType> {
     const { rawTransaction, account } = executeTransactionParams;
@@ -103,13 +108,20 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         rawTransaction,
         account,
       );
+      if (transactionExecutionResponse instanceof Error) {
+        return {
+          success: false,
+          error: parseError(transactionExecutionResponse),
+        };
+      }
       return {
         success: true,
         transactionResponse: transactionExecutionResponse,
       };
     } catch (error: any) {
-      const errInString = error.toString();
-      log.info(errInString);
+      // TODO: should we add transactionId here ?
+      log.info(`Error while executing transaction: ${error}`);
+      const errInString = parseError(error);
       const nonceErrorMessage = config.transaction.errors.networksNonceError[this.chainId];
       const replacementFeeLowMessage = config.transaction.errors.networkResponseMessages
         .REPLACEMENT_UNDERPRICED;
@@ -172,6 +184,22 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     }
   }
 
+  private async sendMaxRetryCountExceededSlackNotification(
+    transactionId: string,
+    account: IEVMAccount,
+    transactionType: TransactionType,
+    chainId: number,
+  ) {
+    const maxRetryCountNotificationMessage = getMaxRetryCountNotificationMessage(
+      transactionId,
+      account,
+      transactionType,
+      chainId,
+    );
+    const slackNotifyObject = this.notificationManager.getSlackNotifyObject(maxRetryCountNotificationMessage);
+    await this.notificationManager.sendSlackNotification(slackNotifyObject);
+  }
+
   async sendTransaction(
     transactionData: TransactionDataType,
     account: IEVMAccount,
@@ -181,7 +209,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     const relayerAddress = account.getPublicKey();
     const {
       to, value, data, gasLimit,
-      speed, transactionId, userAddress,
+      speed, transactionId, walletAddress, metaData,
     } = transactionData;
 
     const retryTransactionCount = parseInt(await this.cacheService.get(getRetryTransactionCountKey(transactionId, this.chainId)), 10);
@@ -189,10 +217,23 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     const maxRetryCount = config.transaction.retryCount[transactionType][this.chainId];
 
     if (retryTransactionCount > maxRetryCount) {
+      try {
+      // send slack notification
+        await this.sendMaxRetryCountExceededSlackNotification(
+          transactionData.transactionId,
+          account,
+          transactionType,
+          this.chainId,
+        );
+      } catch (error) {
+        log.error(error);
+        log.error('Error in sending slack notification');
+      }
+      // Should we send this response if we are manaully resubmitting transaction?
       return {
         state: 'failed',
         code: 404, // TODO custom code for max retry
-        error: 'Max retry count exceeded',
+        error: 'Max retry count exceeded. Use end point to get transaction status', // todo add end point
         transactionId,
         ...{
           isTransactionRelayed: false,
@@ -212,7 +253,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       speed,
       account,
     });
-    log.info(`Raw transaction for transactionId: ${JSON.stringify(rawTransaction)} on chainId ${this.chainId}`);
+    log.info(`Raw transaction for transactionId: ${transactionId} is ${JSON.stringify(rawTransaction)} on chainId ${this.chainId}`);
 
     try {
       const transactionExecutionResponse = await this.executeTransaction({
@@ -224,9 +265,10 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           transactionId: transactionId as string,
           relayerAddress,
           transactionType,
-          previousTransactionHash: null,
+          previousTransactionHash: undefined,
           rawTransaction,
-          userAddress,
+          walletAddress,
+          metaData,
           relayerManagerName,
           error: transactionExecutionResponse.error,
         });
@@ -245,9 +287,10 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         transactionId: transactionId as string,
         relayerAddress,
         transactionType,
-        previousTransactionHash: null,
+        previousTransactionHash: undefined,
         rawTransaction,
-        userAddress,
+        walletAddress,
+        metaData,
         relayerManagerName,
       });
 
@@ -278,17 +321,20 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     transactionType: TransactionType,
   ): Promise<SuccessTransactionResponseType | ErrorTransactionResponseType> {
     const {
-      transactionHash = null,
+      transactionHash,
       transactionId,
       rawTransaction,
-      userAddress,
+      walletAddress,
+      metaData,
       relayerManagerName,
     } = retryTransactionData;
     try {
+      await this.cacheService.increment(getRetryTransactionCountKey(transactionId, this.chainId));
+
       // TODO // Make it generel and EIP 1559 specific and get bump up from config
       const bumpedUpGasPrice = this.gasPriceService.getBumpedUpGasPrice(
         rawTransaction.gasPrice as string,
-        50,
+        config.transaction.bumpGasPriceMultiplier[this.chainId],
       );
 
       rawTransaction.gasPrice = bumpedUpGasPrice as string;
@@ -321,7 +367,8 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         rawTransaction,
         transactionType,
         previousTransactionHash: transactionHash,
-        userAddress,
+        walletAddress,
+        metaData,
         relayerManagerName,
       });
 

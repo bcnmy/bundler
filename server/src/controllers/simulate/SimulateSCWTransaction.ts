@@ -1,10 +1,10 @@
-import { Request, Response } from 'express';
+import { Request } from 'express';
 import { logger } from '../../../../common/log-config';
 import { scwSimulationServiceMap } from '../../../../common/service-manager';
 
 const log = logger(module);
 
-export const simulateSCWTransaction = async (req: Request, res: Response) => {
+export const simulateSCWTransaction = async (req: Request) => {
   try {
     const {
       to, data, chainId, refundInfo,
@@ -33,9 +33,9 @@ export const simulateSCWTransaction = async (req: Request, res: Response) => {
     };
   } catch (error) {
     log.error(`Error in SCW simulation ${error}`);
-    return res.status(500).json({
+    return {
       code: 500,
       error,
-    });
+    };
   }
 };
