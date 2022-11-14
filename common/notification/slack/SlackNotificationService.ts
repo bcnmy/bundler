@@ -21,7 +21,7 @@ export class SlackNotificationService implements ISlackNotificationService {
         throw new Error('Slack web client is not initialized. Check if slack configurations are present');
       }
     } else {
-      throw new Error('Slack token or channel name for relayer node is not present in slack configuration');
+      log.error('Slack token or channel name for relayer node is not present in slack configuration');
     }
   }
 
