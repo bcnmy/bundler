@@ -18,11 +18,11 @@ export class StatusService implements IStatusService {
 
   networkServiceMap: Record<number, EVMNetworkService>;
 
-  evmRelayerManagerMap: Record<string, {
+  evmRelayerManagerMap: {
     [name: string]: {
       [chainId: number]: IRelayerManager<IEVMAccount, EVMRawTransactionType>;
     };
-  }>;
+  } = {};
 
   constructor(params: StatusServiceParamsType) {
     const { cacheService, networkServiceMap, evmRelayerManagerMap } = params;
@@ -59,13 +59,13 @@ export class StatusService implements IStatusService {
     const relayerManagerNameKeys: string[] = Object.keys(this.evmRelayerManagerMap);
     for (const relayerManagerNameKey of relayerManagerNameKeys) {
       relayerManagerStatus[relayerManagerNameKey] = {};
-      const chainIdKeys: string[] = Object.keys(this.evmRelayerManagerMap[relayerManagerNameKey]);
-      for (const chainIdKey of chainIdKeys) {
-        const relayerManager = this.evmRelayerManagerMap[relayerManagerNameKey][chainIdKey];
-        // get list of relayers from relayer manager
-        const relayers = relayerManager.getRelayers();
-        
-      }
+      // const chainIdKeys: string[] = Object.keys(
+      // this.evmRelayerManagerMap[relayerManagerNameKey]);
+      // for (const chainIdKey of chainIdKeys) {
+      //   const relayerManager = this.evmRelayerManagerMap[relayerManagerNameKey][chainIdKey];
+      //   // get list of relayers from relayer manager
+      //   const relayers = relayerManager.getRelayers();
+      // }
     }
   }
 

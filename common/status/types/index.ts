@@ -7,11 +7,11 @@ import { EVMRawTransactionType } from '../../types';
 export type StatusServiceParamsType = {
   cacheService: ICacheService,
   networkServiceMap: Record<number, EVMNetworkService>
-  evmRelayerManagerMap: Record<string, {
+  evmRelayerManagerMap: {
     [name: string]: {
       [chainId: number]: IRelayerManager<IEVMAccount, EVMRawTransactionType>;
     };
-  }>
+  }
 };
 
 export type RedisStatusResponseType = {

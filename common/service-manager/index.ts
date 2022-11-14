@@ -317,10 +317,11 @@ const networkServiceMap: Record<number, EVMNetworkService> = {};
       }
     }
   }
-  const h = new StatusService({
+  // eslint-disable-next-line no-new
+  new StatusService({
     cacheService,
     networkServiceMap,
-    EVMRelayerManagerMap,
+    evmRelayerManagerMap: EVMRelayerManagerMap,
   });
   log.info('<=== Config setup completed ===>');
 })();
