@@ -10,19 +10,19 @@ export const BlockchainTransactionSchema = new Schema<IBlockchainTransaction>({
   },
   transactionHash: {
     type: String,
-    required: true,
+  },
+  previousTransactionHash: {
+    type: String,
   },
   chainId: { type: Number },
   status: {
     type: String,
-    required: true,
   },
   receipt: {
     type: Object,
   },
   relayerAddress: {
     type: String,
-    required: true,
   },
   walletAddress: {
     type: String,
@@ -33,7 +33,6 @@ export const BlockchainTransactionSchema = new Schema<IBlockchainTransaction>({
   },
   rawTransaction: {
     type: Object,
-    required: true,
   },
   gasPrice: {
     type: String,

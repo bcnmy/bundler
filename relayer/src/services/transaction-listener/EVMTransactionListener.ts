@@ -89,11 +89,11 @@ ITransactionPublisher<TransactionQueueMessageType> {
     });
     if (transactionExecutionResponse) {
       log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
-      await this.updateTransactionDataToDatabase({
+      await this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
         receipt: transactionReceipt,
         status: TransactionStatus.SUCCESS,
         updationTime: Date.now(),
-      }, transactionId);
+      }, transactionId, transactionExecutionResponse?.hash);
     }
   }
 
@@ -119,11 +119,11 @@ ITransactionPublisher<TransactionQueueMessageType> {
 
     if (transactionExecutionResponse) {
       log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
-      await this.updateTransactionDataToDatabase({
+      await this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
         receipt: transactionReceipt,
         status: TransactionStatus.FAILED,
         updationTime: Date.now(),
-      }, transactionId);
+      }, transactionId, transactionExecutionResponse?.hash);
     }
   }
 
@@ -252,7 +252,6 @@ ITransactionPublisher<TransactionQueueMessageType> {
         transactionHash: transactionExecutionResponse.hash,
         rawTransaction: transactionExecutionResponse,
         relayerAddress,
-        previousTransactionHash,
         gasPrice: transactionExecutionResponse.gasPrice,
         status: TransactionStatus.PENDING,
         updationTime: Date.now(),

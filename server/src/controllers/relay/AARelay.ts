@@ -19,7 +19,7 @@ export const relayAATransaction = async (req: Request, res: Response) => {
 
     const transactionId = generateTransactionId(userOp);
 
-    const walletAddress = userOp.sender;
+    const walletAddress = userOp.sender.toLowerCase();
 
     const response = routeTransactionToRelayerMap[chainId][TransactionType.AA]
       .sendTransactionToRelayer({

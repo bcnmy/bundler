@@ -1,7 +1,9 @@
 import { ConsumeMessage } from 'amqplib';
+import { ICacheService } from '../../../../common/cache';
 import { logger } from '../../../../common/log-config';
 import { IQueue } from '../../../../common/queue';
 import { EVMRawTransactionType, SCWTransactionMessageType, TransactionType } from '../../../../common/types';
+import { getRetryTransactionCountKey } from '../../../../common/utils';
 import { IEVMAccount } from '../account';
 import { IRelayerManager } from '../relayer-manager/interface/IRelayerManager';
 import { ITransactionService } from '../transaction-service';
@@ -21,15 +23,18 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
 
   transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>;
 
+  cacheService: ICacheService;
+
   constructor(
     scwConsumerParamsType: SCWConsumerParamsType,
   ) {
     const {
-      options, queue, relayerManager, transactionService,
+      options, queue, relayerManager, transactionService, cacheService,
     } = scwConsumerParamsType;
     this.queue = queue;
     this.relayerManager = relayerManager;
     this.transactionService = transactionService;
+    this.cacheService = cacheService;
     this.chainId = options.chainId;
   }
 
@@ -45,6 +50,11 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
       const activeRelayer = await this.relayerManager.getActiveRelayer();
       log.info(`Active relayer for ${this.transactionType} is ${activeRelayer?.getPublicKey()}`);
       if (activeRelayer) {
+        await this.cacheService.set(getRetryTransactionCountKey(
+          transactionDataReceivedFromQueue.transactionId,
+          this.chainId,
+        ), '0');
+
         const transactionServiceResponse = await this.transactionService.sendTransaction(
           transactionDataReceivedFromQueue,
           activeRelayer,

@@ -219,7 +219,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       speed,
       account,
     });
-    log.info(`Raw transaction for transactionId: ${JSON.stringify(rawTransaction)} on chainId ${this.chainId}`);
+    log.info(`Raw transaction for transactionId: ${transactionId} is ${JSON.stringify(rawTransaction)} on chainId ${this.chainId}`);
 
     try {
       const transactionExecutionResponse = await this.executeTransaction({
