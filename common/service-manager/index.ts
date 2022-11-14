@@ -17,6 +17,8 @@ import { IQueue } from '../interface';
 import { logger } from '../log-config';
 import { relayerManagerTransactionTypeNameMap } from '../maps';
 import { EVMNetworkService } from '../network';
+import { NotificationManager } from '../notification';
+import { SlackNotificationService } from '../notification/slack/SlackNotificationService';
 import {
   AATransactionQueue,
   RetryTransactionHandlerQueue,
@@ -86,6 +88,12 @@ let statusService: IStatusService;
 (async () => {
   await dbInstance.connect();
   await cacheService.connect();
+
+  const slackNotificationService = new SlackNotificationService(
+    config.slack.token,
+    config.slack.channel,
+  );
+  const notificationManager = new NotificationManager(slackNotificationService);
 
   const tokenService = new CMCTokenPriceManager(cacheService, {
     apiKey: config.tokenPrice.coinMarketCapApi,
@@ -178,6 +186,7 @@ let statusService: IStatusService;
       gasPriceService,
       transactionDao,
       cacheService,
+      notificationManager,
       options: {
         chainId,
       },
