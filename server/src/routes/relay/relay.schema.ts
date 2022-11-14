@@ -82,17 +82,17 @@ export const crossChainRequestSchema = object.keys({
 });
 
 export const feeOptionsSchema = object.keys({
-  chainId: string.required().valid('5', '80001', '97', '420', '421613', '43113'),
+  chainId: string.required().error(new Error('chainId is required')),
 });
 
 // validate schema with a query parameter of transactionId
 export const transactionStatusSchema = object.keys({
-  chainId: string.required().valid('5', '80001', '97', '420', '421613', '43113'),
+  chainId: string.required().error(new Error('chainId is required')),
   transactionId: string.required().error(new Error('transactionId is required')),
 });
 
 export const transactionResubmitSchema = object.keys({
-  chainId: number.required().valid(5, 80001, 97, 420, 421613, 43113),
+  chainId: number.required().error(new Error('chainId is required')),
   transactionId: string.required().error(new Error('transactionId is required')),
   gasPrice: number.required().error(new Error('gasPrice is required')),
 });
