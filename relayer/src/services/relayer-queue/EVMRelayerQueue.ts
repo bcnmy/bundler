@@ -1,6 +1,6 @@
 import { Mutex } from 'async-mutex';
 import { IRelayerQueue } from './interface/IRelayerQueue';
-import { SortEVMRelayerByLeastPendingCount } from './strategy';
+import { SortEVMRelayerByBalance } from './strategy';
 import { EVMRelayerMetaDataType } from './types';
 
 const popMutex = new Mutex();
@@ -28,7 +28,7 @@ export class EVMRelayerQueue implements IRelayerQueue<EVMRelayerMetaDataType> {
   async push(item: EVMRelayerMetaDataType): Promise<void> {
     return pushMutex.runExclusive(() => {
       this.items.push(item);
-      this.items = SortEVMRelayerByLeastPendingCount.performAlgorithm(
+      this.items = SortEVMRelayerByBalance.performAlgorithm(
         this.items,
       );
     });

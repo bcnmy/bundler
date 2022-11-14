@@ -29,6 +29,7 @@ export enum SocketEventType {
 export type TransactionQueueMessageType = {
   transactionId: string,
   event: SocketEventType,
+  relayerManagerName: string,
   transactionHash?: string,
   previousTransactionHash?: string,
   receipt?: ethers.providers.TransactionResponse,
@@ -104,6 +105,9 @@ export type AATransactionMessageType = {
   value: string;
   transactionId: string;
   userOp?: UserOperationType;
+  metaData?: {
+    dappAPIKey: string
+  }
 };
 
 export type SCWTransactionMessageType = {
@@ -114,6 +118,7 @@ export type SCWTransactionMessageType = {
   chainId: number;
   value: string;
   transactionId: string;
+  walletAddress: string;
 };
 
 export type CrossChainTransactionMessageType = {

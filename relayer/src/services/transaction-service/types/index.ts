@@ -36,9 +36,12 @@ export type TransactionDataType = {
   data: string;
   gasLimit: string; // value will be in hex
   speed?: GasPriceType;
-  userAddress?: string,
+  walletAddress: string,
   transactionId: string;
   ccmpMessage?: CCMPMessage;
+  metaData?: {
+    dappAPIKey: string
+  }
 };
 
 export type ErrorTransactionResponseType = TransactionListenerNotifyReturnType & {

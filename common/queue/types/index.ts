@@ -9,14 +9,15 @@ import type {
 export type TransactionMessageType = ethers.providers.TransactionResponse;
 
 export type RetryTransactionQueueData = {
-  relayerAddress: string;
-  transactionType: TransactionType;
-  transactionHash: string;
-  transactionId: string;
-  rawTransaction: EVMRawTransactionType;
-  userAddress: string;
-  relayerManagerName: string;
-  event: SocketEventType;
+  relayerAddress: string,
+  transactionType: TransactionType,
+  transactionHash?: string,
+  transactionId: string,
+  rawTransaction: EVMRawTransactionType,
+  walletAddress: string,
+  metaData: any,
+  relayerManagerName: string,
+  event: SocketEventType
 };
 
 export type CrossChainRetryQueueData = {
