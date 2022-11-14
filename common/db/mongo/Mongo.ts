@@ -1,8 +1,11 @@
 import mongoose, { Mongoose } from 'mongoose';
 import { config } from '../../../config';
+import { logger } from '../../log-config';
+import { parseError } from '../../utils';
 import { IDBService } from '../interface/IDBService';
 import { BlockchainTransactionsMap, BlockchainTransactionsMapType } from './models';
 
+const log = logger(module);
 export class Mongo implements IDBService {
   private static instance: Mongo;
 
@@ -30,10 +33,10 @@ export class Mongo implements IDBService {
           dbName: 'relayer-node-service',
         });
       }
-      console.log('Connected to db');
+      log.info('Connected to db');
     } catch (error) {
-      console.log('error while connecting to mongo db');
-      console.log(error);
+      log.info('error while connecting to mongo db');
+      parseError(error);
     }
   };
 
