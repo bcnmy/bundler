@@ -1,6 +1,7 @@
 import { IEVMAccount } from '../../../relayer/src/services/account';
 import { IRelayerManager } from '../../../relayer/src/services/relayer-manager';
 import { ICacheService } from '../../cache';
+import { IDBService } from '../../db';
 import { EVMNetworkService } from '../../network';
 import { EVMRawTransactionType } from '../../types';
 
@@ -11,7 +12,8 @@ export type StatusServiceParamsType = {
     [name: string]: {
       [chainId: number]: IRelayerManager<IEVMAccount, EVMRawTransactionType>;
     };
-  }
+  },
+  dbInstance: IDBService,
 };
 
 export type RedisStatusResponseType = {

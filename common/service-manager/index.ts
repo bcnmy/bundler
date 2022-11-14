@@ -322,6 +322,7 @@ const networkServiceMap: Record<number, EVMNetworkService> = {};
     cacheService,
     networkServiceMap,
     evmRelayerManagerMap: EVMRelayerManagerMap,
+    dbInstance,
   });
   log.info('<=== Config setup completed ===>');
 })();
