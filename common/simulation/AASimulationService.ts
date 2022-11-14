@@ -36,7 +36,7 @@ export class AASimulationService {
       return {
         isSimulationSuccessful,
         gasLimitFromSimulation: 0,
-        msgFromSimulation: parseError(error),
+        msgFromSimulation: JSON.stringify(error),
       };
     }
 
