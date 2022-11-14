@@ -12,6 +12,7 @@ import { FeeOption } from '../../server/src/services';
 import { RedisCacheService } from '../cache';
 import { Mongo, TransactionDAO } from '../db';
 import { GasPriceManager } from '../gas-price';
+import { StatusService } from '../status/StatusService';
 import { IQueue } from '../interface';
 import { logger } from '../log-config';
 import { relayerManagerTransactionTypeNameMap } from '../maps';
@@ -33,6 +34,7 @@ import {
   SCWTransactionMessageType,
   TransactionType,
 } from '../types';
+import { IStatusService } from '../status';
 
 const log = logger(module);
 
@@ -76,6 +78,10 @@ const transactionListenerMap: Record<number, EVMTransactionListener> = {};
 const retryTransactionQueueMap: {
   [key: number]: RetryTransactionHandlerQueue;
 } = {};
+const networkServiceMap: Record<number, EVMNetworkService> = {};
+
+// eslint-disable-next-line import/no-mutable-exports
+let statusService: IStatusService;
 
 (async () => {
   await dbInstance.connect();
@@ -106,6 +112,7 @@ const retryTransactionQueueMap: {
       fallbackRpcUrls: config.chains.fallbackUrls[chainId] || [],
     });
     log.info(`Network service setup complete for chainId: ${chainId}`);
+    networkServiceMap[chainId] = networkService;
 
     log.info(`Setting up gas price manager for chainId: ${chainId}`);
     const gasPriceManager = new GasPriceManager(cacheService, networkService, {
@@ -351,6 +358,13 @@ const retryTransactionQueueMap: {
       }
     }
   }
+  // eslint-disable-next-line no-new
+  statusService = new StatusService({
+    cacheService,
+    networkServiceMap,
+    evmRelayerManagerMap: EVMRelayerManagerMap,
+    dbInstance,
+  });
   log.info('<=== Config setup completed ===>');
 })();
 
@@ -363,4 +377,5 @@ export {
   EVMRelayerManagerMap,
   transactionSerivceMap,
   transactionDao,
+  statusService,
 };
