@@ -46,6 +46,13 @@ export class Mongo implements IDBService {
     return BlockchainTransactionsMap[networkId];
   }
 
+  isConnected(): boolean {
+    if (this.client) {
+      return this.client.connection.readyState === 1;
+    }
+    return false;
+  }
+
   close() {
     if (!this.client) {
       throw new Error('Not connected to db');
