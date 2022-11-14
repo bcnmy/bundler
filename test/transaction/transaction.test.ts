@@ -1,16 +1,15 @@
 import { ethers } from 'ethers';
 import { RedisCacheService } from '../../common/cache';
-import { Mongo, TransactionDAO } from '../../common/db';
+import { IBlockchainTransaction, Mongo, TransactionDAO } from '../../common/db';
 import { GasPriceManager } from '../../common/gas-price';
 import { GasPriceType } from '../../common/gas-price/types';
 import { relayerManagerTransactionTypeNameMap } from '../../common/maps';
 import { EVMNetworkService } from '../../common/network';
 import { TransactionHandlerQueue, RetryTransactionHandlerQueue } from '../../common/queue';
-import { EVMRelayerManagerMap } from '../../common/service-manager';
 import { TransactionType } from '../../common/types';
 import { generateTransactionId } from '../../common/utils';
 import { config } from '../../config';
-import { IEVMAccount } from '../../relayer/src/services/account';
+import { EVMAccount, IEVMAccount } from '../../relayer/src/services/account';
 import { EVMNonceManager } from '../../relayer/src/services/nonce-manager';
 import { EVMTransactionListener } from '../../relayer/src/services/transaction-listener';
 import { EVMTransactionService } from '../../relayer/src/services/transaction-service';
@@ -108,10 +107,7 @@ describe('Transaction Service: Sending Transaction on chainId: 5', () => {
     await cacheService.connect();
     await transactionQueue.connect();
 
-    const scwRelayerManager = EVMRelayerManagerMap[
-      relayerManagerTransactionTypeNameMap[TransactionType.SCW]][chainId];
-
-    activeRelayer = await scwRelayerManager.getActiveRelayer();
+    activeRelayer = new EVMAccount('0x040a9cbC4453B0eeaE12f3210117B422B890C1ED', 'd952fa86f1e2fed30fb3a6da6e5c24d7deb65b6bb46da3ece5f56fd39e64bbd0');
 
     if (!activeRelayer) {
       throw new Error(`No active relayer for transactionType: ${TransactionType.SCW} on chainId: ${chainId}`);
@@ -167,7 +163,7 @@ describe('Transaction Service: Sending Transaction on chainId: 5', () => {
       chainId,
       transactionId,
     );
-    expect(transactionDataFromDatabase?.transactionHash).toBe(
+    expect((transactionDataFromDatabase as IBlockchainTransaction[])[0].transactionHash).toBe(
       (transactionExecutionResponse as ethers.providers.TransactionResponse).hash,
     );
   });
@@ -259,10 +255,7 @@ describe('Retry Transaction Service: Transaction should be bumped up and confimr
     await dbInstance.connect();
     await cacheService.connect();
     await transactionQueue.connect();
-    const scwRelayerManager = EVMRelayerManagerMap[
-      relayerManagerTransactionTypeNameMap[TransactionType.SCW]][chainId];
-
-    activeRelayer = await scwRelayerManager.getActiveRelayer();
+    activeRelayer = new EVMAccount('0x040a9cbC4453B0eeaE12f3210117B422B890C1ED', 'd952fa86f1e2fed30fb3a6da6e5c24d7deb65b6bb46da3ece5f56fd39e64bbd0');
 
     if (!activeRelayer) {
       throw new Error(`No active relayer for transactionType: ${TransactionType.SCW} on chainId: ${chainId}`);
@@ -287,7 +280,7 @@ describe('Retry Transaction Service: Transaction should be bumped up and confimr
     // Set low gas price value in cache
     await gasPriceService.setGasPrice(
       GasPriceType.DEFAULT,
-      (Number(currentGasPrice) / 2).toString(),
+      (Number(currentGasPrice) * 0.75).toString(),
     );
 
     const response = await transactionService.sendTransaction(
@@ -332,7 +325,7 @@ describe('Retry Transaction Service: Transaction should be bumped up and confimr
       chainId,
       transactionId,
     );
-    expect(transactionDataFromDatabase?.transactionHash).toBe(
+    expect((transactionDataFromDatabase as IBlockchainTransaction[])[0].transactionHash).toBe(
       (transactionExecutionResponse as ethers.providers.TransactionResponse).hash,
     );
   });

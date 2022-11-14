@@ -28,6 +28,18 @@ export class EVMRelayerQueue implements IRelayerQueue<EVMRelayerMetaDataType> {
   }
 
   /**
+   * @param address relayer address to fetch from queue
+   * @returns relayer meta data
+   */
+  get(address:string): EVMRelayerMetaDataType | undefined {
+    const filteredItem = this.items.filter((item) => item.address === address);
+    if (filteredItem.length > 0) {
+      return filteredItem[0];
+    }
+    return undefined;
+  }
+
+  /**
    * Method pops a relayer from active relayer queue
    * @returns relayer with relayer meta data
    */

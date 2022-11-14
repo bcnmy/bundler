@@ -32,5 +32,6 @@
       "import/no-dynamic-require": 0,
       "no-underscore-dangle": "off",
       "no-restricted-syntax": "off"
-  }
+  },
+  "ignorePatterns": ["**/*.hbs"]
 }

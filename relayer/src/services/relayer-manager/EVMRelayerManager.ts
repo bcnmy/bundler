@@ -208,6 +208,24 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
   }
 
   /**
+   * Method gets list of relayers with data
+   * @returns list of relayers with data
+   */
+  getRelayers(): any {
+    const relayerDataMap: any = {};
+    const relayers = Object.keys(this.relayerMap);
+    // iterate over relayers and get balance and nonce from relayer queue
+    for (const relayer of relayers) {
+      const data = this.relayerQueue.get(relayer);
+      if (data) {
+        relayerDataMap[relayer].balance = data.balance;
+        relayerDataMap[relayer].nonce = data.nonce;
+      }
+    }
+    return relayerDataMap;
+  }
+
+  /**
    * Methods gets count of active relayers or total relayers
    * @param active true if to get count of active relayers
    * @returns count of active relayers or total relayers
@@ -216,10 +234,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
     if (active) {
       return this.relayerQueue.size();
     }
-    return (
-      Object.keys(this.transactionProcessingRelayerMap).length
-      + this.relayerQueue.size()
-    );
+    return Object.keys(this.relayerMap).length;
   }
 
   /**
