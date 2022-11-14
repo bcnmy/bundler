@@ -458,7 +458,8 @@
       },
       "43113": {
         "AVAX": 18,
-        "USDT": 6
+        "USDT": 6,
+        "WETH": 18
       }
     },
     "feeTokenTransferGas": {
