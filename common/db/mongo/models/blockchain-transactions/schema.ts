@@ -26,7 +26,6 @@ export const BlockchainTransactionSchema = new Schema<IBlockchainTransaction>({
   },
   walletAddress: {
     type: String,
-    required: true,
   },
   metaData: {
     type: Object,
