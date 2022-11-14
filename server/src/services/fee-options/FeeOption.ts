@@ -5,6 +5,9 @@ import { GasPriceType } from '../../../../common/gas-price/types';
 import { FeeOptionResponseType } from './types';
 import { IGasPrice } from '../../../../common/gas-price';
 import { ICacheService } from '../../../../common/cache';
+import { logger } from '../../../../common/log-config';
+
+const log = logger(module);
 
 const convertGasPriceToUSD = async (
   nativeChainId: number,
@@ -115,7 +118,7 @@ export class FeeOption {
         response,
       };
     } catch (error) {
-      console.log(error);
+      log.error(error);
       return {
         code: 500,
         error: `Error occured in getting fee options service. Error: ${error}`,
