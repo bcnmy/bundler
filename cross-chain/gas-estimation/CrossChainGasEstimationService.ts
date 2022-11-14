@@ -54,7 +54,8 @@ export class CrossChainGasEstimationService implements ICrossChainGasEstimationS
     const gasPrice = await this.gasPriceService.getGasPrice();
     let effectiveGasPrice = 0;
     if (typeof gasPrice !== 'string') {
-      effectiveGasPrice = parseInt(gasPrice.maxFeePerGas, 10) + parseInt(gasPrice.maxPriorityFeePerGas, 10);
+      effectiveGasPrice = parseInt(gasPrice.maxFeePerGas, 10);
+      effectiveGasPrice += parseInt(gasPrice.maxPriorityFeePerGas, 10);
     } else {
       effectiveGasPrice = parseInt(gasPrice, 10);
     }
@@ -123,11 +124,10 @@ export class CrossChainGasEstimationService implements ICrossChainGasEstimationS
         );
       }
 
-      const feeTokenSymbol = this.tokenAddressToSymbolMap[message.gasFeePaymentArgs.feeTokenAddress];
+      const { feeTokenAddress } = message.gasFeePaymentArgs;
+      const feeTokenSymbol = this.tokenAddressToSymbolMap[feeTokenAddress];
       if (!feeTokenSymbol) {
-        throw new Error(
-          `Fee Token Symbol not found for address: ${message.gasFeePaymentArgs.feeTokenAddress}`,
-        );
+        throw new Error(`Fee Token Symbol not found for address: ${feeTokenAddress}`);
       }
 
       const routerService = this.routerServiceMap[message.routerAdaptor];

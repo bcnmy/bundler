@@ -1,1 +1,1 @@
-export * from "./CCMPGatewayService"
+export * from './CCMPGatewayService';

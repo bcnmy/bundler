@@ -1,5 +1,5 @@
 import { AbacusCore, MultiProvider, coreEnvironments } from '@abacus-network/sdk';
-import { BigNumberish, ethers } from 'ethers';
+import { ethers } from 'ethers';
 import { config } from '../../config';
 import type { ICCMPRouterService } from './interfaces';
 import type { CCMPMessage } from '../../common/types';

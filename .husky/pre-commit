@@ -4,3 +4,4 @@
 yarn run format:server
 yarn run format:common
 yarn run format:relayer
+yarn run format:cross-chain
