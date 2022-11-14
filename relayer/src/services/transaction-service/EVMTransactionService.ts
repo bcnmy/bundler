@@ -4,6 +4,8 @@ import { ICacheService } from '../../../../common/cache';
 import { IGasPrice } from '../../../../common/gas-price';
 import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
+import { getMaxRetryCountNotificationMessage } from '../../../../common/notification';
+import { INotificationManager } from '../../../../common/notification/interface';
 import { EVMRawTransactionType, TransactionType } from '../../../../common/types';
 import { getRetryTransactionCountKey, parseError } from '../../../../common/utils';
 import { config } from '../../../../config';
@@ -39,9 +41,11 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
 
   cacheService: ICacheService;
 
+  notificationManager: INotificationManager;
+
   constructor(evmTransactionServiceParams: EVMTransactionServiceParamsType) {
     const {
-      options, networkService, transactionListener, nonceManager, gasPriceService, cacheService,
+      options, networkService, transactionListener, nonceManager, gasPriceService, cacheService, notificationManager,
     } = evmTransactionServiceParams;
     this.chainId = options.chainId;
     this.networkService = networkService;
@@ -49,6 +53,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     this.nonceManager = nonceManager;
     this.gasPriceService = gasPriceService;
     this.cacheService = cacheService;
+    this.notificationManager = notificationManager;
   }
 
   private async createTransaction(
@@ -179,6 +184,22 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     }
   }
 
+  private async sendMaxRetryCountExceededSlackNotification(
+    transactionId: string,
+    account: IEVMAccount,
+    transactionType: TransactionType,
+    chainId: number,
+  ) {
+    const maxRetryCountNotificationMessage = getMaxRetryCountNotificationMessage(
+      transactionId,
+      account,
+      transactionType,
+      chainId,
+    );
+    const slackNotifyObject = this.notificationManager.getSlackNotifyObject(maxRetryCountNotificationMessage);
+    await this.notificationManager.sendSlackNotification(slackNotifyObject);
+  }
+
   async sendTransaction(
     transactionData: TransactionDataType,
     account: IEVMAccount,
@@ -196,10 +217,23 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     const maxRetryCount = config.transaction.retryCount[transactionType][this.chainId];
 
     if (retryTransactionCount > maxRetryCount) {
+      try {
+      // send slack notification
+        await this.sendMaxRetryCountExceededSlackNotification(
+          transactionData.transactionId,
+          account,
+          transactionType,
+          this.chainId,
+        );
+      } catch (error) {
+        log.error(error);
+        log.error('Error in sending slack notification');
+      }
+      // Should we send this response if we are manaully resubmitting transaction?
       return {
         state: 'failed',
         code: 404, // TODO custom code for max retry
-        error: 'Max retry count exceeded',
+        error: 'Max retry count exceeded. Use end point to get transaction status', // todo add end point
         transactionId,
         ...{
           isTransactionRelayed: false,
