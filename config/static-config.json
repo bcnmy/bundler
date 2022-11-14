@@ -1,4 +1,8 @@
 {
+  "slack": {
+    "token": "xoxb-870821785586-4345375323734-3srwGq80BpaRS4M7XEOBb4HD",
+    "channel": "C04A9077TC5"
+  },
   "socketService": {
     "wssUrl": "wss://sdk-testing-ws.staging.biconomy.io/connection/websocket",
     "httpUrl": "https://sdk-testing-ws.staging.biconomy.io/api"
