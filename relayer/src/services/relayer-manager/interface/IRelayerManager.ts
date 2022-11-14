@@ -2,7 +2,7 @@ import { ethers } from 'ethers';
 import { IGasPrice } from '../../../../../common/gas-price';
 import { INetworkService } from '../../../../../common/network';
 import { INonceManager } from '../../nonce-manager';
-import { EVMRelayerMetaDataType } from '../../relayer-queue';
+import { EVMRelayerMetaDataType, IRelayerQueue } from '../../relayer-queue';
 import { ITransactionService } from '../../transaction-service';
 
 export interface IRelayerManager<AccountType, RawTransactionType> {
@@ -17,6 +17,7 @@ export interface IRelayerManager<AccountType, RawTransactionType> {
   gasLimitMap: {
     [key: number]: number
   };
+  relayerQueue: IRelayerQueue<EVMRelayerMetaDataType>;
   relayerMap: Record<string, AccountType>;
   transactionProcessingRelayerMap: Record<string, EVMRelayerMetaDataType>;
   nonceManager: INonceManager<AccountType, RawTransactionType>;

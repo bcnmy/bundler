@@ -8,10 +8,21 @@ export class TransactionDAO implements ITransactionDAO {
     this._db = Mongo.getInstance();
   }
 
+  /**
+   * Method saves transaction data for a given chain id
+   * @param chainId
+   * @param transactionData
+   */
   async save(chainId: number, transactionData: object): Promise<void> {
     await this._db.getBlockchainTransaction(chainId).insertMany([transactionData]);
   }
 
+  /**
+   * Method updates an existing entry with some new data
+   * @param chainId
+   * @param id is transactionId
+   * @param data
+   */
   async updateByTransactionId(
     chainId: number,
     id: string,
@@ -22,6 +33,12 @@ export class TransactionDAO implements ITransactionDAO {
     }, data);
   }
 
+  /**
+   * Method gets transaction data by transaction id
+   * @param chainId
+   * @param id is transactionId
+   * @returns
+   */
   async getByTransactionId(chainId: number, id: string): Promise<IBlockchainTransaction[] | null> {
     const data = await this._db.getBlockchainTransaction(chainId).find({
       transactionId: id,
@@ -30,5 +47,17 @@ export class TransactionDAO implements ITransactionDAO {
       return data;
     }
     return null;
+  }
+
+  async updateByTransactionIdAndTransactionHash(
+    chainId: number,
+    id: string,
+    hash: string,
+    data: object,
+  ): Promise<void> {
+    await this._db.getBlockchainTransaction(chainId).updateOne({
+      transactionId: id,
+      transactionHash: hash,
+    }, data);
   }
 }
