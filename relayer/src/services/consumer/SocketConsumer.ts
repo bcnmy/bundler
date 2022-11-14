@@ -2,8 +2,10 @@ import { ConsumeMessage } from 'amqplib';
 import { CentClient } from 'cent.js';
 import { logger } from '../../../../common/log-config';
 import { IQueue } from '../../../../common/queue';
-import { TransactionQueueMessageType } from '../../../../common/types';
+import { EVMRawTransactionType, SocketEventType, TransactionQueueMessageType } from '../../../../common/types';
 import { config } from '../../../../config';
+import { IEVMAccount } from '../account';
+import { IRelayerManager } from '../relayer-manager';
 import { ISocketConsumer } from './interface/ISocketConsumer';
 import { SocketConsumerParamsType } from './types';
 
@@ -14,6 +16,12 @@ export class SocketConsumer implements ISocketConsumer {
   socketClient: CentClient;
 
   private queue: IQueue<TransactionQueueMessageType>;
+
+  EVMRelayerManagerMap: {
+    [name: string] : {
+      [chainId: number]: IRelayerManager<IEVMAccount, EVMRawTransactionType>;
+    }
+  };
 
   constructor(
     socketConsumerParams: SocketConsumerParamsType,
@@ -28,6 +36,7 @@ export class SocketConsumer implements ISocketConsumer {
     });
     this.chainId = options.chainId;
     this.queue = queue;
+    this.EVMRelayerManagerMap = options.EVMRelayerManagerMap;
   }
 
   onMessageReceived = async (
@@ -40,6 +49,13 @@ export class SocketConsumer implements ISocketConsumer {
       log.info(`Message received from transction queue in socket service on chain Id ${this.chainId}: ${JSON.stringify(transactionDataReceivedFromQueue)}`);
       this.queue.ack(msg);
       try {
+        if (transactionDataReceivedFromQueue.event === SocketEventType.onTransactionMined
+          && transactionDataReceivedFromQueue.receipt?.from) {
+          log.info(`Calling Relayer Manager ${transactionDataReceivedFromQueue.relayerManagerName} for chainId: ${this.chainId} and relayerAddress: ${transactionDataReceivedFromQueue.receipt.from} onTransactionMined event to update the balance and pending count`);
+          await this.EVMRelayerManagerMap[
+            transactionDataReceivedFromQueue.relayerManagerName][this.chainId]
+            .postTransactionMined(transactionDataReceivedFromQueue.receipt?.from);
+        }
         this.socketClient.publish({
           channel: `transaction:${transactionDataReceivedFromQueue.transactionId}`,
           data: {

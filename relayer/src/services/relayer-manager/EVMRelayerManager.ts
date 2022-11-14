@@ -116,20 +116,69 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
   async getActiveRelayer(): Promise<IEVMAccount | null> {
     const activeRelayer = await this.relayerQueue.pop();
     if (activeRelayer) {
+      activeRelayer.pendingCount += 1;
       this.transactionProcessingRelayerMap[activeRelayer.address] = activeRelayer;
       return this.relayerMap[activeRelayer.address];
     }
     return null;
   }
 
-  async addActiveRelayer(address: string): Promise<void> {
+  async postTransactionMined(relayerAddress: string) {
+    const address = relayerAddress.toLowerCase();
+    let relayerData = this.relayerQueue
+      .list()
+      .find((relayer) => relayer.address === address);
+    if (!relayerData) {
+      // if relayer is performing transaction then it would not be available in relayer queue
+      relayerData = this.transactionProcessingRelayerMap[address];
+    }
+    if (relayerData) {
+      relayerData.pendingCount -= 1;
+      log.info(`Pending count of relayer ${address} is ${relayerData.pendingCount}`);
+      const balance = await this.networkService.getBalance(address);
+      relayerData.balance = balance;
+      log.info(`Balance of relayer ${address} is ${balance}`);
+      // if balance is less than threshold, fund the relayer
+      if (balance.lt(this.fundingBalanceThreshold)) {
+        try {
+          await this.fundRelayers([address]);
+        } catch (error) {
+          log.info(`Error while funding relayer ${address}:- ${error}`);
+        }
+      }
+    } else {
+      log.info(`Relayer ${address} is not found in relayer queue or transaction processing relayer map`);
+    }
+  }
+
+  getRelayer(relayerAddress: string): IEVMAccount | null {
+    const address = relayerAddress.toLowerCase();
+    const relayer = this.relayerMap[address];
+    if (relayer) {
+      return relayer;
+    }
+    return null;
+  }
+
+  async addActiveRelayer(relayerAddress: string): Promise<void> {
+    const address = relayerAddress.toLowerCase();
     log.info(
       `Adding relayer: ${address} to active relayer map on chainId: ${this.chainId}`,
     );
     const relayer = this.transactionProcessingRelayerMap[address];
     if (relayer) {
-      await this.relayerQueue.push(relayer);
+      // check if pending count of relayer is less than threshold
+      // else you wait for the transaction to be mined
+      if (relayer.pendingCount < this.pendingTransactionCountThreshold) {
+        await this.relayerQueue.push(relayer);
+      }
       delete this.transactionProcessingRelayerMap[address];
+
+      // check if size of active relayer queue is
+      // greater than or equal to the inactiveRelayerCountThreshold
+      if ((this.minRelayerCount - this.relayerQueue.size()) >= this.inactiveRelayerCountThreshold) {
+        await this.createRelayers(this.newRelayerInstanceCount);
+      }
       log.info(
         `Relayer ${address} added to active relayer map on chainId: ${this.chainId}`,
       );
@@ -231,7 +280,8 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
     return relayersAddressList;
   }
 
-  hasBalanceBelowThreshold(address: string): boolean {
+  hasBalanceBelowThreshold(relayerAddress: string): boolean {
+    const address = relayerAddress.toLowerCase();
     const relayerData = this.relayerQueue
       .list()
       .find((relayer) => relayer.address === address);
@@ -249,7 +299,8 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
 
   async fundRelayers(addressList: string[]): Promise<any> {
     log.info(`Waiting for lock to fund relayers on chainId: ${this.chainId}`);
-    for (const address of addressList) {
+    for (const relayerAddress of addressList) {
+      const address = relayerAddress.toLowerCase();
       const release = await fundRelayerMutex.acquire();
       if (!this.hasBalanceBelowThreshold(address)) {
         log.info(

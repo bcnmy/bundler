@@ -18,7 +18,7 @@ export const scwRequestSchema = object.keys({
       data: string.required().error(new Error('data is required')),
       chainId: number.required().error(new Error('chainId is required')),
       walletInfo: object.keys({
-        walletAddress: string.required().error(new Error('walletAddress is required')),
+        address: string.required().error(new Error('address is required')),
       }).error(new Error('walletAddress is required')),
       refundInfo: object.keys({
         tokenGasPrice: string.required().error(new Error('tokenGasPrice is required')),
@@ -83,4 +83,16 @@ export const crossChainRequestSchema = object.keys({
 
 export const feeOptionsSchema = object.keys({
   chainId: string.valid('5', '80001'),
+});
+
+// validate schema with a query parameter of transactionId
+export const transactionStatusSchema = object.keys({
+  chainId: string.required().valid('5', '80001'),
+  transactionId: string.required().error(new Error('transactionId is required')),
+});
+
+export const transactionResubmitSchema = object.keys({
+  chainId: number.required().valid(5, 80001),
+  transactionId: string.required().error(new Error('transactionId is required')),
+  gasPrice: number.required().error(new Error('gasPrice is required')),
 });

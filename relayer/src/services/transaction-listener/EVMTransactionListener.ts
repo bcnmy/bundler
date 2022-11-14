@@ -72,6 +72,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       transactionReceipt,
       transactionId,
       relayerAddress,
+      relayerManagerName,
       previousTransactionHash,
       walletAddress,
       metaData,
@@ -84,6 +85,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
     log.info(`Publishing to transaction queue on success for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
     await this.publishToTransactionQueue({
       transactionId,
+      relayerManagerName,
       transactionHash: transactionExecutionResponse?.hash,
       receipt: transactionExecutionResponse,
       event: SocketEventType.onTransactionMined,
@@ -109,6 +111,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       transactionId,
       transactionReceipt,
       relayerAddress,
+      relayerManagerName,
       previousTransactionHash,
       walletAddress,
       metaData,
@@ -120,6 +123,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
     log.info(`Publishing to transaction queue on failure for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
     await this.publishToTransactionQueue({
       transactionId,
+      relayerManagerName,
       transactionHash: transactionExecutionResponse?.hash,
       receipt: transactionExecutionResponse,
       event: SocketEventType.onTransactionMined,
@@ -174,6 +178,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
   private async saveInitialTransactionDataToDatabase(
     transactionExecutionResponse: ethers.providers.TransactionResponse,
     transactionId: string,
+    transactionType: string,
     relayerAddress: string,
     status: TransactionStatus,
     previousTransactionHash: string | null,
@@ -182,6 +187,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
   ): Promise<void> {
     const transactionDataToBeSavedInDatabase = {
       transactionId,
+      transactionType,
       transactionHash: transactionExecutionResponse.hash,
       rawTransaction: transactionExecutionResponse,
       relayerAddress,
@@ -219,6 +225,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
     const transactionReceipt = await this.networkService.waitForTransaction(tranasctionHash);
     log.info(`Transaction receipt is: ${JSON.stringify(transactionReceipt)} for transactionId: ${transactionId} on chainId ${this.chainId}`);
 
+    // TODO: reduce pending count of relayer via RelayerManager
     await this.cacheService.delete(getRetryTransactionCountKey(transactionId, this.chainId));
 
     if (transactionReceipt.status === 1) {
@@ -270,6 +277,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
     if (!transactionExecutionResponse) {
       await this.publishToTransactionQueue({
         transactionId,
+        relayerManagerName,
         error,
         event: SocketEventType.onTransactionError,
       });
@@ -284,6 +292,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
     this.saveInitialTransactionDataToDatabase(
       transactionExecutionResponse,
       transactionId,
+      transactionType,
       relayerAddress,
       TransactionStatus.PENDING,
       null,
@@ -294,6 +303,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
     // transaction queue is being listened by socket service to notify the client about the hash
     await this.publishToTransactionQueue({
       transactionId,
+      relayerManagerName,
       transactionHash: transactionExecutionResponse?.hash,
       receipt: transactionExecutionResponse,
       event: previousTransactionHash

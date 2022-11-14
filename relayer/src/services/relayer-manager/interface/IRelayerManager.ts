@@ -26,7 +26,9 @@ export interface IRelayerManager<AccountType, RawTransactionType> {
   createRelayers(numberOfRelayers?: number): Promise<string[]>;
   fundRelayers(accountAddress: string[]): Promise<boolean>;
   getActiveRelayer(): Promise<AccountType | null>;
+  getRelayer(accountAddress: string): AccountType | null;
   addActiveRelayer(address: string): Promise<void>;
+  postTransactionMined(address: string): Promise<void>;
   getRelayersCount(active: boolean): number;
   hasBalanceBelowThreshold(address: string): boolean;
   setMinRelayerCount(minRelayerCount: number): void
