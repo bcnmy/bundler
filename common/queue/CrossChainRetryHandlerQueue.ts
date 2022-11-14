@@ -42,7 +42,7 @@ export class CrossChainRetryHandlerQueue implements IQueue<CrossChainRetryQueueD
     const key = `cross_chain_retry_chainid.${this.chainId}`;
     const retryInterval = config.ccmp.retryInterval[this.chainId][data.message.routerAdaptor];
     log.info(
-      `Publishing data to cross chain retry queue on chainId: ${this.chainId} with interval ${retryInterval} and key ${key}`
+      `Publishing data to cross chain retry queue on chainId: ${this.chainId} with interval ${retryInterval} and key ${key}`,
     );
     if (this.channel) {
       this.channel.publish(this.exchangeName, key, Buffer.from(JSON.stringify(data)), {
@@ -56,13 +56,13 @@ export class CrossChainRetryHandlerQueue implements IQueue<CrossChainRetryQueueD
 
   async consume(onMessageReceived: () => void) {
     log.info(
-      `[x] Setting up consumer for queue with chainId: ${this.chainId} for cross chain retry queue`
+      `[x] Setting up consumer for queue with chainId: ${this.chainId} for cross chain retry queue`,
     );
     this.channel.prefetch(1);
     try {
       // setup a consumer
       const crossChainRetryQueue: Replies.AssertQueue = await this.channel.assertQueue(
-        `${this.queueName}_${this.chainId}`
+        `${this.queueName}_${this.chainId}`,
       );
       const key = `cross_chain_retry_chainid.${this.chainId}`;
 

@@ -170,7 +170,7 @@ implements
       walletAddress,
       metaData,
       transactionType,
-      ccmpMessage
+      ccmpMessage,
     } = onTranasctionFailureParams;
     if (!transactionReceipt) {
       log.error(`Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`);

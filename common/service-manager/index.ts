@@ -280,7 +280,8 @@ const crossChainRetryTransactionServiceMap: {
     feeOptionMap[chainId] = feeOptionService;
     // for each network get transaction type
     for (const type of supportedTransactionType[chainId]) {
-      const aaRelayerManager = EVMRelayerManagerMap[relayerManagerTransactionTypeNameMap[type]][chainId];
+      const aaRelayerManager = EVMRelayerManagerMap[
+        relayerManagerTransactionTypeNameMap[type]][chainId];
       if (!aaRelayerManager) {
         throw new Error(`Relayer manager not found for ${type}`);
       }
@@ -333,7 +334,8 @@ const crossChainRetryTransactionServiceMap: {
         });
         await scwQueue.connect();
 
-        const scwRelayerManager = EVMRelayerManagerMap[relayerManagerTransactionTypeNameMap[type]][chainId];
+        const scwRelayerManager = EVMRelayerManagerMap[
+          relayerManagerTransactionTypeNameMap[type]][chainId];
         if (!scwRelayerManager) {
           throw new Error(`Relayer manager not found for ${type}`);
         }
@@ -374,7 +376,8 @@ const crossChainRetryTransactionServiceMap: {
           networkService,
         );
 
-        const ccmpRelayerManager = EVMRelayerManagerMap[relayerManagerTransactionTypeNameMap[type]][chainId];
+        const ccmpRelayerManager = EVMRelayerManagerMap[
+          relayerManagerTransactionTypeNameMap[type]][chainId];
         if (!ccmpRelayerManager) {
           throw new Error(`Relayer manager not found for ${type}`);
         }

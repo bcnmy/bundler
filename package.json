@@ -30,6 +30,7 @@
     "ethers": "^5.7.1",
     "express": "^4.18.2",
     "hdkey": "^2.0.1",
+    "http-status-codes": "^2.2.0",
     "husky": "^8.0.2",
     "joi": "^17.6.3",
     "lodash": "^4.17.21",
