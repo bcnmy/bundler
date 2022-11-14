@@ -18,11 +18,6 @@ export const status = async (req: Request, res: Response) => {
   const relayerManager = await statusService.checkRelayerManager();
   const networkService = await statusService.checkNetworkService();
   const tokenPrice = await statusService.checkTokenPrice();
-  console.log('redis', redis);
-  console.log('mongo', mongo);
-  console.log('relayerManager', JSON.stringify(relayerManager));
-  console.log('networkService', networkService);
-  console.log('tokenPrice', tokenPrice);
   res.render('status', {
     redis,
     mongo,

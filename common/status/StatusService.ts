@@ -78,14 +78,12 @@ export class StatusService implements IStatusService {
       relayerManagerStatus[relayerManagerNameKey] = {};
       const chainIdKeys: string[] = Object.keys(this.evmRelayerManagerMap[relayerManagerNameKey]);
       for (const chainIdKey of chainIdKeys) {
-        console.log('chainIdKey', chainIdKey);
         const chainId = parseInt(chainIdKey, 10);
         relayerManagerStatus[relayerManagerNameKey][chainId] = [];
         const relayerManager = this.evmRelayerManagerMap[relayerManagerNameKey][chainId];
         // get list of relayers from relayer manager
         const relayerAddresses = Object.keys(relayerManager.relayerMap);
         // iterate over the list of relayers
-        console.log('no of relayers', relayerAddresses.length);
         for (const relayerAddress of relayerAddresses) {
           const relayerDetails = relayerManager.relayerQueue.get(relayerAddress);
           if (relayerDetails) {
