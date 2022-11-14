@@ -217,13 +217,18 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     const maxRetryCount = config.transaction.retryCount[transactionType][this.chainId];
 
     if (retryTransactionCount > maxRetryCount) {
+      try {
       // send slack notification
-      await this.sendMaxRetryCountExceededSlackNotification(
-        transactionData.transactionId,
-        account,
-        transactionType,
-        this.chainId,
-      );
+        await this.sendMaxRetryCountExceededSlackNotification(
+          transactionData.transactionId,
+          account,
+          transactionType,
+          this.chainId,
+        );
+      } catch (error) {
+        log.error(error);
+        log.error('Error in sending slack notification');
+      }
       // Should we send this response if we are manaully resubmitting transaction?
       return {
         state: 'failed',
