@@ -45,4 +45,4 @@ const encryptConfig = async (
   process.exit(1);
 };
 
-encryptConfig('averystrongpassword');
+encryptConfig(process.env.CONFIG_PASSPHRASE);
