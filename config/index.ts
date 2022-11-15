@@ -2,8 +2,11 @@ import crypto from 'crypto-js';
 import fs, { existsSync } from 'fs';
 import _, { isNumber } from 'lodash';
 import path from 'path';
+import { logger } from '../common/log-config';
 
 import { ConfigType, IConfig } from './interface/IConfig';
+
+const log = logger(module);
 
 const KEY_SIZE = 32;
 const PBKDF2_ITERATIONS = 3100000;
@@ -14,6 +17,7 @@ export class Config implements IConfig {
   config: ConfigType;
 
   constructor() {
+    log.info('Config loading started');
     // decrypt the config and load it
     const encryptedEnvPath = './config.json.enc';
     const passphrase = process.env.CONFIG_PASSPHRASE;
@@ -63,6 +67,7 @@ export class Config implements IConfig {
 
     this.config = _.merge(data, staticConfig);
     this.validate();
+    log.info('Config loaded successfully');
   }
 
   validate(): boolean {
