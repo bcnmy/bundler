@@ -151,6 +151,7 @@ export class CrossChainGasEstimationService implements ICrossChainGasEstimationS
 
       const messageVerificationFee = await this.getMessageVerificationFee(message, feeTokenSymbol);
 
+      // TODO: Integrate Fee Options, and expose as API
       const totalFee = verificationFee.add(verificationTxGasFee).add(messageVerificationFee);
       log.info(`Total Fee: ${totalFee} $${feeTokenSymbol}`);
       return {

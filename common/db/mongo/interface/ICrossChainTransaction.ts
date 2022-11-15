@@ -25,5 +25,4 @@ export interface ICrossChainTransaction {
   retryCount: number;
   message: CCMPMessage;
   verificationData?: CCMPVerificationData;
-  destinationTxHash?: string;
 }

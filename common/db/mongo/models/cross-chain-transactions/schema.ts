@@ -115,9 +115,6 @@ export const CrossChainTransactionSchema = new Schema<ICrossChainTransaction>({
   verificationData: {
     type: String,
   },
-  destinationTxHash: {
-    type: String,
-  },
   retryCount: {
     type: Number,
     required: true,

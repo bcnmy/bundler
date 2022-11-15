@@ -19,8 +19,6 @@ export interface ICCMPTaskManager {
   sourceTxHash: string;
   verificationData: CCMPVerificationData;
   setVerificationData: (data: CCMPVerificationData) => void;
-  destinationTxHash?: string;
-  setDestinationTxHash: (txHash: string) => void;
   status: ICrossChainTransactionStatusLogEntry
   run: (
     name: string,

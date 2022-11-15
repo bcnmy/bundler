@@ -138,18 +138,13 @@ export class CCMPConsumer implements ITransactionConsumer<IEVMAccount, EVMRawTra
   };
 
   private static handleOnTransactionSuccessFactory = (destinationTxHash?: string): IHandler => {
-    const handler: IHandler = async (data, ctx) => {
-      if (destinationTxHash) {
-        ctx.setDestinationTxHash(destinationTxHash);
-      }
-      return {
-        ...data,
-        status: CrossChainTransationStatus.DESTINATION_TRANSACTION_RELAYED,
-        context: {
-          destinationTxHash,
-        },
-      };
-    };
+    const handler: IHandler = async (data) => ({
+      ...data,
+      status: CrossChainTransationStatus.DESTINATION_TRANSACTION_RELAYED,
+      context: {
+        destinationTxHash,
+      },
+    });
     return handler;
   };
 
@@ -157,20 +152,14 @@ export class CCMPConsumer implements ITransactionConsumer<IEVMAccount, EVMRawTra
     destinationTxHash?: string,
     error?: string,
   ): IHandler => {
-    const handler: IHandler = async (data, ctx) => {
-      if (destinationTxHash) {
-        ctx.setDestinationTxHash(destinationTxHash);
-      }
-
-      return {
-        ...data,
-        status: CrossChainTransactionError.DESTINATION_TRANSACTION_REVERTED,
-        context: {
-          destinationTxHash,
-          error,
-        },
-      };
-    };
+    const handler: IHandler = async (data) => ({
+      ...data,
+      status: CrossChainTransactionError.DESTINATION_TRANSACTION_REVERTED,
+      context: {
+        destinationTxHash,
+        error,
+      },
+    });
     return handler;
   };
 }

@@ -457,18 +457,13 @@ implements
   };
 
   private static handleCCMPOnTransactionSuccessFactory = (destinationTxHash?: string): IHandler => {
-    const handler: IHandler = async (data, ctx) => {
-      if (destinationTxHash) {
-        ctx.setDestinationTxHash(destinationTxHash);
-      }
-      return {
-        ...data,
-        status: CrossChainTransationStatus.DESTINATION_TRANSACTION_CONFIRMED,
-        context: {
-          destinationTxHash,
-        },
-      };
-    };
+    const handler: IHandler = async (data) => ({
+      ...data,
+      status: CrossChainTransationStatus.DESTINATION_TRANSACTION_CONFIRMED,
+      context: {
+        destinationTxHash,
+      },
+    });
     return handler;
   };
 
@@ -476,21 +471,15 @@ implements
     destinationTxHash?: string,
     error?: string,
   ): IHandler => {
-    const handler: IHandler = async (data, ctx) => {
-      if (destinationTxHash) {
-        ctx.setDestinationTxHash(destinationTxHash);
-      }
-
-      return {
-        ...data,
-        status: CrossChainTransactionError.DESTINATION_TRANSACTION_REVERTED,
-        scheduleRetry: true,
-        context: {
-          destinationTxHash,
-          error,
-        },
-      };
-    };
+    const handler: IHandler = async (data) => ({
+      ...data,
+      status: CrossChainTransactionError.DESTINATION_TRANSACTION_REVERTED,
+      scheduleRetry: true,
+      context: {
+        destinationTxHash,
+        error,
+      },
+    });
     return handler;
   };
 }

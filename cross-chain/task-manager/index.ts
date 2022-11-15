@@ -21,8 +21,6 @@ const log = logger(module);
 export class CCMPTaskManager implements ICCMPTaskManager {
   public verificationData: CCMPVerificationData;
 
-  public destinationTxHash?: string | undefined;
-
   public status: ICrossChainTransactionStatusLogEntry;
 
   public creationTime: number | undefined;
@@ -47,10 +45,6 @@ export class CCMPTaskManager implements ICCMPTaskManager {
     this.verificationData = data;
   }
 
-  setDestinationTxHash(txHash: string) {
-    this.destinationTxHash = txHash;
-  }
-
   private getPartialDAO() {
     return {
       status: this.status.status,
@@ -60,7 +54,6 @@ export class CCMPTaskManager implements ICCMPTaskManager {
       updationTime: Date.now(),
       message: this.message,
       verificationData: this.verificationData?.toString(),
-      destinationTxHash: this.destinationTxHash,
     };
   }
 

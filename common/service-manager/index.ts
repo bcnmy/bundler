@@ -391,7 +391,7 @@ const networkServiceMap: {
         await ccmpQueue.connect();
 
         ccmpGatewayServiceMap[chainId] = new CCMPGatewayService(
-          config.ccmp.contracts[chainId].Diamond,
+          config.ccmp.contracts[chainId].CCMPGateway,
           chainId,
           config.ccmp.abi.CCMPGateway,
           networkService,
