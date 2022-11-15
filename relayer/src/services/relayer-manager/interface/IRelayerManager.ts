@@ -1,4 +1,5 @@
 import { ethers } from 'ethers';
+import { ICacheService } from '../../../../../common/cache';
 import { IGasPrice } from '../../../../../common/gas-price';
 import { INetworkService } from '../../../../../common/network';
 import { INonceManager } from '../../nonce-manager';
@@ -23,7 +24,7 @@ export interface IRelayerManager<AccountType, RawTransactionType> {
   nonceManager: INonceManager<AccountType, RawTransactionType>;
   networkService: INetworkService<AccountType, RawTransactionType>;
   gasPriceService: IGasPrice;
-
+  cacheService: ICacheService;
   createRelayers(numberOfRelayers?: number): Promise<string[]>;
   fundRelayers(accountAddress: string[]): Promise<boolean>;
   getActiveRelayer(): Promise<AccountType | null>;

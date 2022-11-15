@@ -202,6 +202,7 @@ let statusService: IStatusService;
       const relayerMangerInstance = new EVMRelayerManager({
         networkService,
         gasPriceService,
+        cacheService,
         transactionService,
         nonceManager,
         relayerQueue,

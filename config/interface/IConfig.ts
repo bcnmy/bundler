@@ -151,11 +151,16 @@ type SimulationDataConfigType = {
   [key: string]: any
 };
 
+type CacheServiceConfigType = {
+  lockTTL: number,
+};
+
 export type ConfigType = {
   queueUrl: string,
   slack: SlackConfigType,
   dataSources: DataSourcesConfigType,
   socketService: SocketServiceConfigType,
+  cacheService: CacheServiceConfigType,
   supportedNetworks: Array<number>,
   EIP1559SupportedNetworks: Array<number>,
   supportedTransactionType: ChainIdSupportedTransactionType,

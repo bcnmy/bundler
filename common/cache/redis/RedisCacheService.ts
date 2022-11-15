@@ -1,3 +1,4 @@
+import Redlock, { Lock } from 'redlock';
 import { createClient } from 'redis';
 import { config } from '../../../config';
 import { logger } from '../../log-config';
@@ -10,10 +11,52 @@ export class RedisCacheService implements ICacheService {
 
   private redisClient;
 
+  private redLock: Redlock | undefined;
+
   private constructor() {
     this.redisClient = createClient({
       url: config.dataSources.redisUrl,
     });
+  }
+
+  connectRedLock(): Redlock {
+    return new Redlock(
+      [this.redisClient],
+      {
+        // the expected clock drift; for more details
+        // see http://redis.io/topics/distlock
+        driftFactor: 0.01, // multiplied by lock ttl to determine drift time
+
+        // the max number of times Redlock will attempt
+        // to lock a resource before erroring
+        retryCount: 10000,
+
+        // the time in ms between attempts
+        retryDelay: 800, // time in ms
+
+        // the max time in ms randomly added to retries
+        // to improve performance under high contention
+        // see https://www.awsarchitectureblog.com/2015/03/backoff.html
+        retryJitter: 200, // time in ms
+      },
+    );
+  }
+
+  getRedLock(): Redlock | undefined {
+    if (this.redLock) return this.redLock;
+    return undefined;
+  }
+
+  async unlockRedLock(redisLock: Lock) {
+    try {
+      if (redisLock && this.redLock) {
+        await this.redLock.release(redisLock);
+      } else {
+        log.error('Redlock not initialized');
+      }
+    } catch (error) {
+      log.error(`Error in unlocking redis lock ${JSON.stringify(error)}`);
+    }
   }
 
   /**
@@ -34,6 +77,15 @@ export class RedisCacheService implements ICacheService {
     log.info('Initiating Redis connection');
     await this.redisClient.connect();
     log.info('Main Redis connected successfully');
+    this.redLock = this.connectRedLock();
+
+    this.redLock.on('clientError', (err: object) => {
+      try {
+        log.info(`Failed to get redis lock ${err.toString()}`);
+      } catch (error) {
+        log.error(error);
+      }
+    });
     this.redisClient.on('error', (err: any) => {
       log.error(`Redis redisClient Error ${err}`);
     });

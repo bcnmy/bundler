@@ -7,6 +7,7 @@ import {
 } from 'ethereumjs-util';
 import { ethers } from 'ethers';
 import hdkey from 'hdkey';
+import { ICacheService } from '../../../../common/cache';
 import { IGasPrice } from '../../../../common/gas-price';
 import { GasPriceType } from '../../../../common/gas-price/types';
 import { logger } from '../../../../common/log-config';
@@ -26,7 +27,6 @@ import { EVMRelayerManagerServiceParamsType } from './types';
 
 const log = logger(module);
 
-const fundRelayerMutex = new Mutex();
 const createRelayerMutex = new Mutex();
 const nodePathRoot = "m/44'/60'/0'/";
 
@@ -46,6 +46,8 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
   name: string;
 
   chainId: number;
+
+  cacheService: ICacheService;
 
   transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>;
 
@@ -90,6 +92,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
       options,
       networkService,
       gasPriceService,
+      cacheService,
       nonceManager,
       relayerQueue,
       transactionService,
@@ -111,6 +114,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
     this.gasPriceService = gasPriceService;
     this.transactionService = transactionService;
     this.nonceManager = nonceManager;
+    this.cacheService = cacheService;
   }
 
   /**
@@ -337,63 +341,72 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
    * @param addressList List of relayers to fund
    */
   async fundRelayers(addressList: string[]): Promise<any> {
-    log.info(`Waiting for lock to fund relayers on chainId: ${this.chainId}`);
     for (const relayerAddress of addressList) {
+      log.info(`Waiting for lock to fund relayers on chainId: ${this.chainId} for relayer ${relayerAddress}`);
       const address = relayerAddress.toLowerCase();
-      const release = await fundRelayerMutex.acquire();
+      // const release = await fundRelayerMutex.acquire();
+      const lock = this.cacheService.getRedLock();
       if (!this.hasBalanceBelowThreshold(address)) {
         log.info(
           `Has sufficient funds in relayer ${address} on chainId: ${this.chainId}`,
         );
-      } else {
-        // eslint-disable-next-line no-await-in-loop
-        log.info(`Funding relayer ${address} on chainId: ${this.chainId}`);
-        let gasLimitIndex = 0;
-        // different gas limit for arbitrum
-        if ([42161, 421611].includes(this.chainId)) gasLimitIndex = 1;
+      } else if (lock) {
+        const acquiredLock = await lock.acquire([`locks:${address}`], config.cacheService.lockTTL);
 
-        const gasLimit = this.gasLimitMap[gasLimitIndex];
+        try {
+          // eslint-disable-next-line no-await-in-loop
+          log.info(`Funding relayer ${address} on chainId: ${this.chainId}`);
+          let gasLimitIndex = 0;
+          // different gas limit for arbitrum
+          if ([42161, 421611].includes(this.chainId)) gasLimitIndex = 1;
 
-        const fundingAmount = this.fundingRelayerAmount;
+          const gasLimit = this.gasLimitMap[gasLimitIndex];
 
-        const ownerAccountNonce = await this.nonceManager.getNonce(
-          this.ownerAccountDetails.getPublicKey(),
-        );
-        const gasPrice = await this.gasPriceService.getGasPrice(
-          GasPriceType.DEFAULT,
-        );
-        const rawTx = {
-          from: this.ownerAccountDetails.getPublicKey(),
-          data: '0x',
-          gasPrice: ethers.BigNumber.from(gasPrice).toHexString(),
-          gasLimit: ethers.BigNumber.from(gasLimit.toString()).toHexString(),
-          to: address,
-          value: ethers.utils
-            .parseEther(fundingAmount.toString())
-            .toHexString(),
-          nonce: ethers.BigNumber.from(
-            ownerAccountNonce.toString(),
-          ).toHexString(),
-          chainId: this.chainId,
-        };
-        const transactionId = generateTransactionId(JSON.stringify(rawTx));
-        log.info(
-          `Funding relayer ${address} on chainId: ${
-            this.chainId
-          } with raw tx ${JSON.stringify(rawTx)}`,
-        );
-        await this.transactionService.sendTransaction(
-          {
-            ...rawTx,
-            transactionId,
-            walletAddress: '', // TODO: review to get the wallet address
-          },
-          this.ownerAccountDetails,
-          TransactionType.FUNDING,
-          this.name,
-        );
+          const fundingAmount = this.fundingRelayerAmount;
+
+          const ownerAccountNonce = await this.nonceManager.getNonce(
+            this.ownerAccountDetails.getPublicKey(),
+          );
+          const gasPrice = await this.gasPriceService.getGasPrice(
+            GasPriceType.DEFAULT,
+          );
+          const rawTx = {
+            from: this.ownerAccountDetails.getPublicKey(),
+            data: '0x',
+            gasPrice: ethers.BigNumber.from(gasPrice).toHexString(),
+            gasLimit: ethers.BigNumber.from(gasLimit.toString()).toHexString(),
+            to: address,
+            value: ethers.utils
+              .parseEther(fundingAmount.toString())
+              .toHexString(),
+            nonce: ethers.BigNumber.from(
+              ownerAccountNonce.toString(),
+            ).toHexString(),
+            chainId: this.chainId,
+          };
+          const transactionId = generateTransactionId(JSON.stringify(rawTx));
+          log.info(
+            `Funding relayer ${address} on chainId: ${
+              this.chainId
+            } with raw tx ${JSON.stringify(rawTx)}`,
+          );
+          await this.transactionService.sendTransaction(
+            {
+              ...rawTx,
+              transactionId,
+              walletAddress: '', // TODO: review to get the wallet address
+            },
+            this.ownerAccountDetails,
+            TransactionType.FUNDING,
+            this.name,
+          );
+          await this.cacheService.unlockRedLock(acquiredLock);
+          log.info(`Lock released after funding relayer ${address} on chainId: ${this.chainId}`);
+        } catch (error) {
+          await this.cacheService.unlockRedLock(acquiredLock);
+          log.error(`Error while funding relayer ${address} on chainId: ${this.chainId} with error: ${JSON.stringify(error)}`);
+        }
       }
-      release();
     }
   }
 
