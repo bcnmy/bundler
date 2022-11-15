@@ -27,7 +27,6 @@ import { EVMRelayerManagerServiceParamsType } from './types';
 
 const log = logger(module);
 
-const fundRelayerMutex = new Mutex();
 const createRelayerMutex = new Mutex();
 const nodePathRoot = "m/44'/60'/0'/";
 
