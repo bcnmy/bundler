@@ -538,9 +538,10 @@
       "FTM": [250, 4002],
       "CELO": [42220, 44787],
       "NEON": [245022926],
-      "BOBA": [1294]
+      "BOBA": [1294],
+      "BICO": [111111111]
     },
-    "updateFrequencyInSeconds": 60,
+    "updateFrequencyInSeconds": 120,
     "symbolMapByChainId": {
       "1": {
         "0x6B175474E89094C44Da98b954EedeAC495271d0F": "DAI"

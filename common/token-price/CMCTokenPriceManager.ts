@@ -43,7 +43,8 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
   private async setup() {
     try {
       const networkSymbolsCategoriesKeys = Object.keys(this.networkSymbolCategories);
-      const response = await axios.get(`${this.apiKey}?symbol=${networkSymbolsCategoriesKeys.toString()}`, {
+      log.info(`Fetching token prices for ${networkSymbolsCategoriesKeys.join(', ')}`);
+      const response = await axios.get(`https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=${networkSymbolsCategoriesKeys.toString()}`, {
         headers: {
           'X-CMC_PRO_API_KEY': this.apiKey,
         },
