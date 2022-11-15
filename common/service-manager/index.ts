@@ -101,7 +101,10 @@ let statusService: IStatusService;
     updateFrequencyInSeconds: config.tokenPrice.updateFrequencyInSeconds,
     symbolMapByChainId: config.tokenPrice.symbolMapByChainId,
   });
-  tokenService.schedule();
+  // added check for relayer node path in order to run on only one server
+  if (config.relayer.nodePathIndex === 0) {
+    tokenService.schedule();
+  }
 
   log.info(`Setting up instances for following chainIds: ${JSON.stringify(supportedNetworks)}`);
   for (const chainId of supportedNetworks) {
@@ -131,7 +134,8 @@ let statusService: IStatusService;
 
     log.info(`Setting up gas price service for chainId: ${chainId}`);
     const gasPriceService = gasPriceManager.setup();
-    if (gasPriceService) {
+    // added check for relayer node path in order to run on only one server
+    if (gasPriceService && config.relayer.nodePathIndex === 0) {
       gasPriceService.schedule();
     }
     if (!gasPriceService) {
