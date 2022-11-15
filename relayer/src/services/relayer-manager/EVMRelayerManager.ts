@@ -285,6 +285,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
           log.info(`Creating relayer ${relayerAddress} on chainId: ${this.chainId}`);
           const balance = await this.networkService.getBalance(relayerAddress);
           const nonce = await this.nonceManager.getNonce(relayerAddress);
+          log.info(`Balance of relayer ${relayerAddress} is ${balance} and nonce is ${nonce} on chainId: ${this.chainId} with threshold ${this.fundingBalanceThreshold}`);
           this.relayerQueue.push({
             address: relayer.getPublicKey(),
             pendingCount: 0,
@@ -331,7 +332,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
       );
       if (relayerBalance.lte(this.fundingBalanceThreshold)) {
         log.info(
-          `Relayer ${address} balance ${relayerBalance} is below threshold of ${this.fundingBalanceThreshold}  on chainId: ${this.chainId}`,
+          `Relayer ${address} balance ${relayerBalance} is below threshold of ${this.fundingBalanceThreshold} on chainId: ${this.chainId}`,
         );
         return true;
       }

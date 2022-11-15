@@ -100,34 +100,13 @@
       "43113": 0.1
     },
     "fundingBalanceThreshold": {
-      "5": {
-        "type": "BigNumber",
-        "hex": "0x2C68AF0BB140000"
-      },
-      "137": {
-        "type": "BigNumber",
-        "hex": "0x0429d069189e0000"
-      },
-      "80001": {
-        "type": "BigNumber",
-        "hex": "0x016345785d8a0000"
-      },
-      "97": {
-        "type": "BigNumber",
-        "hex": "0xB1A2BC2EC50000"
-      },
-      "420": {
-        "type": "BigNumber",
-        "hex": "0x2386f26fc10000"
-      },
-      "421613": {
-        "type": "BigNumber",
-        "hex": "0x2386f26fc10000"
-      },
-      "43113": {
-        "type": "BigNumber",
-        "hex": "0x2386f26fc10000"
-      }
+      "5": 0.2,
+      "137": 0.3,
+      "80001": 0.1,
+      "97": 0.05,
+      "420": 0.01,
+      "421613": 0.01,
+      "43113": 0.01
     },
     "newRelayerInstanceCount": {
       "5": 1,

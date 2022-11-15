@@ -1,4 +1,5 @@
 /* eslint-disable no-await-in-loop */
+import { ethers } from 'ethers';
 import { config } from '../../config';
 import { EVMAccount, IEVMAccount } from '../../relayer/src/services/account';
 import { AAConsumer, SCWConsumer, SocketConsumer } from '../../relayer/src/services/consumer';
@@ -216,7 +217,8 @@ let statusService: IStatusService;
           pendingTransactionCountThreshold:
           relayerManager.pendingTransactionCountThreshold[chainId],
           newRelayerInstanceCount: relayerManager.newRelayerInstanceCount[chainId],
-          fundingBalanceThreshold: relayerManager.fundingBalanceThreshold[chainId],
+          fundingBalanceThreshold: ethers.utils
+            .parseEther(relayerManager.fundingBalanceThreshold[chainId].toString()),
           fundingRelayerAmount: relayerManager.fundingRelayerAmount[chainId],
           ownerAccountDetails: new EVMAccount(
             relayerManager.ownerAccountDetails[chainId].publicKey,

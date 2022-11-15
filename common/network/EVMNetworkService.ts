@@ -121,7 +121,7 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
     const balance = await this.useProvider(RpcMethod.getBalance, {
       address,
     });
-    return balance;
+    return BigNumber.from(balance);
   }
 
   // TODO: Avoid creating new contract instance Every time. Save & get from cache
