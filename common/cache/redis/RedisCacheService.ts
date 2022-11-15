@@ -72,10 +72,6 @@ export class RedisCacheService implements ICacheService {
    * Method creates connection to redis client instance
    */
   async connect(): Promise<void> {
-    if (this.redisClient.status === 'ready') {
-      log.info('Redis client already connected');
-      return;
-    }
     log.info('Initiating Redis connection');
     try {
       await this.redisClient.connect();

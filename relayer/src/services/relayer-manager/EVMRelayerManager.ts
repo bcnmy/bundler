@@ -349,10 +349,12 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
         log.info(
           `Has sufficient funds in relayer ${address} on chainId: ${this.chainId}`,
         );
-      } else if (lock) {
-        log.info(`Waiting for lock to fund relayers on chainId: ${this.chainId} for relayer ${relayerAddress} for duration of ${config.cacheService.lockTTL}ms`);
-        const acquiredLock = await lock.acquire([`locks:${this.ownerAccountDetails.getPublicKey()}`], config.cacheService.lockTTL);
-        log.info(`Lock acquired to fund relayers on chainId: ${this.chainId} for relayer ${relayerAddress}`);
+      }
+      if (lock) {
+        const key = `${this.ownerAccountDetails.getPublicKey()}_${this.chainId}`;
+        log.info(`Waiting for lock to fund relayers on key ${key} for relayer ${relayerAddress} for duration of ${config.cacheService.lockTTL}ms`);
+        const acquiredLock = await lock.acquire([`locks:${key}`], config.cacheService.lockTTL);
+        log.info(`Lock acquired on key ${key} to fund relayer ${relayerAddress} on chainId: ${this.chainId}`);
         try {
           // eslint-disable-next-line no-await-in-loop
           log.info(`Funding relayer ${address} on chainId: ${this.chainId}`);
@@ -406,6 +408,8 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
           await this.cacheService.unlockRedLock(acquiredLock);
           log.error(`Error while funding relayer ${address} on chainId: ${this.chainId} with error: ${JSON.stringify(error)}`);
         }
+      } else {
+        log.error(`Lock undefined and hence failed to fund relayer ${address} on chainId: ${this.chainId}`);
       }
     }
   }
