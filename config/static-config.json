@@ -1,11 +1,7 @@
 {
-  "slack": {
-    "token": "xoxb-870821785586-4345375323734-3srwGq80BpaRS4M7XEOBb4HD",
-    "channel": "C04A9077TC5"
-  },
   "socketService": {
-    "wssUrl": "wss://sdk-testing-ws.staging.biconomy.io/connection/websocket",
-    "httpUrl": "https://sdk-testing-ws.staging.biconomy.io/api"
+    "wssUrl": "wss://sdk-ws.prod.biconomy.io/connection/websocket",
+    "httpUrl": "https://sdk-ws.prod.biconomy.io/api"
   },
   "supportedNetworks": [5, 80001, 97, 420, 421613, 43113],
   "EIP1559SupportedNetworks": [],
