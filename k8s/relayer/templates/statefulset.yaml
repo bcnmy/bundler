@@ -48,13 +48,13 @@ spec:
           httpGet:
             path: /health
             port: {{ $values.relayer.port }}
-          initialDelaySeconds: 15
+          initialDelaySeconds: 30
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /health
             port: {{ $values.relayer.port }}
-          initialDelaySeconds: 15
+          initialDelaySeconds: 30
           periodSeconds: 10
       volumes:
       - name: secret
