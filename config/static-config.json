@@ -88,7 +88,7 @@
       "43113": 15
     },
     "fundingRelayerAmount": {
-      "5": 0.1,
+      "5": 0.5,
       "137": 0.5,
       "80001": 0.1,
       "97": 0.1,
@@ -99,7 +99,7 @@
     "fundingBalanceThreshold": {
       "5": {
         "type": "BigNumber",
-        "hex": "0x2386f26fc10000"
+        "hex": "0x2C68AF0BB140000"
       },
       "137": {
         "type": "BigNumber",
