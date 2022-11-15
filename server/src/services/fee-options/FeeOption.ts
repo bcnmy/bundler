@@ -62,9 +62,9 @@ export class FeeOption {
       );
       let networkPriceData;
       if (!networkPriceDataInString) {
-        // 5, 80001, 97, 420, 421613, 43113
+        log.error('Network price data not found');
         networkPriceData = {
-          1: '1278.43', 5: '1278.43', 80001: '0.80', 97: '289.87', 420: '1278.43', 421613: '1278.43', 43113: '13.17',
+          1: '1278.43', 5: '1278.43', 137: '0.80', 80001: '0.80', 97: '289.87', 420: '1278.43', 421613: '1278.43', 43113: '13.17',
         };
       } else {
         networkPriceData = JSON.parse(networkPriceDataInString);

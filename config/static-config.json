@@ -3,7 +3,10 @@
     "wssUrl": "wss://sdk-testing-ws.staging.biconomy.io/connection/websocket",
     "httpUrl": "https://sdk-testing-ws.staging.biconomy.io/api"
   },
-  "supportedNetworks": [5, 80001, 97, 420, 421613, 43113],
+  "cacheService": {
+    "lockTTL": 10000
+  },
+  "supportedNetworks": [5, 80001, 137, 97, 420, 421613, 43113],
   "EIP1559SupportedNetworks": [],
   "supportedTransactionType": {
     "5": ["AA", "SCW"],
@@ -88,7 +91,7 @@
       "43113": 15
     },
     "fundingRelayerAmount": {
-      "5": 0.1,
+      "5": 0.5,
       "137": 0.5,
       "80001": 0.1,
       "97": 0.1,
@@ -97,34 +100,13 @@
       "43113": 0.1
     },
     "fundingBalanceThreshold": {
-      "5": {
-        "type": "BigNumber",
-        "hex": "0x2386f26fc10000"
-      },
-      "137": {
-        "type": "BigNumber",
-        "hex": "0x0429d069189e0000"
-      },
-      "80001": {
-        "type": "BigNumber",
-        "hex": "0x016345785d8a0000"
-      },
-      "97": {
-        "type": "BigNumber",
-        "hex": "0xB1A2BC2EC50000"
-      },
-      "420": {
-        "type": "BigNumber",
-        "hex": "0x2386f26fc10000"
-      },
-      "421613": {
-        "type": "BigNumber",
-        "hex": "0x2386f26fc10000"
-      },
-      "43113": {
-        "type": "BigNumber",
-        "hex": "0x2386f26fc10000"
-      }
+      "5": 0.2,
+      "137": 0.3,
+      "80001": 0.1,
+      "97": 0.05,
+      "420": 0.01,
+      "421613": 0.01,
+      "43113": 0.01
     },
     "newRelayerInstanceCount": {
       "5": 1,
@@ -215,47 +197,47 @@
     "5": {
       "updateFrequencyInSeconds": 6,
       "minGasPrice": 1000000000,
-      "maxGasPrice": 10000000000,
+      "maxGasPrice": 500000000000,
       "baseFeeMultiplier": 1.1
     },
     "137": {
-      "updateFrequencyInSeconds": 60,
-      "minGasPrice": 1000000000,
-      "maxGasPrice": 10000000000,
+      "updateFrequencyInSeconds": 30,
+      "minGasPrice": 30000000000,
+      "maxGasPrice": 500000000000,
       "baseFeeMultiplier": 1.1,
       "gasOracle": {
-        "maticGasStationUrl": "https://gasstation-mainnet.matic.network/v2",
+        "maticGasStationUrl": "https://gasstation-mainnet.matic.network/v1",
         "polygonGasStation": ""
       }
     },
     "80001": {
       "updateFrequencyInSeconds": 10,
       "minGasPrice": 1000000000,
-      "maxGasPrice": 10000000000,
+      "maxGasPrice": 500000000000,
       "baseFeeMultiplier": 1.1
     },
     "97": {
       "updateFrequencyInSeconds": 10,
       "minGasPrice": 1000000000,
-      "maxGasPrice": 10000000000,
+      "maxGasPrice": 500000000000,
       "baseFeeMultiplier": 1.1
     },
     "420": {
       "updateFrequencyInSeconds": 10,
       "minGasPrice": 1000000000,
-      "maxGasPrice": 10000000000,
+      "maxGasPrice": 500000000000,
       "baseFeeMultiplier": 1.1
     },
     "421613": {
       "updateFrequencyInSeconds": 10,
       "minGasPrice": 1000000000,
-      "maxGasPrice": 10000000000,
+      "maxGasPrice": 500000000000,
       "baseFeeMultiplier": 1.1
     },
     "43113": {
       "updateFrequencyInSeconds": 10,
       "minGasPrice": 1000000000,
-      "maxGasPrice": 10000000000,
+      "maxGasPrice": 500000000000,
       "baseFeeMultiplier": 1.1
     }
   },
@@ -535,14 +517,18 @@
       "FTM": [250, 4002],
       "CELO": [42220, 44787],
       "NEON": [245022926],
-      "BOBA": [1294]
+      "BOBA": [1294],
+      "BICO": [111111111]
     },
-    "updateFrequencyInSeconds": 60,
+    "updateFrequencyInSeconds": 90,
     "symbolMapByChainId": {
       "1": {
         "0x6B175474E89094C44Da98b954EedeAC495271d0F": "DAI"
       },
       "5": {
+        "0x6B175474E89094C44Da98b954EedeAC495271d0F": "DAI"
+      },
+      "137": {
         "0x6B175474E89094C44Da98b954EedeAC495271d0F": "DAI"
       },
       "80001": {

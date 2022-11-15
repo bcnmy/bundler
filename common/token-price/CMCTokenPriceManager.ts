@@ -1,9 +1,10 @@
 import axios from 'axios';
+import { schedule } from 'node-cron';
 import { ICacheService } from '../cache';
 import { logger } from '../log-config';
 import { IScheduler } from '../scheduler';
 import { SymbolMapByChainIdType } from '../types';
-import { getTokenPriceKey } from '../utils';
+import { getTokenPriceKey, parseError } from '../utils';
 import { ITokenPrice } from './interface/ITokenPrice';
 import { NetworkSymbolCategoriesType } from './types';
 
@@ -37,13 +38,16 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
   }
 
   schedule() {
-    setInterval(this.setup, this.updateFrequencyInSeconds * 1000);
+    schedule(`*/${this.updateFrequencyInSeconds} * * * * *`, () => {
+      this.setup();
+    });
   }
 
   private async setup() {
     try {
       const networkSymbolsCategoriesKeys = Object.keys(this.networkSymbolCategories);
-      const response = await axios.get(`${this.apiKey}?symbol=${networkSymbolsCategoriesKeys.toString()}`, {
+      log.info(`Fetching token prices for ${networkSymbolsCategoriesKeys.join(', ')}`);
+      const response = await axios.get(`https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=${networkSymbolsCategoriesKeys.toString()}`, {
         headers: {
           'X-CMC_PRO_API_KEY': this.apiKey,
         },
@@ -69,7 +73,7 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
         log.info('Response and response.data is not defined');
       }
     } catch (error) {
-      log.error(error);
+      log.error(`Error while fetching the network prices ${parseError(error)}`);
     }
   }
 

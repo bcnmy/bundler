@@ -1,4 +1,5 @@
-import { createClient } from 'redis';
+import Redlock, { Lock } from 'redlock';
+import Redis from 'ioredis';
 import { config } from '../../../config';
 import { logger } from '../../log-config';
 import { ICacheService } from '../interface';
@@ -10,10 +11,50 @@ export class RedisCacheService implements ICacheService {
 
   private redisClient;
 
+  private redLock: Redlock | undefined;
+
   private constructor() {
-    this.redisClient = createClient({
-      url: config.dataSources.redisUrl,
-    });
+    this.redisClient = new Redis(config.dataSources.redisUrl);
+  }
+
+  connectRedLock(): Redlock {
+    return new Redlock(
+      [this.redisClient],
+      {
+        // the expected clock drift; for more details
+        // see http://redis.io/topics/distlock
+        driftFactor: 0.01, // multiplied by lock ttl to determine drift time
+
+        // the max number of times Redlock will attempt
+        // to lock a resource before erroring
+        retryCount: 5,
+
+        // the time in ms between attempts
+        retryDelay: 8000, // time in ms
+
+        // the max time in ms randomly added to retries
+        // to improve performance under high contention
+        // see https://www.awsarchitectureblog.com/2015/03/backoff.html
+        retryJitter: 200, // time in ms
+      },
+    );
+  }
+
+  getRedLock(): Redlock | undefined {
+    if (this.redLock) return this.redLock;
+    return undefined;
+  }
+
+  async unlockRedLock(redisLock: Lock) {
+    try {
+      if (redisLock && this.redLock) {
+        await this.redLock.release(redisLock);
+      } else {
+        log.error('Redlock not initialized');
+      }
+    } catch (error) {
+      log.error(`Error in unlocking redis lock ${JSON.stringify(error)}`);
+    }
   }
 
   /**
@@ -32,8 +73,21 @@ export class RedisCacheService implements ICacheService {
    */
   async connect(): Promise<void> {
     log.info('Initiating Redis connection');
-    await this.redisClient.connect();
-    log.info('Main Redis connected successfully');
+    try {
+      await this.redisClient.connect();
+      log.info('Main Redis connected successfully');
+    } catch (error) {
+      log.info(`Error in connecting to redis client ${JSON.stringify(error)}`);
+    }
+    this.redLock = this.connectRedLock();
+
+    this.redLock.on('clientError', (err: object) => {
+      try {
+        log.info(`Failed to get redis lock ${err.toString()}`);
+      } catch (error) {
+        log.error(error);
+      }
+    });
     this.redisClient.on('error', (err: any) => {
       log.error(`Redis redisClient Error ${err}`);
     });
@@ -62,7 +116,7 @@ export class RedisCacheService implements ICacheService {
     }
     try {
       log.info(`Key exists. Decrementing cache value by ${decrementBy} => Key: ${key}`);
-      await this.redisClient.decrBy(key, decrementBy);
+      await this.redisClient.decrby(key, decrementBy);
       return true;
     } catch (error) {
       log.error(`Error in decrement value ${JSON.stringify(error)}`);
@@ -137,7 +191,7 @@ export class RedisCacheService implements ICacheService {
       }
 
       log.info(`Inrementing cache value by ${incrementBy} => Key: ${key}`);
-      const result = await this.redisClient.incrBy(key, incrementBy);
+      const result = await this.redisClient.incrby(key, incrementBy);
       if (result) {
         log.info(`Incremented cache value by ${incrementBy} => Key: ${key}`);
         return true;
