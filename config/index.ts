@@ -18,56 +18,61 @@ export class Config implements IConfig {
 
   constructor() {
     log.info('Config loading started');
-    // decrypt the config and load it
-    const encryptedEnvPath = './config.json.enc';
-    const passphrase = process.env.CONFIG_PASSPHRASE;
-    if (!passphrase) {
-      throw new Error('Passphrase for config required in .env file');
+    try {
+      // decrypt the config and load it
+      const encryptedEnvPath = './config.json.enc';
+      const passphrase = process.env.CONFIG_PASSPHRASE;
+      if (!passphrase) {
+        throw new Error('Passphrase for config required in .env file');
+      }
+
+      if (!existsSync(encryptedEnvPath)) {
+        throw new Error(`Invalid ENV Path: ${encryptedEnvPath}`);
+      }
+      const ciphertext = fs.readFileSync(encryptedEnvPath, 'utf8');
+      // First 44 bits are Base64 encodded HMAC
+      const hashInBase64 = ciphertext.substr(0, 44);
+
+      // Next 32 bits are the salt
+      const salt = crypto.enc.Hex.parse(ciphertext.substr(44, 32));
+
+      // Next 32 bits are the initialization vector
+      const iv = crypto.enc.Hex.parse(ciphertext.substr(44 + 32, 32));
+
+      // Rest is encrypted .env
+      const encrypted = ciphertext.substr(44 + 32 + 32);
+
+      // Derive key from passphrase
+      const key = crypto.PBKDF2(passphrase, salt, {
+        keySize: KEY_SIZE / 32,
+        iterations: PBKDF2_ITERATIONS,
+      });
+
+      const bytes = crypto.AES.decrypt(encrypted, key, {
+        iv,
+        padding: AES_PADDING,
+        mode: AES_MODE,
+      });
+
+      const plaintext = bytes.toString(crypto.enc.Utf8);
+
+      // Verify HMAC
+      const decryptedHmac = crypto.HmacSHA256(plaintext, key);
+      const decryptedHmacInBase64 = crypto.enc.Base64.stringify(decryptedHmac);
+
+      if (decryptedHmacInBase64 !== hashInBase64) {
+        throw new Error('Error: HMAC does not match');
+      }
+      const data = JSON.parse(plaintext) as ConfigType;
+      const staticConfig = JSON.parse(fs.readFileSync(path.resolve('./config/static-config.json'), 'utf8'));
+
+      this.config = _.merge(data, staticConfig);
+      this.validate();
+      log.info('Config loaded successfully');
+    } catch (error) {
+      log.error('Config loading failed', error);
+      throw error;
     }
-
-    if (!existsSync(encryptedEnvPath)) {
-      throw new Error(`Invalid ENV Path: ${encryptedEnvPath}`);
-    }
-    const ciphertext = fs.readFileSync(encryptedEnvPath, 'utf8');
-    // First 44 bits are Base64 encodded HMAC
-    const hashInBase64 = ciphertext.substr(0, 44);
-
-    // Next 32 bits are the salt
-    const salt = crypto.enc.Hex.parse(ciphertext.substr(44, 32));
-
-    // Next 32 bits are the initialization vector
-    const iv = crypto.enc.Hex.parse(ciphertext.substr(44 + 32, 32));
-
-    // Rest is encrypted .env
-    const encrypted = ciphertext.substr(44 + 32 + 32);
-
-    // Derive key from passphrase
-    const key = crypto.PBKDF2(passphrase, salt, {
-      keySize: KEY_SIZE / 32,
-      iterations: PBKDF2_ITERATIONS,
-    });
-
-    const bytes = crypto.AES.decrypt(encrypted, key, {
-      iv,
-      padding: AES_PADDING,
-      mode: AES_MODE,
-    });
-
-    const plaintext = bytes.toString(crypto.enc.Utf8);
-
-    // Verify HMAC
-    const decryptedHmac = crypto.HmacSHA256(plaintext, key);
-    const decryptedHmacInBase64 = crypto.enc.Base64.stringify(decryptedHmac);
-
-    if (decryptedHmacInBase64 !== hashInBase64) {
-      throw new Error('Error: HMAC does not match');
-    }
-    const data = JSON.parse(plaintext) as ConfigType;
-    const staticConfig = JSON.parse(fs.readFileSync(path.resolve('./config/static-config.json'), 'utf8'));
-
-    this.config = _.merge(data, staticConfig);
-    this.validate();
-    log.info('Config loaded successfully');
   }
 
   validate(): boolean {
