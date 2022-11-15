@@ -44,6 +44,18 @@ spec:
           limits:
             memory: {{ $values.relayer.resource.limits.memory }}
             cpu: {{ $values.relayer.resource.limits.cpu }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: {{ $values.relayer.port }}
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: {{ $values.relayer.port }}
+          initialDelaySeconds: 15
+          periodSeconds: 10
       volumes:
       - name: secret
         secret:
