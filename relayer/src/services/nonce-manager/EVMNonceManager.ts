@@ -29,7 +29,7 @@ export class EVMNonceManager implements INonceManager<IEVMAccount, EVMRawTransac
     nonce = await this.cacheService.get(accountNonceKey);
     log.info(`Nonce from cache for account: ${address} on chainId: ${this.chainId} is ${nonce}`);
 
-    if (nonce !== null && nonce !== 'undefined') {
+    if (!nonce) {
       nonce = parseInt(nonce, 10);
       if (await this.cacheService.get(this.getUsedAccountNonceKey(address, nonce))) {
         log.info(`Nonce ${nonce} for address ${address} is already used. So clearing nonce and getting nonce from network`);

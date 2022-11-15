@@ -330,8 +330,15 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
         `Relayer ${address} balance is ${relayerBalance} on chainId: ${this.chainId}`,
       );
       if (relayerBalance.lte(this.fundingBalanceThreshold)) {
+        log.info(
+          `Relayer ${address} balance ${relayerBalance} is below threshold of ${this.fundingBalanceThreshold}  on chainId: ${this.chainId}`,
+        );
         return true;
       }
+    } else {
+      log.error(
+        `Relayer ${address} not found in relayer queue on chainId: ${this.chainId}`,
+      );
     }
     return false;
   }
