@@ -392,7 +392,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
               this.chainId
             } with raw tx ${JSON.stringify(rawTx)}`,
           );
-          await this.transactionService.sendTransaction(
+          const response = await this.transactionService.sendTransaction(
             {
               ...rawTx,
               transactionId,
@@ -403,7 +403,17 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
             this.name,
           );
           await this.cacheService.unlockRedLock(acquiredLock);
-          log.info(`Lock released after funding relayer ${address} on chainId: ${this.chainId}`);
+          log.info(`Lock released for relayer ${address} on chainId: ${this.chainId}`);
+
+          if (response.state === 'success') {
+            log.info(
+              `Funding relayer ${address} on chainId: ${this.chainId} completed successfully`,
+            );
+          } else {
+            log.error(
+              `Funding relayer ${address} on chainId: ${this.chainId} failed with error ${response.error}`,
+            );
+          }
         } catch (error) {
           await this.cacheService.unlockRedLock(acquiredLock);
           log.error(`Error while funding relayer ${address} on chainId: ${this.chainId} with error: ${JSON.stringify(error)}`);

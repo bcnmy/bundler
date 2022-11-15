@@ -34,8 +34,6 @@ export class EVMNonceManager implements INonceManager<IEVMAccount, EVMRawTransac
       if (await this.cacheService.get(this.getUsedAccountNonceKey(address, nonce))) {
         log.info(`Nonce ${nonce} for address ${address} is already used. So clearing nonce and getting nonce from network`);
         nonce = await this.getAndSetNonceFromNetwork(address, pendingCount);
-      } else {
-        nonce = await this.getAndSetNonceFromNetwork(address, pendingCount);
       }
     } else {
       nonce = await this.getAndSetNonceFromNetwork(address, pendingCount);
