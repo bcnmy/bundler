@@ -341,6 +341,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
    * @param addressList List of relayers to fund
    */
   async fundRelayers(addressList: string[]): Promise<any> {
+    log.info(`Starting to fund relayers on chainId: ${this.chainId} with addresses: ${addressList}`);
     for (const relayerAddress of addressList) {
       const address = relayerAddress.toLowerCase();
       // const release = await fundRelayerMutex.acquire();
