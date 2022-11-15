@@ -30,6 +30,9 @@ spec:
         image: {{ $values.relayer.image }}
         ports:
         - containerPort: {{ $values.relayer.port }}
+        envFrom:
+          - secretRef:
+              name: {{ .Values.relayer.name }}-passphrase
         volumeMounts:
           - mountPath: "/relayer-node/config.json.enc"
             name: secret
