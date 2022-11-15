@@ -6,7 +6,7 @@
   "cacheService": {
     "lockTTL": 10000
   },
-  "supportedNetworks": [5, 80001, 97, 420, 421613, 43113],
+  "supportedNetworks": [5, 80001, 137, 97, 420, 421613, 43113],
   "EIP1559SupportedNetworks": [],
   "supportedTransactionType": {
     "5": ["AA", "SCW"],
@@ -546,6 +546,9 @@
         "0x6B175474E89094C44Da98b954EedeAC495271d0F": "DAI"
       },
       "5": {
+        "0x6B175474E89094C44Da98b954EedeAC495271d0F": "DAI"
+      },
+      "137": {
         "0x6B175474E89094C44Da98b954EedeAC495271d0F": "DAI"
       },
       "80001": {

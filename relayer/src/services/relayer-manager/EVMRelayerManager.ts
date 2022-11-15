@@ -342,7 +342,6 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
    */
   async fundRelayers(addressList: string[]): Promise<any> {
     for (const relayerAddress of addressList) {
-      log.info(`Waiting for lock to fund relayers on chainId: ${this.chainId} for relayer ${relayerAddress}`);
       const address = relayerAddress.toLowerCase();
       // const release = await fundRelayerMutex.acquire();
       const lock = this.cacheService.getRedLock();
@@ -351,8 +350,9 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
           `Has sufficient funds in relayer ${address} on chainId: ${this.chainId}`,
         );
       } else if (lock) {
-        const acquiredLock = await lock.acquire([`locks:${address}`], config.cacheService.lockTTL);
-
+        log.info(`Waiting for lock to fund relayers on chainId: ${this.chainId} for relayer ${relayerAddress} for duration of ${config.cacheService.lockTTL}ms`);
+        const acquiredLock = await lock.acquire([`locks:${this.ownerAccountDetails.getPublicKey()}`], config.cacheService.lockTTL);
+        log.info(`Lock acquired to fund relayers on chainId: ${this.chainId} for relayer ${relayerAddress}`);
         try {
           // eslint-disable-next-line no-await-in-loop
           log.info(`Funding relayer ${address} on chainId: ${this.chainId}`);

@@ -229,7 +229,7 @@ let statusService: IStatusService;
 
       const addressList = await relayerMangerInstance.createRelayers();
       log.info(
-        `Relayer address list length: ${addressList.length} and minRelayerCount: ${relayerManager.minRelayerCount}`,
+        `Relayer address list length: ${addressList.length} and minRelayerCount: ${JSON.stringify(relayerManager.minRelayerCount)}`,
       );
       await relayerMangerInstance.fundRelayers(addressList);
     }
