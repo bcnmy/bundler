@@ -20,7 +20,7 @@ export class SDKBackendService implements ISDKBackendService {
   }> {
     try {
       log.info(`Estimating gas for cross-chain message: ${JSON.stringify(message)}`);
-      const response = await this.axios.post('/estimate/cross-chain-message', {
+      const response = await this.axios.post('v1/estimator/cross-chain-message', {
         message,
       });
       if (response.status !== 200) {
@@ -30,9 +30,7 @@ export class SDKBackendService implements ISDKBackendService {
       }
       const { gas, txBaseGas } = response.data.data;
       log.info(
-        `Estimated gas for cross-chain message: ${JSON.stringify(
-          message,
-        )} is gas :${gas}, txBaseGas: ${txBaseGas}`,
+        `Estimated gas for cross-chain message hash: ${message.hash} is gas :${gas}, txBaseGas: ${txBaseGas}`,
       );
 
       return { gas, txBaseGas };

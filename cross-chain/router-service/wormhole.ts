@@ -7,6 +7,7 @@ import {
 } from '@certusone/wormhole-sdk';
 import { config } from '../../config';
 import { logger } from '../../common/log-config';
+import { getNativeTokenSymbol } from '../../common/token';
 import type { ICCMPRouterService } from './interfaces';
 import type { CCMPMessage } from '../../common/types';
 import type { EVMNetworkService } from '../../common/network';
@@ -80,7 +81,7 @@ export class WormholeRouterService implements ICCMPRouterService {
   ) {
     return {
       amount: '0',
-      tokenSymbol: 'ETH',
+      tokenSymbol: getNativeTokenSymbol(this.chainId),
     };
   }
 

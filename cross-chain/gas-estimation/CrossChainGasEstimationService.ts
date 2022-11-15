@@ -1,11 +1,12 @@
 import { ethers } from 'ethers';
 import type { BigNumber } from 'ethers';
+import { getNativeTokenSymbol } from '../../common/token';
 import type { IGasPrice } from '../../common/gas-price';
 import type { CCMPMessage, CCMPRouterName } from '../../common/types';
 import type { ICCMPRouterService } from '../router-service/interfaces';
 import type { ICrossChainGasEstimationService } from './interfaces/ICrossChainGasEstimationService';
 import type { ISDKBackendService } from '../../common/sdk-backend-service/types';
-import type { ITokenPriceConversionService } from '../../common/token-price/interface/ITokenPriceConversionService';
+import type { ITokenPriceConversionService } from '../../common/token/interface/ITokenPriceConversionService';
 import { logger } from '../../common/log-config';
 
 const log = logger(module);
@@ -17,8 +18,21 @@ export class CrossChainGasEstimationService implements ICrossChainGasEstimationS
     private readonly tokenPriceConversionService: ITokenPriceConversionService,
     private readonly routerServiceMap: { [key in CCMPRouterName]?: ICCMPRouterService },
     private readonly gasPriceService: IGasPrice,
-    private readonly tokenAddressToSymbolMap: Record<string, string>,
-  ) {}
+    private readonly tokenAddressToSymbolMap: Record<number, Record<string, string>>,
+  ) {
+    // Ensure all the addresses are lower case
+    this.tokenAddressToSymbolMap = Object.fromEntries(
+      Object.entries(this.tokenAddressToSymbolMap).map(([_chainId, addressToSymbolMap]) => [
+        _chainId,
+        Object.fromEntries(
+          Object.entries(addressToSymbolMap).map(([address, symbol]) => [
+            address.toLowerCase(),
+            symbol,
+          ]),
+        ),
+      ]),
+    );
+  }
 
   private async getVerificationFee(
     txHash: string,
@@ -49,7 +63,11 @@ export class CrossChainGasEstimationService implements ICrossChainGasEstimationS
     return tokenAmount;
   }
 
-  private async getTxCostInFeeToken(gasUnits: number, feeTokenSymbol: string): Promise<BigNumber> {
+  private async getTxCostInFeeToken(
+    chainId: number,
+    gasUnits: number,
+    feeTokenSymbol: string,
+  ): Promise<BigNumber> {
     // Get gas price and calculate tx cost in native token
     const gasPrice = await this.gasPriceService.getGasPrice();
     let effectiveGasPrice = 0;
@@ -62,7 +80,7 @@ export class CrossChainGasEstimationService implements ICrossChainGasEstimationS
     log.info(`Effective Gas Price: ${effectiveGasPrice}`);
     const txGasFeeInNativeToken = ethers.BigNumber.from(gasUnits).mul(effectiveGasPrice);
     log.info(`Tx Gas Fee in Native Token: ${txGasFeeInNativeToken}`);
-    const nativeTokenSymbol = this.tokenPriceConversionService.getNativeTokenSymbol(this.chainId);
+    const nativeTokenSymbol = getNativeTokenSymbol(chainId);
     log.info(`Native Token Symbol: ${nativeTokenSymbol}`);
 
     // Convert Tx Cost to Fee Token
@@ -73,10 +91,10 @@ export class CrossChainGasEstimationService implements ICrossChainGasEstimationS
           {
             amount: txGasFeeInNativeToken.toString(),
             tokenSymbol: nativeTokenSymbol,
-            chainId: this.chainId,
+            chainId,
           },
         ],
-        this.chainId,
+        chainId,
         feeTokenSymbol,
       );
     }
@@ -95,28 +113,28 @@ export class CrossChainGasEstimationService implements ICrossChainGasEstimationS
     );
     log.info(`Verification Gas Fee: ${verificationGasFee}`);
     const verificationTxGasFeeInFeeToken = await this.getTxCostInFeeToken(
+      parseInt(message.sourceChainId.toString(), 10),
       verificationGasFee,
       feeTokenSymbol,
     );
-    log.info(`Verification Tx Gas Fee in Fee Token: ${verificationTxGasFeeInFeeToken}`);
+    log.info(`Verification Tx Gas Fee in Fee Token: ${verificationTxGasFeeInFeeToken.toString()}`);
     return verificationTxGasFeeInFeeToken;
   }
 
   private async getMessageVerificationFee(message: CCMPMessage, feeTokenSymbol: string) {
     const messageGasFee = await this.sdkBackendService.estimateCrossChainMessageGas(message);
-    log.info(`Message Gas Fee: ${messageGasFee}`);
+    log.info(`Message Gas Fee: ${messageGasFee.toString()}`);
     const messageGasFeeInFeeToken = await this.getTxCostInFeeToken(
+      parseInt(message.sourceChainId.toString(), 10),
       messageGasFee.gas + messageGasFee.txBaseGas,
       feeTokenSymbol,
     );
-    log.info(`Message Gas Fee in Fee Token: ${messageGasFeeInFeeToken}`);
+    log.info(`Message Gas Fee in Fee Token: ${messageGasFeeInFeeToken.toString()}`);
     return messageGasFeeInFeeToken;
   }
 
   public async estimateCrossChainFee(txHash: string, message: CCMPMessage) {
-    log.info(
-      `Estimating cross chain fee for txHash: ${txHash}, message: ${JSON.stringify(message)}`,
-    );
+    log.info(`Estimating cross chain fee for txHash: ${txHash}, message hash: ${message.hash}`);
     try {
       if (message.destinationChainId.toString() !== this.chainId.toString()) {
         throw new Error(
@@ -124,10 +142,15 @@ export class CrossChainGasEstimationService implements ICrossChainGasEstimationS
         );
       }
 
+      const fromChainid = parseInt(message.sourceChainId.toString(), 10);
       const { feeTokenAddress } = message.gasFeePaymentArgs;
-      const feeTokenSymbol = this.tokenAddressToSymbolMap[feeTokenAddress];
+      const feeTokenSymbol = this.tokenAddressToSymbolMap[fromChainid][
+        feeTokenAddress.toLowerCase()
+      ];
       if (!feeTokenSymbol) {
-        throw new Error(`Fee Token Symbol not found for address: ${feeTokenAddress}`);
+        throw new Error(
+          `Fee Token Symbol not found for address: ${feeTokenAddress} on chainid ${fromChainid}`,
+        );
       }
 
       const routerService = this.routerServiceMap[message.routerAdaptor];

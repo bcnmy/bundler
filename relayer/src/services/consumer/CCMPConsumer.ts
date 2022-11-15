@@ -73,7 +73,7 @@ export class CCMPConsumer implements ITransactionConsumer<IEVMAccount, EVMRawTra
           {
             ...transactionDataReceivedFromQueue,
             ccmpMessage: transactionDataReceivedFromQueue.message,
-            walletAddress: '',
+            walletAddress: '0xDNE',
           },
           activeRelayer,
           this.transactionType,

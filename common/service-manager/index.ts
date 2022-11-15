@@ -38,7 +38,7 @@ import {
 import { AARelayService, CCMPRelayService, SCWRelayService } from '../relay-service';
 import { AASimulationService, SCWSimulationService } from '../simulation';
 import { TenderlySimulationService } from '../simulation/external-simulation';
-import { CMCTokenPriceManager, TokenPriceConversionService } from '../token-price';
+import { CMCTokenPriceManager, TokenPriceConversionService } from '../token';
 import {
   AATransactionMessageType,
   CCMPRouterName,
@@ -281,6 +281,7 @@ const networkServiceMap: {
     transactionQueue.consume(socketConsumerMap[chainId].onMessageReceived);
 
     const tokenService = new CMCTokenPriceManager(cacheService, {
+      baseURL: config.tokenPrice.coinMarketCapUrl,
       apiKey: config.tokenPrice.coinMarketCapApi,
       networkSymbolCategories: config.tokenPrice.networkSymbols,
       updateFrequencyInSeconds: config.tokenPrice.updateFrequencyInSeconds,
@@ -291,7 +292,6 @@ const networkServiceMap: {
     const tokenPriceConversionService = new TokenPriceConversionService(
       tokenService,
       networkServiceMap,
-      config.tokenPrice.networkSymbols,
       config.tokenPrice.symbolMapByChainId,
     );
 
@@ -451,7 +451,7 @@ const networkServiceMap: {
           tokenPriceConversionService,
           ccmpRouterMap[chainId],
           gasPriceService,
-          config.tokenPrice.symbolMapByChainId[chainId],
+          config.tokenPrice.symbolMapByChainId,
         );
 
         ccmpServiceMap[chainId] = new CrossChainTransactionHandlerService(

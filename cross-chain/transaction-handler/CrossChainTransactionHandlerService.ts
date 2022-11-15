@@ -136,7 +136,7 @@ export class CrossChainTransactionHandlerService implements ICrossChainTransacti
     const toChainId = parseInt(message.destinationChainId.toString(), 10);
     const gasEstimationService = this.crossChainGasEstimationServiceMap[toChainId];
     const gasFeeEstimate = await gasEstimationService.estimateCrossChainFee(sourceTxHash, message);
-    log.info(`Gas fee estimate for message ${message.hash} is ${gasFeeEstimate}`);
+    log.info(`Gas fee estimate for message ${message.hash} is ${gasFeeEstimate.toString()}`);
     // Check how much is actually paid
     const gasFeePaid = (
       await this.ccmpGatewayService.getGasPaidByMessageHash(message.hash, [
@@ -149,7 +149,7 @@ export class CrossChainTransactionHandlerService implements ICrossChainTransacti
     // Compare
     if (gasFeePaid.lt(gasFeeEstimate.amount)) {
       log.info(
-        `Gas fee paid for message ${message.hash} is ${gasFeePaid} which is less than the estimated gas fee ${gasFeeEstimate.amount}`,
+        `Gas fee paid for message ${message.hash} is ${gasFeePaid.toString()} which is less than the estimated gas fee ${gasFeeEstimate.amount}`,
       );
       return {
         ...data,

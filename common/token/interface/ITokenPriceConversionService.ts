@@ -8,5 +8,4 @@ export interface ITokenPriceConversionService {
     chainId: number,
     tokenSymbol: string
   ) => Promise<BigNumber>;
-  getNativeTokenSymbol(chainId: number): string;
 }

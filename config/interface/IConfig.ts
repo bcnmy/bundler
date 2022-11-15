@@ -78,6 +78,7 @@ type FeeOptionConfigType = {
 };
 
 type TokenPriceConfigType = {
+  coinMarketCapUrl: string;
   coinMarketCapApi: string;
   networkSymbols: NetworkSymbolMapType;
   updateFrequencyInSeconds: number;

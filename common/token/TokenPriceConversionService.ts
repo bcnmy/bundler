@@ -1,9 +1,10 @@
 import { BigNumber, ethers } from 'ethers';
 import { logger } from '../log-config';
+import { getNativeTokenSymbol } from './utils';
 import type { EVMNetworkService } from '../network';
 import type { ITokenPriceConversionService } from './interface/ITokenPriceConversionService';
 import type { ITokenPrice } from './interface/ITokenPrice';
-import type { TokenAmount, NetworkSymbolCategoriesType } from './types';
+import type { TokenAmount } from './types';
 import type { SymbolMapByChainIdType } from '../types';
 
 const log = logger(module);
@@ -14,36 +15,27 @@ export class TokenPriceConversionService implements ITokenPriceConversionService
   constructor(
     private readonly tokenPriceService: ITokenPrice,
     private readonly networkServiceMap: Record<number, EVMNetworkService>,
-    private readonly networkSymbolCategories: NetworkSymbolCategoriesType,
     private readonly symbolMapByChainId: SymbolMapByChainIdType,
   ) {
+    // Flip the map
     this.symbolToTokenAddressMap = Object.fromEntries(
-      Object.entries(this.symbolMapByChainId).map((chainId, addressToSymbolMap) => [
+      Object.entries(this.symbolMapByChainId).map(([chainId, addressToSymbolMap]) => [
         chainId,
         Object.fromEntries(
-          Object.entries(addressToSymbolMap).map(([address, symbol]) => [symbol, address]),
+          Object.entries(addressToSymbolMap).map(([address, symbol]) => [
+            symbol,
+            // Convert addresses to lowercase
+            address.toLowerCase(),
+          ]),
         ),
       ]),
     );
   }
 
-  getNativeTokenSymbol(chainId: number): string {
-    log.info(`Getting native token symbol for chainId: ${chainId}`);
-    const result = Object.entries(this.networkSymbolCategories).find(
-      ([, networkIds]) => networkIds.includes(chainId),
-    );
-    if (!result) {
-      throw new Error(`Native token symbol not found for chainId: ${chainId}`);
-    }
-    const symbol = result[0];
-    log.info(`Native token symbol for chainId: ${chainId} is ${symbol}`);
-    return symbol;
-  }
-
   private async getTokenDecimals(tokenSymbol: string, chainId: number): Promise<number> {
     log.info(`Getting decimals for token ${tokenSymbol} on chain ${chainId}`);
     let decimals = 18;
-    if (this.getNativeTokenSymbol(chainId) !== tokenSymbol) {
+    if (getNativeTokenSymbol(chainId) !== tokenSymbol) {
       const networkService = this.networkServiceMap[chainId];
       if (!networkService) {
         throw new Error(`Network service not found for chainId: ${chainId}`);
@@ -75,7 +67,9 @@ export class TokenPriceConversionService implements ITokenPriceConversionService
           log.info(`Readable Amount for ${tokenSymbol} on ${chainId}: ${readableAmount}`);
 
           // Get Token Price
-          const tokenPrice: number = await this.tokenPriceService.getTokenPrice(tokenSymbol);
+          const tokenPrice: number = await this.tokenPriceService.getTokenPriceByTokenSymbol(
+            tokenSymbol,
+          );
           log.info(`Token Price for ${tokenSymbol} on ${chainId}: ${tokenPrice}`);
           if (!tokenPrice) {
             throw new Error(`Token Price not found for ${tokenSymbol} on ${chainId}`);
@@ -104,10 +98,11 @@ export class TokenPriceConversionService implements ITokenPriceConversionService
   ): Promise<BigNumber> {
     try {
       const usdValue = await this.getUSDValue(amounts);
-      const tokenPrice = await this.tokenPriceService.getTokenPrice(tokenSymbol);
+      const tokenPrice = await this.tokenPriceService.getTokenPriceByTokenSymbol(tokenSymbol);
       const amount = usdValue / tokenPrice;
       const decimals = await this.getTokenDecimals(tokenSymbol, chainId);
-      const amountInWei = ethers.utils.parseUnits(amount.toString(), decimals);
+      const amountMantissa = Math.floor(amount * 10 ** 5);
+      const amountInWei = ethers.utils.parseUnits(amountMantissa.toString(), decimals - 5);
       log.info(
         `Equivalent Token Amount for ${tokenSymbol} on ${chainId}: ${amountInWei.toString()}`,
       );
