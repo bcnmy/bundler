@@ -9,7 +9,7 @@ import { ConfigType, IConfig } from './interface/IConfig';
 const log = logger(module);
 
 const KEY_SIZE = 32;
-const PBKDF2_ITERATIONS = 3100000;
+const PBKDF2_ITERATIONS = 310000;
 const AES_PADDING = crypto.pad.Pkcs7;
 const AES_MODE = crypto.mode.CBC;
 
