@@ -541,7 +541,7 @@
       "BOBA": [1294],
       "BICO": [111111111]
     },
-    "updateFrequencyInSeconds": 120,
+    "updateFrequencyInSeconds": 90,
     "symbolMapByChainId": {
       "1": {
         "0x6B175474E89094C44Da98b954EedeAC495271d0F": "DAI"
