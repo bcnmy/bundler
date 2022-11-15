@@ -123,7 +123,6 @@ export class FeeOption {
         response,
       };
     } catch (error) {
-      console.log(error);
       log.error(error);
       return {
         code: 500,
