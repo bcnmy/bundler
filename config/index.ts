@@ -6,7 +6,7 @@ import path from 'path';
 import { ConfigType, IConfig } from './interface/IConfig';
 
 const KEY_SIZE = 32;
-const PBKDF2_ITERATIONS = 100000;
+const PBKDF2_ITERATIONS = 3100000;
 const AES_PADDING = crypto.pad.Pkcs7;
 const AES_MODE = crypto.mode.CBC;
 
@@ -16,7 +16,7 @@ export class Config implements IConfig {
   constructor() {
     // decrypt the config and load it
     const encryptedEnvPath = './config.json.enc';
-    const passphrase = 'averystrongpassword';
+    const passphrase = process.env.CONFIG_PASSPHRASE;
 
     if (!existsSync(encryptedEnvPath)) {
       throw new Error(`Invalid ENV Path: ${encryptedEnvPath}`);
