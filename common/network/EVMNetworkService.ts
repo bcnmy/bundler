@@ -85,8 +85,8 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
             return null;
         }
       } catch (error: any) {
+        log.info(`Error in network service ${error}`);
         if (error.toString().toLowerCase().includes() === 'timeout error') {
-          log.info(`Error in network service ${error}`);
           for (; rpcUrlIndex < this.fallbackRpcUrls.length; rpcUrlIndex += 1) {
             this.ethersProvider = new ethers.providers.JsonRpcProvider(
               this.fallbackRpcUrls[rpcUrlIndex],
