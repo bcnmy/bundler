@@ -2,7 +2,7 @@ import crypto from 'crypto-js';
 import { promises, existsSync } from 'fs';
 
 const KEY_SIZE = 32;
-const PBKDF2_ITERATIONS = 100000;
+const PBKDF2_ITERATIONS = 3100000;
 const AES_PADDING = crypto.pad.Pkcs7;
 const AES_MODE = crypto.mode.CBC;
 

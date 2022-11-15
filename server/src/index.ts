@@ -1,4 +1,6 @@
-import 'dotenv/config';
+/* eslint-disable import/first */
+require('dotenv').config({ path: `${__dirname}/../../.env` });
+
 import { logger } from '../../common/log-config';
 import { configInstance } from '../../config';
 
