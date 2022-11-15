@@ -357,8 +357,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
         log.info(
           `Has sufficient funds in relayer ${address} on chainId: ${this.chainId}`,
         );
-      }
-      if (lock) {
+      } else if (lock) {
         const key = `${this.ownerAccountDetails.getPublicKey()}_${this.chainId}`;
         log.info(`Waiting for lock to fund relayers on key ${key} for relayer ${relayerAddress} for duration of ${config.cacheService.lockTTL}ms`);
         const acquiredLock = await lock.acquire([`locks:${key}`], config.cacheService.lockTTL);
