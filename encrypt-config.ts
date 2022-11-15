@@ -45,4 +45,9 @@ const encryptConfig = async (
   process.exit(1);
 };
 
-encryptConfig('averystrongpassword');
+const passphrase = process.env.CONFIG_PASSPHRASE;
+if (passphrase !== undefined) {
+  encryptConfig(passphrase);
+} else {
+  console.error('CONFIG_PASSPHRASE environment variable is not defined');
+}
