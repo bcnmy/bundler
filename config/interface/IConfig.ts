@@ -97,7 +97,7 @@ type TransactionConfigType = {
     networkResponseMessages: {
       [key: string]: string,
     },
-    networksNonceError: ChainIdWithStringValueType,
+    networksNonceError: ChainIdWithArrayStringValueType,
     networksInsufficientFundsError: ChainIdWithStringValueType,
   },
   retryCount: {

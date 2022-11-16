@@ -43,6 +43,17 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
 
   notificationManager: INotificationManager;
 
+  private isNonceError(errInString: string): boolean {
+    const nonceErrorMessage = config.transaction.errors.networksNonceError[this.chainId];
+    nonceErrorMessage.some((message: string) => {
+      if (errInString.toLowerCase().includes(message)) {
+        return true;
+      }
+      return false;
+    });
+    return false;
+  }
+
   constructor(evmTransactionServiceParams: EVMTransactionServiceParamsType) {
     const {
       options, networkService, transactionListener, nonceManager, gasPriceService, cacheService, notificationManager,
@@ -102,86 +113,88 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
   async executeTransaction(
     executeTransactionParams: ExecuteTransactionParamsType,
   ): Promise<ExecuteTransactionResponseType> {
-    const { rawTransaction, account } = executeTransactionParams;
-    try {
-      const transactionExecutionResponse = await this.networkService.sendTransaction(
-        rawTransaction,
-        account,
-      );
-      if (transactionExecutionResponse instanceof Error) {
-        return {
-          success: false,
-          error: parseError(transactionExecutionResponse),
-        };
-      }
-      return {
-        success: true,
-        transactionResponse: transactionExecutionResponse,
-      };
-    } catch (error: any) {
-      // TODO: should we add transactionId here ?
-      log.info(`Error while executing transaction: ${error}`);
-      const errInString = parseError(error);
-      const nonceErrorMessage = config.transaction.errors.networksNonceError[this.chainId];
-      const replacementFeeLowMessage = config.transaction.errors.networkResponseMessages
-        .REPLACEMENT_UNDERPRICED;
-      const alreadyKnownMessage = config.transaction
-        .errors.networkResponseMessages.ALREADY_KNOWN;
-      const insufficientFundsErrorMessage = config
-        .transaction.errors.networksInsufficientFundsError[this.chainId]
-      || config.transaction.errors.networkResponseMessages.INSUFFICIENT_FUNDS;
-
-      if (errInString.indexOf(nonceErrorMessage) > -1
-    || errInString.indexOf('increasing the gas price or incrementing the nonce') > -1) {
-        log.info(
-          `Nonce too low error for relayer ${rawTransaction.from}
-    on network id ${this.chainId}. Removing nonce from cache and retrying`,
+    const retryExecuteTransaction = async (retryExecuteTransactionParams: ExecuteTransactionParamsType): Promise<ExecuteTransactionResponseType> => {
+      const { rawTransaction, account } = retryExecuteTransactionParams;
+      try {
+        const transactionExecutionResponse = await this.networkService.sendTransaction(
+          rawTransaction,
+          account,
         );
-        rawTransaction.nonce = await this.networkService
-          .getNonce(rawTransaction.from, true);
-        log.info(`updating the nonce to ${rawTransaction.nonce}
-     for relayer ${rawTransaction.from} on network id ${this.chainId}`);
-      } else if (errInString.indexOf(replacementFeeLowMessage) > -1) {
-        log.info(
-          `Replacement underpriced error for relayer ${rawTransaction.from}
-     on network id ${this.chainId}`,
-        );
-        let { gasPrice } = await this.networkService.getGasPrice();
-
-        log.info(`gas price from network ${gasPrice}`);
-        const gasPriceInNumber = ethers.BigNumber.from(
-          gasPrice.toString(),
-        ).toNumber();
-
-        log.info(`rawTransaction.gasPrice ${rawTransaction.gasPrice} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
-
-        if (rawTransaction.gasPrice && gasPrice < rawTransaction.gasPrice) {
-          gasPrice = rawTransaction.gasPrice;
+        if (transactionExecutionResponse instanceof Error) {
+          throw transactionExecutionResponse;
         }
-        log.info(`transaction sent with gas price ${rawTransaction.gasPrice} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
-        log.info(`Bumping up gas price with multiplier ${config.transaction.bumpGasPriceMultiplier[this.chainId]} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
-        log.info(`gasPriceInNumber ${gasPriceInNumber} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
-        rawTransaction.gasPrice = Math.round(config.transaction.bumpGasPriceMultiplier[this.chainId] * gasPriceInNumber).toString();
-        log.info(`increasing gas price for the resubmit transaction ${rawTransaction.gasPrice} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
-      } else if (errInString.indexOf(alreadyKnownMessage) > -1) {
-        log.info(
-          `Already known transaction hash with same payload and nonce for relayer ${rawTransaction.from} on network id ${this.chainId}. Removing nonce from cache and retrying`,
-        );
-      } else if (errInString.indexOf(insufficientFundsErrorMessage) > -1) {
-        log.info(`Relayer ${rawTransaction.from} has insufficient funds`);
-        // Send previous relayer for funding
-      } else {
-        log.info('transaction not being retried');
+        return {
+          success: true,
+          transactionResponse: transactionExecutionResponse,
+        };
+      } catch (error: any) {
+        // TODO: should we add transactionId here ?
+        log.info(`Error while executing transaction: ${error}`);
+        const errInString = parseError(error);
+        const replacementFeeLowMessage = config.transaction.errors.networkResponseMessages
+          .REPLACEMENT_UNDERPRICED;
+        const alreadyKnownMessage = config.transaction
+          .errors.networkResponseMessages.ALREADY_KNOWN;
+        const insufficientFundsErrorMessage = config
+          .transaction.errors.networksInsufficientFundsError[this.chainId]
+        || config.transaction.errors.networkResponseMessages.INSUFFICIENT_FUNDS;
+
+        if (this.isNonceError(errInString) || errInString.indexOf('increasing the gas price or incrementing the nonce') > -1) {
+          log.info(
+            `Nonce too low error for relayer ${rawTransaction.from}
+      on network id ${this.chainId}. Removing nonce from cache and retrying`,
+          );
+          rawTransaction.nonce = await this.nonceManager.getAndSetNonceFromNetwork(rawTransaction.from, true);
+          log.info(`updating the nonce to ${rawTransaction.nonce}
+       for relayer ${rawTransaction.from} on network id ${this.chainId}`);
+          retryExecuteTransaction({ rawTransaction, account });
+        } else if (errInString.indexOf(replacementFeeLowMessage) > -1) {
+          log.info(
+            `Replacement underpriced error for relayer ${rawTransaction.from}
+       on network id ${this.chainId}`,
+          );
+          let { gasPrice } = await this.networkService.getGasPrice();
+
+          log.info(`gas price from network ${gasPrice}`);
+          const gasPriceInNumber = ethers.BigNumber.from(
+            gasPrice.toString(),
+          ).toNumber();
+
+          log.info(`rawTransaction.gasPrice ${rawTransaction.gasPrice} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
+
+          if (rawTransaction.gasPrice && gasPrice < rawTransaction.gasPrice) {
+            gasPrice = rawTransaction.gasPrice;
+          }
+          log.info(`transaction sent with gas price ${rawTransaction.gasPrice} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
+          log.info(`Bumping up gas price with multiplier ${config.transaction.bumpGasPriceMultiplier[this.chainId]} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
+          log.info(`gasPriceInNumber ${gasPriceInNumber} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
+          rawTransaction.gasPrice = Math.round(config.transaction.bumpGasPriceMultiplier[this.chainId] * gasPriceInNumber).toString();
+          log.info(`increasing gas price for the resubmit transaction ${rawTransaction.gasPrice} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
+
+          retryExecuteTransaction({ rawTransaction, account });
+        } else if (errInString.indexOf(alreadyKnownMessage) > -1) {
+          log.info(
+            `Already known transaction hash with same payload and nonce for relayer ${rawTransaction.from} on network id ${this.chainId}. Removing nonce from cache and retrying`,
+          );
+        } else if (errInString.indexOf(insufficientFundsErrorMessage) > -1) {
+          log.info(`Relayer ${rawTransaction.from} has insufficient funds`);
+          // Send previous relayer for funding
+        } else {
+          log.info('transaction not being retried');
+          return {
+            success: false,
+            error: 'transaction not being retried',
+          };
+        }
         return {
           success: false,
-          error: 'transaction not being retried',
+          error: errInString,
         };
       }
-      return {
-        success: false,
-        error: errInString,
-      };
-    }
+    };
+
+    const response = await retryExecuteTransaction(executeTransactionParams);
+    return response;
   }
 
   private async sendMaxRetryCountExceededSlackNotification(
@@ -272,7 +285,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           relayerManagerName,
           error: transactionExecutionResponse.error,
         });
-        throw new Error('Error in transaction execution');
+        throw new Error(transactionExecutionResponse.error);
       }
 
       log.info(`Transaction execution response for transactionId ${transactionData.transactionId}: ${JSON.stringify(transactionExecutionResponse)} on chainId ${this.chainId}`);
@@ -305,7 +318,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       return {
         state: 'failed',
         code: 500,
-        error: JSON.stringify(error),
+        error: parseError(error),
         transactionId,
         ...{
           isTransactionRelayed: false,
