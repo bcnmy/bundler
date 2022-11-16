@@ -363,8 +363,6 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
         const acquiredLock = await lock.acquire([`locks:${key}`], config.cacheService.lockTTL);
         log.info(`Lock acquired on key ${key} to fund relayer ${relayerAddress} on chainId: ${this.chainId}`);
         try {
-          // eslint-disable-next-line no-await-in-loop
-          log.info(`Funding relayer ${address} on chainId: ${this.chainId}`);
           let gasLimitIndex = 0;
           // different gas limit for arbitrum
           if ([42161, 421611].includes(this.chainId)) gasLimitIndex = 1;

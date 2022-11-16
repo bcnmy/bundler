@@ -23,21 +23,23 @@ export class EVMNonceManager implements INonceManager<IEVMAccount, EVMRawTransac
     this.cacheService = cacheService;
   }
 
-  async getNonce(address: string, pendingCount = true): Promise<number> {
-    let nonce;
-    const accountNonceKey = this.getAccountNonceKey(address);
-    nonce = await this.cacheService.get(accountNonceKey);
-    log.info(`Nonce from cache for account: ${address} on chainId: ${this.chainId} is ${nonce}`);
-    if (nonce) {
-      nonce = parseInt(nonce, 10);
-      if (await this.cacheService.get(this.getUsedAccountNonceKey(address, nonce))) {
-        log.info(`Nonce ${nonce} for address ${address} is already used. So clearing nonce and getting nonce from network`);
-        nonce = await this.getAndSetNonceFromNetwork(address, pendingCount);
-      }
-    } else {
-      log.info(`Fetching nonce from network for account: ${address} on chainId: ${this.chainId}`);
-      nonce = await this.getAndSetNonceFromNetwork(address, pendingCount);
-    }
+  async getNonce(address: string, pending = true): Promise<number> {
+    const nonce = await this.getAndSetNonceFromNetwork(address, pending);
+    // const accountNonceKey = this.getAccountNonceKey(address);
+    // nonce = await this.cacheService.get(accountNonceKey);
+    // log.info(`Nonce from cache for account: ${address} on chainId: ${this.chainId} is ${nonce}`);
+    // if (nonce) {
+    //   nonce = parseInt(nonce, 10);
+    //   if (await this.cacheService.get(this.getUsedAccountNonceKey(address, nonce))) {
+    //     log.info(`Nonce ${nonce} for address ${address} is already used.
+    //     So clearing nonce and getting nonce from network`);
+    //     nonce = await this.getAndSetNonceFromNetwork(address, pending);
+    //   }
+    // } else {
+    //   log.info(`Fetching nonce from network for account:
+    //    ${address} on chainId: ${this.chainId}`);
+    //   nonce = await this.getAndSetNonceFromNetwork(address, pending);
+    // }
     return nonce;
   }
 
@@ -49,8 +51,8 @@ export class EVMNonceManager implements INonceManager<IEVMAccount, EVMRawTransac
     return this.cacheService.increment(this.getAccountNonceKey(address), 1);
   }
 
-  async getAndSetNonceFromNetwork(address: string, pendingCount: boolean): Promise<number> {
-    const nonceFromNetwork = await this.networkService.getNonce(address, pendingCount);
+  async getAndSetNonceFromNetwork(address: string, pending: boolean): Promise<number> {
+    const nonceFromNetwork = await this.networkService.getNonce(address, pending);
     log.info(`Nonce from network for account: ${address} on chainId: ${this.chainId} is ${nonceFromNetwork}`);
     await this.cacheService.set(this.getAccountNonceKey(address), nonceFromNetwork.toString());
     return nonceFromNetwork;

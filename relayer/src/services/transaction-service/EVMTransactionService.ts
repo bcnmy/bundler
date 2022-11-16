@@ -166,7 +166,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           log.info(`transaction sent with gas price ${rawTransaction.gasPrice} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
           log.info(`Bumping up gas price with multiplier ${config.transaction.bumpGasPriceMultiplier[this.chainId]} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
           log.info(`gasPriceInNumber ${gasPriceInNumber} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
-          rawTransaction.gasPrice = Math.round(config.transaction.bumpGasPriceMultiplier[this.chainId] * gasPriceInNumber).toString();
+          rawTransaction.gasPrice = ethers.utils.hexlify(Math.round(config.transaction.bumpGasPriceMultiplier[this.chainId] * gasPriceInNumber));
           log.info(`increasing gas price for the resubmit transaction ${rawTransaction.gasPrice} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
 
           retryExecuteTransaction({ rawTransaction, account });
