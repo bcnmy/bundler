@@ -43,7 +43,7 @@ export class TenderlySimulationService implements IExternalSimulation {
     const body = {
       // standard TX fields
       network_id: chainId.toString(),
-      from: '0x040a9cbC4453B0eeaE12f3210117B422B890C1ED',
+      from: '0x9e1980070743cb86bdbe3ae1d01018c6e97b0932',
       input: data,
       gas: 8000000,
       gas_price: gasPriceForSimulation.toString(), // TODO get value from cache
@@ -58,7 +58,7 @@ export class TenderlySimulationService implements IExternalSimulation {
     } catch (error) {
       log.info(`Error in Tenderly Simulation: ${JSON.stringify(error)}`);
       return {
-        isSimulationSuccessful: true,
+        isSimulationSuccessful: false,
         msgFromSimulation: `Error in Tenderly Simulation: ${parseError(error)}`,
         gasLimitFromSimulation: 0,
       };
