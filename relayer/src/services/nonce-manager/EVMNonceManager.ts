@@ -49,7 +49,7 @@ export class EVMNonceManager implements INonceManager<IEVMAccount, EVMRawTransac
     return this.cacheService.increment(this.getAccountNonceKey(address), 1);
   }
 
-  private async getAndSetNonceFromNetwork(address: string, pendingCount: boolean): Promise<number> {
+  async getAndSetNonceFromNetwork(address: string, pendingCount: boolean): Promise<number> {
     const nonceFromNetwork = await this.networkService.getNonce(address, pendingCount);
     log.info(`Nonce from network for account: ${address} on chainId: ${this.chainId} is ${nonceFromNetwork}`);
     await this.cacheService.set(this.getAccountNonceKey(address), nonceFromNetwork.toString());
