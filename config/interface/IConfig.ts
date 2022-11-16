@@ -14,10 +14,6 @@ type ChainIdWithNumberValueType = {
   [key: number]: number;
 };
 
-type ChainIdWithBigNumberValueType = {
-  [key: number]: ethers.BigNumber;
-};
-
 type ChainIdAndTokenWithNumberValueType = {
   [key: number]: {
     [key: string]: number;
@@ -86,17 +82,17 @@ type TokenPriceConfigType = {
 };
 
 type RelayerManagerConfigType = Array<{
-  name: string; // assume it to be an identifier by the consumer
-  relayerSeed: string;
-  gasLimitMap: ChainIdWithNumberValueType;
-  minRelayerCount: ChainIdWithNumberValueType;
-  maxRelayerCount: ChainIdWithNumberValueType;
-  inactiveRelayerCountThreshold: ChainIdWithNumberValueType;
-  pendingTransactionCountThreshold: ChainIdWithNumberValueType;
-  fundingRelayerAmount: ChainIdWithNumberValueType;
-  fundingBalanceThreshold: ChainIdWithBigNumberValueType;
-  newRelayerInstanceCount: ChainIdWithNumberValueType;
-  ownerAccountDetails: OwnerAccountDetailsType;
+  name: string, // assume it to be an identifier by the consumer
+  relayerSeed: string,
+  gasLimitMap: ChainIdWithNumberValueType,
+  minRelayerCount: ChainIdWithNumberValueType,
+  maxRelayerCount: ChainIdWithNumberValueType,
+  inactiveRelayerCountThreshold: ChainIdWithNumberValueType,
+  pendingTransactionCountThreshold: ChainIdWithNumberValueType,
+  fundingRelayerAmount: ChainIdWithNumberValueType,
+  fundingBalanceThreshold: ChainIdWithNumberValueType,
+  newRelayerInstanceCount: ChainIdWithNumberValueType,
+  ownerAccountDetails: OwnerAccountDetailsType,
 }>;
 
 type TransactionConfigType = {
@@ -247,6 +243,10 @@ export type SDKBackendConfigType = {
   baseUrl: string;
 };
 
+type CacheServiceConfigType = {
+  lockTTL: number,
+};
+
 export type ConfigType = {
   queueUrl: string;
   slack: SlackConfigType;
@@ -268,6 +268,7 @@ export type ConfigType = {
   simulationData: SimulationDataConfigType;
   indexer: IndexerConfigType;
   sdkBackend: SDKBackendConfigType;
+  cacheService: CacheServiceConfigType,
 };
 
 export interface IConfig {

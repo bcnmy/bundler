@@ -1,24 +1,72 @@
 {
   "slack": {
-    "token": "slacktoken",
-    "channel": "channelid"
+    "token": "",
+    "channel": ""
   },
   "dataSources": {
-    "mongoUrl": "mongodb://localhost:27017",
-    "redisUrl": "redis://localhost:6379"
+    "mongoUrl": "",
+    "redisUrl": ""
   },
   "socketService": {
-    "wssUrl": "ws://localhost:9000/connection/websocket",
-    "httpUrl": "http://localhost:9000/api",
-    "token": "averystrongtoken",
-    "apiKey": "somerandomstring"
+    "token": "",
+    "apiKey": ""
   },
-  "queueUrl": "amqp://localhost:5672?heartbeat=30",
+  "relayer": {
+    "nodePathIndex": 0
+  },
+  "queueUrl": "",
   "simulationData": {
     "tenderlyData": {
-      "tenderlyUser": "username",
-      "tenderlyProject": "projectname",
-      "tenderlyAccessKey": "accesskey"
+      "tenderlyUser": "",
+      "tenderlyProject": "",
+      "tenderlyAccessKey": ""
     }
+  },
+  "chains": {
+    "provider": {
+      "5": "",
+      "137": "",
+      "80001": "",
+      "97": "",
+      "420": "",
+      "421613": "",
+      "43113": ""
+    }
+  },
+  "relayerManagers": [{
+    "relayerSeed": "",
+    "ownerAccountDetails": {
+      "5": {
+        "publicKey": "",
+        "privateKey": ""
+      },
+      "137": {
+        "publicKey": "",
+        "privateKey": ""
+      },
+      "80001": {
+        "publicKey": "",
+        "privateKey": ""
+      },
+      "97": {
+        "publicKey": "",
+        "privateKey": ""
+      },
+      "420": {
+        "publicKey": "",
+        "privateKey": ""
+      },
+      "421613": {
+        "publicKey": "",
+        "privateKey": ""
+      },
+      "43113": {
+        "publicKey": "",
+        "privateKey": ""
+      }
+    }
+  }],
+  "tokenPrice": {
+    "coinMarketCapApi": ""
   }
 }

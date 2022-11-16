@@ -1,10 +1,11 @@
-import { ConsumeMessage } from 'amqplib';
-import {
+import type { ConsumeMessage } from 'amqplib';
+import type { ICacheService } from '../../../../common/cache';
+import type {
   ICrossChainTransactionDAO,
 } from '../../../../common/db';
 import { logger } from '../../../../common/log-config';
-import { IQueue } from '../../../../common/queue';
-import { CrossChainRetryHandlerQueue } from '../../../../common/queue/CrossChainRetryHandlerQueue';
+import type { IQueue } from '../../../../common/queue';
+import type { CrossChainRetryHandlerQueue } from '../../../../common/queue/CrossChainRetryHandlerQueue';
 import {
   EVMRawTransactionType,
   CrossChainTransactionMessageType,
@@ -13,12 +14,12 @@ import {
   CrossChainTransactionError,
 } from '../../../../common/types';
 import { CCMPTaskManager } from '../../../../cross-chain/task-manager';
-import { ICCMPTaskManager, IHandler } from '../../../../cross-chain/task-manager/types';
-import { IEVMAccount } from '../account';
-import { IRelayerManager } from '../relayer-manager/interface/IRelayerManager';
-import { ITransactionService } from '../transaction-service';
-import { ITransactionConsumer } from './interface/ITransactionConsumer';
-import { CCMPConsumerParamsType } from './types';
+import type { ICCMPTaskManager, IHandler } from '../../../../cross-chain/task-manager/types';
+import type { IEVMAccount } from '../account';
+import type { IRelayerManager } from '../relayer-manager/interface/IRelayerManager';
+import type { ITransactionService } from '../transaction-service';
+import type { ITransactionConsumer } from './interface/ITransactionConsumer';
+import type { CCMPConsumerParamsType } from './types';
 
 const log = logger(module);
 export class CCMPConsumer implements ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
@@ -36,6 +37,8 @@ export class CCMPConsumer implements ITransactionConsumer<IEVMAccount, EVMRawTra
 
   crossChainRetryHandlerQueue: CrossChainRetryHandlerQueue;
 
+  cacheService: ICacheService;
+
   constructor(ccmpConsumerParamsType: CCMPConsumerParamsType) {
     const {
       options,
@@ -44,6 +47,7 @@ export class CCMPConsumer implements ITransactionConsumer<IEVMAccount, EVMRawTra
       transactionService,
       crossChainTransactionDAO,
       crossChainRetryHandlerQueue,
+      cacheService,
     } = ccmpConsumerParamsType;
     this.queue = queue;
     this.relayerManager = relayerManager;
@@ -51,6 +55,7 @@ export class CCMPConsumer implements ITransactionConsumer<IEVMAccount, EVMRawTra
     this.chainId = options.chainId;
     this.crossChainTransactionDAO = crossChainTransactionDAO;
     this.crossChainRetryHandlerQueue = crossChainRetryHandlerQueue;
+    this.cacheService = cacheService;
   }
 
   onMessageReceived = async (msg?: ConsumeMessage): Promise<void> => {

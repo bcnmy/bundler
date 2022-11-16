@@ -21,5 +21,10 @@ secret:
   config:
     name: config.json.enc
 
+  passphrase:
+    key: sdk-staging-relayer-node-service-passphrase
+    name: CONFIG_PASSPHRASE
+    version: latest
+
 ingress:
   host: sdk-relayer.staging.biconomy.io

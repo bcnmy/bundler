@@ -6,6 +6,7 @@ import { GasPriceType } from '../../../../../common/gas-price/types';
 import { INetworkService } from '../../../../../common/network';
 import { RetryTransactionQueueData } from '../../../../../common/queue/types';
 import { CCMPMessage, EVMRawTransactionType } from '../../../../../common/types';
+import { INotificationManager } from '../../../../../common/notification/interface';
 import { IEVMAccount } from '../../account';
 import { INonceManager } from '../../nonce-manager';
 import { ITransactionListener } from '../../transaction-listener';
@@ -18,6 +19,7 @@ export type EVMTransactionServiceParamsType = {
   gasPriceService: IGasPrice,
   transactionDao: ITransactionDAO,
   cacheService: ICacheService,
+  notificationManager: INotificationManager,
   options: {
     chainId: number,
   }

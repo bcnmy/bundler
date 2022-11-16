@@ -1,8 +1,10 @@
 import axios, { AxiosInstance } from 'axios';
-import { SymbolMapByChainIdType } from '../types';
+import { schedule } from 'node-cron';
 import { ICacheService } from '../cache';
 import { logger } from '../log-config';
 import { IScheduler } from '../scheduler';
+import { SymbolMapByChainIdType } from '../types';
+import { getTokenPriceKey, parseError } from '../utils';
 import { ITokenPrice } from './interface/ITokenPrice';
 import { NetworkSymbolCategoriesType } from './types';
 
@@ -50,7 +52,9 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
   }
 
   schedule() {
-    setInterval(this.setup, this.updateFrequencyInSeconds * 1000);
+    schedule(`*/${this.updateFrequencyInSeconds} * * * * *`, () => {
+      this.setup();
+    });
   }
 
   private async setup() {
@@ -71,7 +75,7 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
             }
           });
           log.info('Network price data updated in cache');
-          await this.cacheService.set('NETWORK_PRICE_DATA', JSON.stringify(coinsRateObj));
+          await this.cacheService.set(getTokenPriceKey(), JSON.stringify(coinsRateObj));
         } else {
           log.error('Network keys is not defined while fetching the network prices');
         }
@@ -79,7 +83,7 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
         log.info('Response and response.data is not defined');
       }
     } catch (error) {
-      log.error(error);
+      log.error(`Error while fetching the network prices ${parseError(error)}`);
     }
   }
 
@@ -102,6 +106,11 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
     return result[symbol];
   }
 
+  /**
+   * @param chainId
+   * @param tokenAddress
+   * @returns token price in USD
+   */
   async getTokenPriceByTokenAddress(chainId: number, tokenAddress: string): Promise<number> {
     let tokenPrice: number = 0;
     try {

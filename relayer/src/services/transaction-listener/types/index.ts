@@ -1,4 +1,4 @@
-import { ethers } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 import { ICacheService } from '../../../../../common/cache';
 import { ICrossChainTransactionDAO, ITransactionDAO } from '../../../../../common/db';
 import { IQueue } from '../../../../../common/interface';
@@ -7,6 +7,7 @@ import { CrossChainRetryHandlerQueue } from '../../../../../common/queue/CrossCh
 import { RetryTransactionQueueData } from '../../../../../common/queue/types';
 import {
   CCMPMessage, EVMRawTransactionType, TransactionQueueMessageType, TransactionType,
+  TransactionStatus,
 } from '../../../../../common/types';
 import { IEVMAccount } from '../../account';
 
@@ -29,12 +30,10 @@ export type NotifyTransactionListenerParamsType = {
   transactionReceipt?: ethers.providers.TransactionReceipt,
   relayerAddress: string,
   transactionType: TransactionType,
-  previousTransactionHash: string | null,
+  previousTransactionHash?: string,
   rawTransaction?: EVMRawTransactionType,
   walletAddress: string,
-  metaData?: {
-    dappAPIKey: string
-  },
+  metaData?: any,
   relayerManagerName: string,
   ccmpMessage?: CCMPMessage
   error?: string,
@@ -47,3 +46,32 @@ export type TransactionListenerNotifyReturnType = {
 
 export type OnTransactionSuccessParamsType = NotifyTransactionListenerParamsType;
 export type OnTransactionFailureParamsType = NotifyTransactionListenerParamsType;
+
+export type TransactionDataToBeUpdatedInDatabaseType = {
+  transactionHash?: string;
+  previousTransactionHash?: string;
+  status?: TransactionStatus;
+  rawTransaction?: ethers.providers.TransactionResponse;
+  gasPrice?: BigNumber;
+  receipt?: object;
+  resubmitted?: boolean;
+  relayerAddress?: string;
+  updationTime?: number;
+};
+
+export type NewTransactionDataToBeSavedInDatabaseType = {
+  transactionId: string,
+  transactionType: TransactionType,
+  transactionHash: string,
+  previousTransactionHash?: string,
+  status: TransactionStatus,
+  rawTransaction: ethers.providers.TransactionResponse,
+  chainId: number,
+  gasPrice?: BigNumber,
+  relayerAddress: string,
+  walletAddress: string,
+  metaData: any,
+  resubmitted: boolean,
+  creationTime: number,
+  updationTime: number,
+};

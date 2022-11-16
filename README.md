@@ -23,24 +23,13 @@ Working branches have the form `<type>/<feature>` where `type` is one of:
 
 #### Basic
 
-`<jira-issue-id> <type>(<scope>):<subject>`
+`<type>(<scope>):<subject>`
 
-Your basic commit messages should have a **jira-issue-id**, **type**, **scope**, and **subject**:
+Your basic commit messages should have a **type**, **scope**, and **subject**:
 
-- _Jira-issue-id_ is the key in Jira issue, e.g., CORE-1_
 - _Type_ is one of the types listed above
 - _Scope_ is the area of the code that the commit changes
 - _Subject_ is a brief description of the work completed
-
-#### Full
-
-```
-# <type>(<scope>): <subject>
-
-# Why was this necessary?
-# How does this address the issue?
-# What side effects does this change have?
-```
 
 
 ## Local deployment 

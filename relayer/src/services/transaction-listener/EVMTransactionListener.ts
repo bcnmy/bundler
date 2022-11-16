@@ -1,4 +1,3 @@
-import { ethers } from 'ethers';
 import { ICacheService } from '../../../../common/cache';
 import { ICrossChainTransactionDAO, ITransactionDAO } from '../../../../common/db';
 import { IQueue } from '../../../../common/interface';
@@ -24,9 +23,11 @@ import { ITransactionPublisher } from '../transaction-publisher';
 import { ITransactionListener } from './interface/ITransactionListener';
 import {
   EVMTransactionListenerParamsType,
+  NewTransactionDataToBeSavedInDatabaseType,
   NotifyTransactionListenerParamsType,
   OnTransactionFailureParamsType,
   OnTransactionSuccessParamsType,
+  TransactionDataToBeUpdatedInDatabaseType,
   TransactionListenerNotifyReturnType,
 } from './types';
 
@@ -87,11 +88,7 @@ implements
     const {
       transactionExecutionResponse,
       transactionId,
-      relayerAddress,
       relayerManagerName,
-      previousTransactionHash,
-      walletAddress,
-      metaData,
       transactionReceipt,
       transactionType,
       ccmpMessage,
@@ -114,16 +111,11 @@ implements
 
     if (transactionExecutionResponse) {
       log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
-      await this.saveTransactionDataToDatabase(
-        transactionExecutionResponse,
-        transactionId,
-        transactionReceipt,
-        relayerAddress,
-        TransactionStatus.SUCCESS,
-        previousTransactionHash,
-        walletAddress,
-        metaData,
-      );
+      await this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
+        receipt: transactionReceipt,
+        status: TransactionStatus.SUCCESS,
+        updationTime: Date.now(),
+      }, transactionId, transactionExecutionResponse?.hash);
     }
 
     try {
@@ -164,11 +156,7 @@ implements
       transactionExecutionResponse,
       transactionId,
       transactionReceipt,
-      relayerAddress,
       relayerManagerName,
-      previousTransactionHash,
-      walletAddress,
-      metaData,
       transactionType,
       ccmpMessage,
     } = onTranasctionFailureParams;
@@ -187,16 +175,11 @@ implements
 
     if (transactionExecutionResponse) {
       log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
-      await this.saveTransactionDataToDatabase(
-        transactionExecutionResponse,
-        transactionId,
-        transactionReceipt,
-        relayerAddress,
-        TransactionStatus.FAILED,
-        previousTransactionHash,
-        walletAddress,
-        metaData,
-      );
+      await this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
+        receipt: transactionReceipt,
+        status: TransactionStatus.FAILED,
+        updationTime: Date.now(),
+      }, transactionId, transactionExecutionResponse?.hash);
     }
 
     try {
@@ -231,62 +214,37 @@ implements
     }
   }
 
-  private async saveTransactionDataToDatabase(
-    transactionExecutionResponse: ethers.providers.TransactionResponse,
+  private async updateTransactionDataToDatabase(
+    transactionDataToBeUpdatedInDatabase: TransactionDataToBeUpdatedInDatabaseType,
     transactionId: string,
-    transactionReceipt: ethers.providers.TransactionReceipt,
-    relayerAddress: string,
-    status: TransactionStatus,
-    previousTransactionHash: string | null,
-    walletAddress: string,
-    metaData: any,
   ): Promise<void> {
-    const transactionDataToBeSaveInDatabase = {
-      transactionId,
-      transactionHash: transactionExecutionResponse?.hash,
-      previousTransactionHash,
-      status,
-      rawTransaction: transactionExecutionResponse,
-      chainId: this.chainId,
-      gasPrice: transactionExecutionResponse?.gasPrice,
-      receipt: transactionReceipt,
-      relayerAddress,
-      walletAddress,
-      metaData,
-      updationTime: Date.now(),
-    };
     await this.transactionDao.updateByTransactionId(
       this.chainId,
       transactionId,
-      transactionDataToBeSaveInDatabase,
+      transactionDataToBeUpdatedInDatabase,
     );
   }
 
-  private async saveInitialTransactionDataToDatabase(
-    transactionExecutionResponse: ethers.providers.TransactionResponse,
-    transactionId: string,
-    transactionType: string,
-    relayerAddress: string,
-    status: TransactionStatus,
-    previousTransactionHash: string | null,
-    walletAddress: string,
-    metaData: any,
+  private async saveNewTransactionDataToDatabase(
+    newTransactionDataToBeSavedInDatabase: NewTransactionDataToBeSavedInDatabaseType,
   ): Promise<void> {
-    const transactionDataToBeSavedInDatabase = {
-      transactionId,
-      transactionType,
-      transactionHash: transactionExecutionResponse.hash,
-      rawTransaction: transactionExecutionResponse,
-      relayerAddress,
-      status,
-      previousTransactionHash,
-      walletAddress,
-      metaData,
-      receipt: null,
-      creationTime: Date.now(),
-    };
+    await this.transactionDao.save(
+      this.chainId,
+      newTransactionDataToBeSavedInDatabase,
+    );
+  }
 
-    await this.transactionDao.save(this.chainId, transactionDataToBeSavedInDatabase);
+  private async updateTransactionDataToDatabaseByTransactionIdAndTransactionHash(
+    transactionDataToBeUpdatedInDatabase: TransactionDataToBeUpdatedInDatabaseType,
+    transactionId: string,
+    transactionHash: string,
+  ): Promise<void> {
+    await this.transactionDao.updateByTransactionIdAndTransactionHash(
+      this.chainId,
+      transactionId,
+      transactionHash,
+      transactionDataToBeUpdatedInDatabase,
+    );
   }
 
   private async waitForTransaction(
@@ -388,17 +346,39 @@ implements
       };
     }
 
+    if (!previousTransactionHash) {
     // Save initial transaction data to database
-    this.saveInitialTransactionDataToDatabase(
-      transactionExecutionResponse,
-      transactionId,
-      transactionType,
-      relayerAddress,
-      TransactionStatus.PENDING,
-      null,
-      walletAddress,
-      metaData,
-    );
+      this.updateTransactionDataToDatabase({
+        transactionHash: transactionExecutionResponse.hash,
+        rawTransaction: transactionExecutionResponse,
+        relayerAddress,
+        gasPrice: transactionExecutionResponse.gasPrice,
+        status: TransactionStatus.PENDING,
+        updationTime: Date.now(),
+      }, transactionId);
+    } else {
+      this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
+        resubmitted: true,
+        status: TransactionStatus.DROPPED,
+        updationTime: Date.now(),
+      }, transactionId, previousTransactionHash);
+      this.saveNewTransactionDataToDatabase({
+        transactionId,
+        transactionType,
+        transactionHash: transactionExecutionResponse.hash,
+        previousTransactionHash,
+        status: TransactionStatus.PENDING,
+        rawTransaction: transactionExecutionResponse,
+        chainId: this.chainId,
+        gasPrice: transactionExecutionResponse.gasPrice,
+        relayerAddress,
+        walletAddress,
+        metaData,
+        resubmitted: false,
+        creationTime: Date.now(),
+        updationTime: Date.now(),
+      });
+    }
 
     // transaction queue is being listened by socket service to notify the client about the hash
     await this.publishToTransactionQueue({

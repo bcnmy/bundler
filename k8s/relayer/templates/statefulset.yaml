@@ -30,6 +30,9 @@ spec:
         image: {{ $values.relayer.image }}
         ports:
         - containerPort: {{ $values.relayer.port }}
+        envFrom:
+          - secretRef:
+              name: {{ $values.relayer.name }}-passphrase
         volumeMounts:
           - mountPath: "/relayer-node/config.json.enc"
             name: secret
@@ -41,6 +44,18 @@ spec:
           limits:
             memory: {{ $values.relayer.resource.limits.memory }}
             cpu: {{ $values.relayer.resource.limits.cpu }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: {{ $values.relayer.port }}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: {{ $values.relayer.port }}
+          initialDelaySeconds: 30
+          periodSeconds: 10
       volumes:
       - name: secret
         secret:
