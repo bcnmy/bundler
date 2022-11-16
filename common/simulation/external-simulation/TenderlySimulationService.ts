@@ -4,6 +4,7 @@ import { logger } from '../../log-config';
 import { IGasPrice } from '../../gas-price';
 import { GasPriceType } from '../../gas-price/types';
 import { IExternalSimulation } from '../interface';
+import { parseError } from '../../utils';
 
 const log = logger(module);
 
@@ -57,8 +58,8 @@ export class TenderlySimulationService implements IExternalSimulation {
     } catch (error) {
       log.info(`Error in Tenderly Simulation: ${JSON.stringify(error)}`);
       return {
-        isSimulationSuccessful: false,
-        msgFromSimulation: `Error in Tenderly Simulation: ${JSON.stringify(error)}`,
+        isSimulationSuccessful: true,
+        msgFromSimulation: `Error in Tenderly Simulation: ${parseError(error)}`,
         gasLimitFromSimulation: 0,
       };
     }
