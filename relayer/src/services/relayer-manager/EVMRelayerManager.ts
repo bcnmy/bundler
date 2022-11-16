@@ -371,9 +371,8 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
 
           const fundingAmount = this.fundingRelayerAmount;
 
-          const ownerAccountNonce = await this.nonceManager.getNonce(
-            this.ownerAccountDetails.getPublicKey(),
-          );
+          const ownerAccountNonce = await this.nonceManager
+            .getNonce(this.ownerAccountDetails.getPublicKey());
           const gasPrice = await this.gasPriceService.getGasPrice(
             GasPriceType.DEFAULT,
           );

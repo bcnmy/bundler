@@ -24,22 +24,20 @@ export class EVMNonceManager implements INonceManager<IEVMAccount, EVMRawTransac
   }
 
   async getNonce(address: string, pending = true): Promise<number> {
-    const nonce = await this.getAndSetNonceFromNetwork(address, pending);
-    // const accountNonceKey = this.getAccountNonceKey(address);
-    // nonce = await this.cacheService.get(accountNonceKey);
-    // log.info(`Nonce from cache for account: ${address} on chainId: ${this.chainId} is ${nonce}`);
-    // if (nonce) {
-    //   nonce = parseInt(nonce, 10);
-    //   if (await this.cacheService.get(this.getUsedAccountNonceKey(address, nonce))) {
-    //     log.info(`Nonce ${nonce} for address ${address} is already used.
-    //     So clearing nonce and getting nonce from network`);
-    //     nonce = await this.getAndSetNonceFromNetwork(address, pending);
-    //   }
-    // } else {
-    //   log.info(`Fetching nonce from network for account:
-    //    ${address} on chainId: ${this.chainId}`);
-    //   nonce = await this.getAndSetNonceFromNetwork(address, pending);
-    // }
+    let nonce;
+    const accountNonceKey = this.getAccountNonceKey(address);
+    nonce = await this.cacheService.get(accountNonceKey);
+    log.info(`Nonce from cache for account: ${address} on chainId: ${this.chainId} is ${nonce}`);
+    if (nonce) {
+      nonce = parseInt(nonce, 10);
+      if (await this.cacheService.get(this.getUsedAccountNonceKey(address, nonce))) {
+        log.info(`Nonce ${nonce} for address ${address} is already used. So clearing nonce and getting nonce from network`);
+        nonce = await this.getAndSetNonceFromNetwork(address, pending);
+      }
+    } else {
+      log.info(`Fetching nonce from network for account: ${address} on chainId: ${this.chainId}`);
+      nonce = await this.getAndSetNonceFromNetwork(address, pending);
+    }
     return nonce;
   }
 

@@ -81,8 +81,8 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     } = createTransactionParams;
     const relayerAddress = account.getPublicKey();
 
-    const nonce = await this.nonceManager.getNonce(relayerAddress, false);
-    log.info(`Nonce for relayerAddress: ${nonce}`);
+    const nonce = await this.nonceManager.getNonce(relayerAddress);
+    log.info(`Nonce for relayerAddress ${relayerAddress} is ${nonce} on chainId: ${this.chainId}`);
     const response = {
       from,
       to,
