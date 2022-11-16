@@ -45,13 +45,12 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
 
   private isNonceError(errInString: string): boolean {
     const nonceErrorMessage = config.transaction.errors.networksNonceError[this.chainId];
-    nonceErrorMessage.some((message: string) => {
+    return nonceErrorMessage.some((message: string) => {
       if (errInString.toLowerCase().includes(message)) {
         return true;
       }
       return false;
     });
-    return false;
   }
 
   constructor(evmTransactionServiceParams: EVMTransactionServiceParamsType) {
@@ -116,11 +115,14 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     const retryExecuteTransaction = async (retryExecuteTransactionParams: ExecuteTransactionParamsType): Promise<ExecuteTransactionResponseType> => {
       const { rawTransaction, account } = retryExecuteTransactionParams;
       try {
+        log.info(`Sending transaction to network: ${JSON.stringify(rawTransaction)}`);
         const transactionExecutionResponse = await this.networkService.sendTransaction(
           rawTransaction,
           account,
         );
+        log.info(`Transaction execution response: ${JSON.stringify(transactionExecutionResponse)}`);
         if (transactionExecutionResponse instanceof Error) {
+          log.info('Transaction execution failed and checking for retry');
           throw transactionExecutionResponse;
         }
         return {
@@ -128,9 +130,8 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           transactionResponse: transactionExecutionResponse,
         };
       } catch (error: any) {
-        // TODO: should we add transactionId here ?
-        log.info(`Error while executing transaction: ${error}`);
         const errInString = parseError(error);
+        log.info(`Error while executing transaction: ${errInString}`);
         const replacementFeeLowMessage = config.transaction.errors.networkResponseMessages
           .REPLACEMENT_UNDERPRICED;
         const alreadyKnownMessage = config.transaction
@@ -140,10 +141,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         || config.transaction.errors.networkResponseMessages.INSUFFICIENT_FUNDS;
 
         if (this.isNonceError(errInString) || errInString.indexOf('increasing the gas price or incrementing the nonce') > -1) {
-          log.info(
-            `Nonce too low error for relayer ${rawTransaction.from}
-      on network id ${this.chainId}. Removing nonce from cache and retrying`,
-          );
+          log.info(`Nonce too low error for relayer ${rawTransaction.from} on network id ${this.chainId}. Removing nonce from cache and retrying`);
           rawTransaction.nonce = await this.nonceManager.getAndSetNonceFromNetwork(rawTransaction.from, true);
           log.info(`updating the nonce to ${rawTransaction.nonce}
        for relayer ${rawTransaction.from} on network id ${this.chainId}`);
@@ -183,7 +181,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           log.info('transaction not being retried');
           return {
             success: false,
-            error: 'transaction not being retried',
+            error: errInString,
           };
         }
         return {

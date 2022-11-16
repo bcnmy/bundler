@@ -94,7 +94,7 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
             withFallbackRetry();
           }
         }
-        return new Error(error);
+        return error;
       }
     };
     return withFallbackRetry();
