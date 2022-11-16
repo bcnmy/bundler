@@ -9,7 +9,7 @@ import { config } from '../../config';
 import { logger } from '../../common/log-config';
 import { getNativeTokenSymbol } from '../../common/token';
 import type { ICCMPRouterService } from './interfaces';
-import type { CCMPMessage } from '../../common/types';
+import { CCMPMessage, CCMPRouterName } from '../../common/types';
 import type { EVMNetworkService } from '../../common/network';
 
 const log = logger(module);
@@ -33,7 +33,9 @@ export class WormholeRouterService implements ICCMPRouterService {
   ) {
     this.rpcUrl = config.ccmp.bridges.wormhole.hostUrl;
     this.womrholeBridgeAddress = config.ccmp.bridges.wormhole.bridgeAddress[chainId];
-    this.emitterAddress = getEmitterAddressEth(config.ccmp.contracts[chainId].WormholeAdaptor);
+    this.emitterAddress = getEmitterAddressEth(
+      config.ccmp.adaptors[chainId][CCMPRouterName.WORMHOLE],
+    );
     this.emitterChain = config.ccmp.bridges.wormhole.chainId[chainId];
     this.pollingIntervalMs = config.ccmp.bridges.wormhole.pollingIntervalMs;
     this.maxPollingCount = config.ccmp.bridges.wormhole.maxPollingCount;

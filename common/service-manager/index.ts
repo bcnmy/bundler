@@ -60,8 +60,11 @@ import { CCMPGatewayService } from '../../cross-chain/gateway';
 import { SDKBackendService } from '../sdk-backend-service';
 import type { ICrossChainGasEstimationService } from '../../cross-chain/gas-estimation/interfaces/ICrossChainGasEstimationService';
 import { CrossChainGasEstimationService } from '../../cross-chain/gas-estimation';
+import { LiquidityPoolService, LiquidityTokenManagerService } from '../../cross-chain/liquidity';
 
 const log = logger(module);
+
+const networkServiceMap: Record<number, EVMNetworkService> = {};
 
 const routeTransactionToRelayerMap: {
   [chainId: number]: {
@@ -103,6 +106,13 @@ const crossChainGasEstimationServiceMap: {
   [chainId: number]: ICrossChainGasEstimationService;
 } = {};
 
+const liquidityTokenManagerService = new LiquidityTokenManagerService();
+const liquidityPoolService = new LiquidityPoolService(
+  liquidityTokenManagerService,
+  networkServiceMap,
+  config.tokenPrice.symbolMapByChainId,
+);
+
 const indexerService = new IndexerService(config.indexer.baseUrl);
 
 const dbInstance = Mongo.getInstance();
@@ -133,8 +143,6 @@ const crossChainRetryTransactionServiceMap: {
 } = {};
 
 const sdkBackendService = new SDKBackendService(config.sdkBackend.baseUrl);
-
-const networkServiceMap: Record<number, EVMNetworkService> = {};
 
 // eslint-disable-next-line import/no-mutable-exports
 let statusService: IStatusService;
@@ -565,4 +573,7 @@ export {
   transactionDao,
   sdkBackendService,
   statusService,
+  liquidityPoolService,
+  liquidityTokenManagerService,
+  crossChainGasEstimationServiceMap,
 };

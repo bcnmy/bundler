@@ -6,7 +6,7 @@ import { parseIndexerEvent } from '../../../../cross-chain/utils';
 
 const log = logger(module);
 
-export const hookApi = async (req: Request, res: Response) => {
+export const processApi = async (req: Request, res: Response) => {
   const { chainId, data, txHash } = req.body;
 
   const ccmpService = ccmpServiceMap[chainId];

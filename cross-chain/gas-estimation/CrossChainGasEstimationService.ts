@@ -8,6 +8,7 @@ import type { ICrossChainGasEstimationService } from './interfaces/ICrossChainGa
 import type { ISDKBackendService } from '../../common/sdk-backend-service/types';
 import type { ITokenPriceConversionService } from '../../common/token/interface/ITokenPriceConversionService';
 import { logger } from '../../common/log-config';
+import { config } from '../../config';
 
 const log = logger(module);
 
@@ -143,6 +144,8 @@ export class CrossChainGasEstimationService implements ICrossChainGasEstimationS
       }
 
       const fromChainid = parseInt(message.sourceChainId.toString(), 10);
+      const toChainId = parseInt(message.destinationChainId.toString(), 10);
+
       const { feeTokenAddress } = message.gasFeePaymentArgs;
       const feeTokenSymbol = this.tokenAddressToSymbolMap[fromChainid][
         feeTokenAddress.toLowerCase()
@@ -174,11 +177,21 @@ export class CrossChainGasEstimationService implements ICrossChainGasEstimationS
 
       const messageVerificationFee = await this.getMessageVerificationFee(message, feeTokenSymbol);
 
-      // TODO: Integrate Fee Options, and expose as API
       const totalFee = verificationFee.add(verificationTxGasFee).add(messageVerificationFee);
-      log.info(`Total Fee: ${totalFee} $${feeTokenSymbol}`);
+      log.info(`Total Fee before commission: ${totalFee} $${feeTokenSymbol}`);
+
+      let commissionPerc = config.feeOption.commission[toChainId];
+      if (!commissionPerc) {
+        log.error(`Commission not found for chainId: ${toChainId}`);
+        commissionPerc = 0;
+      }
+
+      const commission = totalFee.mul(Math.floor(commissionPerc * 10 ** 6)).div(10 ** 8);
+      const finalFee = totalFee.add(commission);
+      log.info(`Comission: ${commission} $${feeTokenSymbol}, Final Fee: ${finalFee} $${feeTokenSymbol}`);
+
       return {
-        amount: totalFee,
+        amount: finalFee,
         tokenSymbol: feeTokenSymbol,
       };
     } catch (e) {

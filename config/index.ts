@@ -239,6 +239,19 @@ export class Config implements IConfig {
       throw new Error('Hyperlane bridge environment required');
     }
 
+    // Validata CCMP ABI
+    if (!this.config.ccmp.abi.CCMPGateway) {
+      throw new Error('CCMPGateway ABI required');
+    }
+    if (!this.config.ccmp.abi.LiquidityPool) {
+      throw new Error('LiquidityPool ABI required');
+    }
+
+    // Validate CCMP Token Symbols
+    if (!this.config.ccmp.tokenSymbols) {
+      throw new Error('CCMP token symbols required');
+    }
+
     // Validata Indexer Config
     if (!this.config.indexer?.baseUrl) {
       throw new Error('Indexer base url required');

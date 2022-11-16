@@ -1,4 +1,3 @@
-import { ethers } from 'ethers';
 import type { Chains as HyperlaneChains } from '@abacus-network/sdk';
 import type { TransactionType, SymbolMapByChainIdType, CCMPRouterName } from '../../common/types';
 
@@ -208,6 +207,7 @@ type CCMPWebhooksConfigType = {
 
 type CCMPAbiType = {
   CCMPGateway: Record<string, any>[];
+  LiquidityPool: Record<string, any>[];
 };
 
 type CCMPEventType = Record<
@@ -225,6 +225,7 @@ type CCMPRetryIntervalType = Record<number, Record<CCMPRouterName, number>>;
 type CCMPConfigType = {
   bridges: CCMPBridgesConfigType;
   contracts: CCMPContractsConfigType;
+  adaptors: CCMPContractsConfigType;
   webhooks: CCMPWebhooksConfigType;
   abi: CCMPAbiType;
   events: Record<string, CCMPEventType>;
@@ -232,6 +233,7 @@ type CCMPConfigType = {
   supportedRouters: Record<string, CCMPRouterName[]>;
   webhookEndpoint: string;
   retryInterval: CCMPRetryIntervalType;
+  tokenSymbols: Record<string, number>;
 };
 
 type IndexerConfigType = {
