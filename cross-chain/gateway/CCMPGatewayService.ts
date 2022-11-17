@@ -80,22 +80,42 @@ export class CCMPGatewayService implements ICCMPGatewayService {
     return this.interface.encodeFunctionData('receiveMessage', [message, verificationData, false]);
   }
 
-  createReceiveMessageTransaction(
+  async createReceiveMessageTransaction(
     message: CCMPMessage,
     verificationData: string | Uint8Array,
     sourceTxHash: string,
-  ): CrossChainTransactionMessageType {
+  ): Promise<CrossChainTransactionMessageType> {
     log.info(
       `Creating CCMP Gateway Transaction for message ${message.hash} with verification data ${verificationData}`,
     );
+
+    const calldata = this.buildReceiveMessageCalldata(message, verificationData);
+
+    // Estimate Gas
+    let gasLimit: ethers.BigNumber;
+    try {
+      gasLimit = await this.ccmpGateway.estimateGas.receiveMessage(message, verificationData);
+      log.info(
+        `Estimated gas for CCMP receiveMessage for message ${message.hash}: ${gasLimit}`,
+      );
+    } catch (e) {
+      const errorData = (e as any).error?.data
+        || (e as any).error?.error?.data
+        || (e as any).error?.error?.error?.data;
+      if (errorData) {
+        const error = this.ccmpGateway.interface.parseError(errorData);
+        throw new Error(`Error estimating gas for receiveMessage for message ${message.hash}: ${JSON.stringify(error)}`);
+      } else {
+        throw e;
+      }
+    }
 
     return {
       transactionId: message.hash,
       type: TransactionType.CROSS_CHAIN,
       to: message.destinationGateway,
-      data: this.buildReceiveMessageCalldata(message, verificationData),
-      // TODO: Generalize
-      gasLimit: '0xF4240',
+      data: calldata,
+      gasLimit: gasLimit.toString(),
       chainId: parseInt(message.destinationChainId.toString(), 10),
       value: '0x0',
       message,

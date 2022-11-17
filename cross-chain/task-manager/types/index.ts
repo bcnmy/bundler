@@ -1,32 +1,9 @@
-import type {
-  CCMPVerificationData,
-  ICrossChainTransactionStatusLogEntry,
-} from '../../../common/db';
-import type { CCMPMessage } from '../../../common/types';
-import { CrossChainTransationStatus } from '../../../common/types';
+import type { ICrossChainTransactionStatusLogEntry } from '../../../common/db';
+import type { ICCMPTaskManager } from '../interfaces/ICCMPTaskManager';
 
-// TODO: Split interfaces and types into separate files
-
-export interface IHandler {
+export interface ICrossChainProcessStep {
   (
     prev: ICrossChainTransactionStatusLogEntry,
     ctx: ICCMPTaskManager
   ): Promise<ICrossChainTransactionStatusLogEntry>;
-}
-
-export interface ICCMPTaskManager {
-  message: CCMPMessage;
-  sourceTxHash: string;
-  verificationData: CCMPVerificationData;
-  setVerificationData: (data: CCMPVerificationData) => void;
-  status: ICrossChainTransactionStatusLogEntry
-  run: (
-    name: string,
-    handler: IHandler,
-    handlerExpectedPostCompletionStatus: CrossChainTransationStatus
-  ) => Promise<ICCMPTaskManager>;
-}
-
-export interface ICrossChainTransactionHandlerService {
-  processTransaction(message: CCMPMessage, sourceChainTxHash: string): Promise<void>;
 }

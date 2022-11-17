@@ -12,9 +12,10 @@ import type {
   CCMPVerificationData,
 } from '../../common/db';
 import { config } from '../../config';
-import type { IHandler, ICCMPTaskManager } from './types';
+import type { ICrossChainProcessStep } from './types';
 import type { IQueue } from '../../common/interface';
 import type { CrossChainRetryQueueData } from '../../common/queue/types';
+import type { ICCMPTaskManager } from './interfaces/ICCMPTaskManager';
 
 const log = logger(module);
 
@@ -85,7 +86,7 @@ export class CCMPTaskManager implements ICCMPTaskManager {
 
   async run(
     name: string,
-    handler: IHandler,
+    handler: ICrossChainProcessStep,
     handlerExpectedPostCompletionStatus: CrossChainTransationStatus,
   ): Promise<ICCMPTaskManager> {
     if (this.errorOccured) {

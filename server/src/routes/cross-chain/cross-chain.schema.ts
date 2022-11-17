@@ -1,53 +1,88 @@
-import {
-  number, object, string, array,
-} from 'joi';
+import Joi from 'joi';
+import { CCMPRouterName } from '../../../../common/types';
 
-/**
- * @dev hookSchema - derived from the Webhookoutput struct
- * of https://github.com/bcnmy/indexer/blob/master/models/output.go
- */
-export const hookSchema = object({
-  body: object({
-    id: string().required().error(new Error('id is required')),
-    chainId: number().required().error(new Error('chain id is required')),
-    from: string().required().error(new Error('from address is required')),
-    scAddress: string().required().error(new Error('smart contract address is required')),
-    blockHash: string().required().error(new Error('block hash is required')),
-    blockNumber: number().required().error(new Error('block number is required')),
-    txIndex: number().required().error(new Error('transaction index is required')),
-    txHash: string().required().error(new Error('transaction hash is required')),
-    txType: number().required().error(new Error('transaction type is required')),
-    txStatus: string().required().error(new Error('transaction status is required')),
-    txTimestamp: string().required().error(new Error('transaction timestamp is required')),
-    gasLimit: number().required().error(new Error('gas limit is required')),
-    gasUsage: number().required().error(new Error('gas usage is required')), // TODO: ensure changed to gasuse),
-    gasPrice: number().required().error(new Error('gas price is required')),
-    txFees: number().required().error(new Error('transaction fees is required')),
-    topicId: string().required().error(new Error('topic id is required')),
-    event: string().required().error(new Error('event name is required')),
-    data: object({
-      sender: string(), // .required("sender is required"),
-      sourceGateway: string(), // .required("source gateway is required"),
-      sourceAdaptor: string(), // .required("source adaptor is required"),
-      sourceChainId: string(), // .required("source chain id is required"),
-      destinationGateway: string(),
-      // .required("destination chain gateway contract address is required"),
-      destinationChainId: string(), // .required("destination chain id is required"),
-      nonce: string(), // .required("nonce is required"),
-      routerAdaptor: string(), // .required("router adaptor is required"),
-      gasFeePaymentArgs: object({
-        feeTokenAddress: string(), // .required("fee token address is required"),
-        feeAmount: string(), // .required("fee amount is required"),
-        relayer: string(), // .required("relayer is required"),
-      }), // .required("gas fee payment args are required"),
-      payload: array().items(
-        object({
-          operationType: number(), // .required("payload operation type is required"),
-          data: string(), // .required("payload data is required")
-        }),
-      ), // .required("amount is required"),
-    }), // .required("event data is required"),
-    queuedAt: string(), // .required('queued at timestamp is required'),
-    dispatchedAt: string(), // .required("dispatched at timestamp is required"),
+const {
+  string, number, object, alternatives, array,
+} = Joi.types();
+
+const address = (err: Error) => string
+  .regex(/^0x[a-fA-F0-9]{40}$/)
+  .required()
+  .error(err);
+
+const keccak256Hash = (err: Error) => string
+  .regex(/^0x[a-fA-F0-9]{64}$/)
+  .required()
+  .error(err);
+
+const routerAdaptorType = alternatives
+  .try(CCMPRouterName.AXELAR, CCMPRouterName.HYPERLANE, CCMPRouterName.WORMHOLE)
+  .error(new Error('routerAdaptor is required or is invalid'));
+
+export const estimateDepositAndCallApiSchema = object.keys({
+  fromChainId: number.required().error(new Error('fromChainId is required')),
+  toChainId: number.required().error(new Error('toChainId is required')),
+  fromTokenAddress: address(new Error('fromTokenAddress is required')),
+  receiverAddress: address(new Error('receiverAddress is required')),
+  amountInWei: string.required().error(new Error('amountInWei is required')),
+  adaptorName: routerAdaptorType,
+  payloads: array.items(
+    object.keys({
+      to: address(new Error('to address is required')),
+      _calldata: string.required().error(new Error('calldata is required')),
+    }),
+  ),
+});
+
+export const processApiSchema = object.keys({
+  txHash: keccak256Hash(new Error('txHash is required')),
+  message: object.keys({
+    sender: address(new Error('sender address is required')),
+    sourceGateway: address(new Error('sourceGateway address is required')),
+    sourceAdaptor: address(new Error('sourceAdapter address is required')),
+    sourceChainId: number.required().error(new Error('source chainId is required')),
+    destinationChainGateway: address(new Error('destinationChainGateway address is required')),
+    destinationChainId: number.required().error(new Error('destination chainId is required')),
+    nonce: string.required().error(new Error('nonce is required')),
+    routerAdaptor: routerAdaptorType,
+    gasFeePaymentArgs: object.keys({
+      feeTokenAddress: address(new Error('feeTokenAddress is required')),
+      feeAmount: string.required().error(new Error('feeTokenAmount is required')),
+      relayer: address(new Error('relayer address is required')),
+    }),
+    payload: array.items(
+      object.keys({
+        to: address(new Error('to address is required')),
+        _calldata: string.required().error(new Error('calldata is required')),
+      }),
+    ),
+    hash: keccak256Hash(new Error('hash is required')),
+  }),
+});
+
+export const processFromIndexerApiSchema = object.keys({
+  chainId: number.required().error(new Error('chainId is required')),
+  txHash: keccak256Hash(new Error('txHash is required')),
+  data: object.keys({
+    sender: address(new Error('sender address is required')),
+    sourceGateway: address(new Error('sourceGateway address is required')),
+    sourceAdaptor: address(new Error('sourceAdapter address is required')),
+    sourceChainId: number.required().error(new Error('source chainId is required')),
+    destinationChainGateway: address(new Error('destinationChainGateway address is required')),
+    destinationChainId: number.required().error(new Error('destination chainId is required')),
+    nonce: string.required().error(new Error('nonce is required')),
+    routerAdaptor: routerAdaptorType,
+    gasFeePaymentArgs: object.keys({
+      FeeTokenAddress: address(new Error('feeTokenAddress is required')),
+      FeeAmount: string.required().error(new Error('feeTokenAmount is required')),
+      Relayer: address(new Error('relayer address is required')),
+    }),
+    payload: array.items(
+      object.keys({
+        To: address(new Error('to address is required')),
+        Calldata: string.required().error(new Error('calldata is required')),
+      }),
+    ),
+    hash: keccak256Hash(new Error('hash is required')),
   }),
 });

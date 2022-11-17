@@ -1,12 +1,12 @@
-import { ConsumeMessage } from 'amqplib';
-import { IQueue } from '../../common/interface';
+import type { ConsumeMessage } from 'amqplib';
+import type { IQueue } from '../../common/interface';
 import { logger } from '../../common/log-config';
-import { CrossChainRetryQueueData } from '../../common/queue/types';
-import { ICrossChainTransactionHandlerService } from '../task-manager/types';
-import { IRetryTransactionService } from './interface/IRetryTransactionService';
+import type { CrossChainRetryQueueData } from '../../common/queue/types';
+import type { ICrossChainTransactionHandlerService } from '../transaction-handler/interfaces/ICrossChainTransactionHandlerService';
+import type { ICrossChainRetryTransactionService } from './interface/IRetryTransactionService';
 
 const log = logger(module);
-export class CrossChainRetryTransactionService implements IRetryTransactionService {
+export class CrossChainRetryTransactionService implements ICrossChainRetryTransactionService {
   constructor(
     public readonly chainId: number,
     public readonly queue: IQueue<CrossChainRetryQueueData>,

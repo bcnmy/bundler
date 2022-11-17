@@ -17,7 +17,8 @@ import {
 } from '../../../../common/types';
 import { getRetryTransactionCountKey } from '../../../../common/utils';
 import { CCMPTaskManager } from '../../../../cross-chain/task-manager';
-import { ICCMPTaskManager, IHandler } from '../../../../cross-chain/task-manager/types';
+import { ICCMPTaskManager } from '../../../../cross-chain/task-manager/interfaces/ICCMPTaskManager';
+import { ICrossChainProcessStep } from '../../../../cross-chain/task-manager/types';
 import { IEVMAccount } from '../account';
 import { ITransactionPublisher } from '../transaction-publisher';
 import { ITransactionListener } from './interface/ITransactionListener';
@@ -436,8 +437,9 @@ implements
     );
   };
 
-  private static handleCCMPOnTransactionSuccessFactory = (destinationTxHash?: string): IHandler => {
-    const handler: IHandler = async (data) => ({
+  private static handleCCMPOnTransactionSuccessFactory = (destinationTxHash?: string)
+  : ICrossChainProcessStep => {
+    const handler: ICrossChainProcessStep = async (data) => ({
       ...data,
       status: CrossChainTransationStatus.DESTINATION_TRANSACTION_CONFIRMED,
       context: {
@@ -450,8 +452,8 @@ implements
   private static handleCCMPOnTransactionFailureFactory = (
     destinationTxHash?: string,
     error?: string,
-  ): IHandler => {
-    const handler: IHandler = async (data) => ({
+  ): ICrossChainProcessStep => {
+    const handler: ICrossChainProcessStep = async (data) => ({
       ...data,
       status: CrossChainTransactionError.DESTINATION_TRANSACTION_REVERTED,
       scheduleRetry: true,

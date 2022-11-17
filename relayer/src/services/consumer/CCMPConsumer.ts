@@ -1,8 +1,6 @@
 import type { ConsumeMessage } from 'amqplib';
 import type { ICacheService } from '../../../../common/cache';
-import type {
-  ICrossChainTransactionDAO,
-} from '../../../../common/db';
+import type { ICrossChainTransactionDAO } from '../../../../common/db';
 import { logger } from '../../../../common/log-config';
 import type { IQueue } from '../../../../common/queue';
 import type { CrossChainRetryHandlerQueue } from '../../../../common/queue/CrossChainRetryHandlerQueue';
@@ -14,7 +12,8 @@ import {
   CrossChainTransactionError,
 } from '../../../../common/types';
 import { CCMPTaskManager } from '../../../../cross-chain/task-manager';
-import type { ICCMPTaskManager, IHandler } from '../../../../cross-chain/task-manager/types';
+import { ICCMPTaskManager } from '../../../../cross-chain/task-manager/interfaces/ICCMPTaskManager';
+import type { ICrossChainProcessStep } from '../../../../cross-chain/task-manager/types';
 import type { IEVMAccount } from '../account';
 import type { IRelayerManager } from '../relayer-manager/interface/IRelayerManager';
 import type { ITransactionService } from '../transaction-service';
@@ -142,8 +141,10 @@ export class CCMPConsumer implements ITransactionConsumer<IEVMAccount, EVMRawTra
     );
   };
 
-  private static handleOnTransactionSuccessFactory = (destinationTxHash?: string): IHandler => {
-    const handler: IHandler = async (data) => ({
+  private static handleOnTransactionSuccessFactory = (
+    destinationTxHash?: string,
+  ): ICrossChainProcessStep => {
+    const handler: ICrossChainProcessStep = async (data) => ({
       ...data,
       status: CrossChainTransationStatus.DESTINATION_TRANSACTION_RELAYED,
       context: {
@@ -156,8 +157,8 @@ export class CCMPConsumer implements ITransactionConsumer<IEVMAccount, EVMRawTra
   private static handleOnTransactionFailureFactory = (
     destinationTxHash?: string,
     error?: string,
-  ): IHandler => {
-    const handler: IHandler = async (data) => ({
+  ): ICrossChainProcessStep => {
+    const handler: ICrossChainProcessStep = async (data) => ({
       ...data,
       status: CrossChainTransactionError.DESTINATION_TRANSACTION_REVERTED,
       context: {

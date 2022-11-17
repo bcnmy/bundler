@@ -6,7 +6,7 @@ import express, {
 } from 'express';
 import cons from 'consolidate';
 import { morganMiddleware } from '../../common/log-config';
-import { routes } from './routes';
+import { routes } from './routes/relay';
 
 const app = express();
 

@@ -15,7 +15,7 @@ import { EVMRetryTransactionService } from '../../relayer/src/services/retry-tra
 import { EVMTransactionListener } from '../../relayer/src/services/transaction-listener';
 import { EVMTransactionService } from '../../relayer/src/services/transaction-service';
 import { FeeOption } from '../../server/src/services';
-import { CrossChainTransactionHandlerService } from '../../cross-chain';
+import { CrossChainTransactionHandlerService } from '../../cross-chain/transaction-handler';
 import {
   AxelarRouterService,
   HyperlaneRouterService,

@@ -8,7 +8,6 @@ import {
 
 const log = logger(module);
 
-// TODO: Validation
 export const estimateDepositAndCallApi = async (req: Request, res: Response) => {
   const {
     fromChainId,

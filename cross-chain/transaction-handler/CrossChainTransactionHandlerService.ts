@@ -12,11 +12,12 @@ import { CCMPTaskManager } from '../task-manager';
 import type { routeTransactionToRelayerMap as globalRouteTransactionToRelayerMap } from '../../common/service-manager';
 import type { ICCMPRouterService } from '../router-service/interfaces';
 import type { ICrossChainTransactionDAO } from '../../common/db';
-import type { ICrossChainTransactionHandlerService, IHandler } from '../task-manager/types';
+import type { ICrossChainTransactionHandlerService } from './interfaces/ICrossChainTransactionHandlerService';
+import type { ICrossChainProcessStep } from '../task-manager/types';
 import type { CrossChainRetryHandlerQueue } from '../../common/queue/CrossChainRetryHandlerQueue';
-import type { CCMPGatewayService } from '../gateway';
 import type { IIndexerService } from '../../common/indexer/types';
 import type { ICrossChainGasEstimationService } from '../gas-estimation/interfaces/ICrossChainGasEstimationService';
+import type { ICCMPGatewayService } from '../gateway/interfaces/ICCMPGatewayService';
 
 const log = logger(module);
 
@@ -31,7 +32,7 @@ export class CrossChainTransactionHandlerService implements ICrossChainTransacti
     private readonly routeTransactionToRelayerMap: typeof globalRouteTransactionToRelayerMap,
     private readonly crossChainTransactionDAO: ICrossChainTransactionDAO,
     private readonly crossChainRetryTransactionQueue: CrossChainRetryHandlerQueue,
-    private readonly ccmpGatewayService: CCMPGatewayService,
+    private readonly ccmpGatewayService: ICCMPGatewayService,
     private readonly indexerService: IIndexerService,
     private readonly crossChainGasEstimationServiceMap: Record<
     number,
@@ -78,7 +79,7 @@ export class CrossChainTransactionHandlerService implements ICrossChainTransacti
     }
   }
 
-  private handleValidation: IHandler = async (data, ctx) => {
+  private handleValidation: ICrossChainProcessStep = async (data, ctx) => {
     const { supportedRouters } = config.ccmp;
     const { message, status, sourceTxHash } = ctx;
     const { sourceChainId, destinationChainId, routerAdaptor } = message;
@@ -149,7 +150,11 @@ export class CrossChainTransactionHandlerService implements ICrossChainTransacti
     // Compare
     if (gasFeePaid.lt(gasFeeEstimate.amount)) {
       log.info(
-        `Gas fee paid for message ${message.hash} is ${gasFeePaid.toString()} which is less than the estimated gas fee ${gasFeeEstimate.amount}`,
+        `Gas fee paid for message ${
+          message.hash
+        } is ${gasFeePaid.toString()} which is less than the estimated gas fee ${
+          gasFeeEstimate.amount
+        }`,
       );
       return {
         ...data,
@@ -170,7 +175,7 @@ export class CrossChainTransactionHandlerService implements ICrossChainTransacti
     };
   };
 
-  private handleRouterPreVerification: IHandler = async (data, ctx) => {
+  private handleRouterPreVerification: ICrossChainProcessStep = async (data, ctx) => {
     const { sourceTxHash, message } = ctx;
     const routerService = this.routerServiceMap[message.routerAdaptor as CCMPRouterName]!;
 
@@ -189,7 +194,7 @@ export class CrossChainTransactionHandlerService implements ICrossChainTransacti
     };
   };
 
-  private handleFetchVerificationData: IHandler = async (data, ctx) => {
+  private handleFetchVerificationData: ICrossChainProcessStep = async (data, ctx) => {
     const { sourceTxHash, message } = ctx;
     const routerService = this.routerServiceMap[message.routerAdaptor as CCMPRouterName]!;
 
@@ -204,7 +209,7 @@ export class CrossChainTransactionHandlerService implements ICrossChainTransacti
     };
   };
 
-  private handleRelayTransaction: IHandler = async (data, ctx) => {
+  private handleRelayTransaction: ICrossChainProcessStep = async (data, ctx) => {
     const { verificationData, message } = ctx;
 
     if (!verificationData) {
@@ -218,7 +223,7 @@ export class CrossChainTransactionHandlerService implements ICrossChainTransacti
     }
 
     const toChain = Number(message.destinationChainId.toString());
-    const transaction = this.ccmpGatewayService.createReceiveMessageTransaction(
+    const transaction = await this.ccmpGatewayService.createReceiveMessageTransaction(
       message,
       verificationData,
       ctx.sourceTxHash,
