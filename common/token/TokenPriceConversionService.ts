@@ -17,12 +17,11 @@ export class TokenPriceConversionService implements ITokenPriceConversionService
     private readonly networkServiceMap: Record<number, EVMNetworkService>,
     private readonly symbolMapByChainId: SymbolMapByChainIdType,
   ) {
-    // Flip the map
     this.symbolToTokenAddressMap = Object.fromEntries(
-      Object.entries(this.symbolMapByChainId).map(([chainId, addressToSymbolMap]) => [
+      Object.entries(this.symbolMapByChainId).map(([chainId, symbolToAddressMap]) => [
         chainId,
         Object.fromEntries(
-          Object.entries(addressToSymbolMap).map(([address, symbol]) => [
+          Object.entries(symbolToAddressMap).map(([symbol, address]) => [
             symbol,
             // Convert addresses to lowercase
             address.toLowerCase(),

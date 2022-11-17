@@ -5,7 +5,6 @@ import type {
   CCMPRouterName,
   CCMPMessagePayload,
   CCMPMessage,
-  SymbolMapByChainIdType,
 } from '../../common/types';
 import { logger } from '../../common/log-config';
 import { ILiquidityTokenManagerService } from './interfaces/ILiquidityTokenManagerService';
@@ -18,16 +17,18 @@ export class LiquidityPoolService implements ILiquidityPoolService {
     config.ccmp.abi.LiquidityPool,
   );
 
+  private readonly tokenAddressToSymbolMap: Record<number, Record<string, string>>;
+
   constructor(
     private readonly liquidityTokenManagerService: ILiquidityTokenManagerService,
     private readonly networkServiceMap: Record<number, EVMNetworkService>,
-    private readonly symbolMapByChainId: SymbolMapByChainIdType,
+    symbolToTokenAddressMap: Record<number, Record<string, string>>,
   ) {
-    this.symbolMapByChainId = Object.fromEntries(
-      Object.entries(symbolMapByChainId).map(([chainId, addressToSymbolMap]) => [
+    this.tokenAddressToSymbolMap = Object.fromEntries(
+      Object.entries(symbolToTokenAddressMap).map(([chainId, symbolToAddressMap]) => [
         chainId,
         Object.fromEntries(
-          Object.entries(addressToSymbolMap).map(([address, symbol]) => [
+          Object.entries(symbolToAddressMap).map(([symbol, address]) => [
             // Convert addresses to lowercase
             address.toLowerCase(),
             symbol,
@@ -74,7 +75,7 @@ export class LiquidityPoolService implements ILiquidityPoolService {
       );
     }
 
-    const tokenSymbol = this.symbolMapByChainId[fromChainId][fromTokenAddress.toLowerCase()];
+    const tokenSymbol = this.tokenAddressToSymbolMap[fromChainId][fromTokenAddress.toLowerCase()];
     if (!tokenSymbol) {
       throw new Error(
         `Token symbol not found for chainId: ${fromChainId} and tokenAddress: ${fromTokenAddress}`,

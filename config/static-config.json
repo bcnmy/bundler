@@ -2407,11 +2407,11 @@
   "supportedTransactionType": {
     "5": ["AA", "SCW"],
     "137": ["AA", "SCW"],
-    "80001": ["AA", "SCW"],
+    "80001": ["AA", "SCW", "CROSS_CHAIN"],
     "97": ["AA", "SCW"],
     "420": ["AA", "SCW"],
     "421613": ["AA", "SCW"],
-    "43113": ["AA", "SCW"]
+    "43113": ["AA", "SCW", "CROSS_CHAIN"]
   },
   "chains": {
     "currency": {
@@ -2917,7 +2917,8 @@
       "CELO": [42220, 44787],
       "NEON": [245022926],
       "BOBA": [1294],
-      "BICO": [111111111]
+      "BICO": [111111111],
+      "USDT": [825]
     },
     "updateFrequencyInSeconds": 90,
     "symbolMapByChainId": {
@@ -2943,7 +2944,8 @@
         "0x6B175474E89094C44Da98b954EedeAC495271d0F": "DAI"
       },
       "43113": {
-        "0x6B175474E89094C44Da98b954EedeAC495271d0F": "DAI"
+        "0x6B175474E89094C44Da98b954EedeAC495271d0F": "DAI",
+        "0xC74dB45a7D3416249763c151c6324Ceb6B3217fd": "USDT"
       }
     }
   },

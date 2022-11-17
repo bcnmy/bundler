@@ -6,12 +6,13 @@ import {
   CrossChainTransationStatus,
   CrossChainTransactionError,
   isError,
+  TransactionStatus,
 } from '../../common/types';
 import { logger } from '../../common/log-config';
 import { CCMPTaskManager } from '../task-manager';
 import type { routeTransactionToRelayerMap as globalRouteTransactionToRelayerMap } from '../../common/service-manager';
 import type { ICCMPRouterService } from '../router-service/interfaces';
-import type { ICrossChainTransactionDAO } from '../../common/db';
+import type { ICrossChainTransactionDAO, ITransactionDAO } from '../../common/db';
 import type { ICrossChainTransactionHandlerService } from './interfaces/ICrossChainTransactionHandlerService';
 import type { ICrossChainProcessStep } from '../task-manager/types';
 import type { CrossChainRetryHandlerQueue } from '../../common/queue/CrossChainRetryHandlerQueue';
@@ -38,6 +39,7 @@ export class CrossChainTransactionHandlerService implements ICrossChainTransacti
     number,
     ICrossChainGasEstimationService
     >,
+    private readonly transactionDao: ITransactionDAO,
   ) {
     this.webHookEndpoint = config.ccmp.webhookEndpoint;
   }
@@ -223,12 +225,23 @@ export class CrossChainTransactionHandlerService implements ICrossChainTransacti
       };
     }
 
-    const toChain = Number(message.destinationChainId.toString());
+    const toChain = parseInt(message.destinationChainId.toString(), 10);
     const transaction = await this.ccmpGatewayServiceMap[toChain].createReceiveMessageTransaction(
       message,
       verificationData,
       ctx.sourceTxHash,
     );
+
+    // save transaction to transactions db. duh
+    await this.transactionDao.save(toChain, {
+      transactionId: message.hash,
+      TransactionType: TransactionType.CROSS_CHAIN,
+      status: TransactionStatus.PENDING,
+      chainId: toChain,
+      resubmitted: false,
+      creationTime: Date.now(),
+    });
+
     const response = await this.routeTransactionToRelayerMap[toChain][
       TransactionType.CROSS_CHAIN
     ]!.sendTransactionToRelayer(transaction);

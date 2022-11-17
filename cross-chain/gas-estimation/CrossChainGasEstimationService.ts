@@ -13,20 +13,22 @@ import { config } from '../../config';
 const log = logger(module);
 
 export class CrossChainGasEstimationService implements ICrossChainGasEstimationService {
+  private readonly tokenAddressToSymbolMap: Record<number, Record<string, string>>;
+
   constructor(
     private readonly chainId: number,
     private readonly sdkBackendService: ISDKBackendService,
     private readonly tokenPriceConversionService: ITokenPriceConversionService,
     private readonly routerServiceMap: { [key in CCMPRouterName]?: ICCMPRouterService },
     private readonly gasPriceService: IGasPrice,
-    private readonly tokenAddressToSymbolMap: Record<number, Record<string, string>>,
+    symbolToTokenAddressMap: Record<number, Record<string, string>>,
   ) {
     // Ensure all the addresses are lower case
     this.tokenAddressToSymbolMap = Object.fromEntries(
-      Object.entries(this.tokenAddressToSymbolMap).map(([_chainId, addressToSymbolMap]) => [
+      Object.entries(symbolToTokenAddressMap).map(([_chainId, symbolToAddressMap]) => [
         _chainId,
         Object.fromEntries(
-          Object.entries(addressToSymbolMap).map(([address, symbol]) => [
+          Object.entries(symbolToAddressMap).map(([symbol, address]) => [
             address.toLowerCase(),
             symbol,
           ]),

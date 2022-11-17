@@ -110,7 +110,7 @@ const liquidityTokenManagerService = new LiquidityTokenManagerService();
 const liquidityPoolService = new LiquidityPoolService(
   liquidityTokenManagerService,
   networkServiceMap,
-  config.tokenPrice.symbolMapByChainId,
+  config.feeOption.tokenContractAddress,
 );
 
 const indexerService = new IndexerService(config.indexer.baseUrl);
@@ -171,7 +171,7 @@ let statusService: IStatusService;
   const tokenPriceConversionService = new TokenPriceConversionService(
     tokenService,
     networkServiceMap,
-    config.tokenPrice.symbolMapByChainId,
+    config.feeOption.tokenContractAddress,
   );
 
   log.info(`Setting up instances for following chainIds: ${JSON.stringify(supportedNetworks)}`);
@@ -511,7 +511,7 @@ let statusService: IStatusService;
           tokenPriceConversionService,
           ccmpRouterMap[chainId],
           gasPriceService,
-          config.tokenPrice.symbolMapByChainId,
+          config.feeOption.tokenContractAddress,
         );
 
         ccmpServiceMap[chainId] = new CrossChainTransactionHandlerService(
@@ -523,6 +523,7 @@ let statusService: IStatusService;
           ccmpGatewayServiceMap,
           indexerService,
           crossChainGasEstimationServiceMap,
+          transactionDao,
         );
 
         ccmpServiceInitPromises.push(ccmpServiceMap[chainId].init());
