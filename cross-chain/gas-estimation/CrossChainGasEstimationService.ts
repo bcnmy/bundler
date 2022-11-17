@@ -124,7 +124,7 @@ export class CrossChainGasEstimationService implements ICrossChainGasEstimationS
 
   private async getMessageVerificationFee(message: CCMPMessage, feeTokenSymbol: string) {
     const messageGasFee = await this.sdkBackendService.estimateCrossChainMessageGas(message);
-    log.info(`Message Gas Fee: ${messageGasFee.toString()}`);
+    log.info(`Message Gas Fee: ${JSON.stringify(messageGasFee)}`);
     const messageGasFeeInFeeToken = await this.getTxCostInFeeToken(
       parseInt(message.sourceChainId.toString(), 10),
       messageGasFee.gas + messageGasFee.txBaseGas,

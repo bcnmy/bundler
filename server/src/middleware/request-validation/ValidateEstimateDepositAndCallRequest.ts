@@ -16,8 +16,7 @@ export const validateEstimateDepositAndCallRequest = async (
     if (valid) {
       return next();
     }
-    const { details } = error;
-    const message = details.map((i) => i.message).join(',');
+    const { message } = error;
     return res.status(422).json({
       code: 422,
       error: message,

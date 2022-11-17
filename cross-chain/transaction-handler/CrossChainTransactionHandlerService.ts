@@ -32,7 +32,7 @@ export class CrossChainTransactionHandlerService implements ICrossChainTransacti
     private readonly routeTransactionToRelayerMap: typeof globalRouteTransactionToRelayerMap,
     private readonly crossChainTransactionDAO: ICrossChainTransactionDAO,
     private readonly crossChainRetryTransactionQueue: CrossChainRetryHandlerQueue,
-    private readonly ccmpGatewayService: ICCMPGatewayService,
+    private readonly ccmpGatewayServiceMap: Record<number, ICCMPGatewayService>,
     private readonly indexerService: IIndexerService,
     private readonly crossChainGasEstimationServiceMap: Record<
     number,
@@ -134,13 +134,14 @@ export class CrossChainTransactionHandlerService implements ICrossChainTransacti
     // Check Gas Fee Payment
     // Get Estimated Gas Fee
     log.info(`Checking gas fee payment for message ${message.hash}`);
+    const fromChainid = parseInt(message.sourceChainId.toString(), 10);
     const toChainId = parseInt(message.destinationChainId.toString(), 10);
     const gasEstimationService = this.crossChainGasEstimationServiceMap[toChainId];
     const gasFeeEstimate = await gasEstimationService.estimateCrossChainFee(sourceTxHash, message);
     log.info(`Gas fee estimate for message ${message.hash} is ${gasFeeEstimate.toString()}`);
     // Check how much is actually paid
     const gasFeePaid = (
-      await this.ccmpGatewayService.getGasPaidByMessageHash(message.hash, [
+      await this.ccmpGatewayServiceMap[fromChainid].getGasPaidByMessageHash(message.hash, [
         message.gasFeePaymentArgs.feeTokenAddress,
       ])
     ).get(message.gasFeePaymentArgs.feeTokenAddress);
@@ -223,7 +224,7 @@ export class CrossChainTransactionHandlerService implements ICrossChainTransacti
     }
 
     const toChain = Number(message.destinationChainId.toString());
-    const transaction = await this.ccmpGatewayService.createReceiveMessageTransaction(
+    const transaction = await this.ccmpGatewayServiceMap[toChain].createReceiveMessageTransaction(
       message,
       verificationData,
       ctx.sourceTxHash,

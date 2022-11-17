@@ -66,7 +66,7 @@ export class CCMPGatewayService implements ICCMPGatewayService {
         || (e as any).error?.error?.error?.data;
       if (errorData) {
         const error = this.interface.parseError(errorData);
-        log.error(`Decoded Error Data: ${JSON.stringify(error)}`);
+        log.error('Decoded Error Data:', error);
         return { error: JSON.stringify(error) };
       }
       return { error: JSON.stringify(e) };
@@ -90,24 +90,9 @@ export class CCMPGatewayService implements ICCMPGatewayService {
     );
 
     const calldata = this.buildReceiveMessageCalldata(message, verificationData);
-
-    // Estimate Gas
-    let gasLimit: ethers.BigNumber;
-    try {
-      gasLimit = await this.ccmpGateway.estimateGas.receiveMessage(message, verificationData);
-      log.info(
-        `Estimated gas for CCMP receiveMessage for message ${message.hash}: ${gasLimit}`,
-      );
-    } catch (e) {
-      const errorData = (e as any).error?.data
-        || (e as any).error?.error?.data
-        || (e as any).error?.error?.error?.data;
-      if (errorData) {
-        const error = this.ccmpGateway.interface.parseError(errorData);
-        throw new Error(`Error estimating gas for receiveMessage for message ${message.hash}: ${JSON.stringify(error)}`);
-      } else {
-        throw e;
-      }
+    const gasLimit = await this.estimateReceiveMessageGas(message, verificationData);
+    if (!gasLimit.estimate) {
+      throw new Error(gasLimit.error || 'Error estimating gas for receiveMessage');
     }
 
     return {
@@ -115,7 +100,7 @@ export class CCMPGatewayService implements ICCMPGatewayService {
       type: TransactionType.CROSS_CHAIN,
       to: message.destinationGateway,
       data: calldata,
-      gasLimit: gasLimit.toString(),
+      gasLimit: ethers.utils.hexValue(gasLimit.estimate),
       chainId: parseInt(message.destinationChainId.toString(), 10),
       value: '0x0',
       message,

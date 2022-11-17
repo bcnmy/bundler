@@ -16,7 +16,7 @@ export interface ICCMPGatewayService {
   createReceiveMessageTransaction(
     message: CCMPMessage,
     verificationData: string | Uint8Array,
-    sourceTxHash: string
+    sourceTxHash: string,
   ): Promise<CrossChainTransactionMessageType>;
 
   getMessageFromDestinationTranasactionReceipt(

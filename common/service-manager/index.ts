@@ -520,7 +520,7 @@ let statusService: IStatusService;
           routeTransactionToRelayerMap,
           new CrossChainTransactionDAO(),
           crossChainRetryTransactionQueueMap[chainId],
-          ccmpGatewayServiceMap[chainId],
+          ccmpGatewayServiceMap,
           indexerService,
           crossChainGasEstimationServiceMap,
         );
