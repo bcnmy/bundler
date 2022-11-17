@@ -18,21 +18,19 @@ export class LiquidityPoolService implements ILiquidityPoolService {
     config.ccmp.abi.LiquidityPool,
   );
 
-  private readonly symbolToTokenAddressMap: Record<number, Record<string, string>>;
-
   constructor(
     private readonly liquidityTokenManagerService: ILiquidityTokenManagerService,
     private readonly networkServiceMap: Record<number, EVMNetworkService>,
-    symbolMapByChainId: SymbolMapByChainIdType,
+    private readonly symbolMapByChainId: SymbolMapByChainIdType,
   ) {
-    this.symbolToTokenAddressMap = Object.fromEntries(
+    this.symbolMapByChainId = Object.fromEntries(
       Object.entries(symbolMapByChainId).map(([chainId, addressToSymbolMap]) => [
         chainId,
         Object.fromEntries(
           Object.entries(addressToSymbolMap).map(([address, symbol]) => [
-            symbol,
             // Convert addresses to lowercase
             address.toLowerCase(),
+            symbol,
           ]),
         ),
       ]),
@@ -76,7 +74,7 @@ export class LiquidityPoolService implements ILiquidityPoolService {
       );
     }
 
-    const tokenSymbol = this.symbolToTokenAddressMap[fromChainId][fromTokenAddress.toLowerCase()];
+    const tokenSymbol = this.symbolMapByChainId[fromChainId][fromTokenAddress.toLowerCase()];
     if (!tokenSymbol) {
       throw new Error(
         `Token symbol not found for chainId: ${fromChainId} and tokenAddress: ${fromTokenAddress}`,
@@ -84,7 +82,7 @@ export class LiquidityPoolService implements ILiquidityPoolService {
     }
 
     const liquidityPoolTokenSymbol = await this.liquidityTokenManagerService.getTokenSymbol(
-      fromTokenAddress,
+      tokenSymbol,
     );
     if (!liquidityPoolTokenSymbol) {
       throw new Error(

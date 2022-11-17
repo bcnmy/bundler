@@ -47,7 +47,10 @@ export const estimateDepositAndCallApi = async (req: Request, res: Response) => 
       '0xNOT_GENERATED',
       message,
     );
-    res.send(StatusCodes.ACCEPTED).json(gasFeeEstimate);
+    res.status(StatusCodes.OK).json({
+      tokenSymbol: gasFeeEstimate.tokenSymbol,
+      amountInWei: gasFeeEstimate.amount.toString(),
+    });
   } catch (e) {
     log.error(`Error estimating gas fee for deposit and call ${JSON.stringify(e)}`);
     if (e instanceof Error) {
