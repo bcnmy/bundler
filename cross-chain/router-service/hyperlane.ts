@@ -62,7 +62,7 @@ export class HyperlaneRouterService implements ICCMPRouterService {
   }
 
   async estimateVerificationFee(
-    // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     txHash: string,
     message: CCMPMessage,
   ) {

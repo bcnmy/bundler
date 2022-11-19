@@ -1,7 +1,15 @@
 import { Router } from 'express';
-import { estimateDepositAndCallApi, processApi, processFromIndexerApi } from '../../controllers';
+import {
+  estimateDepositAndCallApi,
+  processApi,
+  processFromIndexerApi,
+  statusFromMessageHashApi,
+  statusFromTxHashApi,
+} from '../../controllers';
 import {
   validateCrossChainProcessFromIndexerRequest,
+  validateCrossChainStatusFromMessageHash,
+  validateCrossChainStatusFromTx,
   validateEstimateDepositAndCallRequest,
 } from '../../middleware';
 
@@ -17,4 +25,10 @@ crossChainRouter.post(
   '/estimate/depositAndCall',
   validateEstimateDepositAndCallRequest,
   estimateDepositAndCallApi,
+);
+crossChainRouter.get('/status/tx', validateCrossChainStatusFromTx, statusFromTxHashApi);
+crossChainRouter.get(
+  '/status/message-hash',
+  validateCrossChainStatusFromMessageHash,
+  statusFromMessageHashApi,
 );

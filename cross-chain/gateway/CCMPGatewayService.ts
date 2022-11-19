@@ -108,7 +108,51 @@ export class CCMPGatewayService implements ICCMPGatewayService {
     };
   }
 
-  async getMessageFromDestinationTranasactionReceipt(
+  async getMessageFromSourceTransactionReceipt(
+    chainId: number,
+    receipt: ethers.providers.TransactionReceipt,
+  ): Promise<CCMPMessage> {
+    log.info(
+      `Getting CCMP Message Payload on chain ${chainId} transaction ${receipt.transactionHash}`,
+    );
+    const messageLog = receipt.logs.find(
+      (_log) => _log.topics[0] === config.ccmp.events.CCMPMessageRouted[chainId].topicId,
+    );
+    if (!messageLog) {
+      throw new Error(
+        `No CCMPMessageRouted log found for transaction ${receipt.transactionHash}`,
+      );
+    }
+    const data = this.interface.parseLog(messageLog);
+    const {
+      sender,
+      sourceGateway,
+      sourceAdaptor,
+      sourceChainId,
+      destinationGateway,
+      destinationChainId,
+      nonce,
+      routerAdaptor,
+      payload,
+      gasFeePaymentArgs,
+      hash,
+    } = data.args;
+    return {
+      sender,
+      sourceGateway,
+      sourceChainId,
+      sourceAdaptor,
+      destinationChainId,
+      destinationGateway,
+      nonce,
+      routerAdaptor,
+      payload,
+      gasFeePaymentArgs,
+      hash,
+    };
+  }
+
+  async getMessageFromDestinationTransactionReceipt(
     chainId: number,
     receipt: ethers.providers.TransactionReceipt,
   ): Promise<CCMPMessage> {
@@ -120,7 +164,7 @@ export class CCMPGatewayService implements ICCMPGatewayService {
     );
     if (!messageLog) {
       throw new Error(
-        `No CCMP message routed log found for transaction ${receipt.transactionHash}`,
+        `No CCMPMessageExecuted log found for transaction ${receipt.transactionHash}`,
       );
     }
     const data = this.interface.parseLog(messageLog);

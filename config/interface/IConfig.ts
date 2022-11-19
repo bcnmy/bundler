@@ -213,11 +213,11 @@ type CCMPAbiType = {
 };
 
 type CCMPEventType = Record<
-  number,
-  {
-    name: string;
-    topicId: string;
-  }
+number,
+{
+  name: string;
+  topicId: string;
+}
 >;
 
 type IndexerWebhookBlockConfirmationType = Record<number, number>;

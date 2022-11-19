@@ -19,7 +19,12 @@ export interface ICCMPGatewayService {
     sourceTxHash: string,
   ): Promise<CrossChainTransactionMessageType>;
 
-  getMessageFromDestinationTranasactionReceipt(
+  getMessageFromSourceTransactionReceipt(
+    chainId: number,
+    receipt: TransactionReceipt
+  ): Promise<CCMPMessage>;
+
+  getMessageFromDestinationTransactionReceipt(
     chainId: number,
     receipt: TransactionReceipt
   ): Promise<CCMPMessage>;

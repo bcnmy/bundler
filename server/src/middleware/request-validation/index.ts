@@ -5,3 +5,5 @@ export * from './ValidateTransactionResubmitRequest';
 export * from './ValidateEstimateDepositAndCallRequest';
 export * from './ValidateCrossChainProcessFromIndexerRequest';
 export * from './ValidateCrossChainProcessRequest';
+export * from './ValidateCrossChainStatusFromMessageHash';
+export * from './ValidateCrossChainStatusFromTx';

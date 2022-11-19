@@ -61,6 +61,8 @@ import { SDKBackendService } from '../sdk-backend-service';
 import type { ICrossChainGasEstimationService } from '../../cross-chain/gas-estimation/interfaces/ICrossChainGasEstimationService';
 import { CrossChainGasEstimationService } from '../../cross-chain/gas-estimation';
 import { LiquidityPoolService, LiquidityTokenManagerService } from '../../cross-chain/liquidity';
+import { ICrossChainTransactionStatusService } from '../../server/src/services/cross-chain-transaction-status/interfaces/ICrossChainTransactionStatusService';
+import { CrosschainTransactionStatusService } from '../../server/src/services/cross-chain-transaction-status';
 
 const log = logger(module);
 
@@ -127,6 +129,7 @@ const EVMRelayerManagerMap: {
 } = {};
 
 const transactionDao = new TransactionDAO();
+const crossChainTransactionDAO = new CrossChainTransactionDAO();
 
 const socketConsumerMap: Record<number, SocketConsumer> = {};
 const retryTransactionSerivceMap: Record<number, EVMRetryTransactionService> = {};
@@ -140,6 +143,9 @@ const crossChainRetryTransactionQueueMap: {
 } = {};
 const crossChainRetryTransactionServiceMap: {
   [key: number]: CrossChainRetryTransactionService;
+} = {};
+const crossChainTransactionStatusServiceMap: {
+  [chainId: number]: ICrossChainTransactionStatusService;
 } = {};
 
 const sdkBackendService = new SDKBackendService(config.sdkBackend.baseUrl);
@@ -466,7 +472,7 @@ let statusService: IStatusService;
           queue: ccmpQueue,
           relayerManager: ccmpRelayerManager,
           transactionService,
-          crossChainTransactionDAO: new CrossChainTransactionDAO(),
+          crossChainTransactionDAO,
           crossChainRetryHandlerQueue: crossChainRetryTransactionQueueMap[chainId],
           cacheService,
           options: {
@@ -535,6 +541,12 @@ let statusService: IStatusService;
           ccmpServiceMap[chainId],
         );
 
+        crossChainTransactionStatusServiceMap[chainId] = new CrosschainTransactionStatusService(
+          dbInstance,
+          networkServiceMap,
+          ccmpGatewayServiceMap[chainId],
+        );
+
         await crossChainRetryTransactionQueueMap[chainId].consume(
           crossChainRetryTransactionServiceMap[chainId].onMessageReceived,
         );
@@ -578,4 +590,7 @@ export {
   liquidityPoolService,
   liquidityTokenManagerService,
   crossChainGasEstimationServiceMap,
+  CrossChainTransactionDAO,
+  networkServiceMap,
+  crossChainTransactionStatusServiceMap,
 };

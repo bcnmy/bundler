@@ -19,6 +19,16 @@ const routerAdaptorType = alternatives
   .try(CCMPRouterName.AXELAR, CCMPRouterName.HYPERLANE, CCMPRouterName.WORMHOLE)
   .error(new Error('routerAdaptor is required or is invalid'));
 
+export const getCrossChainTransactionStatusBySourceTransactionSchema = object.keys({
+  sourceTxHash: keccak256Hash(new Error('sourceTxHash is required or is invalid')),
+  chainId: number.required().error(new Error('chainId is required or is invalid')),
+});
+
+export const getCrossChainTransactionStatusByMessageHashSchema = object.keys({
+  messageHash: keccak256Hash(new Error('Message Hash is required or is invalid')),
+  chainId: number.required().error(new Error('chainId is required or is invalid')),
+});
+
 export const estimateDepositAndCallApiSchema = object.keys({
   fromChainId: number.required().error(new Error('fromChainId is required')),
   toChainId: number.required().error(new Error('toChainId is required')),
