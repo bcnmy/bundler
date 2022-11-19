@@ -516,6 +516,7 @@ let statusService: IStatusService;
 
         ccmpServiceMap[chainId] = new CrossChainTransactionHandlerService(
           chainId,
+          cacheService,
           ccmpRouterMap[chainId],
           routeTransactionToRelayerMap,
           new CrossChainTransactionDAO(),

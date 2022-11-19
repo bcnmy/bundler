@@ -19,6 +19,7 @@ import type { CrossChainRetryHandlerQueue } from '../../common/queue/CrossChainR
 import type { IIndexerService } from '../../common/indexer/types';
 import type { ICrossChainGasEstimationService } from '../gas-estimation/interfaces/ICrossChainGasEstimationService';
 import type { ICCMPGatewayService } from '../gateway/interfaces/ICCMPGatewayService';
+import type { ICacheService } from '../../common/cache';
 
 const log = logger(module);
 
@@ -29,6 +30,7 @@ export class CrossChainTransactionHandlerService implements ICrossChainTransacti
 
   constructor(
     private readonly chainId: number,
+    private readonly cacheService: ICacheService,
     private readonly routerServiceMap: { [key in CCMPRouterName]?: ICCMPRouterService },
     private readonly routeTransactionToRelayerMap: typeof globalRouteTransactionToRelayerMap,
     private readonly crossChainTransactionDAO: ICrossChainTransactionDAO,
@@ -269,37 +271,45 @@ export class CrossChainTransactionHandlerService implements ICrossChainTransacti
   };
 
   async processTransaction(message: CCMPMessage, sourceChainTxHash: string) {
-    const sourceChainId = parseInt(message.sourceChainId.toString(), 10);
+    const lock = this.cacheService.getRedLock();
+    if (!lock) {
+      throw new Error('Redlock not initialized');
+    }
+    await lock.using([`key:ccmp:${message.hash}`], 5000, async (signal) => {
+      signal.throwIfAborted();
 
-    // Build the monad
-    const taskManager = new CCMPTaskManager(
-      this.crossChainTransactionDAO,
-      this.crossChainRetryTransactionQueue,
-      sourceChainTxHash,
-      sourceChainId,
-      message,
-    );
+      const sourceChainId = parseInt(message.sourceChainId.toString(), 10);
 
-    const {
-      TRANSACTION_VALIDATED,
-      PROTOCOL_FEE_PAID,
-      PROTOCOL_CONFIRMATION_RECEIVED,
-      DESTINATION_TRANSACTION_QUEUED,
-    } = CrossChainTransationStatus;
+      // Build the monad
+      const taskManager = new CCMPTaskManager(
+        this.crossChainTransactionDAO,
+        this.crossChainRetryTransactionQueue,
+        sourceChainTxHash,
+        sourceChainId,
+        message,
+      );
 
-    // Process the transaction
-    await taskManager
-      .run('Validation', this.handleValidation, TRANSACTION_VALIDATED)
-      .then((t) => t.run('Router Pre-Verfication', this.handleRouterPreVerification, PROTOCOL_FEE_PAID))
-      .then((t) => t.run(
-        'Fetch Verification Data',
-        this.handleFetchVerificationData,
+      const {
+        TRANSACTION_VALIDATED,
+        PROTOCOL_FEE_PAID,
         PROTOCOL_CONFIRMATION_RECEIVED,
-      ))
-      .then((t) => t.run(
-        'Relay Destination Transaction',
-        this.handleRelayTransaction,
         DESTINATION_TRANSACTION_QUEUED,
-      ));
+      } = CrossChainTransationStatus;
+
+      // Process the transaction
+      await taskManager
+        .run('Validation', this.handleValidation, TRANSACTION_VALIDATED)
+        .then((t) => t.run('Router Pre-Verfication', this.handleRouterPreVerification, PROTOCOL_FEE_PAID))
+        .then((t) => t.run(
+          'Fetch Verification Data',
+          this.handleFetchVerificationData,
+          PROTOCOL_CONFIRMATION_RECEIVED,
+        ))
+        .then((t) => t.run(
+          'Relay Destination Transaction',
+          this.handleRelayTransaction,
+          DESTINATION_TRANSACTION_QUEUED,
+        ));
+    });
   }
 }
