@@ -82,7 +82,9 @@
           "421611": "arbitrumrinkeby",
           "43113": "fuji"
         },
-        "environment": "testnet2"
+        "environment": "testnet2",
+        "verificationFeePaymentTxGas": 30000,
+        "verificationGas": 80000
       }
     },
     "contracts": {

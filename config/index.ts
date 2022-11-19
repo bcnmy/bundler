@@ -237,6 +237,12 @@ export class Config implements IConfig {
     if (!this.config.ccmp.bridges.hyperlane?.environment) {
       throw new Error('Hyperlane bridge environment required');
     }
+    if (!this.config.ccmp.bridges.hyperlane?.verificationFeePaymentTxGas) {
+      throw new Error('Hyperlane verification fee payment tx gas required');
+    }
+    if (!this.config.ccmp.bridges.hyperlane?.verificationGas) {
+      throw new Error('Hyperlane verification gas price required');
+    }
 
     // Validata CCMP ABI
     if (!this.config.ccmp.abi.CCMPGateway) {

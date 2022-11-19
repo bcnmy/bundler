@@ -81,33 +81,33 @@ type TokenPriceConfigType = {
 };
 
 type RelayerManagerConfigType = Array<{
-  name: string, // assume it to be an identifier by the consumer
-  relayerSeed: string,
-  gasLimitMap: ChainIdWithNumberValueType,
-  minRelayerCount: ChainIdWithNumberValueType,
-  maxRelayerCount: ChainIdWithNumberValueType,
-  inactiveRelayerCountThreshold: ChainIdWithNumberValueType,
-  pendingTransactionCountThreshold: ChainIdWithNumberValueType,
-  fundingRelayerAmount: ChainIdWithNumberValueType,
-  fundingBalanceThreshold: ChainIdWithNumberValueType,
-  newRelayerInstanceCount: ChainIdWithNumberValueType,
-  ownerAccountDetails: OwnerAccountDetailsType,
+  name: string; // assume it to be an identifier by the consumer
+  relayerSeed: string;
+  gasLimitMap: ChainIdWithNumberValueType;
+  minRelayerCount: ChainIdWithNumberValueType;
+  maxRelayerCount: ChainIdWithNumberValueType;
+  inactiveRelayerCountThreshold: ChainIdWithNumberValueType;
+  pendingTransactionCountThreshold: ChainIdWithNumberValueType;
+  fundingRelayerAmount: ChainIdWithNumberValueType;
+  fundingBalanceThreshold: ChainIdWithNumberValueType;
+  newRelayerInstanceCount: ChainIdWithNumberValueType;
+  ownerAccountDetails: OwnerAccountDetailsType;
 }>;
 
 type TransactionConfigType = {
   errors: {
     networkResponseMessages: {
-      [key: string]: string,
-    },
-    networksNonceError: ChainIdWithStringValueType,
-    networksInsufficientFundsError: ChainIdWithStringValueType,
-  },
+      [key: string]: string;
+    };
+    networksNonceError: ChainIdWithStringValueType;
+    networksInsufficientFundsError: ChainIdWithStringValueType;
+  };
   retryCount: {
     [key: string]: {
-      [key: number]: number
-    }
-  },
-  bumpGasPriceMultiplier: ChainIdWithNumberValueType,
+      [key: number]: number;
+    };
+  };
+  bumpGasPriceMultiplier: ChainIdWithNumberValueType;
 };
 
 type ChainsConfigType = {
@@ -161,6 +161,8 @@ type CCMPBridgesConfigType = {
   [CCMPRouterName.HYPERLANE]: {
     chainName: Record<number, keyof typeof HyperlaneChains>;
     environment: string;
+    verificationFeePaymentTxGas: number;
+    verificationGas: number;
   };
 };
 
@@ -211,11 +213,11 @@ type CCMPAbiType = {
 };
 
 type CCMPEventType = Record<
-number,
-{
-  name: string;
-  topicId: string;
-}
+  number,
+  {
+    name: string;
+    topicId: string;
+  }
 >;
 
 type IndexerWebhookBlockConfirmationType = Record<number, number>;
@@ -246,7 +248,7 @@ export type SDKBackendConfigType = {
 };
 
 type CacheServiceConfigType = {
-  lockTTL: number,
+  lockTTL: number;
 };
 
 export type ConfigType = {
@@ -270,7 +272,7 @@ export type ConfigType = {
   simulationData: SimulationDataConfigType;
   indexer: IndexerConfigType;
   sdkBackend: SDKBackendConfigType;
-  cacheService: CacheServiceConfigType,
+  cacheService: CacheServiceConfigType;
 };
 
 export interface IConfig {
