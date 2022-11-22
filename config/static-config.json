@@ -127,13 +127,13 @@
         "INVALID_TRANSACTION": "submit transaction to pool failed"
       },
       "networksNonceError": {
-        "5": "nonce too low",
-        "137": "nonce too low",
-        "80001": "nonce too low",
-        "97": "nonce too low",
-        "420": "nonce too low",
-        "421613": "nonce too low",
-        "43113": "nonce too low"
+        "5": ["nonce too low", "nonce has already been used"],
+        "137": ["nonce too low"],
+        "80001": ["nonce too low"],
+        "97": ["nonce too low"],
+        "420": ["nonce too low"],
+        "421613": ["nonce too low"],
+        "43113": ["nonce too low"]
       },
       "networksInsufficientFundsError": {
         "5": "insufficient funds for gas",
