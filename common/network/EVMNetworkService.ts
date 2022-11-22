@@ -197,14 +197,21 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
     rawTransactionData: EVMRawTransactionType,
     account: IEVMAccount,
   ): Promise<ethers.providers.TransactionResponse> {
-    const rawTx: EVMRawTransactionType = rawTransactionData;
-    rawTx.from = account.getPublicKey();
-    const tx = await account.signTransaction(rawTx);
-    const receipt = await this.useProvider(RpcMethod.sendTransaction, {
-      tx,
-      rawTx,
-    });
-    return receipt;
+    try {
+      const rawTx: EVMRawTransactionType = rawTransactionData;
+      rawTx.from = account.getPublicKey();
+
+      const tx = await account.signTransaction(rawTx);
+      const receipt = await this.useProvider(RpcMethod.sendTransaction, {
+        tx,
+        rawTx,
+      });
+      return receipt;
+
+    } catch (err) {
+      log.error(err);
+      throw new Error();
+    }
   }
 
   async waitForTransaction(transactionHash: string): Promise<ethers.providers.TransactionReceipt> {

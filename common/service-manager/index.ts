@@ -349,29 +349,29 @@ let labelSCW;
       feeSupportedTokenList[Number(chainId)] = feeSupportedTokenArray;
     }
   }
+
+  config.feeManagementConfig.tokenList = feeSupportedTokenList;
+
   try {
     relayerBalanceManager = new RelayerBalanceManager({
       masterFundingAccountSCW:
         relayerInstanceMap[relayerManagerTransactionTypeNameMap.SCW].ownerAccountDetails,
       relayerAddressesSCW: scwRelayerList,
       masterFundingAccountCCMP:
-        relayerInstanceMap[relayerManagerTransactionTypeNameMap.CROSS_CHAIN].ownerAccountDetails,
-      relayerAddressesCCMP: ccmpRelayerList,
-      appConfig: {
-        tokenList: feeSupportedTokenList,
-        feeSpendThreshold: config.feeOption.feeSpendThreshold,
-        InitialFundingAmountInUsd: config.feeOption.initialFundingAmountInUsd,
-        balanceThreshold: config.feeOption.balanceThreshold,
-      },
-      dbService: transactionDao,
+        relayerInstanceMap[relayerManagerTransactionTypeNameMap.SCW].ownerAccountDetails,// change it to cross-chain before commit
+      relayerAddressesCCMP: scwRelayerList, // change it to ccmpRelayerList before commit
+      appConfig: config.feeManagementConfig,
+      dbUrl: config.dataSources.mongoUrl,
       tokenPriceService: tokenService,
       cacheService,
       transactionServiceMap,
       labelCCMP,
-      labelSCW,
+      labelSCW, // change it to labelSCW before commit
     });
-  } catch (error: unknown) {
-    log.error(error);
+
+  } catch (error: any) {
+    log.error(`ERROR`);
+    log.info(error);
   }
 
   log.info('<=== Config setup completed ===>');

@@ -33,7 +33,7 @@
     "network-sdk": "^1.0.1",
     "node-cron": "^3.0.2",
     "redis": "^4.3.1",
-    "redlock": "^4.2.0",
+    "redlock": "^5.0.0-beta.2",
     "request-promise": "^4.2.6",
     "rest-api-errors": "^1.2.5",
     "serialize-error": "8.1.0",
@@ -41,7 +41,6 @@
     "winston": "^3.8.2"
   },
   "devDependencies": {
-    "@types/redlock": "^4.0.1",
     "@jest/globals": "^29.1.2",
     "@types/amqplib": "^0.8.2",
     "@types/big.js": "^6.1.5",

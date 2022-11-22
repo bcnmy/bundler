@@ -64,8 +64,6 @@ type NativeChainIdMapType = {
 };
 
 type FeeOptionConfigType = {
-  balanceThreshold: Record<number, number>;
-  feeSpendThreshold: Record<number, number>;
   supportedFeeTokens: ChainIdWithArrayStringValueType,
   similarTokens: ChainIdWithArrayStringValueType,
   nativeChainIds: NativeChainIdMapType,
@@ -76,7 +74,6 @@ type FeeOptionConfigType = {
   feeTokenTransferGas: ChainIdAndTokenWithNumberValueType,
   refundReceiver: ChainIdWithStringValueType,
   commission: ChainIdWithNumberValueType,
-  initialFundingAmountInUsd: Record<number, number>;
 };
 
 type TokenPriceConfigType = {
@@ -154,7 +151,25 @@ type SimulationDataConfigType = {
   [key: string]: any
 };
 
+export type TokenData = {
+  address: string;
+  symbol: string;
+  decimal: number;
+};
+
+export type FeeManagementConfig = {
+  tokenList: Record<number, TokenData[]>;
+  nativeTokenSymbol: ChainIdWithStringValueType,
+  noOfDepositConfirmation: ChainIdWithNumberValueType,
+  hyphenLiquidityPoolAddress: ChainIdWithStringValueType,
+  balanceThreshold: ChainIdAndTokenWithNumberValueType;
+  feeSpendThreshold: ChainIdWithNumberValueType;
+  initialFundingAmountInUsd: ChainIdWithNumberValueType;
+
+}
+
 export type ConfigType = {
+  feeManagementConfig: FeeManagementConfig;
   queueUrl: string,
   slack: SlackConfigType,
   dataSources: DataSourcesConfigType,
