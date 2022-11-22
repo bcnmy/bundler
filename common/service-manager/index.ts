@@ -2,7 +2,7 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable import/no-mutable-exports */
 /* eslint-disable guard-for-in */
-/* eslint-disable import/no-cycle */
+import { ethers } from 'ethers';
 import { config } from '../../config';
 import { EVMAccount, IEVMAccount } from '../../relayer/src/services/account';
 import { AAConsumer, SCWConsumer, SocketConsumer } from '../../relayer/src/services/consumer';
@@ -20,6 +20,8 @@ import { IQueue } from '../interface';
 import { logger } from '../log-config';
 import { relayerManagerTransactionTypeNameMap } from '../maps';
 import { EVMNetworkService } from '../network';
+import { NotificationManager } from '../notification';
+import { SlackNotificationService } from '../notification/slack/SlackNotificationService';
 import {
   AATransactionQueue,
   RetryTransactionHandlerQueue,
@@ -29,6 +31,7 @@ import {
 import { AARelayService, SCWRelayService } from '../relay-service';
 import { AASimulationService, SCWSimulationService } from '../simulation';
 import { TenderlySimulationService } from '../simulation/external-simulation';
+import { IStatusService, StatusService } from '../status';
 import { CMCTokenPriceManager } from '../token-price';
 import {
   AATransactionMessageType,
@@ -88,10 +91,20 @@ const relayerInstanceMap: Record<string, EVMRelayerManager> = {};
 let relayerBalanceManager: RelayerBalanceManager;
 let labelCCMP;
 let labelSCW;
+const networkServiceMap: Record<number, EVMNetworkService> = {};
+
+// eslint-disable-next-line import/no-mutable-exports
+let statusService: IStatusService;
 
 (async () => {
   await dbInstance.connect();
   await cacheService.connect();
+
+  const slackNotificationService = new SlackNotificationService(
+    config.slack.token,
+    config.slack.channel,
+  );
+  const notificationManager = new NotificationManager(slackNotificationService);
 
   const tokenService = new CMCTokenPriceManager(cacheService, {
     apiKey: config.tokenPrice.coinMarketCapApi,
@@ -99,53 +112,64 @@ let labelSCW;
     updateFrequencyInSeconds: config.tokenPrice.updateFrequencyInSeconds,
     symbolMapByChainId: config.tokenPrice.symbolMapByChainId,
   });
-  tokenService.schedule();
+  // added check for relayer node path in order to run on only one server
+  if (config.relayer.nodePathIndex === 0) {
+    tokenService.schedule();
+  }
+
+  log.info(`Setting up instances for following chainIds: ${JSON.stringify(supportedNetworks)}`);
   for (const chainId of supportedNetworks) {
+    log.info(`Setup of services started for chainId: ${chainId}`);
     routeTransactionToRelayerMap[chainId] = {};
     entryPointMap[chainId] = [];
 
     if (!config.chains.provider[chainId]) {
       throw new Error(`No provider for chainId ${chainId}`);
     }
+
+    log.info(`Setting up network service for chainId: ${chainId}`);
     const networkService = new EVMNetworkService({
       chainId,
       rpcUrl: config.chains.provider[chainId],
       fallbackRpcUrls: config.chains.fallbackUrls[chainId] || [],
     });
+    log.info(`Network service setup complete for chainId: ${chainId}`);
+    networkServiceMap[chainId] = networkService;
 
+    log.info(`Setting up gas price manager for chainId: ${chainId}`);
     const gasPriceManager = new GasPriceManager(cacheService, networkService, {
       chainId,
       EIP1559SupportedNetworks: config.EIP1559SupportedNetworks,
     });
+    log.info(`Gas price manager setup complete for chainId: ${chainId}`);
 
+    log.info(`Setting up gas price service for chainId: ${chainId}`);
     const gasPriceService = gasPriceManager.setup();
-    if (gasPriceService) {
+    // added check for relayer node path in order to run on only one server
+    if (gasPriceService && config.relayer.nodePathIndex === 0) {
       gasPriceService.schedule();
     }
     if (!gasPriceService) {
       throw new Error(`Gasprice service is not setup for chainId ${chainId}`);
     }
+    log.info(`Gas price service setup complete for chainId: ${chainId}`);
 
+    log.info(`Setting up transaction queue for chainId: ${chainId}`);
     const transactionQueue = new TransactionHandlerQueue({
       chainId,
     });
     await transactionQueue.connect();
+    log.info(`Transaction queue setup complete for chainId: ${chainId}`);
 
-    socketConsumerMap[chainId] = new SocketConsumer({
-      queue: transactionQueue,
-      options: {
-        chainId,
-        wssUrl: config.socketService.wssUrl,
-      },
-    });
-    transactionQueue.consume(socketConsumerMap[chainId].onMessageReceived);
-
+    log.info(`Setting up retry transaction queue for chainId: ${chainId}`);
     const retryTransactionQueue = new RetryTransactionHandlerQueue({
       chainId,
     });
     retryTransactionQueueMap[chainId] = retryTransactionQueue;
     await retryTransactionQueueMap[chainId].connect();
+    log.info(`Retry transaction queue setup complete for chainId: ${chainId}`);
 
+    log.info(`Setting up nonce manager for chainId: ${chainId}`);
     const nonceManager = new EVMNonceManager({
       options: {
         chainId,
@@ -153,7 +177,9 @@ let labelSCW;
       networkService,
       cacheService,
     });
+    log.info(`Nonce manager setup complete for chainId: ${chainId}`);
 
+    log.info(`Setting up transaction listener for chainId: ${chainId}`);
     const transactionListener = new EVMTransactionListener({
       networkService,
       cacheService,
@@ -165,7 +191,9 @@ let labelSCW;
       },
     });
     transactionListenerMap[chainId] = transactionListener;
+    log.info(`Transaction listener setup complete for chainId: ${chainId}`);
 
+    log.info(`Setting up transaction service for chainId: ${chainId}`);
     const transactionService = new EVMTransactionService({
       networkService,
       transactionListener,
@@ -173,13 +201,15 @@ let labelSCW;
       gasPriceService,
       transactionDao,
       cacheService,
+      notificationManager,
       options: {
         chainId,
       },
     });
-
     transactionServiceMap[chainId] = transactionService;
+    log.info(`Transaction service setup complete for chainId: ${chainId}`);
 
+    log.info(`Setting up relayer manager for chainId: ${chainId}`);
     const relayerQueue = new EVMRelayerQueue([]);
     for (const relayerManager of config.relayerManagers) {
       if (!EVMRelayerManagerMap[relayerManager.name]) {
@@ -188,6 +218,7 @@ let labelSCW;
       const relayerMangerInstance = new EVMRelayerManager({
         networkService,
         gasPriceService,
+        cacheService,
         transactionService,
         nonceManager,
         relayerQueue,
@@ -201,7 +232,8 @@ let labelSCW;
           pendingTransactionCountThreshold:
             relayerManager.pendingTransactionCountThreshold[chainId],
           newRelayerInstanceCount: relayerManager.newRelayerInstanceCount[chainId],
-          fundingBalanceThreshold: relayerManager.fundingBalanceThreshold[chainId],
+          fundingBalanceThreshold: ethers.utils
+            .parseEther(relayerManager.fundingBalanceThreshold[chainId].toString()),
           fundingRelayerAmount: relayerManager.fundingRelayerAmount[chainId],
           ownerAccountDetails: new EVMAccount(
             relayerManager.ownerAccountDetails[chainId].publicKey,
@@ -224,11 +256,13 @@ let labelSCW;
         labelSCW = relayerManager.name;
       }
       log.info(
-        `Relayer address list length: ${addressList.length} and minRelayerCount: ${relayerManager.minRelayerCount}`,
+        `Relayer address list length: ${addressList.length} and minRelayerCount: ${JSON.stringify(relayerManager.minRelayerCount)}`,
       );
       await relayerMangerInstance.fundRelayers(addressList);
     }
+    log.info(`Relayer manager setup complete for chainId: ${chainId}`);
 
+    log.info(`Setting up retry transaction service for chainId: ${chainId}`);
     retryTransactionSerivceMap[chainId] = new EVMRetryTransactionService({
       retryTransactionQueue,
       transactionService,
@@ -242,11 +276,27 @@ let labelSCW;
     retryTransactionQueueMap[chainId].consume(
       retryTransactionSerivceMap[chainId].onMessageReceived,
     );
+    log.info(`Retry transaction service setup for chainId: ${chainId}`);
 
+    log.info(`Setting up socket complete consumer for chainId: ${chainId}`);
+    socketConsumerMap[chainId] = new SocketConsumer({
+      queue: transactionQueue,
+      options: {
+        chainId,
+        wssUrl: config.socketService.wssUrl,
+        EVMRelayerManagerMap,
+      },
+    });
+    transactionQueue.consume(socketConsumerMap[chainId].onMessageReceived);
+    log.info(`Socket consumer setup complete for chainId: ${chainId} and attached to transaction queue`);
+
+    log.info(`Setting up fee options service for chainId: ${chainId}`);
     const feeOptionService = new FeeOption(gasPriceService, cacheService, {
       chainId,
     });
     feeOptionMap[chainId] = feeOptionService;
+    log.info(`Fee option service setup complete for chainId: ${chainId}`);
+
     // for each network get transaction type
     for (const type of supportedTransactionType[chainId]) {
       const aaRelayerManager = EVMRelayerManagerMap[
@@ -256,11 +306,13 @@ let labelSCW;
       }
 
       if (type === TransactionType.AA) {
+        log.info(`Setting up AA transaction queue for chaindId: ${chainId}`);
         const aaQueue: IQueue<AATransactionMessageType> = new AATransactionQueue({
           chainId,
         });
 
         await aaQueue.connect();
+        log.info(`AA transaction queue setup complete for chainId: ${chainId}`);
 
         const { entryPointData } = config;
 
@@ -280,10 +332,12 @@ let labelSCW;
           });
         }
 
+        log.info(`Setting up AA consumer, relay service & simulation service for chainId: ${chainId}`);
         const aaConsumer = new AAConsumer({
           queue: aaQueue,
           relayerManager: aaRelayerManager,
           transactionService,
+          cacheService,
           options: {
             chainId,
             entryPointMap,
@@ -296,12 +350,15 @@ let labelSCW;
         routeTransactionToRelayerMap[chainId][type] = aaRelayService;
 
         aaSimulatonServiceMap[chainId] = new AASimulationService(networkService);
+        log.info(`AA consumer, relay service & simulation service setup complete for chainId: ${chainId}`);
       } else if (type === TransactionType.SCW) {
         // queue for scw
+        log.info(`Setting up SCW transaction queue for chaindId: ${chainId}`);
         const scwQueue: IQueue<SCWTransactionMessageType> = new SCWTransactionQueue({
           chainId,
         });
         await scwQueue.connect();
+        log.info(`SCW transaction queue setup complete for chainId: ${chainId}`);
 
         const scwRelayerManager = EVMRelayerManagerMap[
           relayerManagerTransactionTypeNameMap[type]][chainId];
@@ -309,10 +366,12 @@ let labelSCW;
           throw new Error(`Relayer manager not found for ${type}`);
         }
 
+        log.info(`Setting up SCW consumer, relay service & simulation service for chainId: ${chainId}`);
         const scwConsumer = new SCWConsumer({
           queue: scwQueue,
           relayerManager: scwRelayerManager,
           transactionService,
+          cacheService,
           options: {
             chainId,
           },
@@ -331,6 +390,7 @@ let labelSCW;
           networkService,
           tenderlySimulationService,
         );
+        log.info(`SCW consumer, relay service & simulation service setup complete for chainId: ${chainId}`);
       }
     }
   }
@@ -353,27 +413,33 @@ let labelSCW;
   config.feeManagementConfig.tokenList = feeSupportedTokenList;
 
   try {
-    relayerBalanceManager = new RelayerBalanceManager({
+    relayerBalanceManager = new RelayerBalanceManager();
+    relayerBalanceManager.initFeeManager({
       masterFundingAccountSCW:
         relayerInstanceMap[relayerManagerTransactionTypeNameMap.SCW].ownerAccountDetails,
       relayerAddressesSCW: scwRelayerList,
       masterFundingAccountCCMP:
-        relayerInstanceMap[relayerManagerTransactionTypeNameMap.SCW].ownerAccountDetails,// change it to cross-chain before commit
-      relayerAddressesCCMP: scwRelayerList, // change it to ccmpRelayerList before commit
+        relayerInstanceMap[relayerManagerTransactionTypeNameMap.SCW].ownerAccountDetails, // change it to cross-chain before commit
+      relayerAddressesCCMP: ccmpRelayerList, // change it to ccmpRelayerList before commit
       appConfig: config.feeManagementConfig,
       dbUrl: config.dataSources.mongoUrl,
       tokenPriceService: tokenService,
       cacheService,
-      transactionServiceMap,
       labelCCMP,
       labelSCW, // change it to labelSCW before commit
     });
-
   } catch (error: any) {
-    log.error(`ERROR`);
+    log.error('ERROR');
     log.info(error);
   }
 
+  // eslint-disable-next-line no-new
+  statusService = new StatusService({
+    cacheService,
+    networkServiceMap,
+    evmRelayerManagerMap: EVMRelayerManagerMap,
+    dbInstance,
+  });
   log.info('<=== Config setup completed ===>');
 })();
 
@@ -385,4 +451,7 @@ export {
   entryPointMap,
   EVMRelayerManagerMap,
   relayerBalanceManager,
+  transactionServiceMap,
+  transactionDao,
+  statusService,
 };

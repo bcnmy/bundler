@@ -21,8 +21,10 @@ export enum SocketEventType {
 }
 
 export type TransactionQueueMessageType = {
+  transactionType: TransactionType,
   transactionId: string,
   event: SocketEventType,
+  relayerManagerName: string,
   transactionHash?: string,
   previousTransactionHash?: string,
   receipt?: ethers.providers.TransactionResponse,

@@ -2,7 +2,13 @@ import { serializeError } from 'serialize-error';
 
 export const parseError = (error: any): string => {
   if (error instanceof Error) {
-    return serializeError(error)?.message || 'Unable to parse error';
+    let errorMessage = JSON.stringify(error);
+    try {
+      errorMessage = serializeError(error)?.message || errorMessage;
+    } catch (err) {
+      console.error('failed to parse error');
+    }
+    return errorMessage;
   }
   return error;
 };

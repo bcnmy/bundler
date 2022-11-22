@@ -1,4 +1,4 @@
-import Redlock from 'redlock';
+import Redlock, { Lock } from 'redlock';
 
 export interface ICacheService {
 
@@ -10,5 +10,6 @@ export interface ICacheService {
   decrement(key: string, decrementBy?: number): Promise<boolean>
   expire(key: string, expiryTime: number): Promise<boolean>
   delete(key: string): Promise<boolean>
-  getRedLock(): Redlock;
+  getRedLock(): Redlock | undefined;
+  unlockRedLock(lock: Lock): Promise<void>;
 }

@@ -1,13 +1,10 @@
-/* eslint-disable import/no-cycle */
 /* eslint-disable max-len */
-import { ethers } from 'ethers';
 import { ICacheService } from '../../../../common/cache';
 import { ITransactionDAO } from '../../../../common/db';
 import { IQueue } from '../../../../common/interface';
 import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
 import { RetryTransactionQueueData } from '../../../../common/queue/types';
-import { relayerBalanceManager } from '../../../../common/service-manager';
 import {
   EVMRawTransactionType, SocketEventType, TransactionQueueMessageType, TransactionStatus,
 } from '../../../../common/types';
@@ -17,9 +14,11 @@ import { ITransactionPublisher } from '../transaction-publisher';
 import { ITransactionListener } from './interface/ITransactionListener';
 import {
   EVMTransactionListenerParamsType,
+  NewTransactionDataToBeSavedInDatabaseType,
   NotifyTransactionListenerParamsType,
   OnTransactionFailureParamsType,
   OnTransactionSuccessParamsType,
+  TransactionDataToBeUpdatedInDatabaseType,
   TransactionListenerNotifyReturnType,
 } from './types';
 
@@ -74,10 +73,8 @@ export class EVMTransactionListener implements
       transactionExecutionResponse,
       transactionReceipt,
       transactionId,
-      relayerAddress,
-      previousTransactionHash,
-      walletAddress,
-      metaData,
+      relayerManagerName,
+      transactionType,
     } = onTranasctionSuccessParams;
     if (!transactionReceipt) {
       log.error(`Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
@@ -86,23 +83,20 @@ export class EVMTransactionListener implements
 
     log.info(`Publishing to transaction queue on success for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
     await this.publishToTransactionQueue({
+      transactionType,
       transactionId,
+      relayerManagerName,
       transactionHash: transactionExecutionResponse?.hash,
       receipt: transactionExecutionResponse,
       event: SocketEventType.onTransactionMined,
     });
     if (transactionExecutionResponse) {
       log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
-      await this.saveTransactionDataToDatabase(
-        transactionExecutionResponse,
-        transactionId,
-        transactionReceipt,
-        relayerAddress,
-        TransactionStatus.SUCCESS,
-        previousTransactionHash,
-        walletAddress,
-        metaData,
-      );
+      await this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
+        receipt: transactionReceipt,
+        status: TransactionStatus.SUCCESS,
+        updationTime: Date.now(),
+      }, transactionId, transactionExecutionResponse?.hash);
     }
   }
 
@@ -111,10 +105,8 @@ export class EVMTransactionListener implements
       transactionExecutionResponse,
       transactionId,
       transactionReceipt,
-      relayerAddress,
-      previousTransactionHash,
-      walletAddress,
-      metaData,
+      relayerManagerName,
+      transactionType,
     } = onTranasctionFailureParams;
     if (!transactionReceipt) {
       log.error(`Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
@@ -122,7 +114,9 @@ export class EVMTransactionListener implements
     }
     log.info(`Publishing to transaction queue on failure for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
     await this.publishToTransactionQueue({
+      transactionType,
       transactionId,
+      relayerManagerName,
       transactionHash: transactionExecutionResponse?.hash,
       receipt: transactionExecutionResponse,
       event: SocketEventType.onTransactionMined,
@@ -130,73 +124,45 @@ export class EVMTransactionListener implements
 
     if (transactionExecutionResponse) {
       log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
-      await this.saveTransactionDataToDatabase(
-        transactionExecutionResponse,
-        transactionId,
-        transactionReceipt,
-        relayerAddress,
-        TransactionStatus.FAILED,
-        previousTransactionHash,
-        walletAddress,
-        metaData,
-      );
+      await this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
+        receipt: transactionReceipt,
+        status: TransactionStatus.FAILED,
+        updationTime: Date.now(),
+      }, transactionId, transactionExecutionResponse?.hash);
     }
   }
 
-  private async saveTransactionDataToDatabase(
-    transactionExecutionResponse: ethers.providers.TransactionResponse,
+  private async updateTransactionDataToDatabase(
+    transactionDataToBeUpdatedInDatabase: TransactionDataToBeUpdatedInDatabaseType,
     transactionId: string,
-    transactionReceipt: ethers.providers.TransactionReceipt,
-    relayerAddress: string,
-    status: TransactionStatus,
-    previousTransactionHash: string | null,
-    walletAddress: string,
-    metaData: any,
   ): Promise<void> {
-    const transactionDataToBeSaveInDatabase = {
-      transactionId,
-      transactionHash: transactionExecutionResponse?.hash,
-      previousTransactionHash,
-      status,
-      rawTransaction: transactionExecutionResponse,
-      chainId: this.chainId,
-      gasPrice: transactionExecutionResponse?.gasPrice,
-      receipt: transactionReceipt,
-      relayerAddress,
-      walletAddress,
-      metaData,
-      updationTime: Date.now(),
-    };
     await this.transactionDao.updateByTransactionId(
       this.chainId,
       transactionId,
-      transactionDataToBeSaveInDatabase,
+      transactionDataToBeUpdatedInDatabase,
     );
   }
 
-  private async saveInitialTransactionDataToDatabase(
-    transactionExecutionResponse: ethers.providers.TransactionResponse,
-    transactionId: string,
-    relayerAddress: string,
-    status: TransactionStatus,
-    previousTransactionHash: string | null,
-    walletAddress: string,
-    metaData: any,
+  private async saveNewTransactionDataToDatabase(
+    newTransactionDataToBeSavedInDatabase: NewTransactionDataToBeSavedInDatabaseType,
   ): Promise<void> {
-    const transactionDataToBeSavedInDatabase = {
-      transactionId,
-      transactionHash: transactionExecutionResponse.hash,
-      rawTransaction: transactionExecutionResponse,
-      relayerAddress,
-      status,
-      previousTransactionHash,
-      walletAddress,
-      metaData,
-      receipt: null,
-      creationTime: Date.now(),
-    };
+    await this.transactionDao.save(
+      this.chainId,
+      newTransactionDataToBeSavedInDatabase,
+    );
+  }
 
-    await this.transactionDao.save(this.chainId, transactionDataToBeSavedInDatabase);
+  private async updateTransactionDataToDatabaseByTransactionIdAndTransactionHash(
+    transactionDataToBeUpdatedInDatabase: TransactionDataToBeUpdatedInDatabaseType,
+    transactionId: string,
+    transactionHash: string,
+  ): Promise<void> {
+    await this.transactionDao.updateByTransactionIdAndTransactionHash(
+      this.chainId,
+      transactionId,
+      transactionHash,
+      transactionDataToBeUpdatedInDatabase,
+    );
   }
 
   private async waitForTransaction(
@@ -222,6 +188,7 @@ export class EVMTransactionListener implements
     const transactionReceipt = await this.networkService.waitForTransaction(tranasctionHash);
     log.info(`Transaction receipt is: ${JSON.stringify(transactionReceipt)} for transactionId: ${transactionId} on chainId ${this.chainId}`);
 
+    // TODO: reduce pending count of relayer via RelayerManager
     await this.cacheService.delete(getRetryTransactionCountKey(transactionId, this.chainId));
 
     if (transactionReceipt.status === 1) {
@@ -253,7 +220,7 @@ export class EVMTransactionListener implements
       });
     }
 
-    relayerBalanceManager.onTransaction(transactionReceipt, transactionType, this.chainId);
+    // relayerBalanceManager.onTransaction(transactionReceipt, transactionType, this.chainId);
   }
 
   async notify(
@@ -274,7 +241,9 @@ export class EVMTransactionListener implements
 
     if (!transactionExecutionResponse) {
       await this.publishToTransactionQueue({
+        transactionType,
         transactionId,
+        relayerManagerName,
         error,
         event: SocketEventType.onTransactionError,
       });
@@ -285,20 +254,45 @@ export class EVMTransactionListener implements
       };
     }
 
-    // Save initial transaction data to database
-    this.saveInitialTransactionDataToDatabase(
-      transactionExecutionResponse,
-      transactionId,
-      relayerAddress,
-      TransactionStatus.PENDING,
-      null,
-      walletAddress,
-      metaData,
-    );
+    if (!previousTransactionHash) {
+      // Save initial transaction data to database
+      this.updateTransactionDataToDatabase({
+        transactionHash: transactionExecutionResponse.hash,
+        rawTransaction: transactionExecutionResponse,
+        relayerAddress,
+        gasPrice: transactionExecutionResponse.gasPrice,
+        status: TransactionStatus.PENDING,
+        updationTime: Date.now(),
+      }, transactionId);
+    } else {
+      this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
+        resubmitted: true,
+        status: TransactionStatus.DROPPED,
+        updationTime: Date.now(),
+      }, transactionId, previousTransactionHash);
+      this.saveNewTransactionDataToDatabase({
+        transactionId,
+        transactionType,
+        transactionHash: transactionExecutionResponse.hash,
+        previousTransactionHash,
+        status: TransactionStatus.PENDING,
+        rawTransaction: transactionExecutionResponse,
+        chainId: this.chainId,
+        gasPrice: transactionExecutionResponse.gasPrice,
+        relayerAddress,
+        walletAddress,
+        metaData,
+        resubmitted: false,
+        creationTime: Date.now(),
+        updationTime: Date.now(),
+      });
+    }
 
     // transaction queue is being listened by socket service to notify the client about the hash
     await this.publishToTransactionQueue({
+      transactionType,
       transactionId,
+      relayerManagerName,
       transactionHash: transactionExecutionResponse?.hash,
       receipt: transactionExecutionResponse,
       event: previousTransactionHash

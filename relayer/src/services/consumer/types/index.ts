@@ -1,3 +1,4 @@
+import { ICacheService } from '../../../../../common/cache';
 import { IQueue } from '../../../../../common/queue';
 import {
   AATransactionMessageType,
@@ -14,6 +15,7 @@ export type AAConsumerParamsType = {
   queue: IQueue<AATransactionMessageType>,
   relayerManager: IRelayerManager<IEVMAccount, EVMRawTransactionType>,
   transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>,
+  cacheService: ICacheService,
   options: {
     chainId: number,
     entryPointMap: EntryPointMapType
@@ -24,6 +26,7 @@ export type SCWConsumerParamsType = {
   queue: IQueue<SCWTransactionMessageType>,
   relayerManager: IRelayerManager<IEVMAccount, EVMRawTransactionType>,
   transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>,
+  cacheService: ICacheService,
   options: {
     chainId: number,
   },
@@ -32,7 +35,13 @@ export type SCWConsumerParamsType = {
 export type SocketConsumerParamsType = {
   queue: IQueue<TransactionQueueMessageType>;
   options: {
+    relayerBalanceManager: any
     chainId: number,
     wssUrl: string,
+    EVMRelayerManagerMap: {
+      [name: string]: {
+        [chainId: number]: IRelayerManager<IEVMAccount, EVMRawTransactionType>;
+      }
+    },
   },
 };

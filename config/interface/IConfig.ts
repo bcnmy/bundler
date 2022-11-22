@@ -1,5 +1,4 @@
-import { ethers } from 'ethers';
-import { TransactionType, SymbolMapByChainIdType } from '../../common/types';
+import { SymbolMapByChainIdType, TransactionType } from '../../common/types';
 
 type ChainIdWithStringValueType = {
   [key: number]: string
@@ -11,10 +10,6 @@ type ChainIdWithArrayStringValueType = {
 
 type ChainIdWithNumberValueType = {
   [key: number]: number
-};
-
-type ChainIdWithBigNumberValueType = {
-  [key: number]: ethers.BigNumber
 };
 
 type ChainIdAndTokenWithNumberValueType = {
@@ -92,7 +87,7 @@ type RelayerManagerConfigType = Array<{
   inactiveRelayerCountThreshold: ChainIdWithNumberValueType,
   pendingTransactionCountThreshold: ChainIdWithNumberValueType,
   fundingRelayerAmount: ChainIdWithNumberValueType,
-  fundingBalanceThreshold: ChainIdWithBigNumberValueType,
+  fundingBalanceThreshold: ChainIdWithNumberValueType,
   newRelayerInstanceCount: ChainIdWithNumberValueType,
   ownerAccountDetails: OwnerAccountDetailsType,
 }>;
@@ -102,7 +97,7 @@ type TransactionConfigType = {
     networkResponseMessages: {
       [key: string]: string,
     },
-    networksNonceError: ChainIdWithStringValueType,
+    networksNonceError: ChainIdWithArrayStringValueType,
     networksInsufficientFundsError: ChainIdWithStringValueType,
   },
   retryCount: {
@@ -165,8 +160,11 @@ export type FeeManagementConfig = {
   balanceThreshold: ChainIdAndTokenWithNumberValueType;
   feeSpendThreshold: ChainIdWithNumberValueType;
   initialFundingAmountInUsd: ChainIdWithNumberValueType;
+};
 
-}
+type CacheServiceConfigType = {
+  lockTTL: number,
+};
 
 export type ConfigType = {
   feeManagementConfig: FeeManagementConfig;
@@ -174,6 +172,7 @@ export type ConfigType = {
   slack: SlackConfigType,
   dataSources: DataSourcesConfigType,
   socketService: SocketServiceConfigType,
+  cacheService: CacheServiceConfigType,
   supportedNetworks: Array<number>,
   EIP1559SupportedNetworks: Array<number>,
   supportedTransactionType: ChainIdSupportedTransactionType,

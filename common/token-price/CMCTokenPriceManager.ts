@@ -1,8 +1,10 @@
 import axios from 'axios';
-import { SymbolMapByChainIdType } from '../types';
+import { schedule } from 'node-cron';
 import { ICacheService } from '../cache';
 import { logger } from '../log-config';
 import { IScheduler } from '../scheduler';
+import { SymbolMapByChainIdType } from '../types';
+import { getTokenPriceKey, parseError } from '../utils';
 import { ITokenPrice } from './interface/ITokenPrice';
 import { NetworkSymbolCategoriesType } from './types';
 
@@ -36,13 +38,16 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
   }
 
   schedule() {
-    setInterval(this.setup, this.updateFrequencyInSeconds * 1000);
+    schedule(`*/${this.updateFrequencyInSeconds} * * * * *`, () => {
+      this.setup();
+    });
   }
 
   private async setup() {
     try {
       const networkSymbolsCategoriesKeys = Object.keys(this.networkSymbolCategories);
-      const response = await axios.get(`${this.apiKey}?symbol=${networkSymbolsCategoriesKeys.toString()}`, {
+      log.info(`Fetching token prices for ${networkSymbolsCategoriesKeys.join(', ')}`);
+      const response = await axios.get(`https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=${networkSymbolsCategoriesKeys.toString()}`, {
         headers: {
           'X-CMC_PRO_API_KEY': this.apiKey,
         },
@@ -60,7 +65,7 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
             }
           });
           log.info('Network price data updated in cache');
-          await this.cacheService.set('NETWORK_PRICE_DATA', JSON.stringify(coinsRateObj));
+          await this.cacheService.set(getTokenPriceKey(), JSON.stringify(coinsRateObj));
         } else {
           log.error('Network keys is not defined while fetching the network prices');
         }
@@ -68,19 +73,24 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
         log.info('Response and response.data is not defined');
       }
     } catch (error) {
-      log.error(error);
+      log.error(`Error while fetching the network prices ${parseError(error)}`);
     }
   }
 
   async getTokenPrice(symbol: string): Promise<number> {
-    let data = JSON.parse(await this.cacheService.get('NETWORK_PRICE_DATA'));
+    let data = JSON.parse(await this.cacheService.get(getTokenPriceKey()));
     if (!data) {
       await this.setup();
-      data = JSON.parse(await this.cacheService.get('NETWORK_PRICE_DATA'));
+      data = JSON.parse(await this.cacheService.get(getTokenPriceKey()));
     }
     return data[symbol];
   }
 
+  /**
+   * @param chainId
+   * @param tokenAddress
+   * @returns token price in USD
+   */
   async getTokenPriceByTokenAddress(chainId: number, tokenAddress: string): Promise<number> {
     let tokenPrice: number = 0;
     try {

@@ -1,5 +1,5 @@
-import { createClient } from 'redis';
-import Redlock from 'redlock';
+import Redlock, { Lock } from 'redlock';
+import Redis from 'ioredis';
 import { config } from '../../../config';
 import { logger } from '../../log-config';
 import { ICacheService } from '../interface';
@@ -11,38 +11,10 @@ export class RedisCacheService implements ICacheService {
 
   private redisClient;
 
-  private redLock: Redlock;
+  private redLock: Redlock | undefined;
 
   private constructor() {
-    this.redisClient = createClient({
-      url: config.dataSources.redisUrl,
-    });
-
-    this.redLock = this.connectRedLock();
-
-    this.redLock.on('clientError', (err: object) => {
-      try {
-        log.info(`Failed to get redis lock ${err.toString()}`);
-      } catch (error) {
-        log.error(error);
-      }
-    });
-  }
-
-  public static getInstance(): ICacheService {
-    if (!RedisCacheService.instance) {
-      RedisCacheService.instance = new RedisCacheService();
-    }
-    return RedisCacheService.instance;
-  }
-
-  async connect(): Promise<void> {
-    log.info('Initiating Redis connection');
-    await this.redisClient.connect();
-    log.info('Main Redis connected successfully');
-    this.redisClient.on('error', (err: any) => {
-      log.error(`Redis redisClient Error ${err}`);
-    });
+    this.redisClient = new Redis(config.dataSources.redisUrl);
   }
 
   connectRedLock(): Redlock {
@@ -55,10 +27,10 @@ export class RedisCacheService implements ICacheService {
 
         // the max number of times Redlock will attempt
         // to lock a resource before erroring
-        retryCount: 1,
+        retryCount: 5,
 
         // the time in ms between attempts
-        retryDelay: 200, // time in ms
+        retryDelay: 8000, // time in ms
 
         // the max time in ms randomly added to retries
         // to improve performance under high contention
@@ -68,14 +40,72 @@ export class RedisCacheService implements ICacheService {
     );
   }
 
-  getRedLock(): Redlock {
-    return this.redLock;
+  getRedLock(): Redlock | undefined {
+    if (this.redLock) return this.redLock;
+    return undefined;
   }
 
+  async unlockRedLock(redisLock: Lock) {
+    try {
+      if (redisLock && this.redLock) {
+        await this.redLock.release(redisLock);
+      } else {
+        log.error('Redlock not initialized');
+      }
+    } catch (error) {
+      log.error(`Error in unlocking redis lock ${JSON.stringify(error)}`);
+    }
+  }
+
+  /**
+   * Method gets instance of RedisCacheService
+   * @returns RedisCacheService
+   */
+  public static getInstance(): ICacheService {
+    if (!RedisCacheService.instance) {
+      RedisCacheService.instance = new RedisCacheService();
+    }
+    return RedisCacheService.instance;
+  }
+
+  /**
+   * Method creates connection to redis client instance
+   */
+  async connect(): Promise<void> {
+    log.info('Initiating Redis connection');
+    try {
+      await this.redisClient.connect();
+      log.info('Main Redis connected successfully');
+    } catch (error) {
+      log.info(`Error in connecting to redis client ${JSON.stringify(error)}`);
+    }
+    this.redLock = this.connectRedLock();
+
+    this.redLock.on('clientError', (err: object) => {
+      try {
+        log.info(`Failed to get redis lock ${err.toString()}`);
+      } catch (error) {
+        log.error(error);
+      }
+    });
+    this.redisClient.on('error', (err: any) => {
+      log.error(`Redis redisClient Error ${err}`);
+    });
+  }
+
+  /**
+   * Method closes connection to redis client instance
+   */
   async close(): Promise<void> {
     await this.redisClient.quit();
   }
 
+  /**
+   * Method decrements value in cache
+   * @param key of the value to be decremented
+   * @param decrementBy amount to decrement
+   * @returns true or false basis on success or failure
+   */
   async decrement(key: string, decrementBy: number = 1): Promise<boolean> {
     log.info(`Checking if the key: ${key} exists`);
     // could use get service also here
@@ -86,7 +116,7 @@ export class RedisCacheService implements ICacheService {
     }
     try {
       log.info(`Key exists. Decrementing cache value by ${decrementBy} => Key: ${key}`);
-      await this.redisClient.decrBy(key, decrementBy);
+      await this.redisClient.decrby(key, decrementBy);
       return true;
     } catch (error) {
       log.error(`Error in decrement value ${JSON.stringify(error)}`);
@@ -94,6 +124,11 @@ export class RedisCacheService implements ICacheService {
     return false;
   }
 
+  /**
+   * Method deletes value in cache
+   * @param key of the value to be deleted
+   * @returns true or false basis on success or failure
+   */
   async delete(key: string): Promise<boolean> {
     log.info(`Deleting cahce value => Key: ${key}`);
     try {
@@ -106,6 +141,12 @@ export class RedisCacheService implements ICacheService {
     }
   }
 
+  /**
+   * Method sets value in cache with expiry time
+   * @param key of the value that is to be set with expriry
+   * @param expiryTime to be set in cache in seconds
+   * @returns true or false basis on success or failure
+   */
   async expire(key: string, expiryTime: number): Promise<boolean> {
     try {
       log.info(`Setting expirtyTime: ${expiryTime} for key: ${key}`);
@@ -118,6 +159,11 @@ export class RedisCacheService implements ICacheService {
     }
   }
 
+  /**
+   * Method gets value set for a key
+   * @param key
+   * @returns string value that is set in cache
+   */
   async get(key: string): Promise<string> {
     try {
       log.info(`Getting key: ${key} from cache`);
@@ -129,6 +175,12 @@ export class RedisCacheService implements ICacheService {
     return '';
   }
 
+  /**
+   * Method increments value of the passed key
+   * @param key
+   * @param incrementBy units to increment by
+   * @returns true or false basis on success or failure
+   */
   async increment(key: string, incrementBy: number = 1): Promise<boolean> {
     log.info(`Checking if the key: ${key} exists`);
     try {
@@ -139,7 +191,7 @@ export class RedisCacheService implements ICacheService {
       }
 
       log.info(`Inrementing cache value by ${incrementBy} => Key: ${key}`);
-      const result = await this.redisClient.incrBy(key, incrementBy);
+      const result = await this.redisClient.incrby(key, incrementBy);
       if (result) {
         log.info(`Incremented cache value by ${incrementBy} => Key: ${key}`);
         return true;
@@ -151,6 +203,13 @@ export class RedisCacheService implements ICacheService {
     }
   }
 
+  /**
+   * Method sets values in cache for the passed key
+   * @param key
+   * @param value
+   * @param hideValueInLogs true or false if value to be hidden in logs
+   * @returns true or false basis on success or failure
+   */
   async set(key: string, value: string, hideValueInLogs: boolean = false): Promise<boolean> {
     if (!hideValueInLogs) {
       log.info(`Setting cache value => Key: ${key} Value: ${value}`);

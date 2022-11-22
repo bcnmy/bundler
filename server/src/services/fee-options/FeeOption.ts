@@ -1,10 +1,14 @@
 /* eslint-disable no-await-in-loop */
 import Big from 'big.js';
-import { config } from '../../../../config';
-import { GasPriceType } from '../../../../common/gas-price/types';
-import { FeeOptionResponseType } from './types';
-import { IGasPrice } from '../../../../common/gas-price';
 import { ICacheService } from '../../../../common/cache';
+import { IGasPrice } from '../../../../common/gas-price';
+import { GasPriceType } from '../../../../common/gas-price/types';
+import { logger } from '../../../../common/log-config';
+import { getTokenPriceKey } from '../../../../common/utils';
+import { config } from '../../../../config';
+import { FeeOptionResponseType } from './types';
+
+const log = logger(module);
 
 const convertGasPriceToUSD = async (
   nativeChainId: number,
@@ -12,6 +16,7 @@ const convertGasPriceToUSD = async (
   chainPriceDataInUSD: number,
   token: string,
 ) => {
+  log.info(`Converting gas price to USD for chain ${nativeChainId} and token ${token} with gas price ${gasPrice} and chain price data in USD ${chainPriceDataInUSD}`);
   const decimal = config.chains.decimal[nativeChainId] || 18;
   const offset = config.feeOption.offset[nativeChainId][token] || 1;
   const usdc = new Big(gasPrice)
@@ -41,10 +46,6 @@ export class FeeOption {
     this.chainId = options.chainId;
   }
 
-  private static getNetworkPriceDataKey() {
-    return 'NETWORK_PRICE_DATA';
-  }
-
   async get() {
     try {
       const response: Array<FeeOptionResponseType> = [];
@@ -57,12 +58,13 @@ export class FeeOption {
       const gasPrice = Number(gasPriceInString);
 
       const networkPriceDataInString = await this.cacheService.get(
-        FeeOption.getNetworkPriceDataKey(),
+        getTokenPriceKey(),
       );
       let networkPriceData;
       if (!networkPriceDataInString) {
+        log.error('Network price data not found');
         networkPriceData = {
-          1: '1652.34', 4: '1652.34', 5: '1652.34', 137: '0.80', 80001: '0.80',
+          1: '1278.43', 5: '1278.43', 137: '0.80', 80001: '0.80', 97: '289.87', 420: '1278.43', 421613: '1278.43', 43113: '13.17',
         };
       } else {
         networkPriceData = JSON.parse(networkPriceDataInString);
@@ -82,10 +84,12 @@ export class FeeOption {
             chainPriceDataInUSD,
             token,
           );
+          log.info(`Token gas price in usd for chain ${this.chainId} and token ${token} is ${tokenGasPrice} before multiply by 10^${decimal}`);
           tokenGasPrice = new Big(tokenGasPrice).mul(10 ** decimal).toFixed(0).toString();
         } else {
         // calculate for cross chain
           const nativeChainId = config.feeOption.nativeChainIds[token];
+          log.info(`Native chain id for token ${token} is ${nativeChainId}`);
           if (nativeChainId) {
             const gasPriceInUSD = await convertGasPriceToUSD(
               this.chainId,
@@ -93,9 +97,13 @@ export class FeeOption {
               chainPriceDataInUSD,
               token,
             );
+            log.info(`Token gas price in usd for chain ${this.chainId} and token ${token} is ${gasPriceInUSD} before multiply by 10^${decimal}`);
             const nativeChainPrice = networkPriceData[nativeChainId];
+            log.info(`Native chain price for chain ${nativeChainId} is ${nativeChainPrice}`);
             tokenGasPrice = new Big(gasPriceInUSD).div(new Big(nativeChainPrice));
+            log.info(`Token gas price is ${tokenGasPrice} after dividing by native chain price`);
             tokenGasPrice = new Big(tokenGasPrice).mul(10 ** decimal).toFixed(0).toString();
+            log.info(`Final token gas price is ${tokenGasPrice} after multiplying by 10^${decimal}`);
           }
         }
         response.push({
@@ -115,7 +123,7 @@ export class FeeOption {
         response,
       };
     } catch (error) {
-      console.log(error);
+      log.error(error);
       return {
         code: 500,
         error: `Error occured in getting fee options service. Error: ${error}`,

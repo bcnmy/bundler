@@ -16,6 +16,7 @@ services:
       - mongo
       - redis
       - rabbitmq
+      - centrifugo
     build:
       dockerfile: Dockerfile
     restart: always
