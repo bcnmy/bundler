@@ -79,8 +79,8 @@ const EVMRelayerManagerMap: {
 const transactionDao = new TransactionDAO();
 
 const socketConsumerMap: Record<number, SocketConsumer> = {};
-const retryTransactionSerivceMap: Record<number, EVMRetryTransactionService> = {};
-const transactionServiceMap: any = {};
+const retryTransactionServiceMap: Record<number, EVMRetryTransactionService> = {};
+const transactionServiceMap: Record<number, EVMTransactionService> = {};
 const retryTransactionQueueMap: {
   [key: number]: RetryTransactionHandlerQueue;
 } = {};
@@ -229,9 +229,8 @@ let statusService: IStatusService;
         chainId,
       },
     });
-    if (relayerBalanceManager !== null) {
-      transactionListener.setRelayerBalanceManager(relayerBalanceManager);
-    }
+
+    transactionListener.setRelayerBalanceManager(relayerBalanceManager);
 
     log.info(`Transaction listener setup complete for chainId: ${chainId}`);
 
@@ -305,7 +304,7 @@ let statusService: IStatusService;
     log.info(`Relayer manager setup complete for chainId: ${chainId}`);
 
     log.info(`Setting up retry transaction service for chainId: ${chainId}`);
-    retryTransactionSerivceMap[chainId] = new EVMRetryTransactionService({
+    retryTransactionServiceMap[chainId] = new EVMRetryTransactionService({
       retryTransactionQueue,
       transactionService,
       networkService,
@@ -316,7 +315,7 @@ let statusService: IStatusService;
     });
 
     retryTransactionQueueMap[chainId].consume(
-      retryTransactionSerivceMap[chainId].onMessageReceived,
+      retryTransactionServiceMap[chainId].onMessageReceived,
     );
     log.info(`Retry transaction service setup for chainId: ${chainId}`);
 
@@ -454,7 +453,6 @@ export {
   scwSimulationServiceMap,
   entryPointMap,
   EVMRelayerManagerMap,
-  relayerBalanceManager,
   transactionServiceMap,
   transactionDao,
   statusService,

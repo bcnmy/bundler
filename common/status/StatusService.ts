@@ -1,4 +1,3 @@
-/* eslint-disable import/no-cycle */
 import { config } from '../../config';
 import { IEVMAccount } from '../../relayer/src/services/account';
 import { IRelayerManager } from '../../relayer/src/services/relayer-manager';

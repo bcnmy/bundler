@@ -81,7 +81,6 @@ export class EVMTransactionListener implements
       transactionReceipt,
       transactionId,
       relayerManagerName,
-      transactionType,
     } = onTranasctionSuccessParams;
     if (!transactionReceipt) {
       log.error(`Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
@@ -90,7 +89,6 @@ export class EVMTransactionListener implements
 
     log.info(`Publishing to transaction queue on success for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
     await this.publishToTransactionQueue({
-      transactionType,
       transactionId,
       relayerManagerName,
       transactionHash: transactionExecutionResponse?.hash,
@@ -113,7 +111,6 @@ export class EVMTransactionListener implements
       transactionId,
       transactionReceipt,
       relayerManagerName,
-      transactionType,
     } = onTranasctionFailureParams;
     if (!transactionReceipt) {
       log.error(`Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
@@ -121,7 +118,6 @@ export class EVMTransactionListener implements
     }
     log.info(`Publishing to transaction queue on failure for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
     await this.publishToTransactionQueue({
-      transactionType,
       transactionId,
       relayerManagerName,
       transactionHash: transactionExecutionResponse?.hash,
@@ -248,7 +244,6 @@ export class EVMTransactionListener implements
 
     if (!transactionExecutionResponse) {
       await this.publishToTransactionQueue({
-        transactionType,
         transactionId,
         relayerManagerName,
         error,
@@ -297,7 +292,6 @@ export class EVMTransactionListener implements
 
     // transaction queue is being listened by socket service to notify the client about the hash
     await this.publishToTransactionQueue({
-      transactionType,
       transactionId,
       relayerManagerName,
       transactionHash: transactionExecutionResponse?.hash,

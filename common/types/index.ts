@@ -21,7 +21,6 @@ export enum SocketEventType {
 }
 
 export type TransactionQueueMessageType = {
-  transactionType: TransactionType,
   transactionId: string,
   event: SocketEventType,
   relayerManagerName: string,
