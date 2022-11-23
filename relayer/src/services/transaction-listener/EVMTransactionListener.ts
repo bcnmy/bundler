@@ -5,6 +5,7 @@ import { IQueue } from '../../../../common/interface';
 import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
 import { RetryTransactionQueueData } from '../../../../common/queue/types';
+import { IRelayerBalanceManager } from '../../../../common/service-manager/interface/IRelayerBalanceManager';
 import {
   EVMRawTransactionType, SocketEventType, TransactionQueueMessageType, TransactionStatus,
 } from '../../../../common/types';
@@ -39,6 +40,8 @@ export class EVMTransactionListener implements
 
   cacheService: ICacheService;
 
+  relayerBalanceManager: IRelayerBalanceManager | undefined;
+
   constructor(
     evmTransactionListenerParams: EVMTransactionListenerParamsType,
   ) {
@@ -56,6 +59,10 @@ export class EVMTransactionListener implements
     this.retryTransactionQueue = retryTransactionQueue;
     this.transactionDao = transactionDao;
     this.cacheService = cacheService;
+  }
+
+  async setRelayerBalanceManager(_relayerBalanceManager: any) {
+    this.relayerBalanceManager = _relayerBalanceManager;
   }
 
   async publishToTransactionQueue(data: TransactionQueueMessageType): Promise<boolean> {
@@ -220,7 +227,7 @@ export class EVMTransactionListener implements
       });
     }
 
-    // relayerBalanceManager.onTransaction(transactionReceipt, transactionType, this.chainId);
+    this.relayerBalanceManager!.onTransaction(transactionReceipt, transactionType, this.chainId);
   }
 
   async notify(

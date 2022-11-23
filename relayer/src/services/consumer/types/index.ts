@@ -35,7 +35,6 @@ export type SCWConsumerParamsType = {
 export type SocketConsumerParamsType = {
   queue: IQueue<TransactionQueueMessageType>;
   options: {
-    relayerBalanceManager: any
     chainId: number,
     wssUrl: string,
     EVMRelayerManagerMap: {

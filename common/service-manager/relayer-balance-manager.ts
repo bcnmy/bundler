@@ -8,6 +8,7 @@ import { ICacheService } from '../cache';
 import { ITokenPrice } from '../token-price/interface/ITokenPrice';
 import { EVMRawTransactionType, TransactionType } from '../types';
 import { logger } from '../log-config';
+import { IRelayerBalanceManager } from './interface/IRelayerBalanceManager';
 
 const log = logger(module);
 
@@ -20,19 +21,19 @@ type FeeManagerParams = {
     dbUrl: string;
     tokenPriceService: ITokenPrice;
     cacheService: ICacheService;
-
     labelSCW: string | undefined;
     labelCCMP: string | undefined;
 };
 
-export class RelayerBalanceManager {
+export class RelayerBalanceManager implements IRelayerBalanceManager {
     feeManagerSCW: FeeManager | undefined;
-
-    transactionServiceMap?: Record<number, ITransactionService<IEVMAccount, EVMRawTransactionType>>;
 
     feeManagerCCMP: FeeManager | undefined;
 
-    initFeeManager(feeManagerParams: FeeManagerParams) {
+    transactionServiceMap: Record<number,
+        ITransactionService<IEVMAccount, EVMRawTransactionType>> | undefined;
+
+    init(feeManagerParams: FeeManagerParams) {
         try {
             if (feeManagerParams.labelSCW && this.transactionServiceMap) {
                 this.feeManagerSCW = new FeeManager({
@@ -72,6 +73,11 @@ export class RelayerBalanceManager {
         } catch (error) {
             log.error(error);
         }
+    }
+
+    setTransactionServiceMap(transactionServiceMap:
+        Record<number, ITransactionService<IEVMAccount, EVMRawTransactionType>>) {
+        this.transactionServiceMap = transactionServiceMap;
     }
 
     onTransaction(

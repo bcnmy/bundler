@@ -81,7 +81,6 @@ const transactionDao = new TransactionDAO();
 const socketConsumerMap: Record<number, SocketConsumer> = {};
 const retryTransactionSerivceMap: Record<number, EVMRetryTransactionService> = {};
 const transactionServiceMap: any = {};
-const transactionListenerMap: Record<number, EVMTransactionListener> = {};
 const retryTransactionQueueMap: {
   [key: number]: RetryTransactionHandlerQueue;
 } = {};
@@ -115,6 +114,46 @@ let statusService: IStatusService;
   // added check for relayer node path in order to run on only one server
   if (config.relayer.nodePathIndex === 0) {
     tokenService.schedule();
+  }
+
+  const feeSupportedTokenList: Record<number, FeeSupportedToken[]> = {};
+  if (config.feeOption && config.feeOption.tokenContractAddress) {
+    for (const chainId in config.feeOption.tokenContractAddress) {
+      const feeSupportedTokenArray: FeeSupportedToken[] = [];
+      for (const symbol in config.feeOption.tokenContractAddress[chainId]) {
+        const token = {
+          address: config.feeOption.tokenContractAddress[chainId][symbol],
+          symbol,
+          decimal: config.feeOption.decimals[chainId][symbol],
+        };
+        feeSupportedTokenArray.push(token);
+      }
+      feeSupportedTokenList[Number(chainId)] = feeSupportedTokenArray;
+    }
+  }
+
+  config.feeManagementConfig.tokenList = feeSupportedTokenList;
+
+  relayerBalanceManager = new RelayerBalanceManager();
+  try {
+    await relayerBalanceManager.setTransactionServiceMap(transactionServiceMap);
+    await relayerBalanceManager.init({
+      masterFundingAccountSCW:
+        relayerInstanceMap[relayerManagerTransactionTypeNameMap.SCW].ownerAccountDetails,
+      relayerAddressesSCW: scwRelayerList,
+      masterFundingAccountCCMP:
+        relayerInstanceMap[relayerManagerTransactionTypeNameMap.SCW].ownerAccountDetails, // change it to cross-chain before commit
+      relayerAddressesCCMP: ccmpRelayerList, // change it to ccmpRelayerList before commit
+      appConfig: config.feeManagementConfig,
+      dbUrl: config.dataSources.mongoUrl,
+      tokenPriceService: tokenService,
+      cacheService,
+      labelCCMP,
+      labelSCW, // change it to labelSCW before commit
+    });
+  } catch (error: any) {
+    log.error('ERROR');
+    log.info(error);
   }
 
   log.info(`Setting up instances for following chainIds: ${JSON.stringify(supportedNetworks)}`);
@@ -190,7 +229,10 @@ let statusService: IStatusService;
         chainId,
       },
     });
-    transactionListenerMap[chainId] = transactionListener;
+    if (relayerBalanceManager !== null) {
+      transactionListener.setRelayerBalanceManager(relayerBalanceManager);
+    }
+
     log.info(`Transaction listener setup complete for chainId: ${chainId}`);
 
     log.info(`Setting up transaction service for chainId: ${chainId}`);
@@ -393,44 +435,6 @@ let statusService: IStatusService;
         log.info(`SCW consumer, relay service & simulation service setup complete for chainId: ${chainId}`);
       }
     }
-  }
-  const feeSupportedTokenList: Record<number, FeeSupportedToken[]> = {};
-  if (config.feeOption && config.feeOption.tokenContractAddress) {
-    for (const chainId in config.feeOption.tokenContractAddress) {
-      const feeSupportedTokenArray: FeeSupportedToken[] = [];
-      for (const symbol in config.feeOption.tokenContractAddress[chainId]) {
-        const token = {
-          address: config.feeOption.tokenContractAddress[chainId][symbol],
-          symbol,
-          decimal: config.feeOption.decimals[chainId][symbol],
-        };
-        feeSupportedTokenArray.push(token);
-      }
-      feeSupportedTokenList[Number(chainId)] = feeSupportedTokenArray;
-    }
-  }
-
-  config.feeManagementConfig.tokenList = feeSupportedTokenList;
-
-  try {
-    relayerBalanceManager = new RelayerBalanceManager();
-    relayerBalanceManager.initFeeManager({
-      masterFundingAccountSCW:
-        relayerInstanceMap[relayerManagerTransactionTypeNameMap.SCW].ownerAccountDetails,
-      relayerAddressesSCW: scwRelayerList,
-      masterFundingAccountCCMP:
-        relayerInstanceMap[relayerManagerTransactionTypeNameMap.SCW].ownerAccountDetails, // change it to cross-chain before commit
-      relayerAddressesCCMP: ccmpRelayerList, // change it to ccmpRelayerList before commit
-      appConfig: config.feeManagementConfig,
-      dbUrl: config.dataSources.mongoUrl,
-      tokenPriceService: tokenService,
-      cacheService,
-      labelCCMP,
-      labelSCW, // change it to labelSCW before commit
-    });
-  } catch (error: any) {
-    log.error('ERROR');
-    log.info(error);
   }
 
   // eslint-disable-next-line no-new
