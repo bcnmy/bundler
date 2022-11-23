@@ -5,10 +5,10 @@ import type { IGasPrice } from '../../../../../common/gas-price';
 import type { CCMPMessage, CCMPRouterName } from '../../../../../common/types';
 import type { ICCMPRouterService } from '../router-service/interfaces';
 import type { ICrossChainGasEstimationService } from './interfaces/ICrossChainGasEstimationService';
-import type { ISDKBackendService } from '../../../../../common/sdk-backend-service/types';
 import type { ITokenPriceConversionService } from '../../../../../common/token/interface/ITokenPriceConversionService';
 import { logger } from '../../../../../common/log-config';
 import { config } from '../../../../../config';
+import type { CCMPSimulationService } from '../../../../../common/simulation';
 
 const log = logger(module);
 
@@ -16,8 +16,8 @@ export class CrossChainGasEstimationService implements ICrossChainGasEstimationS
   private readonly tokenAddressToSymbolMap: Record<number, Record<string, string>>;
 
   constructor(
-    private readonly chainId: number,
-    private readonly sdkBackendService: ISDKBackendService,
+    private readonly chainId: number, // Destination Chain Id
+    private readonly ccmpSimulationService: CCMPSimulationService,
     private readonly tokenPriceConversionService: ITokenPriceConversionService,
     private readonly routerServiceMap: { [key in CCMPRouterName]?: ICCMPRouterService },
     private readonly gasPriceService: IGasPrice,
@@ -125,11 +125,14 @@ export class CrossChainGasEstimationService implements ICrossChainGasEstimationS
   }
 
   private async getMessageVerificationFee(message: CCMPMessage, feeTokenSymbol: string) {
-    const messageGasFee = await this.sdkBackendService.estimateCrossChainMessageGas(message);
-    log.info(`Message Gas Fee: ${JSON.stringify(messageGasFee)}`);
+    const simulationResult = await this.ccmpSimulationService.simulate({ ccmpMessage: message });
+    log.info(`Message Gas Fee: ${JSON.stringify(simulationResult)}`);
+    if (!simulationResult.isSimulationSuccessful) {
+      throw new Error(`Simulation failed: ${simulationResult.err}`);
+    }
     const messageGasFeeInFeeToken = await this.getTxCostInFeeToken(
       parseInt(message.sourceChainId.toString(), 10),
-      messageGasFee.gas + messageGasFee.txBaseGas,
+      simulationResult.gasEstimateFromSimulation + simulationResult.txBaseGasEstimate,
       feeTokenSymbol,
     );
     log.info(`Message Gas Fee in Fee Token: ${messageGasFeeInFeeToken.toString()}`);

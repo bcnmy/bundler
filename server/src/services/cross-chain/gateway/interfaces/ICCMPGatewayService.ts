@@ -28,4 +28,9 @@ export interface ICCMPGatewayService {
     chainId: number,
     receipt: TransactionReceipt
   ): Promise<CCMPMessage>;
+
+  buildReceiveMessageCalldata(
+    message: CCMPMessage,
+    verificationData: string | Uint8Array
+  ): string;
 }

@@ -276,7 +276,7 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
     return decimal;
   }
 
-  async sendRpcCall(method: string, params: Array<object>): Promise<any> {
+  async sendRpcCall(method: string, params: Array<object | string | number>): Promise<any> {
     const data = {
       method,
       params,

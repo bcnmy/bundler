@@ -1,8 +1,12 @@
+import { ethers } from 'ethers';
 import { RedisCacheService } from '../../common/cache';
 import { TransactionDAO } from '../../common/db';
 import { GasPriceManager } from '../../common/gas-price';
 import { EVMNetworkService } from '../../common/network';
+import { NotificationManager } from '../../common/notification';
+import { SlackNotificationService } from '../../common/notification/slack/SlackNotificationService';
 import { RetryTransactionHandlerQueue, TransactionHandlerQueue } from '../../common/queue';
+import { CrossChainTransactionDAO } from '../../common/service-manager';
 import { EVMRawTransactionType } from '../../common/types';
 import { config } from '../../config';
 import { EVMAccount, IEVMAccount } from '../../relayer/src/services/account';
@@ -17,9 +21,9 @@ describe('relayer manager', () => {
   const chainId = 5;
 
   const EVMRelayerManagerMap: {
-    [name: string] : {
+    [name: string]: {
       [chainId: number]: IRelayerManager<IEVMAccount, EVMRawTransactionType>;
-    }
+    };
   } = {};
 
   const cacheService = RedisCacheService.getInstance();
@@ -47,11 +51,15 @@ describe('relayer manager', () => {
 
   const transactionDao = new TransactionDAO();
 
+  const crossChainTransactionDAO = new CrossChainTransactionDAO();
+
   const transactionListener = new EVMTransactionListener({
     networkService,
     transactionQueue,
     retryTransactionQueue,
     transactionDao,
+    crossChainTransactionDAO,
+    crossChainRetryHandlerQueueMap: {},
     cacheService,
     options: {
       chainId,
@@ -66,6 +74,9 @@ describe('relayer manager', () => {
     cacheService,
   });
 
+  const slackNotificationService = new SlackNotificationService('NULL', 'NULL');
+  const notificationManager = new NotificationManager(slackNotificationService);
+
   if (gasPriceService) {
     const transactionService = new EVMTransactionService({
       networkService,
@@ -74,6 +85,7 @@ describe('relayer manager', () => {
       nonceManager,
       gasPriceService,
       transactionDao,
+      notificationManager,
       options: {
         chainId,
       },
@@ -90,20 +102,19 @@ describe('relayer manager', () => {
       transactionService,
       nonceManager,
       relayerQueue,
+      cacheService,
       options: {
         chainId,
         name: relayerManager.name,
         relayerSeed: relayerManager.relayerSeed,
         minRelayerCount: relayerManager.minRelayerCount[chainId],
         maxRelayerCount: relayerManager.maxRelayerCount[chainId],
-        inactiveRelayerCountThreshold:
-            relayerManager.inactiveRelayerCountThreshold[chainId],
-        pendingTransactionCountThreshold:
-            relayerManager.pendingTransactionCountThreshold[chainId],
-        newRelayerInstanceCount:
-            relayerManager.newRelayerInstanceCount[chainId],
-        fundingBalanceThreshold:
-            relayerManager.fundingBalanceThreshold[chainId],
+        inactiveRelayerCountThreshold: relayerManager.inactiveRelayerCountThreshold[chainId],
+        pendingTransactionCountThreshold: relayerManager.pendingTransactionCountThreshold[chainId],
+        newRelayerInstanceCount: relayerManager.newRelayerInstanceCount[chainId],
+        fundingBalanceThreshold: ethers.BigNumber.from(
+          relayerManager.fundingBalanceThreshold[chainId],
+        ),
         fundingRelayerAmount: relayerManager.fundingRelayerAmount[chainId],
         ownerAccountDetails: new EVMAccount(
           relayerManager.ownerAccountDetails[chainId].publicKey,
@@ -142,9 +153,9 @@ describe('relayer manager', () => {
       for (const address of addressList) {
         const isBalanceBelowThreshold = relayerMangerInstance.hasBalanceBelowThreshold(address);
         expect(isBalanceBelowThreshold).toBe(false);
-        const relayerData = relayerMangerInstance.relayerQueue.list().find(
-          (relayer) => relayer.address === address,
-        );
+        const relayerData = relayerMangerInstance.relayerQueue
+          .list()
+          .find((relayer) => relayer.address === address);
         expect(relayerData).toBeDefined();
         // check balance above threshold
         expect(relayerData?.balance).toBeGreaterThan(0);
@@ -161,7 +172,8 @@ describe('relayer manager', () => {
       const address = '0x0000000000000000000000000000000000000000';
       await relayerMangerInstance.addActiveRelayer(address);
       const relayerData = relayerMangerInstance.relayerQueue
-        .list().find((relayer) => relayer.address === address);
+        .list()
+        .find((relayer) => relayer.address === address);
       expect(relayerData).toBeUndefined();
     });
 
@@ -182,16 +194,14 @@ describe('relayer manager', () => {
     it('should set and fetch inactive relayer count threshold', async () => {
       const inactiveRelayerCountThreshold = 10;
       relayerMangerInstance.setInactiveRelayerCountThreshold(inactiveRelayerCountThreshold);
-      const updatedInactiveRelayerCountThreshold = relayerMangerInstance
-        .getInactiveRelayerCountThreshold();
+      const updatedInactiveRelayerCountThreshold = relayerMangerInstance.getInactiveRelayerCountThreshold();
       expect(updatedInactiveRelayerCountThreshold).toBe(inactiveRelayerCountThreshold);
     });
 
     it('should set and fetch pending transaction count threshold', async () => {
       const pendingTransactionCountThreshold = 10;
       relayerMangerInstance.setPendingTransactionCountThreshold(pendingTransactionCountThreshold);
-      const updatedPendingTransactionCountThreshold = relayerMangerInstance
-        .getPendingTransactionCountThreshold();
+      const updatedPendingTransactionCountThreshold = relayerMangerInstance.getPendingTransactionCountThreshold();
       expect(updatedPendingTransactionCountThreshold).toBe(pendingTransactionCountThreshold);
     });
   }

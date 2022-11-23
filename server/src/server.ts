@@ -70,8 +70,6 @@ const init = async () => {
 
   server = http.createServer(app);
 
-  // TODO: subscribe to indexer from here
-
   (async () => {
     try {
       server.listen(port);

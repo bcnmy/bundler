@@ -73,7 +73,7 @@ export class CCMPGatewayService implements ICCMPGatewayService {
     }
   }
 
-  private buildReceiveMessageCalldata(
+  buildReceiveMessageCalldata(
     message: CCMPMessage,
     verificationData: string | Uint8Array,
   ): string {

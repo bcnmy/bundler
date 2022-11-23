@@ -145,7 +145,10 @@ type DataSourcesConfigType = {
 
 // TODO // Review how to make it generic
 type SimulationDataConfigType = {
-  [key: string]: any;
+  tenderlyData: {
+    [key: string]: any;
+  },
+  ethCallData: EthCallEstimationConfigType;
 };
 
 /* CCMP configurations */
@@ -220,12 +223,15 @@ number,
 }
 >;
 
+type CCMPGasEstimationDataType = Record<CCMPRouterName, { code: string; verificationData: string }>;
+
 type IndexerWebhookBlockConfirmationType = Record<number, number>;
 
 type CCMPRetryIntervalType = Record<number, Record<CCMPRouterName, number>>;
 
 type CCMPConfigType = {
   bridges: CCMPBridgesConfigType;
+  gasEstimation: CCMPGasEstimationDataType;
   contracts: CCMPContractsConfigType;
   adaptors: CCMPContractsConfigType;
   webhooks: CCMPWebhooksConfigType;
@@ -236,6 +242,12 @@ type CCMPConfigType = {
   webhookEndpoint: string;
   retryInterval: CCMPRetryIntervalType;
   tokenSymbols: Record<string, number>;
+  performIndexerRegistrationOnStartup: Record<number, boolean>;
+};
+
+type EthCallEstimationConfigType = {
+  estimatorAddress: Record<number, string>;
+  estimatorAbi: Record<string, any>[];
 };
 
 type IndexerConfigType = {
@@ -271,7 +283,6 @@ export type ConfigType = {
   zeroAddress: string;
   simulationData: SimulationDataConfigType;
   indexer: IndexerConfigType;
-  sdkBackend: SDKBackendConfigType;
   cacheService: CacheServiceConfigType;
 };
 

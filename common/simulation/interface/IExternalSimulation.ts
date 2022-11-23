@@ -1,7 +1,7 @@
 import { IGasPrice } from '../../gas-price';
 
-export interface IExternalSimulation {
+export interface IExternalSimulation<SimulationDataType, SimulationResultType> {
   gasPriceService: IGasPrice;
 
-  simulate(simulationData: any): Promise<any>;
+  simulate(simulationData: SimulationDataType): Promise<SimulationResultType>;
 }

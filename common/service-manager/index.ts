@@ -39,7 +39,7 @@ import {
   TransactionHandlerQueue,
 } from '../queue';
 import { AARelayService, CCMPRelayService, SCWRelayService } from '../relay-service';
-import { AASimulationService, SCWSimulationService } from '../simulation';
+import { AASimulationService, CCMPSimulationService, SCWSimulationService } from '../simulation';
 import { TenderlySimulationService } from '../simulation/external-simulation';
 import { CMCTokenPriceManager, TokenPriceConversionService } from '../token';
 import { IStatusService, StatusService } from '../status';
@@ -57,12 +57,12 @@ import { CrossChainRetryHandlerQueue } from '../queue/CrossChainRetryHandlerQueu
 import { CrossChainRetryTransactionService } from '../../server/src/services/cross-chain/retry-transaction-service';
 import { IndexerService } from '../indexer/IndexerService';
 import { CCMPGatewayService } from '../../server/src/services/cross-chain/gateway';
-import { SDKBackendService } from '../sdk-backend-service';
 import type { ICrossChainGasEstimationService } from '../../server/src/services/cross-chain/gas-estimation/interfaces/ICrossChainGasEstimationService';
 import { CrossChainGasEstimationService } from '../../server/src/services/cross-chain/gas-estimation';
 import { LiquidityPoolService, LiquidityTokenManagerService } from '../../server/src/services/cross-chain/liquidity';
 import { ICrossChainTransactionStatusService } from '../../server/src/services/cross-chain/transaction-status/interfaces/ICrossChainTransactionStatusService';
 import { CrosschainTransactionStatusService } from '../../server/src/services/cross-chain/transaction-status';
+import { ETHCallSimulationService } from '../simulation/external-simulation/EthCallSimulationService';
 
 const log = logger(module);
 
@@ -147,8 +147,6 @@ const crossChainRetryTransactionServiceMap: {
 const crossChainTransactionStatusServiceMap: {
   [chainId: number]: ICrossChainTransactionStatusService;
 } = {};
-
-const sdkBackendService = new SDKBackendService(config.sdkBackend.baseUrl);
 
 // eslint-disable-next-line import/no-mutable-exports
 let statusService: IStatusService;
@@ -515,9 +513,23 @@ let statusService: IStatusService;
           }
         }
 
+        const ethCallSimulationService = new ETHCallSimulationService(
+          chainId,
+          config.simulationData.ethCallData.estimatorAddress[chainId],
+          config.simulationData.ethCallData.estimatorAbi,
+          networkServiceMap[chainId],
+          gasPriceService,
+        );
+
+        const ccmpSimulationService = new CCMPSimulationService(
+          chainId,
+          ethCallSimulationService,
+          ccmpGatewayServiceMap[chainId],
+        );
+
         crossChainGasEstimationServiceMap[chainId] = new CrossChainGasEstimationService(
           chainId,
-          sdkBackendService,
+          ccmpSimulationService,
           tokenPriceConversionService,
           ccmpRouterMap[chainId],
           gasPriceService,
@@ -589,7 +601,6 @@ export {
   transactionSerivceMap,
   indexerService,
   transactionDao,
-  sdkBackendService,
   statusService,
   liquidityPoolService,
   liquidityTokenManagerService,

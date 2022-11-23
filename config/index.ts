@@ -200,6 +200,10 @@ export class Config implements IConfig {
 
         const supportedRouters = this.config.ccmp.supportedRouters[chainId];
 
+        if (typeof this.config.ccmp.performIndexerRegistrationOnStartup[chainId] !== 'boolean') {
+          throw new Error(`Perform indexer registration on startup flag required for chain id ${chainId}`);
+        }
+
         for (const router of supportedRouters) {
           if (
             router === CCMPRouterName.WORMHOLE
@@ -208,6 +212,10 @@ export class Config implements IConfig {
             throw new Error(
               `CCMP Retry interval required for chain id ${chainId}, router ${router}`,
             );
+          }
+
+          if (!this.config.ccmp.gasEstimation[router]) {
+            throw new Error(`Gas estimation data required for router ${router}`);
           }
         }
       }
@@ -266,11 +274,6 @@ export class Config implements IConfig {
     }
     if (!this.config.ccmp.webhookEndpoint) {
       throw new Error('CCMP webhook endpoint required');
-    }
-
-    // Validate SDK Backend Config
-    if (!this.config.sdkBackend?.baseUrl) {
-      throw new Error('SDK Backend base url required');
     }
 
     return true;

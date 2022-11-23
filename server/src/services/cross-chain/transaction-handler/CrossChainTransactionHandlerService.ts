@@ -58,25 +58,27 @@ export class CrossChainTransactionHandlerService implements ICrossChainTransacti
     }
 
     try {
-      await this.indexerService.registerWebhook(
-        this.webHookEndpoint,
-        config.indexer.auth,
-        this.chainId,
-        [
-          {
-            scAddress: config.ccmp.contracts[this.chainId].CCMPGateway,
-            abi: JSON.stringify(config.ccmp.abi.CCMPGateway),
-            events: [
-              {
-                name: config.ccmp.events.CCMPMessageRouted[this.chainId].name,
-                topicid: config.ccmp.events.CCMPMessageRouted[this.chainId].topicId,
-                blockConfirmations: config.ccmp.indexerWebhookBlockConfirmation[this.chainId],
-                processTransferLogs: true,
-              },
-            ],
-          },
-        ],
-      );
+      if (config.ccmp.performIndexerRegistrationOnStartup[this.chainId]) {
+        await this.indexerService.registerWebhook(
+          this.webHookEndpoint,
+          config.indexer.auth,
+          this.chainId,
+          [
+            {
+              scAddress: config.ccmp.contracts[this.chainId].CCMPGateway,
+              abi: JSON.stringify(config.ccmp.abi.CCMPGateway),
+              events: [
+                {
+                  name: config.ccmp.events.CCMPMessageRouted[this.chainId].name,
+                  topicid: config.ccmp.events.CCMPMessageRouted[this.chainId].topicId,
+                  blockConfirmations: config.ccmp.indexerWebhookBlockConfirmation[this.chainId],
+                  processTransferLogs: true,
+                },
+              ],
+            },
+          ],
+        );
+      }
     } catch (e) {
       log.error(`Failed to register webhook for chain ${this.chainId}`, e);
       throw new Error(`Failed to register webhook for chain ${this.chainId}`);
