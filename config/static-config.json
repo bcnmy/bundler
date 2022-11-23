@@ -245,7 +245,7 @@
     "supportedFeeTokens": {
       "5": ["ETH", "USDC", "USDT", "DAI", "WETH"],
       "137": ["MATIC", "USDC", "USDT", "DAI", "WETH"],
-      "80001": ["MATIC", "USDC", "USDT", "DAI", "WETH", "BICO"],
+      "80001": ["MATIC", "USDC", "USDT", "DAI", "WETH"],
       "97": ["BNB", "USDT"],
       "420": ["ETH", "USDC"],
       "421613": ["ETH", "USDC"],
@@ -485,13 +485,13 @@
       }
     },
     "refundReceiver": {
-      "5": "0x040a9cbC4453B0eeaE12f3210117B422B890C1ED",
-      "137": "0x040a9cbC4453B0eeaE12f3210117B422B890C1ED",
-      "80001": "0x040a9cbC4453B0eeaE12f3210117B422B890C1ED",
-      "97": "0x040a9cbC4453B0eeaE12f3210117B422B890C1ED",
-      "420": "0x040a9cbC4453B0eeaE12f3210117B422B890C1ED",
-      "421613": "0x040a9cbC4453B0eeaE12f3210117B422B890C1ED",
-      "43113": "0x040a9cbC4453B0eeaE12f3210117B422B890C1ED"
+      "5": "0xc75Bb3956c596efc6DB663cd3e2f64929d6AB0fc",
+      "137": "0xc75Bb3956c596efc6DB663cd3e2f64929d6AB0fc",
+      "80001": "0xc75Bb3956c596efc6DB663cd3e2f64929d6AB0fc",
+      "97": "0xc75Bb3956c596efc6DB663cd3e2f64929d6AB0fc",
+      "420": "0xc75Bb3956c596efc6DB663cd3e2f64929d6AB0fc",
+      "421613": "0xc75Bb3956c596efc6DB663cd3e2f64929d6AB0fc",
+      "43113": "0xc75Bb3956c596efc6DB663cd3e2f64929d6AB0fc"
     },
     "commission": {
       "5": 0,
