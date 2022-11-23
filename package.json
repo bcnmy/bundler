@@ -4,7 +4,6 @@
     "format:common": "eslint 'common/**' --ext .ts --fix",
     "format:server": "eslint 'server/src/**' --ext .ts --fix",
     "format:relayer": "eslint 'relayer/src/**' --ext .ts --fix",
-    "format:cross-chain": "eslint 'cross-chain/**' --ext .ts --fix",
     "prepare": "husky install",
     "dev": "ts-node server/src/index.ts",
     "views": "cp -r server/src/views server/dist/server/src/views",

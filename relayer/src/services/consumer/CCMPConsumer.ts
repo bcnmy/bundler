@@ -11,9 +11,9 @@ import {
   CrossChainTransationStatus,
   CrossChainTransactionError,
 } from '../../../../common/types';
-import { CCMPTaskManager } from '../../../../cross-chain/task-manager';
-import { ICCMPTaskManager } from '../../../../cross-chain/task-manager/interfaces/ICCMPTaskManager';
-import type { ICrossChainProcessStep } from '../../../../cross-chain/task-manager/types';
+import { CCMPTaskManager } from '../../../../server/src/services/cross-chain/task-manager';
+import { ICCMPTaskManager } from '../../../../server/src/services/cross-chain/task-manager/interfaces/ICCMPTaskManager';
+import type { ICrossChainProcessStep } from '../../../../server/src/services/cross-chain/task-manager/types';
 import type { IEVMAccount } from '../account';
 import type { IRelayerManager } from '../relayer-manager/interface/IRelayerManager';
 import type { ITransactionService } from '../transaction-service';

@@ -15,13 +15,13 @@ import { EVMRetryTransactionService } from '../../relayer/src/services/retry-tra
 import { EVMTransactionListener } from '../../relayer/src/services/transaction-listener';
 import { EVMTransactionService } from '../../relayer/src/services/transaction-service';
 import { FeeOption } from '../../server/src/services';
-import { CrossChainTransactionHandlerService } from '../../cross-chain/transaction-handler';
+import { CrossChainTransactionHandlerService } from '../../server/src/services/cross-chain/transaction-handler';
 import {
   AxelarRouterService,
   HyperlaneRouterService,
   WormholeRouterService,
-} from '../../cross-chain/router-service';
-import { ICCMPRouterService } from '../../cross-chain/router-service/interfaces';
+} from '../../server/src/services/cross-chain/router-service';
+import { ICCMPRouterService } from '../../server/src/services/cross-chain/router-service/interfaces';
 import { RedisCacheService } from '../cache';
 import { Mongo, TransactionDAO } from '../db';
 import { GasPriceManager } from '../gas-price';
@@ -54,15 +54,15 @@ import {
 } from '../types';
 import { CrossChainTransactionDAO } from '../db/dao/CrossChainTransactionDao';
 import { CrossChainRetryHandlerQueue } from '../queue/CrossChainRetryHandlerQueue';
-import { CrossChainRetryTransactionService } from '../../cross-chain/retry-transaction-service';
+import { CrossChainRetryTransactionService } from '../../server/src/services/cross-chain/retry-transaction-service';
 import { IndexerService } from '../indexer/IndexerService';
-import { CCMPGatewayService } from '../../cross-chain/gateway';
+import { CCMPGatewayService } from '../../server/src/services/cross-chain/gateway';
 import { SDKBackendService } from '../sdk-backend-service';
-import type { ICrossChainGasEstimationService } from '../../cross-chain/gas-estimation/interfaces/ICrossChainGasEstimationService';
-import { CrossChainGasEstimationService } from '../../cross-chain/gas-estimation';
-import { LiquidityPoolService, LiquidityTokenManagerService } from '../../cross-chain/liquidity';
-import { ICrossChainTransactionStatusService } from '../../server/src/services/cross-chain-transaction-status/interfaces/ICrossChainTransactionStatusService';
-import { CrosschainTransactionStatusService } from '../../server/src/services/cross-chain-transaction-status';
+import type { ICrossChainGasEstimationService } from '../../server/src/services/cross-chain/gas-estimation/interfaces/ICrossChainGasEstimationService';
+import { CrossChainGasEstimationService } from '../../server/src/services/cross-chain/gas-estimation';
+import { LiquidityPoolService, LiquidityTokenManagerService } from '../../server/src/services/cross-chain/liquidity';
+import { ICrossChainTransactionStatusService } from '../../server/src/services/cross-chain/transaction-status/interfaces/ICrossChainTransactionStatusService';
+import { CrosschainTransactionStatusService } from '../../server/src/services/cross-chain/transaction-status';
 
 const log = logger(module);
 

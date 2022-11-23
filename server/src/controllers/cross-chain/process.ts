@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { ccmpServiceMap } from '../../../../common/service-manager';
 import { logger } from '../../../../common/log-config';
-import { parseIndexerEvent } from '../../../../cross-chain/utils';
+import { parseIndexerEvent } from '../../services/cross-chain/utils';
 
 const log = logger(module);
 

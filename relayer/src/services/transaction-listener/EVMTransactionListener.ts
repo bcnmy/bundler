@@ -16,9 +16,9 @@ import {
   TransactionType,
 } from '../../../../common/types';
 import { getRetryTransactionCountKey } from '../../../../common/utils';
-import { CCMPTaskManager } from '../../../../cross-chain/task-manager';
-import { ICCMPTaskManager } from '../../../../cross-chain/task-manager/interfaces/ICCMPTaskManager';
-import { ICrossChainProcessStep } from '../../../../cross-chain/task-manager/types';
+import { CCMPTaskManager } from '../../../../server/src/services/cross-chain/task-manager';
+import { ICCMPTaskManager } from '../../../../server/src/services/cross-chain/task-manager/interfaces/ICCMPTaskManager';
+import { ICrossChainProcessStep } from '../../../../server/src/services/cross-chain/task-manager/types';
 import { IEVMAccount } from '../account';
 import { ITransactionPublisher } from '../transaction-publisher';
 import { ITransactionListener } from './interface/ITransactionListener';
