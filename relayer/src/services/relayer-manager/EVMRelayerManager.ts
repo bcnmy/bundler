@@ -357,15 +357,12 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
         log.info(
           `Has sufficient funds in relayer ${address} on chainId: ${this.chainId}`,
         );
-      }
-      if (lock) {
+      } else if (lock) {
         const key = `${this.ownerAccountDetails.getPublicKey()}_${this.chainId}`;
         log.info(`Waiting for lock to fund relayers on key ${key} for relayer ${relayerAddress} for duration of ${config.cacheService.lockTTL}ms`);
         const acquiredLock = await lock.acquire([`locks:${key}`], config.cacheService.lockTTL);
         log.info(`Lock acquired on key ${key} to fund relayer ${relayerAddress} on chainId: ${this.chainId}`);
         try {
-          // eslint-disable-next-line no-await-in-loop
-          log.info(`Funding relayer ${address} on chainId: ${this.chainId}`);
           let gasLimitIndex = 0;
           // different gas limit for arbitrum
           if ([42161, 421611].includes(this.chainId)) gasLimitIndex = 1;
@@ -374,9 +371,8 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
 
           const fundingAmount = this.fundingRelayerAmount;
 
-          const ownerAccountNonce = await this.nonceManager.getNonce(
-            this.ownerAccountDetails.getPublicKey(),
-          );
+          const ownerAccountNonce = await this.nonceManager
+            .getNonce(this.ownerAccountDetails.getPublicKey());
           const gasPrice = await this.gasPriceService.getGasPrice(
             GasPriceType.DEFAULT,
           );
