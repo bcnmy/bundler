@@ -8,6 +8,7 @@ import {
 } from '../../controllers';
 import {
   validateCrossChainProcessFromIndexerRequest,
+  validateCrossChainProcessRequest,
   validateCrossChainStatusFromMessageHash,
   validateCrossChainStatusFromTx,
   validateEstimateDepositAndCallRequest,
@@ -15,7 +16,7 @@ import {
 
 export const crossChainRouter = Router();
 
-crossChainRouter.post('/process', validateEstimateDepositAndCallRequest, processApi);
+crossChainRouter.post('/process', validateCrossChainProcessRequest, processApi);
 crossChainRouter.post(
   '/process/indexer',
   validateCrossChainProcessFromIndexerRequest,

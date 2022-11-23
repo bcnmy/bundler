@@ -79,14 +79,19 @@ implements IExternalSimulation<EthCallSimulationDataType, EthCallSimulationRespo
         simulationData.overrides || {},
       ];
       log.info(`eth_call params: ${JSON.stringify(params)}`);
-      const encodedResult = await this.networkService.sendRpcCall('eth_call', params);
+      const response = await this.networkService.sendRpcCall('eth_call', params);
+      const encodedResult = response.data.result;
+      if (!encodedResult) {
+        throw new Error('No result returned from eth_call');
+      }
+      log.info(`eth_call result: ${encodedResult}`);
       const { success, result, gas } = this.estimatorInterface.decodeFunctionResult(
         'estimate',
         encodedResult,
       );
       if (!success) {
         const errorMessage = ETHCallSimulationService.decodeError(result);
-        throw new Error(`Error in simulation: ${errorMessage}`);
+        throw new Error(`Error in simulation: ${JSON.stringify(errorMessage)}`);
       }
 
       const simulationResult = {

@@ -40,7 +40,7 @@ implements ISimulationService<CCMPSimulationDataType, CCMPSimulationResponseType
 
   async simulate(simulationData: CCMPSimulationDataType): Promise<CCMPSimulationResponseType> {
     const { ccmpMessage: message } = simulationData;
-    log.info(`Simulating CCMP message: ${message}`);
+    log.info(`Simulating CCMP message: ${JSON.stringify(message)}`);
     const overrides = this.simulationOverridesMap[message.routerAdaptor];
     if (!overrides) {
       throw new Error(

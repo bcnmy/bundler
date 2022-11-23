@@ -277,9 +277,7 @@ export class CrossChainTransactionHandlerService implements ICrossChainTransacti
     if (!lock) {
       throw new Error('Redlock not initialized');
     }
-    await lock.using([`key:ccmp:${message.hash}`], 5000, async (signal) => {
-      signal.throwIfAborted();
-
+    await lock.using([`key:ccmp:${message.hash}`], 5000, async () => {
       const sourceChainId = parseInt(message.sourceChainId.toString(), 10);
 
       // Build the monad
