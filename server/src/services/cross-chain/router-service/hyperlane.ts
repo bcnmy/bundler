@@ -8,7 +8,7 @@ import {
 import { ethers } from 'ethers';
 import { config } from '../../../../../config';
 import type { ICCMPRouterService } from './interfaces';
-import type { CCMPMessage } from '../../../../../common/types';
+import type { CCMPMessageType } from '../../../../../common/types';
 import type { EVMNetworkService } from '../../../../../common/network';
 import { logger } from '../../../../../common/log-config';
 import { getNativeTokenSymbol } from '../../../../../common/token';
@@ -56,15 +56,20 @@ export class HyperlaneRouterService implements ICCMPRouterService {
     );
   }
 
-  // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
-  async estimateVerificationFeePaymentTxGas(txHash: string, message: CCMPMessage): Promise<number> {
+  // eslint-disable-next-line class-methods-use-this
+  async estimateVerificationFeePaymentTxGas(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    txHash: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    message: CCMPMessageType,
+  ): Promise<number> {
     return config.ccmp.bridges.hyperlane.verificationFeePaymentTxGas;
   }
 
   async estimateVerificationFee(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     txHash: string,
-    message: CCMPMessage,
+    message: CCMPMessageType,
   ) {
     const sourceChainId = parseInt(message.sourceChainId.toString(), 10);
     const sourceChain = this.chainIdToName[sourceChainId];
@@ -97,7 +102,7 @@ export class HyperlaneRouterService implements ICCMPRouterService {
     };
   }
 
-  async handlePreVerification(txHash: string, message: CCMPMessage) {
+  async handlePreVerification(txHash: string, message: CCMPMessageType) {
     // TODO: Implement fee payment mechanism
     log.info(
       `Waiting for transaction ${txHash} with message ${message.hash} to be confirmed by Hyperlane...`,
@@ -113,7 +118,7 @@ export class HyperlaneRouterService implements ICCMPRouterService {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars, class-methods-use-this
-  async getVerificationData(txHash: string, message: CCMPMessage): Promise<string> {
+  async getVerificationData(txHash: string, message: CCMPMessageType): Promise<string> {
     return '';
   }
 }

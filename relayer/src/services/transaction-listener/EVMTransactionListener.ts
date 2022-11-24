@@ -6,7 +6,7 @@ import { INetworkService } from '../../../../common/network';
 import { CrossChainRetryHandlerQueue } from '../../../../common/queue/CrossChainRetryHandlerQueue';
 import { RetryTransactionQueueData } from '../../../../common/queue/types';
 import {
-  CCMPMessage,
+  CCMPMessageType,
   CrossChainTransactionError,
   CrossChainTransationStatus,
   EVMRawTransactionType,
@@ -416,7 +416,7 @@ implements
   }
 
   private getCCMPTaskManagerInstance = async (
-    ccmpMessage: CCMPMessage,
+    ccmpMessage: CCMPMessageType,
   ): Promise<ICCMPTaskManager> => {
     const sourceChainId = parseInt(ccmpMessage.sourceChainId.toString(), 10);
     const state = await this.crossChainTransactionDAO.getByTransactionId(

@@ -83,5 +83,4 @@ const init = async () => {
 
 export {
   init,
-  port,
 };

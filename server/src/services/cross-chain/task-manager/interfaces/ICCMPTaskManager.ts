@@ -1,4 +1,4 @@
-import type { CCMPMessage, CrossChainTransationStatus } from '../../../../../../common/types';
+import type { CCMPMessageType, CrossChainTransationStatus } from '../../../../../../common/types';
 import type {
   CCMPVerificationData,
   ICrossChainTransactionStatusLogEntry,
@@ -6,7 +6,7 @@ import type {
 import { ICrossChainProcessStep } from '../types';
 
 export interface ICCMPTaskManager {
-  message: CCMPMessage;
+  message: CCMPMessageType;
   sourceTxHash: string;
   verificationData: CCMPVerificationData;
   setVerificationData: (data: CCMPVerificationData) => void;

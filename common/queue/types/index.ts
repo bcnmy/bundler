@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import type {
-  CCMPMessage,
+  CCMPMessageType,
   EVMRawTransactionType,
   SocketEventType,
   TransactionType,
@@ -23,6 +23,6 @@ export type RetryTransactionQueueData = {
 export type CrossChainRetryQueueData = {
   transationType: TransactionType.CROSS_CHAIN;
   transactionId: string;
-  message: CCMPMessage;
+  message: CCMPMessageType;
   sourceChainTxHash: string;
 };

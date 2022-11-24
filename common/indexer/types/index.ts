@@ -3,21 +3,21 @@ export interface IIndexerService {
     webhookUrl: string,
     auth: string,
     chainId: number,
-    contracts: IIndexerContractsRegistrationList
+    contracts: IndexerContractsRegistrationListType
   ): Promise<IndexerRegistrationResponse>;
 }
 
 export type IndexerRegistrationResponse = {};
 
-export type IIndexerEventData = {
+export type IndexerEventDataType = {
   name: string;
   topicid: string;
   blockConfirmations: number;
   processTransferLogs: boolean;
 };
 
-export type IIndexerContractsRegistrationList = {
+export type IndexerContractsRegistrationListType = {
   scAddress: string;
-  events: IIndexerEventData[];
+  events: IndexerEventDataType[];
   abi: string;
 }[];

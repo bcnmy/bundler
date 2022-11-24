@@ -3,7 +3,7 @@ import type { Contract, ContractInterface } from 'ethers';
 import type { Interface } from 'ethers/lib/utils';
 import { config } from '../../../../../config';
 import { TransactionType } from '../../../../../common/types';
-import type { CrossChainTransactionMessageType, CCMPMessage } from '../../../../../common/types';
+import type { CrossChainTransactionMessageType, CCMPMessageType } from '../../../../../common/types';
 import { logger } from '../../../../../common/log-config';
 import type { EVMNetworkService } from '../../../../../common/network';
 import type { ICCMPGatewayService } from './interfaces/ICCMPGatewayService';
@@ -41,7 +41,7 @@ export class CCMPGatewayService implements ICCMPGatewayService {
   }
 
   async estimateReceiveMessageGas(
-    message: CCMPMessage,
+    message: CCMPMessageType,
     verificationData: string | Uint8Array,
   ): Promise<{ estimate?: ethers.BigNumber; error?: string }> {
     log.info(
@@ -74,14 +74,14 @@ export class CCMPGatewayService implements ICCMPGatewayService {
   }
 
   buildReceiveMessageCalldata(
-    message: CCMPMessage,
+    message: CCMPMessageType,
     verificationData: string | Uint8Array,
   ): string {
     return this.interface.encodeFunctionData('receiveMessage', [message, verificationData, false]);
   }
 
   async createReceiveMessageTransaction(
-    message: CCMPMessage,
+    message: CCMPMessageType,
     verificationData: string | Uint8Array,
     sourceTxHash: string,
   ): Promise<CrossChainTransactionMessageType> {
@@ -111,7 +111,7 @@ export class CCMPGatewayService implements ICCMPGatewayService {
   async getMessageFromSourceTransactionReceipt(
     chainId: number,
     receipt: ethers.providers.TransactionReceipt,
-  ): Promise<CCMPMessage> {
+  ): Promise<CCMPMessageType> {
     log.info(
       `Getting CCMP Message Payload on chain ${chainId} transaction ${receipt.transactionHash}`,
     );
@@ -155,7 +155,7 @@ export class CCMPGatewayService implements ICCMPGatewayService {
   async getMessageFromDestinationTransactionReceipt(
     chainId: number,
     receipt: ethers.providers.TransactionReceipt,
-  ): Promise<CCMPMessage> {
+  ): Promise<CCMPMessageType> {
     log.info(
       `Getting CCMP Message Payload on chain ${chainId} transaction ${receipt.transactionHash}`,
     );

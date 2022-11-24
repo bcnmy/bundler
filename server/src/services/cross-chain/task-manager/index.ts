@@ -1,6 +1,6 @@
 import { logger } from '../../../../../common/log-config';
 import {
-  CCMPMessage,
+  CCMPMessageType,
   CrossChainTransactionError,
   CrossChainTransationStatus,
   TransactionType,
@@ -33,7 +33,7 @@ export class CCMPTaskManager implements ICCMPTaskManager {
     private readonly crossChainRetryHandlerQueue: IQueue<CrossChainRetryQueueData>,
     public readonly sourceTxHash: string,
     public readonly sourceChainId: number,
-    public readonly message: CCMPMessage,
+    public readonly message: CCMPMessageType,
   ) {
     this.status = {
       status: CrossChainTransationStatus.__START,

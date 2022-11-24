@@ -3,7 +3,7 @@ import { logger } from '../log-config';
 
 import type {
   IIndexerService,
-  IIndexerContractsRegistrationList,
+  IndexerContractsRegistrationListType,
   IndexerRegistrationResponse,
 } from './types';
 
@@ -16,7 +16,7 @@ export class IndexerService implements IIndexerService {
     webhookUrl: string,
     auth: string,
     chainId: number,
-    contracts: IIndexerContractsRegistrationList,
+    contracts: IndexerContractsRegistrationListType,
   ): Promise<IndexerRegistrationResponse> {
     log.info(
       `Registering webhooks for ${webhookUrl} on chain ${chainId} with ${contracts.length} contracts`,

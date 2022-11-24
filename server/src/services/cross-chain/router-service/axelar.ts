@@ -1,5 +1,5 @@
 import type { ICCMPRouterService } from './interfaces';
-import type { CCMPMessage } from '../../../../../common/types';
+import type { CCMPMessageType } from '../../../../../common/types';
 import type { EVMNetworkService } from '../../../../../common/network';
 
 export class AxelarRouterService implements ICCMPRouterService {
@@ -9,22 +9,22 @@ export class AxelarRouterService implements ICCMPRouterService {
   ) {}
 
   // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
-  estimateVerificationFeePaymentTxGas(txHash: string, message: CCMPMessage): Promise<number> {
+  estimateVerificationFeePaymentTxGas(txHash: string, message: CCMPMessageType): Promise<number> {
     throw new Error('Method not implemented.');
   }
 
   // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
-  estimateVerificationFee(txHash: string, message: CCMPMessage): Promise<any> {
+  estimateVerificationFee(txHash: string, message: CCMPMessageType): Promise<any> {
     throw new Error('Method not implemented.');
   }
 
   // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
-  handlePreVerification(txhHash: string, message: CCMPMessage): Promise<void> {
+  handlePreVerification(txhHash: string, message: CCMPMessageType): Promise<void> {
     throw new Error('Method not implemented.');
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars, class-methods-use-this
-  getVerificationData(txHash: string, message: CCMPMessage): Promise<string> {
+  getVerificationData(txHash: string, message: CCMPMessageType): Promise<string> {
     throw new Error('Method not implemented.');
   }
 }

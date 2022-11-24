@@ -9,7 +9,7 @@ import { config } from '../../../../../config';
 import { logger } from '../../../../../common/log-config';
 import { getNativeTokenSymbol } from '../../../../../common/token';
 import type { ICCMPRouterService } from './interfaces';
-import { CCMPMessage, CCMPRouterName } from '../../../../../common/types';
+import { CCMPMessageType, CCMPRouterName } from '../../../../../common/types';
 import type { EVMNetworkService } from '../../../../../common/network';
 
 const log = logger(module);
@@ -63,14 +63,19 @@ export class WormholeRouterService implements ICCMPRouterService {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars, class-methods-use-this
-  async estimateVerificationFeePaymentTxGas(txHash: string, message: CCMPMessage): Promise<number> {
+  // eslint-disable-next-line class-methods-use-this
+  async estimateVerificationFeePaymentTxGas(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    txHash: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    message: CCMPMessageType,
+  ): Promise<number> {
     // No need to do anything here, wormhole messages are free :P
     return 0;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars, class-methods-use-this
-  async handlePreVerification(txHash: string, message: CCMPMessage): Promise<void> {
+  async handlePreVerification(txHash: string, message: CCMPMessageType): Promise<void> {
     // No need to do anything here, wormhole messages are free :P
   }
 
@@ -79,7 +84,7 @@ export class WormholeRouterService implements ICCMPRouterService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     txHash: string,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    message: CCMPMessage,
+    message: CCMPMessageType,
   ) {
     return {
       amount: '0',
@@ -87,7 +92,7 @@ export class WormholeRouterService implements ICCMPRouterService {
     };
   }
 
-  async getVerificationData(txHash: string, message: CCMPMessage): Promise<Uint8Array> {
+  async getVerificationData(txHash: string, message: CCMPMessageType): Promise<Uint8Array> {
     const receipt = await this.networkService.getTransactionReceipt(txHash);
     const sequence = parseSequenceFromLogEth(receipt, this.womrholeBridgeAddress);
     log.info(`Found wormhole sequence ${sequence} for message hash ${message.hash}`);

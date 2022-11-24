@@ -1,5 +1,5 @@
 import {
-  CCMPMessage,
+  CCMPMessageType,
   CrossChainTransactionError,
   CrossChainTransationStatus,
 } from '../../../types';
@@ -23,6 +23,6 @@ export interface ICrossChainTransaction {
   updationTime: number;
   sourceTransactionHash: string;
   retryCount: number;
-  message: CCMPMessage;
+  message: CCMPMessageType;
   verificationData?: CCMPVerificationData;
 }

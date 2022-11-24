@@ -1,5 +1,5 @@
 import { BigNumber, ethers } from 'ethers';
-import { CCMPMessage, UserOperationType } from '../../types';
+import { CCMPMessageType, UserOperationType } from '../../types';
 
 // data response type that external simulation serivcereturns
 export type ExternalSimulationResponseType = {
@@ -23,7 +23,7 @@ export type AASimulationDataType = {
 };
 
 export type CCMPSimulationDataType = {
-  ccmpMessage: CCMPMessage,
+  ccmpMessage: CCMPMessageType,
 };
 
 export type CCMPSimulationResponseType = {

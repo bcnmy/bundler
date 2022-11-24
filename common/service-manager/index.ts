@@ -583,7 +583,8 @@ let statusService: IStatusService;
     await Promise.all(ccmpServiceInitPromises);
     log.info('CCMP Services initialized');
   } catch (e) {
-    log.error(`Error initializing CCMP Services: ${e}`);
+    log.error(`Error initializing CCMP Services: ${JSON.stringify(e)}`);
+    throw e;
   }
 
   log.info('<=== Config setup completed ===>');

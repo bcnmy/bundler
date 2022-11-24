@@ -3,8 +3,8 @@ import { config } from '../../../../../config';
 import type { ILiquidityPoolService } from './interfaces/ILiquidityPoolService';
 import type {
   CCMPRouterName,
-  CCMPMessagePayload,
-  CCMPMessage,
+  CCMPMessagePayloadType,
+  CCMPMessageType,
 } from '../../../../../common/types';
 import { logger } from '../../../../../common/log-config';
 import { ILiquidityTokenManagerService } from './interfaces/ILiquidityTokenManagerService';
@@ -45,8 +45,8 @@ export class LiquidityPoolService implements ILiquidityPoolService {
     receiverAddress: string,
     amountInWei: string,
     adaptorName: CCMPRouterName,
-    payloads: CCMPMessagePayload[],
-  ): Promise<CCMPMessage> {
+    payloads: CCMPMessagePayloadType[],
+  ): Promise<CCMPMessageType> {
     // Get Contract Addresses Required
     const fromChainLiquidityPoolAddress = config.ccmp.contracts[fromChainId].LiquidityPool;
     if (!fromChainLiquidityPoolAddress) {
@@ -113,7 +113,7 @@ export class LiquidityPoolService implements ILiquidityPoolService {
 
     const updatedPayloads = [{ to: toChainLiquidityPoolAddress, _calldata: calldata }, ...payloads];
 
-    const ccmpMessage: CCMPMessage = {
+    const ccmpMessage: CCMPMessageType = {
       hash: 'NOT_GENERATED',
       sender: fromChainLiquidityPoolAddress,
       sourceGateway: fromChainGateway,

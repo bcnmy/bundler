@@ -1,4 +1,4 @@
-import { CCMPMessagePayload, CCMPRouterName, CCMPMessage } from '../../../../../../common/types';
+import { CCMPMessagePayloadType, CCMPRouterName, CCMPMessageType } from '../../../../../../common/types';
 
 export interface ILiquidityPoolService {
   generateDepositAndCallMessage(
@@ -8,6 +8,6 @@ export interface ILiquidityPoolService {
     receiverAddress: string,
     amountInWei: string,
     adaptorName: CCMPRouterName,
-    payload: CCMPMessagePayload[]
-  ): Promise<CCMPMessage>;
+    payload: CCMPMessagePayloadType[]
+  ): Promise<CCMPMessageType>;
 }

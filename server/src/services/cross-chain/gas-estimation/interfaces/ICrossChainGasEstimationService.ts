@@ -1,9 +1,9 @@
 import { BigNumber } from 'ethers';
-import type { CCMPMessage } from '../../../../../../common/types';
+import type { CCMPMessageType } from '../../../../../../common/types';
 
 export interface ICrossChainGasEstimationService {
   estimateCrossChainFee(
     txHash: string,
-    message: CCMPMessage
+    message: CCMPMessageType
   ): Promise<{ amount: BigNumber; tokenSymbol: string }>;
 }

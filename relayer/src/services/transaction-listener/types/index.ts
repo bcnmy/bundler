@@ -6,7 +6,7 @@ import { INetworkService } from '../../../../../common/network';
 import { CrossChainRetryHandlerQueue } from '../../../../../common/queue/CrossChainRetryHandlerQueue';
 import { RetryTransactionQueueData } from '../../../../../common/queue/types';
 import {
-  CCMPMessage, EVMRawTransactionType, TransactionQueueMessageType, TransactionType,
+  CCMPMessageType, EVMRawTransactionType, TransactionQueueMessageType, TransactionType,
   TransactionStatus,
 } from '../../../../../common/types';
 import { IEVMAccount } from '../../account';
@@ -35,7 +35,7 @@ export type NotifyTransactionListenerParamsType = {
   walletAddress: string,
   metaData?: any,
   relayerManagerName: string,
-  ccmpMessage?: CCMPMessage
+  ccmpMessage?: CCMPMessageType
   error?: string,
 };
 

@@ -1,6 +1,6 @@
 import { config } from '../../../../../config';
 import {
-  CCMPMessage,
+  CCMPMessageType,
   TransactionType,
   CCMPRouterName,
   CrossChainTransationStatus,
@@ -272,7 +272,7 @@ export class CrossChainTransactionHandlerService implements ICrossChainTransacti
     };
   };
 
-  async processTransaction(message: CCMPMessage, sourceChainTxHash: string) {
+  async processTransaction(message: CCMPMessageType, sourceChainTxHash: string) {
     const lock = this.cacheService.getRedLock();
     if (!lock) {
       throw new Error('Redlock not initialized');

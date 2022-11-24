@@ -129,7 +129,7 @@ export type CrossChainTransactionMessageType = {
   chainId: number;
   value: string;
   transactionId: string;
-  message: CCMPMessage;
+  message: CCMPMessageType;
   sourceTxHash: string;
 };
 
@@ -175,12 +175,12 @@ export type GasFeePaymentArgsStruct = {
   relayer: string;
 };
 
-export type CCMPMessagePayload = {
+export type CCMPMessagePayloadType = {
   to: string;
   _calldata: string;
 };
 
-export type CCMPMessage = {
+export type CCMPMessageType = {
   sender: string;
   sourceGateway: string;
   sourceAdaptor: string;
@@ -190,7 +190,7 @@ export type CCMPMessage = {
   nonce: BigNumberish;
   routerAdaptor: CCMPRouterName;
   gasFeePaymentArgs: GasFeePaymentArgsStruct;
-  payload: CCMPMessagePayload[];
+  payload: CCMPMessagePayloadType[];
   hash: string;
 };
 

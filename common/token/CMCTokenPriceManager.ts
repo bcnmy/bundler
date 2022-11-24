@@ -97,12 +97,13 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
   }
 
   async getTokenPrice(symbol: string): Promise<number> {
-    let data = await this.cacheService.get('NETWORK_PRICE_DATA');
+    const key = getTokenPriceKey();
+    let data = await this.cacheService.get(key);
     if (!data) {
       await this.setup();
-      data = await this.cacheService.get('NETWORK_PRICE_DATA');
+      data = await this.cacheService.get(key);
     }
-    const result = JSON.parse(await this.cacheService.get('NETWORK_PRICE_DATA'));
+    const result = JSON.parse(await this.cacheService.get(key));
     return result[symbol];
   }
 

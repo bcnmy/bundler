@@ -1,6 +1,6 @@
 import type {
   GasFeePaymentArgsStruct,
-  CCMPMessage,
+  CCMPMessageType,
 } from '../../../../../common/types';
 
 export const keysToLowerCase = (obj: any): any => Object.keys(obj).reduce((acc: any, key) => {
@@ -9,7 +9,7 @@ export const keysToLowerCase = (obj: any): any => Object.keys(obj).reduce((acc: 
   return acc;
 }, {});
 
-export const parseIndexerEvent = (event: Record<string, any>): CCMPMessage => ({
+export const parseIndexerEvent = (event: Record<string, any>): CCMPMessageType => ({
   ...event,
   gasFeePaymentArgs: keysToLowerCase(event.gasFeePaymentArgs) as GasFeePaymentArgsStruct,
   payload: event.payload
@@ -18,4 +18,4 @@ export const parseIndexerEvent = (event: Record<string, any>): CCMPMessage => ({
       to: payload.to,
       _calldata: payload.calldata,
     })),
-} as CCMPMessage);
+} as CCMPMessageType);

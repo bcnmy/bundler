@@ -2,7 +2,7 @@ import { ethers } from 'ethers';
 import type { BigNumber } from 'ethers';
 import { getNativeTokenSymbol } from '../../../../../common/token';
 import type { IGasPrice } from '../../../../../common/gas-price';
-import type { CCMPMessage, CCMPRouterName } from '../../../../../common/types';
+import type { CCMPMessageType, CCMPRouterName } from '../../../../../common/types';
 import type { ICCMPRouterService } from '../router-service/interfaces';
 import type { ICrossChainGasEstimationService } from './interfaces/ICrossChainGasEstimationService';
 import type { ITokenPriceConversionService } from '../../../../../common/token/interface/ITokenPriceConversionService';
@@ -39,7 +39,7 @@ export class CrossChainGasEstimationService implements ICrossChainGasEstimationS
 
   private async getVerificationFee(
     txHash: string,
-    message: CCMPMessage,
+    message: CCMPMessageType,
     routerService: ICCMPRouterService,
     feeTokenSymbol: string,
   ): Promise<BigNumber> {
@@ -106,7 +106,7 @@ export class CrossChainGasEstimationService implements ICrossChainGasEstimationS
 
   private async getVerificationTxGasFee(
     txHash: string,
-    message: CCMPMessage,
+    message: CCMPMessageType,
     routerService: ICCMPRouterService,
     feeTokenSymbol: string,
   ) {
@@ -124,7 +124,7 @@ export class CrossChainGasEstimationService implements ICrossChainGasEstimationS
     return verificationTxGasFeeInFeeToken;
   }
 
-  private async getMessageVerificationFee(message: CCMPMessage, feeTokenSymbol: string) {
+  private async getMessageVerificationFee(message: CCMPMessageType, feeTokenSymbol: string) {
     const simulationResult = await this.ccmpSimulationService.simulate({ ccmpMessage: message });
     log.info(`Message Gas Fee: ${JSON.stringify(simulationResult)}`);
     if (!simulationResult.isSimulationSuccessful) {
@@ -139,7 +139,7 @@ export class CrossChainGasEstimationService implements ICrossChainGasEstimationS
     return messageGasFeeInFeeToken;
   }
 
-  public async estimateCrossChainFee(txHash: string, message: CCMPMessage) {
+  public async estimateCrossChainFee(txHash: string, message: CCMPMessageType) {
     log.info(`Estimating cross chain fee for txHash: ${txHash}, message hash: ${message.hash}`);
     try {
       if (message.destinationChainId.toString() !== this.chainId.toString()) {

@@ -1,5 +1,5 @@
-import type { CCMPMessage } from '../../../../../../common/types';
+import type { CCMPMessageType } from '../../../../../../common/types';
 
 export interface ICrossChainTransactionHandlerService {
-  processTransaction(message: CCMPMessage, sourceChainTxHash: string): Promise<void>;
+  processTransaction(message: CCMPMessageType, sourceChainTxHash: string): Promise<void>;
 }

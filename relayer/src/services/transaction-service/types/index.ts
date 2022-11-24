@@ -5,7 +5,7 @@ import { IGasPrice } from '../../../../../common/gas-price';
 import { GasPriceType } from '../../../../../common/gas-price/types';
 import { INetworkService } from '../../../../../common/network';
 import { RetryTransactionQueueData } from '../../../../../common/queue/types';
-import { CCMPMessage, EVMRawTransactionType } from '../../../../../common/types';
+import { CCMPMessageType, EVMRawTransactionType } from '../../../../../common/types';
 import { INotificationManager } from '../../../../../common/notification/interface';
 import { IEVMAccount } from '../../account';
 import { INonceManager } from '../../nonce-manager';
@@ -40,7 +40,7 @@ export type TransactionDataType = {
   speed?: GasPriceType;
   walletAddress: string,
   transactionId: string;
-  ccmpMessage?: CCMPMessage;
+  ccmpMessage?: CCMPMessageType;
   metaData?: {
     dappAPIKey: string
   }
