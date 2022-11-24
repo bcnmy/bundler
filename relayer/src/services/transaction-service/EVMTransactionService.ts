@@ -219,8 +219,15 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
   ): Promise<SuccessTransactionResponseType | ErrorTransactionResponseType> {
     const relayerAddress = account.getPublicKey();
     const {
-      to, value, data, gasLimit,
-      speed, transactionId, walletAddress, metaData,
+      to,
+      value,
+      data,
+      gasLimit,
+      speed,
+      transactionId,
+      walletAddress,
+      metaData,
+      ccmpMessage,
     } = transactionData;
 
     const retryTransactionCount = parseInt(await this.cacheService.get(getRetryTransactionCountKey(transactionId, this.chainId)), 10);
@@ -303,6 +310,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         walletAddress,
         metaData,
         relayerManagerName,
+        ccmpMessage,
       });
 
       return {

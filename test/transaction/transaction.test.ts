@@ -5,7 +5,10 @@ import { GasPriceManager } from '../../common/gas-price';
 import { GasPriceType } from '../../common/gas-price/types';
 import { relayerManagerTransactionTypeNameMap } from '../../common/maps';
 import { EVMNetworkService } from '../../common/network';
+import { NotificationManager } from '../../common/notification';
+import { SlackNotificationService } from '../../common/notification/slack/SlackNotificationService';
 import { TransactionHandlerQueue, RetryTransactionHandlerQueue } from '../../common/queue';
+import { CrossChainTransactionDAO } from '../../common/service-manager';
 import { TransactionType } from '../../common/types';
 import { generateTransactionId } from '../../common/utils';
 import { config } from '../../config';
@@ -57,16 +60,23 @@ describe('Transaction Service: Sending Transaction on chainId: 5', () => {
     cacheService,
   });
 
+  const crossChainTransactionDAO = new CrossChainTransactionDAO();
+
   const transactionListener = new EVMTransactionListener({
     networkService,
     transactionQueue,
     retryTransactionQueue,
     transactionDao,
     cacheService,
+    crossChainTransactionDAO,
+    crossChainRetryHandlerQueueMap: {},
     options: {
       chainId,
     },
   });
+
+  const slackNotificationService = new SlackNotificationService('NULL', 'NULL');
+  const notificationManager = new NotificationManager(slackNotificationService);
 
   const transactionService = new EVMTransactionService({
     networkService,
@@ -75,6 +85,7 @@ describe('Transaction Service: Sending Transaction on chainId: 5', () => {
     gasPriceService,
     transactionDao,
     cacheService,
+    notificationManager,
     options: {
       chainId,
     },
@@ -208,16 +219,22 @@ describe('Retry Transaction Service: Transaction should be bumped up and confimr
     cacheService,
   });
 
+  const crossChainTransactionDAO = new CrossChainTransactionDAO();
   const transactionListener = new EVMTransactionListener({
     networkService,
     transactionQueue,
     retryTransactionQueue,
     transactionDao,
     cacheService,
+    crossChainTransactionDAO,
+    crossChainRetryHandlerQueueMap: {},
     options: {
       chainId,
     },
   });
+
+  const slackNotificationService = new SlackNotificationService('NULL', 'NULL');
+  const notificationManager = new NotificationManager(slackNotificationService);
 
   const transactionService = new EVMTransactionService({
     networkService,
@@ -226,6 +243,7 @@ describe('Retry Transaction Service: Transaction should be bumped up and confimr
     gasPriceService,
     transactionDao,
     cacheService,
+    notificationManager,
     options: {
       chainId,
     },

@@ -1,8 +1,14 @@
 import mongoose, { Mongoose } from 'mongoose';
 import { config } from '../../../config';
+import { TransactionType } from '../../types';
 import { logger } from '../../log-config';
 import { IDBService } from '../interface/IDBService';
-import { BlockchainTransactionsMap, BlockchainTransactionsMapType } from './models';
+import {
+  BlockchainTransactionsMap,
+  BlockchainTransactionsMapType,
+  CrossChainTransactionsMap,
+  CrossChainTransactionsMapType,
+} from './models';
 
 const log = logger(module);
 
@@ -57,8 +63,25 @@ export class Mongo implements IDBService {
       throw new Error('Not connected to db');
     }
     const supportedNetworks: number[] = config.supportedNetworks || [];
-    if (!supportedNetworks.includes(networkId)) throw new Error(`Network Id ${networkId} is not supported`);
+    if (!supportedNetworks.includes(networkId)) {
+      throw new Error(`Network Id ${networkId} is not supported`);
+    }
     return BlockchainTransactionsMap[networkId];
+  }
+
+  getCrossChainTransaction(networkId: number): CrossChainTransactionsMapType[number] {
+    if (!this.client) {
+      throw new Error('Not connected to db');
+    }
+    const supportedNetworks: number[] = config.supportedNetworks || [];
+    const supportedTransactionType = config.supportedTransactionType[networkId] || [];
+    if (
+      !supportedNetworks.includes(networkId)
+      || !supportedTransactionType.includes(TransactionType.CROSS_CHAIN)
+    ) {
+      throw new Error(`Network Id ${networkId} is not supported`);
+    }
+    return CrossChainTransactionsMap[networkId];
   }
 
   isConnected(): boolean {

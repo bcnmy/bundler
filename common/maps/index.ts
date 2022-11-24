@@ -4,6 +4,6 @@ import { TransactionType } from '../types';
 export const relayerManagerTransactionTypeNameMap = {
   [TransactionType.AA]: 'RM1',
   [TransactionType.SCW]: 'RM1',
-  [TransactionType.CROSS_CHAIN]: 'RM2',
+  [TransactionType.CROSS_CHAIN]: 'RM1',
   [TransactionType.FUNDING]: 'RM0',
 };

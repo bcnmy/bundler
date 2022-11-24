@@ -1,11 +1,13 @@
 import { BigNumber, ethers } from 'ethers';
 import { ICacheService } from '../../../../../common/cache';
-import { ITransactionDAO } from '../../../../../common/db';
+import { ICrossChainTransactionDAO, ITransactionDAO } from '../../../../../common/db';
 import { IQueue } from '../../../../../common/interface';
 import { INetworkService } from '../../../../../common/network';
+import { CrossChainRetryHandlerQueue } from '../../../../../common/queue/CrossChainRetryHandlerQueue';
 import { RetryTransactionQueueData } from '../../../../../common/queue/types';
 import {
-  EVMRawTransactionType, TransactionQueueMessageType, TransactionStatus, TransactionType,
+  CCMPMessageType, EVMRawTransactionType, TransactionQueueMessageType, TransactionType,
+  TransactionStatus,
 } from '../../../../../common/types';
 import { IEVMAccount } from '../../account';
 
@@ -15,6 +17,8 @@ export type EVMTransactionListenerParamsType = {
   retryTransactionQueue: IQueue<RetryTransactionQueueData>,
   transactionDao: ITransactionDAO,
   cacheService: ICacheService,
+  crossChainTransactionDAO: ICrossChainTransactionDAO;
+  crossChainRetryHandlerQueueMap: Record<number, CrossChainRetryHandlerQueue>;
   options: {
     chainId: number
   }
@@ -31,6 +35,7 @@ export type NotifyTransactionListenerParamsType = {
   walletAddress: string,
   metaData?: any,
   relayerManagerName: string,
+  ccmpMessage?: CCMPMessageType
   error?: string,
 };
 

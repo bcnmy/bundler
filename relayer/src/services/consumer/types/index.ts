@@ -1,7 +1,10 @@
+import type { ICrossChainTransactionDAO } from '../../../../../common/db';
 import { ICacheService } from '../../../../../common/cache';
 import { IQueue } from '../../../../../common/queue';
+import { CrossChainRetryHandlerQueue } from '../../../../../common/queue/CrossChainRetryHandlerQueue';
 import {
   AATransactionMessageType,
+  CrossChainTransactionMessageType,
   EntryPointMapType,
   EVMRawTransactionType,
   SCWTransactionMessageType,
@@ -26,6 +29,18 @@ export type SCWConsumerParamsType = {
   queue: IQueue<SCWTransactionMessageType>,
   relayerManager: IRelayerManager<IEVMAccount, EVMRawTransactionType>,
   transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>,
+  cacheService: ICacheService,
+  options: {
+    chainId: number,
+  },
+};
+
+export type CCMPConsumerParamsType = {
+  queue: IQueue<CrossChainTransactionMessageType>,
+  relayerManager: IRelayerManager<IEVMAccount, EVMRawTransactionType>,
+  transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>,
+  crossChainTransactionDAO: ICrossChainTransactionDAO;
+  crossChainRetryHandlerQueue: CrossChainRetryHandlerQueue;
   cacheService: ICacheService,
   options: {
     chainId: number,

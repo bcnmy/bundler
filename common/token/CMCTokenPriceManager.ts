@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import { schedule } from 'node-cron';
 import { ICacheService } from '../cache';
 import { logger } from '../log-config';
@@ -19,11 +19,14 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
 
   private symbolMapByChainId: SymbolMapByChainIdType;
 
+  private axios: AxiosInstance;
+
   cacheService: ICacheService;
 
   constructor(
     cacheService: ICacheService,
     options: {
+      baseURL: string,
       apiKey: string,
       networkSymbolCategories: NetworkSymbolCategoriesType,
       updateFrequencyInSeconds: number,
@@ -35,6 +38,17 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
     this.updateFrequencyInSeconds = options.updateFrequencyInSeconds;
     this.symbolMapByChainId = options.symbolMapByChainId;
     this.cacheService = cacheService;
+
+    if (!options.baseURL) {
+      throw new Error('CoinMarketCap baseURL is not defined');
+    }
+
+    this.axios = axios.create({
+      baseURL: options.baseURL,
+      headers: {
+        'X-CMC_PRO_API_KEY': this.apiKey,
+      },
+    });
   }
 
   schedule() {
@@ -46,13 +60,9 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
   private async setup() {
     try {
       const networkSymbolsCategoriesKeys = Object.keys(this.networkSymbolCategories);
-      log.info(`Fetching token prices for ${networkSymbolsCategoriesKeys.join(', ')}`);
-      const response = await axios.get(`https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=${networkSymbolsCategoriesKeys.toString()}`, {
-        headers: {
-          'X-CMC_PRO_API_KEY': this.apiKey,
-        },
-      });
-      if (response && response.data && response.data.data) {
+      const response = await this.axios.get(`v1/cryptocurrency/quotes/latest?symbol=${networkSymbolsCategoriesKeys.toString()}`);
+      if (response?.data?.data) {
+        // Set Network Wise Price Data
         const networkKeys = Object.keys(response.data.data);
         if (networkKeys) {
           const coinsRateObj: any = {};
@@ -77,13 +87,24 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
     }
   }
 
+  async getTokenPriceByTokenSymbol(tokenSymbol: string): Promise<number> {
+    const symbol = (this.networkSymbolCategories[tokenSymbol] || [])[0];
+    if (!symbol) {
+      throw new Error(`Can't get coinmarketcap symbol for token symbol ${tokenSymbol} from config map`);
+    }
+
+    return this.getTokenPrice(symbol.toString());
+  }
+
   async getTokenPrice(symbol: string): Promise<number> {
-    let data = JSON.parse(await this.cacheService.get(getTokenPriceKey()));
+    const key = getTokenPriceKey();
+    let data = await this.cacheService.get(key);
     if (!data) {
       await this.setup();
-      data = JSON.parse(await this.cacheService.get(getTokenPriceKey()));
+      data = await this.cacheService.get(key);
     }
-    return data[symbol];
+    const result = JSON.parse(await this.cacheService.get(key));
+    return result[symbol];
   }
 
   /**
