@@ -26,6 +26,7 @@ export interface IBlockchainTransaction {
   rawTransaction: RawTransactionType;
   chainId: number;
   gasPrice: string;
+  transactionFee: string;
   receipt: object;
   relayerAddress: string;
   walletAddress: string;

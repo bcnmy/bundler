@@ -57,6 +57,7 @@ export type TransactionDataToBeUpdatedInDatabaseType = {
   resubmitted?: boolean;
   relayerAddress?: string;
   updationTime?: number;
+  transactionFee?: BigNumber;
 };
 
 export type NewTransactionDataToBeSavedInDatabaseType = {

@@ -112,8 +112,10 @@ implements
 
     if (transactionExecutionResponse) {
       log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
+      const transactionFee = (transactionReceipt.gasUsed.mul(transactionReceipt.effectiveGasPrice));
       await this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
         receipt: transactionReceipt,
+        transactionFee,
         status: TransactionStatus.SUCCESS,
         updationTime: Date.now(),
       }, transactionId, transactionExecutionResponse?.hash);
@@ -176,8 +178,10 @@ implements
 
     if (transactionExecutionResponse) {
       log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
+      const transactionFee = (transactionReceipt.gasUsed.mul(transactionReceipt.effectiveGasPrice));
       await this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
         receipt: transactionReceipt,
+        transactionFee,
         status: TransactionStatus.FAILED,
         updationTime: Date.now(),
       }, transactionId, transactionExecutionResponse?.hash);
