@@ -87,6 +87,7 @@ export class CrosschainTransactionStatusService implements ICrossChainTransactio
           : { sourceTransactionStatus: sourceStatus.status as CrossChainTransationStatus }),
         context: sourceStatus.context,
         destinationTransactionStatus: destinationchainData?.status as TransactionStatus,
+        desttinationChainTxHash: destinationchainData?.transactionHash,
       };
     } catch (error) {
       log.error(`Error getting status for message hash ${messageHash}: ${JSON.stringify(error)}`);
