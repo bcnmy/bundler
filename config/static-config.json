@@ -2408,8 +2408,8 @@
       }
     },
     "performIndexerRegistrationOnStartup": {
-      "80001": true,
-      "43113": true
+      "80001": false,
+      "43113": false
     }
   },
   "socketService": {

@@ -60,7 +60,9 @@ export class CrosschainTransactionStatusService implements ICrossChainTransactio
     try {
       // Get Source Chain Details
       const sourceCrossChainChainDao = this.dbService.getCrossChainTransaction(chainId);
-      const sourceChainData = await sourceCrossChainChainDao.findOne({ messageHash });
+      const sourceChainData = await sourceCrossChainChainDao.findOne(
+        { 'message.hash': messageHash },
+      );
       if (!sourceChainData) {
         log.error(`Message ${messageHash} not found on chain ${chainId}`);
         return {
@@ -87,7 +89,7 @@ export class CrosschainTransactionStatusService implements ICrossChainTransactio
           : { sourceTransactionStatus: sourceStatus.status as CrossChainTransationStatus }),
         context: sourceStatus.context,
         destinationTransactionStatus: destinationchainData?.status as TransactionStatus,
-        desttinationChainTxHash: destinationchainData?.transactionHash,
+        destinationChainTxHash: destinationchainData?.transactionHash,
       };
     } catch (error) {
       log.error(`Error getting status for message hash ${messageHash}: ${JSON.stringify(error)}`);

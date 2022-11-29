@@ -9,7 +9,7 @@ export type CrossChainTransactionStatusResult = {
   responseCode: StatusCodes;
   sourceTransactionStatus?: CrossChainTransationStatus;
   destinationTransactionStatus?: TransactionStatus;
-  desttinationChainTxHash?: string;
+  destinationChainTxHash?: string;
   error?: CrossChainTransactionError;
   context?: any;
 };
