@@ -8,7 +8,8 @@ import { parseError } from '../../utils';
 
 const log = logger(module);
 
-export class TenderlySimulationService implements IExternalSimulation {
+export class TenderlySimulationService
+implements IExternalSimulation<SCWSimulationDataType, ExternalSimulationResponseType> {
   gasPriceService: IGasPrice;
 
   private tenderlyUser: string;
@@ -17,20 +18,21 @@ export class TenderlySimulationService implements IExternalSimulation {
 
   private tenderlyAccessKey: string;
 
-  constructor(gasPriceService: IGasPrice, options: {
-    tenderlyUser: string,
-    tenderlyProject: string,
-    tenderlyAccessKey: string,
-  }) {
+  constructor(
+    gasPriceService: IGasPrice,
+    options: {
+      tenderlyUser: string;
+      tenderlyProject: string;
+      tenderlyAccessKey: string;
+    },
+  ) {
     this.gasPriceService = gasPriceService;
     this.tenderlyUser = options.tenderlyUser;
     this.tenderlyProject = options.tenderlyProject;
     this.tenderlyAccessKey = options.tenderlyAccessKey;
   }
 
-  async simulate(
-    simualtionData: SCWSimulationDataType,
-  ): Promise<ExternalSimulationResponseType> {
+  async simulate(simualtionData: SCWSimulationDataType): Promise<ExternalSimulationResponseType> {
     const {
       chainId, data, to, refundInfo,
     } = simualtionData;
@@ -74,7 +76,7 @@ export class TenderlySimulationService implements IExternalSimulation {
 
     const transactionLogs = response.data.transaction.transaction_info.call_trace.logs;
     const gasUsedInSimulation = response.data.transaction.transaction_info.call_trace.gas_used
-     + response.data.transaction.transaction_info.call_trace.intrinsic_gas;
+      + response.data.transaction.transaction_info.call_trace.intrinsic_gas;
     const { isRelayerPaidFully, successOrRevertMsg } = await this.checkIfRelayerIsPaidFully(
       transactionLogs,
       gasUsedInSimulation,
@@ -112,14 +114,16 @@ export class TenderlySimulationService implements IExternalSimulation {
   private async checkIfRelayerIsPaidFully(
     transactionLogs: any,
     gasUsedInSimulation: number,
-    refundInfo: { tokenGasPrice: string, gasToken: string },
+    refundInfo: { tokenGasPrice: string; gasToken: string },
     to: string,
     data: string,
   ) {
     try {
       log.info(`Refund info received: ${JSON.stringify(refundInfo)}`);
       log.info(`Checking if relayer is being paid fully for SCW: ${to} with data: ${data}`);
-      const walletHandlePaymentLog = transactionLogs.find((transactionLog: any) => transactionLog.name === 'WalletHandlePayment');
+      const walletHandlePaymentLog = transactionLogs.find(
+        (transactionLog: any) => transactionLog.name === 'WalletHandlePayment',
+      );
       if (!walletHandlePaymentLog) {
         return {
           isRelayerPaidFully: true,
@@ -127,7 +131,9 @@ export class TenderlySimulationService implements IExternalSimulation {
         };
       }
 
-      const paymentEventData = walletHandlePaymentLog.inputs.find((input: any) => input.soltype.name === 'payment');
+      const paymentEventData = walletHandlePaymentLog.inputs.find(
+        (input: any) => input.soltype.name === 'payment',
+      );
       if (!paymentEventData) {
         return {
           isRelayerPaidFully: true,
@@ -163,13 +169,19 @@ export class TenderlySimulationService implements IExternalSimulation {
         refundCalculatedInSimualtion = gasUsedInSimulation * erc20TokenGasPrice;
       }
 
-      log.info(`Refund being sent to relayer in the transaction: ${refundToRelayer} for SCW: ${to} with data: ${data}`);
-      log.info(`Asset consumption calculated from simulation: ${refundCalculatedInSimualtion} for SCW: ${to} with data: ${data}`);
+      log.info(
+        `Refund being sent to relayer in the transaction: ${refundToRelayer} for SCW: ${to} with data: ${data}`,
+      );
+      log.info(
+        `Asset consumption calculated from simulation: ${refundCalculatedInSimualtion} for SCW: ${to} with data: ${data}`,
+      );
 
-      if ((Number(refundToRelayer) < Number(refundCalculatedInSimualtion))) {
+      if (Number(refundToRelayer) < Number(refundCalculatedInSimualtion)) {
         return {
           isRelayerPaidFully: true,
-          successOrRevertMsg: `Refund to relayer: ${refundToRelayer} is less than what will be consumed in the transaction: ${gasUsedInSimulation * nativeTokenGasPrice}`,
+          successOrRevertMsg: `Refund to relayer: ${refundToRelayer} is less than what will be consumed in the transaction: ${
+            gasUsedInSimulation * nativeTokenGasPrice
+          }`,
         };
       }
       return {

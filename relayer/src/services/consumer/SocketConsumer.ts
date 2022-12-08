@@ -46,7 +46,7 @@ export class SocketConsumer implements ISocketConsumer {
       const transactionDataReceivedFromQueue: TransactionQueueMessageType = JSON.parse(
         msg.content.toString(),
       );
-      log.info(`Message received from transction queue in socket service on chain Id ${this.chainId}: ${JSON.stringify(transactionDataReceivedFromQueue)}`);
+      log.info(`Message received from transaction queue in socket service on chain Id ${this.chainId}: ${JSON.stringify(transactionDataReceivedFromQueue)}`);
       this.queue.ack(msg);
       try {
         if (transactionDataReceivedFromQueue.event === SocketEventType.onTransactionMined

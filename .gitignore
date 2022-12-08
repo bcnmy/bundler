@@ -5,4 +5,11 @@ centrifugo_config.json
 relayer/dist
 server/dist
 coverage
+
+dist/
+
+*.dump
 config/config.json
+centrifugo.config.json
+.DS_Store
+config.json.enc

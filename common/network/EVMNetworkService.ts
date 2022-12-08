@@ -278,11 +278,11 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
 
   async getDecimal(tokenAddress: string): Promise<number> {
     const erc20Contract = this.getContract(JSON.stringify(ERC20_ABI), tokenAddress);
-    const decimal = await erc20Contract.decimal;
+    const decimal = await erc20Contract.decimals();
     return decimal;
   }
 
-  async sendRpcCall(method: string, params: Array<object>): Promise<any> {
+  async sendRpcCall(method: string, params: Array<object | string | number>): Promise<any> {
     const data = {
       method,
       params,

@@ -2,8 +2,8 @@ import crypto from 'crypto-js';
 import fs, { existsSync } from 'fs';
 import _, { isNumber } from 'lodash';
 import path from 'path';
+import { CCMPRouterName, TransactionType } from '../common/types';
 import { logger } from '../common/log-config';
-
 import { ConfigType, IConfig } from './interface/IConfig';
 
 const log = logger(module);
@@ -159,7 +159,7 @@ export class Config implements IConfig {
         throw new Error(`Decimals required for chain id ${chainId}`);
       }
       if (!this.config.feeOption.feeTokenTransferGas[chainId]) {
-        throw new Error(`Decimals required for chain id ${chainId}`);
+        throw new Error(`Fee Token Transfer Gas required for chain id ${chainId}`);
       }
       if (!this.config.feeOption.refundReceiver[chainId]) {
         throw new Error(`Refund receiver required for chain id ${chainId}`);
@@ -177,7 +177,105 @@ export class Config implements IConfig {
       if (!this.config.tokenPrice.symbolMapByChainId[chainId]) {
         throw new Error(`Symbol map required for chain id ${chainId}`);
       }
+
+      // Validate chain specific CCMP config
+      if (this.config.supportedTransactionType[chainId].includes(TransactionType.CROSS_CHAIN)) {
+        const ccmpMessageRoutedConfig = this.config.ccmp.events.CCMPMessageRouted[chainId];
+        if (!ccmpMessageRoutedConfig?.name || !ccmpMessageRoutedConfig?.topicId) {
+          throw new Error(`CCMPMessgeRouted configuration required for chain id ${chainId}`);
+        }
+
+        if (!this.config.ccmp.indexerWebhookBlockConfirmation[chainId]) {
+          throw new Error(`Indexer webhook block confirmation required for chain id ${chainId}`);
+        }
+
+        const contracts = this.config.ccmp.contracts[chainId];
+        if (!contracts?.CCMPGateway) {
+          throw new Error(`CCMPGateway contract required for chain id ${chainId}`);
+        }
+
+        if (!(this.config.ccmp.supportedRouters[chainId]?.length > 0)) {
+          throw new Error(`Supported ccmp routers required for chain id ${chainId}`);
+        }
+
+        const supportedRouters = this.config.ccmp.supportedRouters[chainId];
+
+        if (typeof this.config.ccmp.performIndexerRegistrationOnStartup[chainId] !== 'boolean') {
+          throw new Error(`Perform indexer registration on startup flag required for chain id ${chainId}`);
+        }
+
+        for (const router of supportedRouters) {
+          if (
+            router === CCMPRouterName.WORMHOLE
+            && !this.config.ccmp.retryInterval[chainId][router]
+          ) {
+            throw new Error(
+              `CCMP Retry interval required for chain id ${chainId}, router ${router}`,
+            );
+          }
+
+          if (!this.config.ccmp.gasEstimation[router]) {
+            throw new Error(`Gas estimation data required for router ${router}`);
+          }
+        }
+      }
     }
+
+    // Validate Chain Agnostic CCMP Config - Wormhole
+    if (!this.config.ccmp.bridges.wormhole?.hostUrl) {
+      throw new Error('Wormhole bridge host url required');
+    }
+    if (!this.config.ccmp.bridges.wormhole?.chainId) {
+      throw new Error('Wormhole bridge chain id mapping required');
+    }
+    if (!this.config.ccmp.bridges.wormhole?.bridgeAddress) {
+      throw new Error('Wormhole bridge addresses required');
+    }
+    if (!this.config.ccmp.bridges.wormhole?.pollingIntervalMs) {
+      throw new Error('Wormhole polling interval required');
+    }
+    if (!this.config.ccmp.bridges.wormhole?.maxPollingCount) {
+      throw new Error('Wormhole max polling count required');
+    }
+
+    // Validate Chain Agnostic CCMP Config - Hyperlane
+    if (!this.config.ccmp.bridges.hyperlane?.chainName) {
+      throw new Error('Hyperlane bridge chain name mapping required');
+    }
+    if (!this.config.ccmp.bridges.hyperlane?.environment) {
+      throw new Error('Hyperlane bridge environment required');
+    }
+    if (!this.config.ccmp.bridges.hyperlane?.verificationFeePaymentTxGas) {
+      throw new Error('Hyperlane verification fee payment tx gas required');
+    }
+    if (!this.config.ccmp.bridges.hyperlane?.verificationGas) {
+      throw new Error('Hyperlane verification gas price required');
+    }
+
+    // Validata CCMP ABI
+    if (!this.config.ccmp.abi.CCMPGateway) {
+      throw new Error('CCMPGateway ABI required');
+    }
+    if (!this.config.ccmp.abi.LiquidityPool) {
+      throw new Error('LiquidityPool ABI required');
+    }
+
+    // Validate CCMP Token Symbols
+    if (!this.config.ccmp.tokenSymbols) {
+      throw new Error('CCMP token symbols required');
+    }
+
+    // Validata Indexer Config
+    if (!this.config.indexer?.baseUrl) {
+      throw new Error('Indexer base url required');
+    }
+    if (!this.config.indexer?.auth) {
+      throw new Error('Indexer auth required');
+    }
+    if (!this.config.ccmp.webhookEndpoint) {
+      throw new Error('CCMP webhook endpoint required');
+    }
+
     return true;
   }
 

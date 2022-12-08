@@ -1,5 +1,5 @@
 import { BigNumber, ethers } from 'ethers';
-import { UserOperationType } from '../../types';
+import { CCMPMessageType, UserOperationType } from '../../types';
 
 // data response type that external simulation serivcereturns
 export type ExternalSimulationResponseType = {
@@ -22,9 +22,47 @@ export type AASimulationDataType = {
   chainId: number
 };
 
+export type CCMPSimulationDataType = {
+  ccmpMessage: CCMPMessageType,
+};
+
+export type CCMPSimulationResponseType = {
+  isSimulationSuccessful: boolean,
+  gasEstimateFromSimulation: number,
+  txBaseGasEstimate: number,
+  err?: string,
+};
+
 // data response type that simulation service returns
 export type SimulationResponseType = {
   isSimulationSuccessful: boolean,
   gasLimitFromSimulation: number | BigNumber,
   msgFromSimulation: string,
+};
+
+export type EthCallSimulationDataType = {
+  from?: string;
+  gas?: number;
+  gasPrice?: number;
+  value?: number;
+  estimationCalldata: string;
+  contractAddress: string;
+  overrides?: Record<
+  string,
+  {
+    code?: string;
+    balance?: string;
+    nonce?: string;
+    state?: Record<string, string>;
+    stateDiff?: Record<string, string>;
+  }
+  >;
+  tag: number | 'latest' | 'earliest' | 'pending';
+};
+
+export type EthCallSimulationResponseType = {
+  isSimulationSuccessful: boolean,
+  gasEstimateFromSimulation: number,
+  txBaseGasEstimate: number,
+  err?: string,
 };

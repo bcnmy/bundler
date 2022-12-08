@@ -1,15 +1,26 @@
 /* eslint-disable max-len */
 import { ICacheService } from '../../../../common/cache';
-import { ITransactionDAO } from '../../../../common/db';
+import { ICrossChainTransactionDAO, ITransactionDAO } from '../../../../common/db';
 import { IQueue } from '../../../../common/interface';
 import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
+import { CrossChainRetryHandlerQueue } from '../../../../common/queue/CrossChainRetryHandlerQueue';
 import { RetryTransactionQueueData } from '../../../../common/queue/types';
 import { IRelayerBalanceManager } from '../../../../common/service-manager/interface/IRelayerBalanceManager';
 import {
-  EVMRawTransactionType, SocketEventType, TransactionQueueMessageType, TransactionStatus,
+  CCMPMessageType,
+  CrossChainTransactionError,
+  CrossChainTransationStatus,
+  EVMRawTransactionType,
+  SocketEventType,
+  TransactionQueueMessageType,
+  TransactionStatus,
+  TransactionType,
 } from '../../../../common/types';
 import { getRetryTransactionCountKey } from '../../../../common/utils';
+import { CCMPTaskManager } from '../../../../server/src/services/cross-chain/task-manager';
+import { ICCMPTaskManager } from '../../../../server/src/services/cross-chain/task-manager/interfaces/ICCMPTaskManager';
+import { ICrossChainProcessStep } from '../../../../server/src/services/cross-chain/task-manager/types';
 import { IEVMAccount } from '../account';
 import { ITransactionPublisher } from '../transaction-publisher';
 import { ITransactionListener } from './interface/ITransactionListener';
@@ -25,7 +36,8 @@ import {
 
 const log = logger(module);
 
-export class EVMTransactionListener implements
+export class EVMTransactionListener
+  implements
   ITransactionListener<IEVMAccount, EVMRawTransactionType>,
   ITransactionPublisher<TransactionQueueMessageType> {
   chainId: number;
@@ -42,9 +54,11 @@ export class EVMTransactionListener implements
 
   relayerBalanceManager: IRelayerBalanceManager | undefined;
 
-  constructor(
-    evmTransactionListenerParams: EVMTransactionListenerParamsType,
-  ) {
+  crossChainTransactionDAO: ICrossChainTransactionDAO;
+
+  crossChainRetryHandlerQueueMap: Record<number, CrossChainRetryHandlerQueue>;
+
+  constructor(evmTransactionListenerParams: EVMTransactionListenerParamsType) {
     const {
       options,
       networkService,
@@ -52,6 +66,8 @@ export class EVMTransactionListener implements
       retryTransactionQueue,
       transactionDao,
       cacheService,
+      crossChainTransactionDAO,
+      crossChainRetryHandlerQueueMap,
     } = evmTransactionListenerParams;
     this.chainId = options.chainId;
     this.networkService = networkService;
@@ -59,6 +75,8 @@ export class EVMTransactionListener implements
     this.retryTransactionQueue = retryTransactionQueue;
     this.transactionDao = transactionDao;
     this.cacheService = cacheService;
+    this.crossChainTransactionDAO = crossChainTransactionDAO;
+    this.crossChainRetryHandlerQueueMap = crossChainRetryHandlerQueueMap;
   }
 
   async setRelayerBalanceManager(_relayerBalanceManager: any) {
@@ -78,16 +96,20 @@ export class EVMTransactionListener implements
   private async onTransactionSuccess(onTranasctionSuccessParams: OnTransactionSuccessParamsType) {
     const {
       transactionExecutionResponse,
-      transactionReceipt,
       transactionId,
       relayerManagerName,
+      transactionReceipt,
+      transactionType,
+      ccmpMessage,
     } = onTranasctionSuccessParams;
     if (!transactionReceipt) {
       log.error(`Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
       return;
     }
 
-    log.info(`Publishing to transaction queue on success for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
+    log.info(
+      `Publishing to transaction queue on success for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`,
+    );
     await this.publishToTransactionQueue({
       transactionId,
       relayerManagerName,
@@ -95,6 +117,7 @@ export class EVMTransactionListener implements
       receipt: transactionExecutionResponse,
       event: SocketEventType.onTransactionMined,
     });
+
     if (transactionExecutionResponse) {
       log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
       await this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
@@ -102,6 +125,38 @@ export class EVMTransactionListener implements
         status: TransactionStatus.SUCCESS,
         updationTime: Date.now(),
       }, transactionId, transactionExecutionResponse?.hash);
+    }
+
+    try {
+      if (transactionType === TransactionType.CROSS_CHAIN) {
+        if (!ccmpMessage) {
+          // TODO Needs Investigation, this randomly becomes undefined
+          throw new Error(`CCMP message not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
+        }
+        log.info(
+          `Processing onTransactionSuccess for cross chain transactionId: ${transactionId} on chainId ${this.chainId}`,
+        );
+        if (!transactionReceipt) {
+          log.info(
+            `Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`,
+          );
+          return;
+        }
+        const ccmpTaskManager = await this.getCCMPTaskManagerInstance(ccmpMessage!);
+
+        await ccmpTaskManager.run(
+          'Handle Relayed',
+          EVMTransactionListener.handleCCMPOnTransactionSuccessFactory(
+            transactionReceipt.transactionHash,
+          ),
+          CrossChainTransationStatus.DESTINATION_TRANSACTION_CONFIRMED,
+        );
+      }
+    } catch (e) {
+      log.error(
+        `Error while processing onTransactionSuccess for cross chain transactionId: ${transactionId} on chainId ${this.chainId}`,
+        e,
+      );
     }
   }
 
@@ -111,6 +166,8 @@ export class EVMTransactionListener implements
       transactionId,
       transactionReceipt,
       relayerManagerName,
+      transactionType,
+      ccmpMessage,
     } = onTranasctionFailureParams;
     if (!transactionReceipt) {
       log.error(`Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
@@ -132,6 +189,37 @@ export class EVMTransactionListener implements
         status: TransactionStatus.FAILED,
         updationTime: Date.now(),
       }, transactionId, transactionExecutionResponse?.hash);
+    }
+
+    try {
+      if (transactionType === TransactionType.CROSS_CHAIN) {
+        if (!ccmpMessage) {
+          throw new Error(`CCMP message not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
+        }
+        log.info(
+          `Processing onTransactionFailure for cross chain transactionId: ${transactionId} on chainId ${this.chainId}`,
+        );
+        if (!transactionReceipt) {
+          log.info(
+            `Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`,
+          );
+          return;
+        }
+        const ccmpTaskManager = await this.getCCMPTaskManagerInstance(ccmpMessage!);
+
+        await ccmpTaskManager.run(
+          'Handle Failed',
+          EVMTransactionListener.handleCCMPOnTransactionFailureFactory(
+            transactionReceipt.transactionHash,
+          ),
+          CrossChainTransationStatus.DESTINATION_TRANSACTION_CONFIRMED,
+        );
+      }
+    } catch (e) {
+      log.error(
+        `Error while processing onTransactionFailure for cross chain transactionId: ${transactionId} on chainId ${this.chainId}`,
+        e,
+      );
     }
   }
 
@@ -180,23 +268,32 @@ export class EVMTransactionListener implements
       metaData,
       transactionType,
       relayerManagerName,
+      ccmpMessage,
     } = notifyTransactionListenerParams;
     if (!transactionExecutionResponse) {
       return;
     }
     // TODO : add error check
     const tranasctionHash = transactionExecutionResponse.hash;
-    log.info(`Transaction hash is: ${tranasctionHash} for transactionId: ${transactionId} on chainId ${this.chainId}`);
+    log.info(
+      `Transaction hash is: ${tranasctionHash} for transactionId: ${transactionId} on chainId ${this.chainId}`,
+    );
 
     const transactionReceipt = await this.networkService.waitForTransaction(tranasctionHash);
-    log.info(`Transaction receipt is: ${JSON.stringify(transactionReceipt)} for transactionId: ${transactionId} on chainId ${this.chainId}`);
+    log.info(
+      `Transaction receipt is: ${JSON.stringify(
+        transactionReceipt,
+      )} for transactionId: ${transactionId} on chainId ${this.chainId}`,
+    );
 
     // TODO: reduce pending count of relayer via RelayerManager
     await this.cacheService.delete(getRetryTransactionCountKey(transactionId, this.chainId));
 
     if (transactionReceipt.status === 1) {
-      log.info(`Transaction is a success for transactionId: ${transactionId} on chainId ${this.chainId}`);
-      this.onTransactionSuccess({
+      log.info(
+        `Transaction is a success for transactionId: ${transactionId} on chainId ${this.chainId}`,
+      );
+      await this.onTransactionSuccess({
         transactionExecutionResponse,
         transactionId,
         transactionReceipt,
@@ -206,11 +303,14 @@ export class EVMTransactionListener implements
         walletAddress,
         metaData,
         relayerManagerName,
+        ccmpMessage,
       });
     }
     if (transactionReceipt.status === 0) {
-      log.info(`Transaction is a failure for transactionId: ${transactionId} on chainId ${this.chainId}`);
-      this.onTransactionFailure({
+      log.info(
+        `Transaction is a failure for transactionId: ${transactionId} on chainId ${this.chainId}`,
+      );
+      await this.onTransactionFailure({
         transactionExecutionResponse,
         transactionId,
         transactionReceipt,
@@ -220,6 +320,7 @@ export class EVMTransactionListener implements
         walletAddress,
         metaData,
         relayerManagerName,
+        ccmpMessage,
       });
     }
 
@@ -300,7 +401,9 @@ export class EVMTransactionListener implements
         ? SocketEventType.onTransactionHashChanged : SocketEventType.onTransactionHashGenerated,
     });
     // retry txn service will check for receipt
-    log.info(`Publishing transaction data of transactionId: ${transactionId} to retry transaction queue on chainId ${this.chainId}`);
+    log.info(
+      `Publishing transaction data of transactionId: ${transactionId} to retry transaction queue on chainId ${this.chainId}`,
+    );
     await this.publishToRetryTransactionQueue({
       relayerAddress,
       transactionType,
@@ -321,4 +424,54 @@ export class EVMTransactionListener implements
       transactionExecutionResponse,
     };
   }
+
+  private getCCMPTaskManagerInstance = async (
+    ccmpMessage: CCMPMessageType,
+  ): Promise<ICCMPTaskManager> => {
+    const sourceChainId = parseInt(ccmpMessage.sourceChainId.toString(), 10);
+    const state = await this.crossChainTransactionDAO.getByTransactionId(
+      sourceChainId,
+      ccmpMessage.hash,
+    );
+    if (!state) {
+      throw new Error(
+        `No state found for transactionId: ${ccmpMessage.hash} on chainId ${sourceChainId}`,
+      );
+    }
+    return new CCMPTaskManager(
+      this.crossChainTransactionDAO,
+      this.crossChainRetryHandlerQueueMap[sourceChainId],
+      state.sourceTransactionHash,
+      sourceChainId,
+      state.message,
+    );
+  };
+
+  private static handleCCMPOnTransactionSuccessFactory = (destinationTxHash?: string)
+    : ICrossChainProcessStep => {
+    const handler: ICrossChainProcessStep = async (data) => ({
+      ...data,
+      status: CrossChainTransationStatus.DESTINATION_TRANSACTION_CONFIRMED,
+      context: {
+        destinationTxHash,
+      },
+    });
+    return handler;
+  };
+
+  private static handleCCMPOnTransactionFailureFactory = (
+    destinationTxHash?: string,
+    error?: string,
+  ): ICrossChainProcessStep => {
+    const handler: ICrossChainProcessStep = async (data) => ({
+      ...data,
+      status: CrossChainTransactionError.DESTINATION_TRANSACTION_REVERTED,
+      scheduleRetry: true,
+      context: {
+        destinationTxHash,
+        error,
+      },
+    });
+    return handler;
+  };
 }

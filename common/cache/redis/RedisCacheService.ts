@@ -18,26 +18,23 @@ export class RedisCacheService implements ICacheService {
   }
 
   connectRedLock(): Redlock {
-    return new Redlock(
-      [this.redisClient],
-      {
-        // the expected clock drift; for more details
-        // see http://redis.io/topics/distlock
-        driftFactor: 0.01, // multiplied by lock ttl to determine drift time
+    return new Redlock([this.redisClient], {
+      // the expected clock drift; for more details
+      // see http://redis.io/topics/distlock
+      driftFactor: 0.01, // multiplied by lock ttl to determine drift time
 
-        // the max number of times Redlock will attempt
-        // to lock a resource before erroring
-        retryCount: 5,
+      // the max number of times Redlock will attempt
+      // to lock a resource before erroring
+      retryCount: 5,
 
-        // the time in ms between attempts
-        retryDelay: 8000, // time in ms
+      // the time in ms between attempts
+      retryDelay: 8000, // time in ms
 
-        // the max time in ms randomly added to retries
-        // to improve performance under high contention
-        // see https://www.awsarchitectureblog.com/2015/03/backoff.html
-        retryJitter: 200, // time in ms
-      },
-    );
+      // the max time in ms randomly added to retries
+      // to improve performance under high contention
+      // see https://www.awsarchitectureblog.com/2015/03/backoff.html
+      retryJitter: 200, // time in ms
+    });
   }
 
   getRedLock(): Redlock | undefined {
@@ -167,7 +164,7 @@ export class RedisCacheService implements ICacheService {
   async get(key: string): Promise<string> {
     try {
       log.info(`Getting key: ${key} from cache`);
-      const result = await this.redisClient.get(key) || '';
+      const result = (await this.redisClient.get(key)) || '';
       return result;
     } catch (error) {
       log.error(`Error getting value for key ${key} - ${JSON.stringify(error)}`);

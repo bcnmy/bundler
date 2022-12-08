@@ -29,7 +29,7 @@ export interface ITransactionService<AccountType, RawTransactionType> {
   sendTransaction(
     transaction: TransactionDataType,
     account: AccountType,
-    tranasctionType: TransactionType,
+    transactionType: TransactionType,
     relayerManagerName: string,
   ): Promise<SuccessTransactionResponseType | ErrorTransactionResponseType>;
   retryTransaction(

@@ -5,7 +5,12 @@
 import { ethers } from 'ethers';
 import { config } from '../../config';
 import { EVMAccount, IEVMAccount } from '../../relayer/src/services/account';
-import { AAConsumer, SCWConsumer, SocketConsumer } from '../../relayer/src/services/consumer';
+import {
+  AAConsumer,
+  SCWConsumer,
+  SocketConsumer,
+  CCMPConsumer,
+} from '../../relayer/src/services/consumer';
 import { EVMNonceManager } from '../../relayer/src/services/nonce-manager';
 import { EVMRelayerManager, IRelayerManager } from '../../relayer/src/services/relayer-manager';
 import { EVMRelayerQueue } from '../../relayer/src/services/relayer-queue';
@@ -13,6 +18,13 @@ import { EVMRetryTransactionService } from '../../relayer/src/services/retry-tra
 import { EVMTransactionListener } from '../../relayer/src/services/transaction-listener';
 import { EVMTransactionService } from '../../relayer/src/services/transaction-service';
 import { FeeOption } from '../../server/src/services';
+import { CrossChainTransactionHandlerService } from '../../server/src/services/cross-chain/transaction-handler';
+import {
+  AxelarRouterService,
+  HyperlaneRouterService,
+  WormholeRouterService,
+} from '../../server/src/services/cross-chain/router-service';
+import { ICCMPRouterService } from '../../server/src/services/cross-chain/router-service/interfaces';
 import { RedisCacheService } from '../cache';
 import { Mongo, TransactionDAO } from '../db';
 import { GasPriceManager } from '../gas-price';
@@ -24,17 +36,20 @@ import { NotificationManager } from '../notification';
 import { SlackNotificationService } from '../notification/slack/SlackNotificationService';
 import {
   AATransactionQueue,
+  CCMPTransactionQueue,
   RetryTransactionHandlerQueue,
   SCWTransactionQueue,
   TransactionHandlerQueue,
 } from '../queue';
-import { AARelayService, SCWRelayService } from '../relay-service';
-import { AASimulationService, SCWSimulationService } from '../simulation';
+import { AARelayService, CCMPRelayService, SCWRelayService } from '../relay-service';
+import { AASimulationService, CCMPSimulationService, SCWSimulationService } from '../simulation';
 import { TenderlySimulationService } from '../simulation/external-simulation';
+import { CMCTokenPriceManager, TokenPriceConversionService } from '../token';
 import { IStatusService, StatusService } from '../status';
-import { CMCTokenPriceManager } from '../token-price';
 import {
   AATransactionMessageType,
+  CCMPRouterName,
+  CrossChainTransactionMessageType,
   EntryPointMapType,
   EVMRawTransactionType,
   FeeSupportedToken,
@@ -42,12 +57,27 @@ import {
   TransactionType,
 } from '../types';
 import { RelayerBalanceManager } from './relayer-balance-manager';
+import { CrossChainTransactionDAO } from '../db/dao/CrossChainTransactionDao';
+import { CrossChainRetryHandlerQueue } from '../queue/CrossChainRetryHandlerQueue';
+import { CrossChainRetryTransactionService } from '../../server/src/services/cross-chain/retry-transaction-service';
+import { IndexerService } from '../indexer/IndexerService';
+import { CCMPGatewayService } from '../../server/src/services/cross-chain/gateway';
+import type { ICrossChainGasEstimationService } from '../../server/src/services/cross-chain/gas-estimation/interfaces/ICrossChainGasEstimationService';
+import { CrossChainGasEstimationService } from '../../server/src/services/cross-chain/gas-estimation';
+import { LiquidityPoolService, LiquidityTokenManagerService } from '../../server/src/services/cross-chain/liquidity';
+import { ICrossChainTransactionStatusService } from '../../server/src/services/cross-chain/transaction-status/interfaces/ICrossChainTransactionStatusService';
+import { CrosschainTransactionStatusService } from '../../server/src/services/cross-chain/transaction-status';
+import { ETHCallSimulationService } from '../simulation/external-simulation/EthCallSimulationService';
 
 const log = logger(module);
 
+const networkServiceMap: Record<number, EVMNetworkService> = {};
+
 const routeTransactionToRelayerMap: {
   [chainId: number]: {
-    [transactionType: string]: AARelayService | SCWRelayService;
+    [TransactionType.AA]?: AARelayService;
+    [TransactionType.SCW]?: SCWRelayService;
+    [TransactionType.CROSS_CHAIN]?: CCMPRelayService;
   };
 } = {};
 
@@ -65,6 +95,33 @@ const scwSimulationServiceMap: {
 
 const entryPointMap: EntryPointMapType = {};
 
+const ccmpServiceMap: {
+  [chainId: number]: CrossChainTransactionHandlerService;
+} = {};
+
+const ccmpRouterMap: {
+  [chainId: number]: {
+    [key in CCMPRouterName]?: ICCMPRouterService;
+  };
+} = {};
+
+const ccmpGatewayServiceMap: {
+  [chainId: number]: CCMPGatewayService;
+} = {};
+
+const crossChainGasEstimationServiceMap: {
+  [chainId: number]: ICrossChainGasEstimationService;
+} = {};
+
+const liquidityTokenManagerService = new LiquidityTokenManagerService();
+const liquidityPoolService = new LiquidityPoolService(
+  liquidityTokenManagerService,
+  networkServiceMap,
+  config.feeOption.tokenContractAddress,
+);
+
+const indexerService = new IndexerService(config.indexer.baseUrl);
+
 const dbInstance = Mongo.getInstance();
 const cacheService = RedisCacheService.getInstance();
 
@@ -77,6 +134,7 @@ const EVMRelayerManagerMap: {
 } = {};
 
 const transactionDao = new TransactionDAO();
+const crossChainTransactionDAO = new CrossChainTransactionDAO();
 
 const socketConsumerMap: Record<number, SocketConsumer> = {};
 const retryTransactionServiceMap: Record<number, EVMRetryTransactionService> = {};
@@ -90,7 +148,16 @@ const relayerInstanceMap: Record<string, EVMRelayerManager> = {};
 let relayerBalanceManager: RelayerBalanceManager;
 let labelCCMP;
 let labelSCW;
-const networkServiceMap: Record<number, EVMNetworkService> = {};
+
+const crossChainRetryTransactionQueueMap: {
+  [key: number]: CrossChainRetryHandlerQueue;
+} = {};
+const crossChainRetryTransactionServiceMap: {
+  [key: number]: CrossChainRetryTransactionService;
+} = {};
+const crossChainTransactionStatusServiceMap: {
+  [chainId: number]: ICrossChainTransactionStatusService;
+} = {};
 
 // eslint-disable-next-line import/no-mutable-exports
 let statusService: IStatusService;
@@ -99,6 +166,8 @@ let statusService: IStatusService;
   await dbInstance.connect();
   await cacheService.connect();
 
+  const ccmpServiceInitPromises: Promise<void>[] = [];
+
   const slackNotificationService = new SlackNotificationService(
     config.slack.token,
     config.slack.channel,
@@ -106,6 +175,7 @@ let statusService: IStatusService;
   const notificationManager = new NotificationManager(slackNotificationService);
 
   const tokenService = new CMCTokenPriceManager(cacheService, {
+    baseURL: config.tokenPrice.coinMarketCapUrl,
     apiKey: config.tokenPrice.coinMarketCapApi,
     networkSymbolCategories: config.tokenPrice.networkSymbols,
     updateFrequencyInSeconds: config.tokenPrice.updateFrequencyInSeconds,
@@ -136,7 +206,7 @@ let statusService: IStatusService;
 
   relayerBalanceManager = new RelayerBalanceManager();
   try {
-    await relayerBalanceManager.setTransactionServiceMap(transactionServiceMap);
+    relayerBalanceManager.setTransactionServiceMap(transactionServiceMap);
     await relayerBalanceManager.init({
       masterFundingAccountSCW:
         relayerInstanceMap[relayerManagerTransactionTypeNameMap.SCW].ownerAccountDetails,
@@ -155,6 +225,11 @@ let statusService: IStatusService;
     log.error('ERROR');
     log.info(error);
   }
+  const tokenPriceConversionService = new TokenPriceConversionService(
+    tokenService,
+    networkServiceMap,
+    config.feeOption.tokenContractAddress,
+  );
 
   log.info(`Setting up instances for following chainIds: ${JSON.stringify(supportedNetworks)}`);
   for (const chainId of supportedNetworks) {
@@ -208,6 +283,9 @@ let statusService: IStatusService;
     await retryTransactionQueueMap[chainId].connect();
     log.info(`Retry transaction queue setup complete for chainId: ${chainId}`);
 
+    crossChainRetryTransactionQueueMap[chainId] = new CrossChainRetryHandlerQueue({ chainId });
+    await crossChainRetryTransactionQueueMap[chainId].connect();
+
     log.info(`Setting up nonce manager for chainId: ${chainId}`);
     const nonceManager = new EVMNonceManager({
       options: {
@@ -225,6 +303,8 @@ let statusService: IStatusService;
       transactionQueue,
       retryTransactionQueue,
       transactionDao,
+      crossChainRetryHandlerQueueMap: crossChainRetryTransactionQueueMap,
+      crossChainTransactionDAO: new CrossChainTransactionDAO(),
       options: {
         chainId,
       },
@@ -432,6 +512,122 @@ let statusService: IStatusService;
           tenderlySimulationService,
         );
         log.info(`SCW consumer, relay service & simulation service setup complete for chainId: ${chainId}`);
+      } else if (type === TransactionType.CROSS_CHAIN) {
+        // queue for ccmp
+        const ccmpQueue: IQueue<CrossChainTransactionMessageType> = new CCMPTransactionQueue({
+          chainId,
+        });
+        await ccmpQueue.connect();
+
+        ccmpGatewayServiceMap[chainId] = new CCMPGatewayService(
+          config.ccmp.contracts[chainId].CCMPGateway,
+          chainId,
+          config.ccmp.abi.CCMPGateway,
+          networkService,
+        );
+
+        const ccmpRelayerManager = EVMRelayerManagerMap[
+          relayerManagerTransactionTypeNameMap[type]][chainId];
+        if (!ccmpRelayerManager) {
+          throw new Error(`Relayer manager not found for ${type}`);
+        }
+
+        const ccmpConsumer = new CCMPConsumer({
+          queue: ccmpQueue,
+          relayerManager: ccmpRelayerManager,
+          transactionService,
+          crossChainTransactionDAO,
+          crossChainRetryHandlerQueue: crossChainRetryTransactionQueueMap[chainId],
+          cacheService,
+          options: {
+            chainId,
+          },
+        });
+        await ccmpQueue.consume(ccmpConsumer.onMessageReceived);
+
+        const ccmpRelayService = new CCMPRelayService(ccmpQueue);
+        routeTransactionToRelayerMap[chainId][type] = ccmpRelayService;
+
+        ccmpRouterMap[chainId] = {};
+        for (const routerName of config.ccmp.supportedRouters[chainId]) {
+          switch (routerName) {
+            case CCMPRouterName.WORMHOLE: {
+              ccmpRouterMap[chainId][routerName] = new WormholeRouterService(
+                chainId,
+                networkService,
+              );
+              break;
+            }
+            case CCMPRouterName.AXELAR: {
+              ccmpRouterMap[chainId][routerName] = new AxelarRouterService(chainId, networkService);
+              break;
+            }
+            case CCMPRouterName.HYPERLANE: {
+              ccmpRouterMap[chainId][routerName] = new HyperlaneRouterService(
+                chainId,
+                networkService,
+              );
+              break;
+            }
+            default: {
+              throw new Error(`Router ${routerName} not supported`);
+            }
+          }
+        }
+
+        const ethCallSimulationService = new ETHCallSimulationService(
+          chainId,
+          config.simulationData.ethCallData.estimatorAddress[chainId],
+          config.simulationData.ethCallData.estimatorAbi,
+          networkServiceMap[chainId],
+          gasPriceService,
+        );
+
+        const ccmpSimulationService = new CCMPSimulationService(
+          chainId,
+          ethCallSimulationService,
+          ccmpGatewayServiceMap[chainId],
+        );
+
+        crossChainGasEstimationServiceMap[chainId] = new CrossChainGasEstimationService(
+          chainId,
+          ccmpSimulationService,
+          tokenPriceConversionService,
+          ccmpRouterMap[chainId],
+          gasPriceService,
+          config.feeOption.tokenContractAddress,
+        );
+
+        ccmpServiceMap[chainId] = new CrossChainTransactionHandlerService(
+          chainId,
+          cacheService,
+          ccmpRouterMap[chainId],
+          routeTransactionToRelayerMap,
+          new CrossChainTransactionDAO(),
+          crossChainRetryTransactionQueueMap[chainId],
+          ccmpGatewayServiceMap,
+          indexerService,
+          crossChainGasEstimationServiceMap,
+          transactionDao,
+        );
+
+        ccmpServiceInitPromises.push(ccmpServiceMap[chainId].init());
+
+        crossChainRetryTransactionServiceMap[chainId] = new CrossChainRetryTransactionService(
+          chainId,
+          crossChainRetryTransactionQueueMap[chainId],
+          ccmpServiceMap[chainId],
+        );
+
+        crossChainTransactionStatusServiceMap[chainId] = new CrosschainTransactionStatusService(
+          dbInstance,
+          networkServiceMap,
+          ccmpGatewayServiceMap[chainId],
+        );
+
+        await crossChainRetryTransactionQueueMap[chainId].consume(
+          crossChainRetryTransactionServiceMap[chainId].onMessageReceived,
+        );
       }
     }
   }
@@ -443,6 +639,16 @@ let statusService: IStatusService;
     evmRelayerManagerMap: EVMRelayerManagerMap,
     dbInstance,
   });
+
+  // Wait for CCMP Service to be initialized
+  try {
+    await Promise.all(ccmpServiceInitPromises);
+    log.info('CCMP Services initialized');
+  } catch (e) {
+    log.error(`Error initializing CCMP Services: ${JSON.stringify(e)}`);
+    throw e;
+  }
+
   log.info('<=== Config setup completed ===>');
 })();
 
@@ -453,7 +659,16 @@ export {
   scwSimulationServiceMap,
   entryPointMap,
   EVMRelayerManagerMap,
+  ccmpRouterMap,
+  ccmpServiceMap,
   transactionServiceMap,
+  indexerService,
   transactionDao,
   statusService,
+  liquidityPoolService,
+  liquidityTokenManagerService,
+  crossChainGasEstimationServiceMap,
+  CrossChainTransactionDAO,
+  networkServiceMap,
+  crossChainTransactionStatusServiceMap,
 };

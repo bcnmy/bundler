@@ -32,7 +32,7 @@ describe('Network Service: Rpc Urls', () => {
     expect(blockNumber).toBeGreaterThan(0);
   });
 
-  it('Fallback urls should be active for chaindId: 5', async () => {
+  it('Fallback urls should be active for chainId: 5', async () => {
     for (
       let fallBackRpcUrlIndex = 0;
       fallBackRpcUrlIndex < networkServiceMap[5].fallbackRpcUrls.length;
@@ -47,7 +47,7 @@ describe('Network Service: Rpc Urls', () => {
     }
   });
 
-  it('Fallback urls should be active for chaindId: 80001', async () => {
+  it('Fallback urls should be active for chainId: 80001', async () => {
     for (
       let fallBackRpcUrlIndex = 0;
       fallBackRpcUrlIndex < networkServiceMap[80001].fallbackRpcUrls.length;

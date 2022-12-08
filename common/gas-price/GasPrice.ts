@@ -246,7 +246,7 @@ export class GasPrice implements IGasPrice {
       }
       await this.setGasPrice(GasPriceType.DEFAULT, gasPrice);
 
-      log.info(`Setting gas price for chaindId: ${this.chainId} as ${gasPrice}`);
+      log.info(`Setting gas price for chainId: ${this.chainId} as ${gasPrice}`);
     } catch (error) {
       log.info(`Error in setting gas price for network id ${this.chainId} - ${error}`);
     }

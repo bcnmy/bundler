@@ -1,11 +1,12 @@
 import { RedisCacheService } from '../../common/cache';
-import { CMCTokenPriceManager } from '../../common/token-price';
+import { CMCTokenPriceManager } from '../../common/token';
 import { config } from '../../config';
 
 describe('get token price', () => {
   const cacheService = RedisCacheService.getInstance();
 
   const tokenService = new CMCTokenPriceManager(cacheService, {
+    baseURL: config.tokenPrice.coinMarketCapApi,
     apiKey: config.tokenPrice.coinMarketCapApi,
     networkSymbolCategories: config.tokenPrice.networkSymbols,
     updateFrequencyInSeconds: config.tokenPrice.updateFrequencyInSeconds,

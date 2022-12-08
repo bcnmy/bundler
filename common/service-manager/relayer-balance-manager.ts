@@ -5,7 +5,7 @@ import { ITransactionService } from '@biconomy/fee-management/dist/relayer-node-
 import { AppConfig, Mode } from '@biconomy/fee-management/dist/types';
 import { ethers } from 'ethers';
 import { ICacheService } from '../cache';
-import { ITokenPrice } from '../token-price/interface/ITokenPrice';
+import { ITokenPrice } from '../token/interface/ITokenPrice';
 import { EVMRawTransactionType, TransactionType } from '../types';
 import { logger } from '../log-config';
 import { IRelayerBalanceManager } from './interface/IRelayerBalanceManager';

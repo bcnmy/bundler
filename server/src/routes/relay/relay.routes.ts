@@ -5,7 +5,7 @@ import { transactionResubmitApi } from '../../controllers/transaction-resubmit';
 import {
   validateRelayRequest,
   validateFeeOption,
-  validateTransactionStatus,
+  validateEstimateDepositAndCallRequest,
   validateTransactionResubmit,
 } from '../../middleware';
 
@@ -13,7 +13,7 @@ export const relayApiRouter = Router();
 
 relayApiRouter.get('/feeOptions', validateFeeOption, feeOptionsApi);
 
-relayApiRouter.get('/status', validateTransactionStatus, transactionStatusApi);
+relayApiRouter.get('/status', validateEstimateDepositAndCallRequest, transactionStatusApi);
 
 relayApiRouter.post('/', validateRelayRequest(), simulateTransaction(), requestHandler);
 
