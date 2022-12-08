@@ -48,6 +48,7 @@ export class CrossChainGasEstimationService implements ICrossChainGasEstimationS
     log.info(`Verification Fee: ${amount} $${tokenSymbol}`);
 
     let tokenAmount: ethers.BigNumber = ethers.BigNumber.from(amount);
+    const sourceChainId = parseInt(message.sourceChainId.toString(), 10);
     if (tokenSymbol !== feeTokenSymbol) {
       // Convert Verification Fee to Fee Token
       tokenAmount = await this.tokenPriceConversionService.getEquivalentTokenAmount(
@@ -55,10 +56,10 @@ export class CrossChainGasEstimationService implements ICrossChainGasEstimationS
           {
             amount,
             tokenSymbol,
-            chainId: this.chainId,
+            chainId: this.chainId, // Destination Chain Id
           },
         ],
-        this.chainId,
+        sourceChainId,
         feeTokenSymbol,
       );
     }

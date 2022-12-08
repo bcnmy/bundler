@@ -54,6 +54,8 @@ export const estimateDepositAndCallApi = async (req: Request, res: Response) => 
     log.error(`Error estimating gas fee for deposit and call ${JSON.stringify(e)}`);
     if (e instanceof Error) {
       res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(e.message);
+    } else {
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).send('Unknown Error');
     }
   }
 };
