@@ -243,8 +243,8 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
       });
       return receipt;
     } catch (err) {
-      log.error(err);
-      throw new Error();
+      log.error('Error while calling sendTransaction()');
+      throw err;
     }
   }
 

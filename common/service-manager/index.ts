@@ -1,7 +1,4 @@
-/* eslint-disable max-len */
 /* eslint-disable no-await-in-loop */
-/* eslint-disable import/no-mutable-exports */
-/* eslint-disable guard-for-in */
 import { ethers } from 'ethers';
 import { config } from '../../config';
 import { EVMAccount, IEVMAccount } from '../../relayer/src/services/account';
@@ -187,16 +184,18 @@ let statusService: IStatusService;
   }
 
   const feeSupportedTokenList: Record<number, FeeSupportedToken[]> = {};
-  if (config.feeOption && config.feeOption.tokenContractAddress) {
-    for (const chainId in config.feeOption.tokenContractAddress) {
+  for (const chainId in config.feeOption.tokenContractAddress) {
+    if (Object.prototype.hasOwnProperty.call(config.feeOption.tokenContractAddress, chainId)) {
       const feeSupportedTokenArray: FeeSupportedToken[] = [];
       for (const symbol in config.feeOption.tokenContractAddress[chainId]) {
-        const token = {
-          address: config.feeOption.tokenContractAddress[chainId][symbol],
-          symbol,
-          decimal: config.feeOption.decimals[chainId][symbol],
-        };
-        feeSupportedTokenArray.push(token);
+        if (Object.prototype.hasOwnProperty.call(config.feeOption.tokenContractAddress, symbol)) {
+          const token = {
+            address: config.feeOption.tokenContractAddress[chainId][symbol],
+            symbol,
+            decimal: config.feeOption.decimals[chainId][symbol],
+          };
+          feeSupportedTokenArray.push(token);
+        }
       }
       feeSupportedTokenList[Number(chainId)] = feeSupportedTokenArray;
     }
@@ -211,8 +210,8 @@ let statusService: IStatusService;
       masterFundingAccountSCW:
         relayerInstanceMap[relayerManagerTransactionTypeNameMap.SCW].ownerAccountDetails,
       relayerAddressesSCW: scwRelayerList,
-      masterFundingAccountCCMP:
-        relayerInstanceMap[relayerManagerTransactionTypeNameMap.SCW].ownerAccountDetails, // change it to cross-chain before commit
+      masterFundingAccountCCMP: relayerInstanceMap[relayerManagerTransactionTypeNameMap.SCW]
+        .ownerAccountDetails, // change it to cross-chain before commit
       relayerAddressesCCMP: ccmpRelayerList, // change it to ccmpRelayerList before commit
       appConfig: config.feeManagementConfig,
       dbUrl: config.dataSources.mongoUrl,
@@ -222,7 +221,7 @@ let statusService: IStatusService;
       labelSCW, // change it to labelSCW before commit
     });
   } catch (error: any) {
-    log.error('ERROR');
+    log.error('Error while calling relayerBalanceManager.init()');
     log.info(error);
   }
   const tokenPriceConversionService = new TokenPriceConversionService(
@@ -369,7 +368,8 @@ let statusService: IStatusService;
 
       if (relayerManagerTransactionTypeNameMap.CROSS_CHAIN === relayerManager.name) {
         ccmpRelayerList = addressList;
-        relayerInstanceMap[relayerManagerTransactionTypeNameMap.CROSS_CHAIN] = relayerMangerInstance;
+        relayerInstanceMap[
+          relayerManagerTransactionTypeNameMap.CROSS_CHAIN] = relayerMangerInstance;
         labelCCMP = relayerManager.name;
       } else if (relayerManagerTransactionTypeNameMap.SCW === relayerManager.name) {
         scwRelayerList = addressList;

@@ -79,7 +79,7 @@ export class EVMTransactionListener
     this.crossChainRetryHandlerQueueMap = crossChainRetryHandlerQueueMap;
   }
 
-  async setRelayerBalanceManager(_relayerBalanceManager: any) {
+  async setRelayerBalanceManager(_relayerBalanceManager: IRelayerBalanceManager) {
     this.relayerBalanceManager = _relayerBalanceManager;
   }
 

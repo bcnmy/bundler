@@ -2,29 +2,14 @@
 import { FeeManager } from '@biconomy/fee-management';
 import { IEVMAccount } from '@biconomy/fee-management/dist/relayer-node-interfaces/IEVMAccount';
 import { ITransactionService } from '@biconomy/fee-management/dist/relayer-node-interfaces/ITransactionService';
-import { AppConfig, Mode } from '@biconomy/fee-management/dist/types';
 import { ethers } from 'ethers';
-import { ICacheService } from '../cache';
-import { ITokenPrice } from '../token/interface/ITokenPrice';
+import { Mode } from '@biconomy/fee-management/dist/types';
 import { EVMRawTransactionType, TransactionType } from '../types';
 import { logger } from '../log-config';
 import { IRelayerBalanceManager } from './interface/IRelayerBalanceManager';
+import { FeeManagerParams } from './types';
 
 const log = logger(module);
-
-type FeeManagerParams = {
-    masterFundingAccountSCW: IEVMAccount;
-    relayerAddressesSCW: String[];
-    masterFundingAccountCCMP: IEVMAccount;
-    relayerAddressesCCMP: String[];
-    appConfig: AppConfig;
-    dbUrl: string;
-    tokenPriceService: ITokenPrice;
-    cacheService: ICacheService;
-    labelSCW: string | undefined;
-    labelCCMP: string | undefined;
-};
-
 export class RelayerBalanceManager implements IRelayerBalanceManager {
     feeManagerSCW: FeeManager | undefined;
 
