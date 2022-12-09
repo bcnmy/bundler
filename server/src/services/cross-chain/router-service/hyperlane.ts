@@ -28,6 +28,8 @@ export class HyperlaneRouterService implements ICCMPRouterService {
 
   private readonly chainIdToName: Record<number, ChainName>;
 
+  private readonly verificationData: string;
+
   constructor(
     private readonly chainId: number,
     private readonly networkService: EVMNetworkService,
@@ -54,6 +56,9 @@ export class HyperlaneRouterService implements ICCMPRouterService {
       this.multiProvider,
       this.hyperlaneSdk,
     );
+
+    const abiCoder = new ethers.utils.AbiCoder();
+    this.verificationData = abiCoder.encode(['uint256'], [0]);
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -110,7 +115,18 @@ export class HyperlaneRouterService implements ICCMPRouterService {
     const txReceipt = await this.networkService.getTransactionReceipt(txHash);
 
     try {
+      const id = setInterval(() => {
+        try {
+          const dispatchedMessage = this.hyperlaneSdk.getDispatchedMessages(txReceipt);
+          log.info(`Dispatched Message for Hyperlane Message ${message.hash}: ${JSON.stringify(dispatchedMessage)}`);
+        } catch (e) {
+          log.error(`Error while getting dispatched message for message ${message.hash}: ${JSON.stringify(e)}`);
+        }
+      }, 5000);
+
+      // Wait for message to get processed
       const processReceipts = await this.hyperlaneSdk.waitForMessageProcessing(txReceipt);
+      clearInterval(id);
       log.info(`Status for hyperlane message ${message.hash}: ${JSON.stringify(processReceipts)}`);
     } catch (e) {
       throw new Error(`Error while waiting for message ${message.hash} processing: ${e}`);
@@ -119,6 +135,6 @@ export class HyperlaneRouterService implements ICCMPRouterService {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars, class-methods-use-this
   async getVerificationData(txHash: string, message: CCMPMessageType): Promise<string> {
-    return '';
+    return this.verificationData;
   }
 }

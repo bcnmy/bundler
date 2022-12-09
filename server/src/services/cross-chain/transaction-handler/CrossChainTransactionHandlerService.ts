@@ -166,6 +166,7 @@ export class CrossChainTransactionHandlerService implements ICrossChainTransacti
       return {
         ...data,
         status: CrossChainTransactionError.INSUFFICIENT_GAS_FEE,
+        scheduleRetry: true,
         context: {
           paid: gasFeePaid.toString(),
           required: gasFeeEstimate.amount.toString(),
@@ -277,7 +278,7 @@ export class CrossChainTransactionHandlerService implements ICrossChainTransacti
     if (!lock) {
       throw new Error('Redlock not initialized');
     }
-    await lock.using([`key:ccmp:${message.hash}`], 5000, async () => {
+    await lock.using([`key:ccmp:${message.hash}`], 100000, async () => {
       const sourceChainId = parseInt(message.sourceChainId.toString(), 10);
 
       // Build the monad
