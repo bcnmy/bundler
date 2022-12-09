@@ -18,7 +18,7 @@ export class SocketConsumer implements ISocketConsumer {
   private queue: IQueue<TransactionQueueMessageType>;
 
   EVMRelayerManagerMap: {
-    [name: string] : {
+    [name: string]: {
       [chainId: number]: IRelayerManager<IEVMAccount, EVMRawTransactionType>;
     }
   };

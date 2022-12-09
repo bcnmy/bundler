@@ -49,9 +49,11 @@ import {
   CrossChainTransactionMessageType,
   EntryPointMapType,
   EVMRawTransactionType,
+  FeeSupportedToken,
   SCWTransactionMessageType,
   TransactionType,
 } from '../types';
+import { RelayerBalanceManager } from './relayer-balance-manager';
 import { CrossChainTransactionDAO } from '../db/dao/CrossChainTransactionDao';
 import { CrossChainRetryHandlerQueue } from '../queue/CrossChainRetryHandlerQueue';
 import { CrossChainRetryTransactionService } from '../../server/src/services/cross-chain/retry-transaction-service';
@@ -132,12 +134,18 @@ const transactionDao = new TransactionDAO();
 const crossChainTransactionDAO = new CrossChainTransactionDAO();
 
 const socketConsumerMap: Record<number, SocketConsumer> = {};
-const retryTransactionSerivceMap: Record<number, EVMRetryTransactionService> = {};
-const transactionSerivceMap: Record<number, EVMTransactionService> = {};
-const transactionListenerMap: Record<number, EVMTransactionListener> = {};
+const retryTransactionServiceMap: Record<number, EVMRetryTransactionService> = {};
+const transactionServiceMap: Record<number, EVMTransactionService> = {};
 const retryTransactionQueueMap: {
   [key: number]: RetryTransactionHandlerQueue;
 } = {};
+let scwRelayerList: string[] = [];
+let ccmpRelayerList: string[] = [];
+const relayerInstanceMap: Record<string, EVMRelayerManager> = {};
+let relayerBalanceManager: RelayerBalanceManager;
+let labelCCMP;
+let labelSCW;
+
 const crossChainRetryTransactionQueueMap: {
   [key: number]: CrossChainRetryHandlerQueue;
 } = {};
@@ -175,6 +183,47 @@ let statusService: IStatusService;
     tokenService.schedule();
   }
 
+  const feeSupportedTokenList: Record<number, FeeSupportedToken[]> = {};
+  for (const chainId in config.feeOption.tokenContractAddress) {
+    if (Object.prototype.hasOwnProperty.call(config.feeOption.tokenContractAddress, chainId)) {
+      const feeSupportedTokenArray: FeeSupportedToken[] = [];
+      for (const symbol in config.feeOption.tokenContractAddress[chainId]) {
+        if (Object.prototype.hasOwnProperty.call(config.feeOption.tokenContractAddress, symbol)) {
+          const token = {
+            address: config.feeOption.tokenContractAddress[chainId][symbol],
+            symbol,
+            decimal: config.feeOption.decimals[chainId][symbol],
+          };
+          feeSupportedTokenArray.push(token);
+        }
+      }
+      feeSupportedTokenList[Number(chainId)] = feeSupportedTokenArray;
+    }
+  }
+
+  config.feeManagementConfig.tokenList = feeSupportedTokenList;
+
+  relayerBalanceManager = new RelayerBalanceManager();
+  try {
+    relayerBalanceManager.setTransactionServiceMap(transactionServiceMap);
+    await relayerBalanceManager.init({
+      masterFundingAccountSCW:
+        relayerInstanceMap[relayerManagerTransactionTypeNameMap.SCW].ownerAccountDetails,
+      relayerAddressesSCW: scwRelayerList,
+      masterFundingAccountCCMP: relayerInstanceMap[relayerManagerTransactionTypeNameMap.SCW]
+        .ownerAccountDetails, // change it to cross-chain before commit
+      relayerAddressesCCMP: ccmpRelayerList, // change it to ccmpRelayerList before commit
+      appConfig: config.feeManagementConfig,
+      dbUrl: config.dataSources.mongoUrl,
+      tokenPriceService: tokenService,
+      cacheService,
+      labelCCMP,
+      labelSCW, // change it to labelSCW before commit
+    });
+  } catch (error: any) {
+    log.error('Error while calling relayerBalanceManager.init()');
+    log.info(error);
+  }
   const tokenPriceConversionService = new TokenPriceConversionService(
     tokenService,
     networkServiceMap,
@@ -259,7 +308,9 @@ let statusService: IStatusService;
         chainId,
       },
     });
-    transactionListenerMap[chainId] = transactionListener;
+
+    transactionListener.setRelayerBalanceManager(relayerBalanceManager);
+
     log.info(`Transaction listener setup complete for chainId: ${chainId}`);
 
     log.info(`Setting up transaction service for chainId: ${chainId}`);
@@ -275,7 +326,7 @@ let statusService: IStatusService;
         chainId,
       },
     });
-    transactionSerivceMap[chainId] = transactionService;
+    transactionServiceMap[chainId] = transactionService;
     log.info(`Transaction service setup complete for chainId: ${chainId}`);
 
     log.info(`Setting up relayer manager for chainId: ${chainId}`);
@@ -314,6 +365,17 @@ let statusService: IStatusService;
       EVMRelayerManagerMap[relayerManager.name][chainId] = relayerMangerInstance;
 
       const addressList = await relayerMangerInstance.createRelayers();
+
+      if (relayerManagerTransactionTypeNameMap.CROSS_CHAIN === relayerManager.name) {
+        ccmpRelayerList = addressList;
+        relayerInstanceMap[
+          relayerManagerTransactionTypeNameMap.CROSS_CHAIN] = relayerMangerInstance;
+        labelCCMP = relayerManager.name;
+      } else if (relayerManagerTransactionTypeNameMap.SCW === relayerManager.name) {
+        scwRelayerList = addressList;
+        relayerInstanceMap[relayerManagerTransactionTypeNameMap.SCW] = relayerMangerInstance;
+        labelSCW = relayerManager.name;
+      }
       log.info(
         `Relayer address list length: ${addressList.length} and minRelayerCount: ${JSON.stringify(relayerManager.minRelayerCount)}`,
       );
@@ -322,7 +384,7 @@ let statusService: IStatusService;
     log.info(`Relayer manager setup complete for chainId: ${chainId}`);
 
     log.info(`Setting up retry transaction service for chainId: ${chainId}`);
-    retryTransactionSerivceMap[chainId] = new EVMRetryTransactionService({
+    retryTransactionServiceMap[chainId] = new EVMRetryTransactionService({
       retryTransactionQueue,
       transactionService,
       networkService,
@@ -333,7 +395,7 @@ let statusService: IStatusService;
     });
 
     retryTransactionQueueMap[chainId].consume(
-      retryTransactionSerivceMap[chainId].onMessageReceived,
+      retryTransactionServiceMap[chainId].onMessageReceived,
     );
     log.info(`Retry transaction service setup for chainId: ${chainId}`);
 
@@ -599,7 +661,7 @@ export {
   EVMRelayerManagerMap,
   ccmpRouterMap,
   ccmpServiceMap,
-  transactionSerivceMap,
+  transactionServiceMap,
   indexerService,
   transactionDao,
   statusService,

@@ -200,3 +200,9 @@ export type EntryPointMapType = {
     entryPointContract: ethers.Contract;
   }>;
 };
+
+export type FeeSupportedToken = {
+  address: string,
+  symbol: string,
+  decimal: number,
+};

@@ -12,10 +12,12 @@
     "test": "jest"
   },
   "dependencies": {
+    "fee-management": "0.0.1",
+    "@ethersproject/bignumber": "^5.5.0",
+    "@ethersproject/providers": "^5.7.2",
     "@abacus-network/sdk": "^0.4.3-processtest",
     "@axelar-network/axelarjs-sdk": "^0.9.2",
     "@certusone/wormhole-sdk": "^0.6.2",
-    "@ethersproject/bignumber": "^5.5.0",
     "@improbable-eng/grpc-web-node-http-transport": "^0.15.0",
     "@slack/web-api": "^6.8.0",
     "@types/crypto-js": "^4.1.1",
@@ -54,6 +56,7 @@
     "winston": "^3.8.2"
   },
   "devDependencies": {
+    "@jest/globals": "^29.1.2",
     "@types/amqplib": "^0.8.2",
     "@types/big.js": "^6.1.5",
     "@types/consolidate": "^0.14.1",
