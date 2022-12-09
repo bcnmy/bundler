@@ -12,7 +12,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@biconomy/fee-management": "/Users/divyanailwal/Git_hub/fee-management",
+    "fee-management": "0.0.1",
     "@ethersproject/bignumber": "^5.5.0",
     "@ethersproject/providers": "^5.7.2",
     "@abacus-network/sdk": "^0.4.3-processtest",
