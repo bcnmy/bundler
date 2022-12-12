@@ -84,7 +84,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       transactionId,
       relayerManagerName,
       transactionHash: transactionExecutionResponse?.hash,
-      receipt: transactionExecutionResponse,
+      receipt: transactionReceipt,
       event: SocketEventType.onTransactionMined,
     });
     if (transactionExecutionResponse) {
@@ -113,7 +113,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       transactionId,
       relayerManagerName,
       transactionHash: transactionExecutionResponse?.hash,
-      receipt: transactionExecutionResponse,
+      receipt: transactionReceipt,
       event: SocketEventType.onTransactionMined,
     });
 
