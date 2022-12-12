@@ -5,6 +5,7 @@ import {
   processFromIndexerApi,
   statusFromMessageHashApi,
   statusFromTxHashApi,
+  supportedRoutersAPI,
 } from '../../controllers';
 import {
   validateCrossChainProcessFromIndexerRequest,
@@ -36,3 +37,5 @@ crossChainRouter.get(
   validateCrossChainStatusFromMessageHash,
   statusFromMessageHashApi,
 );
+
+crossChainRouter.get('/supported-routers', supportedRoutersAPI);

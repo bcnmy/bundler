@@ -108,7 +108,7 @@ export class HyperlaneRouterService implements ICCMPRouterService {
   }
 
   async handlePreVerification(txHash: string, message: CCMPMessageType) {
-    // TODO: Implement fee payment mechanism
+    // TODO Implement fee payment mechanism
     log.info(
       `Waiting for transaction ${txHash} with message ${message.hash} to be confirmed by Hyperlane...`,
     );
