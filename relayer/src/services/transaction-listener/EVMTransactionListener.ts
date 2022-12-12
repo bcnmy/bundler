@@ -285,7 +285,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       transactionId,
       relayerManagerName,
       transactionHash: transactionExecutionResponse?.hash,
-      receipt: transactionExecutionResponse,
+      receipt: undefined,
       event: previousTransactionHash
         ? SocketEventType.onTransactionHashChanged : SocketEventType.onTransactionHashGenerated,
     });

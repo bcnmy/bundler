@@ -60,9 +60,9 @@ export class SocketConsumer implements ISocketConsumer {
           channel: `transaction:${transactionDataReceivedFromQueue.transactionId}`,
           data: {
             transactionId: transactionDataReceivedFromQueue.transactionId,
-            transactionHash: transactionDataReceivedFromQueue.receipt?.transactionHash,
+            transactionHash: transactionDataReceivedFromQueue?.transactionHash,
             event: transactionDataReceivedFromQueue.event,
-            receipt: transactionDataReceivedFromQueue.receipt,
+            receipt: transactionDataReceivedFromQueue?.receipt,
           },
         });
       } catch (error) {
