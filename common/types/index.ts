@@ -26,7 +26,7 @@ export type TransactionQueueMessageType = {
   relayerManagerName: string,
   transactionHash?: string,
   previousTransactionHash?: string,
-  receipt?: ethers.providers.TransactionResponse,
+  receipt?: ethers.providers.TransactionReceipt,
   error?: string,
 };
 
