@@ -2,52 +2,6 @@
 # yarn lockfile v1
 
 
-"@abacus-network/app@0.4.2-processtest":
-  version "0.4.2-processtest"
-  resolved "https://registry.yarnpkg.com/@abacus-network/app/-/app-0.4.2-processtest.tgz#b50e60f853492b1b102e855919ebfe16c2e1c92c"
-  integrity sha512-fr7du8xSwJDTcP4kN33nc77K2f+M1NYSlVvvrVV/o00HUf+20CZP2ybOLVSK/5GsJinpgNVjYHzPjqp1/DDmIQ==
-  dependencies:
-    "@abacus-network/core" "0.4.2-processtest"
-    "@abacus-network/utils" "0.4.2-processtest"
-    "@openzeppelin/contracts-upgradeable" "^4.5.0"
-
-"@abacus-network/celo-ethers-provider@^0.1.0":
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/@abacus-network/celo-ethers-provider/-/celo-ethers-provider-0.1.1.tgz#3e0e2b6f1af6e68835b17dd9ed0caa99f330e0df"
-  integrity sha512-Y/u6cxzCDTmqA9PVwAWRnLxPw7xbdLAgoCgp3NZUNKSN6R/QyLj/HbJ4Qibonx8Qmo6sTegu2xnItcsala5nMw==
-
-"@abacus-network/core@0.4.2-processtest":
-  version "0.4.2-processtest"
-  resolved "https://registry.yarnpkg.com/@abacus-network/core/-/core-0.4.2-processtest.tgz#a0bea2b43afd915fda9dd32f535ff1586358a126"
-  integrity sha512-bnssX4ZO8/iveI2oy5ffJcEAL7FSWyNlIUV9CrunIEVdkTu5OR0BxXgVGCs30A1fMSFXmdx1BeSoWgRw0/MFdA==
-  dependencies:
-    "@abacus-network/utils" "0.4.2-processtest"
-    "@openzeppelin/contracts" "^4.6.0"
-    "@openzeppelin/contracts-upgradeable" "^4.6.0"
-    "@summa-tx/memview-sol" "^2.0.0"
-
-"@abacus-network/sdk@^0.4.3-processtest":
-  version "0.4.3-processtest"
-  resolved "https://registry.yarnpkg.com/@abacus-network/sdk/-/sdk-0.4.3-processtest.tgz#6622fdc2bff47dac2607d9d144b55079afa54b20"
-  integrity sha512-eWBJYTepbHeqX/Kadg5+oCbxCdtYuP1hGR5Pwq6k2ahbNpuEi2s5Ume76fLsuMboFym0VzGCTxXjzCIZ+356jQ==
-  dependencies:
-    "@abacus-network/app" "0.4.2-processtest"
-    "@abacus-network/celo-ethers-provider" "^0.1.0"
-    "@abacus-network/core" "0.4.2-processtest"
-    "@abacus-network/utils" "0.4.2-processtest"
-    "@types/debug" "^4.1.7"
-    coingecko-api "^1.0.10"
-    cross-fetch "^3.1.5"
-    debug "^4.3.4"
-    ethers "^5.6.8"
-
-"@abacus-network/utils@0.4.2-processtest":
-  version "0.4.2-processtest"
-  resolved "https://registry.yarnpkg.com/@abacus-network/utils/-/utils-0.4.2-processtest.tgz#2f7e5528f3818478819aacb1ebbced1d49bfbde0"
-  integrity sha512-8XtxkgLyo2u9/pGQMx+iy5+HkI2edPNh3mgNyneB2hRX6ovmquMsGfDs+VgKNgQaQgMIlOZ2QS5lp+W9MSFagg==
-  dependencies:
-    ethers "^5.6.8"
-
 "@acuminous/bitsyntax@^0.1.2":
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/@acuminous/bitsyntax/-/bitsyntax-0.1.2.tgz#e0b31b9ee7ad1e4dd840c34864327c33d9f1f653"
@@ -1720,6 +1674,41 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.1.tgz#b520529ec21d8e5945a1851dfd1c32e94e39ff45"
   integrity sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==
 
+"@hyperlane-xyz/celo-ethers-provider@^0.1.1":
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/@hyperlane-xyz/celo-ethers-provider/-/celo-ethers-provider-0.1.1.tgz#596dbf180cd476781e8d3bdd9ba595e7438563f0"
+  integrity sha512-Kl+qV4J+5PGwFN+dCQ+bu42y5FXkvQKDuZVLRKehk/L6/Otj+UO0PL+U532Y3/RaWH0xtpsImONfL7+edzOFtw==
+
+"@hyperlane-xyz/core@0.5.6":
+  version "0.5.6"
+  resolved "https://registry.yarnpkg.com/@hyperlane-xyz/core/-/core-0.5.6.tgz#0b1c7b064007feb2f75f04d88771a038e15e64ed"
+  integrity sha512-TK0qZ+MImiEN/jWXthT6juOhoqgnmPqjaozv3TO8cmTrfQt2UaN76SKUwX58jCEcxs/stqwT9o4eZuDR3yW0pQ==
+  dependencies:
+    "@hyperlane-xyz/utils" "0.5.6"
+    "@openzeppelin/contracts" "^4.6.0"
+    "@openzeppelin/contracts-upgradeable" "^4.6.0"
+
+"@hyperlane-xyz/sdk@^0.5.6":
+  version "0.5.6"
+  resolved "https://registry.yarnpkg.com/@hyperlane-xyz/sdk/-/sdk-0.5.6.tgz#7af9e06180de2731bdfb3efef6ef367debebc55b"
+  integrity sha512-zsw71f3nTuegaszsoe8hzKBheaZYuoWW38rAwtaNAgkXfC8LSwcODFWU8/HtHLgxpOlLQTWeLgZMU+tHTip/7A==
+  dependencies:
+    "@hyperlane-xyz/celo-ethers-provider" "^0.1.1"
+    "@hyperlane-xyz/core" "0.5.6"
+    "@hyperlane-xyz/utils" "0.5.6"
+    "@types/debug" "^4.1.7"
+    coingecko-api "^1.0.10"
+    cross-fetch "^3.1.5"
+    debug "^4.3.4"
+    ethers "^5.6.8"
+
+"@hyperlane-xyz/utils@0.5.6":
+  version "0.5.6"
+  resolved "https://registry.yarnpkg.com/@hyperlane-xyz/utils/-/utils-0.5.6.tgz#3874a9497c493537c41d116e93fef27e15d3d97b"
+  integrity sha512-ud4j33yKSAzo0Od5mqIOnC+3iHOnH3BGOFE7dABz8LMOt6Ettx8N/PC9Ou3LHdiYNc9e4CHfbv7+G1Z6POKHEQ==
+  dependencies:
+    ethers "^5.6.8"
+
 "@improbable-eng/grpc-web-node-http-transport@^0.15.0":
   version "0.15.0"
   resolved "https://registry.yarnpkg.com/@improbable-eng/grpc-web-node-http-transport/-/grpc-web-node-http-transport-0.15.0.tgz#5a064472ef43489cbd075a91fb831c2abeb09d68"
@@ -2169,7 +2158,7 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
-"@openzeppelin/contracts-upgradeable@^4.5.0", "@openzeppelin/contracts-upgradeable@^4.6.0":
+"@openzeppelin/contracts-upgradeable@^4.6.0":
   version "4.8.0"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-4.8.0.tgz#26688982f46969018e3ed3199e72a07c8d114275"
   integrity sha512-5GeFgqMiDlqGT8EdORadp1ntGF0qzWZLmEY7Wbp/yVhN7/B3NNzCxujuI77ktlyG81N3CUZP8cZe3ZAQ/cW10w==
@@ -2375,11 +2364,6 @@
     node-fetch "2"
     rpc-websockets "^7.5.0"
     superstruct "^0.14.2"
-
-"@summa-tx/memview-sol@^2.0.0":
-  version "2.1.1"
-  resolved "https://registry.yarnpkg.com/@summa-tx/memview-sol/-/memview-sol-2.1.1.tgz#fa44b872e52269846df9a6561a9399461fac896e"
-  integrity sha512-Wfw6+Vn5evlCCK/aKLmZsPd9B6qi6UeIGHjC7mjhusp/3ansY/t96J9dCZzi+tAgzaE7WxCRR1aRXPQgVVxXsg==
 
 "@terra-money/legacy.proto@npm:@terra-money/terra.proto@^0.1.7":
   version "0.1.7"

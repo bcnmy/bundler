@@ -1,10 +1,10 @@
 import {
-  AbacusCore,
+  HyperlaneCore,
   MultiProvider,
   coreEnvironments,
   InterchainGasCalculator,
   ChainName,
-} from '@abacus-network/sdk';
+} from '@hyperlane-xyz/sdk';
 import { ethers } from 'ethers';
 import { config } from '../../../../../config';
 import type { ICCMPRouterService } from './interfaces';
@@ -16,7 +16,7 @@ import { getNativeTokenSymbol } from '../../../../../common/token';
 const log = logger(module);
 
 export class HyperlaneRouterService implements ICCMPRouterService {
-  private readonly hyperlaneSdk: AbacusCore<any>;
+  private readonly hyperlaneSdk: HyperlaneCore<any>;
 
   private readonly environment: keyof typeof coreEnvironments;
 
@@ -51,7 +51,7 @@ export class HyperlaneRouterService implements ICCMPRouterService {
         ]),
       ) as any,
     );
-    this.hyperlaneSdk = AbacusCore.fromEnvironment(this.environment, this.multiProvider);
+    this.hyperlaneSdk = HyperlaneCore.fromEnvironment(this.environment, this.multiProvider);
     this.interchainGasCalculator = new InterchainGasCalculator(
       this.multiProvider,
       this.hyperlaneSdk,
@@ -125,9 +125,9 @@ export class HyperlaneRouterService implements ICCMPRouterService {
       }, 5000);
 
       // Wait for message to get processed
-      const processReceipts = await this.hyperlaneSdk.waitForMessageProcessing(txReceipt);
+      await this.hyperlaneSdk.waitForMessageProcessed(txReceipt);
       clearInterval(id);
-      log.info(`Status for hyperlane message ${message.hash}: ${JSON.stringify(processReceipts)}`);
+      log.info(`Status for hyperlane message ${message.hash}: Processed`);
     } catch (e) {
       throw new Error(`Error while waiting for message ${message.hash} processing: ${e}`);
     }
