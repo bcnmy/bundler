@@ -49,10 +49,10 @@ export const simulateAATransaction = async (req: Request) => {
       msgFromSimulation: 'AA transaction successfully simulated',
     };
   } catch (error) {
-    log.error(`Error in simulateAATransaction ${error}`);
+    log.error(`Error in AA transaction simulation ${JSON.stringify(error)}`);
     return {
       code: 500,
-      error,
+      error: `Error in AA transaction simulation ${JSON.stringify(error)}`,
     };
   }
 };

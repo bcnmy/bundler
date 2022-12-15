@@ -17,8 +17,8 @@ export const simulateTransaction = () => async (
       response = await simulateSCWTransaction(req);
     }
     if (!response) {
-      return res.status(400).send({
-        code: 400,
+      return res.status(500).send({
+        code: 500,
         error: 'Response not received from simulation service',
       });
     }
@@ -32,7 +32,7 @@ export const simulateTransaction = () => async (
   } catch (error) {
     return res.status(500).send({
       code: 500,
-      error: `Internal server error: ${error}`,
+      error: `Internal server error: ${JSON.stringify(error)}`,
     });
   }
 };

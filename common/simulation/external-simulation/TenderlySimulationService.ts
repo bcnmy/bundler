@@ -46,7 +46,7 @@ export class TenderlySimulationService implements IExternalSimulation {
       from: '0x9e1980070743cb86bdbe3ae1d01018c6e97b0932',
       input: data,
       gas: 8000000,
-      gas_price: gasPriceForSimulation.toString(), // TODO get value from cache
+      gas_price: gasPriceForSimulation.toString(),
       value: '0',
       to,
       // simulation config (tenderly specific)
@@ -145,12 +145,11 @@ export class TenderlySimulationService implements IExternalSimulation {
 
       let refundToRelayer: number;
       const gasPrice = await this.gasPriceService.getGasPrice(GasPriceType.DEFAULT);
-      // TODO // Review how to calculate this
+
       const nativeTokenGasPrice = parseInt(gasPrice as string, 10);
 
       log.info(`Native token gas price: ${nativeTokenGasPrice} for SCW: ${to} with data: ${data}`);
       // ERC 20 token gas price should be in units of native asset
-      // TODO get price feeds
       const erc20TokenGasPrice = parseInt(refundInfo.tokenGasPrice, 10);
       let refundCalculatedInSimualtion: number = 0;
       if (refundInfo.gasToken === '0x0000000000000000000000000000000000000000') {

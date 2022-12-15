@@ -25,7 +25,7 @@ export const feeOptionsApi = async (req: Request, res: Response) => {
     log.error(`Error in fee option ${error}`);
     return res.status(500).json({
       code: 500,
-      error,
+      error: `Error in fee option ${error}`,
     });
   }
 };

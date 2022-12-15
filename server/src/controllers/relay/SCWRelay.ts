@@ -55,10 +55,10 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    log.error(`Error in SCW relay ${error}`);
+    log.error(`Error in SCW relay ${JSON.stringify(error)}`);
     return res.status(500).json({
       code: 500,
-      error: JSON.stringify(error),
+      error: `Internal Server Error: ${JSON.stringify(error)}`,
     });
   }
 };

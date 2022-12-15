@@ -15,17 +15,17 @@ export class SCWRelayService implements IRelayService<SCWTransactionMessageType>
     data: SCWTransactionMessageType,
   ): Promise<RelayServiceResponseType> {
     log.info(`Sending transaction to SCW tranasction queue with transactionId: ${data.transactionId}`);
-    await this.queue.publish(data);
     let response : RelayServiceResponseType;
     try {
+      await this.queue.publish(data);
       response = {
         code: 200,
         transactionId: data.transactionId,
       };
     } catch (error) {
       response = {
-        code: 400,
-        error: 'bad request',
+        code: 500,
+        error: `Internal server error: ${error}`,
       };
     }
     return response;
