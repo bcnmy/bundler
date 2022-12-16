@@ -114,7 +114,7 @@ export class EVMTransactionListener
       transactionId,
       relayerManagerName,
       transactionHash: transactionExecutionResponse?.hash,
-      receipt: transactionExecutionResponse,
+      receipt: transactionReceipt,
       event: SocketEventType.onTransactionMined,
     });
 
@@ -178,7 +178,7 @@ export class EVMTransactionListener
       transactionId,
       relayerManagerName,
       transactionHash: transactionExecutionResponse?.hash,
-      receipt: transactionExecutionResponse,
+      receipt: transactionReceipt,
       event: SocketEventType.onTransactionMined,
     });
 
@@ -396,7 +396,7 @@ export class EVMTransactionListener
       transactionId,
       relayerManagerName,
       transactionHash: transactionExecutionResponse?.hash,
-      receipt: transactionExecutionResponse,
+      receipt: undefined,
       event: previousTransactionHash
         ? SocketEventType.onTransactionHashChanged : SocketEventType.onTransactionHashGenerated,
     });
