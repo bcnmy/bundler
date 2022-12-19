@@ -6,51 +6,91 @@
   "ccmp": {
     "webhookEndpoint": "http://localhost:3000/api/v1/cross-chain/process/indexer",
     "supportedRouters": {
-      "43113": [
-        "wormhole",
-        "hyperlane"
-      ],
-      "80001": [
-        "wormhole",
-        "hyperlane"
-      ]
+      "5": ["wormhole", "hyperlane"],
+      "43113": ["wormhole", "hyperlane"],
+      "80001": ["wormhole", "hyperlane"],
+      "97": ["wormhole", "hyperlane"],
+      "420": ["hyperlane"],
+      "421613": ["hyperlane"]
     },
     "events": {
       "CCMPMessageRouted": {
+        "5": {
+          "name": "CCMPMessageRouted",
+          "topicId": "0xd104ea90f9fae928714248aaeace6818d814f775ed2883b9286841dc71b66ada"
+        },
         "43113": {
           "name": "CCMPMessageRouted",
           "topicId": "0xd104ea90f9fae928714248aaeace6818d814f775ed2883b9286841dc71b66ada"
         },
         "80001": {
+          "name": "CCMPMessageRouted",
+          "topicId": "0xd104ea90f9fae928714248aaeace6818d814f775ed2883b9286841dc71b66ada"
+        },
+        "97": {
+          "name": "CCMPMessageRouted",
+          "topicId": "0xd104ea90f9fae928714248aaeace6818d814f775ed2883b9286841dc71b66ada"
+        },
+        "420": {
+          "name": "CCMPMessageRouted",
+          "topicId": "0xd104ea90f9fae928714248aaeace6818d814f775ed2883b9286841dc71b66ada"
+        },
+        "421613": {
           "name": "CCMPMessageRouted",
           "topicId": "0xd104ea90f9fae928714248aaeace6818d814f775ed2883b9286841dc71b66ada"
         }
       },
       "CCMPMessageExecuted": {
+        "5": {
+          "name": "CCMPMessageExecuted",
+          "topicId": "0x42e073e73dd9723ee27739705ad4e0552def30ad3fcead00836676904fec0160"
+        },
         "43113": {
           "name": "CCMPMessageExecuted",
           "topicId": "0x42e073e73dd9723ee27739705ad4e0552def30ad3fcead00836676904fec0160"
         },
         "80001": {
+          "name": "CCMPMessageExecuted",
+          "topicId": "0x42e073e73dd9723ee27739705ad4e0552def30ad3fcead00836676904fec0160"
+        },
+        "97": {
+          "name": "CCMPMessageExecuted",
+          "topicId": "0x42e073e73dd9723ee27739705ad4e0552def30ad3fcead00836676904fec0160"
+        },
+        "420": {
+          "name": "CCMPMessageExecuted",
+          "topicId": "0x42e073e73dd9723ee27739705ad4e0552def30ad3fcead00836676904fec0160"
+        },
+        "421613": {
           "name": "CCMPMessageExecuted",
           "topicId": "0x42e073e73dd9723ee27739705ad4e0552def30ad3fcead00836676904fec0160"
         }
       }
     },
     "tokenSymbols": {
-      "USDT": 1
+      "USDT": 1,
+      "USDC": 2,
+      "ETH": 3,
+      "BICO": 4,
+      "MATIC": 5
     },
     "indexerWebhookBlockConfirmation": {
+      "5": 5,
       "43113": 5,
-      "80001": 1
+      "80001": 5,
+      "97": 5,
+      "420": 5,
+      "421613": 5
     },
     "bridges": {
       "wormhole": {
         "pollingIntervalMs": 2000,
         "maxPollingCount": 5,
         "bridgeAddress": {
+          "5": "0x706abc4E45D419950511e474C7B9Ed348A4a716c",
           "80001": "0x0CBE91CF822c73C2315FB05100C2F714765d5c20",
-          "43113": "0x7bbcE28e64B3F8b84d876Ab298393c38ad7aac4C"
+          "43113": "0x7bbcE28e64B3F8b84d876Ab298393c38ad7aac4C",
+          "97": "0x68605AD7b15c732a30b1BbC62BE8F2A509D74b4D"
         },
         "hostUrl": "https://wormhole-v2-testnet-api.certus.one",
         "chainId": {
@@ -89,8 +129,9 @@
           "43113": "fuji"
         },
         "environment": "testnet2",
-        "verificationFeePaymentTxGas": 30000,
-        "verificationGas": 80000
+        "verificationFeePaymentTxGas": 1,
+        "verificationGas": 1,
+        "enableVerificationFeeCalculation": false
       }
     },
     "gasEstimation": {
@@ -108,27 +149,61 @@
       }
     },
     "contracts": {
+      "5": {
+        "CCMPExecutor": "0x8A97B3CD2451DA24a78D9827E4f3511A573cC7B3",
+        "CCMPGateway": "0x404172100D6A428F5Eae378650f4259CC803de7c",
+        "LiquidityPool": "0xE61d38cC9B3eF1d223b177090f3FD02b0B3412e7"
+      },
       "43113": {
-        "CCMPExecutor": "0x320D8cfCA5d07FB88230626b12672708511B23D9",
-        "CCMPGateway": "0x53B309Ff259e568309A19810E3bF1647B6922afd",
+        "CCMPExecutor": "0x8A97B3CD2451DA24a78D9827E4f3511A573cC7B3",
+        "CCMPGateway": "0x404172100D6A428F5Eae378650f4259CC803de7c",
         "LiquidityPool": "0x07d2d1690D13f5fD9F9D51a96CEe211F6a845AC5"
       },
       "80001": {
-        "CCMPExecutor": "0xAe4D41d1105896FC976e19681A42d3057Ee6c528",
-        "CCMPGateway": "0x5dB92fdAC16d027A3Fef6f438540B5818b6f66D5",
+        "CCMPExecutor": "0x8A97B3CD2451DA24a78D9827E4f3511A573cC7B3",
+        "CCMPGateway": "0x404172100D6A428F5Eae378650f4259CC803de7c",
         "LiquidityPool": "0xb831F0848A055b146a0b13D54cfFa6C1FE201b83"
+      },
+      "97": {
+        "CCMPExecutor": "0x8A97B3CD2451DA24a78D9827E4f3511A573cC7B3",
+        "CCMPGateway": "0x404172100D6A428F5Eae378650f4259CC803de7c",
+        "LiquidityPool": "0xDbF976e42bC51D801E0DB572ED279EA2F46c3BbD"
+      },
+      "420": {
+        "CCMPExecutor": "0x8A97B3CD2451DA24a78D9827E4f3511A573cC7B3",
+        "CCMPGateway": "0x404172100D6A428F5Eae378650f4259CC803de7c",
+        "LiquidityPool": "0xb6e4E72E62d5Ad9E6daa6b1251D543947E8a8d60"
+      },
+      "421613": {
+        "CCMPExecutor": "0x8A97B3CD2451DA24a78D9827E4f3511A573cC7B3",
+        "CCMPGateway": "0x404172100D6A428F5Eae378650f4259CC803de7c",
+        "LiquidityPool": "0x01d2Ae629deDa986B1C2Eaea91f6769B499B7F25"
       }
     },
     "adaptors": {
-      "43113": {
-        "axelar": "0x2aC78FF75EC3E1349fcC2d2ea30cf56318f93f25",
-        "wormhole": "0x8C6ed76011b7d5ddcf8dA88687C4B5A7a4b79165",
-        "hyperlane": "0xFb41e96053608669d3B2D976577237684C71df11"
+      "5": {
+        "wormhole": "0x84fEe39095b18962b875588dF7F9Ad1bE87e8653",
+        "hyperlane": "0xDc490a8408605D4A411d1eba33b1C62148511293"
       },
       "80001": {
-        "axelar": "0x2BFA42C7359E789b2A78612B79510d09660B2E16",
-        "wormhole": "0x428D93d5042bC2efda4f5402f55E5B7f0B8e3Ce8",
-        "hyperlane": "0xBB5D00aF8A3B275Cb1f59950A0fF62a099a91810"
+        "wormhole": "0x84fEe39095b18962b875588dF7F9Ad1bE87e8653",
+        "hyperlane": "0xDc490a8408605D4A411d1eba33b1C62148511293"
+      },
+      "43113": {
+        "wormhole": "0x84fEe39095b18962b875588dF7F9Ad1bE87e8653",
+        "hyperlane": "0xDc490a8408605D4A411d1eba33b1C62148511293"
+      },
+      "97": {
+        "wormhole": "0x84fEe39095b18962b875588dF7F9Ad1bE87e8653",
+        "hyperlane": "0xDc490a8408605D4A411d1eba33b1C62148511293"
+      },
+      "420": {
+        "wormhole": "0x84fEe39095b18962b875588dF7F9Ad1bE87e8653",
+        "hyperlane": "0xDc490a8408605D4A411d1eba33b1C62148511293"
+      },
+      "421613": {
+        "wormhole": "0x84fEe39095b18962b875588dF7F9Ad1bE87e8653",
+        "hyperlane": "0xDc490a8408605D4A411d1eba33b1C62148511293"
       }
     },
     "abi": {
@@ -2408,16 +2483,26 @@
       ]
     },
     "retryInterval": {
-      "43113": {
+      "5": {
         "wormhole": 10000
       },
       "80001": {
+        "wormhole": 10000
+      },
+      "43113": {
+        "wormhole": 10000
+      },
+      "97": {
         "wormhole": 10000
       }
     },
     "performIndexerRegistrationOnStartup": {
       "80001": false,
-      "43113": false
+      "43113": false,
+      "97": false,
+      "5": false,
+      "421613": false,
+      "420": false
     }
   },
   "socketService": {
@@ -2427,42 +2512,16 @@
   "cacheService": {
     "lockTTL": 10000
   },
-  "supportedNetworks": [
-    80001,
-    43113
-  ],
+  "supportedNetworks": [80001, 43113, 5, 97, 420, 421613],
   "EIP1559SupportedNetworks": [],
   "supportedTransactionType": {
-    "5": [
-      "AA",
-      "SCW"
-    ],
-    "137": [
-      "AA",
-      "SCW"
-    ],
-    "80001": [
-      "AA",
-      "SCW",
-      "CROSS_CHAIN"
-    ],
-    "97": [
-      "AA",
-      "SCW"
-    ],
-    "420": [
-      "AA",
-      "SCW"
-    ],
-    "421613": [
-      "AA",
-      "SCW"
-    ],
-    "43113": [
-      "AA",
-      "SCW",
-      "CROSS_CHAIN"
-    ]
+    "5": ["AA", "SCW", "CROSS_CHAIN"],
+    "137": ["AA", "SCW"],
+    "80001": ["AA", "SCW", "CROSS_CHAIN"],
+    "97": ["AA", "SCW", "CROSS_CHAIN"],
+    "420": ["AA", "SCW", "CROSS_CHAIN"],
+    "421613": ["AA", "SCW", "CROSS_CHAIN"],
+    "43113": ["AA", "SCW", "CROSS_CHAIN"]
   },
   "chains": {
     "currency": {
@@ -2576,28 +2635,13 @@
         "INVALID_TRANSACTION": "submit transaction to pool failed"
       },
       "networksNonceError": {
-        "5": [
-          "nonce too low",
-          "nonce has already been used"
-        ],
-        "137": [
-          "nonce too low"
-        ],
-        "80001": [
-          "nonce too low"
-        ],
-        "97": [
-          "nonce too low"
-        ],
-        "420": [
-          "nonce too low"
-        ],
-        "421613": [
-          "nonce too low"
-        ],
-        "43113": [
-          "nonce too low"
-        ]
+        "5": ["nonce too low", "nonce has already been used"],
+        "137": ["nonce too low"],
+        "80001": ["nonce too low"],
+        "97": ["nonce too low"],
+        "420": ["nonce too low"],
+        "421613": ["nonce too low"],
+        "43113": ["nonce too low"]
       },
       "networksInsufficientFundsError": {
         "5": "insufficient funds for gas",
@@ -2759,38 +2803,14 @@
       }
     },
     "similarTokens": {
-      "1": [
-        "ETH",
-        "WETH"
-      ],
-      "5": [
-        "ETH",
-        "WETH"
-      ],
-      "137": [
-        "MATIC",
-        "WMATIC"
-      ],
-      "80001": [
-        "MATIC",
-        "WMATIC"
-      ],
-      "97": [
-        "BNB",
-        "WBNB"
-      ],
-      "420": [
-        "ETH",
-        "WETH"
-      ],
-      "421613": [
-        "ETH",
-        "WETH"
-      ],
-      "43113": [
-        "AVAX",
-        "WAVAX"
-      ]
+      "1": ["ETH", "WETH"],
+      "5": ["ETH", "WETH"],
+      "137": ["MATIC", "WMATIC"],
+      "80001": ["MATIC", "WMATIC"],
+      "97": ["BNB", "WBNB"],
+      "420": ["ETH", "WETH"],
+      "421613": ["ETH", "WETH"],
+      "43113": ["AVAX", "WAVAX"]
     },
     "nativeChainIds": {
       "WETH": 1,
@@ -2994,69 +3014,21 @@
   "tokenPrice": {
     "coinMarketCapUrl": "https://pro-api.coinmarketcap.com/",
     "networkSymbols": {
-      "ETH": [
-        1,
-        3,
-        4,
-        42,
-        5,
-        421613,
-        42161,
-        420,
-        10
-      ],
-      "MATIC": [
-        8995,
-        80001,
-        15001,
-        16110,
-        137
-      ],
-      "DAI": [
-        77,
-        100
-      ],
-      "RBTC": [
-        31
-      ],
-      "AVAX": [
-        43113,
-        43114
-      ],
-      "BNB": [
-        97,
-        56
-      ],
-      "GLMR": [
-        1287,
-        1284
-      ],
-      "EDG": [
-        2021
-      ],
-      "MOVR": [
-        1285
-      ],
-      "FTM": [
-        250,
-        4002
-      ],
-      "CELO": [
-        42220,
-        44787
-      ],
-      "NEON": [
-        245022926
-      ],
-      "BOBA": [
-        1294
-      ],
-      "BICO": [
-        111111111
-      ],
-      "USDT": [
-        825
-      ]
+      "ETH": [1, 3, 4, 42, 5, 421613, 42161, 420, 10],
+      "MATIC": [8995, 80001, 15001, 16110, 137],
+      "DAI": [77, 100],
+      "RBTC": [31],
+      "AVAX": [43113, 43114],
+      "BNB": [97, 56],
+      "GLMR": [1287, 1284],
+      "EDG": [2021],
+      "MOVR": [1285],
+      "FTM": [250, 4002],
+      "CELO": [42220, 44787],
+      "NEON": [245022926],
+      "BOBA": [1294],
+      "BICO": [111111111],
+      "USDT": [825]
     },
     "updateFrequencyInSeconds": 90,
     "symbolMapByChainId": {

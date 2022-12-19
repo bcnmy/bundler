@@ -166,6 +166,7 @@ type CCMPBridgesConfigType = {
     environment: string;
     verificationFeePaymentTxGas: number;
     verificationGas: number;
+    enableVerificationFeeCalculation: false;
   };
 };
 

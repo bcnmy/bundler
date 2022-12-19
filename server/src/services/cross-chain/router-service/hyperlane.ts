@@ -76,6 +76,14 @@ export class HyperlaneRouterService implements ICCMPRouterService {
     txHash: string,
     message: CCMPMessageType,
   ) {
+    if (config.ccmp.bridges.hyperlane.enableVerificationFeeCalculation) {
+      log.info('Verification fee calculation is disabled for Hyperlane');
+      return {
+        amount: ethers.BigNumber.from(0),
+        tokenSymbol: this.nativeTokenSymbol,
+      };
+    }
+
     const sourceChainId = parseInt(message.sourceChainId.toString(), 10);
     const sourceChain = this.chainIdToName[sourceChainId];
     if (!sourceChain) {
