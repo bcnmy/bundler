@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/indent */
-import { FeeManager } from '@biconomy/fee-management';
-import { IEVMAccount } from '@biconomy/fee-management/dist/relayer-node-interfaces/IEVMAccount';
-import { ITransactionService } from '@biconomy/fee-management/dist/relayer-node-interfaces/ITransactionService';
+import { FeeManager } from 'fee-management';
+import { IEVMAccount } from 'fee-management/dist/relayer-node-interfaces/IEVMAccount';
+import { ITransactionService } from 'fee-management/dist/relayer-node-interfaces/ITransactionService';
 import { ethers } from 'ethers';
-import { Mode } from '@biconomy/fee-management/dist/types';
+import { Mode } from 'fee-management/dist/types';
 import { EVMRawTransactionType, TransactionType } from '../types';
 import { logger } from '../log-config';
 import { IRelayerBalanceManager } from './interface/IRelayerBalanceManager';
