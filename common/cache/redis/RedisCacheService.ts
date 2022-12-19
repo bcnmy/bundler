@@ -14,7 +14,7 @@ export class RedisCacheService implements ICacheService {
   private redLock: Redlock | undefined;
 
   private constructor() {
-    this.redisClient = new Redis(config.dataSources.redisUrl);
+    this.redisClient = new Redis(config.dataSources.redisUrl, { lazyConnect: true });
   }
 
   connectRedLock(): Redlock {
@@ -69,12 +69,13 @@ export class RedisCacheService implements ICacheService {
    * Method creates connection to redis client instance
    */
   async connect(): Promise<void> {
-    log.info('Initiating Redis connection');
+    log.info(`Initiating Redis connection with current status as: ${this.redisClient.status}`);
     try {
       await this.redisClient.connect();
-      log.info('Main Redis connected successfully');
+      log.info(`Main Redis connected successfully with status as: ${this.redisClient.status}`);
     } catch (error) {
-      log.info(`Error in connecting to redis client ${JSON.stringify(error)}`);
+      log.info(`Error in connecting to redis client ${error}`);
+      throw error;
     }
     this.redLock = this.connectRedLock();
 
@@ -218,7 +219,7 @@ export class RedisCacheService implements ICacheService {
       log.info(`Cache value set in logs for key: ${key}`);
       return true;
     } catch (error) {
-      log.error(`Error setting value $${value} for key ${key} - ${JSON.stringify(error)}`);
+      log.error(`Error setting value ${value} for key ${key} - ${JSON.stringify(error)}`);
       return false;
     }
   }

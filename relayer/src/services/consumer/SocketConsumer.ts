@@ -18,7 +18,7 @@ export class SocketConsumer implements ISocketConsumer {
   private queue: IQueue<TransactionQueueMessageType>;
 
   EVMRelayerManagerMap: {
-    [name: string] : {
+    [name: string]: {
       [chainId: number]: IRelayerManager<IEVMAccount, EVMRawTransactionType>;
     }
   };
@@ -60,9 +60,9 @@ export class SocketConsumer implements ISocketConsumer {
           channel: `transaction:${transactionDataReceivedFromQueue.transactionId}`,
           data: {
             transactionId: transactionDataReceivedFromQueue.transactionId,
-            transactionHash: transactionDataReceivedFromQueue.receipt?.hash,
+            transactionHash: transactionDataReceivedFromQueue?.transactionHash,
             event: transactionDataReceivedFromQueue.event,
-            receipt: transactionDataReceivedFromQueue.receipt,
+            receipt: transactionDataReceivedFromQueue?.receipt,
           },
         });
       } catch (error) {

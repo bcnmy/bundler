@@ -216,11 +216,11 @@ type CCMPAbiType = {
 };
 
 type CCMPEventType = Record<
-number,
-{
-  name: string;
-  topicId: string;
-}
+  number,
+  {
+    name: string;
+    topicId: string;
+  }
 >;
 
 type CCMPGasEstimationDataType = Record<CCMPRouterName, { code: string; verificationData: string }>;
@@ -259,11 +259,29 @@ export type SDKBackendConfigType = {
   baseUrl: string;
 };
 
+export type TokenData = {
+  address: string;
+  symbol: string;
+  decimal: number;
+};
+
+export type FeeManagementConfig = {
+  tokenList: Record<number, TokenData[]>;
+  nativeTokenSymbol: ChainIdWithStringValueType,
+  noOfDepositConfirmation: ChainIdWithNumberValueType,
+  hyphenLiquidityPoolAddress: ChainIdWithStringValueType,
+  balanceThreshold: ChainIdAndTokenWithNumberValueType;
+  feeSpendThreshold: ChainIdWithNumberValueType;
+  initialFundingAmountInUsd: ChainIdWithNumberValueType;
+};
+
 type CacheServiceConfigType = {
   lockTTL: number;
 };
 
 export type ConfigType = {
+  feeManagementConfig: FeeManagementConfig;
+  cacheService: CacheServiceConfigType,
   queueUrl: string;
   slack: SlackConfigType;
   dataSources: DataSourcesConfigType;
@@ -283,7 +301,6 @@ export type ConfigType = {
   zeroAddress: string;
   simulationData: SimulationDataConfigType;
   indexer: IndexerConfigType;
-  cacheService: CacheServiceConfigType;
 };
 
 export interface IConfig {

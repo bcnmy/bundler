@@ -16,6 +16,10 @@
     "@certusone/wormhole-sdk": "^0.6.2",
     "@ethersproject/bignumber": "^5.5.0",
     "@hyperlane-xyz/sdk": "^0.5.6",
+    "fee-management": "0.0.2",
+    "@ethersproject/bignumber": "^5.5.0",
+    "@ethersproject/providers": "^5.7.2",
+    "@certusone/wormhole-sdk": "^0.6.2",
     "@improbable-eng/grpc-web-node-http-transport": "^0.15.0",
     "@slack/web-api": "^6.8.0",
     "@types/crypto-js": "^4.1.1",
@@ -54,6 +58,7 @@
     "winston": "^3.8.2"
   },
   "devDependencies": {
+    "@jest/globals": "^29.1.2",
     "@types/amqplib": "^0.8.2",
     "@types/big.js": "^6.1.5",
     "@types/consolidate": "^0.14.1",

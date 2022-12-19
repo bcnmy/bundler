@@ -53,7 +53,7 @@ export type SocketConsumerParamsType = {
     chainId: number,
     wssUrl: string,
     EVMRelayerManagerMap: {
-      [name: string] : {
+      [name: string]: {
         [chainId: number]: IRelayerManager<IEVMAccount, EVMRawTransactionType>;
       }
     },

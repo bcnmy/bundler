@@ -32,7 +32,7 @@ export type TransactionQueueMessageType = {
   relayerManagerName: string,
   transactionHash?: string,
   previousTransactionHash?: string,
-  receipt?: ethers.providers.TransactionResponse,
+  receipt?: ethers.providers.TransactionReceipt,
   error?: string,
 };
 
@@ -199,4 +199,10 @@ export type EntryPointMapType = {
     address: string;
     entryPointContract: ethers.Contract;
   }>;
+};
+
+export type FeeSupportedToken = {
+  address: string,
+  symbol: string,
+  decimal: number,
 };

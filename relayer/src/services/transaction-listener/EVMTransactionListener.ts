@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import { ICacheService } from '../../../../common/cache';
 import { ICrossChainTransactionDAO, ITransactionDAO } from '../../../../common/db';
 import { IQueue } from '../../../../common/interface';
@@ -5,6 +6,7 @@ import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
 import { CrossChainRetryHandlerQueue } from '../../../../common/queue/CrossChainRetryHandlerQueue';
 import { RetryTransactionQueueData } from '../../../../common/queue/types';
+import { IRelayerBalanceManager } from '../../../../common/service-manager/interface/IRelayerBalanceManager';
 import {
   CCMPMessageType,
   CrossChainTransactionError,
@@ -35,9 +37,9 @@ import {
 const log = logger(module);
 
 export class EVMTransactionListener
-implements
-    ITransactionListener<IEVMAccount, EVMRawTransactionType>,
-    ITransactionPublisher<TransactionQueueMessageType> {
+  implements
+  ITransactionListener<IEVMAccount, EVMRawTransactionType>,
+  ITransactionPublisher<TransactionQueueMessageType> {
   chainId: number;
 
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
@@ -49,6 +51,8 @@ implements
   transactionDao: ITransactionDAO;
 
   cacheService: ICacheService;
+
+  relayerBalanceManager: IRelayerBalanceManager | undefined;
 
   crossChainTransactionDAO: ICrossChainTransactionDAO;
 
@@ -73,6 +77,10 @@ implements
     this.cacheService = cacheService;
     this.crossChainTransactionDAO = crossChainTransactionDAO;
     this.crossChainRetryHandlerQueueMap = crossChainRetryHandlerQueueMap;
+  }
+
+  async setRelayerBalanceManager(_relayerBalanceManager: IRelayerBalanceManager) {
+    this.relayerBalanceManager = _relayerBalanceManager;
   }
 
   async publishToTransactionQueue(data: TransactionQueueMessageType): Promise<boolean> {
@@ -106,7 +114,7 @@ implements
       transactionId,
       relayerManagerName,
       transactionHash: transactionExecutionResponse?.hash,
-      receipt: transactionExecutionResponse,
+      receipt: transactionReceipt,
       event: SocketEventType.onTransactionMined,
     });
 
@@ -170,7 +178,7 @@ implements
       transactionId,
       relayerManagerName,
       transactionHash: transactionExecutionResponse?.hash,
-      receipt: transactionExecutionResponse,
+      receipt: transactionReceipt,
       event: SocketEventType.onTransactionMined,
     });
 
@@ -315,6 +323,8 @@ implements
         ccmpMessage,
       });
     }
+
+    this.relayerBalanceManager!.onTransaction(transactionReceipt, transactionType, this.chainId);
   }
 
   async notify(
@@ -348,7 +358,7 @@ implements
     }
 
     if (!previousTransactionHash) {
-    // Save initial transaction data to database
+      // Save initial transaction data to database
       this.updateTransactionDataToDatabase({
         transactionHash: transactionExecutionResponse.hash,
         rawTransaction: transactionExecutionResponse,
@@ -386,7 +396,7 @@ implements
       transactionId,
       relayerManagerName,
       transactionHash: transactionExecutionResponse?.hash,
-      receipt: transactionExecutionResponse,
+      receipt: undefined,
       event: previousTransactionHash
         ? SocketEventType.onTransactionHashChanged : SocketEventType.onTransactionHashGenerated,
     });
@@ -438,7 +448,7 @@ implements
   };
 
   private static handleCCMPOnTransactionSuccessFactory = (destinationTxHash?: string)
-  : ICrossChainProcessStep => {
+    : ICrossChainProcessStep => {
     const handler: ICrossChainProcessStep = async (data) => ({
       ...data,
       status: CrossChainTransationStatus.DESTINATION_TRANSACTION_CONFIRMED,

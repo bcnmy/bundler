@@ -11,7 +11,7 @@ import { Type0TransactionGasPriceType, Type2TransactionGasPriceType } from './ty
 
 const log = logger(module);
 export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTransactionType>,
- IERC20NetworkService {
+  IERC20NetworkService {
   chainId: number;
 
   rpcUrl: string;
@@ -232,14 +232,20 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
     rawTransactionData: EVMRawTransactionType,
     account: IEVMAccount,
   ): Promise<ethers.providers.TransactionResponse> {
-    const rawTx: EVMRawTransactionType = rawTransactionData;
-    rawTx.from = account.getPublicKey();
-    const tx = await account.signTransaction(rawTx);
-    const receipt = await this.useProvider(RpcMethod.sendTransaction, {
-      tx,
-      rawTx,
-    });
-    return receipt;
+    try {
+      const rawTx: EVMRawTransactionType = rawTransactionData;
+      rawTx.from = account.getPublicKey();
+
+      const tx = await account.signTransaction(rawTx);
+      const receipt = await this.useProvider(RpcMethod.sendTransaction, {
+        tx,
+        rawTx,
+      });
+      return receipt;
+    } catch (err) {
+      log.error('Error while calling sendTransaction()');
+      throw err;
+    }
   }
 
   /**
