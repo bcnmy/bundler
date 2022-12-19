@@ -2705,44 +2705,13 @@
   },
   "feeOption": {
     "supportedFeeTokens": {
-      "5": [
-        "ETH",
-        "USDC",
-        "USDT",
-        "DAI",
-        "WETH"
-      ],
-      "137": [
-        "MATIC",
-        "USDC",
-        "USDT",
-        "DAI",
-        "WETH"
-      ],
-      "80001": [
-        "MATIC",
-        "USDC",
-        "USDT",
-        "DAI",
-        "WETH"
-      ],
-      "97": [
-        "BNB",
-        "USDT"
-      ],
-      "420": [
-        "ETH",
-        "USDC"
-      ],
-      "421613": [
-        "ETH",
-        "USDC"
-      ],
-      "43113": [
-        "AVAX",
-        "USDT",
-        "WETH"
-      ]
+      "5": ["ETH", "USDC", "USDT", "DAI", "WETH"],
+      "137": ["MATIC", "USDC", "USDT", "DAI", "WETH"],
+      "80001": ["MATIC", "USDC", "USDT", "DAI", "WETH"],
+      "97": ["BNB", "USDT"],
+      "420": ["ETH", "USDC"],
+      "421613": ["ETH", "USDC"],
+      "43113": ["AVAX", "USDT", "WETH"]
     },
     "offset": {
       "5": {
