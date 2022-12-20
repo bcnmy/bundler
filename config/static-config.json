@@ -122,11 +122,12 @@
           "43114": "avalanche",
           "5": "goerli",
           "69": "optimismkovan",
-          "420": "optimism",
+          "420": "optimismgoerli",
           "97": "bsctestnet",
           "80001": "mumbai",
           "421611": "arbitrumrinkeby",
-          "43113": "fuji"
+          "43113": "fuji",
+          "421613": "arbitrumgoerli"
         },
         "environment": "testnet2",
         "verificationFeePaymentTxGas": 1,
@@ -2484,16 +2485,26 @@
     },
     "retryInterval": {
       "5": {
-        "wormhole": 10000
+        "wormhole": 10000,
+        "hyperlane": 10000
       },
       "80001": {
-        "wormhole": 10000
+        "wormhole": 10000,
+        "hyperlane": 10000
       },
       "43113": {
-        "wormhole": 10000
+        "wormhole": 10000,
+        "hyperlane": 10000
       },
       "97": {
-        "wormhole": 10000
+        "wormhole": 10000,
+        "hyperlane": 10000
+      },
+      "420": {
+        "hyperlane": 10000
+      },
+      "421613": {
+        "hyperlane": 10000
       }
     },
     "performIndexerRegistrationOnStartup": {
@@ -2898,11 +2909,11 @@
       },
       "420": {
         "ETH": "0x0000000000000000000000000000000000000000",
-        "USDC": "0xfAA13F5ebdA3Daf625264526522678a86dEEAf87"
+        "USDC": "0x359a5ECa3Af6db9b04dF09Bb417f97890219Fe5D"
       },
       "421613": {
         "ETH": "0x0000000000000000000000000000000000000000",
-        "USDC": "0xcaFbE4cE15475E0C220E9bE054B68a0830d24E46"
+        "USDC": "0xc84c9BD3898f9c167915FE945f8C722709018d24"
       },
       "43113": {
         "AVAX": "0x0000000000000000000000000000000000000000",
@@ -3028,7 +3039,8 @@
       "NEON": [245022926],
       "BOBA": [1294],
       "BICO": [111111111],
-      "USDT": [825]
+      "USDT": [825],
+      "USDC": [3408]
     },
     "updateFrequencyInSeconds": 90,
     "symbolMapByChainId": {

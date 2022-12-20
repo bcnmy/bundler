@@ -76,7 +76,7 @@ export class HyperlaneRouterService implements ICCMPRouterService {
     txHash: string,
     message: CCMPMessageType,
   ) {
-    if (config.ccmp.bridges.hyperlane.enableVerificationFeeCalculation) {
+    if (!config.ccmp.bridges.hyperlane.enableVerificationFeeCalculation) {
       log.info('Verification fee calculation is disabled for Hyperlane');
       return {
         amount: ethers.BigNumber.from(0),

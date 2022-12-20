@@ -201,7 +201,7 @@ export class CrossChainGasEstimationService implements ICrossChainGasEstimationS
         tokenSymbol: feeTokenSymbol,
       };
     } catch (e) {
-      log.error(`Error estimating verification fee for messge: ${message.hash}`, e);
+      log.error(`Error estimating verification fee for message: ${message.hash}`, e);
       throw e;
     }
   }
