@@ -100,7 +100,8 @@ export class CCMPGatewayService implements ICCMPGatewayService {
       type: TransactionType.CROSS_CHAIN,
       to: message.destinationGateway,
       data: calldata,
-      gasLimit: ethers.utils.hexValue(gasLimit.estimate),
+      // Send 1.5x Estimate
+      gasLimit: ethers.utils.hexValue(gasLimit.estimate.mul(3).div(2)),
       chainId: parseInt(message.destinationChainId.toString(), 10),
       value: '0x0',
       message,
