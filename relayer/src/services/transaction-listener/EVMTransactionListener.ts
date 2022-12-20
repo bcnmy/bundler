@@ -37,7 +37,7 @@ import {
 const log = logger(module);
 
 export class EVMTransactionListener
-  implements
+implements
   ITransactionListener<IEVMAccount, EVMRawTransactionType>,
   ITransactionPublisher<TransactionQueueMessageType> {
   chainId: number;
@@ -448,7 +448,7 @@ export class EVMTransactionListener
   };
 
   private static handleCCMPOnTransactionSuccessFactory = (destinationTxHash?: string)
-    : ICrossChainProcessStep => {
+  : ICrossChainProcessStep => {
     const handler: ICrossChainProcessStep = async (data) => ({
       ...data,
       status: CrossChainTransationStatus.DESTINATION_TRANSACTION_CONFIRMED,
