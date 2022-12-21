@@ -9,7 +9,6 @@ import {
   CrossChainTransactionMessageType,
   TransactionType,
   CrossChainTransationStatus,
-  CrossChainTransactionError,
 } from '../../../../common/types';
 import { CCMPTaskManager } from '../../../../server/src/services/cross-chain/task-manager';
 import { ICCMPTaskManager } from '../../../../server/src/services/cross-chain/task-manager/interfaces/ICCMPTaskManager';
