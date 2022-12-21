@@ -19,12 +19,14 @@
     "@hyperlane-xyz/sdk": "^0.5.6",
     "@improbable-eng/grpc-web-node-http-transport": "^0.15.0",
     "@slack/web-api": "^6.8.0",
+    "@types/cls-hooked": "^4.3.3",
     "@types/crypto-js": "^4.1.1",
     "amqplib": "^0.10.3",
     "async-mutex": "^0.4.0",
     "axios": "^1.1.2",
     "big.js": "^6.2.1",
     "cent.js": "^2.0.5",
+    "cls-hooked": "^4.2.2",
     "cls-rtracer": "^2.6.2",
     "consolidate": "^0.16.0",
     "cors": "^2.8.5",
@@ -54,6 +56,7 @@
     "rest-api-errors": "^1.2.5",
     "serialize-error": "8.1.0",
     "typescript": "^4.7.4",
+    "uuidv4": "^6.2.13",
     "winston": "^3.8.2"
   },
   "devDependencies": {

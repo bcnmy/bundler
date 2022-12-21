@@ -3,6 +3,29 @@ import winston from 'winston';
 import { hostname } from 'os';
 import rTracer from 'cls-rtracer';
 import { EventEmitter } from 'events';
+import { getNamespace, createNamespace } from 'cls-hooked';
+import { uuid } from 'uuidv4';
+
+const loggingSession = getNamespace('logging-session') || createNamespace('logging-session');
+const CONTINUATION_ID_VAR_NAME = 'continuationId';
+
+const runWithContinuationId = (value: any, f: () => any) => {
+  if (!value) {
+    value = uuid();
+  }
+  let returnValue = null;
+  loggingSession.run(() => {
+    loggingSession.set(CONTINUATION_ID_VAR_NAME, value);
+    returnValue = f();
+  });
+  return returnValue;
+};
+
+const continuationIdFormat = winston.format((info) => {
+  const continuationId = loggingSession.get(CONTINUATION_ID_VAR_NAME);
+  info.continuationId = continuationId;
+  return info;
+});
 
 const consoleTransport = new winston.transports.Console({
   level: process.env.LOG_LEVEL || 'debug',
@@ -20,6 +43,7 @@ const serverTransport = (path: string) => winston.createLogger({
     winston.format.timestamp({
       format: 'YYYY-MM-DD HH:mm:ss SSS',
     }),
+    continuationIdFormat(),
     winston.format((info: any) => {
       info.path = path;
       info.hostname = hostname();
@@ -47,4 +71,4 @@ const logger = (module: { filename: string; }) => {
   return serverTransport(path);
 };
 
-export { logger, serverTransport };
+export { logger, serverTransport, runWithContinuationId };
