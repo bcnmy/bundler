@@ -6,6 +6,7 @@ import type { CrossChainTransactionStatusResult } from './types';
 import type { EVMNetworkService } from '../../../../../common/network';
 import type { CCMPGatewayService } from '../gateway';
 import { CrossChainTransactionError, CrossChainTransationStatus, TransactionStatus } from '../../../../../common/types';
+import { removeUrls } from '../utils';
 
 const log = logger(module);
 
@@ -94,7 +95,7 @@ export class CrosschainTransactionStatusService implements ICrossChainTransactio
         ...(sourceChainData.errors
           ? { error: sourceStatus.status as CrossChainTransactionError }
           : { sourceTransactionStatus: sourceStatus.status as CrossChainTransationStatus }),
-        context: sourceStatus.context,
+        context: removeUrls(sourceStatus.context || ''),
         destinationTransactionStatus: destinationChainData?.status as TransactionStatus,
         destinationChainTxHash: destinationChainData?.transactionHash,
       };
