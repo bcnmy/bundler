@@ -160,7 +160,7 @@ export class CCMPConsumer implements ITransactionConsumer<IEVMAccount, EVMRawTra
   ): ICrossChainProcessStep => {
     const handler: ICrossChainProcessStep = async (data) => ({
       ...data,
-      status: CrossChainTransactionError.DESTINATION_TRANSACTION_REVERTED,
+      status: CrossChainTransationStatus.DESTINATION_TRANSACTION_RELAYED,
       context: {
         destinationTxHash,
         error,
