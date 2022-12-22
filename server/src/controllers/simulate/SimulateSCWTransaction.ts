@@ -32,10 +32,10 @@ export const simulateSCWTransaction = async (req: Request) => {
       msgFromSimulation: 'Transaction successfully simulated',
     };
   } catch (error) {
-    log.error(`Error in SCW simulation ${error}`);
+    log.error(`Error in SCW transaction simulation ${JSON.stringify(error)}`);
     return {
       code: 500,
-      error,
+      error: `Error in SCW transaction simulation ${JSON.stringify(error)}`,
     };
   }
 };
