@@ -1,3 +1,4 @@
+import { StatusCodes } from 'http-status-codes';
 import { IQueue } from '../interface';
 import { logger } from '../log-config';
 import { SCWTransactionMessageType, RelayServiceResponseType } from '../types';
@@ -19,12 +20,12 @@ export class SCWRelayService implements IRelayService<SCWTransactionMessageType>
     let response : RelayServiceResponseType;
     try {
       response = {
-        code: 200,
+        code: StatusCodes.OK,
         transactionId: data.transactionId,
       };
     } catch (error) {
       response = {
-        code: 400,
+        code: StatusCodes.BAD_REQUEST,
         error: 'bad request',
       };
     }

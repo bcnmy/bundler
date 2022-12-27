@@ -1,10 +1,11 @@
 import rTracer from 'cls-rtracer';
+import cons from 'consolidate';
 import cors from 'cors';
 import express, {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  NextFunction, Request, Response, ErrorRequestHandler,
+  NextFunction, Request, Response,
 } from 'express';
-import cons from 'consolidate';
+import { StatusCodes } from 'http-status-codes';
 import { morganMiddleware } from '../../common/log-config';
 import { routes } from './routes';
 
@@ -76,6 +77,6 @@ app.use((
   res: Response,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   next: NextFunction,
-) => res.status(300).json(err.message));
+) => res.status(StatusCodes.BAD_REQUEST).json(err.message));
 
 export default app;

@@ -1,3 +1,4 @@
+import { StatusCodes } from 'http-status-codes';
 import { RedisCacheService } from '../../common/cache';
 import { GasPriceManager } from '../../common/gas-price';
 import { EVMNetworkService } from '../../common/network';
@@ -31,7 +32,7 @@ describe('get fee options', () => {
       });
       const { response, code } = await feeOptionService.get();
 
-      expect(code).toBe(200);
+      expect(code).toBe(StatusCodes.OK);
       expect(response).toBeDefined();
 
       if (response) {

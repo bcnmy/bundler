@@ -1,5 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import Big from 'big.js';
+import { StatusCodes } from 'http-status-codes';
 import { ICacheService } from '../../../../common/cache';
 import { IGasPrice } from '../../../../common/gas-price';
 import { GasPriceType } from '../../../../common/gas-price/types';
@@ -119,13 +120,13 @@ export class FeeOption {
         });
       }
       return {
-        code: 200,
+        code: StatusCodes.OK,
         response,
       };
     } catch (error) {
       log.error(error);
       return {
-        code: 500,
+        code: StatusCodes.INTERNAL_SERVER_ERROR,
         error: `Error occured in getting fee options service. Error: ${error}`,
       };
     }

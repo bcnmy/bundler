@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { StatusCodes } from 'http-status-codes';
 import { logger } from '../../../../common/log-config';
 import { routeTransactionToRelayerMap, transactionDao } from '../../../../common/service-manager';
 import { isError, TransactionStatus, TransactionType } from '../../../../common/types';
@@ -42,13 +43,13 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
     });
 
     if (isError(response)) {
-      return res.status(400).json({
-        code: 400,
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        code: StatusCodes.BAD_REQUEST,
         error: response.error,
       });
     }
-    return res.status(200).json({
-      code: 200,
+    return res.status(StatusCodes.OK).json({
+      code: StatusCodes.OK,
       data: {
         transactionId,
         connectionUrl: websocketUrl,
@@ -56,8 +57,8 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
     });
   } catch (error) {
     log.error(`Error in SCW relay ${error}`);
-    return res.status(500).json({
-      code: 500,
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      code: StatusCodes.INTERNAL_SERVER_ERROR,
       error: JSON.stringify(error),
     });
   }

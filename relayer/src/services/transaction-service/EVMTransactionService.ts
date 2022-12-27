@@ -1,5 +1,6 @@
 /* eslint-disable max-len */
 import { ethers } from 'ethers';
+import { StatusCodes } from 'http-status-codes';
 import { ICacheService } from '../../../../common/cache';
 import { IGasPrice } from '../../../../common/gas-price';
 import { logger } from '../../../../common/log-config';
@@ -250,7 +251,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       // Should we send this response if we are manaully resubmitting transaction?
       return {
         state: 'failed',
-        code: 404, // TODO custom code for max retry
+        code: StatusCodes.NOT_FOUND, // TODO custom code for max retry
         error: 'Max retry count exceeded. Use end point to get transaction status', // todo add end point
         transactionId,
         ...{
@@ -315,7 +316,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
 
       return {
         state: 'success',
-        code: 200,
+        code: StatusCodes.OK,
         transactionId,
         ...transactionListenerNotifyResponse,
       };
@@ -323,7 +324,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       log.info(`Error while sending transaction: ${error}`);
       return {
         state: 'failed',
-        code: 500,
+        code: StatusCodes.INTERNAL_SERVER_ERROR,
         error: parseError(error),
         transactionId,
         ...{
@@ -368,7 +369,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       } else {
         return {
           state: 'failed',
-          code: 500,
+          code: StatusCodes.INTERNAL_SERVER_ERROR,
           error: JSON.stringify(retryTransactionExecutionResponse.error),
           transactionId,
           ...{
@@ -393,7 +394,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
 
       return {
         state: 'success',
-        code: 200,
+        code: StatusCodes.OK,
         transactionId,
         ...transactionListenerNotifyResponse,
       };
@@ -401,7 +402,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       log.info(`Error while retrying transaction: ${error} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
       return {
         state: 'failed',
-        code: 500,
+        code: StatusCodes.INTERNAL_SERVER_ERROR,
         error: JSON.stringify(error),
         transactionId,
         ...{

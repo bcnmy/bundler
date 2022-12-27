@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { StatusCodes } from 'http-status-codes';
 import { RedisCacheService } from '../../../../common/cache';
 import { logger } from '../../../../common/log-config';
 
@@ -9,7 +10,7 @@ export const deleteCacheAPI = async (req: Request, res: Response) => {
     const { secret } = req.query;
     const { key } = req.body;
     if (secret !== 'j2AFV5Ni89kcU6jM') {
-      return res.status(400).json({
+      return res.status(StatusCodes.BAD_REQUEST).json({
         error: 'invalid request',
       });
     }
@@ -19,7 +20,7 @@ export const deleteCacheAPI = async (req: Request, res: Response) => {
     });
   } catch (error) {
     log.error(`Error in deleteCacheAPI ${error}`);
-    return res.status(500).json({
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       error,
     });
   }
@@ -30,7 +31,7 @@ export const getCacheAPI = async (req: Request, res: Response) => {
     const { secret } = req.query;
     const { key } = req.body;
     if (secret !== 'j2AFV5Ni89kcU6jM') {
-      return res.status(400).json({
+      return res.status(StatusCodes.BAD_REQUEST).json({
         error: 'invalid request',
       });
     }
@@ -42,12 +43,12 @@ export const getCacheAPI = async (req: Request, res: Response) => {
       });
     }
 
-    return res.status(404).json({
+    return res.status(StatusCodes.NOT_FOUND).json({
       msg: 'cache not found',
     });
   } catch (error) {
     log.error(`Error in deleteCacheAPI ${error}`);
-    return res.status(500).json({
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       error,
     });
   }
@@ -58,7 +59,7 @@ export const postCacheAPI = async (req: Request, res: Response) => {
     const { secret } = req.query;
     const { key, value } = req.body;
     if (secret !== 'j2AFV5Ni89kcU6jM') {
-      return res.status(400).json({
+      return res.status(StatusCodes.BAD_REQUEST).json({
         error: 'invalid request',
       });
     }
@@ -70,12 +71,12 @@ export const postCacheAPI = async (req: Request, res: Response) => {
       });
     }
 
-    return res.status(400).json({
+    return res.status(StatusCodes.BAD_REQUEST).json({
       msg: 'cache not saved',
     });
   } catch (error) {
     log.error(`Error in deleteCacheAPI ${error}`);
-    return res.status(500).json({
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       error,
     });
   }

@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { StatusCodes } from 'http-status-codes';
 import { logger } from '../../../../common/log-config';
 import { transactionDao } from '../../../../common/service-manager';
 import { parseError } from '../../../../common/utils';
@@ -14,15 +15,15 @@ export const transactionStatusApi = async (req: Request, res: Response) => {
   try {
     if (!response) {
       log.info(`Transaction status for transactionId ${transactionId} on chainId ${chainId} is not found`);
-      return res.status(404).json({
-        code: 404,
+      return res.status(StatusCodes.NOT_FOUND).json({
+        code: StatusCodes.NOT_FOUND,
         error: 'Transaction not found',
       });
     }
     log.info(`Transaction status for transactionId ${transactionId} on chainId ${chainId} is ${JSON.stringify(response)}`);
     if (response.length) {
       return res.json({
-        code: 200,
+        code: StatusCodes.OK,
         data: {
           chainId,
           transactionId: response[0].transactionId,
@@ -34,14 +35,14 @@ export const transactionStatusApi = async (req: Request, res: Response) => {
         },
       });
     }
-    return res.status(404).json({
-      code: 404,
+    return res.status(StatusCodes.NOT_FOUND).json({
+      code: StatusCodes.NOT_FOUND,
       error: 'Transaction not found',
     });
   } catch (error) {
     log.error(`Error in transaction status ${parseError(error)}`);
-    return res.status(500).json({
-      code: 500,
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      code: StatusCodes.INTERNAL_SERVER_ERROR,
       error: parseError(error),
     });
   }

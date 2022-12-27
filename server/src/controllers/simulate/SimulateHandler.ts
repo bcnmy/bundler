@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
+import { StatusCodes } from 'http-status-codes';
 import { TransactionMethodType } from '../../../../common/types';
 import { simulateAATransaction } from './SimulateAATransaction';
 import { simulateSCWTransaction } from './SimulateSCWTransaction';
@@ -17,12 +18,12 @@ export const simulateTransaction = () => async (
       response = await simulateSCWTransaction(req);
     }
     if (!response) {
-      return res.status(400).send({
-        code: 400,
+      return res.status(StatusCodes.BAD_REQUEST).send({
+        code: StatusCodes.BAD_REQUEST,
         error: 'Response not received from simulation service',
       });
     }
-    if ((response as any).code !== 200) {
+    if ((response as any).code !== StatusCodes.OK) {
       return res.status((response as any).code).send({
         code: (response as any).code,
         error: (response as any).msgFromSimulation,
@@ -30,8 +31,8 @@ export const simulateTransaction = () => async (
     }
     return next();
   } catch (error) {
-    return res.status(500).send({
-      code: 500,
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({
+      code: StatusCodes.INTERNAL_SERVER_ERROR,
       error: `Internal server error: ${error}`,
     });
   }
