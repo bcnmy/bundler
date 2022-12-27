@@ -149,7 +149,6 @@ export type GaslessFallbackTransactionMessageType = {
   }
 };
 
-
 type ResponseType = {
   code: number;
   transactionId: string;
