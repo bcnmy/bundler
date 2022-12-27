@@ -5,6 +5,7 @@ export enum TransactionType {
   SCW = 'SCW',
   CROSS_CHAIN = 'CROSS_CHAIN',
   FUNDING = 'FUNDING',
+  GASLESS_FALLBACK = 'GASLESS_FALLBACK',
 }
 
 export enum CCMPRouterName {
@@ -17,6 +18,7 @@ export enum TransactionMethodType {
   SCW = 'eth_sendSmartContractWalletTransaction',
   AA = 'eth_sendUserOperation',
   CROSS_CHAIN = 'eth_sendCrossChainTransaction',
+  GASLESS_FALLBACK = 'eth_sendViaGaslessFallback',
 }
 
 export enum SocketEventType {

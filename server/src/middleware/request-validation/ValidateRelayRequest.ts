@@ -1,7 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
+import { StatusCodes } from 'http-status-codes';
 import { logger } from '../../../../common/log-config';
 import { TransactionMethodType } from '../../../../common/types';
-import { aaRequestSchema, scwRequestSchema } from '../../routes/relay/relay.schema';
+import { aaRequestSchema, gaslessFallbackRequestSchema, scwRequestSchema } from '../../routes/relay/relay.schema';
 
 const log = logger(module);
 
@@ -20,9 +21,12 @@ export const validateRelayRequest = () => async (
       case TransactionMethodType.AA:
         validationResponse = aaRequestSchema.validate(req.body);
         break;
+      case TransactionMethodType.GASLESS_FALLBACK:
+        validationResponse = gaslessFallbackRequestSchema.validate(req.body);
+        break;
       default:
-        return res.status(400).send({
-          code: 400,
+        return res.status(StatusCodes.BAD_REQUEST).send({
+          code: StatusCodes.BAD_REQUEST,
           error: 'Wrong transaction type sent in validate relay request',
         });
     }
@@ -38,14 +42,14 @@ export const validateRelayRequest = () => async (
     } else {
       message = error.message || error.toString();
     }
-    return res.status(400).json({
-      code: 400,
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      code: StatusCodes.BAD_REQUEST,
       error: message,
     });
   } catch (e: any) {
     log.error(e);
-    return res.status(400).send({
-      code: 400,
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({
+      code: StatusCodes.INTERNAL_SERVER_ERROR,
       error: JSON.stringify(e),
     });
   }

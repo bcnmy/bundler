@@ -62,6 +62,18 @@ export const aaRequestSchema = object.keys({
   id: number.required().error(new Error('id is required')),
 });
 
+export const gaslessFallbackRequestSchema = object.keys({
+  method: string.regex(/eth_sendUserOperation/),
+  params: array.items(alternatives.try(
+    userOp,
+    entryPointAddress,
+    chainId,
+    metaData,
+  )),
+  jsonrpc: string.required().error(new Error('jsonrpc is required')),
+  id: number.required().error(new Error('id is required')),
+});
+
 export const feeOptionsSchema = object.keys({
   chainId: string.required().error(new Error('chainId is required')),
 });

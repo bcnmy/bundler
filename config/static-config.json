@@ -2437,12 +2437,14 @@
     ],
     "137": [
       "AA",
-      "SCW"
+      "SCW",
+      "GASLESS_FALLBACK"
     ],
     "80001": [
       "AA",
       "SCW",
-      "CROSS_CHAIN"
+      "CROSS_CHAIN",
+      "GASLESS_FALLBACK"
     ],
     "97": [
       "AA",
@@ -2643,6 +2645,10 @@
         "420": 50,
         "421613": 50,
         "43113": 50
+      },
+      "GASLESS_FALLBACK": {
+        "80001": 5,
+        "137": 5
       }
     },
     "bumpGasPriceMultiplier": {
