@@ -18,7 +18,7 @@ export enum TransactionMethodType {
   SCW = 'eth_sendSmartContractWalletTransaction',
   AA = 'eth_sendUserOperation',
   CROSS_CHAIN = 'eth_sendCrossChainTransaction',
-  GASLESS_FALLBACK = 'eth_sendViaGaslessFallback',
+  GASLESS_FALLBACK = 'eth_sendGaslessFallback',
 }
 
 export enum SocketEventType {
@@ -134,6 +134,21 @@ export type CrossChainTransactionMessageType = {
   message: CCMPMessageType;
   sourceTxHash: string;
 };
+
+export type GaslessFallbackTransactionMessageType = {
+  type: string;
+  to: string;
+  data: string;
+  gasLimit: string;
+  chainId: number;
+  value: string;
+  transactionId: string;
+  userOp?: UserOperationType;
+  metaData?: {
+    dappAPIKey: string
+  }
+};
+
 
 type ResponseType = {
   code: number;

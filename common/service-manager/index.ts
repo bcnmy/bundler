@@ -3,10 +3,8 @@ import { ethers } from 'ethers';
 import { config } from '../../config';
 import { EVMAccount, IEVMAccount } from '../../relayer/src/services/account';
 import {
-  AAConsumer,
-  SCWConsumer,
+  AAConsumer, CCMPConsumer, GaslessFallbackConsumer, SCWConsumer,
   SocketConsumer,
-  CCMPConsumer,
 } from '../../relayer/src/services/consumer';
 import { EVMNonceManager } from '../../relayer/src/services/nonce-manager';
 import { EVMRelayerManager, IRelayerManager } from '../../relayer/src/services/relayer-manager';
@@ -15,16 +13,25 @@ import { EVMRetryTransactionService } from '../../relayer/src/services/retry-tra
 import { EVMTransactionListener } from '../../relayer/src/services/transaction-listener';
 import { EVMTransactionService } from '../../relayer/src/services/transaction-service';
 import { FeeOption } from '../../server/src/services';
-import { CrossChainTransactionHandlerService } from '../../server/src/services/cross-chain/transaction-handler';
+import { CrossChainGasEstimationService } from '../../server/src/services/cross-chain/gas-estimation';
+import type { ICrossChainGasEstimationService } from '../../server/src/services/cross-chain/gas-estimation/interfaces/ICrossChainGasEstimationService';
+import { CCMPGatewayService } from '../../server/src/services/cross-chain/gateway';
+import { LiquidityPoolService, LiquidityTokenManagerService } from '../../server/src/services/cross-chain/liquidity';
+import { CrossChainRetryTransactionService } from '../../server/src/services/cross-chain/retry-transaction-service';
 import {
   AxelarRouterService,
   HyperlaneRouterService,
   WormholeRouterService,
 } from '../../server/src/services/cross-chain/router-service';
 import { ICCMPRouterService } from '../../server/src/services/cross-chain/router-service/interfaces';
+import { CrossChainTransactionHandlerService } from '../../server/src/services/cross-chain/transaction-handler';
+import { CrosschainTransactionStatusService } from '../../server/src/services/cross-chain/transaction-status';
+import { ICrossChainTransactionStatusService } from '../../server/src/services/cross-chain/transaction-status/interfaces/ICrossChainTransactionStatusService';
 import { RedisCacheService } from '../cache';
 import { Mongo, TransactionDAO } from '../db';
+import { CrossChainTransactionDAO } from '../db/dao/CrossChainTransactionDao';
 import { GasPriceManager } from '../gas-price';
+import { IndexerService } from '../indexer/IndexerService';
 import { IQueue } from '../interface';
 import { logger } from '../log-config';
 import { relayerManagerTransactionTypeNameMap } from '../maps';
@@ -33,16 +40,19 @@ import { NotificationManager } from '../notification';
 import { SlackNotificationService } from '../notification/slack/SlackNotificationService';
 import {
   AATransactionQueue,
-  CCMPTransactionQueue,
-  RetryTransactionHandlerQueue,
+  CCMPTransactionQueue, GaslessFallbackTransactionQueue, RetryTransactionHandlerQueue,
   SCWTransactionQueue,
   TransactionHandlerQueue,
 } from '../queue';
-import { AARelayService, CCMPRelayService, SCWRelayService } from '../relay-service';
+import { CrossChainRetryHandlerQueue } from '../queue/CrossChainRetryHandlerQueue';
+import {
+  AARelayService, CCMPRelayService, GaslessFallbackRelayService, SCWRelayService,
+} from '../relay-service';
 import { AASimulationService, CCMPSimulationService, SCWSimulationService } from '../simulation';
 import { TenderlySimulationService } from '../simulation/external-simulation';
-import { CMCTokenPriceManager, TokenPriceConversionService } from '../token';
+import { ETHCallSimulationService } from '../simulation/external-simulation/EthCallSimulationService';
 import { IStatusService, StatusService } from '../status';
+import { CMCTokenPriceManager, TokenPriceConversionService } from '../token';
 import {
   AATransactionMessageType,
   CCMPRouterName,
@@ -50,21 +60,11 @@ import {
   EntryPointMapType,
   EVMRawTransactionType,
   FeeSupportedToken,
+  GaslessFallbackTransactionMessageType,
   SCWTransactionMessageType,
   TransactionType,
 } from '../types';
 import { RelayerBalanceManager } from './relayer-balance-manager';
-import { CrossChainTransactionDAO } from '../db/dao/CrossChainTransactionDao';
-import { CrossChainRetryHandlerQueue } from '../queue/CrossChainRetryHandlerQueue';
-import { CrossChainRetryTransactionService } from '../../server/src/services/cross-chain/retry-transaction-service';
-import { IndexerService } from '../indexer/IndexerService';
-import { CCMPGatewayService } from '../../server/src/services/cross-chain/gateway';
-import type { ICrossChainGasEstimationService } from '../../server/src/services/cross-chain/gas-estimation/interfaces/ICrossChainGasEstimationService';
-import { CrossChainGasEstimationService } from '../../server/src/services/cross-chain/gas-estimation';
-import { LiquidityPoolService, LiquidityTokenManagerService } from '../../server/src/services/cross-chain/liquidity';
-import { ICrossChainTransactionStatusService } from '../../server/src/services/cross-chain/transaction-status/interfaces/ICrossChainTransactionStatusService';
-import { CrosschainTransactionStatusService } from '../../server/src/services/cross-chain/transaction-status';
-import { ETHCallSimulationService } from '../simulation/external-simulation/EthCallSimulationService';
 
 const log = logger(module);
 
@@ -75,6 +75,7 @@ const routeTransactionToRelayerMap: {
     [TransactionType.AA]?: AARelayService;
     [TransactionType.SCW]?: SCWRelayService;
     [TransactionType.CROSS_CHAIN]?: CCMPRelayService;
+    [TransactionType.GASLESS_FALLBACK]?: GaslessFallbackRelayService;
   };
 } = {};
 
@@ -420,13 +421,13 @@ let statusService: IStatusService;
 
     // for each network get transaction type
     for (const type of supportedTransactionType[chainId]) {
-      const aaRelayerManager = EVMRelayerManagerMap[
-        relayerManagerTransactionTypeNameMap[type]][chainId];
-      if (!aaRelayerManager) {
-        throw new Error(`Relayer manager not found for ${type}`);
-      }
-
       if (type === TransactionType.AA) {
+        const aaRelayerManager = EVMRelayerManagerMap[
+          relayerManagerTransactionTypeNameMap[type]][chainId];
+        if (!aaRelayerManager) {
+          throw new Error(`Relayer manager not found for ${type}`);
+        }
+
         log.info(`Setting up AA transaction queue for chaindId: ${chainId}`);
         const aaQueue: IQueue<AATransactionMessageType> = new AATransactionQueue({
           chainId,
@@ -628,6 +629,56 @@ let statusService: IStatusService;
         await crossChainRetryTransactionQueueMap[chainId].consume(
           crossChainRetryTransactionServiceMap[chainId].onMessageReceived,
         );
+      } else if (type === TransactionType.GASLESS_FALLBACK) {
+        const gaslessFallbackRelayerManager = EVMRelayerManagerMap[
+          relayerManagerTransactionTypeNameMap[type]][chainId];
+        if (!gaslessFallbackRelayerManager) {
+          throw new Error(`Relayer manager not found for ${type}`);
+        }
+
+        log.info(`Setting up Gasless Fallback transaction queue for chaindId: ${chainId}`);
+        const gaslessFallbackQueue:
+        IQueue<GaslessFallbackTransactionMessageType> = new GaslessFallbackTransactionQueue({
+          chainId,
+        });
+
+        await gaslessFallbackQueue.connect();
+        log.info(`Gasless Fallback transaction queue setup complete for chainId: ${chainId}`);
+
+        const { entryPointData } = config;
+
+        for (
+          let entryPointIndex = 0;
+          entryPointIndex < entryPointData[chainId].length;
+          entryPointIndex += 1
+        ) {
+          const entryPoint = entryPointData[chainId][entryPointIndex];
+
+          entryPointMap[chainId].push({
+            address: entryPoint.address,
+            entryPointContract: networkService.getContract(
+              JSON.stringify(entryPoint.abi),
+              entryPoint.address,
+            ),
+          });
+        }
+
+        log.info(`Setting up Gasless Fallback consumer, relay service for chainId: ${chainId}`);
+        const gaslessFallbackConsumer = new GaslessFallbackConsumer({
+          queue: gaslessFallbackQueue,
+          relayerManager: gaslessFallbackRelayerManager,
+          transactionService,
+          cacheService,
+          options: {
+            chainId,
+            entryPointMap,
+          },
+        });
+          // start listening for transaction
+        await gaslessFallbackQueue.consume(gaslessFallbackConsumer.onMessageReceived);
+
+        const gaslessFallbackRelayService = new GaslessFallbackRelayService(gaslessFallbackQueue);
+        routeTransactionToRelayerMap[chainId][type] = gaslessFallbackRelayService;
       }
     }
   }

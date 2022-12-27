@@ -1,3 +1,4 @@
 export * from './AARelayService';
-export * from './SCWRelayService';
 export * from './CCMPRelayService';
+export * from './GaslessFallbackRelayService';
+export * from './SCWRelayService';
