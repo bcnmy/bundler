@@ -199,7 +199,8 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
       // check if size of active relayer queue is
       // greater than or equal to the inactiveRelayerCountThreshold
       if ((this.minRelayerCount - this.relayerQueue.size()) >= this.inactiveRelayerCountThreshold) {
-        await this.createRelayers(this.newRelayerInstanceCount);
+        const newRelayers = await this.createRelayers(this.newRelayerInstanceCount);
+        await this.fundRelayers(newRelayers);
       }
       log.info(
         `Relayer ${address} added to active relayer map on chainId: ${this.chainId}`,
