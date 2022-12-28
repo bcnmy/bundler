@@ -12,7 +12,7 @@ export class GaslessFallbackTransactionQueue implements
 IQueue<GaslessFallbackTransactionMessageType> {
   private channel!: Channel;
 
-  transactionType: TransactionType = TransactionType.AA;
+  transactionType: TransactionType = TransactionType.GASLESS_FALLBACK;
 
   private exchangeName = `relayer_queue_exchange_${this.transactionType}`;
 

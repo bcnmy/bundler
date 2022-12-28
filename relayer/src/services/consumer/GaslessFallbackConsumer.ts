@@ -19,7 +19,7 @@ import { GaslessFallbackConsumerParamsType } from './types';
 const log = logger(module);
 export class GaslessFallbackConsumer implements
 ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
-  private transactionType: TransactionType = TransactionType.AA;
+  private transactionType: TransactionType = TransactionType.GASLESS_FALLBACK;
 
   private queue: IQueue<AATransactionMessageType>;
 

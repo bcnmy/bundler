@@ -143,10 +143,7 @@ export type GaslessFallbackTransactionMessageType = {
   chainId: number;
   value: string;
   transactionId: string;
-  userOp?: UserOperationType;
-  metaData?: {
-    dappAPIKey: string
-  }
+  walletAddress: string;
 };
 
 type ResponseType = {

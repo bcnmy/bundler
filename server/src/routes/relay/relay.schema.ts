@@ -63,12 +63,18 @@ export const aaRequestSchema = object.keys({
 });
 
 export const gaslessFallbackRequestSchema = object.keys({
-  method: string.regex(/eth_sendUserOperation/),
-  params: array.items(alternatives.try(
-    userOp,
-    entryPointAddress,
-    chainId,
-    metaData,
+  method: string.regex(/eth_sendGaslessFallbackTransaction/),
+  params: array.items(object.keys(
+    {
+      value: number,
+      to: string.regex(/^0x[a-fA-F0-9]{40}$/).required().error(new Error('to is required')),
+      gasLimit: string, // in hex
+      data: string.required().error(new Error('data is required')),
+      chainId: number.required().error(new Error('chainId is required')),
+      walletInfo: object.keys({
+        address: string.required().error(new Error('address is required')),
+      }).error(new Error('walletAddress is required')),
+    },
   )),
   jsonrpc: string.required().error(new Error('jsonrpc is required')),
   id: number.required().error(new Error('id is required')),

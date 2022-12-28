@@ -10,22 +10,21 @@ const websocketUrl = config.socketService.wssUrl;
 
 const log = logger(module);
 
-export const relaySCWTransaction = async (req: Request, res: Response) => {
+export const relayGaslessFallbackTransaction = async (req: Request, res: Response) => {
   try {
     const {
       type, to, data, gasLimit, chainId, value, walletInfo,
     } = req.body.params[0];
-    log.info(`Relaying SCW Transaction for SCW: ${to} on chainId: ${chainId}`);
+    log.info(`Relaying Gasless Fallback Transaction for Gasless Fallback: ${to} on chainId: ${chainId}`);
 
-    const gasLimitFromSimulation = req.body.params[1] ? `0x${(req.body.params[1]).toString(16)}` : null;
     const transactionId = generateTransactionId(data);
-    log.info(`Sending transaction to relayer with transactionId: ${transactionId} for SCW: ${to} on chainId: ${chainId}`);
-    const response = await routeTransactionToRelayerMap[chainId][TransactionType.SCW]!
+    log.info(`Sending transaction to relayer with transactionId: ${transactionId} for Gasless Fallback: ${to} on chainId: ${chainId}`);
+    const response = await routeTransactionToRelayerMap[chainId][TransactionType.GASLESS_FALLBACK]!
       .sendTransactionToRelayer({
         type,
         to,
         data,
-        gasLimit: gasLimit || gasLimitFromSimulation,
+        gasLimit,
         chainId,
         value,
         walletAddress: walletInfo.address.toLowerCase(),
@@ -34,7 +33,7 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
 
     transactionDao.save(chainId, {
       transactionId,
-      transactionType: TransactionType.SCW,
+      transactionType: TransactionType.GASLESS_FALLBACK,
       status: TransactionStatus.PENDING,
       chainId,
       walletAddress: walletInfo.address,
@@ -56,7 +55,7 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    log.error(`Error in SCW relay ${error}`);
+    log.error(`Error in Gasless Fallback relay ${error}`);
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       code: StatusCodes.INTERNAL_SERVER_ERROR,
       error: JSON.stringify(error),
