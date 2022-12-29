@@ -33,7 +33,7 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
 
     transactionDao.save(chainId, {
       transactionId,
-      transactionType: TransactionType.AA,
+      transactionType: TransactionType.SCW,
       status: TransactionStatus.PENDING,
       chainId,
       walletAddress: walletInfo.address,
