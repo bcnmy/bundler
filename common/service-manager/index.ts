@@ -188,7 +188,10 @@ let statusService: IStatusService;
     if (Object.prototype.hasOwnProperty.call(config.feeOption.tokenContractAddress, chainId)) {
       const feeSupportedTokenArray: FeeSupportedToken[] = [];
       for (const symbol in config.feeOption.tokenContractAddress[chainId]) {
-        if (Object.prototype.hasOwnProperty.call(config.feeOption.tokenContractAddress, symbol)) {
+        if (Object.prototype.hasOwnProperty.call(
+          config.feeOption.tokenContractAddress[chainId],
+          symbol,
+        )) {
           const token = {
             address: config.feeOption.tokenContractAddress[chainId][symbol],
             symbol,
@@ -204,26 +207,7 @@ let statusService: IStatusService;
   config.feeManagementConfig.tokenList = feeSupportedTokenList;
 
   relayerBalanceManager = new RelayerBalanceManager();
-  try {
-    relayerBalanceManager.setTransactionServiceMap(transactionServiceMap);
-    await relayerBalanceManager.init({
-      masterFundingAccountSCW:
-        relayerInstanceMap[relayerManagerTransactionTypeNameMap.SCW].ownerAccountDetails,
-      relayerAddressesSCW: scwRelayerList,
-      masterFundingAccountCCMP: relayerInstanceMap[relayerManagerTransactionTypeNameMap.SCW]
-        .ownerAccountDetails, // change it to cross-chain before commit
-      relayerAddressesCCMP: ccmpRelayerList, // change it to ccmpRelayerList before commit
-      appConfig: config.feeManagementConfig,
-      dbUrl: config.dataSources.mongoUrl,
-      tokenPriceService: tokenService,
-      cacheService,
-      labelCCMP,
-      labelSCW, // change it to labelSCW before commit
-    });
-  } catch (error: any) {
-    log.error('Error while calling relayerBalanceManager.init()');
-    log.info(error);
-  }
+
   const tokenPriceConversionService = new TokenPriceConversionService(
     tokenService,
     networkServiceMap,
@@ -371,11 +355,14 @@ let statusService: IStatusService;
         relayerInstanceMap[
           relayerManagerTransactionTypeNameMap.CROSS_CHAIN] = relayerMangerInstance;
         labelCCMP = relayerManager.name;
-      } else if (relayerManagerTransactionTypeNameMap.SCW === relayerManager.name) {
+      }
+
+      if (relayerManagerTransactionTypeNameMap.SCW === relayerManager.name) {
         scwRelayerList = addressList;
         relayerInstanceMap[relayerManagerTransactionTypeNameMap.SCW] = relayerMangerInstance;
         labelSCW = relayerManager.name;
       }
+
       log.info(
         `Relayer address list length: ${addressList.length} and minRelayerCount: ${JSON.stringify(relayerManager.minRelayerCount)}`,
       );
@@ -647,6 +634,28 @@ let statusService: IStatusService;
   } catch (e) {
     log.error(`Error initializing CCMP Services: ${JSON.stringify(e)}`);
     throw e;
+  }
+
+  try {
+    relayerBalanceManager.setTransactionServiceMap(transactionServiceMap);
+    await relayerBalanceManager.init({
+      masterFundingAccountSCW:
+        relayerInstanceMap[relayerManagerTransactionTypeNameMap.SCW].ownerAccountDetails,
+      relayerAddressesSCW: scwRelayerList,
+      masterFundingAccountCCMP: relayerInstanceMap[relayerManagerTransactionTypeNameMap.CROSS_CHAIN]
+        .ownerAccountDetails, // change it to cross-chain before commit
+      relayerAddressesCCMP: ccmpRelayerList, // change it to ccmpRelayerList before commit
+      appConfig: config.feeManagementConfig,
+      dbUrl: config.dataSources.mongoUrl,
+      tokenPriceService: tokenService,
+      cacheService,
+      labelCCMP,
+      labelSCW, // change it to labelSCW before commit
+    });
+    log.info('relayerBalanceManager initialised Successfully');
+  } catch (error: any) {
+    log.error('Error while calling relayerBalanceManager.init()');
+    log.info(error);
   }
 
   log.info('<=== Config setup completed ===>');
