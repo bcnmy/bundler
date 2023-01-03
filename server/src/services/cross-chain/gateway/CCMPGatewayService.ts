@@ -30,12 +30,9 @@ export class CCMPGatewayService implements ICCMPGatewayService {
     tokenAddresses: string[],
   ): Promise<Map<string, ethers.BigNumber>> {
     log.info(`Getting gas paid for message ${messageHash} and tokens ${tokenAddresses}...`);
-    const relayer = config.feeOption.refundReceiver[this.chainId];
-    log.info(`Refudn receiver: ${relayer}`);
     const data: ethers.BigNumber[] = await this.ccmpGateway.getGasFeePaymentDetails(
       messageHash,
       tokenAddresses,
-      relayer,
     );
     log.info(`Gas paid for message ${messageHash}: ${JSON.stringify(data)}`);
     return new Map<string, ethers.BigNumber>(
@@ -103,8 +100,7 @@ export class CCMPGatewayService implements ICCMPGatewayService {
       type: TransactionType.CROSS_CHAIN,
       to: message.destinationGateway,
       data: calldata,
-      // Send 1.5x Estimate
-      gasLimit: ethers.utils.hexValue(gasLimit.estimate.mul(3).div(2)),
+      gasLimit: ethers.utils.hexValue(gasLimit.estimate),
       chainId: parseInt(message.destinationChainId.toString(), 10),
       value: '0x0',
       message,

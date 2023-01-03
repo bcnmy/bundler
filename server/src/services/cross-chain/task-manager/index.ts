@@ -112,11 +112,12 @@ export class CCMPTaskManager implements ICCMPTaskManager {
     {
       // Remove Mongo specific fields from the result if any before assigning to this.status
       const {
-        status, timestamp, sourceTxHash, error, scheduleRetry,
+        status, timestamp, context, sourceTxHash, error, scheduleRetry,
       } = state.statusLog[state.statusLog.length - 1];
       this.status = {
         status,
         timestamp,
+        context,
         sourceTxHash,
         error,
         scheduleRetry,

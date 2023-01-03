@@ -26,28 +26,7 @@ export const processFromIndexerApi = async (req: Request, res: Response) => {
   })();
 };
 
-export const processFromSourceTxHash = async (req: Request, res: Response) => {
-  const { txHash, chainId } = req.body;
-  const sourceChainId = parseInt(chainId.toString(), 10);
-
-  const ccmpService = ccmpServiceMap[sourceChainId];
-  if (ccmpService) {
-    res.status(StatusCodes.ACCEPTED).send('CCMP event webhook started processing.');
-  } else {
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send('CCMP Service Not Initialized.');
-    return;
-  }
-
-  (async () => {
-    try {
-      await ccmpService.processTransactionFromTxHash(txHash);
-    } catch (e) {
-      log.error(`Error processing transaction ${txHash} on chain ${sourceChainId}`, e);
-    }
-  })();
-};
-
-export const processFromMessageApi = async (req: Request, res: Response) => {
+export const processApi = async (req: Request, res: Response) => {
   const { message, txHash } = req.body;
   const sourceChainId = parseInt(message.sourceChainId.toString(), 10);
 

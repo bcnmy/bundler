@@ -596,7 +596,6 @@ let statusService: IStatusService;
           indexerService,
           crossChainGasEstimationServiceMap,
           transactionDao,
-          networkServiceMap,
         );
 
         ccmpServiceInitPromises.push(ccmpServiceMap[chainId].init());

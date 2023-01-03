@@ -1,10 +1,10 @@
 import {
-  HyperlaneCore,
+  AbacusCore,
   MultiProvider,
   coreEnvironments,
   InterchainGasCalculator,
   ChainName,
-} from '@hyperlane-xyz/sdk';
+} from '@abacus-network/sdk';
 import { ethers } from 'ethers';
 import { config } from '../../../../../config';
 import type { ICCMPRouterService } from './interfaces';
@@ -16,7 +16,7 @@ import { getNativeTokenSymbol } from '../../../../../common/token';
 const log = logger(module);
 
 export class HyperlaneRouterService implements ICCMPRouterService {
-  private readonly hyperlaneSdk: HyperlaneCore<any>;
+  private readonly hyperlaneSdk: AbacusCore<any>;
 
   private readonly environment: keyof typeof coreEnvironments;
 
@@ -27,8 +27,6 @@ export class HyperlaneRouterService implements ICCMPRouterService {
   private readonly interchainGasCalculator: InterchainGasCalculator<any>;
 
   private readonly chainIdToName: Record<number, ChainName>;
-
-  private readonly verificationData: string;
 
   constructor(
     private readonly chainId: number,
@@ -51,14 +49,11 @@ export class HyperlaneRouterService implements ICCMPRouterService {
         ]),
       ) as any,
     );
-    this.hyperlaneSdk = HyperlaneCore.fromEnvironment(this.environment, this.multiProvider);
+    this.hyperlaneSdk = AbacusCore.fromEnvironment(this.environment, this.multiProvider);
     this.interchainGasCalculator = new InterchainGasCalculator(
       this.multiProvider,
       this.hyperlaneSdk,
     );
-
-    const abiCoder = new ethers.utils.AbiCoder();
-    this.verificationData = abiCoder.encode(['uint256'], [0]);
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -76,14 +71,6 @@ export class HyperlaneRouterService implements ICCMPRouterService {
     txHash: string,
     message: CCMPMessageType,
   ) {
-    if (!config.ccmp.bridges.hyperlane.enableVerificationFeeCalculation) {
-      log.info('Verification fee calculation is disabled for Hyperlane');
-      return {
-        amount: ethers.BigNumber.from(0),
-        tokenSymbol: this.nativeTokenSymbol,
-      };
-    }
-
     const sourceChainId = parseInt(message.sourceChainId.toString(), 10);
     const sourceChain = this.chainIdToName[sourceChainId];
     if (!sourceChain) {
@@ -116,26 +103,15 @@ export class HyperlaneRouterService implements ICCMPRouterService {
   }
 
   async handlePreVerification(txHash: string, message: CCMPMessageType) {
-    // TODO Implement fee payment mechanism
+    // TODO: Implement fee payment mechanism
     log.info(
       `Waiting for transaction ${txHash} with message ${message.hash} to be confirmed by Hyperlane...`,
     );
     const txReceipt = await this.networkService.getTransactionReceipt(txHash);
 
     try {
-      const id = setInterval(() => {
-        try {
-          const dispatchedMessage = this.hyperlaneSdk.getDispatchedMessages(txReceipt);
-          log.info(`Dispatched Message for Hyperlane Message ${message.hash}: ${JSON.stringify(dispatchedMessage)}`);
-        } catch (e) {
-          log.error(`Error while getting dispatched message for message ${message.hash}: ${JSON.stringify(e)}`);
-        }
-      }, 5000);
-
-      // Wait for message to get processed
-      await this.hyperlaneSdk.waitForMessageProcessed(txReceipt);
-      clearInterval(id);
-      log.info(`Status for hyperlane message ${message.hash}: Processed`);
+      const processReceipts = await this.hyperlaneSdk.waitForMessageProcessing(txReceipt);
+      log.info(`Status for hyperlane message ${message.hash}: ${JSON.stringify(processReceipts)}`);
     } catch (e) {
       throw new Error(`Error while waiting for message ${message.hash} processing: ${e}`);
     }
@@ -143,6 +119,6 @@ export class HyperlaneRouterService implements ICCMPRouterService {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars, class-methods-use-this
   async getVerificationData(txHash: string, message: CCMPMessageType): Promise<string> {
-    return this.verificationData;
+    return '';
   }
 }
