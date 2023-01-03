@@ -20,7 +20,7 @@ const routerAdaptorType = alternatives
   .error(new Error('routerAdaptor is required or is invalid'));
 
 export const getCrossChainTransactionStatusBySourceTransactionSchema = object.keys({
-  sourceTxHash: keccak256Hash(new Error('sourceTxHash is required or is invalid')),
+  txHash: keccak256Hash(new Error('txHash is required or is invalid')),
   chainId: number.required().error(new Error('chainId is required or is invalid')),
 });
 
