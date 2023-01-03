@@ -2,6 +2,7 @@ import type { ConsumeMessage } from 'amqplib';
 import type { ICacheService } from '../../../../common/cache';
 import type { ICrossChainTransactionDAO } from '../../../../common/db';
 import { logger } from '../../../../common/log-config';
+import { runWithContinuationId } from '../../../../common/log-config/transports/server-logs';
 import type { IQueue } from '../../../../common/queue';
 import type { CrossChainRetryHandlerQueue } from '../../../../common/queue/CrossChainRetryHandlerQueue';
 import {
@@ -9,7 +10,6 @@ import {
   CrossChainTransactionMessageType,
   TransactionType,
   CrossChainTransationStatus,
-  CrossChainTransactionError,
 } from '../../../../common/types';
 import { CCMPTaskManager } from '../../../../server/src/services/cross-chain/task-manager';
 import { ICCMPTaskManager } from '../../../../server/src/services/cross-chain/task-manager/interfaces/ICCMPTaskManager';
@@ -62,65 +62,67 @@ export class CCMPConsumer implements ITransactionConsumer<IEVMAccount, EVMRawTra
       const transactionDataReceivedFromQueue: CrossChainTransactionMessageType = JSON.parse(
         msg.content.toString(),
       );
-      const taskManager = await this.getCCMPTaskManagerInstance(transactionDataReceivedFromQueue);
-      log.info(
-        `onMessage received in ${this.transactionType}: ${JSON.stringify(
-          transactionDataReceivedFromQueue,
-        )}`,
-      );
-      this.queue.ack(msg);
-      // get active relayer
-      const activeRelayer = await this.relayerManager.getActiveRelayer();
-      log.info(`Active relayer for ${this.transactionType} is ${activeRelayer?.getPublicKey()}`);
-      if (activeRelayer) {
-        const transactionServiceResponse = await this.transactionService.sendTransaction(
-          {
-            ...transactionDataReceivedFromQueue,
-            ccmpMessage: transactionDataReceivedFromQueue.message,
-            walletAddress: '0xDNE',
-          },
-          activeRelayer,
-          this.transactionType,
-          this.relayerManager.name,
-        );
+      runWithContinuationId(transactionDataReceivedFromQueue.message.hash, async () => {
+        const taskManager = await this.getCCMPTaskManagerInstance(transactionDataReceivedFromQueue);
         log.info(
-          `Response from transaction service after sending transaction on chainId: ${
-            this.chainId
-          }: ${JSON.stringify(transactionServiceResponse)}`,
+          `onMessage received in ${this.transactionType}: ${JSON.stringify(
+            transactionDataReceivedFromQueue,
+          )}`,
         );
-        this.relayerManager.addActiveRelayer(activeRelayer.getPublicKey());
-        if (transactionServiceResponse.state === 'success') {
+        this.queue.ack(msg);
+        // get active relayer
+        const activeRelayer = await this.relayerManager.getActiveRelayer();
+        log.info(`Active relayer for ${this.transactionType} is ${activeRelayer?.getPublicKey()}`);
+        if (activeRelayer) {
+          const transactionServiceResponse = await this.transactionService.sendTransaction(
+            {
+              ...transactionDataReceivedFromQueue,
+              ccmpMessage: transactionDataReceivedFromQueue.message,
+              walletAddress: '0xDNE',
+            },
+            activeRelayer,
+            this.transactionType,
+            this.relayerManager.name,
+          );
           log.info(
-            `Transaction sent successfully for ${this.transactionType} on chain ${this.chainId}`,
+            `Response from transaction service after sending transaction on chainId: ${
+              this.chainId
+            }: ${JSON.stringify(transactionServiceResponse)}`,
           );
-          await taskManager.run(
-            'Handle Relayed',
-            CCMPConsumer.handleOnTransactionSuccessFactory(
-              transactionServiceResponse.transactionExecutionResponse?.hash,
-            ),
-            CrossChainTransationStatus.DESTINATION_TRANSACTION_RELAYED,
-          );
+          this.relayerManager.addActiveRelayer(activeRelayer.getPublicKey());
+          if (transactionServiceResponse.state === 'success') {
+            log.info(
+              `Transaction sent successfully for ${this.transactionType} on chain ${this.chainId}`,
+            );
+            await taskManager.run(
+              'Handle Relayed',
+              CCMPConsumer.handleOnTransactionSuccessFactory(
+                transactionServiceResponse.transactionExecutionResponse?.hash,
+              ),
+              CrossChainTransationStatus.DESTINATION_TRANSACTION_RELAYED,
+            );
+          } else {
+            log.error(
+              `Transaction failed with error: ${
+                transactionServiceResponse?.error || 'unknown error'
+              } for ${this.transactionType} on chain ${this.chainId}`,
+            );
+            await taskManager.run(
+              'Handle Relay Error',
+              CCMPConsumer.handleOnTransactionFailureFactory(
+                transactionServiceResponse.transactionExecutionResponse?.hash,
+                transactionServiceResponse?.error,
+              ),
+              CrossChainTransationStatus.DESTINATION_TRANSACTION_RELAYED,
+            );
+          }
         } else {
-          log.error(
-            `Transaction failed with error: ${
-              transactionServiceResponse?.error || 'unknown error'
-            } for ${this.transactionType} on chain ${this.chainId}`,
-          );
-          await taskManager.run(
-            'Handle Relay Error',
-            CCMPConsumer.handleOnTransactionFailureFactory(
-              transactionServiceResponse.transactionExecutionResponse?.hash,
-              transactionServiceResponse?.error,
-            ),
-            CrossChainTransationStatus.DESTINATION_TRANSACTION_RELAYED,
+          this.queue.publish(JSON.parse(msg.content.toString()));
+          log.info(
+            `No active relayer for transactionType: ${this.transactionType} on chainId: ${this.chainId}`,
           );
         }
-      } else {
-        this.queue.publish(JSON.parse(msg.content.toString()));
-        log.info(
-          `No active relayer for transactionType: ${this.transactionType} on chainId: ${this.chainId}`,
-        );
-      }
+      });
     } else {
       throw new Error(
         `No msg received from queue for transactionType: ${this.transactionType} on chainId: ${this.chainId}`,
@@ -160,7 +162,7 @@ export class CCMPConsumer implements ITransactionConsumer<IEVMAccount, EVMRawTra
   ): ICrossChainProcessStep => {
     const handler: ICrossChainProcessStep = async (data) => ({
       ...data,
-      status: CrossChainTransactionError.DESTINATION_TRANSACTION_REVERTED,
+      status: CrossChainTransationStatus.DESTINATION_TRANSACTION_RELAYED,
       context: {
         destinationTxHash,
         error,

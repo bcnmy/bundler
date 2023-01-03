@@ -19,7 +19,7 @@ export class WormholeRouterService implements ICCMPRouterService {
 
   private readonly emitterAddress: string;
 
-  private readonly womrholeBridgeAddress: string;
+  private readonly wormholeBridgeAddress: string;
 
   private readonly emitterChain: string;
 
@@ -32,7 +32,7 @@ export class WormholeRouterService implements ICCMPRouterService {
     private readonly networkService: EVMNetworkService,
   ) {
     this.rpcUrl = config.ccmp.bridges.wormhole.hostUrl;
-    this.womrholeBridgeAddress = config.ccmp.bridges.wormhole.bridgeAddress[chainId];
+    this.wormholeBridgeAddress = config.ccmp.bridges.wormhole.bridgeAddress[chainId];
     this.emitterAddress = getEmitterAddressEth(
       config.ccmp.adaptors[chainId][CCMPRouterName.WORMHOLE],
     );
@@ -46,7 +46,7 @@ export class WormholeRouterService implements ICCMPRouterService {
     if (!this.rpcUrl) {
       throw new Error('Missing rpcUrl for wormhole bridge');
     }
-    if (!this.womrholeBridgeAddress) {
+    if (!this.wormholeBridgeAddress) {
       throw new Error('Missing womrholeBridgeAddress for wormhole bridge');
     }
     if (!this.emitterAddress) {
@@ -93,9 +93,16 @@ export class WormholeRouterService implements ICCMPRouterService {
   }
 
   async getVerificationData(txHash: string, message: CCMPMessageType): Promise<Uint8Array> {
-    const receipt = await this.networkService.getTransactionReceipt(txHash);
-    const sequence = parseSequenceFromLogEth(receipt, this.womrholeBridgeAddress);
-    log.info(`Found wormhole sequence ${sequence} for message hash ${message.hash}`);
+    let sequence: string;
+    try {
+      const receipt = await this.networkService.getTransactionReceipt(txHash);
+      if (!receipt) throw new Error(`Receipt not found for transaction ${txHash}`);
+      sequence = parseSequenceFromLogEth(receipt, this.wormholeBridgeAddress);
+      log.info(`Found wormhole sequence ${sequence} for message hash ${message.hash}`);
+    } catch (e) {
+      log.error(`Failed to get sequence for message hash ${message.hash}, error: ${JSON.stringify(e)}`);
+      throw new Error('Waiting for protocol verification');
+    }
 
     return new Promise<Uint8Array>((resolve, reject) => {
       let counter = 0;
@@ -117,7 +124,7 @@ export class WormholeRouterService implements ICCMPRouterService {
           clearInterval(id);
           resolve(vaaBytes);
         } catch (e) {
-          log.error(`Failed to get VAA for sequence ${sequence}, retrying...`);
+          log.error(`Failed to get VAA for sequence ${sequence} with error ${e}, retrying...`);
           if (counter >= this.maxPollingCount) {
             clearInterval(id);
             reject(

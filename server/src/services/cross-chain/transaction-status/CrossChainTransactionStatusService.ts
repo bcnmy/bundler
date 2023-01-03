@@ -6,6 +6,7 @@ import type { CrossChainTransactionStatusResult } from './types';
 import type { EVMNetworkService } from '../../../../../common/network';
 import type { CCMPGatewayService } from '../gateway';
 import { CrossChainTransactionError, CrossChainTransationStatus, TransactionStatus } from '../../../../../common/types';
+import { removeUrls } from '../utils';
 
 const log = logger(module);
 
@@ -78,18 +79,25 @@ export class CrosschainTransactionStatusService implements ICrossChainTransactio
         10,
       );
       const destinationChainDao = this.dbService.getBlockchainTransaction(destinationChainId);
-      const destinationchainData = await destinationChainDao.findOne({
-        transactionId: messageHash,
-      });
+      const destinationChainData = (
+        await destinationChainDao
+          .find({
+            transactionId: messageHash,
+          })
+          .sort({
+            updationTime: -1,
+          })
+          .limit(1)
+      )[0];
 
       return {
         responseCode: StatusCodes.OK,
         ...(sourceChainData.errors
           ? { error: sourceStatus.status as CrossChainTransactionError }
           : { sourceTransactionStatus: sourceStatus.status as CrossChainTransationStatus }),
-        context: sourceStatus.context,
-        destinationTransactionStatus: destinationchainData?.status as TransactionStatus,
-        destinationChainTxHash: destinationchainData?.transactionHash,
+        context: removeUrls(sourceStatus.context || ''),
+        destinationTransactionStatus: destinationChainData?.status as TransactionStatus,
+        destinationChainTxHash: destinationChainData?.transactionHash,
       };
     } catch (error) {
       log.error(`Error getting status for message hash ${messageHash}: ${JSON.stringify(error)}`);

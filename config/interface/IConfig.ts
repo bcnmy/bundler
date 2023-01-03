@@ -1,4 +1,4 @@
-import type { Chains as HyperlaneChains } from '@abacus-network/sdk';
+import type { Chains as HyperlaneChains } from '@hyperlane-xyz/sdk';
 import type { TransactionType, SymbolMapByChainIdType, CCMPRouterName } from '../../common/types';
 
 type ChainIdWithStringValueType = {
@@ -166,6 +166,7 @@ type CCMPBridgesConfigType = {
     environment: string;
     verificationFeePaymentTxGas: number;
     verificationGas: number;
+    enableVerificationFeeCalculation: false;
   };
 };
 
