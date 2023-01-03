@@ -208,7 +208,7 @@
       }
     },
     "abi": {
-      "CCMPGateway": [
+      "CCMPGateway":[
         {
           "inputs": [
             {
@@ -324,6 +324,11 @@
             }
           ],
           "name": "NativeTransferFailed",
+          "type": "error"
+        },
+        {
+          "inputs": [],
+          "name": "ParameterArrayLengthMismatch",
           "type": "error"
         },
         {
@@ -794,6 +799,11 @@
               "internalType": "address[]",
               "name": "_tokens",
               "type": "address[]"
+            },
+            {
+              "internalType": "address",
+              "name": "_relayer",
+              "type": "address"
             }
           ],
           "name": "getGasFeePaymentDetails",
@@ -958,7 +968,7 @@
               "type": "string"
             }
           ],
-          "name": "routerAdator",
+          "name": "routerAdaptor",
           "outputs": [
             {
               "internalType": "contract ICCMPRouterAdaptor",
@@ -1071,6 +1081,24 @@
         {
           "inputs": [
             {
+              "internalType": "uint256[]",
+              "name": "_chainId",
+              "type": "uint256[]"
+            },
+            {
+              "internalType": "contract ICCMPGateway[]",
+              "name": "_gateway",
+              "type": "address[]"
+            }
+          ],
+          "name": "setGatewayBatch",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
               "internalType": "address",
               "name": "_pauser",
               "type": "address"
@@ -1102,6 +1130,24 @@
         {
           "inputs": [
             {
+              "internalType": "string[]",
+              "name": "names",
+              "type": "string[]"
+            },
+            {
+              "internalType": "contract ICCMPRouterAdaptor[]",
+              "name": "adaptors",
+              "type": "address[]"
+            }
+          ],
+          "name": "setRouterAdaptorBatch",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
               "internalType": "address",
               "name": "_newOwner",
               "type": "address"
@@ -1119,7 +1165,7 @@
           "stateMutability": "nonpayable",
           "type": "function"
         }
-      ],
+      ] ,
       "LiquidityPool": [
         {
           "anonymous": false,
