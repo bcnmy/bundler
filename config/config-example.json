@@ -15,6 +15,7 @@
     "nodePathIndex": 0
   },
   "queueUrl": "",
+  "paymasterDashboardBackendUrl": "",
   "simulationData": {
     "tenderlyData": {
       "tenderlyUser": "",

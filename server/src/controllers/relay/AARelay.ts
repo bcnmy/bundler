@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
 import { routeTransactionToRelayerMap, transactionDao } from '../../../../common/service-manager';
 import { isError, TransactionStatus, TransactionType } from '../../../../common/types';
-import { generateTransactionId } from '../../../../common/utils';
+import { generateTransactionId, getMetaDataFromUserOp } from '../../../../common/utils';
 import { config } from '../../../../config';
 
 const websocketUrl = config.socketService.wssUrl;
@@ -34,6 +34,14 @@ export const relayAATransaction = async (req: Request, res: Response) => {
         walletAddress,
         metaData,
       });
+
+    const { dappAPIKey } = metaData;
+    const {
+      destinationSmartContractAddresses,
+      destinationSmartContractMethods,
+    } = await getMetaDataFromUserOp(userOp, chainId, dappAPIKey);
+    metaData.destinationSmartContractAddresses = destinationSmartContractAddresses;
+    metaData.destinationSmartContractMethods = destinationSmartContractMethods;
 
     transactionDao.save(chainId, {
       transactionId,

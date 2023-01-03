@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export const gasPriceCall = async (url: string) => {
-  const { data } = await axios.get(url);
+export const axiosGetCall = async (url: string, _data?: any) => {
+  const { data } = await axios.get(url, _data);
   return data;
 };
