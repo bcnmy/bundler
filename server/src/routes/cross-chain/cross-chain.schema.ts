@@ -44,7 +44,12 @@ export const estimateDepositAndCallApiSchema = object.keys({
   ),
 });
 
-export const processApiSchema = object.keys({
+export const processFromTxHashApiSchema = object.keys({
+  txHash: keccak256Hash(new Error('txHash is required')),
+  chainId: number.required().error(new Error('chainId is required')),
+});
+
+export const processFromMessageApiSchema = object.keys({
   txHash: keccak256Hash(new Error('txHash is required')),
   message: object.keys({
     sender: address(new Error('sender address is required')),

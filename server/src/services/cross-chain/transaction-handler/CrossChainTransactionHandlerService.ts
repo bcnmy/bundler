@@ -20,6 +20,7 @@ import type { IIndexerService } from '../../../../../common/indexer/types';
 import type { ICrossChainGasEstimationService } from '../gas-estimation/interfaces/ICrossChainGasEstimationService';
 import type { ICCMPGatewayService } from '../gateway/interfaces/ICCMPGatewayService';
 import type { ICacheService } from '../../../../../common/cache';
+import type { EVMNetworkService } from '../../../../../common/network';
 import { runWithContinuationId } from '../../../../../common/log-config/transports/server-logs';
 
 const log = logger(module);
@@ -43,6 +44,7 @@ export class CrossChainTransactionHandlerService implements ICrossChainTransacti
     ICrossChainGasEstimationService
     >,
     private readonly transactionDao: ITransactionDAO,
+    private readonly networkServiceMap: Record<number, EVMNetworkService>,
   ) {
     this.webHookEndpoint = config.ccmp.webhookEndpoint;
   }
@@ -273,6 +275,31 @@ export class CrossChainTransactionHandlerService implements ICrossChainTransacti
       status: CrossChainTransationStatus.DESTINATION_TRANSACTION_QUEUED,
     };
   };
+
+  async processTransactionFromTxHash(sourceTxHash: string) {
+    try {
+      log.info(`Processing Transaction for source transaction ${sourceTxHash} on chain ${this.chainId}...`);
+      const transactionReceipt = await this.networkServiceMap[this.chainId].getTransactionReceipt(
+        sourceTxHash,
+      );
+      if (!transactionReceipt) {
+        log.error(`Transaction ${sourceTxHash} not found on chain ${this.chainId}`);
+      }
+      const ccmpMessage = await this.ccmpGatewayServiceMap[
+        this.chainId
+      ].getMessageFromSourceTransactionReceipt(this.chainId, transactionReceipt);
+      log.info(
+        `CCMP message hash for source transaction ${sourceTxHash} on chainId ${this.chainId}: ${ccmpMessage.hash}`,
+      );
+      await this.processTransaction(ccmpMessage, sourceTxHash);
+    } catch (error) {
+      log.error(
+        `Error processing transaction ${sourceTxHash} on chain ${
+          this.chainId
+        }: ${JSON.stringify(error)}`,
+      );
+    }
+  }
 
   async processTransaction(message: CCMPMessageType, sourceChainTxHash: string) {
     const lock = this.cacheService.getRedLock();
