@@ -1,14 +1,17 @@
 import { Router } from 'express';
 import {
   estimateDepositAndCallApi,
-  processApi,
+  processFromMessageApi,
   processFromIndexerApi,
   statusFromMessageHashApi,
   statusFromTxHashApi,
+  supportedRoutersAPI,
+  processFromSourceTxHash,
 } from '../../controllers';
 import {
   validateCrossChainProcessFromIndexerRequest,
-  validateCrossChainProcessRequest,
+  validateCrossChainProcessFromMessageRequest,
+  validateCrossChainProcessFromTxRequest,
   validateCrossChainStatusFromMessageHash,
   validateCrossChainStatusFromTx,
   validateEstimateDepositAndCallRequest,
@@ -16,7 +19,9 @@ import {
 
 export const crossChainRouter = Router();
 
-crossChainRouter.post('/process', validateCrossChainProcessRequest, processApi);
+crossChainRouter.post('/process/message', validateCrossChainProcessFromMessageRequest, processFromMessageApi);
+
+crossChainRouter.post('/process/tx', validateCrossChainProcessFromTxRequest, processFromSourceTxHash);
 
 crossChainRouter.post(
   '/process/indexer',
@@ -36,3 +41,5 @@ crossChainRouter.get(
   validateCrossChainStatusFromMessageHash,
   statusFromMessageHashApi,
 );
+
+crossChainRouter.get('/supported-routers', supportedRoutersAPI);
