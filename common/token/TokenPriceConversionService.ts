@@ -1,5 +1,4 @@
 import { BigNumber, ethers } from 'ethers';
-import Decimal from 'decimal.js';
 import { logger } from '../log-config';
 import { getNativeTokenSymbol } from './utils';
 import type { EVMNetworkService } from '../network';
@@ -101,9 +100,8 @@ export class TokenPriceConversionService implements ITokenPriceConversionService
       const tokenPrice = await this.tokenPriceService.getTokenPriceByTokenSymbol(tokenSymbol);
       const amount = usdValue / tokenPrice;
       const decimals = await this.getTokenDecimals(tokenSymbol, chainId);
-      const amountInWei = ethers.BigNumber.from(
-        new Decimal(amount).mul(new Decimal(10).pow(decimals)).floor().toString(),
-      );
+      const amountMantissa = Math.floor(amount * 10 ** 5);
+      const amountInWei = ethers.utils.parseUnits(amountMantissa.toString(), decimals - 5);
       log.info(
         `Equivalent Token Amount for ${tokenSymbol} on ${chainId}: ${amountInWei.toString()}`,
       );

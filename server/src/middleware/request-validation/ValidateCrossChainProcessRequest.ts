@@ -1,16 +1,16 @@
 import { NextFunction, Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
-import { processFromMessageApiSchema } from '../../routes/cross-chain/cross-chain.schema';
+import { processApiSchema } from '../../routes/cross-chain/cross-chain.schema';
 
 const log = logger(module);
 
-export const validateCrossChainProcessFromMessageRequest = async (
+export const validateCrossChainProcessRequest = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
   try {
-    const { error } = processFromMessageApiSchema.validate(req.body);
+    const { error } = processApiSchema.validate(req.body);
     const valid = error == null;
 
     if (valid) {

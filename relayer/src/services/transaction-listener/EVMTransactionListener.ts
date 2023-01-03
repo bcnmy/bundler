@@ -9,6 +9,7 @@ import { RetryTransactionQueueData } from '../../../../common/queue/types';
 import { IRelayerBalanceManager } from '../../../../common/service-manager/interface/IRelayerBalanceManager';
 import {
   CCMPMessageType,
+  CrossChainTransactionError,
   CrossChainTransationStatus,
   EVMRawTransactionType,
   SocketEventType,
@@ -464,7 +465,7 @@ implements
   ): ICrossChainProcessStep => {
     const handler: ICrossChainProcessStep = async (data) => ({
       ...data,
-      status: CrossChainTransationStatus.DESTINATION_TRANSACTION_RELAYED,
+      status: CrossChainTransactionError.DESTINATION_TRANSACTION_REVERTED,
       scheduleRetry: true,
       context: {
         destinationTxHash,

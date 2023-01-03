@@ -145,8 +145,8 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           rawTransaction.nonce = await this.nonceManager.getAndSetNonceFromNetwork(rawTransaction.from, true);
           log.info(`updating the nonce to ${rawTransaction.nonce}
        for relayer ${rawTransaction.from} on network id ${this.chainId}`);
-          return await retryExecuteTransaction({ rawTransaction, account });
-        } if (errInString.indexOf(replacementFeeLowMessage) > -1) {
+          retryExecuteTransaction({ rawTransaction, account });
+        } else if (errInString.indexOf(replacementFeeLowMessage) > -1) {
           log.info(
             `Replacement underpriced error for relayer ${rawTransaction.from}
        on network id ${this.chainId}`,
@@ -169,8 +169,8 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           rawTransaction.gasPrice = ethers.utils.hexlify(Math.round(config.transaction.bumpGasPriceMultiplier[this.chainId] * gasPriceInNumber));
           log.info(`increasing gas price for the resubmit transaction ${rawTransaction.gasPrice} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
 
-          return await retryExecuteTransaction({ rawTransaction, account });
-        } if (errInString.indexOf(alreadyKnownMessage) > -1) {
+          retryExecuteTransaction({ rawTransaction, account });
+        } else if (errInString.indexOf(alreadyKnownMessage) > -1) {
           log.info(
             `Already known transaction hash with same payload and nonce for relayer ${rawTransaction.from} on network id ${this.chainId}. Removing nonce from cache and retrying`,
           );
