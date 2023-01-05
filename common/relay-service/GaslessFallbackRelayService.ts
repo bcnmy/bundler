@@ -1,4 +1,3 @@
-import { StatusCodes } from 'http-status-codes';
 import { IQueue } from '../interface';
 import { logger } from '../log-config';
 import {
@@ -24,17 +23,17 @@ implements IRelayService<GaslessFallbackTransactionMessageType> {
     data: GaslessFallbackTransactionMessageType,
   ): Promise<RelayServiceResponseType> {
     log.info(`Sending transaction to Gasless Fallback tranasction queue with transactionId: ${data.transactionId}`);
-    await this.queue.publish(data);
     let response : RelayServiceResponseType;
     try {
+      await this.queue.publish(data);
       response = {
-        code: StatusCodes.OK,
+        code: 200,
         transactionId: data.transactionId,
       };
     } catch (error) {
       response = {
-        code: StatusCodes.BAD_REQUEST,
-        error: 'bad request',
+        code: 500,
+        error: `Internal server error: ${error}`,
       };
     }
     return response;
