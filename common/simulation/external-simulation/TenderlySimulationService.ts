@@ -93,10 +93,11 @@ export class TenderlySimulationService implements IExternalSimulation {
       };
     }
 
+    const gasLimitFromSimulation = response?.data?.transaction?.gas_used;
     return {
       isSimulationSuccessful: true,
       msgFromSimulation: 'Fee options fetched successfully',
-      gasLimitFromSimulation: response?.data?.transaction?.gas_used,
+      gasLimitFromSimulation: gasLimitFromSimulation + 100000,
     };
   }
 

@@ -21,6 +21,9 @@ export const BlockchainTransactionSchema = new Schema<IBlockchainTransaction>({
   receipt: {
     type: Object,
   },
+  transactionType: {
+    type: String,
+  },
   relayerAddress: {
     type: String,
   },
