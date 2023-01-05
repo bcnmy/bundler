@@ -10,8 +10,8 @@
   "EIP1559SupportedNetworks": [],
   "supportedTransactionType": {
     "5": ["AA", "SCW"],
-    "137": ["AA", "SCW"],
-    "80001": ["AA", "SCW"],
+    "137": ["AA", "SCW", "GASLESS_FALLBACK"],
+    "80001": ["AA", "SCW", "GASLESS_FALLBACK"],
     "97": ["AA", "SCW"],
     "420": ["AA", "SCW"],
     "421613": ["AA", "SCW"],
