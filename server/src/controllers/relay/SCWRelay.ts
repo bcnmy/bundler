@@ -12,7 +12,7 @@ const log = logger(module);
 export const relaySCWTransaction = async (req: Request, res: Response) => {
   try {
     const {
-      type, to, data, gasLimit, chainId, value, walletInfo,
+      to, data, gasLimit, chainId, value, walletInfo,
     } = req.body.params[0];
     log.info(`Relaying SCW Transaction for SCW: ${to} on chainId: ${chainId}`);
 
@@ -21,7 +21,7 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
     log.info(`Sending transaction to relayer with transactionId: ${transactionId} for SCW: ${to} on chainId: ${chainId}`);
     const response = await routeTransactionToRelayerMap[chainId][TransactionType.SCW]
       .sendTransactionToRelayer({
-        type,
+        type: TransactionType.SCW,
         to,
         data,
         gasLimit: gasLimit || gasLimitFromSimulation,

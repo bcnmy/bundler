@@ -12,7 +12,7 @@ const log = logger(module);
 export const relayGaslessFallbackTransaction = async (req: Request, res: Response) => {
   try {
     const {
-      type, to, data, gasLimit, chainId, value, walletInfo,
+      to, data, gasLimit, chainId, value, walletInfo,
     } = req.body.params[0];
     log.info(`Relaying Gasless Fallback Transaction for Gasless Fallback: ${to} on chainId: ${chainId}`);
 
@@ -20,7 +20,7 @@ export const relayGaslessFallbackTransaction = async (req: Request, res: Respons
     log.info(`Sending transaction to relayer with transactionId: ${transactionId} for Gasless Fallback: ${to} on chainId: ${chainId}`);
     const response = await routeTransactionToRelayerMap[chainId][TransactionType.GASLESS_FALLBACK]!
       .sendTransactionToRelayer({
-        type,
+        type: TransactionType.GASLESS_FALLBACK,
         to,
         data,
         gasLimit,

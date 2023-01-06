@@ -93,6 +93,7 @@ export const gaslessFallbackRequestSchema = object.keys({
       walletInfo: object.keys({
         address: string.required().error(new Error('address is required')),
       }).error(new Error('walletAddress is required')),
+      metaData,
     },
   )),
   jsonrpc: string.required().error(new Error('jsonrpc is required')),
