@@ -103,6 +103,8 @@ export const getMetaDataFromUserOp = async (
     const dappId = dappData._id;
 
     log.info(`Data fetched for dappId: ${dappId}`);
+    log.info(`dappData: ${JSON.stringify(dappData)}`);
+    log.info(`smartContractData: ${JSON.stringify(smartContractData)}`);
 
     for (
       let smartContractDataIndex = 0;

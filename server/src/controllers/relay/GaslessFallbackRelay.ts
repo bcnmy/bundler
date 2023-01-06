@@ -12,25 +12,14 @@ const log = logger(module);
 export const relayGaslessFallbackTransaction = async (req: Request, res: Response) => {
   try {
     const {
-      type, to, data, gasLimit, chainId, value, walletInfo,
+      to, data, gasLimit, chainId, value, walletInfo, metaData,
     } = req.body.params[0];
     log.info(`Relaying Gasless Fallback Transaction for Gasless Fallback: ${to} on chainId: ${chainId}`);
 
     const transactionId = generateTransactionId(data);
     log.info(`Sending transaction to relayer with transactionId: ${transactionId} for Gasless Fallback: ${to} on chainId: ${chainId}`);
-    const response = await routeTransactionToRelayerMap[chainId][TransactionType.GASLESS_FALLBACK]!
-      .sendTransactionToRelayer({
-        type,
-        to,
-        data,
-        gasLimit,
-        chainId,
-        value,
-        walletAddress: walletInfo.address.toLowerCase(),
-        transactionId,
-      });
 
-    transactionDao.save(chainId, {
+    await transactionDao.save(chainId, {
       transactionId,
       transactionType: TransactionType.GASLESS_FALLBACK,
       status: TransactionStatus.PENDING,
@@ -39,6 +28,28 @@ export const relayGaslessFallbackTransaction = async (req: Request, res: Respons
       resubmitted: false,
       creationTime: Date.now(),
     });
+
+    const response = await routeTransactionToRelayerMap[chainId][TransactionType.GASLESS_FALLBACK]!
+      .sendTransactionToRelayer({
+        type: TransactionType.GASLESS_FALLBACK,
+        to,
+        data,
+        gasLimit,
+        chainId,
+        value,
+        walletAddress: walletInfo.address.toLowerCase(),
+        transactionId,
+        metaData,
+      });
+
+    const { dappAPIKey } = metaData;
+    const {
+      destinationSmartContractAddresses,
+      destinationSmartContractMethods,
+    } = await getMetaDataFromFallbackUserOp(to, data, chainId, dappAPIKey);
+
+    metaData.destinationSmartContractAddresses = destinationSmartContractAddresses;
+    metaData.destinationSmartContractMethods = destinationSmartContractMethods;
 
     if (isError(response)) {
       return res.status(400).json({

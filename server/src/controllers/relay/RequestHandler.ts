@@ -13,6 +13,8 @@ export const requestHandler = async (
     response = await relayAATransaction(req, res);
   } else if (method === TransactionMethodType.SCW) {
     response = await relaySCWTransaction(req, res);
+  } else if (method === TransactionMethodType.GASLESS_FALLBACK) {
+    response = await relaySCWTransaction(req, res);
   } else {
     return res.status(400).send({
       code: 400,

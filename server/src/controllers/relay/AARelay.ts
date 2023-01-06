@@ -21,6 +21,17 @@ export const relayAATransaction = async (req: Request, res: Response) => {
 
     const walletAddress = userOp.sender.toLowerCase();
 
+    await transactionDao.save(chainId, {
+      transactionId,
+      transactionType: TransactionType.AA,
+      status: TransactionStatus.PENDING,
+      chainId,
+      walletAddress,
+      metaData,
+      resubmitted: false,
+      creationTime: Date.now(),
+    });
+
     const response = routeTransactionToRelayerMap[chainId][TransactionType.AA]
       .sendTransactionToRelayer({
         type: TransactionType.AA,
@@ -43,16 +54,13 @@ export const relayAATransaction = async (req: Request, res: Response) => {
     metaData.destinationSmartContractAddresses = destinationSmartContractAddresses;
     metaData.destinationSmartContractMethods = destinationSmartContractMethods;
 
-    transactionDao.save(chainId, {
-      transactionId,
-      transactionType: TransactionType.AA,
-      status: TransactionStatus.PENDING,
+    await transactionDao.updateByTransactionId(
       chainId,
-      walletAddress,
-      metaData,
-      resubmitted: false,
-      creationTime: Date.now(),
-    });
+      transactionId,
+      {
+        metaData,
+      },
+    );
 
     if (isError(response)) {
       return res.status(400).json({

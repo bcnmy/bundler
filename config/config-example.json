@@ -11,6 +11,9 @@
     "token": "",
     "apiKey": ""
   },
+  "paymasterDashboardBackend": {
+    "url": ""
+  },
   "relayer": {
     "nodePathIndex": 0
   },
