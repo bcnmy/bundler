@@ -1,0 +1,30 @@
+name: "BSDK-257-fallback-transaction-relayer-server"
+replicas: 1
+relayer:
+  name: "BSDK-257-fallback-transaction-relayer-server"
+  image: "gcr.io/biconomy-staging/sdk/BSDK-257-fallback-transaction-relayer-node-service:latest"
+  port: "3000"
+  replicaCount: 1
+  resource:
+    requests:
+      memory: "100Mi"
+      cpu: "100m"
+    limits:
+      memory: "250Mi"
+      cpu: "250m"
+
+namespace: "sdk-staging"
+
+secret:
+  projectID: biconomy-staging
+  key: sdk-staging-relayer-node-service
+  config:
+    name: config.json.enc
+
+  passphrase:
+    key: sdk-staging-relayer-node-service-passphrase
+    name: CONFIG_PASSPHRASE
+    version: latest
+
+ingress:
+  host: sdk-257-fallback-transaction-relayer.staging.biconomy.io
