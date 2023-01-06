@@ -151,3 +151,10 @@ export type EntryPointMapType = {
     entryPointContract: ethers.Contract
   }>
 };
+
+export type GetMetaDataFromUserOpReturnType = {
+  destinationSmartContractAddresses: Array<string>
+  destinationSmartContractMethods: Array<{ name: string, address: string }>
+};
+
+export type GetMetaDataFromFallbackUserOpReturnType = GetMetaDataFromUserOpReturnType;

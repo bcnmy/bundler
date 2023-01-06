@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
 import { routeTransactionToRelayerMap, transactionDao } from '../../../../common/service-manager';
 import { isError, TransactionStatus, TransactionType } from '../../../../common/types';
-import { generateTransactionId } from '../../../../common/utils';
+import { generateTransactionId, getMetaDataFromUserOp } from '../../../../common/utils';
 import { config } from '../../../../config';
 
 const websocketUrl = config.socketService.wssUrl;
@@ -21,6 +21,17 @@ export const relayAATransaction = async (req: Request, res: Response) => {
 
     const walletAddress = userOp.sender.toLowerCase();
 
+    await transactionDao.save(chainId, {
+      transactionId,
+      transactionType: TransactionType.AA,
+      status: TransactionStatus.PENDING,
+      chainId,
+      walletAddress,
+      metaData,
+      resubmitted: false,
+      creationTime: Date.now(),
+    });
+
     const response = routeTransactionToRelayerMap[chainId][TransactionType.AA]
       .sendTransactionToRelayer({
         type: TransactionType.AA,
@@ -35,16 +46,19 @@ export const relayAATransaction = async (req: Request, res: Response) => {
         metaData,
       });
 
-    transactionDao.save(chainId, {
-      transactionId,
-      transactionType: TransactionType.AA,
-      status: TransactionStatus.PENDING,
+    const { dappAPIKey } = metaData;
+    const {
+      destinationSmartContractAddresses,
+      destinationSmartContractMethods,
+    } = await getMetaDataFromUserOp(userOp, chainId, dappAPIKey);
+    metaData.destinationSmartContractAddresses = destinationSmartContractAddresses;
+    metaData.destinationSmartContractMethods = destinationSmartContractMethods;
+
+    await transactionDao.updateMetaDataByTransactionId(
       chainId,
-      walletAddress,
+      transactionId,
       metaData,
-      resubmitted: false,
-      creationTime: Date.now(),
-    });
+    );
 
     if (isError(response)) {
       return res.status(400).json({

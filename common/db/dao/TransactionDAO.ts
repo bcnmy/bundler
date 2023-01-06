@@ -60,4 +60,16 @@ export class TransactionDAO implements ITransactionDAO {
       transactionHash: hash,
     }, data);
   }
+
+  async updateMetaDataByTransactionId(
+    chainId: number,
+    id: string,
+    metaData: any,
+  ): Promise<void> {
+    await this._db.getBlockchainTransaction(chainId).updateOne({
+      transactionId: id,
+    }, {
+      metaData,
+    });
+  }
 }
