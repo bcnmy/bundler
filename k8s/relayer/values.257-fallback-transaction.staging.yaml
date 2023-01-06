@@ -2,7 +2,7 @@ name: "BSDK-257-fallback-transaction-relayer-server"
 replicas: 1
 relayer:
   name: "BSDK-257-fallback-transaction-relayer-server"
-  image: "gcr.io/biconomy-staging/sdk/BSDK-257-fallback-transaction-relayer-node-service:latest"
+  image: "gcr.io/biconomy-staging/sdk/257-fallback-transaction-relayer-node-service:latest"
   port: "3000"
   replicaCount: 1
   resource:
