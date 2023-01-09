@@ -46,19 +46,24 @@ export const relayAATransaction = async (req: Request, res: Response) => {
         metaData,
       });
 
-    const { dappAPIKey } = metaData;
-    const {
-      destinationSmartContractAddresses,
-      destinationSmartContractMethods,
-    } = await getMetaDataFromUserOp(userOp, chainId, dappAPIKey);
-    metaData.destinationSmartContractAddresses = destinationSmartContractAddresses;
-    metaData.destinationSmartContractMethods = destinationSmartContractMethods;
+    try {
+      const { dappAPIKey } = metaData;
+      const {
+        destinationSmartContractAddresses,
+        destinationSmartContractMethods,
+      } = await getMetaDataFromUserOp(userOp, chainId, dappAPIKey);
+      metaData.destinationSmartContractAddresses = destinationSmartContractAddresses;
+      metaData.destinationSmartContractMethods = destinationSmartContractMethods;
 
-    await transactionDao.updateMetaDataByTransactionId(
-      chainId,
-      transactionId,
-      metaData,
-    );
+      await transactionDao.updateMetaDataByTransactionId(
+        chainId,
+        transactionId,
+        metaData,
+      );
+    } catch (error) {
+      log.info(`Error in getting meta data from userOp: ${JSON.stringify(userOp)}`);
+      log.info(`Error: ${error}`);
+    }
 
     if (isError(response)) {
       return res.status(400).json({

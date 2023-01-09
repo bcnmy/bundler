@@ -160,7 +160,7 @@ type AbiConfigType = {
 };
 
 type PaymasterDashboardBackendConfigType = {
-  url: string
+  dappDataUrl: string
 };
 
 export type ConfigType = {

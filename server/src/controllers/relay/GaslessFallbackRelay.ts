@@ -42,14 +42,24 @@ export const relayGaslessFallbackTransaction = async (req: Request, res: Respons
         metaData,
       });
 
-    const { dappAPIKey } = metaData;
-    const {
-      destinationSmartContractAddresses,
-      destinationSmartContractMethods,
-    } = await getMetaDataFromFallbackUserOp(to, data, chainId, dappAPIKey);
+    try {
+      const { dappAPIKey } = metaData;
+      const {
+        destinationSmartContractAddresses,
+        destinationSmartContractMethods,
+      } = await getMetaDataFromFallbackUserOp(to, data, chainId, dappAPIKey);
+      metaData.destinationSmartContractAddresses = destinationSmartContractAddresses;
+      metaData.destinationSmartContractMethods = destinationSmartContractMethods;
 
-    metaData.destinationSmartContractAddresses = destinationSmartContractAddresses;
-    metaData.destinationSmartContractMethods = destinationSmartContractMethods;
+      await transactionDao.updateMetaDataByTransactionId(
+        chainId,
+        transactionId,
+        metaData,
+      );
+    } catch (error) {
+      log.info(`Error in getting meta data from to: ${to} and data: ${data}`);
+      log.info(`Error: ${error}`);
+    }
 
     if (isError(response)) {
       return res.status(400).json({

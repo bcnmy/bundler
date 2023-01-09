@@ -84,10 +84,10 @@ export const getMetaDataFromUserOp = async (
       destinationSmartContractMethodsCallData.push(relayerDestinationContractMethodCallData);
     }
     log.info(`Destination Smart Contract Addresses for walletAddress: ${userOp.sender} are: ${destinationSmartContractAddresses} for dappAPIKey: ${dappAPIKey}`);
-    log.info(`Destination Smart Contract Methods for walletAddress: ${userOp.sender} are: ${destinationSmartContractMethodsCallData} for dappAPIKey: ${dappAPIKey}`);
+    log.info(`Destination Smart Contract Methods call data for walletAddress: ${userOp.sender} are: ${destinationSmartContractMethodsCallData} for dappAPIKey: ${dappAPIKey}`);
     log.info(`Getting smart contract data for addresses:${JSON.stringify(destinationSmartContractAddresses)} for dappAPIKey: ${dappAPIKey}`);
     const dataFromPaymasterDashboardBackend = await axiosGetCall(
-      config.paymasterDashboardBackendConfig.url,
+      config.paymasterDashboardBackendConfig.dappDataUrl,
       {
         dappAPIKey,
         smartContractAddresses: destinationSmartContractAddresses,
@@ -97,21 +97,20 @@ export const getMetaDataFromUserOp = async (
       throw dataFromPaymasterDashboardBackend.message;
     }
     const {
-      dappData,
-      smartContractData,
+      dapp,
+      smartContracts,
     } = dataFromPaymasterDashboardBackend.data;
-    const dappId = dappData._id;
+    const dappId = dapp._id;
+    log.info(dataFromPaymasterDashboardBackend.data);
 
     log.info(`Data fetched for dappId: ${dappId}`);
-    log.info(`dappData: ${JSON.stringify(dappData)}`);
-    log.info(`smartContractData: ${JSON.stringify(smartContractData)}`);
 
     for (
       let smartContractDataIndex = 0;
-      smartContractDataIndex < smartContractData.length;
+      smartContractDataIndex < smartContracts.length;
       smartContractDataIndex += 1
     ) {
-      const { abi } = smartContractData[smartContractDataIndex];
+      const { abi } = smartContracts[smartContractDataIndex];
       const destinationSmartContractMethodCallData = destinationSmartContractMethodsCallData[
         smartContractDataIndex
       ];
@@ -122,7 +121,7 @@ export const getMetaDataFromUserOp = async (
       const methodNameSmartContract = decodedDataSmartContract.name;
       destinationSmartContractMethods.push({
         name: methodNameSmartContract,
-        address: smartContractData[smartContractDataIndex].address,
+        address: smartContracts[smartContractDataIndex].address,
       });
     }
 
