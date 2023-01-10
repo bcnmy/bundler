@@ -2,7 +2,7 @@ import { ethers } from 'ethers';
 import { config } from '../../config';
 import { logger } from '../log-config';
 import { GetMetaDataFromUserOpReturnType, UserOperationType } from '../types';
-import { axiosGetCall } from './axios-calls';
+import { axiosPostCall } from './axios-calls';
 
 const log = logger(module);
 
@@ -83,16 +83,20 @@ export const getMetaDataFromUserOp = async (
       destinationSmartContractAddresses.push(relayerDestinationContractAddress);
       destinationSmartContractMethodsCallData.push(relayerDestinationContractMethodCallData);
     }
+
     log.info(`Destination Smart Contract Addresses for walletAddress: ${userOp.sender} are: ${destinationSmartContractAddresses} for dappAPIKey: ${dappAPIKey}`);
     log.info(`Destination Smart Contract Methods call data for walletAddress: ${userOp.sender} are: ${destinationSmartContractMethodsCallData} for dappAPIKey: ${dappAPIKey}`);
     log.info(`Getting smart contract data for addresses:${JSON.stringify(destinationSmartContractAddresses)} for dappAPIKey: ${dappAPIKey}`);
-    const dataFromPaymasterDashboardBackend = await axiosGetCall(
+    log.info(`Making call to paymaster dashboard backend to get data on ${config.paymasterDashboardBackendConfig.dappDataUrl} for dappAPIKey: ${dappAPIKey}`);
+
+    const dataFromPaymasterDashboardBackend = await axiosPostCall(
       config.paymasterDashboardBackendConfig.dappDataUrl,
       {
-        dappAPIKey,
+        apiKey: dappAPIKey,
         smartContractAddresses: destinationSmartContractAddresses,
       },
     );
+    log.info(`Respone from paymaster dashboard backend: ${JSON.stringify(dataFromPaymasterDashboardBackend)} for dappAPIKey: ${dappAPIKey}`);
     if (dataFromPaymasterDashboardBackend.statusCode !== 200) {
       throw dataFromPaymasterDashboardBackend.message;
     }
@@ -100,10 +104,12 @@ export const getMetaDataFromUserOp = async (
       dapp,
       smartContracts,
     } = dataFromPaymasterDashboardBackend.data;
-    const dappId = dapp._id;
+    // const dappId = dapp._id;
     log.info(dataFromPaymasterDashboardBackend.data);
 
-    log.info(`Data fetched for dappId: ${dappId}`);
+    log.info(`Data fetched for dappAPIKey: ${dappAPIKey}`);
+    log.info(`Dapp: ${JSON.stringify(dapp)} for dappAPIKey: ${dappAPIKey}`);
+    log.info(`Smart Contracts: ${JSON.stringify(smartContracts)} for dappAPIKey: ${dappAPIKey}`);
 
     for (
       let smartContractDataIndex = 0;
@@ -125,6 +131,8 @@ export const getMetaDataFromUserOp = async (
       });
     }
 
+    log.info(`Destination Smart Contract Addresses: ${JSON.stringify(destinationSmartContractAddresses)} for dappAPIKey: ${dappAPIKey}`);
+    log.info(`Destination Smart Contract Methods: ${JSON.stringify(destinationSmartContractMethods)} for dappAPIKey: ${dappAPIKey}`);
     return {
       destinationSmartContractAddresses,
       destinationSmartContractMethods,
