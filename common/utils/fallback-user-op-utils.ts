@@ -84,7 +84,7 @@ export const getMetaDataFromFallbackUserOp = async (
           2 + offset * transactionsIndex,
           42 + offset * transactionsIndex,
         );
-        destinationSmartContractAddresses.push(`0x${destinationSmartContractAddress}`);
+        destinationSmartContractAddresses.push(`0x${destinationSmartContractAddress.toLowerCase()}`);
         const destinationSmartContractMethodCallData = transactions.slice(
           170 + offset * transactionsIndex,
           306 + offset * transactionsIndex,
@@ -126,7 +126,7 @@ export const getMetaDataFromFallbackUserOp = async (
       const destinationSmartContractAddress = transactionInfoForExecTransaction.to;
       const destinationSmartContractMethodCallData = transactionInfoForExecTransaction.data;
 
-      destinationSmartContractAddresses.push(destinationSmartContractAddress);
+      destinationSmartContractAddresses.push(destinationSmartContractAddress.toLowerCase());
       destinationSmartContractMethodsCallData.push(destinationSmartContractMethodCallData);
     }
 

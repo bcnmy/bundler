@@ -72,7 +72,7 @@ export const getMetaDataFromUserOp = async (
           2 + offset * transactionsIndex,
           42 + offset * transactionsIndex,
         );
-        destinationSmartContractAddresses.push(`0x${destinationSmartContractAddress}`);
+        destinationSmartContractAddresses.push(`0x${destinationSmartContractAddress.toLowerCase()}`);
         const destinationSmartContractMethodCallData = transactions.slice(
           170 + offset * transactionsIndex,
           306 + offset * transactionsIndex,
@@ -80,7 +80,7 @@ export const getMetaDataFromUserOp = async (
         destinationSmartContractMethodsCallData.push(`0x${destinationSmartContractMethodCallData}`);
       }
     } else {
-      destinationSmartContractAddresses.push(relayerDestinationContractAddress);
+      destinationSmartContractAddresses.push(relayerDestinationContractAddress.toLowerCase());
       destinationSmartContractMethodsCallData.push(relayerDestinationContractMethodCallData);
     }
 
