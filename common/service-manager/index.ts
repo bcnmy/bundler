@@ -87,6 +87,7 @@ const networkServiceMap: Record<number, EVMNetworkService> = {};
 // eslint-disable-next-line import/no-mutable-exports
 let statusService: IStatusService;
 let scwRelayerList: string[] = [];
+
 const relayerInstanceMap: Record<string, EVMRelayerManager> = {};
 let relayerBalanceManager: RelayerBalanceManager;
 let labelCCMP;
