@@ -36,7 +36,7 @@ import {
 const log = logger(module);
 
 export class EVMTransactionListener
-implements
+  implements
   ITransactionListener<IEVMAccount, EVMRawTransactionType>,
   ITransactionPublisher<TransactionQueueMessageType> {
   chainId: number;
@@ -323,7 +323,9 @@ implements
       });
     }
 
-    this.relayerBalanceManager!.onTransaction(transactionReceipt, transactionType, this.chainId);
+    if (transactionType !== TransactionType.FUNDING && transactionType !== TransactionType.AA) {
+      this.relayerBalanceManager!.onTransaction(transactionReceipt, transactionType, this.chainId);
+    }
   }
 
   async notify(
@@ -447,7 +449,7 @@ implements
   };
 
   private static handleCCMPOnTransactionSuccessFactory = (destinationTxHash?: string)
-  : ICrossChainProcessStep => {
+    : ICrossChainProcessStep => {
     const handler: ICrossChainProcessStep = async (data) => ({
       ...data,
       status: CrossChainTransationStatus.DESTINATION_TRANSACTION_CONFIRMED,

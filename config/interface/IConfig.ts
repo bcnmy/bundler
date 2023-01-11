@@ -267,9 +267,10 @@ export type TokenData = {
 };
 
 export type FeeManagementConfig = {
+  swapInAction: string,
   tokenList: Record<number, TokenData[]>;
   nativeTokenSymbol: ChainIdWithStringValueType,
-  noOfDepositConfirmation: ChainIdWithNumberValueType,
+  noOfBlockConfirmation: ChainIdWithNumberValueType,
   hyphenLiquidityPoolAddress: ChainIdWithStringValueType,
   balanceThreshold: ChainIdAndTokenWithNumberValueType;
   feeSpendThreshold: ChainIdWithNumberValueType;
