@@ -59,6 +59,7 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
         const { userOp, to } = transactionDataReceivedFromQueue;
         const entryPointContracts = this.entryPointMap[this.chainId];
 
+        // TODO Test this via making it a function
         let entryPointContract;
         for (let entryPointContractIndex = 0;
           entryPointContractIndex < entryPointContracts.length;
