@@ -5,11 +5,7 @@ import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
 import { RetryTransactionQueueData } from '../../../../common/queue/types';
 import {
-  EVMRawTransactionType,
-  SocketEventType,
-  TransactionQueueMessageType,
-  TransactionStatus,
-  TransactionType,
+  EVMRawTransactionType, SocketEventType, TransactionQueueMessageType, TransactionStatus,
 } from '../../../../common/types';
 import { getRetryTransactionCountKey } from '../../../../common/utils';
 import { IEVMAccount } from '../account';
@@ -24,13 +20,12 @@ import {
   TransactionDataToBeUpdatedInDatabaseType,
   TransactionListenerNotifyReturnType,
 } from './types';
-import { IRelayerBalanceManager } from '../../../../common/service-manager/interface/IRelayerBalanceManager';
 
 const log = logger(module);
 
 export class EVMTransactionListener implements
-  ITransactionListener<IEVMAccount, EVMRawTransactionType>,
-  ITransactionPublisher<TransactionQueueMessageType> {
+ITransactionListener<IEVMAccount, EVMRawTransactionType>,
+ITransactionPublisher<TransactionQueueMessageType> {
   chainId: number;
 
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
@@ -38,8 +33,6 @@ export class EVMTransactionListener implements
   transactionQueue: IQueue<TransactionQueueMessageType>;
 
   retryTransactionQueue: IQueue<RetryTransactionQueueData>;
-
-  relayerBalanceManager: IRelayerBalanceManager | undefined;
 
   transactionDao: ITransactionDAO;
 
@@ -62,10 +55,6 @@ export class EVMTransactionListener implements
     this.retryTransactionQueue = retryTransactionQueue;
     this.transactionDao = transactionDao;
     this.cacheService = cacheService;
-  }
-
-  async setRelayerBalanceManager(_relayerBalanceManager: IRelayerBalanceManager) {
-    this.relayerBalanceManager = _relayerBalanceManager;
   }
 
   async publishToTransactionQueue(data: TransactionQueueMessageType): Promise<boolean> {
@@ -225,10 +214,6 @@ export class EVMTransactionListener implements
         relayerManagerName,
       });
     }
-
-    if (transactionType !== TransactionType.FUNDING && transactionType !== TransactionType.AA) {
-      this.relayerBalanceManager!.onTransaction(transactionReceipt, transactionType, this.chainId);
-    }
   }
 
   async notify(
@@ -262,7 +247,7 @@ export class EVMTransactionListener implements
     }
 
     if (!previousTransactionHash) {
-      // Save initial transaction data to database
+    // Save initial transaction data to database
       this.updateTransactionDataToDatabase({
         transactionHash: transactionExecutionResponse.hash,
         rawTransaction: transactionExecutionResponse,

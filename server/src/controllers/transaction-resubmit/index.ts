@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
 import { relayerManagerTransactionTypeNameMap } from '../../../../common/maps';
-import { EVMRelayerManagerMap, transactionDao, transactionServiceMap } from '../../../../common/service-manager';
+import { EVMRelayerManagerMap, transactionDao, transactionSerivceMap } from '../../../../common/service-manager';
 import { TransactionType } from '../../../../common/types';
 import { parseError } from '../../../../common/utils';
 
@@ -43,7 +43,7 @@ export const transactionResubmitApi = async (req: Request, res: Response) => {
         nonce: transaction.rawTransaction.nonce,
       };
       log.info(`Resubmitting transaction ${transactionId} with gasPrice ${gasPrice} on chainId ${chainId} and raw transaction data ${JSON.stringify(rawTransaction)}`);
-      const result = await transactionServiceMap[chainId].executeTransaction({
+      const result = await transactionSerivceMap[chainId].executeTransaction({
         rawTransaction,
         account: relayer,
       });

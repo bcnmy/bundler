@@ -86,15 +86,6 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
     return data[symbol];
   }
 
-  async getTokenPriceByTokenSymbol(tokenSymbol: string): Promise<number> {
-    const symbol = (this.networkSymbolCategories[tokenSymbol] || [])[0];
-    if (!symbol) {
-      throw new Error(`Can't get coinmarketcap symbol for token symbol ${tokenSymbol} from config map`);
-    }
-
-    return this.getTokenPrice(symbol.toString());
-  }
-
   /**
    * @param chainId
    * @param tokenAddress
