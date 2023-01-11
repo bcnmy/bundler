@@ -323,7 +323,7 @@ export class EVMTransactionListener
       });
     }
 
-    if (transactionType !== TransactionType.FUNDING) {
+    if (transactionType !== TransactionType.FUNDING && transactionType !== TransactionType.AA) {
       this.relayerBalanceManager!.onTransaction(transactionReceipt, transactionType, this.chainId);
     }
   }
