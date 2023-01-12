@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/indent */
-import { FeeManager } from 'fee-management';
-import { IEVMAccount } from 'fee-management/dist/relayer-node-interfaces/IEVMAccount';
-import { ITransactionService } from 'fee-management/dist/relayer-node-interfaces/ITransactionService';
+import {
+    FeeManager,
+    IEVMAccount,
+    ITransactionService,
+} from 'fee-management';
 import { TransactionReceipt } from '@ethersproject/providers';
 import { EVMRawTransactionType, TransactionType } from '../../types';
 import { FeeManagerParams } from '../types';
