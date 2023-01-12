@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/indent */
-import { FeeManager } from 'fee-management';
-import { IEVMAccount } from 'fee-management/dist/relayer-node-interfaces/IEVMAccount';
-import { ITransactionService } from 'fee-management/dist/relayer-node-interfaces/ITransactionService';
+import {
+    IEVMAccount,
+    FeeManager, ITransactionService,
+    Mode,
+} from 'fee-management';
 import { ethers } from 'ethers';
-import { Mode } from 'fee-management/dist/types';
 import { EVMRawTransactionType, TransactionType } from '../types';
 import { logger } from '../log-config';
 import { IRelayerBalanceManager } from './interface/IRelayerBalanceManager';
