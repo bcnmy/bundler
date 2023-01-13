@@ -27,6 +27,7 @@ export interface IBlockchainTransaction {
   chainId: number;
   gasPrice: string;
   receipt: object;
+  transactionFee: number;
   relayerAddress: string;
   walletAddress: string;
   metaData: any;
