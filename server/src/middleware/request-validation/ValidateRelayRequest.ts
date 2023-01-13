@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
 import { TransactionMethodType } from '../../../../common/types';
-import { aaRequestSchema, crossChainRequestSchema, scwRequestSchema } from '../../routes/relay/relay.schema';
+import { aaRequestSchema, crossChainRequestSchema, scwRequestSchema,  } from '../../routes/relay/relay.schema';
 
 const log = logger(module);
 
@@ -20,6 +20,9 @@ export const validateRelayRequest = () => async (
       case TransactionMethodType.AA:
         validationResponse = aaRequestSchema.validate(req.body);
         break;
+      case TransactionMethodType.GASLESS_FALLBACK:
+          validationResponse = gaslessFallbackRequestSchema.validate(req.body);
+          break;
       case TransactionMethodType.CROSS_CHAIN:
         validationResponse = crossChainRequestSchema.validate(req.body);
         break;
