@@ -12,7 +12,7 @@ export enum TransactionMethodType {
   SCW = 'eth_sendSmartContractWalletTransaction',
   AA = 'eth_sendUserOperation',
   CROSS_CHAIN = 'eth_sendCrossChainTransaction',
-  GASLESS_FALLBACK = 'eth_sendGaslessFallback',
+  GASLESS_FALLBACK = 'eth_sendGaslessFallbackTransaction',
 }
 
 export enum SocketEventType {
