@@ -33,6 +33,9 @@ export const BlockchainTransactionSchema = new Schema<IBlockchainTransaction>({
   metaData: {
     type: Object,
   },
+  transactionFee: {
+    type: Number,
+  },
   rawTransaction: {
     type: Object,
   },
