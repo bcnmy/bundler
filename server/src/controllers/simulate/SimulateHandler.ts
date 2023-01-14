@@ -15,11 +15,11 @@ export const simulateTransaction = () => async (
       response = await simulateAATransaction(req);
     } else if (method === TransactionMethodType.SCW) {
       response = await simulateSCWTransaction(req);
-    } else if(method === TransactionMethodType.GASLESS_FALLBACK) {
+    } else if (method === TransactionMethodType.GASLESS_FALLBACK) {
       // TODO add actual simulation logic
       response = {
-        code: 200
-      }
+        code: 200,
+      };
     }
     if (!response) {
       return res.status(500).send({
