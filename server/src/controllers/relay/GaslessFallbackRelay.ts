@@ -1,7 +1,12 @@
 import { Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
 import { routeTransactionToRelayerMap, transactionDao } from '../../../../common/service-manager';
-import { isError, TransactionStatus, TransactionType } from '../../../../common/types';
+import {
+  isError,
+  TransactionMethodType,
+  TransactionStatus,
+  TransactionType,
+} from '../../../../common/types';
 import { generateTransactionId } from '../../../../common/utils';
 import { config } from '../../../../config';
 
@@ -18,6 +23,13 @@ export const relayGaslessFallbackTransaction = async (req: Request, res: Respons
 
     const transactionId = generateTransactionId(data);
     log.info(`Sending transaction to relayer with transactionId: ${transactionId} for Gasless Fallback: ${to} on chainId: ${chainId}`);
+    if (!routeTransactionToRelayerMap[chainId][TransactionType.AA]) {
+      return res.status(400).json({
+        code: 400,
+        error: `${TransactionMethodType.GASLESS_FALLBACK} method not supported for chainId: ${chainId}`,
+      });
+    }
+
     const response = await routeTransactionToRelayerMap[chainId][TransactionType.GASLESS_FALLBACK]!
       .sendTransactionToRelayer({
         type: TransactionType.GASLESS_FALLBACK,
@@ -55,6 +67,7 @@ export const relayGaslessFallbackTransaction = async (req: Request, res: Respons
     });
   } catch (error) {
     log.error(`Error in Gasless Fallback relay ${error}`);
+    console.log(error);
     return res.status(500).json({
       code: 500,
       error: JSON.stringify(error),

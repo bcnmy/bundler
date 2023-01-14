@@ -9,7 +9,7 @@
   "supportedNetworks": [5, 80001, 137, 97, 420, 421613, 43113],
   "EIP1559SupportedNetworks": [],
   "supportedTransactionType": {
-    "5": ["AA", "SCW"],
+    "5": ["AA", "SCW", "GASLESS_FALLBACK"],
     "137": ["AA", "SCW", "GASLESS_FALLBACK"],
     "80001": ["AA", "SCW", "GASLESS_FALLBACK"],
     "97": ["AA", "SCW"],
@@ -181,6 +181,11 @@
         "420": 50,
         "421613": 50,
         "43113": 50
+      },
+      "GASLESS_FALLBACK": {
+        "5": 5,
+        "137": 7,
+        "80001": 5
       }
     },
     "bumpGasPriceMultiplier": {

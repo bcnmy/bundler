@@ -1,7 +1,12 @@
 import { Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
 import { routeTransactionToRelayerMap, transactionDao } from '../../../../common/service-manager';
-import { isError, TransactionStatus, TransactionType } from '../../../../common/types';
+import {
+  isError,
+  TransactionMethodType,
+  TransactionStatus,
+  TransactionType,
+} from '../../../../common/types';
 import { generateTransactionId } from '../../../../common/utils';
 import { config } from '../../../../config';
 
@@ -21,6 +26,12 @@ export const relayAATransaction = async (req: Request, res: Response) => {
 
     const walletAddress = userOp.sender.toLowerCase();
 
+    if (!routeTransactionToRelayerMap[chainId][TransactionType.AA]) {
+      return res.status(400).json({
+        code: 400,
+        error: `${TransactionMethodType.AA} method not supported for chainId: ${chainId}`,
+      });
+    }
     const response = routeTransactionToRelayerMap[chainId][TransactionType.AA]
       .sendTransactionToRelayer({
         type: TransactionType.AA,

@@ -1,7 +1,12 @@
 import { Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
 import { routeTransactionToRelayerMap, transactionDao } from '../../../../common/service-manager';
-import { isError, TransactionStatus, TransactionType } from '../../../../common/types';
+import {
+  isError,
+  TransactionMethodType,
+  TransactionStatus,
+  TransactionType,
+} from '../../../../common/types';
 import { generateTransactionId } from '../../../../common/utils';
 import { config } from '../../../../config';
 
@@ -19,6 +24,13 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
     const gasLimitFromSimulation = req.body.params[1] ? `0x${(req.body.params[1]).toString(16)}` : null;
     const transactionId = generateTransactionId(data);
     log.info(`Sending transaction to relayer with transactionId: ${transactionId} for SCW: ${to} on chainId: ${chainId}`);
+    if (!routeTransactionToRelayerMap[chainId][TransactionType.AA]) {
+      return res.status(400).json({
+        code: 400,
+        error: `${TransactionMethodType.SCW} method not supported for chainId: ${chainId}`,
+      });
+    }
+
     const response = await routeTransactionToRelayerMap[chainId][TransactionType.SCW]
       .sendTransactionToRelayer({
         type: TransactionType.SCW,
