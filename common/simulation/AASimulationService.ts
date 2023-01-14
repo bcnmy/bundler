@@ -29,7 +29,7 @@ export class AASimulationService {
 
     let isSimulationSuccessful = true;
     try {
-      await entryPointStatic.callStatic.simulateValidation(userOp, false);
+      await entryPointStatic.callStatic.simulateValidation(userOp);
       // .catch((e: any) => e);
       // const result = AASimulationService.parseUserOpSimulationResult(userOp, simulationResult);
     } catch (error: any) {
