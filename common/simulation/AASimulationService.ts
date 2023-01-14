@@ -29,9 +29,9 @@ export class AASimulationService {
 
     let isSimulationSuccessful = true;
     try {
-      await entryPointStatic.callStatic.simulateValidation(userOp);
-      // .catch((e: any) => e);
-      // const result = AASimulationService.parseUserOpSimulationResult(userOp, simulationResult);
+      const simulationResult = await entryPointStatic.callStatic.simulateValidation(userOp)
+        .catch((e: any) => e);
+      AASimulationService.parseUserOpSimulationResult(userOp, simulationResult);
     } catch (error: any) {
       log.info(`AA Simulation failed: ${JSON.stringify(error)}`);
       isSimulationSuccessful = false;
@@ -83,14 +83,15 @@ export class AASimulationService {
         throw new Error(`paymaster validation failed: ${msg}`);
       }
     }
+    return true;
 
-    const {
-      returnInfo,
-      senderInfo,
-      // factoryInfo,
-      // paymasterInfo,
-      // aggregatorInfo, // may be missing (exists only SimulationResultWithAggregator
-    } = simulationResult.errorArgs;
+    // const {
+    //   returnInfo,
+    //   senderInfo,
+    // factoryInfo,
+    // paymasterInfo,
+    // aggregatorInfo, // may be missing (exists only SimulationResultWithAggregator
+    // } = simulationResult.errorArgs;
 
     // extract address from "data" (first 20 bytes)
     // add it as "addr" member to the "stakeinfo" struct
@@ -105,15 +106,15 @@ export class AASimulationService {
     //     };
     // }
 
-    return {
-      returnInfo,
-      senderInfo: {
-        ...senderInfo,
-        addr: userOp.sender,
-      },
-      // factoryInfo: fillEntity(userOp.initCode, factoryInfo),
-      // paymasterInfo: fillEntity(userOp.paymasterAndData, paymasterInfo),
-      // aggregatorInfo: fillEntity(aggregatorInfo?.actualAggregator, aggregatorInfo?.stakeInfo),
-    };
+    // return {
+    //   returnInfo,
+    //   senderInfo: {
+    //     ...senderInfo,
+    //     addr: userOp.sender,
+    //   },
+    // factoryInfo: fillEntity(userOp.initCode, factoryInfo),
+    // paymasterInfo: fillEntity(userOp.paymasterAndData, paymasterInfo),
+    // aggregatorInfo: fillEntity(aggregatorInfo?.actualAggregator, aggregatorInfo?.stakeInfo),
+    // };
   }
 }
