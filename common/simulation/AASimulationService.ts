@@ -78,8 +78,10 @@ export class AASimulationService {
       const msg: string = simulationResult.errorArgs?.reason ?? simulationResult.toString()
 
       if (paymaster == null) {
+        log.info(`account validation failed: ${msg} for userOp: ${JSON.stringify(userOp)}`);
         throw new Error(`account validation failed: ${msg}`);
       } else {
+        log.info(`paymaster validation failed: ${msg} for userOp: ${JSON.stringify(userOp)}`);
         throw new Error(`paymaster validation failed: ${msg}`);
       }
     }
