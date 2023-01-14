@@ -34,7 +34,6 @@ export class AASimulationService {
       AASimulationService.parseUserOpSimulationResult(userOp, simulationResult);
     } catch (error: any) {
       log.info(`AA Simulation failed: ${JSON.stringify(error)}`);
-      log.info(`AA Simulation failed: ${error}`);
       isSimulationSuccessful = false;
       return {
         isSimulationSuccessful,
@@ -80,10 +79,10 @@ export class AASimulationService {
 
       if (paymaster == null) {
         log.info(`account validation failed: ${msg} for userOp: ${JSON.stringify(userOp)}`);
-        throw new Error(`account validation failed: ${msg}`);
+        throw Error(`account validation failed: ${msg}`);
       } else {
         log.info(`paymaster validation failed: ${msg} for userOp: ${JSON.stringify(userOp)}`);
-        throw new Error(`paymaster validation failed: ${msg}`);
+        throw Error(`paymaster validation failed: ${msg}`);
       }
     }
     return true;
