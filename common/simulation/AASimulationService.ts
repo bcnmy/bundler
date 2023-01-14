@@ -3,7 +3,7 @@ import { config } from '../../config';
 import { IEVMAccount } from '../../relayer/src/services/account';
 import { logger } from '../log-config';
 import { INetworkService } from '../network';
-import { EVMRawTransactionType } from '../types';
+import { EVMRawTransactionType, UserOperationType } from '../types';
 import { parseError } from '../utils';
 import { AASimulationDataType, SimulationResponseType } from './types';
 
@@ -29,7 +29,9 @@ export class AASimulationService {
 
     let isSimulationSuccessful = true;
     try {
-      await entryPointStatic.callStatic.simulateValidation(userOp, false);
+      await entryPointStatic.simulateValidation(userOp, { gasLimit: 10e6 });
+      // .catch((e: any) => e);
+      // const result = AASimulationService.parseUserOpSimulationResult(userOp, simulationResult);
     } catch (error: any) {
       log.info(`AA Simulation failed: ${JSON.stringify(error)}`);
       isSimulationSuccessful = false;
@@ -61,6 +63,57 @@ export class AASimulationService {
       isSimulationSuccessful,
       gasLimitFromSimulation: estimatedGasForUserOp,
       msgFromSimulation: 'Success',
+    };
+  }
+
+  static parseUserOpSimulationResult(userOp: UserOperationType, simulationResult: any) {
+    if (!simulationResult?.errorName?.startsWith('ValidationResult')) {
+      // parse it as FailedOp
+      // if its FailedOp, then we have the paymaster param... otherwise its an Error(string)
+      let { paymaster } = simulationResult.errorArgs;
+      if (paymaster === config.zeroAddress) {
+        paymaster = undefined;
+      }
+      // eslint-disable-next-line
+      const msg: string = simulationResult.errorArgs?.reason ?? simulationResult.toString()
+
+      if (paymaster == null) {
+        throw new Error(`account validation failed: ${msg}`);
+      } else {
+        throw new Error(`paymaster validation failed: ${msg}`);
+      }
+    }
+
+    const {
+      returnInfo,
+      senderInfo,
+      // factoryInfo,
+      // paymasterInfo,
+      // aggregatorInfo, // may be missing (exists only SimulationResultWithAggregator
+    } = simulationResult.errorArgs;
+
+    // extract address from "data" (first 20 bytes)
+    // add it as "addr" member to the "stakeinfo" struct
+    // if no address, then return "undefined" instead of struct.
+    // function fillEntity(data: BytesLike, info: StakeInfo): StakeInfo | undefined {
+    //   const addr = getAddr(data);
+    //   return addr == null
+    //     ? undefined
+    //     : {
+    //       ...info,
+    //       addr,
+    //     };
+    // }
+
+    return {
+      returnInfo,
+      senderInfo: {
+        ...senderInfo,
+        addr: userOp.sender,
+      },
+      // factoryInfo: fillEntity(userOp.initCode, factoryInfo),
+      // paymasterInfo: fillEntity(userOp.paymasterAndData, paymasterInfo),
+      // aggregatorInfo: fillEntity(aggregatorInfo?.actualAggregator, aggregatorInfo?.stakeInfo),
     };
   }
 }
