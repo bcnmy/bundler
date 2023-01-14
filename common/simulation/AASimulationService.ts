@@ -29,7 +29,7 @@ export class AASimulationService {
 
     let isSimulationSuccessful = true;
     try {
-      await entryPointStatic.simulateValidation(userOp, { gasLimit: 10e6 });
+      await entryPointStatic.callStatic.simulateValidation(userOp, false);
       // .catch((e: any) => e);
       // const result = AASimulationService.parseUserOpSimulationResult(userOp, simulationResult);
     } catch (error: any) {
