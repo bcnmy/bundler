@@ -34,11 +34,12 @@ export class AASimulationService {
       AASimulationService.parseUserOpSimulationResult(userOp, simulationResult);
     } catch (error: any) {
       log.info(`AA Simulation failed: ${JSON.stringify(error)}`);
+      log.info(`AA Simulation failed: ${error}`);
       isSimulationSuccessful = false;
       return {
         isSimulationSuccessful,
         gasLimitFromSimulation: 0,
-        msgFromSimulation: JSON.stringify(error),
+        msgFromSimulation: JSON.stringify(error) || error,
       };
     }
 
