@@ -19,7 +19,9 @@ export const relayGaslessFallbackTransaction = async (req: Request, res: Respons
     const {
       to, data, gasLimit, chainId, value, walletInfo,
     } = req.body.params[0];
-    log.info(`Relaying Gasless Fallback Transaction for Gasless Fallback: ${to} on chainId: ${chainId}`);
+
+    const fallbackGasTankAddress = config.fallbackGasTankData[chainId][0].address;
+    log.info(`Relaying Gasless Fallback Transaction for Gasless Fallback: ${fallbackGasTankAddress} on chainId: ${chainId}`);
 
     const transactionId = generateTransactionId(data);
     log.info(`Sending transaction to relayer with transactionId: ${transactionId} for Gasless Fallback: ${to} on chainId: ${chainId}`);
@@ -33,7 +35,7 @@ export const relayGaslessFallbackTransaction = async (req: Request, res: Respons
     const response = await routeTransactionToRelayerMap[chainId][TransactionType.GASLESS_FALLBACK]!
       .sendTransactionToRelayer({
         type: TransactionType.GASLESS_FALLBACK,
-        to,
+        to: fallbackGasTankAddress,
         data,
         gasLimit,
         chainId,
