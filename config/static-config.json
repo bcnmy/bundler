@@ -1,7 +1,7 @@
 {
   "socketService": {
-    "wssUrl": "wss://sdk-ws.prod.biconomy.io/connection/websocket",
-    "httpUrl": "https://sdk-ws.prod.biconomy.io/api"
+    "wssUrl": "wss://sdk-testing-ws.staging.biconomy.io/connection/websocket",
+    "httpUrl": "https://sdk-testing-ws.staging.biconomy.io/api"
   },
   "cacheService": {
     "lockTTL": 10000
