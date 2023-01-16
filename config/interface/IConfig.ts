@@ -137,10 +137,10 @@ type EntryPointDataConfigType = {
 };
 
 type FallbackGasTankDataConfigType = {
-  [key: number]: Array<{
+  [key: number]: {
     abi: Array<any>,
     address: string,
-  }>
+  }
 };
 
 type DataSourcesConfigType = {
