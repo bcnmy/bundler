@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { TransactionMethodType } from '../../../../common/types';
 import { relayAATransaction } from './AARelay';
+import { relayGaslessFallbackTransaction } from './GaslessFallbackRelay';
 import { relaySCWTransaction } from './SCWRelay';
 
 export const requestHandler = async (
@@ -13,6 +14,8 @@ export const requestHandler = async (
     response = await relayAATransaction(req, res);
   } else if (method === TransactionMethodType.SCW) {
     response = await relaySCWTransaction(req, res);
+  } else if (method === TransactionMethodType.GASLESS_FALLBACK) {
+    response = await relayGaslessFallbackTransaction(req, res);
   } else {
     return res.status(400).send({
       code: 400,

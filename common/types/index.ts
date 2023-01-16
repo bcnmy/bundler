@@ -5,12 +5,14 @@ export enum TransactionType {
   SCW = 'SCW',
   CROSS_CHAIN = 'CROSS_CHAIN',
   FUNDING = 'FUNDING',
+  GASLESS_FALLBACK = 'GASLESS_FALLBACK',
 }
 
 export enum TransactionMethodType {
   SCW = 'eth_sendSmartContractWalletTransaction',
   AA = 'eth_sendUserOperation',
   CROSS_CHAIN = 'eth_sendCrossChainTransaction',
+  GASLESS_FALLBACK = 'eth_sendGaslessFallbackTransaction',
 }
 
 export enum SocketEventType {
@@ -84,6 +86,17 @@ export type AATransactionMessageType = {
 };
 
 export type SCWTransactionMessageType = {
+  type: string;
+  to: string;
+  data: string;
+  gasLimit: string;
+  chainId: number;
+  value: string;
+  transactionId: string;
+  walletAddress: string;
+};
+
+export type GaslessFallbackTransactionMessageType = {
   type: string;
   to: string;
   data: string;

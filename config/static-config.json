@@ -1,7 +1,7 @@
 {
   "socketService": {
-    "wssUrl": "wss://sdk-ws.prod.biconomy.io/connection/websocket",
-    "httpUrl": "https://sdk-ws.prod.biconomy.io/api"
+    "wssUrl": "wss://sdk-testing-ws.staging.biconomy.io/connection/websocket",
+    "httpUrl": "https://sdk-testing-ws.staging.biconomy.io/api"
   },
   "cacheService": {
     "lockTTL": 10000
@@ -17,34 +17,13 @@
   ],
   "EIP1559SupportedNetworks": [],
   "supportedTransactionType": {
-    "5": [
-      "AA",
-      "SCW"
-    ],
-    "137": [
-      "AA",
-      "SCW"
-    ],
-    "80001": [
-      "AA",
-      "SCW"
-    ],
-    "97": [
-      "AA",
-      "SCW"
-    ],
-    "420": [
-      "AA",
-      "SCW"
-    ],
-    "421613": [
-      "AA",
-      "SCW"
-    ],
-    "43113": [
-      "AA",
-      "SCW"
-    ]
+    "5": ["AA", "SCW", "GASLESS_FALLBACK"],
+    "137": ["AA", "SCW", "GASLESS_FALLBACK"],
+    "80001": ["AA", "SCW", "GASLESS_FALLBACK"],
+    "97": ["AA", "SCW"],
+    "420": ["AA", "SCW"],
+    "421613": ["AA", "SCW"],
+    "43113": ["AA", "SCW"]
   },
   "chains": {
     "currency": {
@@ -227,6 +206,11 @@
         "420": 50,
         "421613": 50,
         "43113": 50
+      },
+      "GASLESS_FALLBACK": {
+        "5": 5,
+        "137": 7,
+        "80001": 5
       }
     },
     "bumpGasPriceMultiplier": {
