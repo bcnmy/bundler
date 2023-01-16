@@ -33,6 +33,7 @@ import { AASimulationService, SCWSimulationService } from '../simulation';
 import { TenderlySimulationService } from '../simulation/external-simulation';
 import { IStatusService, StatusService } from '../status';
 import { CMCTokenPriceManager } from '../token-price';
+import { RelayerBalanceManager } from './relayer-balance-manager';
 import {
   AATransactionMessageType,
   EntryPointMapType,
@@ -40,6 +41,7 @@ import {
   GaslessFallbackTransactionMessageType,
   SCWTransactionMessageType,
   TransactionType,
+  FeeSupportedToken,
 } from '../types';
 
 const log = logger(module);
@@ -78,8 +80,8 @@ const EVMRelayerManagerMap: {
 const transactionDao = new TransactionDAO();
 
 const socketConsumerMap: Record<number, SocketConsumer> = {};
-const retryTransactionSerivceMap: Record<number, EVMRetryTransactionService> = {};
-const transactionSerivceMap: Record<number, EVMTransactionService> = {};
+const retryTransactionServiceMap: Record<number, EVMRetryTransactionService> = {};
+const transactionServiceMap: Record<number, EVMTransactionService> = {};
 const transactionListenerMap: Record<number, EVMTransactionListener> = {};
 const retryTransactionQueueMap: {
   [key: number]: RetryTransactionHandlerQueue;
@@ -88,6 +90,12 @@ const networkServiceMap: Record<number, EVMNetworkService> = {};
 
 // eslint-disable-next-line import/no-mutable-exports
 let statusService: IStatusService;
+let scwRelayerList: string[] = [];
+
+const relayerInstanceMap: Record<string, EVMRelayerManager> = {};
+let relayerBalanceManager: RelayerBalanceManager;
+let labelCCMP;
+let labelSCW;
 
 (async () => {
   await dbInstance.connect();
@@ -109,6 +117,31 @@ let statusService: IStatusService;
   if (config.relayer.nodePathIndex === 0) {
     tokenService.schedule();
   }
+
+  const feeSupportedTokenList: Record<number, FeeSupportedToken[]> = {};
+  for (const chainId in config.feeOption.tokenContractAddress) {
+    if (Object.prototype.hasOwnProperty.call(config.feeOption.tokenContractAddress, chainId)) {
+      const feeSupportedTokenArray: FeeSupportedToken[] = [];
+      for (const symbol in config.feeOption.tokenContractAddress[chainId]) {
+        if (Object.prototype.hasOwnProperty.call(
+          config.feeOption.tokenContractAddress[chainId],
+          symbol,
+        )) {
+          const token = {
+            address: config.feeOption.tokenContractAddress[chainId][symbol],
+            symbol,
+            decimal: config.feeOption.decimals[chainId][symbol],
+          };
+          feeSupportedTokenArray.push(token);
+        }
+      }
+      feeSupportedTokenList[Number(chainId)] = feeSupportedTokenArray;
+    }
+  }
+
+  config.feeManagementConfig.tokenList = feeSupportedTokenList;
+
+  relayerBalanceManager = new RelayerBalanceManager();
 
   log.info(`Setting up instances for following chainIds: ${JSON.stringify(supportedNetworks)}`);
   for (const chainId of supportedNetworks) {
@@ -183,6 +216,9 @@ let statusService: IStatusService;
         chainId,
       },
     });
+
+    transactionListener.setRelayerBalanceManager(relayerBalanceManager);
+
     transactionListenerMap[chainId] = transactionListener;
     log.info(`Transaction listener setup complete for chainId: ${chainId}`);
 
@@ -199,7 +235,7 @@ let statusService: IStatusService;
         chainId,
       },
     });
-    transactionSerivceMap[chainId] = transactionService;
+    transactionServiceMap[chainId] = transactionService;
     log.info(`Transaction service setup complete for chainId: ${chainId}`);
 
     log.info(`Setting up relayer manager for chainId: ${chainId}`);
@@ -223,7 +259,7 @@ let statusService: IStatusService;
           maxRelayerCount: relayerManager.maxRelayerCount[chainId],
           inactiveRelayerCountThreshold: relayerManager.inactiveRelayerCountThreshold[chainId],
           pendingTransactionCountThreshold:
-          relayerManager.pendingTransactionCountThreshold[chainId],
+            relayerManager.pendingTransactionCountThreshold[chainId],
           newRelayerInstanceCount: relayerManager.newRelayerInstanceCount[chainId],
           fundingBalanceThreshold: ethers.utils
             .parseEther(relayerManager.fundingBalanceThreshold[chainId].toString()),
@@ -238,6 +274,13 @@ let statusService: IStatusService;
       EVMRelayerManagerMap[relayerManager.name][chainId] = relayerMangerInstance;
 
       const addressList = await relayerMangerInstance.createRelayers();
+
+      if (relayerManagerTransactionTypeNameMap.SCW === relayerManager.name) {
+        scwRelayerList = addressList;
+        relayerInstanceMap[relayerManagerTransactionTypeNameMap.SCW] = relayerMangerInstance;
+        labelSCW = relayerManager.name;
+      }
+
       log.info(
         `Relayer address list length: ${addressList.length} and minRelayerCount: ${JSON.stringify(relayerManager.minRelayerCount)}`,
       );
@@ -246,7 +289,7 @@ let statusService: IStatusService;
     log.info(`Relayer manager setup complete for chainId: ${chainId}`);
 
     log.info(`Setting up retry transaction service for chainId: ${chainId}`);
-    retryTransactionSerivceMap[chainId] = new EVMRetryTransactionService({
+    retryTransactionServiceMap[chainId] = new EVMRetryTransactionService({
       retryTransactionQueue,
       transactionService,
       networkService,
@@ -257,7 +300,7 @@ let statusService: IStatusService;
     });
 
     retryTransactionQueueMap[chainId].consume(
-      retryTransactionSerivceMap[chainId].onMessageReceived,
+      retryTransactionServiceMap[chainId].onMessageReceived,
     );
     log.info(`Retry transaction service setup for chainId: ${chainId}`);
 
@@ -415,6 +458,28 @@ let statusService: IStatusService;
     evmRelayerManagerMap: EVMRelayerManagerMap,
     dbInstance,
   });
+
+  try {
+    relayerBalanceManager.setTransactionServiceMap(transactionServiceMap);
+    await relayerBalanceManager.init({
+      masterFundingAccountSCW:
+        relayerInstanceMap[relayerManagerTransactionTypeNameMap.SCW].ownerAccountDetails,
+      relayerAddressesSCW: scwRelayerList,
+      masterFundingAccountCCMP: relayerInstanceMap[relayerManagerTransactionTypeNameMap.CROSS_CHAIN]
+        .ownerAccountDetails, // change it to cross-chain before commit
+      relayerAddressesCCMP: [], // change it to ccmpRelayerList before commit
+      appConfig: config.feeManagementConfig,
+      dbUrl: config.dataSources.mongoUrl,
+      tokenPriceService: tokenService,
+      cacheService,
+      labelCCMP,
+      labelSCW, // change it to labelSCW before commit
+    });
+    log.info('relayerBalanceManager initialised Successfully');
+  } catch (error: any) {
+    log.error('Error while calling relayerBalanceManager.init()');
+    log.info(error);
+  }
   log.info('<=== Config setup completed ===>');
 })();
 
@@ -425,7 +490,7 @@ export {
   scwSimulationServiceMap,
   entryPointMap,
   EVMRelayerManagerMap,
-  transactionSerivceMap,
+  transactionServiceMap,
   transactionDao,
   statusService,
 };
