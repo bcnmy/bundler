@@ -1,23 +1,23 @@
-import { RedisCacheService } from '../../common/cache';
-import { TransactionDAO } from '../../common/db';
-import { GasPriceManager } from '../../common/gas-price';
-import { EVMNetworkService } from '../../common/network';
-import { RetryTransactionHandlerQueue, TransactionHandlerQueue } from '../../common/queue';
-import { EVMRawTransactionType } from '../../common/types';
-import { config } from '../../config';
-import { EVMAccount, IEVMAccount } from '../../relayer/src/services/account';
-import { EVMNonceManager } from '../../relayer/src/services/nonce-manager';
-import { EVMRelayerManager, IRelayerManager } from '../../relayer/src/services/relayer-manager';
-import { EVMRelayerQueue } from '../../relayer/src/services/relayer-queue';
-import { EVMTransactionListener } from '../../relayer/src/services/transaction-listener';
-import { EVMTransactionService } from '../../relayer/src/services/transaction-service';
+import { RedisCacheService } from '../../../common/cache';
+import { TransactionDAO } from '../../../common/db';
+import { GasPriceManager } from '../../../common/gas-price';
+import { EVMNetworkService } from '../../../common/network';
+import { RetryTransactionHandlerQueue, TransactionHandlerQueue } from '../../../common/queue';
+import { EVMRawTransactionType } from '../../../common/types';
+import { config } from '../../../config';
+import { EVMAccount, IEVMAccount } from '../../../relayer/src/services/account';
+import { EVMNonceManager } from '../../../relayer/src/services/nonce-manager';
+import { EVMRelayerManager, IRelayerManager } from '../../../relayer/src/services/relayer-manager';
+import { EVMRelayerQueue } from '../../../relayer/src/services/relayer-queue';
+import { EVMTransactionListener } from '../../../relayer/src/services/transaction-listener';
+import { EVMTransactionService } from '../../../relayer/src/services/transaction-service';
 
 // test relayer manager
 describe('relayer manager', () => {
   const chainId = 5;
 
   const EVMRelayerManagerMap: {
-    [name: string] : {
+    [name: string]: {
       [chainId: number]: IRelayerManager<IEVMAccount, EVMRawTransactionType>;
     }
   } = {};
@@ -97,13 +97,13 @@ describe('relayer manager', () => {
         minRelayerCount: relayerManager.minRelayerCount[chainId],
         maxRelayerCount: relayerManager.maxRelayerCount[chainId],
         inactiveRelayerCountThreshold:
-            relayerManager.inactiveRelayerCountThreshold[chainId],
+          relayerManager.inactiveRelayerCountThreshold[chainId],
         pendingTransactionCountThreshold:
-            relayerManager.pendingTransactionCountThreshold[chainId],
+          relayerManager.pendingTransactionCountThreshold[chainId],
         newRelayerInstanceCount:
-            relayerManager.newRelayerInstanceCount[chainId],
+          relayerManager.newRelayerInstanceCount[chainId],
         fundingBalanceThreshold:
-            relayerManager.fundingBalanceThreshold[chainId],
+          relayerManager.fundingBalanceThreshold[chainId],
         fundingRelayerAmount: relayerManager.fundingRelayerAmount[chainId],
         ownerAccountDetails: new EVMAccount(
           relayerManager.ownerAccountDetails[chainId].publicKey,

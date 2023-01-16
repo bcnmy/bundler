@@ -1,11 +1,11 @@
 import { ethers } from 'ethers';
-import { RedisCacheService } from '../../common/cache';
-import { GasPriceManager } from '../../common/gas-price';
-import { EVMNetworkService } from '../../common/network';
-import { entryPointMap } from '../../common/service-manager';
-import { AASimulationService, SCWSimulationService } from '../../common/simulation';
-import { TenderlySimulationService } from '../../common/simulation/external-simulation';
-import { config } from '../../config';
+import { RedisCacheService } from '../../../common/cache';
+import { GasPriceManager } from '../../../common/gas-price';
+import { EVMNetworkService } from '../../../common/network';
+import { entryPointMap } from '../../../common/service-manager';
+import { AASimulationService, SCWSimulationService } from '../../../common/simulation';
+import { TenderlySimulationService } from '../../../common/simulation/external-simulation';
+import { config } from '../../../config';
 
 const cacheService = RedisCacheService.getInstance();
 
@@ -81,7 +81,7 @@ describe('AA transactions on Goerli', () => {
     entryPointContractIndex < entryPointContracts.length;
     entryPointContractIndex += 1) {
     if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
-     === entryPointAddress.toLowerCase()) {
+      === entryPointAddress.toLowerCase()) {
       entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
       break;
     }
