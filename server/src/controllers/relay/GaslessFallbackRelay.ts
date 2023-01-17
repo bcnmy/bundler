@@ -1,8 +1,13 @@
 import { Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
 import { routeTransactionToRelayerMap, transactionDao } from '../../../../common/service-manager';
-import { isError, TransactionStatus, TransactionType } from '../../../../common/types';
 import { generateTransactionId, getMetaDataFromFallbackUserOp } from '../../../../common/utils';
+import {
+  isError,
+  TransactionMethodType,
+  TransactionStatus,
+  TransactionType,
+} from '../../../../common/types';
 import { config } from '../../../../config';
 
 const websocketUrl = config.socketService.wssUrl;
@@ -14,7 +19,9 @@ export const relayGaslessFallbackTransaction = async (req: Request, res: Respons
     const {
       to, data, gasLimit, chainId, value, walletInfo, metaData,
     } = req.body.params[0];
-    log.info(`Relaying Gasless Fallback Transaction for Gasless Fallback: ${to} on chainId: ${chainId}`);
+
+    const fallbackGasTankAddress = config.fallbackGasTankData[chainId].address;
+    log.info(`Relaying Gasless Fallback Transaction for Gasless Fallback: ${fallbackGasTankAddress} on chainId: ${chainId}`);
 
     const transactionId = generateTransactionId(data);
     log.info(`Sending transaction to relayer with transactionId: ${transactionId} for Gasless Fallback: ${to} on chainId: ${chainId}`);
@@ -28,11 +35,17 @@ export const relayGaslessFallbackTransaction = async (req: Request, res: Respons
       resubmitted: false,
       creationTime: Date.now(),
     });
+    if (!routeTransactionToRelayerMap[chainId][TransactionType.AA]) {
+      return res.status(400).json({
+        code: 400,
+        error: `${TransactionMethodType.GASLESS_FALLBACK} method not supported for chainId: ${chainId}`,
+      });
+    }
 
     const response = await routeTransactionToRelayerMap[chainId][TransactionType.GASLESS_FALLBACK]!
       .sendTransactionToRelayer({
         type: TransactionType.GASLESS_FALLBACK,
-        to,
+        to: fallbackGasTankAddress,
         data,
         gasLimit,
         chainId,
@@ -76,6 +89,7 @@ export const relayGaslessFallbackTransaction = async (req: Request, res: Respons
     });
   } catch (error) {
     log.error(`Error in Gasless Fallback relay ${error}`);
+    console.log(error);
     return res.status(500).json({
       code: 500,
       error: JSON.stringify(error),

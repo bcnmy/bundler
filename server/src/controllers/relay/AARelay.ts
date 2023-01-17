@@ -1,8 +1,13 @@
 import { Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
 import { routeTransactionToRelayerMap, transactionDao } from '../../../../common/service-manager';
-import { isError, TransactionStatus, TransactionType } from '../../../../common/types';
 import { generateTransactionId, getMetaDataFromUserOp } from '../../../../common/utils';
+import {
+  isError,
+  TransactionMethodType,
+  TransactionStatus,
+  TransactionType,
+} from '../../../../common/types';
 import { config } from '../../../../config';
 
 const websocketUrl = config.socketService.wssUrl;
@@ -32,6 +37,12 @@ export const relayAATransaction = async (req: Request, res: Response) => {
       creationTime: Date.now(),
     });
 
+    if (!routeTransactionToRelayerMap[chainId][TransactionType.AA]) {
+      return res.status(400).json({
+        code: 400,
+        error: `${TransactionMethodType.AA} method not supported for chainId: ${chainId}`,
+      });
+    }
     const response = routeTransactionToRelayerMap[chainId][TransactionType.AA]
       .sendTransactionToRelayer({
         type: TransactionType.AA,

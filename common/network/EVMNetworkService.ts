@@ -11,7 +11,7 @@ import { Type0TransactionGasPriceType, Type2TransactionGasPriceType } from './ty
 
 const log = logger(module);
 export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTransactionType>,
- IERC20NetworkService {
+  IERC20NetworkService {
   chainId: number;
 
   rpcUrl: string;
@@ -80,7 +80,10 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
           case RpcMethod.sendTransaction:
             return await this.ethersProvider.sendTransaction(params.tx);
           case RpcMethod.waitForTransaction:
-            return await this.ethersProvider.waitForTransaction(params.transactionHash);
+            return await this.ethersProvider.waitForTransaction(
+              params.transactionHash,
+              params.blockConfirmations,
+            );
           default:
             return null;
         }
@@ -246,10 +249,16 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
    * @param transactionHash transaction hash
    * @returns receipt of the transaction once mined, else waits for the transaction to be mined
    */
-  async waitForTransaction(transactionHash: string): Promise<ethers.providers.TransactionReceipt> {
+  async waitForTransaction(
+    transactionHash: string,
+    blockConfirmations: number = 1,
+  ): Promise<ethers.providers.TransactionReceipt> {
+    log.info(`transactionHash: ${transactionHash}, blockConfirmations: ${blockConfirmations}`);
     const transactionReceipt = await this.useProvider(RpcMethod.waitForTransaction, {
       transactionHash,
+      blockConfirmations,
     });
+
     return transactionReceipt;
   }
 
