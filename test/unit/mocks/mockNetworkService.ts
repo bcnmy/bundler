@@ -56,13 +56,16 @@ export class MockNetworkService implements INetworkService<IEVMAccount, EVMRawTr
 
     getGasPrice(): Promise<Type0TransactionGasPriceType> {
         const gasPrice: Type0TransactionGasPriceType = {
-            gasPrice: '1',
+            gasPrice: '20000000',
         };
         return Promise.resolve(gasPrice);
     }
 
     getEIP1559GasPrice(): Promise<Type2TransactionGasPriceType> {
-        throw new Error('Method not implemented.');
+        return Promise.resolve({
+            maxFeePerGas: '20000000',
+            maxPriorityFeePerGas: '20000000',
+        });
     }
 
     getBalance(address: string): Promise<BigNumber> {
