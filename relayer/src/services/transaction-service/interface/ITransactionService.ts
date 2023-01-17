@@ -38,4 +38,6 @@ export interface ITransactionService<AccountType, RawTransactionType> {
     tranasctionType: TransactionType,
     relayerManagerName: string,
   ): Promise<SuccessTransactionResponseType | ErrorTransactionResponseType>;
+
+  getNetworkServiceInstance(): INetworkService<AccountType, RawTransactionType>;
 }

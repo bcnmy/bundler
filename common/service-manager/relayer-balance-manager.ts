@@ -5,7 +5,10 @@ import {
     Mode,
 } from 'fee-management';
 import { ethers } from 'ethers';
-import { EVMRawTransactionType, TransactionType } from '../types';
+import {
+    EVMRawTransactionType,
+    TransactionType,
+} from 'fee-management/src/types';
 import { logger } from '../log-config';
 import { IRelayerBalanceManager } from './interface/IRelayerBalanceManager';
 import { FeeManagerParams } from './types';

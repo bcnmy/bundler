@@ -28,7 +28,7 @@ import {
 const log = logger(module);
 
 export class EVMTransactionService implements
-ITransactionService<IEVMAccount, EVMRawTransactionType> {
+  ITransactionService<IEVMAccount, EVMRawTransactionType> {
   chainId: number;
 
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
@@ -138,7 +138,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           .errors.networkResponseMessages.ALREADY_KNOWN;
         const insufficientFundsErrorMessage = config
           .transaction.errors.networksInsufficientFundsError[this.chainId]
-        || config.transaction.errors.networkResponseMessages.INSUFFICIENT_FUNDS;
+          || config.transaction.errors.networkResponseMessages.INSUFFICIENT_FUNDS;
 
         if (this.isNonceError(errInString) || errInString.indexOf('increasing the gas price or incrementing the nonce') > -1) {
           log.info(`Nonce too low error for relayer ${rawTransaction.from} on network id ${this.chainId}. Removing nonce from cache and retrying`);
@@ -229,7 +229,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
 
     if (retryTransactionCount > maxRetryCount) {
       try {
-      // send slack notification
+        // send slack notification
         await this.sendMaxRetryCountExceededSlackNotification(
           transactionData.transactionId,
           account,
@@ -402,5 +402,9 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         },
       };
     }
+  }
+
+  getNetworkServiceInstance(): INetworkService<IEVMAccount, EVMRawTransactionType> {
+    return this.networkService;
   }
 }

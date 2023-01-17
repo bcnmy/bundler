@@ -30,6 +30,14 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
     });
   }
 
+  getEthersProvider(): ethers.providers.JsonRpcProvider {
+    return this.ethersProvider;
+  }
+
+  getChainId(): number {
+    return this.chainId;
+  }
+
   getActiveRpcUrl(): string {
     return this.rpcUrl;
   }

@@ -26,6 +26,8 @@ export interface INetworkService<AccountType, RawTransactionType> {
   // REVIEW
   // remove any
   useProvider(tag: RpcMethod, params?: any): Promise<any>
+  getEthersProvider(): ethers.providers.JsonRpcProvider;
+  getChainId(): number;
   sendRpcCall(method: string, params: Array<object>): Promise<any>
   getGasPrice(): Promise<Type0TransactionGasPriceType>;
   getEIP1559GasPrice(): Promise<Type2TransactionGasPriceType>;
