@@ -29,7 +29,7 @@ import {
   GaslessFallbackTransactionQueue,
 } from '../queue';
 import { AARelayService, GaslessFallbackRelayService, SCWRelayService } from '../relay-service';
-import { AASimulationService, SCWSimulationService } from '../simulation';
+import { AASimulationService, GaslessFallbackSimulationService, SCWSimulationService } from '../simulation';
 import { TenderlySimulationService } from '../simulation/external-simulation';
 import { IStatusService, StatusService } from '../status';
 import { CMCTokenPriceManager } from '../token-price';
@@ -62,6 +62,10 @@ const aaSimulatonServiceMap: {
 
 const scwSimulationServiceMap: {
   [chainId: number]: SCWSimulationService;
+} = {};
+
+const gaslessFallbackSimulationServiceMap: {
+  [chainId: number]: GaslessFallbackSimulationService;
 } = {};
 
 const entryPointMap: EntryPointMapType = {};
@@ -447,6 +451,16 @@ let labelSCW;
         const gaslessFallbackRelayService = new GaslessFallbackRelayService(gaslessFallbackQueue);
         routeTransactionToRelayerMap[chainId][type] = gaslessFallbackRelayService;
 
+        const tenderlySimulationService = new TenderlySimulationService(gasPriceService, {
+          tenderlyUser: config.simulationData.tenderlyData.tenderlyUser,
+          tenderlyProject: config.simulationData.tenderlyData.tenderlyProject,
+          tenderlyAccessKey: config.simulationData.tenderlyData.tenderlyAccessKey,
+        });
+        gaslessFallbackSimulationServiceMap[chainId] = new GaslessFallbackSimulationService(
+          networkService,
+          tenderlySimulationService,
+        );
+
         log.info(`Gasless fallback consumer & relay service simulation service setup complete for chainId: ${chainId}`);
       }
     }
@@ -488,6 +502,7 @@ export {
   feeOptionMap,
   aaSimulatonServiceMap,
   scwSimulationServiceMap,
+  gaslessFallbackSimulationServiceMap,
   entryPointMap,
   EVMRelayerManagerMap,
   transactionServiceMap,

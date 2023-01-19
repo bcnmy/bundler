@@ -20,6 +20,8 @@ export const relayGaslessFallbackTransaction = async (req: Request, res: Respons
       to, data, gasLimit, chainId, value, walletInfo, metaData,
     } = req.body.params[0];
 
+    const gasLimitFromSimulation = req.body.params[1] ? `0x${(req.body.params[1]).toString(16)}` : null;
+
     const fallbackGasTankAddress = config.fallbackGasTankData[chainId].address;
     log.info(`Relaying Gasless Fallback Transaction for Gasless Fallback: ${fallbackGasTankAddress} on chainId: ${chainId}`);
 
@@ -47,7 +49,7 @@ export const relayGaslessFallbackTransaction = async (req: Request, res: Respons
         type: TransactionType.GASLESS_FALLBACK,
         to: fallbackGasTankAddress,
         data,
-        gasLimit,
+        gasLimit: gasLimit || gasLimitFromSimulation,
         chainId,
         value,
         walletAddress: walletInfo.address.toLowerCase(),

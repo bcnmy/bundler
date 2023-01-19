@@ -9,11 +9,11 @@ export type ExternalSimulationResponseType = {
 };
 
 // data type that simulation service expects
-export type SCWSimulationDataType = {
+export type SimulationDataType = {
   chainId: number,
   data: string,
   to: string,
-  refundInfo: any,
+  refundInfo?: any,
 };
 
 export type AASimulationDataType = {

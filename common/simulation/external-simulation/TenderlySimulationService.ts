@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ExternalSimulationResponseType, SCWSimulationDataType } from '../types';
+import { ExternalSimulationResponseType, SimulationDataType } from '../types';
 import { logger } from '../../log-config';
 import { IGasPrice } from '../../gas-price';
 import { GasPriceType } from '../../gas-price/types';
@@ -29,12 +29,12 @@ export class TenderlySimulationService implements IExternalSimulation {
   }
 
   async simulate(
-    simualtionData: SCWSimulationDataType,
+    simualtionData: SimulationDataType,
   ): Promise<ExternalSimulationResponseType> {
     const {
       chainId, data, to, refundInfo,
     } = simualtionData;
-    log.info(`Sending request to tenderly to run simulation for SCW: ${to} with data: ${data}`);
+    log.info(`Sending request to tenderly to run simulation to address: ${to} with data: ${data}`);
     const SIMULATE_URL = `https://api.tenderly.co/api/v1/account/${this.tenderlyUser}/project/${this.tenderlyProject}/simulate`;
     const tAxios = this.tenderlyInstance();
 
@@ -63,7 +63,7 @@ export class TenderlySimulationService implements IExternalSimulation {
         gasLimitFromSimulation: 0,
       };
     }
-
+    log.info(`Response from Tenderly: ${JSON.stringify(response)}`);
     if (!response?.data?.transaction?.status) {
       return {
         isSimulationSuccessful: false,
@@ -75,6 +75,14 @@ export class TenderlySimulationService implements IExternalSimulation {
     const transactionLogs = response.data.transaction.transaction_info.call_trace.logs;
     const gasUsedInSimulation = response.data.transaction.transaction_info.call_trace.gas_used
      + response.data.transaction.transaction_info.call_trace.intrinsic_gas;
+
+    if (!refundInfo || Object.keys(refundInfo).length === 0) {
+      return {
+        isSimulationSuccessful: true,
+        msgFromSimulation: 'Simulation successful',
+        gasLimitFromSimulation: gasUsedInSimulation,
+      };
+    }
     const { isRelayerPaidFully, successOrRevertMsg } = await this.checkIfRelayerIsPaidFully(
       transactionLogs,
       gasUsedInSimulation,

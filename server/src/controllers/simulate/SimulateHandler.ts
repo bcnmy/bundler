@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { TransactionMethodType } from '../../../../common/types';
 import { simulateAATransaction } from './SimulateAATransaction';
+import { simulateGaslessFallbackTransaction } from './SimulateGaslessFallbackTransaction';
 import { simulateSCWTransaction } from './SimulateSCWTransaction';
 
 export const simulateTransaction = () => async (
@@ -16,10 +17,7 @@ export const simulateTransaction = () => async (
     } else if (method === TransactionMethodType.SCW) {
       response = await simulateSCWTransaction(req);
     } else if (method === TransactionMethodType.GASLESS_FALLBACK) {
-      // TODO add actual simulation logic
-      response = {
-        code: 200,
-      };
+      response = await simulateGaslessFallbackTransaction(req);
     }
     if (!response) {
       return res.status(500).send({
