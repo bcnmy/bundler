@@ -2,7 +2,7 @@ import { ethers } from 'ethers';
 import { config } from '../../config';
 import { logger } from '../log-config';
 import { GetMetaDataFromFallbackUserOpReturnType } from '../types';
-import { axiosGetCall } from './axios-calls';
+import { axiosPostCall } from './axios-calls';
 
 const log = logger(module);
 
@@ -17,12 +17,13 @@ export const getMetaDataFromFallbackUserOp = async (
     const destinationSmartContractAddresses: Array<string> = [];
     const destinationSmartContractMethodsCallData: Array<string> = [];
     const destinationSmartContractMethods: Array<{ address: string, name: string }> = [];
-    const { gasTankAbi, multiSendCallOnlyAbi, smartWalletAbi } = config.abi;
+    const { multiSendCallOnlyAbi, smartWalletAbi } = config.abi;
     const multiSendCallOnlyContractAddress = config.chains.multiSendCallOnlyAddress[chainId];
     log.info(`Multi Send Call Only Contract Address: ${multiSendCallOnlyContractAddress} on chainId: ${chainId}`);
+    const { fallbackContractAbi } = config.fallbackGasTankData[chainId];
 
     const gasTankCallData = data;
-    const iFaceGasTank = new ethers.utils.Interface(gasTankAbi);
+    const iFaceGasTank = new ethers.utils.Interface(fallbackContractAbi);
     const decodedDataGasTank = iFaceGasTank.parseTransaction({
       data: gasTankCallData,
     });
@@ -133,10 +134,12 @@ export const getMetaDataFromFallbackUserOp = async (
     log.info(`Destination Smart Contract Addresses for walletAddress: ${fallbackUserOp.sender} are: ${destinationSmartContractAddresses} on chainId: ${chainId}`);
     log.info(`Destination Smart Contract Methods call data for walletAddress: ${fallbackUserOp.sender} are: ${destinationSmartContractMethodsCallData} on chainId: ${chainId}`);
     log.info(`Getting smart contract data for addresses:${JSON.stringify(destinationSmartContractAddresses)} on chainId: ${chainId}`);
-    const dataFromPaymasterDashboardBackend = await axiosGetCall(
+    log.info(`Making call to paymaster dashboard backend to get data on ${config.paymasterDashboardBackendConfig.dappDataUrl} for dappAPIKey: ${dappAPIKey}`);
+
+    const dataFromPaymasterDashboardBackend = await axiosPostCall(
       config.paymasterDashboardBackendConfig.dappDataUrl,
       {
-        dappAPIKey,
+        apiKey: dappAPIKey,
         smartContractAddresses: destinationSmartContractAddresses,
       },
     );

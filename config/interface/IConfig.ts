@@ -140,7 +140,7 @@ type EntryPointDataConfigType = {
 
 type FallbackGasTankDataConfigType = {
   [key: number]: {
-    abi: Array<any>,
+    fallbackContractAbi: Array<any>,
     address: string,
   }
 };
@@ -168,7 +168,7 @@ type AbiConfigType = {
 
 type PaymasterDashboardBackendConfigType = {
   dappDataUrl: string
-}
+};
 
 export type TokenData = {
   address: string;
