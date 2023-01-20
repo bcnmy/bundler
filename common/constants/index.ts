@@ -21,3 +21,6 @@ export const ERC20_ABI = [{
 }, {
   anonymous: false, inputs: [{ indexed: true, name: 'from', type: 'address' }, { indexed: true, name: 'to', type: 'address' }, { indexed: false, name: 'value', type: 'uint256' }], name: 'Transfer', type: 'event',
 }];
+
+// call data length while sending multi send transaction
+export const LengthOfSingleEncodedTransaction = 306;
