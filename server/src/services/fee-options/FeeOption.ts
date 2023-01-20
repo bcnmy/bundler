@@ -6,6 +6,7 @@ import { GasPriceType } from '../../../../common/gas-price/types';
 import { logger } from '../../../../common/log-config';
 import { getTokenPriceKey } from '../../../../common/utils';
 import { config } from '../../../../config';
+import { STATUSES } from '../../middleware';
 import { FeeOptionResponseType } from './types';
 
 const log = logger(module);
@@ -119,13 +120,13 @@ export class FeeOption {
         });
       }
       return {
-        code: 200,
+        code: STATUSES.SUCCESS,
         response,
       };
     } catch (error) {
       log.error(error);
       return {
-        code: 500,
+        code: STATUSES.INTERNAL_SERVER_ERROR,
         error: `Error occured in getting fee options service. Error: ${error}`,
       };
     }

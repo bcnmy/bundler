@@ -1,5 +1,6 @@
 import { ethers } from 'ethers';
 import { config } from '../../config';
+import { STATUSES } from '../../server/src/middleware';
 import { logger } from '../log-config';
 import { GetMetaDataFromFallbackUserOpReturnType } from '../types';
 import { axiosPostCall } from './axios-calls';
@@ -143,7 +144,7 @@ export const getMetaDataFromFallbackUserOp = async (
         smartContractAddresses: destinationSmartContractAddresses,
       },
     );
-    if (dataFromPaymasterDashboardBackend.statusCode !== 200) {
+    if (dataFromPaymasterDashboardBackend.statusCode !== STATUSES.SUCCESS) {
       throw dataFromPaymasterDashboardBackend.message;
     }
     const {

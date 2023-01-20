@@ -9,6 +9,7 @@ import {
   TransactionType,
 } from '../../../../common/types';
 import { config } from '../../../../config';
+import { STATUSES } from '../../middleware';
 
 const websocketUrl = config.socketService.wssUrl;
 
@@ -38,8 +39,8 @@ export const relayGaslessFallbackTransaction = async (req: Request, res: Respons
       creationTime: Date.now(),
     });
     if (!routeTransactionToRelayerMap[chainId][TransactionType.AA]) {
-      return res.status(400).json({
-        code: 400,
+      return res.status(STATUSES.BAD_REQUEST).json({
+        code: STATUSES.BAD_REQUEST,
         error: `${TransactionMethodType.GASLESS_FALLBACK} method not supported for chainId: ${chainId}`,
       });
     }
@@ -77,13 +78,13 @@ export const relayGaslessFallbackTransaction = async (req: Request, res: Respons
     }
 
     if (isError(response)) {
-      return res.status(400).json({
-        code: 400,
+      return res.status(STATUSES.BAD_REQUEST).json({
+        code: STATUSES.BAD_REQUEST,
         error: response.error,
       });
     }
-    return res.status(200).json({
-      code: 200,
+    return res.status(STATUSES.SUCCESS).json({
+      code: STATUSES.SUCCESS,
       data: {
         transactionId,
         connectionUrl: websocketUrl,
@@ -91,9 +92,8 @@ export const relayGaslessFallbackTransaction = async (req: Request, res: Respons
     });
   } catch (error) {
     log.error(`Error in Gasless Fallback relay ${error}`);
-    console.log(error);
-    return res.status(500).json({
-      code: 500,
+    return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
+      code: STATUSES.INTERNAL_SERVER_ERROR,
       error: JSON.stringify(error),
     });
   }

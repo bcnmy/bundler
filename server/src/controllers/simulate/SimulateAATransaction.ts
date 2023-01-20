@@ -1,6 +1,7 @@
 import { Request } from 'express';
 import { logger } from '../../../../common/log-config';
 import { aaSimulatonServiceMap, entryPointMap } from '../../../../common/service-manager';
+import { STATUSES } from '../../middleware';
 
 const log = logger(module);
 
@@ -25,7 +26,7 @@ export const simulateAATransaction = async (req: Request) => {
     }
     if (!entryPointContract) {
       return {
-        code: 400,
+        code: STATUSES.BAD_REQUEST,
         msgFromSimulation: 'Entry point not found in relayer node',
       };
     }
@@ -38,20 +39,20 @@ export const simulateAATransaction = async (req: Request) => {
     if (!aaSimulationResponse.isSimulationSuccessful) {
       const { msgFromSimulation } = aaSimulationResponse;
       return {
-        code: 400,
+        code: STATUSES.BAD_REQUEST,
         msgFromSimulation,
       };
     }
     req.body.params[4] = aaSimulationResponse.gasLimitFromSimulation;
     log.info(`Transaction successfully simulated for userOp: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
     return {
-      code: 200,
+      code: STATUSES.SUCCESS,
       msgFromSimulation: 'AA transaction successfully simulated',
     };
   } catch (error) {
     log.error(`Error in AA transaction simulation ${JSON.stringify(error)}`);
     return {
-      code: 500,
+      code: STATUSES.INTERNAL_SERVER_ERROR,
       error: `Error in AA transaction simulation ${JSON.stringify(error)}`,
     };
   }

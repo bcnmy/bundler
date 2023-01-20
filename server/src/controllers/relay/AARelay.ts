@@ -9,6 +9,7 @@ import {
   TransactionType,
 } from '../../../../common/types';
 import { config } from '../../../../config';
+import { STATUSES } from '../../middleware';
 
 const websocketUrl = config.socketService.wssUrl;
 
@@ -38,8 +39,8 @@ export const relayAATransaction = async (req: Request, res: Response) => {
     });
 
     if (!routeTransactionToRelayerMap[chainId][TransactionType.AA]) {
-      return res.status(400).json({
-        code: 400,
+      return res.status(STATUSES.BAD_REQUEST).json({
+        code: STATUSES.BAD_REQUEST,
         error: `${TransactionMethodType.AA} method not supported for chainId: ${chainId}`,
       });
     }
@@ -78,13 +79,13 @@ export const relayAATransaction = async (req: Request, res: Response) => {
     }
 
     if (isError(response)) {
-      return res.status(400).json({
-        code: 400,
+      return res.status(STATUSES.BAD_REQUEST).json({
+        code: STATUSES.BAD_REQUEST,
         error: response.error,
       });
     }
-    return res.status(200).json({
-      code: 200,
+    return res.status(STATUSES.SUCCESS).json({
+      code: STATUSES.SUCCESS,
       data: {
         transactionId,
         connectionUrl: websocketUrl,
@@ -92,8 +93,8 @@ export const relayAATransaction = async (req: Request, res: Response) => {
     });
   } catch (error) {
     log.error(`Error in AA relay ${JSON.stringify(error)}`);
-    return res.status(500).json({
-      code: 500,
+    return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
+      code: STATUSES.INTERNAL_SERVER_ERROR,
       error: `Internal Server Error: ${JSON.stringify(error)}`,
     });
   }

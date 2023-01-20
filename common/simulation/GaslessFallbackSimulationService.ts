@@ -18,7 +18,7 @@ export class GaslessFallbackSimulationService {
   }
 
   async simulate(simulationData: SimulationDataType): Promise<SimulationResponseType> {
-    const tenderlySimulationResult = await this.tenderlySimulationService.simulate(simulationData);
-    return tenderlySimulationResult;
+    const tenderlySimulationResponse = await this.tenderlySimulationService.simulate(simulationData);
+    return tenderlySimulationResponse;
   }
 }

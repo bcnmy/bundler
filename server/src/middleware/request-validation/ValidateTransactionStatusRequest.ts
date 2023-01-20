@@ -24,8 +24,8 @@ export const validateTransactionStatus = async (
     });
   } catch (e: any) {
     log.error(e);
-    return res.status(400).send({
-      code: 400,
+    return res.status(STATUSES.BAD_REQUEST).send({
+      code: STATUSES.BAD_REQUEST,
       error: e.errors,
     });
   }

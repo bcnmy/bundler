@@ -1,6 +1,7 @@
 import { Request } from 'express';
 import { logger } from '../../../../common/log-config';
 import { scwSimulationServiceMap } from '../../../../common/service-manager';
+import { STATUSES } from '../../middleware';
 
 const log = logger(module);
 
@@ -20,7 +21,7 @@ export const simulateSCWTransaction = async (req: Request) => {
     if (!scwSimulationResponse.isSimulationSuccessful) {
       const { msgFromSimulation } = scwSimulationResponse;
       return {
-        code: 400,
+        code: STATUSES.BAD_REQUEST,
         msgFromSimulation,
       };
     }
@@ -28,13 +29,13 @@ export const simulateSCWTransaction = async (req: Request) => {
     req.body.params[1] = gasLimitFromSimulation;
     log.info(`Transaction successfully simulated for SCW: ${to} on chainId: ${chainId}`);
     return {
-      code: 200,
+      code: STATUSES.SUCCESS,
       msgFromSimulation: 'Transaction successfully simulated',
     };
   } catch (error) {
     log.error(`Error in SCW transaction simulation ${JSON.stringify(error)}`);
     return {
-      code: 500,
+      code: STATUSES.INTERNAL_SERVER_ERROR,
       error: `Error in SCW transaction simulation ${JSON.stringify(error)}`,
     };
   }

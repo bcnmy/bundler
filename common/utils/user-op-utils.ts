@@ -1,5 +1,6 @@
 import { ethers } from 'ethers';
 import { config } from '../../config';
+import { STATUSES } from '../../server/src/middleware';
 import { logger } from '../log-config';
 import { GetMetaDataFromUserOpReturnType, UserOperationType } from '../types';
 import { axiosPostCall } from './axios-calls';
@@ -97,7 +98,7 @@ export const getMetaDataFromUserOp = async (
       },
     );
     log.info(`Respone from paymaster dashboard backend: ${JSON.stringify(dataFromPaymasterDashboardBackend)} for dappAPIKey: ${dappAPIKey}`);
-    if (dataFromPaymasterDashboardBackend.statusCode !== 200) {
+    if (dataFromPaymasterDashboardBackend.statusCode !== STATUSES.SUCCESS) {
       throw dataFromPaymasterDashboardBackend.message;
     }
     const {

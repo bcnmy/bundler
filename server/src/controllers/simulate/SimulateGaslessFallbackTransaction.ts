@@ -1,6 +1,7 @@
 import { Request } from 'express';
 import { logger } from '../../../../common/log-config';
 import { gaslessFallbackSimulationServiceMap } from '../../../../common/service-manager';
+import { STATUSES } from '../../middleware';
 
 const log = logger(module);
 
@@ -22,7 +23,7 @@ export const simulateGaslessFallbackTransaction = async (req:Request) => {
     if (!gaslessFallbackSimulationResponse.isSimulationSuccessful) {
       const { msgFromSimulation } = gaslessFallbackSimulationResponse;
       return {
-        code: 400,
+        code: STATUSES.BAD_REQUEST,
         msgFromSimulation,
       };
     }
@@ -30,13 +31,13 @@ export const simulateGaslessFallbackTransaction = async (req:Request) => {
     req.body.params[1] = gasLimitFromSimulation;
     log.info(`Transaction successfully simulated for gasless fallback: ${to} on chainId: ${chainId}`);
     return {
-      code: 200,
+      code: STATUSES.SUCCESS,
       msgFromSimulation: 'Transaction successfully simulated',
     };
   } catch (error) {
     log.error(`Error in Gasless Fallback transaction simulation ${JSON.stringify(error)}`);
     return {
-      code: 500,
+      code: STATUSES.INTERNAL_SERVER_ERROR,
       error: `Error in Gasless Fallback transaction simulation ${JSON.stringify(error)}`,
     };
   }

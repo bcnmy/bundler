@@ -17,8 +17,8 @@ export const requestHandler = async (
   } else if (method === TransactionMethodType.GASLESS_FALLBACK) {
     response = await relayGaslessFallbackTransaction(req, res);
   } else {
-    return res.status(400).send({
-      code: 400,
+    return res.status(STATUSES.BAD_REQUEST).send({
+      code: STATUSES.BAD_REQUEST,
       error: 'Wrong transaction type sent in request',
     });
   }
