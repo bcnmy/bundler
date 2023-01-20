@@ -410,11 +410,16 @@ let labelSCW;
         const scwRelayService = new SCWRelayService(scwQueue);
         routeTransactionToRelayerMap[chainId][type] = scwRelayService;
 
-        const tenderlySimulationService = new TenderlySimulationService(gasPriceService, {
-          tenderlyUser: config.simulationData.tenderlyData.tenderlyUser,
-          tenderlyProject: config.simulationData.tenderlyData.tenderlyProject,
-          tenderlyAccessKey: config.simulationData.tenderlyData.tenderlyAccessKey,
-        });
+        const tenderlySimulationService = new TenderlySimulationService(
+          gasPriceService,
+          cacheService,
+
+          {
+            tenderlyUser: config.simulationData.tenderlyData.tenderlyUser,
+            tenderlyProject: config.simulationData.tenderlyData.tenderlyProject,
+            tenderlyAccessKey: config.simulationData.tenderlyData.tenderlyAccessKey,
+          },
+        );
         scwSimulationServiceMap[chainId] = new SCWSimulationService(
           networkService,
           tenderlySimulationService,
@@ -451,11 +456,15 @@ let labelSCW;
         const gaslessFallbackRelayService = new GaslessFallbackRelayService(gaslessFallbackQueue);
         routeTransactionToRelayerMap[chainId][type] = gaslessFallbackRelayService;
 
-        const tenderlySimulationService = new TenderlySimulationService(gasPriceService, {
-          tenderlyUser: config.simulationData.tenderlyData.tenderlyUser,
-          tenderlyProject: config.simulationData.tenderlyData.tenderlyProject,
-          tenderlyAccessKey: config.simulationData.tenderlyData.tenderlyAccessKey,
-        });
+        const tenderlySimulationService = new TenderlySimulationService(
+          gasPriceService,
+          cacheService,
+          {
+            tenderlyUser: config.simulationData.tenderlyData.tenderlyUser,
+            tenderlyProject: config.simulationData.tenderlyData.tenderlyProject,
+            tenderlyAccessKey: config.simulationData.tenderlyData.tenderlyAccessKey,
+          },
+        );
         gaslessFallbackSimulationServiceMap[chainId] = new GaslessFallbackSimulationService(
           networkService,
           tenderlySimulationService,

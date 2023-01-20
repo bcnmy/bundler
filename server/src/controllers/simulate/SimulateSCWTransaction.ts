@@ -25,8 +25,12 @@ export const simulateSCWTransaction = async (req: Request) => {
         message,
       };
     }
-    const { gasLimitFromSimulation } = scwSimulationResponse;
-    req.body.params[1] = gasLimitFromSimulation;
+    const simulationData = scwSimulationResponse.data;
+    req.body.params[1] = simulationData.gasLimitFromSimulation;
+    req.body.params[2] = {
+      refundAmount: simulationData.refundAmount,
+      refundAmountInUSD: simulationData.refundAmountInUSD,
+    };
     log.info(`Transaction successfully simulated for SCW: ${to} on chainId: ${chainId}`);
     return {
       code: STATUSES.SUCCESS,

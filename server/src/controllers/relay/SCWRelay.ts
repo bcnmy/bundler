@@ -18,7 +18,7 @@ const log = logger(module);
 export const relaySCWTransaction = async (req: Request, res: Response) => {
   try {
     const {
-      to, data, gasLimit, chainId, value, walletInfo,
+      to, data, gasLimit, chainId, value, walletInfo, refundInfo,
     } = req.body.params[0];
     log.info(`Relaying SCW Transaction for SCW: ${to} on chainId: ${chainId}`);
 
@@ -44,6 +44,27 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
         transactionId,
       });
 
+    // refundTokenAddress -> address of token in which gas is paid
+    // refundTokenCurrency -> USDT, USDC etc
+    // refundAmount -> Amount of USDC, USDT etc
+    // refundAmountInUSD -> Amount of USDC, USDT, WETH in USD
+
+    const { gasToken } = refundInfo;
+
+    const {
+      refundAmount,
+      refundAmountInUSD,
+    } = req.body.params[2];
+    const refundTokenAddress = gasToken;
+    let refundTokenCurrency = '';
+
+    const tokenContractAddresses = config.feeOption.tokenContractAddress[chainId];
+    for (const currency of Object.keys(tokenContractAddresses)) {
+      if (refundTokenAddress.toLowerCase() === tokenContractAddresses[currency].toLowerCase()) {
+        refundTokenCurrency = currency;
+      }
+    }
+
     transactionDao.save(chainId, {
       transactionId,
       transactionType: TransactionType.SCW,
@@ -51,6 +72,10 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
       chainId,
       walletAddress: walletInfo.address,
       resubmitted: false,
+      refundTokenAddress,
+      refundTokenCurrency,
+      refundAmount,
+      refundAmountInUSD,
       creationTime: Date.now(),
     });
 

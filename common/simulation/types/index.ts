@@ -5,7 +5,11 @@ import { UserOperationType } from '../../types';
 export type ExternalSimulationResponseType = {
   isSimulationSuccessful: boolean,
   message: string,
-  gasLimitFromSimulation: number | BigNumber,
+  data: {
+    refundAmount: number,
+    refundAmountInUSD: number,
+    gasLimitFromSimulation: number | BigNumber,
+  }
 };
 
 // data type that simulation service expects
@@ -25,6 +29,10 @@ export type AASimulationDataType = {
 // data response type that simulation service returns
 export type SimulationResponseType = {
   isSimulationSuccessful: boolean,
-  gasLimitFromSimulation: number | BigNumber,
+  data: {
+    refundAmount: number,
+    refundAmountInUSD: number,
+    gasLimitFromSimulation: number | BigNumber,
+  },
   message: string,
 };

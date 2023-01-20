@@ -1,15 +1,20 @@
 import axios from 'axios';
+import Big from 'big.js';
 import { ExternalSimulationResponseType, SimulationDataType } from '../types';
 import { logger } from '../../log-config';
 import { IGasPrice } from '../../gas-price';
 import { GasPriceType } from '../../gas-price/types';
 import { IExternalSimulation } from '../interface';
-import { parseError } from '../../utils';
+import { getTokenPriceKey, parseError } from '../../utils';
+import { config } from '../../../config';
+import { ICacheService } from '../../cache';
 
 const log = logger(module);
-
+// TODO Remove hard coded values from this class
 export class TenderlySimulationService implements IExternalSimulation {
   gasPriceService: IGasPrice;
+
+  cacheService: ICacheService;
 
   private tenderlyUser: string;
 
@@ -17,12 +22,13 @@ export class TenderlySimulationService implements IExternalSimulation {
 
   private tenderlyAccessKey: string;
 
-  constructor(gasPriceService: IGasPrice, options: {
+  constructor(gasPriceService: IGasPrice, cacheService: ICacheService, options: {
     tenderlyUser: string,
     tenderlyProject: string,
     tenderlyAccessKey: string,
   }) {
     this.gasPriceService = gasPriceService;
+    this.cacheService = cacheService;
     this.tenderlyUser = options.tenderlyUser;
     this.tenderlyProject = options.tenderlyProject;
     this.tenderlyAccessKey = options.tenderlyAccessKey;
@@ -60,7 +66,11 @@ export class TenderlySimulationService implements IExternalSimulation {
       return {
         isSimulationSuccessful: false,
         message: `Error in Tenderly Simulation: ${parseError(error)}`,
-        gasLimitFromSimulation: 0,
+        data: {
+          refundAmount: 0,
+          refundAmountInUSD: 0,
+          gasLimitFromSimulation: 0,
+        },
       };
     }
     log.info(`Response from Tenderly: ${JSON.stringify(response)}`);
@@ -68,7 +78,11 @@ export class TenderlySimulationService implements IExternalSimulation {
       return {
         isSimulationSuccessful: false,
         message: response?.data?.transaction?.error_message,
-        gasLimitFromSimulation: 0,
+        data: {
+          refundAmount: 0,
+          refundAmountInUSD: 0,
+          gasLimitFromSimulation: 0,
+        },
       };
     }
 
@@ -80,14 +94,23 @@ export class TenderlySimulationService implements IExternalSimulation {
       return {
         isSimulationSuccessful: true,
         message: 'Simulation successful',
-        gasLimitFromSimulation: gasUsedInSimulation,
+        data: {
+          refundAmount: 0,
+          refundAmountInUSD: 0,
+          gasLimitFromSimulation: 0,
+        },
       };
     }
-    const { isRelayerPaidFully, successOrRevertMsg } = await this.checkIfRelayerIsPaidFully(
+    const {
+      isRelayerPaidFully,
+      successOrRevertMsg,
+      refundAmountData,
+    } = await this.checkIfRelayerIsPaidFully(
       transactionLogs,
       gasUsedInSimulation,
       refundInfo,
       to,
+      chainId,
       data,
     );
 
@@ -97,15 +120,23 @@ export class TenderlySimulationService implements IExternalSimulation {
       return {
         isSimulationSuccessful: false,
         message: `Payment to relayer is incorrect, with message: ${successOrRevertMsg}`,
-        gasLimitFromSimulation: 0,
+        data: {
+          refundAmount: 0,
+          refundAmountInUSD: 0,
+          gasLimitFromSimulation: 0,
+        },
       };
     }
 
     const gasLimitFromSimulation = response?.data?.transaction?.gas_used;
     return {
       isSimulationSuccessful: true,
-      message: 'Fee options fetched successfully',
-      gasLimitFromSimulation: gasLimitFromSimulation + 100000,
+      message: 'SimulationSuccesful',
+      data: {
+        refundAmount: refundAmountData?.refundAmount,
+        refundAmountInUSD: refundAmountData?.refundAmountInUSD,
+        gasLimitFromSimulation,
+      },
     };
   }
 
@@ -118,11 +149,29 @@ export class TenderlySimulationService implements IExternalSimulation {
     });
   }
 
+  static convertGasPriceToUSD = async (
+    nativeChainId: number,
+    gasPrice: number,
+    chainPriceDataInUSD: number,
+    token: string,
+  ) => {
+    log.info(`Converting gas price to USD for chain ${nativeChainId} and token ${token} with gas price ${gasPrice} and chain price data in USD ${chainPriceDataInUSD}`);
+    const decimal = config.chains.decimal[nativeChainId] || 18;
+    const offset = config.feeOption.offset[nativeChainId][token] || 1;
+    const usdc = new Big(gasPrice)
+      .mul(new Big(chainPriceDataInUSD))
+      .div(new Big(10 ** decimal))
+      .mul(new Big(offset))
+      .toString();
+    return usdc;
+  };
+
   private async checkIfRelayerIsPaidFully(
     transactionLogs: any,
     gasUsedInSimulation: number,
     refundInfo: { tokenGasPrice: string, gasToken: string },
     to: string,
+    chainId: number,
     data: string,
   ) {
     try {
@@ -131,7 +180,7 @@ export class TenderlySimulationService implements IExternalSimulation {
       const walletHandlePaymentLog = transactionLogs.find((transactionLog: any) => transactionLog.name === 'WalletHandlePayment');
       if (!walletHandlePaymentLog) {
         return {
-          isRelayerPaidFully: true,
+          isRelayerPaidFully: false,
           successOrRevertMsg: 'WalletHandlePayment event not found in simulation logs',
         };
       }
@@ -139,20 +188,21 @@ export class TenderlySimulationService implements IExternalSimulation {
       const paymentEventData = walletHandlePaymentLog.inputs.find((input: any) => input.soltype.name === 'payment');
       if (!paymentEventData) {
         return {
-          isRelayerPaidFully: true,
+          isRelayerPaidFully: false,
           successOrRevertMsg: 'Payment data not found in ExecutionSuccess simulation logs',
         };
       }
       const paymentValue = paymentEventData.value;
       if (!paymentValue) {
         return {
-          isRelayerPaidFully: true,
+          isRelayerPaidFully: false,
           successOrRevertMsg: 'Payment value not found in payment event data',
         };
       }
       log.info(`Payment sent in transaction: ${paymentValue} for SCW: ${to} with data: ${data}`);
 
       let refundToRelayer: number;
+      // TODO will have to change in EIP 1559 implementation
       const gasPrice = await this.gasPriceService.getGasPrice(GasPriceType.DEFAULT);
 
       const nativeTokenGasPrice = parseInt(gasPrice as string, 10);
@@ -176,18 +226,53 @@ export class TenderlySimulationService implements IExternalSimulation {
 
       if ((Number(refundToRelayer) < Number(refundCalculatedInSimualtion))) {
         return {
-          isRelayerPaidFully: true,
+          isRelayerPaidFully: false,
           successOrRevertMsg: `Refund to relayer: ${refundToRelayer} is less than what will be consumed in the transaction: ${gasUsedInSimulation * nativeTokenGasPrice}`,
         };
       }
+
+      const networkPriceDataInString = await this.cacheService.get(
+        getTokenPriceKey(),
+      );
+      let networkPriceData;
+      if (!networkPriceDataInString) {
+        log.error('Network price data not found');
+        // TODO remove this hardcoded value. Think better solution
+        networkPriceData = {
+          1: '1278.43', 5: '1278.43', 137: '0.80', 80001: '0.80', 97: '289.87', 420: '1278.43', 421613: '1278.43', 43113: '13.17',
+        };
+      } else {
+        networkPriceData = JSON.parse(networkPriceDataInString);
+      }
+      const chainPriceDataInUSD = networkPriceData[chainId];
+
+      let erc20TokenCurrency = '';
+
+      const tokenContractAddresses = config.feeOption.tokenContractAddress[chainId];
+      for (const currency of Object.keys(tokenContractAddresses)) {
+        if (refundInfo.gasToken.toLowerCase() === tokenContractAddresses[currency].toLowerCase()) {
+          erc20TokenCurrency = currency;
+        }
+      }
+
+      const refundAmountInUSD = await TenderlySimulationService.convertGasPriceToUSD(
+        chainId,
+        nativeTokenGasPrice,
+        chainPriceDataInUSD,
+        erc20TokenCurrency,
+      );
       return {
         isRelayerPaidFully: true,
         successOrRevertMsg: `Refund to relayer: ${refundToRelayer} is sufficient to send the transaction`,
+        refundAmountData: {
+          refundAmount: paymentValue,
+          refundAmountInUSD: Number(refundAmountInUSD) as any,
+        },
       };
     } catch (error) {
       log.info(error);
       return {
-        isRelayerPaidFully: true,
+        isRelayerPaidFully: false,
         successOrRevertMsg: `Something went wrong with error: ${error}`,
       };
     }

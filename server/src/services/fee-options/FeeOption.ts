@@ -64,6 +64,7 @@ export class FeeOption {
       let networkPriceData;
       if (!networkPriceDataInString) {
         log.error('Network price data not found');
+        // TODO remove this hardcoded value. Think better solution
         networkPriceData = {
           1: '1278.43', 5: '1278.43', 137: '0.80', 80001: '0.80', 97: '289.87', 420: '1278.43', 421613: '1278.43', 43113: '13.17',
         };
