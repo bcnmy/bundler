@@ -14,45 +14,42 @@ const websocketUrl = config.socketService.wssUrl;
 
 const log = logger(module);
 
-export const relayAATransaction = async (req: Request, res: Response) => {
+export const relayGaslessFallbackTransaction = async (req: Request, res: Response) => {
   try {
-    const userOp = req.body.params[0];
-    const entryPointAddress = req.body.params[1];
-    const chainId = req.body.params[2];
-    const metaData = req.body.params[3];
-    const gasLimitFromSimulation = req.body.params[4];
+    const {
+      to, data, gasLimit, chainId, value, walletInfo,
+    } = req.body.params[0];
 
-    const transactionId = generateTransactionId(userOp);
+    const fallbackGasTankAddress = config.fallbackGasTankData[chainId].address;
+    log.info(`Relaying Gasless Fallback Transaction for Gasless Fallback: ${fallbackGasTankAddress} on chainId: ${chainId}`);
 
-    const walletAddress = userOp.sender.toLowerCase();
-
+    const transactionId = generateTransactionId(data);
+    log.info(`Sending transaction to relayer with transactionId: ${transactionId} for Gasless Fallback: ${to} on chainId: ${chainId}`);
     if (!routeTransactionToRelayerMap[chainId][TransactionType.AA]) {
       return res.status(400).json({
         code: 400,
-        error: `${TransactionMethodType.AA} method not supported for chainId: ${chainId}`,
+        error: `${TransactionMethodType.GASLESS_FALLBACK} method not supported for chainId: ${chainId}`,
       });
     }
-    const response = routeTransactionToRelayerMap[chainId][TransactionType.AA]
+
+    const response = await routeTransactionToRelayerMap[chainId][TransactionType.GASLESS_FALLBACK]!
       .sendTransactionToRelayer({
-        type: TransactionType.AA,
-        to: entryPointAddress,
-        data: '0x0',
-        gasLimit: `0x${Number(gasLimitFromSimulation).toString(16)}`,
+        type: TransactionType.GASLESS_FALLBACK,
+        to: fallbackGasTankAddress,
+        data,
+        gasLimit,
         chainId,
-        value: '0x0',
-        userOp,
+        value,
+        walletAddress: walletInfo.address.toLowerCase(),
         transactionId,
-        walletAddress,
-        metaData,
       });
 
     transactionDao.save(chainId, {
       transactionId,
-      transactionType: TransactionType.AA,
+      transactionType: TransactionType.GASLESS_FALLBACK,
       status: TransactionStatus.PENDING,
       chainId,
-      walletAddress,
-      metaData,
+      walletAddress: walletInfo.address,
       resubmitted: false,
       creationTime: Date.now(),
     });
@@ -71,10 +68,11 @@ export const relayAATransaction = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    log.error(`Error in AA relay ${JSON.stringify(error)}`);
+    log.error(`Error in Gasless Fallback relay ${error}`);
+    console.log(error);
     return res.status(500).json({
       code: 500,
-      error: `Internal Server Error: ${JSON.stringify(error)}`,
+      error: JSON.stringify(error),
     });
   }
 };
