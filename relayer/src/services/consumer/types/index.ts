@@ -4,6 +4,7 @@ import {
   AATransactionMessageType,
   EntryPointMapType,
   EVMRawTransactionType,
+  GaslessFallbackTransactionMessageType,
   SCWTransactionMessageType,
   TransactionQueueMessageType,
 } from '../../../../../common/types';
@@ -24,6 +25,16 @@ export type AAConsumerParamsType = {
 
 export type SCWConsumerParamsType = {
   queue: IQueue<SCWTransactionMessageType>,
+  relayerManager: IRelayerManager<IEVMAccount, EVMRawTransactionType>,
+  transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>,
+  cacheService: ICacheService,
+  options: {
+    chainId: number,
+  },
+};
+
+export type GaslessFallbackConsumerParamsType = {
+  queue: IQueue<GaslessFallbackTransactionMessageType>,
   relayerManager: IRelayerManager<IEVMAccount, EVMRawTransactionType>,
   transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>,
   cacheService: ICacheService,

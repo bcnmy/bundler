@@ -2,7 +2,9 @@
 import { ethers } from 'ethers';
 import { config } from '../../config';
 import { EVMAccount, IEVMAccount } from '../../relayer/src/services/account';
-import { AAConsumer, SCWConsumer, SocketConsumer } from '../../relayer/src/services/consumer';
+import {
+  AAConsumer, SCWConsumer, SocketConsumer, GaslessFallbackConsumer,
+} from '../../relayer/src/services/consumer';
 import { EVMNonceManager } from '../../relayer/src/services/nonce-manager';
 import { EVMRelayerManager, IRelayerManager } from '../../relayer/src/services/relayer-manager';
 import { EVMRelayerQueue } from '../../relayer/src/services/relayer-queue';
@@ -24,8 +26,9 @@ import {
   RetryTransactionHandlerQueue,
   SCWTransactionQueue,
   TransactionHandlerQueue,
+  GaslessFallbackTransactionQueue,
 } from '../queue';
-import { AARelayService, SCWRelayService } from '../relay-service';
+import { AARelayService, GaslessFallbackRelayService, SCWRelayService } from '../relay-service';
 import { AASimulationService, SCWSimulationService } from '../simulation';
 import { TenderlySimulationService } from '../simulation/external-simulation';
 import { IStatusService, StatusService } from '../status';
@@ -34,6 +37,7 @@ import {
   AATransactionMessageType,
   EntryPointMapType,
   EVMRawTransactionType,
+  GaslessFallbackTransactionMessageType,
   SCWTransactionMessageType,
   TransactionType,
 } from '../types';
@@ -42,7 +46,7 @@ const log = logger(module);
 
 const routeTransactionToRelayerMap: {
   [chainId: number]: {
-    [transactionType: string]: AARelayService | SCWRelayService;
+    [transactionType: string]: AARelayService | SCWRelayService | GaslessFallbackRelayService;
   };
 } = {};
 
@@ -219,7 +223,7 @@ let statusService: IStatusService;
           maxRelayerCount: relayerManager.maxRelayerCount[chainId],
           inactiveRelayerCountThreshold: relayerManager.inactiveRelayerCountThreshold[chainId],
           pendingTransactionCountThreshold:
-          relayerManager.pendingTransactionCountThreshold[chainId],
+            relayerManager.pendingTransactionCountThreshold[chainId],
           newRelayerInstanceCount: relayerManager.newRelayerInstanceCount[chainId],
           fundingBalanceThreshold: ethers.utils
             .parseEther(relayerManager.fundingBalanceThreshold[chainId].toString()),
@@ -278,13 +282,12 @@ let statusService: IStatusService;
 
     // for each network get transaction type
     for (const type of supportedTransactionType[chainId]) {
-      const aaRelayerManager = EVMRelayerManagerMap[
-        relayerManagerTransactionTypeNameMap[type]][chainId];
-      if (!aaRelayerManager) {
-        throw new Error(`Relayer manager not found for ${type}`);
-      }
-
       if (type === TransactionType.AA) {
+        const aaRelayerManager = EVMRelayerManagerMap[
+          relayerManagerTransactionTypeNameMap[type]][chainId];
+        if (!aaRelayerManager) {
+          throw new Error(`Relayer manager not found for ${type}`);
+        }
         log.info(`Setting up AA transaction queue for chaindId: ${chainId}`);
         const aaQueue: IQueue<AATransactionMessageType> = new AATransactionQueue({
           chainId,
@@ -370,6 +373,38 @@ let statusService: IStatusService;
           tenderlySimulationService,
         );
         log.info(`SCW consumer, relay service & simulation service setup complete for chainId: ${chainId}`);
+      } else if (type === TransactionType.GASLESS_FALLBACK) {
+        // queue for scw
+        log.info(`Setting up Gasless Fallback transaction queue for chaindId: ${chainId}`);
+        const gaslessFallbackQueue: IQueue<
+          GaslessFallbackTransactionMessageType> = new GaslessFallbackTransactionQueue({
+            chainId,
+          });
+        await gaslessFallbackQueue.connect();
+        log.info(`SCW transaction queue setup complete for chainId: ${chainId}`);
+
+        const gaslessFallbackRelayerManager = EVMRelayerManagerMap[
+          relayerManagerTransactionTypeNameMap[type]][chainId];
+        if (!gaslessFallbackRelayerManager) {
+          throw new Error(`Relayer manager not found for ${type}`);
+        }
+
+        log.info(`Setting up Gasless Fallback consumer & relay service for chainId: ${chainId}`);
+        const gaslessFallbackConsumer = new GaslessFallbackConsumer({
+          queue: gaslessFallbackQueue,
+          relayerManager: gaslessFallbackRelayerManager,
+          transactionService,
+          cacheService,
+          options: {
+            chainId,
+          },
+        });
+        await gaslessFallbackQueue.consume(gaslessFallbackConsumer.onMessageReceived);
+
+        const gaslessFallbackRelayService = new GaslessFallbackRelayService(gaslessFallbackQueue);
+        routeTransactionToRelayerMap[chainId][type] = gaslessFallbackRelayService;
+
+        log.info(`Gasless fallback consumer & relay service simulation service setup complete for chainId: ${chainId}`);
       }
     }
   }
