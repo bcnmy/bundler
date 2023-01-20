@@ -18,7 +18,7 @@ describe('Transaction Service: Sending Transaction on chainId: 5', () => {
         [chainId: number]: GasPriceServiceType;
     } = {};
 
-    let cacheService: MockCache | ICacheService;
+    let cacheService: MockCache;
     beforeAll(async () => {
         cacheService = new MockCache();
         const networkServiceMap: {
