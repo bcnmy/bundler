@@ -38,7 +38,7 @@ export class AASimulationService {
       return {
         isSimulationSuccessful,
         gasLimitFromSimulation: 0,
-        msgFromSimulation: parseError(error),
+        message: parseError(error),
       };
     }
 
@@ -56,13 +56,13 @@ export class AASimulationService {
       return {
         isSimulationSuccessful: false,
         gasLimitFromSimulation: 0,
-        msgFromSimulation: parseError(estimatedGasForUserOp),
+        message: parseError(estimatedGasForUserOp),
       };
     }
     return {
       isSimulationSuccessful,
       gasLimitFromSimulation: estimatedGasForUserOp,
-      msgFromSimulation: 'Success',
+      message: 'Success',
     };
   }
 

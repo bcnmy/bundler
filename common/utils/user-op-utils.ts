@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import { config } from '../../config';
 import { STATUSES } from '../../server/src/middleware';
+import { LengthOfSingleEncodedTransaction } from '../constants';
 import { logger } from '../log-config';
 import { GetMetaDataFromUserOpReturnType, UserOperationType } from '../types';
 import { axiosPostCall } from './axios-calls';
@@ -58,7 +59,7 @@ export const getMetaDataFromUserOp = async (
       log.info(`Multi send transactions encoded data: ${transactions} for dappAPIKey: ${dappAPIKey}`);
 
       const lengthOfEncodedTransactions = transactions.length;
-      const lengthOfSingleEncodedTransaction = 306;
+      const lengthOfSingleEncodedTransaction = LengthOfSingleEncodedTransaction;
       const numOfDestinationSmartContractAddresses = lengthOfEncodedTransactions
           / lengthOfSingleEncodedTransaction;
       log.info(`Number of destination smart contract address for wallet address: ${userOp.sender} are: ${numOfDestinationSmartContractAddresses} for dappAPIKey: ${dappAPIKey}`);

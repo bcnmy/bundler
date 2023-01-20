@@ -19,10 +19,10 @@ export const simulateSCWTransaction = async (req: Request) => {
     });
 
     if (!scwSimulationResponse.isSimulationSuccessful) {
-      const { msgFromSimulation } = scwSimulationResponse;
+      const { message } = scwSimulationResponse;
       return {
         code: STATUSES.BAD_REQUEST,
-        msgFromSimulation,
+        message,
       };
     }
     const { gasLimitFromSimulation } = scwSimulationResponse;
@@ -30,7 +30,7 @@ export const simulateSCWTransaction = async (req: Request) => {
     log.info(`Transaction successfully simulated for SCW: ${to} on chainId: ${chainId}`);
     return {
       code: STATUSES.SUCCESS,
-      msgFromSimulation: 'Transaction successfully simulated',
+      message: 'Transaction successfully simulated',
     };
   } catch (error) {
     log.error(`Error in SCW transaction simulation ${JSON.stringify(error)}`);

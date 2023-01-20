@@ -29,7 +29,7 @@ export const simulateTransaction = () => async (
     if ((response as any).code !== STATUSES.SUCCESS) {
       return res.status((response as any).code).send({
         code: (response as any).code,
-        error: (response as any).msgFromSimulation,
+        error: (response as any).message,
       });
     }
     return next();

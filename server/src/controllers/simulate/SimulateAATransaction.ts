@@ -27,7 +27,7 @@ export const simulateAATransaction = async (req: Request) => {
     if (!entryPointContract) {
       return {
         code: STATUSES.BAD_REQUEST,
-        msgFromSimulation: 'Entry point not found in relayer node',
+        message: 'Entry point not found in relayer node',
       };
     }
 
@@ -37,17 +37,17 @@ export const simulateAATransaction = async (req: Request) => {
     log.info(`AA simulation response: ${JSON.stringify(aaSimulationResponse)}`);
 
     if (!aaSimulationResponse.isSimulationSuccessful) {
-      const { msgFromSimulation } = aaSimulationResponse;
+      const { message } = aaSimulationResponse;
       return {
         code: STATUSES.BAD_REQUEST,
-        msgFromSimulation,
+        message,
       };
     }
     req.body.params[4] = aaSimulationResponse.gasLimitFromSimulation;
     log.info(`Transaction successfully simulated for userOp: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
     return {
       code: STATUSES.SUCCESS,
-      msgFromSimulation: 'AA transaction successfully simulated',
+      message: 'AA transaction successfully simulated',
     };
   } catch (error) {
     log.error(`Error in AA transaction simulation ${JSON.stringify(error)}`);

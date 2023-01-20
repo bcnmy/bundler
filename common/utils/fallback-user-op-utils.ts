@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import { config } from '../../config';
 import { STATUSES } from '../../server/src/middleware';
+import { LengthOfSingleEncodedTransaction } from '../constants';
 import { logger } from '../log-config';
 import { GetMetaDataFromFallbackUserOpReturnType } from '../types';
 import { axiosPostCall } from './axios-calls';
@@ -71,7 +72,7 @@ export const getMetaDataFromFallbackUserOp = async (
       log.info(`Multi send call only transactions encoded data: ${transactions} for dappId: ${multiSendCallOnlyContractAddress}`);
 
       const lengthOfEncodedTransactions = transactions.length;
-      const lengthOfSingleEncodedTransaction = 306;
+      const lengthOfSingleEncodedTransaction = LengthOfSingleEncodedTransaction;
       const numOfDestinationSmartContractAddresses = lengthOfEncodedTransactions
       / lengthOfSingleEncodedTransaction;
       log.info(`Number of destination smart contract address for wallet address: ${fallbackUserOp.sender} are: ${numOfDestinationSmartContractAddresses} on chainId: ${chainId}`);

@@ -59,7 +59,7 @@ export class TenderlySimulationService implements IExternalSimulation {
       log.info(`Error in Tenderly Simulation: ${JSON.stringify(error)}`);
       return {
         isSimulationSuccessful: false,
-        msgFromSimulation: `Error in Tenderly Simulation: ${parseError(error)}`,
+        message: `Error in Tenderly Simulation: ${parseError(error)}`,
         gasLimitFromSimulation: 0,
       };
     }
@@ -67,7 +67,7 @@ export class TenderlySimulationService implements IExternalSimulation {
     if (!response?.data?.transaction?.status) {
       return {
         isSimulationSuccessful: false,
-        msgFromSimulation: response?.data?.transaction?.error_message,
+        message: response?.data?.transaction?.error_message,
         gasLimitFromSimulation: 0,
       };
     }
@@ -79,7 +79,7 @@ export class TenderlySimulationService implements IExternalSimulation {
     if (!refundInfo || Object.keys(refundInfo).length === 0) {
       return {
         isSimulationSuccessful: true,
-        msgFromSimulation: 'Simulation successful',
+        message: 'Simulation successful',
         gasLimitFromSimulation: gasUsedInSimulation,
       };
     }
@@ -96,7 +96,7 @@ export class TenderlySimulationService implements IExternalSimulation {
     if (!isRelayerPaidFully) {
       return {
         isSimulationSuccessful: false,
-        msgFromSimulation: `Payment to relayer is incorrect, with message: ${successOrRevertMsg}`,
+        message: `Payment to relayer is incorrect, with message: ${successOrRevertMsg}`,
         gasLimitFromSimulation: 0,
       };
     }
@@ -104,7 +104,7 @@ export class TenderlySimulationService implements IExternalSimulation {
     const gasLimitFromSimulation = response?.data?.transaction?.gas_used;
     return {
       isSimulationSuccessful: true,
-      msgFromSimulation: 'Fee options fetched successfully',
+      message: 'Fee options fetched successfully',
       gasLimitFromSimulation: gasLimitFromSimulation + 100000,
     };
   }

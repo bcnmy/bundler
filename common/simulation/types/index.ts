@@ -4,7 +4,7 @@ import { UserOperationType } from '../../types';
 // data response type that external simulation serivcereturns
 export type ExternalSimulationResponseType = {
   isSimulationSuccessful: boolean,
-  msgFromSimulation: string,
+  message: string,
   gasLimitFromSimulation: number | BigNumber,
 };
 
@@ -26,5 +26,5 @@ export type AASimulationDataType = {
 export type SimulationResponseType = {
   isSimulationSuccessful: boolean,
   gasLimitFromSimulation: number | BigNumber,
-  msgFromSimulation: string,
+  message: string,
 };

@@ -21,10 +21,10 @@ export const simulateGaslessFallbackTransaction = async (req:Request) => {
       });
 
     if (!gaslessFallbackSimulationResponse.isSimulationSuccessful) {
-      const { msgFromSimulation } = gaslessFallbackSimulationResponse;
+      const { message } = gaslessFallbackSimulationResponse;
       return {
         code: STATUSES.BAD_REQUEST,
-        msgFromSimulation,
+        message,
       };
     }
     const { gasLimitFromSimulation } = gaslessFallbackSimulationResponse;
@@ -32,7 +32,7 @@ export const simulateGaslessFallbackTransaction = async (req:Request) => {
     log.info(`Transaction successfully simulated for gasless fallback: ${to} on chainId: ${chainId}`);
     return {
       code: STATUSES.SUCCESS,
-      msgFromSimulation: 'Transaction successfully simulated',
+      message: 'Transaction successfully simulated',
     };
   } catch (error) {
     log.error(`Error in Gasless Fallback transaction simulation ${JSON.stringify(error)}`);

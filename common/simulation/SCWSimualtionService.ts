@@ -18,7 +18,9 @@ export class SCWSimulationService {
   }
 
   async simulate(simulationData: SimulationDataType): Promise<SimulationResponseType> {
-    const tenderlySimulationResponse = await this.tenderlySimulationService.simulate(simulationData);
+    const tenderlySimulationResponse = await this.tenderlySimulationService.simulate(
+      simulationData,
+    );
     return tenderlySimulationResponse;
   }
 }
