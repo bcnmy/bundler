@@ -1,7 +1,10 @@
+import { ethers } from 'ethers';
 import { RedisCacheService } from '../../../common/cache';
 import { TransactionDAO } from '../../../common/db';
 import { GasPriceManager } from '../../../common/gas-price';
 import { EVMNetworkService } from '../../../common/network';
+import { NotificationManager } from '../../../common/notification';
+import { SlackNotificationService } from '../../../common/notification/slack/SlackNotificationService';
 import { RetryTransactionHandlerQueue, TransactionHandlerQueue } from '../../../common/queue';
 import { EVMRawTransactionType } from '../../../common/types';
 import { config } from '../../../config';
@@ -66,14 +69,21 @@ describe('relayer manager', () => {
     cacheService,
   });
 
+  const slackNotificationService = new SlackNotificationService(
+    config.slack.token,
+    config.slack.channel,
+  );
+  const notificationManager = new NotificationManager(slackNotificationService);
+
   if (gasPriceService) {
     const transactionService = new EVMTransactionService({
       networkService,
-      cacheService,
       transactionListener,
       nonceManager,
       gasPriceService,
       transactionDao,
+      cacheService,
+      notificationManager,
       options: {
         chainId,
       },
@@ -87,6 +97,7 @@ describe('relayer manager', () => {
     const relayerMangerInstance = new EVMRelayerManager({
       networkService,
       gasPriceService,
+      cacheService,
       transactionService,
       nonceManager,
       relayerQueue,
@@ -102,8 +113,7 @@ describe('relayer manager', () => {
           relayerManager.pendingTransactionCountThreshold[chainId],
         newRelayerInstanceCount:
           relayerManager.newRelayerInstanceCount[chainId],
-        fundingBalanceThreshold:
-          relayerManager.fundingBalanceThreshold[chainId],
+        fundingBalanceThreshold: ethers.utils.parseEther(relayerManager.fundingBalanceThreshold[chainId].toString()),
         fundingRelayerAmount: relayerManager.fundingRelayerAmount[chainId],
         ownerAccountDetails: new EVMAccount(
           relayerManager.ownerAccountDetails[chainId].publicKey,

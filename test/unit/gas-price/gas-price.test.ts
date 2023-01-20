@@ -32,7 +32,7 @@ describe('Transaction Service: Sending Transaction on chainId: 5', () => {
 
         gasPriceManagerGoerli = new GasPriceManager(cacheService, networkServiceMap[goerli], {
             chainId: goerli,
-            EIP1559SupportedNetworks: config.EIP1559SupportedNetworks,
+            EIP1559SupportedNetworks: [],
         });
 
         gasPriceServiceMap[goerli] = gasPriceManagerGoerli.setup();
@@ -44,7 +44,7 @@ describe('Transaction Service: Sending Transaction on chainId: 5', () => {
         });
         gasPriceManagerMumbai = new GasPriceManager(cacheService, networkServiceMap[goerli], {
             chainId: mumbai,
-            EIP1559SupportedNetworks: config.EIP1559SupportedNetworks,
+            EIP1559SupportedNetworks: [80001],
         });
         gasPriceServiceMap[mumbai] = gasPriceManagerMumbai.setup();
     });

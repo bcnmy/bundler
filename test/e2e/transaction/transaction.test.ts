@@ -5,6 +5,8 @@ import { GasPriceManager } from '../../../common/gas-price';
 import { GasPriceType } from '../../../common/gas-price/types';
 import { relayerManagerTransactionTypeNameMap } from '../../../common/maps';
 import { EVMNetworkService } from '../../../common/network';
+import { NotificationManager } from '../../../common/notification';
+import { SlackNotificationService } from '../../../common/notification/slack/SlackNotificationService';
 import { TransactionHandlerQueue, RetryTransactionHandlerQueue } from '../../../common/queue';
 import { TransactionType } from '../../../common/types';
 import { generateTransactionId } from '../../../common/utils';
@@ -68,6 +70,12 @@ describe('Transaction Service: Sending Transaction on chainId: 5', () => {
     },
   });
 
+  const slackNotificationService = new SlackNotificationService(
+    config.slack.token,
+    config.slack.channel,
+  );
+  const notificationManager = new NotificationManager(slackNotificationService);
+
   const transactionService = new EVMTransactionService({
     networkService,
     transactionListener,
@@ -75,6 +83,7 @@ describe('Transaction Service: Sending Transaction on chainId: 5', () => {
     gasPriceService,
     transactionDao,
     cacheService,
+    notificationManager,
     options: {
       chainId,
     },
@@ -208,6 +217,12 @@ describe('Retry Transaction Service: Transaction should be bumped up and confimr
     cacheService,
   });
 
+  const slackNotificationService = new SlackNotificationService(
+    config.slack.token,
+    config.slack.channel,
+  );
+  const notificationManager = new NotificationManager(slackNotificationService);
+
   const transactionListener = new EVMTransactionListener({
     networkService,
     transactionQueue,
@@ -226,6 +241,7 @@ describe('Retry Transaction Service: Transaction should be bumped up and confimr
     gasPriceService,
     transactionDao,
     cacheService,
+    notificationManager,
     options: {
       chainId,
     },
