@@ -52,15 +52,16 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
           'X-CMC_PRO_API_KEY': this.apiKey,
         },
       });
-      if (response && response.data && response.data.data) {
-        const networkKeys = Object.keys(response.data.data);
+
+      if (response && response.data) {
+        const networkKeys = Object.keys(response.data);
         if (networkKeys) {
           const coinsRateObj: any = {};
           networkKeys.forEach((network: any) => {
             const coinNetworkIds = this.networkSymbolCategories[network];
             if (coinNetworkIds && coinNetworkIds.length) {
               coinNetworkIds.forEach((networkId: number) => {
-                coinsRateObj[networkId] = response.data.data[network].quote.USD.price.toFixed(2);
+                coinsRateObj[networkId] = response.data[network].quote.USD.price.toFixed(2);
               });
             }
           });
@@ -78,11 +79,12 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
   }
 
   async getTokenPrice(symbol: string): Promise<number> {
-    let data = JSON.parse(await this.cacheService.get(getTokenPriceKey()));
-    if (!data) {
+    let rawData = await this.cacheService.get(getTokenPriceKey());
+    if (!rawData) {
       await this.setup();
-      data = JSON.parse(await this.cacheService.get(getTokenPriceKey()));
+      rawData = await this.cacheService.get(getTokenPriceKey());
     }
+    let data = JSON.parse(rawData);
     return data[symbol];
   }
 
