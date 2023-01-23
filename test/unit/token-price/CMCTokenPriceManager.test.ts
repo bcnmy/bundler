@@ -7,7 +7,7 @@ import { MockCache } from '../mocks/mockCache';
 const axios = require('axios');
 
 let symbol = "ETH";
-const dummyTokenAddress = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
+const tokenAddress = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
 
 describe('CMCTokenPriceManager', () => {
     let cmcTokenPriceManager: CMCTokenPriceManager;
@@ -25,7 +25,7 @@ describe('CMCTokenPriceManager', () => {
                 updateFrequencyInSeconds: config.tokenPrice.updateFrequencyInSeconds,
                 symbolMapByChainId: {
                     "1": {
-                        "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee": "ETH"
+                        [tokenAddress]: "ETH"
                     },
                 },
             }
@@ -47,25 +47,29 @@ describe('CMCTokenPriceManager', () => {
     it('should call getTokenPrice and fetch the data from network', async () => {
         let expectedTokenPrice = '1200'
 
+        jest.spyOn(cacheService, 'get').mockReturnValueOnce(Promise.resolve(''));
+
         const mockFakeTodoItem = {
             "data": {
-                "ETH": {
-                    "id": 1027,
-                    "name": "Ethereum",
-                    "symbol": "ETH",
-                    "quote": {
-                        "USD": {
-                            "price": 1200
+                "data": {
+                    "ETH": {
+                        "id": 1027,
+                        "name": "Ethereum",
+                        "symbol": "ETH",
+                        "quote": {
+                            "USD": {
+                                "price": 1200
+                            }
                         }
-                    }
-                },
-                "USDT": {
-                    "id": 825,
-                    "name": "Tether",
-                    "symbol": "USDT",
-                    "quote": {
-                        "USD": {
-                            "price": 1,
+                    },
+                    "USDT": {
+                        "id": 825,
+                        "name": "Tether",
+                        "symbol": "USDT",
+                        "quote": {
+                            "USD": {
+                                "price": 1,
+                            }
                         }
                     }
                 }
@@ -73,18 +77,34 @@ describe('CMCTokenPriceManager', () => {
         }
         axios.get.mockReturnValue(mockFakeTodoItem);
 
-        jest.spyOn(cacheService, 'get').mockReturnValue(Promise.resolve(JSON.stringify({ [symbol]: expectedTokenPrice })));
-
+        jest.spyOn(cacheService, 'get').mockReturnValueOnce(Promise.resolve(JSON.stringify({ [symbol]: expectedTokenPrice })));
         let tokenPrice = await cmcTokenPriceManager.getTokenPrice(symbol);
         expect(tokenPrice).toEqual(expectedTokenPrice);
     });
 
-    it('should call getTokenPrice and fetch the data from network', async () => {
+    it('should call getTokenPriceByTokenAddress', async () => {
         let expectedTokenPrice = '1200'
 
         jest.spyOn(cmcTokenPriceManager, 'getTokenPrice').mockReturnValueOnce(Promise.resolve(1200));
 
-        let tokenPrice = await cmcTokenPriceManager.getTokenPriceByTokenAddress(1, dummyTokenAddress);
+        let tokenPrice = await cmcTokenPriceManager.getTokenPriceByTokenAddress(1, tokenAddress);
         expect(tokenPrice.toString()).toEqual(expectedTokenPrice);
+    });
+
+    it(`getTokenPrice should throw Can't get token symbol for token address 0xf17e65822b568b3903685a7c9f496cf7656cc6c1 from config map`, async () => {
+        try {
+            await await cmcTokenPriceManager.getTokenPriceByTokenAddress(1, "0xf17e65822b568b3903685a7c9f496cf7656cc6c1");
+        } catch (error: any) {
+            expect(error.toString()).toEqual("Error: Can't get token symbol for token address 0xf17e65822b568b3903685a7c9f496cf7656cc6c1 from config map");
+        }
+    });
+
+
+    it(`getTokenPrice should throw Token address is not defined`, async () => {
+        try {
+            await cmcTokenPriceManager.getTokenPriceByTokenAddress(1, "");
+        } catch (error: any) {
+            expect(error.toString()).toEqual("Error: Token address is not defined");
+        }
     });
 });

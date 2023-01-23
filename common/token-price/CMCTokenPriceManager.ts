@@ -53,15 +53,15 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
         },
       });
 
-      if (response && response.data) {
-        const networkKeys = Object.keys(response.data);
+      if (response && response.data && response.data.data) {
+        const networkKeys = Object.keys(response.data.data);
         if (networkKeys) {
           const coinsRateObj: any = {};
           networkKeys.forEach((network: any) => {
             const coinNetworkIds = this.networkSymbolCategories[network];
             if (coinNetworkIds && coinNetworkIds.length) {
               coinNetworkIds.forEach((networkId: number) => {
-                coinsRateObj[networkId] = response.data[network].quote.USD.price.toFixed(2);
+                coinsRateObj[networkId] = response.data.data[network].quote.USD.price.toFixed(2);
               });
             }
           });
@@ -84,7 +84,7 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
       await this.setup();
       rawData = await this.cacheService.get(getTokenPriceKey());
     }
-    let data = JSON.parse(rawData);
+    const data = JSON.parse(rawData);
     return data[symbol];
   }
 
@@ -93,7 +93,7 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
    * @param tokenAddress
    * @returns token price in USD
    */
-  async getTokenPriceByTokenAddress(chainId: number, tokenAddress: string): Promise<number> {
+  async getTokenPriceByTokenAddress(chainId: number, tokenAddress: string) {
     let tokenPrice: number = 0;
     try {
       if (tokenAddress) {
@@ -104,12 +104,15 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
           log.info(`Token price for ${tokenSymbol} is ${tokenPrice} USD`);
         } else {
           log.error(`Can't get token symbol for token address ${tokenAddress} from config map`);
+          throw new Error(`Can't get token symbol for token address ${tokenAddress} from config map`);
         }
       } else {
         log.error('Token address is not defined');
+        throw new Error('Token address is not defined');
       }
     } catch (error) {
       log.error(error);
+      throw error;
     }
     return tokenPrice;
   }
