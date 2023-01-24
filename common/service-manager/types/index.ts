@@ -1,4 +1,5 @@
-import { IEVMAccount, AppConfig } from 'fee-management';
+import { IEVMAccount } from 'fee-management/dist/relayer-node-interfaces/IEVMAccount';
+import { AppConfig } from 'fee-management/dist/types';
 import { ICacheService } from '../../cache';
 import { ITokenPrice } from '../../token/interface/ITokenPrice';
 

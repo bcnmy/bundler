@@ -2887,6 +2887,24 @@
     "@typescript-eslint/types" "5.47.0"
     eslint-visitor-keys "^3.3.0"
 
+"@uniswap/lib@1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@uniswap/lib/-/lib-1.1.1.tgz#0afd29601846c16e5d082866cbb24a9e0758e6bc"
+  integrity sha512-2yK7sLpKIT91TiS5sewHtOa7YuM8IuBXVl4GZv2jZFys4D2sY7K5vZh6MqD25TPA95Od+0YzCVq6cTF2IKrOmg==
+
+"@uniswap/v2-core@1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@uniswap/v2-core/-/v2-core-1.0.0.tgz#e0fab91a7d53e8cafb5326ae4ca18351116b0844"
+  integrity sha512-BJiXrBGnN8mti7saW49MXwxDBRFiWemGetE58q8zgfnPPzQKq55ADltEILqOt6VFZ22kVeVKbF8gVd8aY3l7pA==
+
+"@uniswap/v2-periphery@^1.1.0-beta.0":
+  version "1.1.0-beta.0"
+  resolved "https://registry.yarnpkg.com/@uniswap/v2-periphery/-/v2-periphery-1.1.0-beta.0.tgz#20a4ccfca22f1a45402303aedb5717b6918ebe6d"
+  integrity sha512-6dkwAMKza8nzqYiXEr2D86dgW3TTavUvCR0w2Tu33bAbM8Ah43LKAzH7oKKPRT5VJQaMi1jtkGs1E8JPor1n5g==
+  dependencies:
+    "@uniswap/lib" "1.1.1"
+    "@uniswap/v2-core" "1.0.0"
+
 "@wry/context@^0.7.0":
   version "0.7.0"
   resolved "https://registry.yarnpkg.com/@wry/context/-/context-0.7.0.tgz#be88e22c0ddf62aeb0ae9f95c3d90932c619a5c8"
@@ -4775,12 +4793,13 @@ fecha@^4.2.0:
   resolved "https://registry.yarnpkg.com/fecha/-/fecha-4.2.3.tgz#4d9ccdbc61e8629b259fdca67e65891448d569fd"
   integrity sha512-OP2IUU6HeYKJi3i0z4A19kHMQoLVs4Hc+DPqqxI2h/DPZHTm/vjsfC6P0b4jCMy14XizLBqvndQ+UilD7707Jw==
 
-fee-management@0.0.2:
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/fee-management/-/fee-management-0.0.2.tgz#c3d06fb4c0bef8ef448867aba58d78f0b1aa5f09"
-  integrity sha512-Xo1/1+S8eD3V+XCa3DEqbXm1F+9VE268jDHD9e4P7iYlyXuVDecaJf4SNjR/u1SPOzRrtyZLwOqOhgTq9eMvPA==
+fee-management@0.0.3:
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/fee-management/-/fee-management-0.0.3.tgz#9ff0b24f1a76ea3ffadc3ee832977a506fc7ac08"
+  integrity sha512-HyO3tc87zPsVRsK/UYhbO8G+5gIUYcpQ4tBOdR3b23dvTFR3CvgnXGWt1F3SWfvspkju5TCYWYiZCTHVud7ogQ==
   dependencies:
     "@types/crypto-js" "^4.1.1"
+    "@uniswap/v2-periphery" "^1.1.0-beta.0"
     amqplib "^0.10.3"
     cross-fetch "^3.1.5"
     crypto-js "^4.1.1"

@@ -6,7 +6,7 @@ import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
 import { CrossChainRetryHandlerQueue } from '../../../../common/queue/CrossChainRetryHandlerQueue';
 import { RetryTransactionQueueData } from '../../../../common/queue/types';
-import { IRelayerBalanceManager } from '../../../../common/service-manager/interface/IRelayerBalanceManager';
+// import { IRelayerBalanceManager } from '../../../../common/service-manager/interface/IRelayerBalanceManager';
 import {
   CCMPMessageType,
   CrossChainTransationStatus,
@@ -36,7 +36,7 @@ import {
 const log = logger(module);
 
 export class EVMTransactionListener
-  implements
+implements
   ITransactionListener<IEVMAccount, EVMRawTransactionType>,
   ITransactionPublisher<TransactionQueueMessageType> {
   chainId: number;
@@ -51,7 +51,7 @@ export class EVMTransactionListener
 
   cacheService: ICacheService;
 
-  relayerBalanceManager: IRelayerBalanceManager | undefined;
+  // relayerBalanceManager: IRelayerBalanceManager | undefined;
 
   crossChainTransactionDAO: ICrossChainTransactionDAO;
 
@@ -78,9 +78,9 @@ export class EVMTransactionListener
     this.crossChainRetryHandlerQueueMap = crossChainRetryHandlerQueueMap;
   }
 
-  async setRelayerBalanceManager(_relayerBalanceManager: IRelayerBalanceManager) {
-    this.relayerBalanceManager = _relayerBalanceManager;
-  }
+  // async setRelayerBalanceManager(_relayerBalanceManager: IRelayerBalanceManager) {
+  //   this.relayerBalanceManager = _relayerBalanceManager;
+  // }
 
   async publishToTransactionQueue(data: TransactionQueueMessageType): Promise<boolean> {
     await this.transactionQueue.publish(data);
@@ -323,9 +323,9 @@ export class EVMTransactionListener
       });
     }
 
-    if (transactionType !== TransactionType.FUNDING && transactionType !== TransactionType.AA) {
-      this.relayerBalanceManager!.onTransaction(transactionReceipt, transactionType, this.chainId);
-    }
+    // if (transactionType !== TransactionType.FUNDING && transactionType !== TransactionType.AA) {
+    //   this.relayerBalanceManager!.onTransaction(transactionReceipt, transactionType, this.chainId);
+    // }
   }
 
   async notify(
@@ -449,7 +449,7 @@ export class EVMTransactionListener
   };
 
   private static handleCCMPOnTransactionSuccessFactory = (destinationTxHash?: string)
-    : ICrossChainProcessStep => {
+  : ICrossChainProcessStep => {
     const handler: ICrossChainProcessStep = async (data) => ({
       ...data,
       status: CrossChainTransationStatus.DESTINATION_TRANSACTION_CONFIRMED,

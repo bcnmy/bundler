@@ -53,7 +53,7 @@ import {
   SCWTransactionMessageType,
   TransactionType,
 } from '../types';
-import { RelayerBalanceManager } from './relayer-balance-manager';
+// import { RelayerBalanceManager } from './relayer-balance-manager';
 import { CrossChainTransactionDAO } from '../db/dao/CrossChainTransactionDao';
 import { CrossChainRetryHandlerQueue } from '../queue/CrossChainRetryHandlerQueue';
 import { CrossChainRetryTransactionService } from '../../server/src/services/cross-chain/retry-transaction-service';
@@ -139,12 +139,12 @@ const transactionServiceMap: Record<number, EVMTransactionService> = {};
 const retryTransactionQueueMap: {
   [key: number]: RetryTransactionHandlerQueue;
 } = {};
-let scwRelayerList: string[] = [];
-let ccmpRelayerList: string[] = [];
+// let scwRelayerList: string[] = [];
+// let ccmpRelayerList: string[] = [];
 const relayerInstanceMap: Record<string, EVMRelayerManager> = {};
-let relayerBalanceManager: RelayerBalanceManager;
-let labelCCMP;
-let labelSCW;
+// let relayerBalanceManager: RelayerBalanceManager;
+// let labelCCMP;
+// let labelSCW;
 
 const crossChainRetryTransactionQueueMap: {
   [key: number]: CrossChainRetryHandlerQueue;
@@ -206,7 +206,7 @@ let statusService: IStatusService;
 
   config.feeManagementConfig.tokenList = feeSupportedTokenList;
 
-  relayerBalanceManager = new RelayerBalanceManager();
+  // relayerBalanceManager = new RelayerBalanceManager();
 
   const tokenPriceConversionService = new TokenPriceConversionService(
     tokenService,
@@ -293,7 +293,7 @@ let statusService: IStatusService;
       },
     });
 
-    transactionListener.setRelayerBalanceManager(relayerBalanceManager);
+    // transactionListener.setRelayerBalanceManager(relayerBalanceManager);
 
     log.info(`Transaction listener setup complete for chainId: ${chainId}`);
 
@@ -351,16 +351,16 @@ let statusService: IStatusService;
       const addressList = await relayerMangerInstance.createRelayers();
 
       if (relayerManagerTransactionTypeNameMap.CROSS_CHAIN === relayerManager.name) {
-        ccmpRelayerList = addressList;
+        // ccmpRelayerList = addressList;
         relayerInstanceMap[
           relayerManagerTransactionTypeNameMap.CROSS_CHAIN] = relayerMangerInstance;
-        labelCCMP = relayerManager.name;
+        // labelCCMP = relayerManager.name;
       }
 
       if (relayerManagerTransactionTypeNameMap.SCW === relayerManager.name) {
-        scwRelayerList = addressList;
+        // scwRelayerList = addressList;
         relayerInstanceMap[relayerManagerTransactionTypeNameMap.SCW] = relayerMangerInstance;
-        labelSCW = relayerManager.name;
+        // labelSCW = relayerManager.name;
       }
 
       log.info(
@@ -637,27 +637,28 @@ let statusService: IStatusService;
     throw e;
   }
 
-  try {
-    relayerBalanceManager.setTransactionServiceMap(transactionServiceMap);
-    await relayerBalanceManager.init({
-      masterFundingAccountSCW:
-        relayerInstanceMap[relayerManagerTransactionTypeNameMap.SCW].ownerAccountDetails,
-      relayerAddressesSCW: scwRelayerList,
-      masterFundingAccountCCMP: relayerInstanceMap[relayerManagerTransactionTypeNameMap.CROSS_CHAIN]
-        .ownerAccountDetails, // change it to cross-chain before commit
-      relayerAddressesCCMP: ccmpRelayerList, // change it to ccmpRelayerList before commit
-      appConfig: config.feeManagementConfig,
-      dbUrl: config.dataSources.mongoUrl,
-      tokenPriceService: tokenService,
-      cacheService,
-      labelCCMP,
-      labelSCW, // change it to labelSCW before commit
-    });
-    log.info('relayerBalanceManager initialised Successfully');
-  } catch (error: any) {
-    log.error('Error while calling relayerBalanceManager.init()');
-    log.info(error);
-  }
+  // try {
+  //   relayerBalanceManager.setTransactionServiceMap(transactionServiceMap);
+  //   await relayerBalanceManager.init({
+  //     masterFundingAccountSCW:
+  //       relayerInstanceMap[relayerManagerTransactionTypeNameMap.SCW].ownerAccountDetails,
+  //     relayerAddressesSCW: scwRelayerList,
+  //     masterFundingAccountCCMP:
+  //  relayerInstanceMap[relayerManagerTransactionTypeNameMap.CROSS_CHAIN]
+  //       .ownerAccountDetails, // change it to cross-chain before commit
+  //     relayerAddressesCCMP: ccmpRelayerList, // change it to ccmpRelayerList before commit
+  //     appConfig: config.feeManagementConfig,
+  //     dbUrl: config.dataSources.mongoUrl,
+  //     tokenPriceService: tokenService,
+  //     cacheService,
+  //     labelCCMP,
+  //     labelSCW, // change it to labelSCW before commit
+  //   });
+  //   log.info('relayerBalanceManager initialised Successfully');
+  // } catch (error: any) {
+  //   log.error('Error while calling relayerBalanceManager.init()');
+  //   log.info(error);
+  // }
 
   log.info('<=== Config setup completed ===>');
 })();
