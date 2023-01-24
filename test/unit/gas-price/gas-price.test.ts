@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/indent */
 import { ethers } from 'ethers';
-import { ICacheService } from '../../../common/cache';
 import { GasPriceManager, GasPriceServiceType } from '../../../common/gas-price';
 import { GasPriceType } from '../../../common/gas-price/types';
 import { EVMNetworkService } from '../../../common/network';
