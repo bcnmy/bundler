@@ -93,7 +93,7 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
    * @param tokenAddress
    * @returns token price in USD
    */
-  async getTokenPriceByTokenAddress(chainId: number, tokenAddress: string) {
+  async getTokenPriceByTokenAddress(chainId: number, tokenAddress: string): Promise<number> {
     let tokenPrice: number = 0;
     try {
       if (tokenAddress) {
