@@ -10,7 +10,7 @@ import { MockNetworkService } from '../mocks/mockNetworkService';
 const goerli = 5;
 const mumbai = 80001; // to test eip1559 supported networks
 
-describe('Transaction Service: Sending Transaction on chainId: 5', () => {
+describe('GasPriceManager', () => {
     let gasPriceManagerGoerli;
     let gasPriceManagerMumbai;
     const gasPriceServiceMap: {

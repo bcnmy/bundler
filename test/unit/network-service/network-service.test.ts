@@ -33,7 +33,7 @@ const dummyTransactionReceipt = {
     type: 0
 };
 
-describe('Transaction Service: Sending Transaction on chainId: 5', () => {
+describe('EVMNetworkService', () => {
 
     let evmNetworkServiceGoerli: EVMNetworkService;
     let evmNetworkServiceMumbai: EVMNetworkService;

@@ -1,8 +1,4 @@
-import { WebClient } from '@slack/web-api';
-import { NotificationManager } from '../../../common/notification';
 import { SlackNotificationService } from '../../../common/notification/slack/SlackNotificationService';
-import { SlackNotificationObjectType } from '../../../common/notification/types';
-import { config } from '../../../config';
 
 let dummySlackChannel = "C04AQ36PJM_"
 let dummySlackToken = 'xoxp-1234567890-1234567890-1234567890-abcdef';

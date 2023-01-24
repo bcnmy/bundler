@@ -4,12 +4,10 @@ import { AASimulationService, SCWSimulationService } from '../../../common/simul
 import { TenderlySimulationService } from '../../../common/simulation/external-simulation';
 import { config } from '../../../config';
 import { MockGasPrice } from '../mocks/mockGasPrice';
-import { entryPointMap } from '../../../common/service-manager';
 
 const goerli = 5;
 const toAddress = "0xF86B30C63E068dBB6bdDEa6fe76bf92F194Dc53c";
 const refundAddress = "0xa86B30C63E068dBB6bdDEa6fe76bf92F194Dc53b";
-const entryPointAddress = '0x2babd7e23c8559dc53ba38d2976b9254d0f0d55b';
 
 describe('SCWSimulationService', () => {
     let scwSimulationService: SCWSimulationService;
@@ -66,7 +64,6 @@ describe('SCWSimulationService', () => {
         })
 
         expect(result).toEqual(expectedOutput);
-
     });
 });
 
