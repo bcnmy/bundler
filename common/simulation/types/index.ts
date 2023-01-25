@@ -30,8 +30,8 @@ export type AASimulationDataType = {
 export type SimulationResponseType = {
   isSimulationSuccessful: boolean,
   data: {
-    refundAmount: number,
-    refundAmountInUSD: number,
+    refundAmount?: number,
+    refundAmountInUSD?: number,
     gasLimitFromSimulation: number | BigNumber,
   },
   message: string,

@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
 import { transactionStatusSchema } from '../../routes/relay/relay.schema';
+import { STATUSES } from '../RequestHelpers';
 
 const log = logger(module);
 

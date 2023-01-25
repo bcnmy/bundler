@@ -7,6 +7,7 @@ import {
   gaslessFallbackRequestSchema,
   scwRequestSchema,
 } from '../../routes/relay/relay.schema';
+import { STATUSES } from '../RequestHelpers';
 
 const log = logger(module);
 

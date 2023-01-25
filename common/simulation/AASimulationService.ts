@@ -37,7 +37,9 @@ export class AASimulationService {
       isSimulationSuccessful = false;
       return {
         isSimulationSuccessful,
-        gasLimitFromSimulation: 0,
+        data: {
+          gasLimitFromSimulation: 0,
+        },
         message: parseError(error),
       };
     }
@@ -55,13 +57,17 @@ export class AASimulationService {
     if (!estimatedGasForUserOp._isBigNumber) {
       return {
         isSimulationSuccessful: false,
-        gasLimitFromSimulation: 0,
+        data: {
+          gasLimitFromSimulation: 0,
+        },
         message: parseError(estimatedGasForUserOp),
       };
     }
     return {
       isSimulationSuccessful,
-      gasLimitFromSimulation: estimatedGasForUserOp,
+      data: {
+        gasLimitFromSimulation: estimatedGasForUserOp,
+      },
       message: 'Success',
     };
   }
