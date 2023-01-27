@@ -23,26 +23,26 @@ export class AASimulationService {
     // entry point contract call to check
     // https://github.com/eth-infinitism/account-abstraction/blob/5b7130c2645cbba7fe4540a96997163b44c1aafd/contracts/core/EntryPoint.sol#L245
     const { userOp, entryPointContract, chainId } = simulationData;
-    const entryPointStatic = entryPointContract.connect(
-      this.networkService.ethersProvider.getSigner(config.zeroAddress),
-    );
+    // const entryPointStatic = entryPointContract.connect(
+    //   this.networkService.ethersProvider.getSigner(config.zeroAddress),
+    // );
 
-    let isSimulationSuccessful = true;
-    try {
-      const simulationResult = await entryPointStatic.callStatic.simulateValidation(userOp)
-        .catch((e: any) => e);
-      AASimulationService.parseUserOpSimulationResult(userOp, simulationResult);
-    } catch (error: any) {
-      log.info(`AA Simulation failed: ${parseError(error)}`);
-      isSimulationSuccessful = false;
-      return {
-        isSimulationSuccessful,
-        data: {
-          gasLimitFromSimulation: 0,
-        },
-        message: parseError(error),
-      };
-    }
+    const isSimulationSuccessful = true;
+    // try {
+    //   const simulationResult = await entryPointStatic.callStatic.simulateValidation(userOp)
+    //     .catch((e: any) => e);
+    //   AASimulationService.parseUserOpSimulationResult(userOp, simulationResult);
+    // } catch (error: any) {
+    //   log.info(`AA Simulation failed: ${parseError(error)}`);
+    //   isSimulationSuccessful = false;
+    //   return {
+    //     isSimulationSuccessful,
+    //     data: {
+    //       gasLimitFromSimulation: 0,
+    //     },
+    //     message: parseError(error),
+    //   };
+    // }
 
     const estimatedGasForUserOpFromEthers = await this.networkService.estimateGas(
       entryPointContract,
@@ -76,6 +76,9 @@ export class AASimulationService {
     if (!simulationResult?.errorName?.startsWith('ValidationResult')) {
       // parse it as FailedOp
       // if its FailedOp, then we have the paymaster param... otherwise its an Error(string)
+      if (!simulationResult.errorArgs) {
+        throw Error(`errorArgs not present in simulationResult: ${JSON.stringify(simulationResult)}`);
+      }
       let { paymaster } = simulationResult.errorArgs;
       if (paymaster === config.zeroAddress) {
         paymaster = undefined;

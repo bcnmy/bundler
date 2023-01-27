@@ -5,6 +5,7 @@ import { LengthOfSingleEncodedTransaction } from '../constants';
 import { logger } from '../log-config';
 import { GetMetaDataFromUserOpReturnType, RelayerDestinationSmartContractName, UserOperationType } from '../types';
 import { axiosPostCall } from './axios-calls';
+import { parseError } from './parse-error';
 
 const log = logger(module);
 
@@ -73,7 +74,7 @@ export const getMetaDataFromUserOp = async (
         transactionsIndex += 1
       ) {
         // https://goerli.etherscan.io/address/0x2f65beD438a30827D408b7c6818ec5A22C022Dd1#code
-        const offset = 306;
+        const offset = 370;
         const destinationSmartContractAddress = transactions.slice(
           2 + offset * transactionsIndex,
           42 + offset * transactionsIndex,
@@ -81,7 +82,7 @@ export const getMetaDataFromUserOp = async (
         destinationSmartContractAddresses.push(`0x${destinationSmartContractAddress.toLowerCase()}`);
         const destinationSmartContractMethodCallData = transactions.slice(
           170 + offset * transactionsIndex,
-          306 + offset * transactionsIndex,
+          370 + offset * transactionsIndex,
         );
         destinationSmartContractMethodsCallData.push(`0x${destinationSmartContractMethodCallData}`);
       }
@@ -149,7 +150,7 @@ export const getMetaDataFromUserOp = async (
       relayerDestinationContractName,
     };
   } catch (error: any) {
-    log.info(`Error in getting wallet transaction data for userOp: ${userOp} on chainId: ${chainId} with error: ${JSON.parse(error)} for dappAPIKey: ${dappAPIKey}`);
+    log.info(`Error in getting wallet transaction data for userOp: ${userOp} on chainId: ${chainId} with error: ${parseError(error)} for dappAPIKey: ${dappAPIKey}`);
     return {
       destinationSmartContractAddresses: [],
       destinationSmartContractMethods: [],

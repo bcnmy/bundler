@@ -23,4 +23,4 @@ export const ERC20_ABI = [{
 }];
 
 // call data length while sending multi send transaction
-export const LengthOfSingleEncodedTransaction = 306;
+export const LengthOfSingleEncodedTransaction = 370;
