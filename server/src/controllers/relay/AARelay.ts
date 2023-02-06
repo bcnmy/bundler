@@ -4,6 +4,7 @@ import { routeTransactionToRelayerMap, transactionDao } from '../../../../common
 import { generateTransactionId, getMetaDataFromUserOp } from '../../../../common/utils';
 import {
   isError,
+  RelayerDestinationSmartContractName,
   TransactionMethodType,
   TransactionStatus,
   TransactionType,
@@ -63,8 +64,6 @@ export const relayAATransaction = async (req: Request, res: Response) => {
       const {
         destinationSmartContractAddresses,
         destinationSmartContractMethods,
-        relayerDestinationContractAddress,
-        relayerDestinationContractName,
       } = await getMetaDataFromUserOp(userOp, chainId, dappAPIKey);
       metaData.destinationSmartContractAddresses = destinationSmartContractAddresses;
       metaData.destinationSmartContractMethods = destinationSmartContractMethods;
@@ -74,8 +73,8 @@ export const relayAATransaction = async (req: Request, res: Response) => {
         chainId,
         transactionId,
         metaData,
-        relayerDestinationContractAddress,
-        relayerDestinationContractName,
+        entryPointAddress,
+        RelayerDestinationSmartContractName.ENTRY_POINT,
       );
     } catch (error) {
       log.info(`Error in getting meta data from userOp: ${JSON.stringify(userOp)} for dappAPIKey: ${dappAPIKey}`);

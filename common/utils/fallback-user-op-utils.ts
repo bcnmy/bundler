@@ -3,7 +3,7 @@ import { config } from '../../config';
 import { STATUSES } from '../../server/src/middleware';
 import { LengthOfSingleEncodedTransaction } from '../constants';
 import { logger } from '../log-config';
-import { GetMetaDataFromFallbackUserOpReturnType, RelayerDestinationSmartContractName } from '../types';
+import { GetMetaDataFromFallbackUserOpReturnType } from '../types';
 import { axiosPostCall } from './axios-calls';
 
 const log = logger(module);
@@ -47,9 +47,7 @@ export const getMetaDataFromFallbackUserOp = async (
     // Transaction memory _tx, unit256 batchId, FeeRefund memory refundInfo, bytes memory signatures
 
     const { target, callData } = fallbackUserOp;
-    let relayerDestinationContractName = '';
     if (target.toLowerCase() === multiSendCallOnlyContractAddress) {
-      relayerDestinationContractName = RelayerDestinationSmartContractName.MULTI_SEND_CALL_ONLY;
       const multiSendCallOnlyCallData = callData;
       const iFaceMultiSendCallOnly = new ethers.utils.Interface(multiSendCallOnlyAbi);
       const decodedDataMultiSendCallOnly = iFaceMultiSendCallOnly.decodeFunctionData('multiSend(bytes)', multiSendCallOnlyCallData);
@@ -58,8 +56,6 @@ export const getMetaDataFromFallbackUserOp = async (
         return {
           destinationSmartContractAddresses: [],
           destinationSmartContractMethods: [],
-          relayerDestinationContractAddress: '',
-          relayerDestinationContractName: '',
         };
       }
       log.info(`Multi send call only decoded data for wallet address: ${fallbackUserOp.sender} is: ${decodedDataMultiSendCallOnly} on chainId: ${chainId}`);
@@ -70,8 +66,6 @@ export const getMetaDataFromFallbackUserOp = async (
         return {
           destinationSmartContractAddresses: [],
           destinationSmartContractMethods: [],
-          relayerDestinationContractAddress: '',
-          relayerDestinationContractName: '',
         };
       }
       const transactions = methodArgsMultiSendMultiSendCallOnly.slice(2);
@@ -108,8 +102,6 @@ export const getMetaDataFromFallbackUserOp = async (
         return {
           destinationSmartContractAddresses: [],
           destinationSmartContractMethods: [],
-          relayerDestinationContractAddress: '',
-          relayerDestinationContractName: '',
         };
       }
       log.info(`Decoded smart wallet data: ${JSON.stringify(decodedDataSmartWallet)} on chainId: ${chainId}`);
@@ -120,8 +112,6 @@ export const getMetaDataFromFallbackUserOp = async (
         return {
           destinationSmartContractAddresses: [],
           destinationSmartContractMethods: [],
-          relayerDestinationContractAddress: '',
-          relayerDestinationContractName: '',
         };
       }
       log.info(`Arguments of smart wallet method: ${JSON.stringify(methodArgsSmartWalletExecTransaction)} on chainId: ${chainId}`);
@@ -132,8 +122,6 @@ export const getMetaDataFromFallbackUserOp = async (
         return {
           destinationSmartContractAddresses: [],
           destinationSmartContractMethods: [],
-          relayerDestinationContractAddress: '',
-          relayerDestinationContractName: '',
         };
       }
       log.info(`Transaction info for wallet addresss: ${fallbackUserOp.sender} is ${JSON.stringify(transactionInfoForExecTransaction)} on chainId: ${chainId}`);
@@ -192,16 +180,12 @@ export const getMetaDataFromFallbackUserOp = async (
     return {
       destinationSmartContractAddresses,
       destinationSmartContractMethods,
-      relayerDestinationContractAddress: target.toLowerCase(),
-      relayerDestinationContractName,
     };
   } catch (error: any) {
     log.info(`Error in getting wallet transaction data for to address: ${to} on chainId: ${chainId} with error: ${JSON.parse(error)} for dappAPIKey: ${dappAPIKey}`);
     return {
       destinationSmartContractAddresses: [],
       destinationSmartContractMethods: [],
-      relayerDestinationContractAddress: '',
-      relayerDestinationContractName: '',
     };
   }
 };

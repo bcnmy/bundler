@@ -17,8 +17,6 @@ export enum TransactionMethodType {
 
 export enum RelayerDestinationSmartContractName {
   ENTRY_POINT = 'Entry Point',
-  MULTI_SEND = 'Multi Send',
-  MULTI_SEND_CALL_ONLY = 'Multi Send Call Only',
   FALLBACK_GASLESS = 'Fallback Gasless',
 }
 
@@ -162,8 +160,6 @@ export type EntryPointMapType = {
 export type GetMetaDataFromUserOpReturnType = {
   destinationSmartContractAddresses: Array<string>
   destinationSmartContractMethods: Array<{ name: string, address: string }>
-  relayerDestinationContractAddress: string;
-  relayerDestinationContractName: string;
 };
 
 export type GetMetaDataFromFallbackUserOpReturnType = GetMetaDataFromUserOpReturnType;

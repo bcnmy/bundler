@@ -4,6 +4,7 @@ import { routeTransactionToRelayerMap, transactionDao } from '../../../../common
 import { generateTransactionId, getMetaDataFromFallbackUserOp } from '../../../../common/utils';
 import {
   isError,
+  RelayerDestinationSmartContractName,
   TransactionMethodType,
   TransactionStatus,
   TransactionType,
@@ -63,8 +64,6 @@ export const relayGaslessFallbackTransaction = async (req: Request, res: Respons
       const {
         destinationSmartContractAddresses,
         destinationSmartContractMethods,
-        relayerDestinationContractAddress,
-        relayerDestinationContractName,
       } = await getMetaDataFromFallbackUserOp(to, data, chainId, dappAPIKey);
       metaData.destinationSmartContractAddresses = destinationSmartContractAddresses;
       metaData.destinationSmartContractMethods = destinationSmartContractMethods;
@@ -73,8 +72,8 @@ export const relayGaslessFallbackTransaction = async (req: Request, res: Respons
         chainId,
         transactionId,
         metaData,
-        relayerDestinationContractAddress,
-        relayerDestinationContractName,
+        fallbackGasTankAddress,
+        RelayerDestinationSmartContractName.FALLBACK_GASLESS,
       );
     } catch (error) {
       log.info(`Error in getting meta data from to: ${to} and data: ${data}`);

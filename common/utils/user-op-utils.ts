@@ -3,7 +3,7 @@ import { config } from '../../config';
 import { STATUSES } from '../../server/src/middleware';
 import { LengthOfSingleEncodedTransaction } from '../constants';
 import { logger } from '../log-config';
-import { GetMetaDataFromUserOpReturnType, RelayerDestinationSmartContractName, UserOperationType } from '../types';
+import { GetMetaDataFromUserOpReturnType, UserOperationType } from '../types';
 import { axiosPostCall } from './axios-calls';
 import { parseError } from './parse-error';
 
@@ -49,11 +49,8 @@ export const getMetaDataFromUserOp = async (
     const relayerDestinationContractMethodCallData = methodArgsSmartWalletExecFromEntryPoint[2];
     log.info(`Relayer Destination Contract Method Call Data for wallet address: ${userOp.sender} is ${relayerDestinationContractMethodCallData} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
 
-    let relayerDestinationContractName = '';
-
     if (relayerDestinationContractAddress.toLowerCase()
         === multiSendContractAddress.toLowerCase()) {
-      relayerDestinationContractName = RelayerDestinationSmartContractName.MULTI_SEND;
       const multiSendCallData = relayerDestinationContractMethodCallData;
       const iFaceMultiSend = new ethers.utils.Interface(multiSendAbi);
       const decodedDataMultiSend = iFaceMultiSend.decodeFunctionData('multiSend(bytes)', multiSendCallData);
@@ -93,7 +90,7 @@ export const getMetaDataFromUserOp = async (
 
     log.info(`Destination Smart Contract Addresses for walletAddress: ${userOp.sender} are: ${destinationSmartContractAddresses} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
     log.info(`Destination Smart Contract Methods call data for walletAddress: ${userOp.sender} are: ${destinationSmartContractMethodsCallData} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
-    log.info(`Getting smart contract data for addresses:${JSON.stringify(destinationSmartContractAddresses)} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
+    log.info(`Getting smart contract data for addresses: ${JSON.stringify(destinationSmartContractAddresses)} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
     log.info(`Making call to paymaster dashboard backend to get data on ${config.paymasterDashboardBackendConfig.dappDataUrl} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
 
     const dataFromPaymasterDashboardBackend = await axiosPostCall(
@@ -118,12 +115,28 @@ export const getMetaDataFromUserOp = async (
     log.info(`Dapp: ${JSON.stringify(dapp)} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
     log.info(`Smart Contracts: ${JSON.stringify(smartContracts)} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
 
+    const smartContractsData = [];
     for (
       let smartContractDataIndex = 0;
-      smartContractDataIndex < smartContracts.length;
+      smartContractDataIndex < destinationSmartContractAddresses.length;
       smartContractDataIndex += 1
     ) {
-      const { abi } = smartContracts[smartContractDataIndex];
+      for (let smartContractIndex = 0;
+        smartContractIndex < smartContracts.length;
+        smartContractIndex += 1) {
+        if (destinationSmartContractAddresses[smartContractDataIndex]
+            === smartContracts[smartContractIndex].address) {
+          smartContractsData.push(smartContracts[smartContractIndex]);
+        }
+      }
+    }
+    log.info(`Extracting data for: ${destinationSmartContractAddresses.length} contract method calls`);
+    for (
+      let smartContractDataIndex = 0;
+      smartContractDataIndex < destinationSmartContractAddresses.length;
+      smartContractDataIndex += 1
+    ) {
+      const { abi } = smartContractsData[smartContractDataIndex];
       const destinationSmartContractMethodCallData = destinationSmartContractMethodsCallData[
         smartContractDataIndex
       ];
@@ -134,28 +147,23 @@ export const getMetaDataFromUserOp = async (
       const methodNameSmartContract = decodedDataSmartContract.name;
       destinationSmartContractMethods.push({
         name: methodNameSmartContract,
-        address: smartContracts[smartContractDataIndex].address,
+        address: smartContractsData[smartContractDataIndex].address,
       });
     }
 
     log.info(`Destination Smart Contract Addresses: ${JSON.stringify(destinationSmartContractAddresses)} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
     log.info(`Destination Smart Contract Methods: ${JSON.stringify(destinationSmartContractMethods)} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
     log.info(`Relayer Destination Smart Contract Address: ${JSON.stringify(relayerDestinationContractAddress)} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
-    log.info(`Relayer Destination Smart Contract Name: ${JSON.stringify(relayerDestinationContractName)} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
 
     return {
       destinationSmartContractAddresses,
       destinationSmartContractMethods,
-      relayerDestinationContractAddress,
-      relayerDestinationContractName,
     };
   } catch (error: any) {
     log.info(`Error in getting wallet transaction data for userOp: ${userOp} on chainId: ${chainId} with error: ${parseError(error)} for dappAPIKey: ${dappAPIKey}`);
     return {
       destinationSmartContractAddresses: [],
       destinationSmartContractMethods: [],
-      relayerDestinationContractAddress: '',
-      relayerDestinationContractName: '',
     };
   }
 };
