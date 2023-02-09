@@ -1,8 +1,8 @@
-import { RedisCacheService } from '../../common/cache';
-import { GasPriceManager, GasPriceServiceType } from '../../common/gas-price';
-import { GasPriceType } from '../../common/gas-price/types';
-import { EVMNetworkService } from '../../common/network';
-import { config } from '../../config';
+import { RedisCacheService } from '../../../common/cache';
+import { GasPriceManager, GasPriceServiceType } from '../../../common/gas-price';
+import { GasPriceType } from '../../../common/gas-price/types';
+import { EVMNetworkService } from '../../../common/network';
+import { config } from '../../../config';
 
 const chainId = 5;
 
