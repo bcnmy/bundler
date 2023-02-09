@@ -1,3 +1,4 @@
+/* eslint-disable no-new-object */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable class-methods-use-this */
 /* eslint-disable @typescript-eslint/space-before-blocks */
@@ -86,7 +87,7 @@ export class MockNetworkService implements INetworkService<IEVMAccount, EVMRawTr
         methodName: string,
         params: object,
     ): Promise<object> {
-        return Promise.resolve(new Object(BigNumber.from(1)))
+        return Promise.resolve(new Object(BigNumber.from(1)));
     }
 
     estimateGas(
