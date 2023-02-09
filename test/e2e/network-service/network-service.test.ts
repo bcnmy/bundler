@@ -145,8 +145,8 @@ describe('Network Service: Native Asset Balance', () => {
     const wallet = ethers.Wallet.createRandom();
 
     // owner address
-    // const ownerAddressPublicKey = '0x4C07E2fa10f9871142883139B32Cb03F2A180494';
-    const ownerAddressPrivateKey = 'e3b3818b1b604cf6dfc3133faa9a524f1e2ea0d5894a003c4b857952f6b146f6';
+    // const ownerAddressPublicKey = '0x040a9cbC4453B0eeaE12f3210117B422B890C1ED';
+    const ownerAddressPrivateKey = 'd952fa86f1e2fed30fb3a6da6e5c24d7deb65b6bb46da3ece5f56fd39e64bbd0';
     const ownerWallet = new ethers.Wallet(
       ownerAddressPrivateKey,
       networkServiceMap[5].ethersProvider,
@@ -210,8 +210,8 @@ describe('Network Service: Nonce Check', () => {
     // call getNonce() on an address, nonce should x
 
     // owner address
-    const ownerAddressPublicKey = '0x4C07E2fa10f9871142883139B32Cb03F2A180494';
-    const ownerAddressPrivateKey = 'e3b3818b1b604cf6dfc3133faa9a524f1e2ea0d5894a003c4b857952f6b146f6';
+    const ownerAddressPublicKey = '0x040a9cbC4453B0eeaE12f3210117B422B890C1ED';
+    const ownerAddressPrivateKey = 'd952fa86f1e2fed30fb3a6da6e5c24d7deb65b6bb46da3ece5f56fd39e64bbd0';
     const ownerWallet = new ethers.Wallet(
       ownerAddressPrivateKey,
       networkServiceMap[5].ethersProvider,
@@ -276,8 +276,8 @@ describe('Network Service: Sending Transaction', () => {
     const wallet = ethers.Wallet.createRandom();
 
     // owner address
-    const ownerAddressPublicKey = '0x4C07E2fa10f9871142883139B32Cb03F2A180494';
-    const ownerAddressPrivateKey = 'e3b3818b1b604cf6dfc3133faa9a524f1e2ea0d5894a003c4b857952f6b146f6';
+    const ownerAddressPublicKey = '0x040a9cbC4453B0eeaE12f3210117B422B890C1ED';
+    const ownerAddressPrivateKey = 'd952fa86f1e2fed30fb3a6da6e5c24d7deb65b6bb46da3ece5f56fd39e64bbd0';
 
     const evmAccount = new EVMAccount(ownerAddressPublicKey, ownerAddressPrivateKey);
 

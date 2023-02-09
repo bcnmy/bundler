@@ -377,9 +377,9 @@ let statusService: IStatusService;
         // queue for scw
         log.info(`Setting up Gasless Fallback transaction queue for chaindId: ${chainId}`);
         const gaslessFallbackQueue: IQueue<
-          GaslessFallbackTransactionMessageType> = new GaslessFallbackTransactionQueue({
-            chainId,
-          });
+        GaslessFallbackTransactionMessageType> = new GaslessFallbackTransactionQueue({
+          chainId,
+        });
         await gaslessFallbackQueue.connect();
         log.info(`SCW transaction queue setup complete for chainId: ${chainId}`);
 

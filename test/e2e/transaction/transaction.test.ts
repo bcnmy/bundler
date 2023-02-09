@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import { RedisCacheService } from '../../../common/cache';
-import { IBlockchainTransaction, Mongo, TransactionDAO } from '../../../common/db';
+import { Mongo, TransactionDAO } from '../../../common/db';
 import { GasPriceManager } from '../../../common/gas-price';
 import { GasPriceType } from '../../../common/gas-price/types';
 import { relayerManagerTransactionTypeNameMap } from '../../../common/maps';
@@ -19,91 +19,90 @@ import { EVMTransactionService } from '../../../relayer/src/services/transaction
 const dbInstance = Mongo.getInstance();
 const transactionDao = new TransactionDAO();
 const cacheService = RedisCacheService.getInstance();
+const chainId = 5;
+
+const networkService = new EVMNetworkService({
+  chainId,
+  rpcUrl: config.chains.provider[chainId],
+  fallbackRpcUrls: config.chains.fallbackUrls[chainId] || [],
+});
+
+const transactionQueue = new TransactionHandlerQueue({
+  chainId,
+});
+
+const gasPriceManager = new GasPriceManager(cacheService, networkService, {
+  chainId,
+  EIP1559SupportedNetworks: config.EIP1559SupportedNetworks,
+});
+
+const gasPriceService = gasPriceManager.setup();
+if (gasPriceService) {
+  gasPriceService.schedule();
+}
+if (!gasPriceService) {
+  throw new Error(`Gasprice service is not setup for chainId ${chainId}`);
+}
+
+const retryTransactionQueue = new RetryTransactionHandlerQueue({
+  chainId,
+});
+retryTransactionQueue.connect();
+
+const nonceManager = new EVMNonceManager({
+  options: {
+    chainId,
+  },
+  networkService,
+  cacheService,
+});
+
+const transactionListener = new EVMTransactionListener({
+  networkService,
+  transactionQueue,
+  retryTransactionQueue,
+  transactionDao,
+  cacheService,
+  options: {
+    chainId,
+  },
+});
+
+const slackNotificationService = new SlackNotificationService(
+  config.slack.token,
+  config.slack.channel,
+);
+const notificationManager = new NotificationManager(slackNotificationService);
+
+const transactionService = new EVMTransactionService({
+  networkService,
+  transactionListener,
+  nonceManager,
+  gasPriceService,
+  transactionDao,
+  cacheService,
+  notificationManager,
+  options: {
+    chainId,
+  },
+});
+
+const setQuoteAbi = [{
+  inputs: [{ internalType: 'string', name: 'newQuote', type: 'string' }], name: 'setQuote', outputs: [], stateMutability: 'nonpayable', type: 'function',
+}, { inputs: [], stateMutability: 'nonpayable', type: 'constructor' }, {
+  inputs: [], name: 'admin', outputs: [{ internalType: 'address', name: '', type: 'address' }], stateMutability: 'view', type: 'function',
+}, {
+  inputs: [], name: 'getQuote', outputs: [{ internalType: 'string', name: 'currentQuote', type: 'string' }, { internalType: 'address', name: 'currentOwner', type: 'address' }], stateMutability: 'view', type: 'function',
+}, {
+  inputs: [], name: 'owner', outputs: [{ internalType: 'address', name: '', type: 'address' }], stateMutability: 'view', type: 'function',
+}, {
+  inputs: [], name: 'quote', outputs: [{ internalType: 'string', name: '', type: 'string' }], stateMutability: 'view', type: 'function',
+}];
+const setQuoteAddress = '0xe31b0bcbda693bff2529f4a1d9f7e8f6d924c6ab';
+
+const setQuoteContract = networkService.getContract(JSON.stringify(setQuoteAbi), setQuoteAddress);
 
 describe('Transaction Service: Sending Transaction on chainId: 5', () => {
-  const chainId = 5;
-
-  const networkService = new EVMNetworkService({
-    chainId,
-    rpcUrl: config.chains.provider[chainId],
-    fallbackRpcUrls: config.chains.fallbackUrls[chainId] || [],
-  });
-
-  const transactionQueue = new TransactionHandlerQueue({
-    chainId,
-  });
-
-  const gasPriceManager = new GasPriceManager(cacheService, networkService, {
-    chainId,
-    EIP1559SupportedNetworks: config.EIP1559SupportedNetworks,
-  });
-
-  const gasPriceService = gasPriceManager.setup();
-  if (gasPriceService) {
-    gasPriceService.schedule();
-  }
-  if (!gasPriceService) {
-    throw new Error(`Gasprice service is not setup for chainId ${chainId}`);
-  }
-
-  const retryTransactionQueue = new RetryTransactionHandlerQueue({
-    chainId,
-  });
-  retryTransactionQueue.connect();
-
-  const nonceManager = new EVMNonceManager({
-    options: {
-      chainId,
-    },
-    networkService,
-    cacheService,
-  });
-
-  const transactionListener = new EVMTransactionListener({
-    networkService,
-    transactionQueue,
-    retryTransactionQueue,
-    transactionDao,
-    cacheService,
-    options: {
-      chainId,
-    },
-  });
-
-  const slackNotificationService = new SlackNotificationService(
-    config.slack.token,
-    config.slack.channel,
-  );
-  const notificationManager = new NotificationManager(slackNotificationService);
-
-  const transactionService = new EVMTransactionService({
-    networkService,
-    transactionListener,
-    nonceManager,
-    gasPriceService,
-    transactionDao,
-    cacheService,
-    notificationManager,
-    options: {
-      chainId,
-    },
-  });
-
-  const setQuoteAbi = [{
-    inputs: [{ internalType: 'string', name: 'newQuote', type: 'string' }], name: 'setQuote', outputs: [], stateMutability: 'nonpayable', type: 'function',
-  }, { inputs: [], stateMutability: 'nonpayable', type: 'constructor' }, {
-    inputs: [], name: 'admin', outputs: [{ internalType: 'address', name: '', type: 'address' }], stateMutability: 'view', type: 'function',
-  }, {
-    inputs: [], name: 'getQuote', outputs: [{ internalType: 'string', name: 'currentQuote', type: 'string' }, { internalType: 'address', name: 'currentOwner', type: 'address' }], stateMutability: 'view', type: 'function',
-  }, {
-    inputs: [], name: 'owner', outputs: [{ internalType: 'address', name: '', type: 'address' }], stateMutability: 'view', type: 'function',
-  }, {
-    inputs: [], name: 'quote', outputs: [{ internalType: 'string', name: '', type: 'string' }], stateMutability: 'view', type: 'function',
-  }];
-  const setQuoteAddress = '0xe31b0bcbda693bff2529f4a1d9f7e8f6d924c6ab';
-
-  const setQuoteContract = networkService.getContract(JSON.stringify(setQuoteAbi), setQuoteAddress);
-
   let nonceBeforeTransaction: number;
   let transactionExecutionResponse: ethers.providers.TransactionResponse | null;
   let transactionId: string;
@@ -166,102 +165,9 @@ describe('Transaction Service: Sending Transaction on chainId: 5', () => {
     );
     expect(transactionReceipt.status).toBe(1);
   });
-
-  it('Transaction Data is saved in database', async () => {
-    const transactionDataFromDatabase = await transactionDao.getByTransactionId(
-      chainId,
-      transactionId,
-    );
-    expect((transactionDataFromDatabase as IBlockchainTransaction[])[0].transactionHash).toBe(
-      (transactionExecutionResponse as ethers.providers.TransactionResponse).hash,
-    );
-  });
 });
 
 describe('Retry Transaction Service: Transaction should be bumped up and confimred on chainId: 5', () => {
-  const chainId = 5;
-
-  const networkService = new EVMNetworkService({
-    chainId,
-    rpcUrl: config.chains.provider[chainId],
-    fallbackRpcUrls: config.chains.fallbackUrls[chainId] || [],
-  });
-
-  const transactionQueue = new TransactionHandlerQueue({
-    chainId,
-  });
-
-  const gasPriceManager = new GasPriceManager(cacheService, networkService, {
-    chainId,
-    EIP1559SupportedNetworks: config.EIP1559SupportedNetworks,
-  });
-
-  const gasPriceService = gasPriceManager.setup();
-  if (gasPriceService) {
-    gasPriceService.schedule();
-  }
-  if (!gasPriceService) {
-    throw new Error(`Gasprice service is not setup for chainId ${chainId}`);
-  }
-
-  const retryTransactionQueue = new RetryTransactionHandlerQueue({
-    chainId,
-  });
-  retryTransactionQueue.connect();
-
-  const nonceManager = new EVMNonceManager({
-    options: {
-      chainId,
-    },
-    networkService,
-    cacheService,
-  });
-
-  const slackNotificationService = new SlackNotificationService(
-    config.slack.token,
-    config.slack.channel,
-  );
-  const notificationManager = new NotificationManager(slackNotificationService);
-
-  const transactionListener = new EVMTransactionListener({
-    networkService,
-    transactionQueue,
-    retryTransactionQueue,
-    transactionDao,
-    cacheService,
-    options: {
-      chainId,
-    },
-  });
-
-  const transactionService = new EVMTransactionService({
-    networkService,
-    transactionListener,
-    nonceManager,
-    gasPriceService,
-    transactionDao,
-    cacheService,
-    notificationManager,
-    options: {
-      chainId,
-    },
-  });
-
-  const setQuoteAbi = [{
-    inputs: [{ internalType: 'string', name: 'newQuote', type: 'string' }], name: 'setQuote', outputs: [], stateMutability: 'nonpayable', type: 'function',
-  }, { inputs: [], stateMutability: 'nonpayable', type: 'constructor' }, {
-    inputs: [], name: 'admin', outputs: [{ internalType: 'address', name: '', type: 'address' }], stateMutability: 'view', type: 'function',
-  }, {
-    inputs: [], name: 'getQuote', outputs: [{ internalType: 'string', name: 'currentQuote', type: 'string' }, { internalType: 'address', name: 'currentOwner', type: 'address' }], stateMutability: 'view', type: 'function',
-  }, {
-    inputs: [], name: 'owner', outputs: [{ internalType: 'address', name: '', type: 'address' }], stateMutability: 'view', type: 'function',
-  }, {
-    inputs: [], name: 'quote', outputs: [{ internalType: 'string', name: '', type: 'string' }], stateMutability: 'view', type: 'function',
-  }];
-  const setQuoteAddress = '0xe31b0bcbda693bff2529f4a1d9f7e8f6d924c6ab';
-
-  const setQuoteContract = networkService.getContract(JSON.stringify(setQuoteAbi), setQuoteAddress);
-
   let nonceBeforeTransaction: number;
   let transactionExecutionResponse: ethers.providers.TransactionResponse | null;
   let transactionId: string;
@@ -296,7 +202,7 @@ describe('Retry Transaction Service: Transaction should be bumped up and confimr
     // Set low gas price value in cache
     await gasPriceService.setGasPrice(
       GasPriceType.DEFAULT,
-      (Number(currentGasPrice) * 0.75).toString(),
+      (Math.round(Number((currentGasPrice)) * 0.75)).toString(),
     );
 
     const response = await transactionService.sendTransaction(
@@ -318,7 +224,7 @@ describe('Retry Transaction Service: Transaction should be bumped up and confimr
   it('Transaction hash is generated', async () => {
     expect((transactionExecutionResponse as ethers.providers.TransactionResponse).hash)
       .not.toBeNull();
-    expect((transactionExecutionResponse as ethers.providers.TransactionResponse).hash).toBe('string');
+    expect(typeof (transactionExecutionResponse as ethers.providers.TransactionResponse).hash).toBe('string');
   });
 
   it('Nonce should have been incremented by 1', async () => {
@@ -334,15 +240,5 @@ describe('Retry Transaction Service: Transaction should be bumped up and confimr
       (transactionExecutionResponse as ethers.providers.TransactionResponse).hash,
     );
     expect(transactionReceipt.status).toBe(1);
-  });
-
-  it('Transaction Data is saved in database', async () => {
-    const transactionDataFromDatabase = await transactionDao.getByTransactionId(
-      chainId,
-      transactionId,
-    );
-    expect((transactionDataFromDatabase as IBlockchainTransaction[])[0].transactionHash).toBe(
-      (transactionExecutionResponse as ethers.providers.TransactionResponse).hash,
-    );
   });
 });

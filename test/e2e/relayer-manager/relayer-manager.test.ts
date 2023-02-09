@@ -113,6 +113,7 @@ describe('relayer manager', () => {
           relayerManager.pendingTransactionCountThreshold[chainId],
         newRelayerInstanceCount:
           relayerManager.newRelayerInstanceCount[chainId],
+        // eslint-disable-next-line max-len
         fundingBalanceThreshold: ethers.utils.parseEther(relayerManager.fundingBalanceThreshold[chainId].toString()),
         fundingRelayerAmount: relayerManager.fundingRelayerAmount[chainId],
         ownerAccountDetails: new EVMAccount(
@@ -157,7 +158,7 @@ describe('relayer manager', () => {
         );
         expect(relayerData).toBeDefined();
         // check balance above threshold
-        expect(relayerData?.balance).toBeGreaterThan(0);
+        expect(Number(relayerData?.balance)).toBeGreaterThan(0);
         expect(relayerData?.pendingCount).toBe(0);
       }
     });
