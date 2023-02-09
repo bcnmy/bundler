@@ -1,6 +1,6 @@
-import { RedisCacheService } from '../../common/cache';
-import { CMCTokenPriceManager } from '../../common/token-price';
-import { config } from '../../config';
+import { RedisCacheService } from '../../../common/cache';
+import { CMCTokenPriceManager } from '../../../common/token-price';
+import { config } from '../../../config';
 
 describe('get token price', () => {
   const cacheService = RedisCacheService.getInstance();

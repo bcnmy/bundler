@@ -1,8 +1,8 @@
-import { RedisCacheService } from '../../common/cache';
-import { GasPriceManager } from '../../common/gas-price';
-import { EVMNetworkService } from '../../common/network';
-import { config } from '../../config';
-import { FeeOption } from '../../server/src/services';
+import { RedisCacheService } from '../../../common/cache';
+import { GasPriceManager } from '../../../common/gas-price';
+import { EVMNetworkService } from '../../../common/network';
+import { config } from '../../../config';
+import { FeeOption } from '../../../server/src/services';
 
 const chainId = 5;
 const cacheService = RedisCacheService.getInstance();
@@ -67,7 +67,7 @@ describe('get fee options', () => {
         );
         expect(response[0].feeTokenTransferGas).toBe(7300);
         expect(response[0].refundReceiver).toBe(
-          '0x040a9cbC4453B0eeaE12f3210117B422B890C1ED',
+          '0xc75Bb3956c596efc6DB663cd3e2f64929d6AB0fc',
         );
       }
     }

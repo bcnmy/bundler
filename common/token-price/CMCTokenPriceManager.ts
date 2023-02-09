@@ -52,6 +52,7 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
           'X-CMC_PRO_API_KEY': this.apiKey,
         },
       });
+
       if (response && response.data && response.data.data) {
         const networkKeys = Object.keys(response.data.data);
         if (networkKeys) {
@@ -78,21 +79,13 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
   }
 
   async getTokenPrice(symbol: string): Promise<number> {
-    let data = JSON.parse(await this.cacheService.get(getTokenPriceKey()));
-    if (!data) {
+    let rawData = await this.cacheService.get(getTokenPriceKey());
+    if (!rawData) {
       await this.setup();
-      data = JSON.parse(await this.cacheService.get(getTokenPriceKey()));
+      rawData = await this.cacheService.get(getTokenPriceKey());
     }
+    const data = JSON.parse(rawData);
     return data[symbol];
-  }
-
-  async getTokenPriceByTokenSymbol(tokenSymbol: string): Promise<number> {
-    const symbol = (this.networkSymbolCategories[tokenSymbol] || [])[0];
-    if (!symbol) {
-      throw new Error(`Can't get coinmarketcap symbol for token symbol ${tokenSymbol} from config map`);
-    }
-
-    return this.getTokenPrice(symbol.toString());
   }
 
   /**
@@ -111,12 +104,15 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
           log.info(`Token price for ${tokenSymbol} is ${tokenPrice} USD`);
         } else {
           log.error(`Can't get token symbol for token address ${tokenAddress} from config map`);
+          throw new Error(`Can't get token symbol for token address ${tokenAddress} from config map`);
         }
       } else {
         log.error('Token address is not defined');
+        throw new Error('Token address is not defined');
       }
     } catch (error) {
       log.error(error);
+      throw error;
     }
     return tokenPrice;
   }

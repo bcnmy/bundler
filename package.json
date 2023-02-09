@@ -9,14 +9,11 @@
     "views": "cp -r server/src/views server/dist/server/src/views",
     "build": "tsc -p server && npm run views",
     "start": "node server/dist/server/src/index.js",
-    "test": "jest"
+    "test": "jest --detectOpenHandles"
   },
   "dependencies": {
     "@slack/web-api": "^6.8.0",
     "@types/crypto-js": "^4.1.1",
-    "fee-management": "0.0.4",
-    "@ethersproject/bignumber": "^5.5.0",
-    "@ethersproject/providers": "^5.7.2",
     "amqplib": "^0.10.3",
     "async-mutex": "^0.4.0",
     "axios": "^1.1.2",

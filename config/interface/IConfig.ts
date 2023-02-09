@@ -170,25 +170,7 @@ type PaymasterDashboardBackendConfigType = {
   dappDataUrl: string
 };
 
-export type TokenData = {
-  address: string;
-  symbol: string;
-  decimal: number;
-};
-
-export type FeeManagementConfig = {
-  swapInAction: string,
-  tokenList: Record<number, TokenData[]>;
-  nativeTokenSymbol: ChainIdWithStringValueType,
-  noOfBlockConfirmation: ChainIdWithNumberValueType,
-  hyphenLiquidityPoolAddress: ChainIdWithStringValueType,
-  balanceThreshold: ChainIdAndTokenWithNumberValueType;
-  feeSpendThreshold: ChainIdWithNumberValueType;
-  initialFundingAmountInUsd: ChainIdWithNumberValueType;
-};
-
 export type ConfigType = {
-  feeManagementConfig: FeeManagementConfig,
   queueUrl: string,
   paymasterDashboardBackendConfig: PaymasterDashboardBackendConfigType,
   slack: SlackConfigType,
