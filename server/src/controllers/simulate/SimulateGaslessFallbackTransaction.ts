@@ -35,7 +35,7 @@ export const simulateGaslessFallbackTransaction = async (req:Request) => {
       message: 'Transaction successfully simulated',
     };
   } catch (error) {
-    log.error(`Error in Gasless Fallback transaction simulation ${JSON.stringify(error)}`);
+    log.error(`Error in Gasless Fallback transaction simulation ${error}`);
     return {
       code: STATUSES.INTERNAL_SERVER_ERROR,
       error: `Error in Gasless Fallback transaction simulation ${JSON.stringify(error)}`,

@@ -73,7 +73,7 @@ export class TenderlySimulationService implements IExternalSimulation {
         },
       };
     }
-    log.info(`Response from Tenderly: ${JSON.stringify(response)}`);
+    log.info(`Response from Tenderly: ${JSON.stringify(response?.data?.transaction)}`);
     if (!response?.data?.transaction?.status) {
       return {
         isSimulationSuccessful: false,
