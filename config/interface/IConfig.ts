@@ -115,7 +115,8 @@ type ChainsConfigType = {
   fallbackUrls: ChainIdWithArrayStringValueType,
   retryTransactionInterval: ChainIdWithNumberValueType,
   multiSendAddress: ChainIdWithStringValueType,
-  multiSendCallOnlyAddress: ChainIdWithStringValueType
+  multiSendCallOnlyAddress: ChainIdWithStringValueType,
+  walletFactoryAddress: ChainIdWithStringValueType
 };
 
 type RelayerConfigType = {
@@ -162,7 +163,6 @@ type CacheServiceConfigType = {
 type AbiConfigType = {
   smartWalletAbi: Array<any>,
   multiSendAbi: Array<any>,
-  gasTankAbi: Array<any>,
   multiSendCallOnlyAbi: Array<any>
 };
 

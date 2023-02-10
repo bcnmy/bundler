@@ -17,7 +17,7 @@ export type SimulationDataType = {
   chainId: number,
   data: string,
   to: string,
-  refundInfo?: any,
+  refundInfo?: { tokenGasPrice: string, gasToken: string },
 };
 
 export type AASimulationDataType = {

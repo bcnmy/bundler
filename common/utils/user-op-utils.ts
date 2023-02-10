@@ -1,7 +1,6 @@
 import { ethers } from 'ethers';
 import { config } from '../../config';
 import { STATUSES } from '../../server/src/middleware';
-import { LengthOfSingleEncodedTransaction } from '../constants';
 import { logger } from '../log-config';
 import { GetMetaDataFromUserOpReturnType, UserOperationType } from '../types';
 import { axiosPostCall } from './axios-calls';
@@ -28,6 +27,7 @@ export const getMetaDataFromUserOp = async (
     /**
      * using callData from userOp, callData is data of execFromEntryPoint https://github.com/bcnmy/scw-contracts/blob/master/contracts/smart-contract-wallet/SmartWallet.sol
      * Will get tagret and from target address fetch abi from abi
+     * target can be multiSend or destination contract
      */
 
     // TODO keep interface generic basis on wallet if it is biconomy smart contract wallet
@@ -43,49 +43,56 @@ export const getMetaDataFromUserOp = async (
     const methodArgsSmartWalletExecFromEntryPoint = decodedDataSmartWallet.args;
     log.info(`Arguments of smart wallet method: ${JSON.stringify(methodArgsSmartWalletExecFromEntryPoint)} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
 
-    const relayerDestinationContractAddress = methodArgsSmartWalletExecFromEntryPoint[0];
-    log.info(`Relayer Destination Contract Address for wallet addresss: ${userOp.sender} is ${relayerDestinationContractAddress} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
+    const walletDestinationContractAddress = methodArgsSmartWalletExecFromEntryPoint[0];
+    log.info(`Wallet Destination Contract Address for wallet addresss: ${userOp.sender} is ${walletDestinationContractAddress} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
 
-    const relayerDestinationContractMethodCallData = methodArgsSmartWalletExecFromEntryPoint[2];
-    log.info(`Relayer Destination Contract Method Call Data for wallet address: ${userOp.sender} is ${relayerDestinationContractMethodCallData} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
+    const walletDestinationContractMethodCallData = methodArgsSmartWalletExecFromEntryPoint[2];
+    log.info(`Relayer Destination Contract Method Call Data for wallet address: ${userOp.sender} is ${walletDestinationContractMethodCallData} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
 
-    if (relayerDestinationContractAddress.toLowerCase()
+    if (walletDestinationContractAddress.toLowerCase()
         === multiSendContractAddress.toLowerCase()) {
-      const multiSendCallData = relayerDestinationContractMethodCallData;
+      const multiSendCallData = walletDestinationContractMethodCallData;
       const iFaceMultiSend = new ethers.utils.Interface(multiSendAbi);
       const decodedDataMultiSend = iFaceMultiSend.decodeFunctionData('multiSend(bytes)', multiSendCallData);
       log.info(`Multi send decoded data for wallet address: ${userOp.sender} is: ${decodedDataMultiSend} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
       // Two times multi send because one to represnt contract name, next for funciton name
       const methodArgsMultiSendMultiSend = decodedDataMultiSend[0];
-      const transactions = methodArgsMultiSendMultiSend.slice(2);
-      log.info(`Multi send transactions encoded data: ${transactions} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
+      const multiSendTransactions = methodArgsMultiSendMultiSend.slice(2);
 
-      const lengthOfEncodedTransactions = transactions.length;
-      const lengthOfSingleEncodedTransaction = LengthOfSingleEncodedTransaction;
-      const numOfDestinationSmartContractAddresses = lengthOfEncodedTransactions
-          / lengthOfSingleEncodedTransaction;
-      log.info(`Number of destination smart contract address for wallet address: ${userOp.sender} are: ${numOfDestinationSmartContractAddresses} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
-      for (
-        let transactionsIndex = 0;
-        transactionsIndex < numOfDestinationSmartContractAddresses;
-        transactionsIndex += 1
-      ) {
-        // https://goerli.etherscan.io/address/0x2f65beD438a30827D408b7c6818ec5A22C022Dd1#code
-        const offset = 370;
-        const destinationSmartContractAddress = transactions.slice(
-          2 + offset * transactionsIndex,
-          42 + offset * transactionsIndex,
+      let multiSendTransactionIndex = 0;
+      while (multiSendTransactionIndex < multiSendTransactions.length) {
+        // eslint-disable-next-line max-len
+        const multiSendOperation = multiSendTransactions.substring(multiSendTransactionIndex + 0, multiSendTransactionIndex + 2);
+        log.info(`multiSendOperation: ${multiSendOperation} for dappAPIKey: ${dappAPIKey}`);
+
+        const multiSendTo = `0x${multiSendTransactions.substring(multiSendTransactionIndex + 2, multiSendTransactionIndex + 42)}`;
+        log.info(`multiSendTo: ${multiSendTo} for dappAPIKey: ${dappAPIKey}`);
+
+        // eslint-disable-next-line max-len
+        const multiSendValue = multiSendTransactions.substring(multiSendTransactionIndex + 42, multiSendTransactionIndex + 106);
+        log.info(`multiSendValue: ${multiSendValue} for dappAPIKey: ${dappAPIKey}`);
+
+        // eslint-disable-next-line max-len
+        const multiSendDataLength = multiSendTransactions.substring(multiSendTransactionIndex + 106, multiSendTransactionIndex + 170);
+        log.info(`multiSendDataLength: ${multiSendDataLength} for dappAPIKey: ${dappAPIKey}`);
+
+        const multiSendDataLengthInNum = Number(`0x${multiSendTransactions.substring(multiSendTransactionIndex + 106, multiSendTransactionIndex + 170)}`);
+        log.info(`multiSendDataLengthInNum: ${multiSendDataLengthInNum} for dappAPIKey: ${dappAPIKey}`);
+
+        // eslint-disable-next-line max-len
+        const multiSendData = `0x${multiSendTransactions.substring(multiSendTransactionIndex + 170, multiSendTransactionIndex + 170 + (multiSendDataLengthInNum * 2))}`;
+        log.info(`multiSendData: ${multiSendData} for dappAPIKey: ${dappAPIKey}`);
+
+        destinationSmartContractAddresses.push(multiSendTo.toLowerCase());
+        destinationSmartContractMethodsCallData.push(
+          multiSendData.toLowerCase(),
         );
-        destinationSmartContractAddresses.push(`0x${destinationSmartContractAddress.toLowerCase()}`);
-        const destinationSmartContractMethodCallData = transactions.slice(
-          170 + offset * transactionsIndex,
-          370 + offset * transactionsIndex,
-        );
-        destinationSmartContractMethodsCallData.push(`0x${destinationSmartContractMethodCallData}`);
+        multiSendTransactionIndex += (170 + multiSendDataLengthInNum * 2);
+        log.info(`multiSendTransactionIndex: ${multiSendTransactionIndex} for dappAPIKey: ${dappAPIKey}`);
       }
     } else {
-      destinationSmartContractAddresses.push(relayerDestinationContractAddress.toLowerCase());
-      destinationSmartContractMethodsCallData.push(relayerDestinationContractMethodCallData);
+      destinationSmartContractAddresses.push(walletDestinationContractAddress.toLowerCase());
+      destinationSmartContractMethodsCallData.push(walletDestinationContractMethodCallData);
     }
 
     log.info(`Destination Smart Contract Addresses for walletAddress: ${userOp.sender} are: ${destinationSmartContractAddresses} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
@@ -153,7 +160,7 @@ export const getMetaDataFromUserOp = async (
 
     log.info(`Destination Smart Contract Addresses: ${JSON.stringify(destinationSmartContractAddresses)} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
     log.info(`Destination Smart Contract Methods: ${JSON.stringify(destinationSmartContractMethods)} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
-    log.info(`Relayer Destination Smart Contract Address: ${JSON.stringify(relayerDestinationContractAddress)} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
+    log.info(`Wallet Destination Smart Contract Address: ${JSON.stringify(walletDestinationContractAddress)} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
 
     return {
       destinationSmartContractAddresses,

@@ -1,10 +1,11 @@
+/* eslint-disable no-continue */
 import { ethers } from 'ethers';
 import { config } from '../../config';
 import { STATUSES } from '../../server/src/middleware';
-import { LengthOfSingleEncodedTransaction } from '../constants';
 import { logger } from '../log-config';
 import { GetMetaDataFromFallbackUserOpReturnType } from '../types';
 import { axiosPostCall } from './axios-calls';
+import { parseError } from './parse-error';
 
 const log = logger(module);
 
@@ -19,9 +20,30 @@ export const getMetaDataFromFallbackUserOp = async (
     const destinationSmartContractAddresses: Array<string> = [];
     const destinationSmartContractMethodsCallData: Array<string> = [];
     const destinationSmartContractMethods: Array<{ address: string, name: string }> = [];
-    const { multiSendCallOnlyAbi, smartWalletAbi } = config.abi;
+    const { multiSendCallOnlyAbi, multiSendAbi, smartWalletAbi } = config.abi;
     const multiSendCallOnlyContractAddress = config.chains.multiSendCallOnlyAddress[chainId];
+    const multiSendContractAddress = config.chains.multiSendAddress[chainId];
+    const walletFactoryAddress = config.chains.walletFactoryAddress[chainId];
     log.info(`Multi Send Call Only Contract Address: ${multiSendCallOnlyContractAddress} on chainId: ${chainId}`);
+    log.info(`Multi Send Contract Address: ${multiSendContractAddress} on chainId: ${chainId}`);
+    log.info(`Wallet Factory Address: ${walletFactoryAddress} on chainId: ${chainId}`);
+
+    /**
+     * 2 cases bases on target
+     * If target === multiSendCallOnly -> wallet deployment + n (1 or more) transactions
+     * callData of multiSendCallOnly's multiSend will be appended call data of
+     * deployCounerFactualWallet of WalletFactory and call data of execTransaction.
+     * If n === 1, then execTransaction will have callData of single destination contract
+     * else, execTransaction will have callData of MultiSend's multiSend,
+     * which again will have appended call data of each destination contract
+     *
+     * Else target === walletAddress
+     * Can be n (1 or more ) transactions
+     * If n === 1, execTranasction will have call data of destination smart contract method
+     * Else execTransaction will have call data on multiSend which will have data of
+     * destination contracts
+     */
+
     const { fallbackContractAbi } = config.fallbackGasTankData[chainId];
 
     const gasTankCallData = data;
@@ -36,18 +58,9 @@ export const getMetaDataFromFallbackUserOp = async (
     const walletAddress = fallbackUserOp.sender;
     log.info(`Extracting data for wallet address: ${walletAddress} on chainId: ${chainId}`);
 
-    /**
-     * using callData from fallbackUserOp, callData is data of execFromEntryPoint https://github.com/bcnmy/scw-contracts/blob/master/contracts/smart-contract-wallet/SmartWallet.sol
-     * Will get tagret and from target address fetch abi from abi
-     */
-
-    // TODO keep interface generic basis on wallet if it is biconomy smart contract wallet
-    // or another wallet and take care of versioning
-    // https://github.com/bcnmy/scw-contracts/blob/5c22c474c90737611cd99d280eb69464cb235d2e/contracts/smart-contract-wallet/SmartWallet.sol#L183
-    // Transaction memory _tx, unit256 batchId, FeeRefund memory refundInfo, bytes memory signatures
-
     const { target, callData } = fallbackUserOp;
     if (target.toLowerCase() === multiSendCallOnlyContractAddress) {
+      log.info(`Target contract for wallet address: ${fallbackUserOp.sender} is MultiSendCallOnly: ${multiSendCallOnlyContractAddress}`);
       const multiSendCallOnlyCallData = callData;
       const iFaceMultiSendCallOnly = new ethers.utils.Interface(multiSendCallOnlyAbi);
       const decodedDataMultiSendCallOnly = iFaceMultiSendCallOnly.decodeFunctionData('multiSend(bytes)', multiSendCallOnlyCallData);
@@ -68,43 +81,156 @@ export const getMetaDataFromFallbackUserOp = async (
           destinationSmartContractMethods: [],
         };
       }
-      const transactions = methodArgsMultiSendMultiSendCallOnly.slice(2);
-      log.info(`Multi send call only transactions encoded data: ${transactions} for dappId: ${multiSendCallOnlyContractAddress}`);
+      const multiSendCallOnlyTransactions = methodArgsMultiSendMultiSendCallOnly.slice(2);
+      log.info(`Multi send call only transactions encoded data: ${multiSendCallOnlyTransactions} for dappAPIKey: ${multiSendCallOnlyContractAddress}`);
 
-      const lengthOfEncodedTransactions = transactions.length;
-      const lengthOfSingleEncodedTransaction = LengthOfSingleEncodedTransaction;
-      const numOfDestinationSmartContractAddresses = lengthOfEncodedTransactions
-      / lengthOfSingleEncodedTransaction;
-      log.info(`Number of destination smart contract address for wallet address: ${fallbackUserOp.sender} are: ${numOfDestinationSmartContractAddresses} on chainId: ${chainId}`);
-      for (
-        let transactionsIndex = 0;
-        transactionsIndex < numOfDestinationSmartContractAddresses;
-        transactionsIndex += 1
-      ) {
-        // https://goerli.etherscan.io/address/0xa1677D8C8eDb188E49ECd832236Af281d6b0b20e#code
-        const offset = 306;
-        const destinationSmartContractAddress = transactions.slice(
-          2 + offset * transactionsIndex,
-          42 + offset * transactionsIndex,
-        );
-        destinationSmartContractAddresses.push(`0x${destinationSmartContractAddress.toLowerCase()}`);
-        const destinationSmartContractMethodCallData = transactions.slice(
-          170 + offset * transactionsIndex,
-          306 + offset * transactionsIndex,
-        );
-        destinationSmartContractMethodsCallData.push(`0x${destinationSmartContractMethodCallData}`);
+      let multiSendCallOnlyTransactionIndex = 0;
+      while (multiSendCallOnlyTransactionIndex < multiSendCallOnlyTransactions.length) {
+        // eslint-disable-next-line max-len
+        const multiSendCallOnlyOperation = multiSendCallOnlyTransactions.substring(multiSendCallOnlyTransactionIndex + 0, multiSendCallOnlyTransactionIndex + 2);
+        log.info(`multiSendCallOnlyOperation: ${multiSendCallOnlyOperation} for dappAPIKey: ${dappAPIKey}`);
+
+        const multiSendCallOnlyTo = `0x${multiSendCallOnlyTransactions.substring(multiSendCallOnlyTransactionIndex + 2, multiSendCallOnlyTransactionIndex + 42)}`;
+        log.info(`multiSendCallOnlyTo: ${multiSendCallOnlyTo} for dappAPIKey: ${dappAPIKey}`);
+
+        // eslint-disable-next-line max-len
+        const multiSendCallOnlyValue = multiSendCallOnlyTransactions.substring(multiSendCallOnlyTransactionIndex + 42, multiSendCallOnlyTransactionIndex + 106);
+        log.info(`multiSendCallOnlyValue: ${multiSendCallOnlyValue} for dappAPIKey: ${dappAPIKey}`);
+
+        // eslint-disable-next-line max-len
+        const multiSendCallOnlyDataLength = multiSendCallOnlyTransactions.substring(multiSendCallOnlyTransactionIndex + 106, multiSendCallOnlyTransactionIndex + 170);
+        log.info(`multiSendCallOnlyDataLength: ${multiSendCallOnlyDataLength} for dappAPIKey: ${dappAPIKey}`);
+
+        const multiSendCallOnlyDataLengthInNum = Number(`0x${multiSendCallOnlyTransactions.substring(multiSendCallOnlyTransactionIndex + 106, multiSendCallOnlyTransactionIndex + 170)}`);
+        log.info(`multiSendCallOnlyDataLengthInNum: ${multiSendCallOnlyDataLengthInNum} for dappAPIKey: ${dappAPIKey}`);
+
+        // eslint-disable-next-line max-len
+        const multiSendCallOnlyData = `0x${multiSendCallOnlyTransactions.substring(multiSendCallOnlyTransactionIndex + 170, multiSendCallOnlyTransactionIndex + 170 + (multiSendCallOnlyDataLengthInNum * 2))}`;
+        log.info(`multiSendCallOnlyData: ${multiSendCallOnlyData} for dappAPIKey: ${dappAPIKey}`);
+
+        if (multiSendCallOnlyTo.toLowerCase() === walletFactoryAddress.toLowerCase()) {
+          log.info(`Multi Send Call Only's destination smart contract: ${multiSendCallOnlyTo} is Wallet Factory: ${walletFactoryAddress}, hence skipping for whitelisting`);
+          multiSendCallOnlyTransactionIndex += (170 + multiSendCallOnlyDataLengthInNum * 2);
+          log.info(`multiSendCallOnlyTransactionIndex: ${multiSendCallOnlyTransactionIndex} for dappAPIKey: ${dappAPIKey}`);
+          continue;
+        } else {
+          log.info(`Multi Send Call Only's destination smart contract: ${multiSendCallOnlyTo} is wallet`);
+
+          const iFaceSmartWallet = new ethers.utils.Interface(JSON.stringify(smartWalletAbi));
+          const decodedDataSmartWallet = iFaceSmartWallet.parseTransaction(
+            { data: multiSendCallOnlyData },
+          );
+          if (!decodedDataSmartWallet) {
+            log.info('Could not parse call data of smart wallet for fallbackUserOp');
+            return {
+              destinationSmartContractAddresses: [],
+              destinationSmartContractMethods: [],
+            };
+          }
+          log.info(`Decoded smart wallet data: ${JSON.stringify(decodedDataSmartWallet)} for dappAPIKey: ${dappAPIKey}`);
+
+          const methodArgsSmartWalletExecTransaction = decodedDataSmartWallet.args;
+          if (!methodArgsSmartWalletExecTransaction) {
+            log.info('No value args found in decoded data of the smart wallet for execTransaction');
+            return {
+              destinationSmartContractAddresses: [],
+              destinationSmartContractMethods: [],
+            };
+          }
+          log.info(`Arguments of smart wallet method: ${JSON.stringify(methodArgsSmartWalletExecTransaction)} for dappAPIKey: ${dappAPIKey}`);
+
+          const transactionInfoForExecTransaction = methodArgsSmartWalletExecTransaction[0];
+          if (!transactionInfoForExecTransaction) {
+            log.info('Transaction info not found in arguments of parse transaction');
+            return {
+              destinationSmartContractAddresses: [],
+              destinationSmartContractMethods: [],
+            };
+          }
+          log.info(`Transaction info for wallet addresss: ${fallbackUserOp.sender} is ${JSON.stringify(transactionInfoForExecTransaction)} for dappAPIKey: ${dappAPIKey}`);
+
+          const destinationSmartContractAddress = transactionInfoForExecTransaction.to;
+          const destinationSmartContractMethodCallData = transactionInfoForExecTransaction.data;
+
+          if (destinationSmartContractAddress.toLowerCase() === multiSendContractAddress) {
+            log.info(`Multi send: ${multiSendContractAddress} is called from wallet contract: ${target}`);
+            const multiSendCallData = destinationSmartContractMethodCallData;
+            const iFaceMultiSend = new ethers.utils.Interface(multiSendAbi);
+            const decodedDataMultiSend = iFaceMultiSend.decodeFunctionData('multiSend(bytes)', multiSendCallData);
+            if (!decodedDataMultiSend) {
+              log.info('Could not parse call data of multi send');
+              return {
+                destinationSmartContractAddresses: [],
+                destinationSmartContractMethods: [],
+              };
+            }
+            log.info(`Multi send decoded data for wallet address: ${target} is: ${decodedDataMultiSend} for dappAPIKey: ${dappAPIKey}`);
+            // Two times multi send because one to represnt contract name, next for funciton name
+            const methodArgsMultiSendMultiSend = decodedDataMultiSend[0];
+            if (!methodArgsMultiSendMultiSend) {
+              log.info('No value args found in decoded data of the multi send');
+              return {
+                destinationSmartContractAddresses: [],
+                destinationSmartContractMethods: [],
+              };
+            }
+            const multiSendTransactions = methodArgsMultiSendMultiSend.slice(2);
+            log.info(`Multi send transactions encoded data: ${multiSendTransactions} for dappAPIKey: ${dappAPIKey}`);
+
+            let multiSendTransactionIndex = 0;
+            while (multiSendTransactionIndex < multiSendTransactions.length) {
+              // eslint-disable-next-line max-len
+              const multiSendOperation = multiSendTransactions.substring(multiSendTransactionIndex + 0, multiSendTransactionIndex + 2);
+              log.info(`multiSendOperation: ${multiSendOperation} for dappAPIKey: ${dappAPIKey}`);
+
+              const multiSendTo = `0x${multiSendTransactions.substring(multiSendTransactionIndex + 2, multiSendTransactionIndex + 42)}`;
+              log.info(`multiSendTo: ${multiSendTo} for dappAPIKey: ${dappAPIKey}`);
+
+              // eslint-disable-next-line max-len
+              const multiSendValue = multiSendTransactions.substring(multiSendTransactionIndex + 42, multiSendTransactionIndex + 106);
+              log.info(`multiSendValue: ${multiSendValue} for dappAPIKey: ${dappAPIKey}`);
+
+              // eslint-disable-next-line max-len
+              const multiSendDataLength = multiSendTransactions.substring(multiSendTransactionIndex + 106, multiSendTransactionIndex + 170);
+              log.info(`multiSendDataLength: ${multiSendDataLength} for dappAPIKey: ${dappAPIKey}`);
+
+              const multiSendDataLengthInNum = Number(`0x${multiSendTransactions.substring(multiSendTransactionIndex + 106, multiSendTransactionIndex + 170)}`);
+              log.info(`multiSendDataLengthInNum: ${multiSendDataLengthInNum} for dappAPIKey: ${dappAPIKey}`);
+
+              // eslint-disable-next-line max-len
+              const multiSendData = `0x${multiSendTransactions.substring(multiSendTransactionIndex + 170, multiSendTransactionIndex + 170 + (multiSendDataLengthInNum * 2))}`;
+              log.info(`multiSendData: ${multiSendData} for dappAPIKey: ${dappAPIKey}`);
+
+              destinationSmartContractAddresses.push(multiSendTo.toLowerCase());
+              destinationSmartContractMethodsCallData.push(
+                multiSendData.toLowerCase(),
+              );
+              multiSendTransactionIndex += (170 + multiSendDataLengthInNum * 2);
+              log.info(`multiSendTransactionIndex: ${multiSendTransactionIndex} for dappAPIKey: ${dappAPIKey}`);
+            }
+          } else {
+            destinationSmartContractAddresses.push(destinationSmartContractAddress.toLowerCase());
+            destinationSmartContractMethodsCallData.push(
+              destinationSmartContractMethodCallData.toLowerCase(),
+            );
+          }
+        }
+
+        multiSendCallOnlyTransactionIndex += (170 + multiSendCallOnlyDataLengthInNum * 2);
+        log.info(`multiSendCallOnlyTransactionIndex: ${multiSendCallOnlyTransactionIndex} for dappAPIKey: ${dappAPIKey}`);
       }
     } else {
+      log.info(`Target contract for wallet address: ${fallbackUserOp.sender} is wallet: ${target}`);
       const iFaceSmartWallet = new ethers.utils.Interface(JSON.stringify(smartWalletAbi));
       const decodedDataSmartWallet = iFaceSmartWallet.parseTransaction({ data: callData });
       if (!decodedDataSmartWallet) {
-        log.info(`Could not parse call data of smart wallet for fallbackUserOp: ${JSON.stringify(fallbackUserOp)}`);
+        log.info('Could not parse call data of smart wallet for fallbackUserOp');
         return {
           destinationSmartContractAddresses: [],
           destinationSmartContractMethods: [],
         };
       }
-      log.info(`Decoded smart wallet data: ${JSON.stringify(decodedDataSmartWallet)} on chainId: ${chainId}`);
+      log.info(`Decoded smart wallet data: ${JSON.stringify(decodedDataSmartWallet)} for dappAPIKey: ${dappAPIKey}`);
 
       const methodArgsSmartWalletExecTransaction = decodedDataSmartWallet.args;
       if (!methodArgsSmartWalletExecTransaction) {
@@ -114,23 +240,83 @@ export const getMetaDataFromFallbackUserOp = async (
           destinationSmartContractMethods: [],
         };
       }
-      log.info(`Arguments of smart wallet method: ${JSON.stringify(methodArgsSmartWalletExecTransaction)} on chainId: ${chainId}`);
+      log.info(`Arguments of smart wallet method: ${JSON.stringify(methodArgsSmartWalletExecTransaction)} for dappAPIKey: ${dappAPIKey}`);
 
       const transactionInfoForExecTransaction = methodArgsSmartWalletExecTransaction[0];
       if (!transactionInfoForExecTransaction) {
-        log.info('Transction info not found in arguments of parse transaction');
+        log.info('Transaction info not found in arguments of parse transaction');
         return {
           destinationSmartContractAddresses: [],
           destinationSmartContractMethods: [],
         };
       }
-      log.info(`Transaction info for wallet addresss: ${fallbackUserOp.sender} is ${JSON.stringify(transactionInfoForExecTransaction)} on chainId: ${chainId}`);
+      log.info(`Transaction info for wallet addresss: ${fallbackUserOp.sender} is ${JSON.stringify(transactionInfoForExecTransaction)} for dappAPIKey: ${dappAPIKey}`);
 
       const destinationSmartContractAddress = transactionInfoForExecTransaction.to;
       const destinationSmartContractMethodCallData = transactionInfoForExecTransaction.data;
 
-      destinationSmartContractAddresses.push(destinationSmartContractAddress.toLowerCase());
-      destinationSmartContractMethodsCallData.push(destinationSmartContractMethodCallData);
+      if (destinationSmartContractAddress.toLowerCase() === multiSendContractAddress) {
+        log.info(`Multi send: ${multiSendContractAddress} is called from wallet contract: ${target}`);
+        const multiSendCallData = destinationSmartContractMethodCallData;
+        const iFaceMultiSend = new ethers.utils.Interface(multiSendAbi);
+        const decodedDataMultiSend = iFaceMultiSend.decodeFunctionData('multiSend(bytes)', multiSendCallData);
+        if (!decodedDataMultiSend) {
+          log.info('Could not parse call data of multi send');
+          return {
+            destinationSmartContractAddresses: [],
+            destinationSmartContractMethods: [],
+          };
+        }
+        log.info(`Multi send decoded data for wallet address: ${target} is: ${decodedDataMultiSend} for dappAPIKey: ${dappAPIKey}`);
+        // Two times multi send because one to represnt contract name, next for funciton name
+        const methodArgsMultiSendMultiSend = decodedDataMultiSend[0];
+        if (!methodArgsMultiSendMultiSend) {
+          log.info('No value args found in decoded data of the multi send');
+          return {
+            destinationSmartContractAddresses: [],
+            destinationSmartContractMethods: [],
+          };
+        }
+        const multiSendTransactions = methodArgsMultiSendMultiSend.slice(2);
+        log.info(`Multi send transactions encoded data: ${multiSendTransactions} for dappAPIKey: ${dappAPIKey}`);
+
+        let multiSendTransactionIndex = 0;
+        while (multiSendTransactionIndex < multiSendTransactions.length) {
+          // eslint-disable-next-line max-len
+          const multiSendOperation = multiSendTransactions.substring(multiSendTransactionIndex + 0, multiSendTransactionIndex + 2);
+          log.info(`multiSendOperation: ${multiSendOperation} for dappAPIKey: ${dappAPIKey}`);
+
+          const multiSendTo = `0x${multiSendTransactions.substring(multiSendTransactionIndex + 2, multiSendTransactionIndex + 42)}`;
+          log.info(`multiSendTo: ${multiSendTo} for dappAPIKey: ${dappAPIKey}`);
+
+          // eslint-disable-next-line max-len
+          const multiSendValue = multiSendTransactions.substring(multiSendTransactionIndex + 42, multiSendTransactionIndex + 106);
+          log.info(`multiSendValue: ${multiSendValue} for dappAPIKey: ${dappAPIKey}`);
+
+          // eslint-disable-next-line max-len
+          const multiSendDataLength = multiSendTransactions.substring(multiSendTransactionIndex + 106, multiSendTransactionIndex + 170);
+          log.info(`multiSendDataLength: ${multiSendDataLength} for dappAPIKey: ${dappAPIKey}`);
+
+          const multiSendDataLengthInNum = Number(`0x${multiSendTransactions.substring(multiSendTransactionIndex + 106, multiSendTransactionIndex + 170)}`);
+          log.info(`multiSendDataLengthInNum: ${multiSendDataLengthInNum} for dappAPIKey: ${dappAPIKey}`);
+
+          // eslint-disable-next-line max-len
+          const multiSendData = `0x${multiSendTransactions.substring(multiSendTransactionIndex + 170, multiSendTransactionIndex + 170 + (multiSendDataLengthInNum * 2))}`;
+          log.info(`multiSendData: ${multiSendData} for dappAPIKey: ${dappAPIKey}`);
+
+          destinationSmartContractAddresses.push(multiSendTo.toLowerCase());
+          destinationSmartContractMethodsCallData.push(
+            multiSendData,
+          );
+          multiSendTransactionIndex += (170 + multiSendDataLengthInNum * 2);
+          log.info(`multiSendTransactionIndex: ${multiSendTransactionIndex} for dappAPIKey: ${dappAPIKey}`);
+        }
+      } else {
+        destinationSmartContractAddresses.push(destinationSmartContractAddress.toLowerCase());
+        destinationSmartContractMethodsCallData.push(
+          destinationSmartContractMethodCallData.toLowerCase(),
+        );
+      }
     }
 
     log.info(`Destination Smart Contract Addresses for walletAddress: ${fallbackUserOp.sender} are: ${destinationSmartContractAddresses} on chainId: ${chainId}`);
@@ -152,17 +338,33 @@ export const getMetaDataFromFallbackUserOp = async (
       dapp,
       smartContracts,
     } = dataFromPaymasterDashboardBackend.data;
-    const dappId = dapp._id;
+    // const dappId = dapp._id;
 
-    log.info(`Data fetched for dappId: ${dappId}`);
+    log.info(`Data fetched for dappAPIKey: ${dappAPIKey}`);
     log.info(`dapp: ${JSON.stringify(dapp)}`);
     log.info(`smartContracts: ${JSON.stringify(smartContracts)}`);
+    const smartContractsData = [];
     for (
       let smartContractDataIndex = 0;
-      smartContractDataIndex < smartContracts.length;
+      smartContractDataIndex < destinationSmartContractAddresses.length;
       smartContractDataIndex += 1
     ) {
-      const { abi } = smartContracts[smartContractDataIndex];
+      for (let smartContractIndex = 0;
+        smartContractIndex < smartContracts.length;
+        smartContractIndex += 1) {
+        if (destinationSmartContractAddresses[smartContractDataIndex]
+            === smartContracts[smartContractIndex].address) {
+          smartContractsData.push(smartContracts[smartContractIndex]);
+        }
+      }
+    }
+
+    for (
+      let smartContractDataIndex = 0;
+      smartContractDataIndex < destinationSmartContractAddresses.length;
+      smartContractDataIndex += 1
+    ) {
+      const { abi } = smartContractsData[smartContractDataIndex];
       const destinationSmartContractMethodCallData = destinationSmartContractMethodsCallData[
         smartContractDataIndex
       ];
@@ -173,7 +375,7 @@ export const getMetaDataFromFallbackUserOp = async (
       const methodNameSmartContract = decodedDataSmartContract.name;
       destinationSmartContractMethods.push({
         name: methodNameSmartContract,
-        address: smartContracts[smartContractDataIndex].address,
+        address: smartContractsData[smartContractDataIndex].address,
       });
     }
 
@@ -182,7 +384,7 @@ export const getMetaDataFromFallbackUserOp = async (
       destinationSmartContractMethods,
     };
   } catch (error: any) {
-    log.info(`Error in getting wallet transaction data for to address: ${to} on chainId: ${chainId} with error: ${JSON.parse(error)} for dappAPIKey: ${dappAPIKey}`);
+    log.info(`Error in getting wallet transaction data for to address: ${to} on chainId: ${chainId} with error: ${parseError(error)} for dappAPIKey: ${dappAPIKey}`);
     return {
       destinationSmartContractAddresses: [],
       destinationSmartContractMethods: [],
