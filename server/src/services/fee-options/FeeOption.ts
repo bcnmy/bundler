@@ -20,12 +20,12 @@ const convertGasPriceToUSD = async (
   log.info(`Converting gas price to USD for chain ${nativeChainId} and token ${token} with gas price ${gasPrice} and chain price data in USD ${chainPriceDataInUSD}`);
   const decimal = config.chains.decimal[nativeChainId] || 18;
   const offset = config.feeOption.offset[nativeChainId][token] || 1;
-  const usdc = new Big(gasPrice)
+  const gasPriceInUSD = new Big(gasPrice)
     .mul(new Big(chainPriceDataInUSD))
     .div(new Big(10 ** decimal))
     .mul(new Big(offset))
     .toString();
-  return usdc;
+  return gasPriceInUSD;
 };
 
 export class FeeOption {

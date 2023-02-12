@@ -102,10 +102,10 @@ export class TenderlySimulationService implements IExternalSimulation {
       };
     }
     const {
-      isRelayerPaidFully,
+      isSimulationSuccessful,
       successOrRevertMsg,
       refundAmountData,
-    } = await this.checkIfRelayerIsPaidFully(
+    } = await this.checkIfSimulationIsSuccesful(
       transactionLogs,
       gasUsedInSimulation,
       refundInfo,
@@ -114,9 +114,9 @@ export class TenderlySimulationService implements IExternalSimulation {
       data,
     );
 
-    log.info(`isRelayerPaidFully: ${isRelayerPaidFully} for SCW: ${to} with data: ${data}`);
+    log.info(`isSimulationSuccessful: ${isSimulationSuccessful} for destination address: ${to} with data: ${data}`);
 
-    if (!isRelayerPaidFully) {
+    if (!isSimulationSuccessful) {
       return {
         isSimulationSuccessful: false,
         message: `Payment to relayer is incorrect, with message: ${successOrRevertMsg}`,
@@ -149,24 +149,59 @@ export class TenderlySimulationService implements IExternalSimulation {
     });
   }
 
-  static convertGasPriceToUSD = async (
-    nativeChainId: number,
-    gasPrice: number,
-    chainPriceDataInUSD: number,
-    token: string,
-  ) => {
-    log.info(`Converting gas price to USD for chain ${nativeChainId} and token ${token} with gas price ${gasPrice} and chain price data in USD ${chainPriceDataInUSD}`);
-    const decimal = config.chains.decimal[nativeChainId] || 18;
-    const offset = config.feeOption.offset[nativeChainId][token] || 1;
-    const usdc = new Big(gasPrice)
-      .mul(new Big(chainPriceDataInUSD))
-      .div(new Big(10 ** decimal))
-      .mul(new Big(offset))
-      .toString();
-    return usdc;
+  getRefundAmountInUsdForNativeToken = async (payment: number, chainId: number) => {
+    let refundAmountInUsd = new Big(0);
+    const networkPriceDataInString = await this.cacheService.get(
+      getTokenPriceKey(),
+    );
+    log.info(`Getting refund amount in usd for native token with payment value: ${payment} on chainId: ${chainId}`);
+    let networkPriceData;
+    if (!networkPriceDataInString) {
+      log.error('Network price data not found');
+      // TODO remove this hardcoded value. Think better solution
+      networkPriceData = {
+        1: '1278.43', 5: '1278.43', 137: '0.80', 80001: '0.80', 97: '289.87', 420: '1278.43', 421613: '1278.43', 43113: '13.17',
+      };
+    } else {
+      networkPriceData = JSON.parse(networkPriceDataInString);
+    }
+    const decimal = config.chains.decimal[chainId] || 18;
+    log.info(`Decimal for native token: ${decimal} on chainId: ${chainId}`);
+    const chainPriceDataInUSD = networkPriceData[chainId];
+    log.info(`chainPriceDataInUSD for native token: ${chainPriceDataInUSD} on chainId: ${chainId}`);
+    refundAmountInUsd = (new Big(payment).div(
+      new Big(10 ** decimal),
+    )).mul(new Big(chainPriceDataInUSD));
+    log.info(`refundAmountInUsd for refund in native asset: ${refundAmountInUsd} on chainId: ${chainId}`);
+    return refundAmountInUsd;
   };
 
-  private async checkIfRelayerIsPaidFully(
+  static getRefundAmountInUsdForERC20Token = (
+    payment: number,
+    gasToken: string,
+    chainId: number,
+  ) => {
+    let refundAmountInUsd = new Big(0);
+    // NOTE: Adding for DAI, USDC, USDT so dollar price -> $1 for now
+    // let token: string = '';
+    // const tokensPerChainId = config.feeOption.tokenContractAddress[chainId];
+    // for (const currency of Object.keys(tokensPerChainId)) {
+    //   if (tokensPerChainId[currency].toLowerCase() === gasToken.toLowerCase()) {
+    //     token = currency;
+    //   }
+    // }
+    const decimal = config.chains.decimal[chainId] || 18;
+    log.info(`Decimal for erc20 token: ${decimal} on chainId: ${chainId}`);
+    // const offset = config.feeOption.offset[chainId][token] || 1;
+
+    refundAmountInUsd = (new Big(payment).div(
+      new Big(10 ** decimal),
+    ));
+    log.info(`refundAmountInUsd for refund in erc20 token: ${refundAmountInUsd} on chainId: ${chainId}`);
+    return refundAmountInUsd;
+  };
+
+  private async checkIfSimulationIsSuccesful(
     transactionLogs: any,
     gasUsedInSimulation: number,
     refundInfo: { tokenGasPrice: string, gasToken: string },
@@ -176,11 +211,12 @@ export class TenderlySimulationService implements IExternalSimulation {
   ) {
     try {
       log.info(`Refund info received: ${JSON.stringify(refundInfo)}`);
-      log.info(`Checking if relayer is being paid fully for SCW: ${to} with data: ${data}`);
+      log.info(`gasUsedInSimulation: ${gasUsedInSimulation} for destination address: ${to} with data: ${data}`);
+      log.info(`Checking if simulation is successful for destination address: ${to} with data: ${data}`);
       const walletHandlePaymentLog = transactionLogs.find((transactionLog: any) => transactionLog.name === 'WalletHandlePayment');
       if (!walletHandlePaymentLog) {
         return {
-          isRelayerPaidFully: false,
+          isSimulationSuccessful: false,
           successOrRevertMsg: 'WalletHandlePayment event not found in simulation logs',
         };
       }
@@ -188,37 +224,61 @@ export class TenderlySimulationService implements IExternalSimulation {
       const paymentEventData = walletHandlePaymentLog.inputs.find((input: any) => input.soltype.name === 'payment');
       if (!paymentEventData) {
         return {
-          isRelayerPaidFully: false,
+          isSimulationSuccessful: false,
           successOrRevertMsg: 'Payment data not found in ExecutionSuccess simulation logs',
         };
       }
       const paymentValue = paymentEventData.value;
       if (!paymentValue) {
         return {
-          isRelayerPaidFully: false,
+          isSimulationSuccessful: false,
           successOrRevertMsg: 'Payment value not found in payment event data',
         };
       }
       log.info(`Payment sent in transaction: ${paymentValue} for SCW: ${to} with data: ${data}`);
 
-      let refundToRelayer: number;
       // TODO will have to change in EIP 1559 implementation
       const gasPrice = await this.gasPriceService.getGasPrice(GasPriceType.DEFAULT);
+      log.info(`Current gasPrice: ${gasPrice} on chainId: ${chainId}`);
 
       const nativeTokenGasPrice = parseInt(gasPrice as string, 10);
 
       log.info(`Native token gas price: ${nativeTokenGasPrice} for SCW: ${to} with data: ${data}`);
       // ERC 20 token gas price should be in units of native asset
       const erc20TokenGasPrice = parseInt(refundInfo.tokenGasPrice, 10);
+      log.info(`erc20TokenGasPrice: ${erc20TokenGasPrice} for SCW: ${to} with data: ${data}`);
+
+      let refundToRelayer: number;
       let refundCalculatedInSimualtion: number = 0;
+      let refundAmountInUsd: Big;
       if (refundInfo.gasToken === '0x0000000000000000000000000000000000000000') {
         refundToRelayer = Number(paymentValue) * nativeTokenGasPrice;
         refundCalculatedInSimualtion = gasUsedInSimulation * nativeTokenGasPrice;
+        refundAmountInUsd = await this.getRefundAmountInUsdForNativeToken(
+          paymentValue,
+          chainId,
+        );
       } else {
         // decimals
         // paymentValue is in smallest unit?
-        refundToRelayer = Number(paymentValue) * erc20TokenGasPrice;
-        refundCalculatedInSimualtion = gasUsedInSimulation * erc20TokenGasPrice;
+        let token: string = '';
+        const tokensPerChainId = config.feeOption.tokenContractAddress[chainId];
+        for (const currency of Object.keys(tokensPerChainId)) {
+          if (tokensPerChainId[currency].toLowerCase() === refundInfo.gasToken.toLowerCase()) {
+            token = currency;
+          }
+        }
+        // const decimal = config.feeOption.decimals[chainId][token];
+        // log.info(`decimal: ${decimal} for SCW: ${to}`);
+        refundToRelayer = Number(paymentValue);
+        const offset = config.feeOption.offset[chainId][token] || 1;
+        log.info(`offset: ${offset} for SCW: ${to}`);
+        refundCalculatedInSimualtion = (gasUsedInSimulation * erc20TokenGasPrice) / offset;
+        refundAmountInUsd = TenderlySimulationService.getRefundAmountInUsdForERC20Token(
+          paymentValue,
+          refundInfo.gasToken,
+          chainId,
+        );
       }
 
       log.info(`Refund being sent to relayer in the transaction: ${refundToRelayer} for SCW: ${to} with data: ${data}`);
@@ -226,53 +286,23 @@ export class TenderlySimulationService implements IExternalSimulation {
 
       if ((Number(refundToRelayer) < Number(refundCalculatedInSimualtion))) {
         return {
-          isRelayerPaidFully: false,
+          isSimulationSuccessful: false,
           successOrRevertMsg: `Refund to relayer: ${refundToRelayer} is less than what will be consumed in the transaction: ${gasUsedInSimulation * nativeTokenGasPrice}`,
         };
       }
 
-      const networkPriceDataInString = await this.cacheService.get(
-        getTokenPriceKey(),
-      );
-      let networkPriceData;
-      if (!networkPriceDataInString) {
-        log.error('Network price data not found');
-        // TODO remove this hardcoded value. Think better solution
-        networkPriceData = {
-          1: '1278.43', 5: '1278.43', 137: '0.80', 80001: '0.80', 97: '289.87', 420: '1278.43', 421613: '1278.43', 43113: '13.17',
-        };
-      } else {
-        networkPriceData = JSON.parse(networkPriceDataInString);
-      }
-      const chainPriceDataInUSD = networkPriceData[chainId];
-
-      let erc20TokenCurrency = '';
-
-      const tokenContractAddresses = config.feeOption.tokenContractAddress[chainId];
-      for (const currency of Object.keys(tokenContractAddresses)) {
-        if (refundInfo.gasToken.toLowerCase() === tokenContractAddresses[currency].toLowerCase()) {
-          erc20TokenCurrency = currency;
-        }
-      }
-
-      const refundAmountInUSD = await TenderlySimulationService.convertGasPriceToUSD(
-        chainId,
-        nativeTokenGasPrice,
-        chainPriceDataInUSD,
-        erc20TokenCurrency,
-      );
       return {
-        isRelayerPaidFully: true,
+        isSimulationSuccessful: true,
         successOrRevertMsg: `Refund to relayer: ${refundToRelayer} is sufficient to send the transaction`,
         refundAmountData: {
           refundAmount: paymentValue,
-          refundAmountInUSD: Number(refundAmountInUSD) as any,
+          refundAmountInUSD: Number(refundAmountInUsd) as any,
         },
       };
     } catch (error) {
       log.info(error);
       return {
-        isRelayerPaidFully: false,
+        isSimulationSuccessful: false,
         successOrRevertMsg: `Something went wrong with error: ${error}`,
       };
     }

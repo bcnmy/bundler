@@ -93,7 +93,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       let transactionFee: number;
       let transactionFeeInUSD: number;
       let transactionFeeCurrency: string;
-      if (!transactionReceipt.gasUsed || !transactionReceipt.effectiveGasPrice) {
+      if (!transactionReceipt.gasUsed && !transactionReceipt.effectiveGasPrice) {
         log.info(`gasUsed or effectiveGasPrice field not found in ${JSON.stringify(transactionExecutionResponse)}`);
         transactionFee = 0;
         transactionFeeInUSD = 0;
@@ -107,7 +107,6 @@ ITransactionPublisher<TransactionQueueMessageType> {
         if (!coinsRateObj) {
           log.info('Coins Rate Obj not fetched from cache'); // TODO should it make call to token price service?
         }
-        // TODO @kunal047 can add this logic to save fee in USD
         transactionFeeInUSD = JSON.parse(coinsRateObj)[this.chainId];
       }
       await this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
@@ -146,7 +145,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       let transactionFee: number;
       let transactionFeeInUSD : number;
       let transactionFeeCurrency: string;
-      if (!transactionReceipt.gasUsed || !transactionReceipt.effectiveGasPrice) {
+      if (!transactionReceipt.gasUsed && !transactionReceipt.effectiveGasPrice) {
         log.info(`gasUsed or effectiveGasPrice field not found in ${JSON.stringify(transactionExecutionResponse)}`);
         transactionFee = 0;
         transactionFeeInUSD = 0;
