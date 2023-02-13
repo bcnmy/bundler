@@ -9,6 +9,7 @@ import {
 } from '../../../../common/types';
 import { generateTransactionId } from '../../../../common/utils';
 import { config } from '../../../../config';
+import { STATUSES } from '../../middleware';
 
 const websocketUrl = config.socketService.wssUrl;
 
@@ -17,7 +18,7 @@ const log = logger(module);
 export const relaySCWTransaction = async (req: Request, res: Response) => {
   try {
     const {
-      to, data, gasLimit, chainId, value, walletInfo,
+      to, data, gasLimit, chainId, value, walletInfo, refundInfo,
     } = req.body.params[0];
     log.info(`Relaying SCW Transaction for SCW: ${to} on chainId: ${chainId}`);
 
@@ -25,8 +26,8 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
     const transactionId = generateTransactionId(data);
     log.info(`Sending transaction to relayer with transactionId: ${transactionId} for SCW: ${to} on chainId: ${chainId}`);
     if (!routeTransactionToRelayerMap[chainId][TransactionType.AA]) {
-      return res.status(400).json({
-        code: 400,
+      return res.status(STATUSES.BAD_REQUEST).json({
+        code: STATUSES.BAD_REQUEST,
         error: `${TransactionMethodType.SCW} method not supported for chainId: ${chainId}`,
       });
     }
@@ -43,6 +44,27 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
         transactionId,
       });
 
+    // refundTokenAddress -> address of token in which gas is paid
+    // refundTokenCurrency -> USDT, USDC etc
+    // refundAmount -> Amount of USDC, USDT etc
+    // refundAmountInUSD -> Amount of USDC, USDT, WETH in USD
+
+    const { gasToken } = refundInfo;
+
+    const {
+      refundAmount,
+      refundAmountInUSD,
+    } = req.body.params[2];
+    const refundTokenAddress = gasToken;
+    let refundTokenCurrency = '';
+
+    const tokenContractAddresses = config.feeOption.tokenContractAddress[chainId];
+    for (const currency of Object.keys(tokenContractAddresses)) {
+      if (refundTokenAddress.toLowerCase() === tokenContractAddresses[currency].toLowerCase()) {
+        refundTokenCurrency = currency;
+      }
+    }
+
     transactionDao.save(chainId, {
       transactionId,
       transactionType: TransactionType.SCW,
@@ -50,17 +72,21 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
       chainId,
       walletAddress: walletInfo.address,
       resubmitted: false,
+      refundTokenAddress,
+      refundTokenCurrency,
+      refundAmount,
+      refundAmountInUSD,
       creationTime: Date.now(),
     });
 
     if (isError(response)) {
-      return res.status(400).json({
-        code: 400,
+      return res.status(STATUSES.BAD_REQUEST).json({
+        code: STATUSES.BAD_REQUEST,
         error: response.error,
       });
     }
-    return res.status(200).json({
-      code: 200,
+    return res.status(STATUSES.SUCCESS).json({
+      code: STATUSES.SUCCESS,
       data: {
         transactionId,
         connectionUrl: websocketUrl,
@@ -68,8 +94,8 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
     });
   } catch (error) {
     log.error(`Error in SCW relay ${JSON.stringify(error)}`);
-    return res.status(500).json({
-      code: 500,
+    return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
+      code: STATUSES.INTERNAL_SERVER_ERROR,
       error: `Internal Server Error: ${JSON.stringify(error)}`,
     });
   }

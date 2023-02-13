@@ -46,6 +46,9 @@ export type TransactionDataToBeUpdatedInDatabaseType = {
   transactionHash?: string;
   previousTransactionHash?: string;
   status?: TransactionStatus;
+  transactionFee?: number;
+  transactionFeeInUSD?: number;
+  transactionFeeCurrency?: string;
   rawTransaction?: ethers.providers.TransactionResponse;
   gasPrice?: BigNumber;
   receipt?: object;

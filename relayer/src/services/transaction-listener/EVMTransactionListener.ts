@@ -7,7 +7,7 @@ import { RetryTransactionQueueData } from '../../../../common/queue/types';
 import {
   EVMRawTransactionType, SocketEventType, TransactionQueueMessageType, TransactionStatus,
 } from '../../../../common/types';
-import { getRetryTransactionCountKey } from '../../../../common/utils';
+import { getRetryTransactionCountKey, getTokenPriceKey } from '../../../../common/utils';
 import { IEVMAccount } from '../account';
 import { ITransactionPublisher } from '../transaction-publisher';
 import { ITransactionListener } from './interface/ITransactionListener';
@@ -20,6 +20,7 @@ import {
   TransactionDataToBeUpdatedInDatabaseType,
   TransactionListenerNotifyReturnType,
 } from './types';
+import { config } from '../../../../config';
 
 const log = logger(module);
 
@@ -89,8 +90,30 @@ ITransactionPublisher<TransactionQueueMessageType> {
     });
     if (transactionExecutionResponse) {
       log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
+      let transactionFee: number;
+      let transactionFeeInUSD: number;
+      let transactionFeeCurrency: string;
+      if (!transactionReceipt.gasUsed && !transactionReceipt.effectiveGasPrice) {
+        log.info(`gasUsed or effectiveGasPrice field not found in ${JSON.stringify(transactionExecutionResponse)}`);
+        transactionFee = 0;
+        transactionFeeInUSD = 0;
+        transactionFeeCurrency = '';
+      } else {
+        transactionFee = Number(transactionReceipt.gasUsed.mul(
+          transactionReceipt.effectiveGasPrice,
+        ));
+        transactionFeeCurrency = config.chains.currency[this.chainId];
+        const coinsRateObj = await this.cacheService.get(getTokenPriceKey());
+        if (!coinsRateObj) {
+          log.info('Coins Rate Obj not fetched from cache'); // TODO should it make call to token price service?
+        }
+        transactionFeeInUSD = JSON.parse(coinsRateObj)[this.chainId];
+      }
       await this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
         receipt: transactionReceipt,
+        transactionFee,
+        transactionFeeInUSD,
+        transactionFeeCurrency,
         status: TransactionStatus.SUCCESS,
         updationTime: Date.now(),
       }, transactionId, transactionExecutionResponse?.hash);
@@ -119,8 +142,31 @@ ITransactionPublisher<TransactionQueueMessageType> {
 
     if (transactionExecutionResponse) {
       log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
+      let transactionFee: number;
+      let transactionFeeInUSD : number;
+      let transactionFeeCurrency: string;
+      if (!transactionReceipt.gasUsed && !transactionReceipt.effectiveGasPrice) {
+        log.info(`gasUsed or effectiveGasPrice field not found in ${JSON.stringify(transactionExecutionResponse)}`);
+        transactionFee = 0;
+        transactionFeeInUSD = 0;
+        transactionFeeCurrency = '';
+      } else {
+        transactionFee = Number(transactionReceipt.gasUsed.mul(
+          transactionReceipt.effectiveGasPrice,
+        ));
+        transactionFeeCurrency = config.chains.currency[this.chainId];
+        const coinsRateObj = await this.cacheService.get(getTokenPriceKey());
+        if (!coinsRateObj) {
+          log.info('Coins Rate Obj not fetched from cache'); // TODO should it make call to token price service?
+        }
+        // TODO @kunal047 can add this logic to save fee in USD
+        transactionFeeInUSD = JSON.parse(coinsRateObj)[this.chainId];
+      }
       await this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
         receipt: transactionReceipt,
+        transactionFee,
+        transactionFeeInUSD,
+        transactionFeeCurrency,
         status: TransactionStatus.FAILED,
         updationTime: Date.now(),
       }, transactionId, transactionExecutionResponse?.hash);

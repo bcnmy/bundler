@@ -18,7 +18,7 @@ type RawTransactionType = {
 };
 
 export interface IBlockchainTransaction {
-  transactionId: string; // REVIEW // In case of funding relayer transactions no transactionId
+  transactionId: string;
   transactionType: string;
   transactionHash: string;
   previousTransactionHash?: string;
@@ -27,6 +27,15 @@ export interface IBlockchainTransaction {
   chainId: number;
   gasPrice: string;
   receipt: object;
+  transactionFee: number;
+  transactionFeeInUSD: number;
+  transactionFeeCurrency: string
+  refundTokenAddress: string;
+  refundTokenCurrency: string;
+  refundAmount: number;
+  refundAmountInUSD: number;
+  relayerDestinationContractAddress: string;
+  relayerDestinationContractName: string;
   relayerAddress: string;
   walletAddress: string;
   metaData: any;

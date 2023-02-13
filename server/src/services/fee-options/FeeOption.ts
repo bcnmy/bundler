@@ -6,6 +6,7 @@ import { GasPriceType } from '../../../../common/gas-price/types';
 import { logger } from '../../../../common/log-config';
 import { getTokenPriceKey } from '../../../../common/utils';
 import { config } from '../../../../config';
+import { STATUSES } from '../../middleware';
 import { FeeOptionResponseType } from './types';
 
 const log = logger(module);
@@ -19,12 +20,12 @@ const convertGasPriceToUSD = async (
   log.info(`Converting gas price to USD for chain ${nativeChainId} and token ${token} with gas price ${gasPrice} and chain price data in USD ${chainPriceDataInUSD}`);
   const decimal = config.chains.decimal[nativeChainId] || 18;
   const offset = config.feeOption.offset[nativeChainId][token] || 1;
-  const usdc = new Big(gasPrice)
+  const gasPriceInUSD = new Big(gasPrice)
     .mul(new Big(chainPriceDataInUSD))
     .div(new Big(10 ** decimal))
     .mul(new Big(offset))
     .toString();
-  return usdc;
+  return gasPriceInUSD;
 };
 
 export class FeeOption {
@@ -63,6 +64,7 @@ export class FeeOption {
       let networkPriceData;
       if (!networkPriceDataInString) {
         log.error('Network price data not found');
+        // TODO remove this hardcoded value. Think better solution
         networkPriceData = {
           1: '1278.43', 5: '1278.43', 137: '0.80', 80001: '0.80', 97: '289.87', 420: '1278.43', 421613: '1278.43', 43113: '13.17',
         };
@@ -119,13 +121,13 @@ export class FeeOption {
         });
       }
       return {
-        code: 200,
+        code: STATUSES.SUCCESS,
         response,
       };
     } catch (error) {
       log.error(error);
       return {
-        code: 500,
+        code: STATUSES.INTERNAL_SERVER_ERROR,
         error: `Error occured in getting fee options service. Error: ${error}`,
       };
     }

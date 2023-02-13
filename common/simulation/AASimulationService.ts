@@ -37,8 +37,10 @@ export class AASimulationService {
       isSimulationSuccessful = false;
       return {
         isSimulationSuccessful,
-        gasLimitFromSimulation: 0,
-        msgFromSimulation: parseError(error),
+        data: {
+          gasLimitFromSimulation: 0,
+        },
+        message: parseError(error),
       };
     }
 
@@ -55,14 +57,18 @@ export class AASimulationService {
     if (!estimatedGasForUserOp._isBigNumber) {
       return {
         isSimulationSuccessful: false,
-        gasLimitFromSimulation: 0,
-        msgFromSimulation: parseError(estimatedGasForUserOp),
+        data: {
+          gasLimitFromSimulation: 0,
+        },
+        message: parseError(estimatedGasForUserOp),
       };
     }
     return {
       isSimulationSuccessful,
-      gasLimitFromSimulation: estimatedGasForUserOp,
-      msgFromSimulation: 'Success',
+      data: {
+        gasLimitFromSimulation: estimatedGasForUserOp,
+      },
+      message: 'Success',
     };
   }
 
@@ -70,6 +76,9 @@ export class AASimulationService {
     if (!simulationResult?.errorName?.startsWith('ValidationResult')) {
       // parse it as FailedOp
       // if its FailedOp, then we have the paymaster param... otherwise its an Error(string)
+      if (!simulationResult.errorArgs) {
+        throw Error(`errorArgs not present in simulationResult: ${JSON.stringify(simulationResult)}`);
+      }
       let { paymaster } = simulationResult.errorArgs;
       if (paymaster === config.zeroAddress) {
         paymaster = undefined;

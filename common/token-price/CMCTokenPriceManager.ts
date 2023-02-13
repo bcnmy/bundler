@@ -6,7 +6,7 @@ import { IScheduler } from '../scheduler';
 import { SymbolMapByChainIdType } from '../types';
 import { getTokenPriceKey, parseError } from '../utils';
 import { ITokenPrice } from './interface/ITokenPrice';
-import { NetworkSymbolCategoriesType } from './types';
+import { CoinsRateObjType, NetworkSymbolCategoriesType } from './types';
 
 const log = logger(module);
 
@@ -56,7 +56,7 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
       if (response && response.data && response.data.data) {
         const networkKeys = Object.keys(response.data.data);
         if (networkKeys) {
-          const coinsRateObj: any = {};
+          const coinsRateObj: CoinsRateObjType = {};
           networkKeys.forEach((network: any) => {
             const coinNetworkIds = this.networkSymbolCategories[network];
             if (coinNetworkIds && coinNetworkIds.length) {

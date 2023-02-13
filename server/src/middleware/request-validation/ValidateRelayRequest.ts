@@ -7,6 +7,7 @@ import {
   gaslessFallbackRequestSchema,
   scwRequestSchema,
 } from '../../routes/relay/relay.schema';
+import { STATUSES } from '../RequestHelpers';
 
 const log = logger(module);
 
@@ -32,8 +33,8 @@ export const validateRelayRequest = () => async (
         validationResponse = crossChainRequestSchema.validate(req.body);
         break;
       default:
-        return res.status(400).send({
-          code: 400,
+        return res.status(STATUSES.BAD_REQUEST).send({
+          code: STATUSES.BAD_REQUEST,
           error: 'Wrong transaction type sent in validate relay request',
         });
     }
@@ -49,14 +50,14 @@ export const validateRelayRequest = () => async (
     } else {
       message = error.message || error.toString();
     }
-    return res.status(400).json({
-      code: 400,
+    return res.status(STATUSES.BAD_REQUEST).json({
+      code: STATUSES.BAD_REQUEST,
       error: message,
     });
   } catch (e: any) {
     log.error(e);
-    return res.status(400).send({
-      code: 400,
+    return res.status(STATUSES.BAD_REQUEST).send({
+      code: STATUSES.BAD_REQUEST,
       error: JSON.stringify(e),
     });
   }

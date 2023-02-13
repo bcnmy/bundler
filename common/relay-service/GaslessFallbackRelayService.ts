@@ -1,3 +1,4 @@
+import { STATUSES } from '../../server/src/middleware';
 import { IQueue } from '../interface';
 import { logger } from '../log-config';
 import {
@@ -27,12 +28,12 @@ implements IRelayService<GaslessFallbackTransactionMessageType> {
     try {
       await this.queue.publish(data);
       response = {
-        code: 200,
+        code: STATUSES.SUCCESS,
         transactionId: data.transactionId,
       };
     } catch (error) {
       response = {
-        code: 500,
+        code: STATUSES.INTERNAL_SERVER_ERROR,
         error: `Internal server error: ${error}`,
       };
     }

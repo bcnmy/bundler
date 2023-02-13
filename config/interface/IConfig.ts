@@ -113,7 +113,10 @@ type ChainsConfigType = {
   decimal: ChainIdWithNumberValueType,
   provider: ChainIdWithStringValueType,
   fallbackUrls: ChainIdWithArrayStringValueType,
-  retryTransactionInterval: ChainIdWithNumberValueType
+  retryTransactionInterval: ChainIdWithNumberValueType,
+  multiSendAddress: ChainIdWithStringValueType,
+  multiSendCallOnlyAddress: ChainIdWithStringValueType,
+  walletFactoryAddress: ChainIdWithStringValueType
 };
 
 type RelayerConfigType = {
@@ -138,7 +141,7 @@ type EntryPointDataConfigType = {
 
 type FallbackGasTankDataConfigType = {
   [key: number]: {
-    abi: Array<any>,
+    fallbackContractAbi: Array<any>,
     address: string,
   }
 };
@@ -157,8 +160,19 @@ type CacheServiceConfigType = {
   lockTTL: number,
 };
 
+type AbiConfigType = {
+  smartWalletAbi: Array<any>,
+  multiSendAbi: Array<any>,
+  multiSendCallOnlyAbi: Array<any>
+};
+
+type PaymasterDashboardBackendConfigType = {
+  dappDataUrl: string
+};
+
 export type ConfigType = {
   queueUrl: string,
+  paymasterDashboardBackendConfig: PaymasterDashboardBackendConfigType,
   slack: SlackConfigType,
   dataSources: DataSourcesConfigType,
   socketService: SocketServiceConfigType,
@@ -176,7 +190,8 @@ export type ConfigType = {
   entryPointData: EntryPointDataConfigType,
   fallbackGasTankData: FallbackGasTankDataConfigType,
   zeroAddress: string,
-  simulationData: SimulationDataConfigType
+  simulationData: SimulationDataConfigType,
+  abi: AbiConfigType
 };
 
 export interface IConfig {
