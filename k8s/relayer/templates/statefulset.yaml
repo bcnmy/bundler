@@ -28,13 +28,12 @@ spec:
       containers:
       - name: {{ $values.relayer.name }}{{ $i }}
         image: {{ $values.relayer.image }}
-        - env:
-          - name: {{ $values.relayer.env.name }}
-            value: {{ $values.relayer.env.value }}
         ports:
         - containerPort: {{ $values.relayer.port }}
         
         envFrom:
+          - configMapRef:
+              name: {{ .Values.name }}
           - secretRef:
               name: {{ $values.relayer.name }}-passphrase
         volumeMounts:
