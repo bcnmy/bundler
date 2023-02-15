@@ -26,13 +26,14 @@ spec:
         releaseTime: {{ dateInZone "2006-01-02 15:04:05Z" (now) "UTC"| quote }} 
     spec:
       containers:
-      - env:
-        - name: {{ $values.relayer.env.port }}
-          value: {{ $values.relayer.env.value }}
       - name: {{ $values.relayer.name }}{{ $i }}
         image: {{ $values.relayer.image }}
+        - env:
+          - name: {{ $values.relayer.env.name }}
+            value: {{ $values.relayer.env.value }}
         ports:
         - containerPort: {{ $values.relayer.port }}
+        
         envFrom:
           - secretRef:
               name: {{ $values.relayer.name }}-passphrase
