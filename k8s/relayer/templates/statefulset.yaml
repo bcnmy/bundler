@@ -33,7 +33,7 @@ spec:
         
         envFrom:
           - configMapRef:
-              name: {{ .Values.relayer.name }}
+              name: {{ $values.relayer.name }}
           - secretRef:
               name: {{ $values.relayer.name }}-passphrase
         volumeMounts:
