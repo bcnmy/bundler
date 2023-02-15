@@ -16,7 +16,7 @@ relayer:
 namespace: "sdk-staging"
 
 config:
-  port: PORT
+  name: PORT
   value: "3000"
 
 secret:
