@@ -12,6 +12,9 @@ relayer:
     limits:
       memory: "250Mi"
       cpu: "250m"
+  env:
+    port: PORT
+    value: "3000"
 
 namespace: "sdk-staging"
 
