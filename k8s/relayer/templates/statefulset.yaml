@@ -32,8 +32,6 @@ spec:
         - containerPort: {{ $values.relayer.port }}
         
         envFrom:
-          - configMapRef:
-              name: {{ $values.relayer.name }}
           - secretRef:
               name: {{ $values.relayer.name }}-passphrase
         volumeMounts:

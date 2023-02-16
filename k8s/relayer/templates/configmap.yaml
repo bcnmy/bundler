@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ .Values.relayer.name }}
-  namespace: {{ .Values.namespace }}
-data:
-  name: {{ .Values.config.name }}
-  value: "{{ .Values.config.value }}"

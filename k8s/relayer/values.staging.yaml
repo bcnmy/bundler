@@ -15,10 +15,6 @@ relayer:
   
 namespace: "sdk-staging"
 
-config:
-  name: PORT
-  value: "3000"
-
 secret:
   projectID: biconomy-staging
   key: sdk-staging-relayer-node-service
