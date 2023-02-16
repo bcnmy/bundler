@@ -5,4 +5,4 @@ metadata:
   namespace: {{ .Values.namespace }}
 data:
   name: {{ .Values.config.name }}
-  value: {{ .Values.config.value }}
+  value: "{{ .Values.config.value }}"
