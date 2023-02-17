@@ -2,7 +2,7 @@ name: "relayer-server"
 replicas: 1
 relayer:
   name: "relayer-server"
-  image: "gcr.io/biconomy-staging/sdk/relayer-node-service:latest"
+  image: "gcr.io/biconomy-staging/sdk-test/relayer-node-service:latest"
   port: "3000"
   replicaCount: 1
   resource:
@@ -13,18 +13,18 @@ relayer:
       memory: "250Mi"
       cpu: "250m"
 
-namespace: "sdk-staging"
+namespace: "sdk-test"
 
 secret:
   projectID: biconomy-staging
-  key: sdk-staging-relayer-node-service
+  key: sdk-test-relayer-node-service
   config:
     name: config.json.enc
 
   passphrase:
-    key: sdk-staging-relayer-node-service-passphrase
+    key: sdk-test-relayer-node-service-passphrase
     name: CONFIG_PASSPHRASE
     version: latest
 
 ingress:
-  host: sdk-relayer.staging.biconomy.io
+  host: sdk-relayer.test.biconomy.io
