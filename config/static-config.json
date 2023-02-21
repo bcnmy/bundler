@@ -47,16 +47,16 @@
       "43113": 100000
     },
     "multiSendAddress": {
-      "5": "0x2f65bed438a30827d408b7c6818ec5a22c022dd1",
-      "80001": "0x2f65bed438a30827d408b7c6818ec5a22c022dd1"
+      "5": "0x9b55e34edb498a1d5e3d9fadf5232cbaf755334c",
+      "80001": "0x9b55e34edb498a1d5e3d9fadf5232cbaf755334c"
     },
     "multiSendCallOnlyAddress": {
-      "5": "0xa1677d8c8edb188e49ecd832236af281d6b0b20e",
-      "80001": "0xa1677d8c8edb188e49ecd832236af281d6b0b20e"
+      "5": "0x78d83c812347c35c411db63f6a0f68fa2d3c5f39",
+      "80001": "0x78d83c812347c35c411db63f6a0f68fa2d3c5f39"
     },
     "walletFactoryAddress": {
-      "5": "0xf59cda6fd211303bfb79f87269ABd37f565499d8",
-      "80001": "0xf59cda6fd211303bfb79f87269ABd37f565499d8"
+      "5": "0x3e6bdbdfd60e8423d59079fa63c4c2f6b3687b36",
+      "80001": "0x3e6bdbdfd60e8423d59079fa63c4c2f6b3687b36"
     }
   },
   "relayerManagers": [{
