@@ -1,6 +1,7 @@
 import { Request } from 'express';
 import { logger } from '../../../../common/log-config';
 import { aaSimulatonServiceMap, entryPointMap } from '../../../../common/service-manager';
+import { parseError } from '../../../../common/utils';
 import { STATUSES } from '../../middleware';
 
 const log = logger(module);
@@ -50,10 +51,10 @@ export const simulateAATransaction = async (req: Request) => {
       message: 'AA transaction successfully simulated',
     };
   } catch (error) {
-    log.error(`Error in AA transaction simulation ${JSON.stringify(error)}`);
+    log.error(`Error in AA transaction simulation ${parseError(error)}`);
     return {
       code: STATUSES.INTERNAL_SERVER_ERROR,
-      error: `Error in AA transaction simulation ${JSON.stringify(error)}`,
+      error: `Error in AA transaction simulation ${parseError(error)}`,
     };
   }
 };

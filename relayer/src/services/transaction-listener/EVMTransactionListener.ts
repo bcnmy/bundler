@@ -106,8 +106,9 @@ ITransactionPublisher<TransactionQueueMessageType> {
         const coinsRateObj = await this.cacheService.get(getTokenPriceKey());
         if (!coinsRateObj) {
           log.info('Coins Rate Obj not fetched from cache'); // TODO should it make call to token price service?
+        } else {
+          transactionFeeInUSD = JSON.parse(coinsRateObj)[this.chainId];
         }
-        transactionFeeInUSD = JSON.parse(coinsRateObj)[this.chainId];
       }
       await this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
         receipt: transactionReceipt,
@@ -158,9 +159,10 @@ ITransactionPublisher<TransactionQueueMessageType> {
         const coinsRateObj = await this.cacheService.get(getTokenPriceKey());
         if (!coinsRateObj) {
           log.info('Coins Rate Obj not fetched from cache'); // TODO should it make call to token price service?
+        } else {
+          // TODO @kunal047 can add this logic to save fee in USD
+          transactionFeeInUSD = JSON.parse(coinsRateObj)[this.chainId];
         }
-        // TODO @kunal047 can add this logic to save fee in USD
-        transactionFeeInUSD = JSON.parse(coinsRateObj)[this.chainId];
       }
       await this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
         receipt: transactionReceipt,

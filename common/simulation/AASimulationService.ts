@@ -1,4 +1,3 @@
-import { BigNumber } from 'ethers';
 import { config } from '../../config';
 import { IEVMAccount } from '../../relayer/src/services/account';
 import { logger } from '../log-config';
@@ -31,6 +30,7 @@ export class AASimulationService {
     try {
       const simulationResult = await entryPointStatic.callStatic.simulateValidation(userOp)
         .catch((e: any) => e);
+      log.info(`simulationResult: ${JSON.stringify(simulationResult)}`);
       AASimulationService.parseUserOpSimulationResult(userOp, simulationResult);
     } catch (error: any) {
       log.info(`AA Simulation failed: ${parseError(error)}`);
@@ -44,16 +44,16 @@ export class AASimulationService {
       };
     }
 
-    const estimatedGasForUserOpFromEthers = await this.networkService.estimateGas(
+    const estimatedGasForUserOp = await this.networkService.estimateGas(
       entryPointContract,
       'handleOps',
       [[userOp],
         config.feeOption.refundReceiver[chainId]],
       config.zeroAddress,
     );
-    const estimatedGasForUserOp = BigNumber.from('1000000');
+    // const estimatedGasForUserOp = BigNumber.from('3000000');
 
-    log.info(`Estimated gas is: ${estimatedGasForUserOpFromEthers} from ethers for userOp: ${JSON.stringify(userOp)}`);
+    log.info(`Estimated gas is: ${estimatedGasForUserOp} from ethers for userOp: ${JSON.stringify(userOp)}`);
     if (!estimatedGasForUserOp._isBigNumber) {
       return {
         isSimulationSuccessful: false,
@@ -74,8 +74,10 @@ export class AASimulationService {
 
   static parseUserOpSimulationResult(userOp: UserOperationType, simulationResult: any) {
     if (!simulationResult?.errorName?.startsWith('ValidationResult')) {
+      log.info(`Inside ${!simulationResult?.errorName?.startsWith('ValidationResult')}`);
       // parse it as FailedOp
       // if its FailedOp, then we have the paymaster param... otherwise its an Error(string)
+      log.info(`simulationResult.errorArgs: ${simulationResult.errorArgs}`);
       if (!simulationResult.errorArgs) {
         throw Error(`errorArgs not present in simulationResult: ${JSON.stringify(simulationResult)}`);
       }

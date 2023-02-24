@@ -14,7 +14,7 @@ export const scwRequestSchema = object.keys({
     {
       value: number,
       to: string.regex(/^0x[a-fA-F0-9]{40}$/).required().error(new Error('to is required')),
-      gasLimit: string, // in hex
+      gasLimit: string.optional().allow(''), // in hex
       data: string.required().error(new Error('data is required')),
       chainId: number.required().error(new Error('chainId is required')),
       walletInfo: object.keys({
@@ -87,7 +87,7 @@ export const gaslessFallbackRequestSchema = object.keys({
     {
       value: number,
       to: string.regex(/^0x[a-fA-F0-9]{40}$/).required().error(new Error('to is required')),
-      gasLimit: string, // in hex
+      gasLimit: string.optional().allow(''), // in hex
       data: string.required().error(new Error('data is required')),
       chainId: number.required().error(new Error('chainId is required')),
       walletInfo: object.keys({
