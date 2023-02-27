@@ -90,14 +90,11 @@ ITransactionPublisher<TransactionQueueMessageType> {
     });
     if (transactionExecutionResponse) {
       log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
-      let transactionFee: number;
-      let transactionFeeInUSD: number;
-      let transactionFeeCurrency: string;
+      let transactionFee = 0;
+      let transactionFeeInUSD = 0;
+      let transactionFeeCurrency = '';
       if (!transactionReceipt.gasUsed && !transactionReceipt.effectiveGasPrice) {
         log.info(`gasUsed or effectiveGasPrice field not found in ${JSON.stringify(transactionExecutionResponse)}`);
-        transactionFee = 0;
-        transactionFeeInUSD = 0;
-        transactionFeeCurrency = '';
       } else {
         transactionFee = Number(transactionReceipt.gasUsed.mul(
           transactionReceipt.effectiveGasPrice,
@@ -143,14 +140,11 @@ ITransactionPublisher<TransactionQueueMessageType> {
 
     if (transactionExecutionResponse) {
       log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
-      let transactionFee: number;
-      let transactionFeeInUSD : number;
-      let transactionFeeCurrency: string;
+      let transactionFee = 0;
+      let transactionFeeInUSD = 0;
+      let transactionFeeCurrency = '';
       if (!transactionReceipt.gasUsed && !transactionReceipt.effectiveGasPrice) {
         log.info(`gasUsed or effectiveGasPrice field not found in ${JSON.stringify(transactionExecutionResponse)}`);
-        transactionFee = 0;
-        transactionFeeInUSD = 0;
-        transactionFeeCurrency = '';
       } else {
         transactionFee = Number(transactionReceipt.gasUsed.mul(
           transactionReceipt.effectiveGasPrice,
