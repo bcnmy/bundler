@@ -7,7 +7,7 @@
     "lockTTL": 10000
   },
   "supportedNetworks": [5, 80001],
-  "EIP1559SupportedNetworks": [],
+  "EIP1559SupportedNetworks": [80001],
   "supportedTransactionType": {
     "5": ["AA", "SCW", "GASLESS_FALLBACK"],
     "137": ["AA", "SCW", "GASLESS_FALLBACK"],
@@ -228,6 +228,7 @@
       "baseFeeMultiplier": 1.1,
       "gasOracle": {
         "maticGasStationUrl": "https://gasstation-mainnet.matic.network/v1",
+        "maticGasStationUrlForEIP1559": "https://gasstation-mainnet.matic.network/v2",
         "polygonGasStation": ""
       }
     },

@@ -343,13 +343,19 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     try {
       await this.cacheService.increment(getRetryTransactionCountKey(transactionId, this.chainId));
 
-      // TODO // Make it generel and EIP 1559 specific and get bump up from config
+      // Make it general and EIP 1559 specific and get bump up from config
       const bumpedUpGasPrice = this.gasPriceService.getBumpedUpGasPrice(
         rawTransaction.gasPrice as string,
         config.transaction.bumpGasPriceMultiplier[this.chainId],
       );
 
-      rawTransaction.gasPrice = bumpedUpGasPrice as string;
+      if (typeof bumpedUpGasPrice === 'string') {
+        rawTransaction.gasPrice = bumpedUpGasPrice as string;
+      } else if (typeof bumpedUpGasPrice === 'object') {
+        rawTransaction.maxFeePerGas = bumpedUpGasPrice.maxFeePerGas;
+        rawTransaction.maxPriorityFeePerGas = bumpedUpGasPrice.maxPriorityFeePerGas;
+      }
+
       log.info(`Executing retry transaction for transactionId: ${transactionId}`);
       const retryTransactionExecutionResponse = await this.executeTransaction({
         rawTransaction,
