@@ -7,6 +7,12 @@ const log = logger(module);
 
 export const feeOptionsApi = async (req: Request, res: Response) => {
   const chainId = req.query.chainId as string;
+  if(!feeOptionMap[Number(chainId)]) {
+    return res.status(STATUSES.BAD_REQUEST).json({
+      code: STATUSES.BAD_REQUEST,
+      error: `Fee options not available for chainId: ${chainId}`,
+    });
+  }
   const response = await feeOptionMap[Number(chainId)].get();
   try {
     if (response.error) {
