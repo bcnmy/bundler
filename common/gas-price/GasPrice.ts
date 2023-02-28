@@ -257,10 +257,13 @@ export class GasPrice implements IGasPrice {
             .getEIP1559GasPrice())
             .maxPriorityFeePerGas;
           if (maxFeePerGasFromNetwork && maxPriorityFeePerGasFromNetwork) {
-            await this.setMaxFeeGasPrice(GasPriceType.DEFAULT, maxFeePerGasFromNetwork);
+            const maxFeePerGas = ethers.utils.formatUnits(maxFeePerGasFromNetwork, 'wei');
+            const maxPriorityFeePerGas = ethers.utils.formatUnits(maxPriorityFeePerGasFromNetwork, 'wei');
+
+            await this.setMaxFeeGasPrice(GasPriceType.DEFAULT, maxFeePerGas);
             await this.setMaxPriorityFeeGasPrice(
               GasPriceType.DEFAULT,
-              maxPriorityFeePerGasFromNetwork,
+              maxPriorityFeePerGas,
             );
           }
         }
