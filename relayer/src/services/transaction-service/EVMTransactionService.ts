@@ -102,6 +102,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       } = gasPrice;
       return {
         ...response,
+        type: 2,
         maxFeePerGas: ethers.utils.hexlify(Number(maxFeePerGas)),
         maxPriorityFeePerGas: ethers.utils.hexlify(Number(maxPriorityFeePerGas)),
       };
