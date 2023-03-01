@@ -229,6 +229,10 @@ export class MaticGasPrice extends GasPrice implements IScheduler {
       GasPriceType.FAST,
       Math.round(fastestGasPriceInWei).toString(),
     );
+
+    await this.maticGasStationForEIP1559().catch(async (err) => {
+      log.error(`[POLYGONSCAN] Error in fetching matic gas price for EIP1559: ${err}`);
+    });
   }
 
   schedule() {

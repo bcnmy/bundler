@@ -6,7 +6,7 @@ import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
 import { getMaxRetryCountNotificationMessage } from '../../../../common/notification';
 import { INotificationManager } from '../../../../common/notification/interface';
-import { EVMRawTransactionType, TransactionType } from '../../../../common/types';
+import { EVMRawTransactionType, NetworkBasedGasPriceType, TransactionType } from '../../../../common/types';
 import { getRetryTransactionCountKey, parseError } from '../../../../common/utils';
 import { config } from '../../../../config';
 import { STATUSES } from '../../../../server/src/middleware';
@@ -102,6 +102,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       } = gasPrice;
       return {
         ...response,
+        type: 2,
         maxFeePerGas: ethers.utils.hexlify(Number(maxFeePerGas)),
         maxPriorityFeePerGas: ethers.utils.hexlify(Number(maxPriorityFeePerGas)),
       };
@@ -342,15 +343,30 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     } = retryTransactionData;
     try {
       await this.cacheService.increment(getRetryTransactionCountKey(transactionId, this.chainId));
-
-      // TODO // Make it generel and EIP 1559 specific and get bump up from config
+      let pastGasPrice: NetworkBasedGasPriceType = rawTransaction.gasPrice as string;
+      if (!pastGasPrice) {
+        pastGasPrice = {
+          maxFeePerGas: rawTransaction.maxFeePerGas as string,
+          maxPriorityFeePerGas: rawTransaction.maxPriorityFeePerGas as string,
+        };
+      }
+      // Make it general and EIP 1559 specific and get bump up from config
       const bumpedUpGasPrice = this.gasPriceService.getBumpedUpGasPrice(
-        rawTransaction.gasPrice as string,
+        pastGasPrice,
         config.transaction.bumpGasPriceMultiplier[this.chainId],
       );
+      log.info(`Bumped up gas price for transactionId: ${transactionId} is ${bumpedUpGasPrice} on chainId ${this.chainId}`);
 
-      rawTransaction.gasPrice = bumpedUpGasPrice as string;
+      if (typeof bumpedUpGasPrice === 'string') {
+        rawTransaction.gasPrice = bumpedUpGasPrice as string;
+      } else if (typeof bumpedUpGasPrice === 'object') {
+        rawTransaction.maxFeePerGas = bumpedUpGasPrice.maxFeePerGas;
+        rawTransaction.maxPriorityFeePerGas = bumpedUpGasPrice.maxPriorityFeePerGas;
+      }
+
       log.info(`Executing retry transaction for transactionId: ${transactionId}`);
+      log.info(`Raw transaction for retrying transactionId: ${transactionId} is ${JSON.stringify(rawTransaction)} on chainId ${this.chainId}`);
+
       const retryTransactionExecutionResponse = await this.executeTransaction({
         rawTransaction,
         account,
