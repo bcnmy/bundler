@@ -1,5 +1,6 @@
 import CryptoJS from 'crypto-js';
 import { logger } from '../../../../../common/log-config';
+import { parseError } from '../../../../../common/utils';
 import { config } from '../../../../../config';
 
 const log = logger(module);
@@ -34,7 +35,7 @@ export const authenticateFallbackGasTankDepositRequest = async (encryptedData: s
     log.error(error);
     return {
       isAuthenticated: false,
-      authenticationMessage: `Authentication failed with error: ${JSON.stringify(error)}`,
+      authenticationMessage: `Authentication failed with error: ${parseError(error)}`,
     };
   }
 };
