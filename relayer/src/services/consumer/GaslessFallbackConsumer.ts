@@ -26,11 +26,11 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
   cacheService: ICacheService;
 
   constructor(
-    scwConsumerParamsType: GaslessFallbackConsumerParamsType,
+    gaslessFallbackConsumerParamsType: GaslessFallbackConsumerParamsType,
   ) {
     const {
       options, queue, relayerManager, transactionService, cacheService,
-    } = scwConsumerParamsType;
+    } = gaslessFallbackConsumerParamsType;
     this.queue = queue;
     this.relayerManager = relayerManager;
     this.transactionService = transactionService;

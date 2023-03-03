@@ -9,13 +9,13 @@
   "supportedNetworks": [5, 80001],
   "EIP1559SupportedNetworks": [80001],
   "supportedTransactionType": {
-    "5": ["AA", "SCW", "GASLESS_FALLBACK"],
-    "137": ["AA", "SCW", "GASLESS_FALLBACK"],
-    "80001": ["AA", "SCW", "GASLESS_FALLBACK"],
-    "97": ["AA", "SCW", "GASLESS_FALLBACK"],
-    "420": ["AA", "SCW", "GASLESS_FALLBACK"],
-    "421613": ["AA", "SCW", "GASLESS_FALLBACK"],
-    "43113": ["AA", "SCW", "GASLESS_FALLBACK"]
+    "5": ["AA", "SCW", "GASLESS_FALLBACK", "FALLBACK_GASTANK_DEPOSIT"],
+    "137": ["AA", "SCW", "GASLESS_FALLBACK", "FALLBACK_GASTANK_DEPOSIT"],
+    "80001": ["AA", "SCW", "GASLESS_FALLBACK", "FALLBACK_GASTANK_DEPOSIT"],
+    "97": ["AA", "SCW", "GASLESS_FALLBACK", "FALLBACK_GASTANK_DEPOSIT"],
+    "420": ["AA", "SCW", "GASLESS_FALLBACK", "FALLBACK_GASTANK_DEPOSIT"],
+    "421613": ["AA", "SCW", "GASLESS_FALLBACK", "FALLBACK_GASTANK_DEPOSIT"],
+    "43113": ["AA", "SCW", "GASLESS_FALLBACK", "FALLBACK_GASTANK_DEPOSIT"]
   },
   "chains": {
     "currency": {

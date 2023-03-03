@@ -6,6 +6,7 @@ export enum TransactionType {
   CROSS_CHAIN = 'CROSS_CHAIN',
   FUNDING = 'FUNDING',
   GASLESS_FALLBACK = 'GASLESS_FALLBACK',
+  FALLBACK_GASTANK_DEPOSIT = 'FALLBACK_GASTANK_DEPOSIT',
 }
 
 export enum TransactionMethodType {
@@ -13,6 +14,7 @@ export enum TransactionMethodType {
   AA = 'eth_sendUserOperation',
   CROSS_CHAIN = 'eth_sendCrossChainTransaction',
   GASLESS_FALLBACK = 'eth_sendGaslessFallbackTransaction',
+  FALLBACK_GASTANK_DEPOSIT = 'eth_sendFallbackGasTankDepositTransaction',
 }
 
 export enum RelayerDestinationSmartContractName {
@@ -35,6 +37,16 @@ export type TransactionQueueMessageType = {
   previousTransactionHash?: string,
   receipt?: ethers.providers.TransactionReceipt,
   error?: string,
+};
+
+export type FallbackGasTankDepositTransactionMessageType = {
+  transactionId: string,
+  type: string;
+  to: string;
+  data: string;
+  gasLimit: string;
+  chainId: number;
+  value: string;
 };
 
 export enum TransactionStatus {

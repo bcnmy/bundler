@@ -20,6 +20,12 @@ export type SimulationDataType = {
   refundInfo?: { tokenGasPrice: string, gasToken: string },
 };
 
+export type FallbackGasTankDepositSimulationDataType = {
+  chainId: number,
+  value: string,
+  to: string,
+};
+
 export type AASimulationDataType = {
   userOp: UserOperationType,
   entryPointContract: ethers.Contract,

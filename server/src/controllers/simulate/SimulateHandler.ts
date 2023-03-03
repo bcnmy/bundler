@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import { TransactionMethodType } from '../../../../common/types';
 import { STATUSES } from '../../middleware';
 import { simulateAATransaction } from './SimulateAATransaction';
+import { simulateFallbackGasTankDepositTransaction } from './SimulateFallbackGasTankDepositTransaction';
 import { simulateGaslessFallbackTransaction } from './SimulateGaslessFallbackTransaction';
 import { simulateSCWTransaction } from './SimulateSCWTransaction';
 
@@ -19,6 +20,8 @@ export const simulateTransaction = () => async (
       response = await simulateSCWTransaction(req);
     } else if (method === TransactionMethodType.GASLESS_FALLBACK) {
       response = await simulateGaslessFallbackTransaction(req);
+    } else if (method === TransactionMethodType.FALLBACK_GASTANK_DEPOSIT) {
+      response = await simulateFallbackGasTankDepositTransaction(req);
     }
     if (!response) {
       return res.status(STATUSES.INTERNAL_SERVER_ERROR).send({

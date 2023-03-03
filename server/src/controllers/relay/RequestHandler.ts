@@ -4,6 +4,7 @@ import { STATUSES } from '../../middleware';
 import { relayAATransaction } from './AARelay';
 import { relayGaslessFallbackTransaction } from './GaslessFallbackRelay';
 import { relaySCWTransaction } from './SCWRelay';
+import { relayFallbackGasTankDepositTransaction } from './FallbackGasTankDepositRelay';
 
 export const requestHandler = async (
   req: Request,
@@ -17,6 +18,8 @@ export const requestHandler = async (
     response = await relaySCWTransaction(req, res);
   } else if (method === TransactionMethodType.GASLESS_FALLBACK) {
     response = await relayGaslessFallbackTransaction(req, res);
+  } else if (method === TransactionMethodType.FALLBACK_GASTANK_DEPOSIT) {
+    response = await relayFallbackGasTankDepositTransaction(req, res);
   } else {
     return res.status(STATUSES.BAD_REQUEST).send({
       code: STATUSES.BAD_REQUEST,

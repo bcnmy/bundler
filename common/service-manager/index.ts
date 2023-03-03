@@ -3,7 +3,7 @@ import { ethers } from 'ethers';
 import { config } from '../../config';
 import { EVMAccount, IEVMAccount } from '../../relayer/src/services/account';
 import {
-  AAConsumer, SCWConsumer, SocketConsumer, GaslessFallbackConsumer,
+  AAConsumer, SCWConsumer, SocketConsumer, GaslessFallbackConsumer, FallbackGasTankDepositConsumer,
 } from '../../relayer/src/services/consumer';
 import { EVMNonceManager } from '../../relayer/src/services/nonce-manager';
 import { EVMRelayerManager, IRelayerManager } from '../../relayer/src/services/relayer-manager';
@@ -27,9 +27,17 @@ import {
   SCWTransactionQueue,
   TransactionHandlerQueue,
   GaslessFallbackTransactionQueue,
+  FallbackGasTankDepositTransactionQueue,
 } from '../queue';
-import { AARelayService, GaslessFallbackRelayService, SCWRelayService } from '../relay-service';
-import { AASimulationService, GaslessFallbackSimulationService, SCWSimulationService } from '../simulation';
+import {
+  AARelayService, GaslessFallbackRelayService, SCWRelayService, FallbackGasTankDepositRelayService,
+} from '../relay-service';
+import {
+  AASimulationService,
+  GaslessFallbackSimulationService,
+  SCWSimulationService,
+  FallbackGasTankDepositSimulationService,
+} from '../simulation';
 import { TenderlySimulationService } from '../simulation/external-simulation';
 import { IStatusService, StatusService } from '../status';
 import { CMCTokenPriceManager } from '../token-price';
@@ -39,6 +47,7 @@ import {
   EVMRawTransactionType,
   GaslessFallbackTransactionMessageType,
   SCWTransactionMessageType,
+  FallbackGasTankDepositTransactionMessageType,
   TransactionType,
 } from '../types';
 
@@ -64,6 +73,10 @@ const scwSimulationServiceMap: {
 
 const gaslessFallbackSimulationServiceMap: {
   [chainId: number]: GaslessFallbackSimulationService;
+} = {};
+
+const fallbackGasTankDepositSimulationServiceMap: {
+  [chainId: number]: FallbackGasTankDepositSimulationService;
 } = {};
 
 const entryPointMap: EntryPointMapType = {};
@@ -428,6 +441,52 @@ let statusService: IStatusService;
         );
 
         log.info(`Gasless fallback consumer & relay service simulation service setup complete for chainId: ${chainId}`);
+      } else if (type === TransactionType.FALLBACK_GASTANK_DEPOSIT) {
+        // queue for scw
+        log.info(`Setting up Fallback gas tank deposit transaction queue for chaindId: ${chainId}`);
+        const fallbackGasTankDepositQueue: IQueue<
+        FallbackGasTankDepositTransactionMessageType> = new FallbackGasTankDepositTransactionQueue({
+          chainId,
+        });
+        await fallbackGasTankDepositQueue.connect();
+        log.info(`Fallback gas tank transaction queue setup complete for chainId: ${chainId}`);
+
+        const fallbackGasTankDepositRelayerManager = EVMRelayerManagerMap[
+          relayerManagerTransactionTypeNameMap[type]][chainId];
+        if (!fallbackGasTankDepositRelayerManager) {
+          throw new Error(`Relayer manager not found for ${type}`);
+        }
+
+        const {
+          fallbackGasTankDepositManager,
+        } = config;
+
+        log.info(`Setting up Fallback gas tank consumer, relay service & simulation service for chainId: ${chainId}`);
+        const fallbackGasTankDepositConsumer = new FallbackGasTankDepositConsumer({
+          queue: fallbackGasTankDepositQueue,
+          relayerManager: fallbackGasTankDepositRelayerManager,
+          transactionService,
+          cacheService,
+          options: {
+            chainId,
+            fallbackGasTankDepositOwnerAccountDetails: new EVMAccount(
+              fallbackGasTankDepositManager.ownerAccountDetails[chainId].publicKey,
+              fallbackGasTankDepositManager.ownerAccountDetails[chainId].privateKey,
+            ),
+          },
+        });
+        await fallbackGasTankDepositQueue.consume(fallbackGasTankDepositConsumer.onMessageReceived);
+
+        const fallbackGasTankDepositRelayService = new FallbackGasTankDepositRelayService(
+          fallbackGasTankDepositQueue,
+        );
+        routeTransactionToRelayerMap[chainId][type] = fallbackGasTankDepositRelayService;
+
+        // eslint-disable-next-line max-len
+        fallbackGasTankDepositSimulationServiceMap[chainId] = new FallbackGasTankDepositSimulationService(
+          networkService,
+        );
+        log.info(`Fallback Gas Tank Deposit consumer, relay service & simulation service setup complete for chainId: ${chainId}`);
       }
     }
   }
@@ -447,6 +506,7 @@ export {
   aaSimulatonServiceMap,
   scwSimulationServiceMap,
   gaslessFallbackSimulationServiceMap,
+  fallbackGasTankDepositSimulationServiceMap,
   entryPointMap,
   EVMRelayerManagerMap,
   transactionSerivceMap,
