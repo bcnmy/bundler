@@ -9,7 +9,6 @@ import { ethers } from 'ethers';
 import hdkey from 'hdkey';
 import { ICacheService } from '../../../../common/cache';
 import { IGasPrice } from '../../../../common/gas-price';
-import { GasPriceType } from '../../../../common/gas-price/types';
 import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
 import {
@@ -374,13 +373,10 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
 
           const ownerAccountNonce = await this.nonceManager
             .getNonce(this.ownerAccountDetails.getPublicKey());
-          const gasPrice = await this.gasPriceService.getGasPrice(
-            GasPriceType.DEFAULT,
-          );
+
           const rawTx = {
             from: this.ownerAccountDetails.getPublicKey(),
             data: '0x',
-            gasPrice: ethers.BigNumber.from(gasPrice).toHexString(),
             gasLimit: ethers.BigNumber.from(gasLimit.toString()).toHexString(),
             to: address,
             value: ethers.utils
