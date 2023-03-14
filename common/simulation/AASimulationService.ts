@@ -47,7 +47,7 @@ export class AASimulationService {
         config.feeOption.refundReceiver[chainId]],
       config.zeroAddress,
     );
-    const estimatedGasForUserOp = BigNumber.from('1000000');
+    const estimatedGasForUserOp = BigNumber.from('8000000');
 
     log.info(`Estimated gas is: ${estimatedGasForUserOpFromEthers} from ethers for userOp: ${JSON.stringify(userOp)}`);
     if (!estimatedGasForUserOp._isBigNumber) {
