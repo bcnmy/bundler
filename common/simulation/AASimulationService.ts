@@ -1,3 +1,4 @@
+import { BigNumber } from 'ethers';
 import { config } from '../../config';
 import { IEVMAccount } from '../../relayer/src/services/account';
 import { logger } from '../log-config';
