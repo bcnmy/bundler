@@ -134,7 +134,7 @@
     "errors": {
       "networkResponseMessages": {
         "ALREADY_KNOWN" : "already known",
-        "REPLACEMENT_UNDERPRICED" : "REPLACEMENT_UNDERPRICED",
+        "REPLACEMENT_UNDERPRICED" : "replacement fee too low",
         "INSUFFICIENT_FUNDS": "insufficient funds for gas",
         "INVALID_TRANSACTION": "submit transaction to pool failed"
       },
