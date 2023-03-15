@@ -22,7 +22,7 @@ export class AASimulationService {
   ): Promise<SimulationResponseType> {
     // entry point contract call to check
     // https://github.com/eth-infinitism/account-abstraction/blob/5b7130c2645cbba7fe4540a96997163b44c1aafd/contracts/core/EntryPoint.sol#L245
-    const { userOp, entryPointContract, chainId } = simulationData;
+    const { userOp, entryPointContract } = simulationData;
     const entryPointStatic = entryPointContract.connect(
       this.networkService.ethersProvider.getSigner(config.zeroAddress),
     );
