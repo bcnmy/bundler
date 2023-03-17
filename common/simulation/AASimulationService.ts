@@ -45,13 +45,13 @@ export class AASimulationService {
       };
     }
 
-    // const estimatedGasForUserOp = await this.networkService.estimateGas(
-    //   entryPointContract,
-    //   'handleOps',
-    //   [[userOp],
-    //     config.feeOption.refundReceiver[chainId]],
-    //   config.zeroAddress,
-    // );
+    const estimatedGasForUserOp = await this.networkService.estimateGas(
+      entryPointContract,
+      'handleOps',
+      [[userOp],
+        config.feeOption.refundReceiver[chainId]],
+      config.zeroAddress,
+    );
     const estimatedGasForUserOp = BigNumber.from('3000000');
 
     log.info(`Estimated gas is: ${estimatedGasForUserOp} from ethers for userOp: ${JSON.stringify(userOp)}`);
