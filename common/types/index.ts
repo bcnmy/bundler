@@ -15,6 +15,14 @@ export enum TransactionMethodType {
   GASLESS_FALLBACK = 'eth_sendGaslessFallbackTransaction',
 }
 
+export enum EthMethodType {
+  ESTIMATE_USER_OPERATION_GAS = 'eth_estimateUserOperationGas',
+  GET_USER_OPERATION_BY_HASH = 'eth_estimateUserOperationGas',
+  GET_USER_OPERATION_RECEIPT = 'eth_getUserOperationReceipt',
+  SUPPORTED_ENTRY_POINTS = 'eth_supportedEntryPoints',
+  CHAIN_ID = 'eth_chainId',
+}
+
 export enum RelayerDestinationSmartContractName {
   ENTRY_POINT = 'Entry Point',
   FALLBACK_GASLESS = 'Fallback Gasless',
