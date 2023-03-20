@@ -1,5 +1,5 @@
 name: "relayer-server"
-replicas: 1
+replicas: 2
 relayer:
   name: "relayer-server"
   image: "gcr.io/biconomy-staging/sdk-test/relayer-node-service:latest"
@@ -10,8 +10,8 @@ relayer:
       memory: "100Mi"
       cpu: "100m"
     limits:
-      memory: "250Mi"
-      cpu: "250m"
+      memory: "500Mi"
+      cpu: "500m"
 
 namespace: "sdk-test"
 
