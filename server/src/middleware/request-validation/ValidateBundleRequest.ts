@@ -2,7 +2,10 @@ import { NextFunction, Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
 import { EthMethodType, TransactionMethodType } from '../../../../common/types';
 import {
-  bundlerRequestSchema,
+  bundlerEstimateUserOpGasRequestSchema,
+  bundlerGetUserOpByHashRequestSchema,
+  bundlerGetUserOpReceiptRequestSchema,
+  bundlerSendUserOpRequestSchema,
 } from '../../routes/bundle/bundle.schema';
 import { STATUSES } from '../RequestHelpers';
 
@@ -29,12 +32,12 @@ export const validateBundleRequest = () => async (
       case EthMethodType.GET_USER_OPERATION_RECEIPT:
         validationResponse = bundlerGetUserOpReceiptRequestSchema.validate(req.body);
         break;
-      case EthMethodType.SUPPORTED_ENTRY_POINTS:
-        validationResponse = bundlerSupportedEntryPointsRequestSchema.validate(req.body);
-        break;
-      case EthMethodType.CHAIN_ID:
-        validationResponse = bundlerChainIdRequestSchema.validate(req.body);
-        break;
+      // case EthMethodType.SUPPORTED_ENTRY_POINTS:
+      //   validationResponse = bundlerSupportedEntryPointsRequestSchema.validate(req.body);
+      //   break;
+      // case EthMethodType.CHAIN_ID:
+      //   validationResponse = bundlerChainIdRequestSchema.validate(req.body);
+      //   break;
       default:
         return res.status(STATUSES.BAD_REQUEST).send({
           code: STATUSES.BAD_REQUEST,

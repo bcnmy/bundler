@@ -29,7 +29,7 @@ export const simulateGaslessFallbackTransaction = async (req:Request) => {
     }
     const { gasLimitFromSimulation } = gaslessFallbackSimulationResponse.data;
     req.body.params[1] = gasLimitFromSimulation;
-    log.info(`gasLimitFromSimulation: ${gasLimitFromSimulation} or gasless fallback: ${to} on chainId: ${chainId}`)
+    log.info(`gasLimitFromSimulation: ${gasLimitFromSimulation} or gasless fallback: ${to} on chainId: ${chainId}`);
     log.info(`Transaction successfully simulated for gasless fallback: ${to} on chainId: ${chainId}`);
     return {
       code: STATUSES.SUCCESS,

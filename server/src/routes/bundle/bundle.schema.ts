@@ -78,6 +78,5 @@ export const bundlerGetUserOpByHashRequestSchema = object.keys({
   id: number.required().error(new Error('id is required')),
 });
 
-
 // eth_getUserOperationReceipt
 export const bundlerGetUserOpReceiptRequestSchema = bundlerGetUserOpByHashRequestSchema;
