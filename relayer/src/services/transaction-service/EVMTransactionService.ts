@@ -153,23 +153,28 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
             `Replacement underpriced error for relayer ${rawTransaction.from}
        on network id ${this.chainId}`,
           );
-          let { gasPrice } = await this.networkService.getGasPrice();
+          const pastGasPrice = rawTransaction.gasPrice ? rawTransaction.gasPrice : {
+            maxFeePerGas: rawTransaction.maxFeePerGas,
+            maxPriorityFeePerGas: rawTransaction.maxPriorityFeePerGas,
+          };
+          const bumpedUpGasPrice = this.gasPriceService.getBumpedUpGasPrice(
+            pastGasPrice as NetworkBasedGasPriceType,
+            config.transaction.bumpGasPriceMultiplier[this.chainId],
+          );
 
-          log.info(`gas price from network ${gasPrice}`);
-          const gasPriceInNumber = ethers.BigNumber.from(
-            gasPrice.toString(),
-          ).toNumber();
-
-          log.info(`rawTransaction.gasPrice ${rawTransaction.gasPrice} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
-
-          if (rawTransaction.gasPrice && gasPrice < rawTransaction.gasPrice) {
-            gasPrice = rawTransaction.gasPrice;
+          if (typeof bumpedUpGasPrice !== 'string') {
+            log.info(`rawTransaction.maxFeePerGas ${rawTransaction.maxFeePerGas} for relayer ${rawTransaction.from} on network id ${this.chainId} before bumping up`);
+            log.info(`rawTransaction.maxPriorityFeePerGas ${rawTransaction.maxPriorityFeePerGas} for relayer ${rawTransaction.from} on network id ${this.chainId} before bumping up`);
+            rawTransaction.maxFeePerGas = bumpedUpGasPrice.maxFeePerGas;
+            rawTransaction.maxPriorityFeePerGas = bumpedUpGasPrice.maxPriorityFeePerGas;
+            log.info(`increasing gas price for the resubmit transaction ${rawTransaction.gasPrice} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
+            log.info(`rawTransaction.maxFeePerGas ${rawTransaction.maxFeePerGas} for relayer ${rawTransaction.from} on network id ${this.chainId} after bumping up`);
+            log.info(`rawTransaction.maxPriorityFeePerGas ${rawTransaction.maxPriorityFeePerGas} for relayer ${rawTransaction.from} on network id ${this.chainId} after bumping up`);
+          } else {
+            log.info(`rawTransaction.gasPrice ${rawTransaction.gasPrice} for relayer ${rawTransaction.from} on network id ${this.chainId} before bumping up`);
+            rawTransaction.gasPrice = bumpedUpGasPrice;
+            log.info(`increasing gas price for the resubmit transaction ${rawTransaction.gasPrice} for relayer ${rawTransaction.from} on network id ${this.chainId} after bumping up`);
           }
-          log.info(`transaction sent with gas price ${rawTransaction.gasPrice} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
-          log.info(`Bumping up gas price with multiplier ${config.transaction.bumpGasPriceMultiplier[this.chainId]} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
-          log.info(`gasPriceInNumber ${gasPriceInNumber} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
-          rawTransaction.gasPrice = ethers.utils.hexlify(Math.round(config.transaction.bumpGasPriceMultiplier[this.chainId] * gasPriceInNumber));
-          log.info(`increasing gas price for the resubmit transaction ${rawTransaction.gasPrice} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
 
           retryExecuteTransaction({ rawTransaction, account });
         } else if (errInString.indexOf(alreadyKnownMessage) > -1) {
