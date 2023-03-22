@@ -22,7 +22,7 @@ export class AASimulationService {
   ): Promise<SimulationResponseType> {
     // entry point contract call to check
     // https://github.com/eth-infinitism/account-abstraction/blob/5b7130c2645cbba7fe4540a96997163b44c1aafd/contracts/core/EntryPoint.sol#L245
-    const { userOp, entryPointContract } = simulationData;
+    const { userOp, entryPointContract, chainId } = simulationData;
     const entryPointStatic = entryPointContract.connect(
       this.networkService.ethersProvider.getSigner(config.zeroAddress),
     );
@@ -45,16 +45,17 @@ export class AASimulationService {
       };
     }
 
-    const estimatedGasForUserOp = await this.networkService.estimateGas(
+    let estimatedGasForUserOp = await this.networkService.estimateGas(
       entryPointContract,
       'handleOps',
       [[userOp],
         config.feeOption.refundReceiver[chainId]],
       config.zeroAddress,
     );
-    const estimatedGasForUserOp = BigNumber.from('3000000');
-
     log.info(`Estimated gas is: ${estimatedGasForUserOp} from ethers for userOp: ${JSON.stringify(userOp)}`);
+    estimatedGasForUserOp = BigNumber.from('3000000');
+
+    log.info(`Estimated gas is: ${estimatedGasForUserOp} for userOp: ${JSON.stringify(userOp)}`);
     if (!estimatedGasForUserOp._isBigNumber) {
       return {
         isSimulationSuccessful: false,
