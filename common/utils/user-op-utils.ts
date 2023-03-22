@@ -1,8 +1,11 @@
 import { ethers } from 'ethers';
+import { hexlify } from 'ethers/lib/utils';
 import { config } from '../../config';
 import { STATUSES } from '../../server/src/middleware';
 import { logger } from '../log-config';
-import { GetMetaDataFromUserOpReturnType, UserOperationType } from '../types';
+import {
+  GetMetaDataFromUserOpReturnType, Log, UserOperationEventEvent, UserOperationType,
+} from '../types';
 import { axiosPostCall } from './axios-calls';
 import { parseError } from './parse-error';
 
@@ -173,4 +176,111 @@ export const getMetaDataFromUserOp = async (
       destinationSmartContractMethods: [],
     };
   }
+};
+
+export const getPaymasterFromPaymasterAndData = (paymasterAndData: string): string => {
+  const paymasterAddress = `0x${paymasterAndData.substring(0, 42)}`;
+  log.info(`paymasterAddress: ${paymasterAddress} for paymasterAndData: ${paymasterAndData}`);
+  return paymasterAddress;
+};
+
+const filterLogs = (userOpEvent: UserOperationEventEvent, logs: Log[]): Log[] => {
+  let startIndex = -1;
+  let endIndex = -1;
+  logs.forEach((eventLog, index) => {
+    if (eventLog?.topics[0] === userOpEvent.topics[0]) {
+      // process UserOperationEvent
+      if (eventLog.topics[1] === userOpEvent.topics[1]) {
+        // it's our userOpHash. save as end of logs array
+        endIndex = index;
+      } else {
+        // it's a different hash. remember it as beginning index,
+        // but only if we didn't find our end index yet.
+        // eslint-disable-next-line no-lonely-if
+        if (endIndex === -1) {
+          startIndex = index;
+        }
+      }
+    }
+  });
+  if (endIndex === -1) {
+    throw new Error('fatal: no UserOperationEvent in logs');
+  }
+  return logs.slice(startIndex + 1, endIndex);
+};
+
+const deepHexlify = (obj: any): any => {
+  if (typeof obj === 'function') {
+    return undefined;
+  }
+  if (obj == null || typeof obj === 'string' || typeof obj === 'boolean') {
+    return obj;
+    // eslint-disable-next-line no-underscore-dangle
+  } if (obj._isBigNumber != null || typeof obj !== 'object') {
+    return hexlify(obj).replace(/^0x0/, '0x');
+  }
+  if (Array.isArray(obj)) {
+    return obj.map((member) => deepHexlify(member));
+  }
+  return Object.keys(obj).reduce(
+    (set, key) => ({
+      ...set,
+      [key]: deepHexlify(obj[key]),
+    }),
+    {},
+  );
+};
+
+export const getUserOperationReceipt = async (
+  chainId: number,
+  userOpHash: string,
+  entryPointAddress: string,
+): Promise<any> => {
+  const { entryPointData, chains } = config;
+  let entryPointContract;
+
+  for (
+    let entryPointIndex = 0;
+    entryPointIndex < entryPointData[chainId].length;
+    entryPointIndex += 1
+  ) {
+    const entryPoint = entryPointData[chainId][entryPointIndex];
+
+    if (entryPoint.address.toLowerCase() === entryPointAddress.toLowerCase()) {
+      const jsonRpcProvider = new ethers.providers.JsonRpcProvider(chains.provider[chainId]);
+      entryPointContract = new ethers.Contract(
+        entryPointAddress,
+        JSON.stringify(entryPoint.abi),
+        jsonRpcProvider,
+      );
+    }
+  }
+
+  if (!entryPointContract) {
+    return null;
+  }
+
+  let event = [];
+
+  try {
+    event = await entryPointContract.queryFilter(
+      entryPointContract.filters.UserOperationEvent(userOpHash),
+    ) as any;
+    // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+    if (event[0]) {
+      const receipt = await event.getTransactionReceipt();
+      const logs = filterLogs(event, receipt.logs);
+      return deepHexlify({
+        actualGasCost: event.args.actualGasCost,
+        actualGasUsed: event.args.actualGasUsed,
+        success: event.args.success,
+        logs,
+        receipt,
+      });
+    }
+  } catch (err) {
+    log.info(`Missing/invalid userOpHash for userOpHash: ${userOpHash} on chainId: ${chainId}`);
+    return null;
+  }
+  return null;
 };

@@ -7,4 +7,5 @@ export const relayerManagerTransactionTypeNameMap = {
   [TransactionType.GASLESS_FALLBACK]: 'RM1',
   [TransactionType.CROSS_CHAIN]: 'RM2',
   [TransactionType.FUNDING]: 'RM0',
+  [TransactionType.BUNDLER]: 'RM3',
 };

@@ -1,17 +1,17 @@
 import amqp, { Channel, ConsumeMessage, Replies } from 'amqplib';
 import { config } from '../../config';
 import { logger } from '../log-config';
-import { AATransactionMessageType, TransactionType } from '../types';
+import { BundlerTransactionMessageType, TransactionType } from '../types';
 import { IQueue } from './interface/IQueue';
 
 const log = logger(module);
 
 const { queueUrl } = config;
 
-export class AATransactionQueue implements IQueue<AATransactionMessageType> {
+export class BundlerTransactionQueue implements IQueue<BundlerTransactionMessageType> {
   private channel!: Channel;
 
-  transactionType: TransactionType = TransactionType.AA;
+  transactionType: TransactionType = TransactionType.BUNDLER;
 
   private exchangeName = `relayer_queue_exchange_${this.transactionType}`;
 
@@ -42,7 +42,7 @@ export class AATransactionQueue implements IQueue<AATransactionMessageType> {
     }
   }
 
-  async publish(data: AATransactionMessageType) {
+  async publish(data: BundlerTransactionMessageType) {
     const key = `chainid.${this.chainId}.type.${this.transactionType}`;
     log.info(`Publishing data to retry queue on chainId: ${this.chainId} and key ${key}`);
     this.channel.publish(this.exchangeName, key, Buffer.from(JSON.stringify(data)), {

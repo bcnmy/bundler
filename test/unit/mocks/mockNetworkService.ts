@@ -26,7 +26,7 @@ export class MockNetworkService implements INetworkService<IEVMAccount, EVMRawTr
     ethersProvider: JsonRpcProvider = new MockJsonProvider();
 
     constructor(tempParams: any) {
-        this.chainId = tempParams.chaindId;
+        this.chainId = tempParams.chainId;
         this.rpcUrl = tempParams.rpcUrl;
         this.fallbackRpcUrls = tempParams.fallbackRpcUrls;
     }

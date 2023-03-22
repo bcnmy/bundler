@@ -1,13 +1,15 @@
 import { config } from '../../config';
 import { IEVMAccount } from '../../relayer/src/services/account';
+import { BUNDLER_VALIDATION_STATUSES } from '../../server/src/middleware';
 import { logger } from '../log-config';
 import { INetworkService } from '../network';
 import { EVMRawTransactionType, UserOperationType } from '../types';
 import { parseError } from '../utils';
+import RpcError from '../utils/rpc-error';
 import { AASimulationDataType, SimulationResponseType } from './types';
 
 const log = logger(module);
-export class AASimulationService {
+export class BundlerSimulationAndValidationService {
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
 
   constructor(
@@ -16,11 +18,9 @@ export class AASimulationService {
     this.networkService = networkService;
   }
 
-  async simulate(
+  async simulateAndValidate(
     simulationData: AASimulationDataType,
   ): Promise<SimulationResponseType> {
-    // entry point contract call to check
-    // https://github.com/eth-infinitism/account-abstraction/blob/5b7130c2645cbba7fe4540a96997163b44c1aafd/contracts/core/EntryPoint.sol#L245
     const { userOp, entryPointContract, chainId } = simulationData;
     const entryPointStatic = entryPointContract.connect(
       this.networkService.ethersProvider.getSigner(config.zeroAddress),
@@ -31,7 +31,7 @@ export class AASimulationService {
       const simulationResult = await entryPointStatic.callStatic.simulateValidation(userOp)
         .catch((e: any) => e);
       log.info(`simulationResult: ${JSON.stringify(simulationResult)}`);
-      AASimulationService.parseUserOpSimulationResult(userOp, simulationResult);
+      BundlerSimulationAndValidationService.parseUserOpSimulationResult(userOp, simulationResult);
     } catch (error: any) {
       log.info(`AA Simulation failed: ${parseError(error)}`);
       isSimulationSuccessful = false;
@@ -63,20 +63,10 @@ export class AASimulationService {
         message: parseError(estimatedGasForUserOp),
       };
     }
-
-    let userOpHash: string = '';
-    try {
-      userOpHash = entryPointContract.getUserOpHash(userOp);
-      log.info(`userOpHash: ${userOpHash} for userOp: ${JSON.stringify(userOp)}`);
-    } catch (error) {
-      log.info(`Error in getting userOpHash for userOp: ${JSON.stringify(userOp)} with error: ${parseError(error)}`);
-    }
-
     return {
       isSimulationSuccessful,
       data: {
         gasLimitFromSimulation: estimatedGasForUserOp,
-        userOpHash,
       },
       message: 'Success',
     };
@@ -100,10 +90,10 @@ export class AASimulationService {
 
       if (!paymaster) {
         log.info(`account validation failed: ${msg} for userOp: ${JSON.stringify(userOp)}`);
-        throw Error(`account validation failed: ${msg}`);
+        throw new RpcError(msg, BUNDLER_VALIDATION_STATUSES.SIMULATE_VALIDATION_FAILED);
       } else {
         log.info(`paymaster validation failed: ${msg} for userOp: ${JSON.stringify(userOp)}`);
-        throw Error(`paymaster validation failed: ${msg}`);
+        throw new RpcError(msg, BUNDLER_VALIDATION_STATUSES.SIMULATE_PAYMASTER_VALIDATION_FAILED);
       }
     }
     return true;

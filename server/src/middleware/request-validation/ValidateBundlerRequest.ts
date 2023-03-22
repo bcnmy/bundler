@@ -2,16 +2,18 @@ import { NextFunction, Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
 import { EthMethodType, TransactionMethodType } from '../../../../common/types';
 import {
+  bundlerChainIdRequestSchema,
   bundlerEstimateUserOpGasRequestSchema,
   bundlerGetUserOpByHashRequestSchema,
   bundlerGetUserOpReceiptRequestSchema,
   bundlerSendUserOpRequestSchema,
-} from '../../routes/bundle/bundle.schema';
-import { STATUSES } from '../RequestHelpers';
+  bundlerSupportedEntryPointsRequestSchema,
+} from '../../routes/bundler/bundler.schema';
+import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../RequestHelpers';
 
 const log = logger(module);
 
-export const validateBundleRequest = () => async (
+export const validateBundlerRequest = () => async (
   req: Request,
   res: Response,
   next: NextFunction,
@@ -20,7 +22,7 @@ export const validateBundleRequest = () => async (
     const { method } = req.body;
     let validationResponse;
     switch (method) {
-      case TransactionMethodType.AA:
+      case TransactionMethodType.BUNDLER:
         validationResponse = bundlerSendUserOpRequestSchema.validate(req.body);
         break;
       case EthMethodType.ESTIMATE_USER_OPERATION_GAS:
@@ -32,12 +34,12 @@ export const validateBundleRequest = () => async (
       case EthMethodType.GET_USER_OPERATION_RECEIPT:
         validationResponse = bundlerGetUserOpReceiptRequestSchema.validate(req.body);
         break;
-      // case EthMethodType.SUPPORTED_ENTRY_POINTS:
-      //   validationResponse = bundlerSupportedEntryPointsRequestSchema.validate(req.body);
-      //   break;
-      // case EthMethodType.CHAIN_ID:
-      //   validationResponse = bundlerChainIdRequestSchema.validate(req.body);
-      //   break;
+      case EthMethodType.SUPPORTED_ENTRY_POINTS:
+        validationResponse = bundlerSupportedEntryPointsRequestSchema.validate(req.body);
+        break;
+      case EthMethodType.CHAIN_ID:
+        validationResponse = bundlerChainIdRequestSchema.validate(req.body);
+        break;
       default:
         return res.status(STATUSES.BAD_REQUEST).send({
           code: STATUSES.BAD_REQUEST,
@@ -56,8 +58,8 @@ export const validateBundleRequest = () => async (
     } else {
       message = error.message || error.toString();
     }
-    return res.status(STATUSES.BAD_REQUEST).json({
-      code: STATUSES.BAD_REQUEST,
+    return res.status(BUNDLER_VALIDATION_STATUSES.INVALID_USER_OP_FIELDS).json({
+      code: BUNDLER_VALIDATION_STATUSES.INVALID_USER_OP_FIELDS,
       error: message,
     });
   } catch (e: any) {

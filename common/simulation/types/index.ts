@@ -32,7 +32,9 @@ export type SimulationResponseType = {
   data: {
     refundAmount?: number,
     refundAmountInUSD?: number,
+    userOpHash?: string,
     gasLimitFromSimulation: number | BigNumber,
   },
   message: string,
+  code?: number,
 };

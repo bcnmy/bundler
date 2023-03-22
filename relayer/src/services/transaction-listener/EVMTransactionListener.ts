@@ -1,13 +1,22 @@
+/* eslint-disable no-await-in-loop */
 import { ICacheService } from '../../../../common/cache';
-import { ITransactionDAO } from '../../../../common/db';
+import { ITransactionDAO, IUserOperationDAO } from '../../../../common/db';
 import { IQueue } from '../../../../common/interface';
 import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
 import { RetryTransactionQueueData } from '../../../../common/queue/types';
 import {
-  EVMRawTransactionType, SocketEventType, TransactionQueueMessageType, TransactionStatus,
+  EVMRawTransactionType,
+  SocketEventType,
+  TransactionQueueMessageType,
+  TransactionStatus,
+  TransactionType,
 } from '../../../../common/types';
-import { getRetryTransactionCountKey, getTokenPriceKey } from '../../../../common/utils';
+import {
+  getRetryTransactionCountKey,
+  getTokenPriceKey,
+  getUserOperationReceipt,
+} from '../../../../common/utils';
 import { IEVMAccount } from '../account';
 import { ITransactionPublisher } from '../transaction-publisher';
 import { ITransactionListener } from './interface/ITransactionListener';
@@ -37,6 +46,8 @@ ITransactionPublisher<TransactionQueueMessageType> {
 
   transactionDao: ITransactionDAO;
 
+  userOperationDao: IUserOperationDAO;
+
   cacheService: ICacheService;
 
   constructor(
@@ -48,6 +59,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       transactionQueue,
       retryTransactionQueue,
       transactionDao,
+      userOperationDao,
       cacheService,
     } = evmTransactionListenerParams;
     this.chainId = options.chainId;
@@ -55,6 +67,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
     this.transactionQueue = transactionQueue;
     this.retryTransactionQueue = retryTransactionQueue;
     this.transactionDao = transactionDao;
+    this.userOperationDao = userOperationDao;
     this.cacheService = cacheService;
   }
 
@@ -74,6 +87,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       transactionReceipt,
       transactionId,
       relayerManagerName,
+      transactionType,
     } = onTranasctionSuccessParams;
     if (!transactionReceipt) {
       log.error(`Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
@@ -116,6 +130,53 @@ ITransactionPublisher<TransactionQueueMessageType> {
         updationTime: Date.now(),
       }, transactionId, transactionExecutionResponse?.hash);
     }
+
+    if (transactionType === TransactionType.BUNDLER) {
+      const userOps = await this.userOperationDao.getUserOpsByTransactionId(
+        this.chainId,
+        transactionId,
+      );
+      if (!userOps.length) {
+        log.info(`No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+        return;
+      }
+      for (let userOpIndex = 0; userOpIndex < userOps.length; userOpIndex += 1) {
+        const { userOpHash, entryPoint } = userOps[userOpIndex];
+
+        // TODO create entry point instance here
+
+        const userOpReceipt = await getUserOperationReceipt(this.chainId, userOpHash, entryPoint);
+        if (!userOpReceipt) {
+          log.info(`userOpReceipt not fetched for userOpHash: ${userOpHash} on chainId: ${this.chainId}`);
+          return;
+        }
+        const {
+          success,
+          actualGasCost,
+          actualGasUsed,
+          reason,
+          logs,
+        } = userOpReceipt;
+
+        await this.userOperationDao.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
+          this.chainId,
+          transactionId,
+          userOpHash,
+          {
+            transactionHash: transactionExecutionResponse?.hash,
+            receipt: transactionReceipt,
+            blockNumber: transactionReceipt.blockNumber,
+            blockHash: transactionReceipt.blockHash,
+            status: TransactionStatus.SUCCESS,
+            success,
+            actualGasCost,
+            actualGasUsed,
+            reason,
+            logs,
+          },
+        );
+      }
+    }
   }
 
   private async onTransactionFailure(onTranasctionFailureParams: OnTransactionFailureParamsType) {
@@ -124,6 +185,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       transactionId,
       transactionReceipt,
       relayerManagerName,
+      transactionType,
     } = onTranasctionFailureParams;
     if (!transactionReceipt) {
       log.error(`Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
@@ -152,9 +214,8 @@ ITransactionPublisher<TransactionQueueMessageType> {
         transactionFeeCurrency = config.chains.currency[this.chainId];
         const coinsRateObj = await this.cacheService.get(getTokenPriceKey());
         if (!coinsRateObj) {
-          log.info('Coins Rate Obj not fetched from cache'); // TODO should it make call to token price service?
+          log.info('Coins Rate Obj not fetched from cache');
         } else {
-          // TODO @kunal047 can add this logic to save fee in USD
           transactionFeeInUSD = JSON.parse(coinsRateObj)[this.chainId];
         }
       }
@@ -166,6 +227,50 @@ ITransactionPublisher<TransactionQueueMessageType> {
         status: TransactionStatus.FAILED,
         updationTime: Date.now(),
       }, transactionId, transactionExecutionResponse?.hash);
+    }
+
+    if (transactionType === TransactionType.BUNDLER) {
+      const userOps = await this.userOperationDao.getUserOpsByTransactionId(
+        this.chainId,
+        transactionId,
+      );
+      if (!userOps.length) {
+        log.info(`No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+        return;
+      }
+      for (let userOpIndex = 0; userOpIndex < userOps.length; userOpIndex += 1) {
+        const { userOpHash, entryPoint } = userOps[userOpIndex];
+
+        const userOpReceipt = await getUserOperationReceipt(this.chainId, userOpHash, entryPoint);
+        if (!userOpReceipt) {
+          log.info(`userOpReceipt not fetched for userOpHash: ${userOpHash} on chainId: ${this.chainId}`);
+          return;
+        }
+        const {
+          success,
+          actualGasCost,
+          actualGasUsed,
+          reason,
+          logs,
+        } = userOpReceipt;
+        await this.userOperationDao.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
+          this.chainId,
+          transactionId,
+          userOpHash,
+          {
+            transactionHash: transactionExecutionResponse?.hash,
+            receipt: transactionReceipt,
+            blockNumber: transactionReceipt.blockNumber,
+            blockHash: transactionReceipt.blockHash,
+            status: TransactionStatus.FAILED,
+            success,
+            actualGasCost,
+            actualGasUsed,
+            reason,
+            logs,
+          },
+        );
+      }
     }
   }
 

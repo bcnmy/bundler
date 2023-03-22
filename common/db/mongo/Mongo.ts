@@ -2,7 +2,12 @@ import mongoose, { Mongoose } from 'mongoose';
 import { config } from '../../../config';
 import { logger } from '../../log-config';
 import { IDBService } from '../interface/IDBService';
-import { BlockchainTransactionsMap, BlockchainTransactionsMapType } from './models';
+import {
+  BlockchainTransactionsMap,
+  BlockchainTransactionsMapType,
+  UserOperationsMap,
+  UserOperationsMapType,
+} from './models';
 
 const log = logger(module);
 
@@ -59,6 +64,20 @@ export class Mongo implements IDBService {
     const supportedNetworks: number[] = config.supportedNetworks || [];
     if (!supportedNetworks.includes(networkId)) throw new Error(`Network Id ${networkId} is not supported`);
     return BlockchainTransactionsMap[networkId];
+  }
+
+  /**
+   * Method returns user operation model for a given chain id
+   * @param networkId
+   * @returns user operation model for a given chain id
+   */
+  getUserOperation(networkId: number): UserOperationsMapType[number] {
+    if (!this.client) {
+      throw new Error('Not connected to db');
+    }
+    const supportedNetworks: number[] = config.supportedNetworks || [];
+    if (!supportedNetworks.includes(networkId)) throw new Error(`Network Id ${networkId} is not supported`);
+    return UserOperationsMap[networkId];
   }
 
   isConnected(): boolean {
