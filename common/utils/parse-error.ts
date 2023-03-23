@@ -1,14 +1,28 @@
 import { serializeError } from 'serialize-error';
 
 export const parseError = (error: any): string => {
+  let errorMessage: string = '';
   if (error instanceof Error) {
-    let errorMessage = JSON.stringify(error);
     try {
-      errorMessage = serializeError(error)?.message || errorMessage;
+      errorMessage = serializeError(error)?.message || JSON.stringify(error);
     } catch (err) {
-      console.error('failed to parse error');
+      // ignore
+      errorMessage = JSON.stringify(error);
     }
-    return errorMessage;
+  } else {
+    try {
+      errorMessage = JSON.stringify(error);
+    } catch (err) {
+      // ignore
+      errorMessage = error;
+    }
   }
-  return error;
+
+  try {
+    return errorMessage.toString().replace(/\b(https?):\/\/[-\w+&@#/%?=~|!:,.;]*[-\w+&@#/%=~|]/g, 'URL');
+  } catch (err2) {
+    // ignore
+    errorMessage = error;
+  }
+  return errorMessage;
 };

@@ -1,3 +1,4 @@
+import { BigNumber } from 'ethers';
 import { config } from '../../config';
 import { IEVMAccount } from '../../relayer/src/services/account';
 import { logger } from '../log-config';
@@ -44,16 +45,17 @@ export class AASimulationService {
       };
     }
 
-    const estimatedGasForUserOp = await this.networkService.estimateGas(
+    let estimatedGasForUserOp = await this.networkService.estimateGas(
       entryPointContract,
       'handleOps',
       [[userOp],
         config.feeOption.refundReceiver[chainId]],
       config.zeroAddress,
     );
-    // const estimatedGasForUserOp = BigNumber.from('3000000');
-
     log.info(`Estimated gas is: ${estimatedGasForUserOp} from ethers for userOp: ${JSON.stringify(userOp)}`);
+    estimatedGasForUserOp = BigNumber.from('3000000');
+
+    log.info(`Estimated gas is: ${estimatedGasForUserOp} for userOp: ${JSON.stringify(userOp)}`);
     if (!estimatedGasForUserOp._isBigNumber) {
       return {
         isSimulationSuccessful: false,

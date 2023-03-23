@@ -1,3 +1,4 @@
+/* eslint-disable prefer-destructuring */
 import { ethers } from 'ethers';
 import { config } from '../../config';
 import { STATUSES } from '../../server/src/middleware';
@@ -17,10 +18,10 @@ export const getMetaDataFromUserOp = async (
   try {
     const walletAddress = userOp.sender;
     log.info(`Extracting data for wallet address: ${walletAddress} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
-    const destinationSmartContractAddresses: Array<string> = [];
-    const destinationSmartContractMethodsCallData: Array<string> = [];
+    let destinationSmartContractAddresses: Array<string> = [];
+    let destinationSmartContractMethodsCallData: Array<string> = [];
     const destinationSmartContractMethods: Array<{ address: string, name: string }> = [];
-    const { smartWalletAbi, multiSendAbi } = config.abi;
+    const { smartWalletAbi } = config.abi;
     const multiSendContractAddress = config.chains.multiSendAddress[chainId];
     log.info(`Multi Send Contract Address: ${multiSendContractAddress} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
 
@@ -40,59 +41,39 @@ export const getMetaDataFromUserOp = async (
     const decodedDataSmartWallet = iFaceSmartWallet.parseTransaction({ data: callData });
     log.info(`Decoded smart wallet data: ${JSON.stringify(decodedDataSmartWallet)} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
 
-    const methodArgsSmartWalletExecFromEntryPoint = decodedDataSmartWallet.args;
-    log.info(`Arguments of smart wallet method: ${JSON.stringify(methodArgsSmartWalletExecFromEntryPoint)} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
+    const smartWalletExecFunctionName = decodedDataSmartWallet.name;
+    log.info(`Name of smart wallet method: ${JSON.stringify(smartWalletExecFunctionName)} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
 
-    const walletDestinationContractAddress = methodArgsSmartWalletExecFromEntryPoint[0];
-    log.info(`Wallet Destination Contract Address for wallet addresss: ${userOp.sender} is ${walletDestinationContractAddress} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
-
-    const walletDestinationContractMethodCallData = methodArgsSmartWalletExecFromEntryPoint[2];
-    log.info(`Relayer Destination Contract Method Call Data for wallet address: ${userOp.sender} is ${walletDestinationContractMethodCallData} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
-
-    if (walletDestinationContractAddress.toLowerCase()
-        === multiSendContractAddress.toLowerCase()) {
-      const multiSendCallData = walletDestinationContractMethodCallData;
-      const iFaceMultiSend = new ethers.utils.Interface(multiSendAbi);
-      const decodedDataMultiSend = iFaceMultiSend.decodeFunctionData('multiSend(bytes)', multiSendCallData);
-      log.info(`Multi send decoded data for wallet address: ${userOp.sender} is: ${decodedDataMultiSend} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
-      // Two times multi send because one to represnt contract name, next for funciton name
-      const methodArgsMultiSendMultiSend = decodedDataMultiSend[0];
-      const multiSendTransactions = methodArgsMultiSendMultiSend.slice(2);
-
-      let multiSendTransactionIndex = 0;
-      while (multiSendTransactionIndex < multiSendTransactions.length) {
-        // eslint-disable-next-line max-len
-        const multiSendOperation = multiSendTransactions.substring(multiSendTransactionIndex + 0, multiSendTransactionIndex + 2);
-        log.info(`multiSendOperation: ${multiSendOperation} for dappAPIKey: ${dappAPIKey}`);
-
-        const multiSendTo = `0x${multiSendTransactions.substring(multiSendTransactionIndex + 2, multiSendTransactionIndex + 42)}`;
-        log.info(`multiSendTo: ${multiSendTo} for dappAPIKey: ${dappAPIKey}`);
-
-        // eslint-disable-next-line max-len
-        const multiSendValue = multiSendTransactions.substring(multiSendTransactionIndex + 42, multiSendTransactionIndex + 106);
-        log.info(`multiSendValue: ${multiSendValue} for dappAPIKey: ${dappAPIKey}`);
-
-        // eslint-disable-next-line max-len
-        const multiSendDataLength = multiSendTransactions.substring(multiSendTransactionIndex + 106, multiSendTransactionIndex + 170);
-        log.info(`multiSendDataLength: ${multiSendDataLength} for dappAPIKey: ${dappAPIKey}`);
-
-        const multiSendDataLengthInNum = Number(`0x${multiSendTransactions.substring(multiSendTransactionIndex + 106, multiSendTransactionIndex + 170)}`);
-        log.info(`multiSendDataLengthInNum: ${multiSendDataLengthInNum} for dappAPIKey: ${dappAPIKey}`);
-
-        // eslint-disable-next-line max-len
-        const multiSendData = `0x${multiSendTransactions.substring(multiSendTransactionIndex + 170, multiSendTransactionIndex + 170 + (multiSendDataLengthInNum * 2))}`;
-        log.info(`multiSendData: ${multiSendData} for dappAPIKey: ${dappAPIKey}`);
-
-        destinationSmartContractAddresses.push(multiSendTo.toLowerCase());
-        destinationSmartContractMethodsCallData.push(
-          multiSendData.toLowerCase(),
-        );
-        multiSendTransactionIndex += (170 + multiSendDataLengthInNum * 2);
-        log.info(`multiSendTransactionIndex: ${multiSendTransactionIndex} for dappAPIKey: ${dappAPIKey}`);
+    if (smartWalletExecFunctionName === 'executeCall') {
+      const methodArgsSmartWalletExecuteCall = decodedDataSmartWallet.args;
+      if (!methodArgsSmartWalletExecuteCall) {
+        log.info(`No value args found in decoded data of the smart wallet for executeCall for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
+        return {
+          destinationSmartContractAddresses: [],
+          destinationSmartContractMethods: [],
+        };
       }
+      log.info(`Arguments of smart wallet method: ${JSON.stringify(methodArgsSmartWalletExecuteCall)} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
+      destinationSmartContractAddresses.push(methodArgsSmartWalletExecuteCall[0]);
+      destinationSmartContractMethodsCallData.push(methodArgsSmartWalletExecuteCall[2]);
+    } else if (smartWalletExecFunctionName === 'executeBatchCall') {
+      const methodArgsSmartWalletExecuteBatchCall = decodedDataSmartWallet.args;
+      if (!methodArgsSmartWalletExecuteBatchCall) {
+        log.info(`No value args found in decoded data of the smart wallet for executeBatchCall for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
+        return {
+          destinationSmartContractAddresses: [],
+          destinationSmartContractMethods: [],
+        };
+      }
+      log.info(`Arguments of smart wallet method: ${JSON.stringify(methodArgsSmartWalletExecuteBatchCall)} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
+      destinationSmartContractAddresses = methodArgsSmartWalletExecuteBatchCall[0];
+      destinationSmartContractMethodsCallData = methodArgsSmartWalletExecuteBatchCall[3];
     } else {
-      destinationSmartContractAddresses.push(walletDestinationContractAddress.toLowerCase());
-      destinationSmartContractMethodsCallData.push(walletDestinationContractMethodCallData);
+      log.info(`User op has call data of: ${smartWalletExecFunctionName} which is not supported for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
+      return {
+        destinationSmartContractAddresses: [],
+        destinationSmartContractMethods: [],
+      };
     }
 
     log.info(`Destination Smart Contract Addresses for walletAddress: ${userOp.sender} are: ${destinationSmartContractAddresses} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
@@ -160,7 +141,6 @@ export const getMetaDataFromUserOp = async (
 
     log.info(`Destination Smart Contract Addresses: ${JSON.stringify(destinationSmartContractAddresses)} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
     log.info(`Destination Smart Contract Methods: ${JSON.stringify(destinationSmartContractMethods)} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
-    log.info(`Wallet Destination Smart Contract Address: ${JSON.stringify(walletDestinationContractAddress)} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
 
     return {
       destinationSmartContractAddresses,
