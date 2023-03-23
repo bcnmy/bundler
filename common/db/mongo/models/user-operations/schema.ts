@@ -48,13 +48,10 @@ export const UserOperationSchema = new Schema<IUserOperation>({
   userOpHash: {
     type: String,
   },
-  userOpReceipt: {
+  receipt: {
     type: Object,
   },
   creationTime: {
-    type: Number,
-  },
-  updationTime: {
     type: Number,
   },
 });

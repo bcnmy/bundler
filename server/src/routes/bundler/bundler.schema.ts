@@ -91,7 +91,7 @@ export const bundlerGetUserOpReceiptRequestSchema = object.keys({
 // eth_supportedEntryPoints
 export const bundlerSupportedEntryPointsRequestSchema = object.keys({
   method: string.regex(/eth_supportedEntryPoints/),
-  params: array.items(alternatives.try()),
+  params: array,
   jsonrpc: string.required().error(new Error('jsonrpc is required')),
   id: number.required().error(new Error('id is required')),
 });
@@ -99,7 +99,7 @@ export const bundlerSupportedEntryPointsRequestSchema = object.keys({
 // eth_chainId
 export const bundlerChainIdRequestSchema = object.keys({
   method: string.regex(/eth_chainId/),
-  params: array.items(alternatives.try()),
+  params: array,
   jsonrpc: string.required().error(new Error('jsonrpc is required')),
   id: number.required().error(new Error('id is required')),
 });

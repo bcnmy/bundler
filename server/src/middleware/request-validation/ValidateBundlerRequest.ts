@@ -46,7 +46,9 @@ export const validateBundlerRequest = () => async (
           error: 'Wrong transaction type sent in validate relay request',
         });
     }
+
     const { error } = validationResponse;
+    log.info(`error from validation: ${JSON.stringify(error)} for method: ${method}`);
     const valid = error == null;
     if (valid) {
       return next();
@@ -54,11 +56,11 @@ export const validateBundlerRequest = () => async (
     const { details } = error;
     let message;
     if (details) {
-      message = details.map((i) => i.message).join(',');
+      message = details.map((i) => (i.context ? i.context.message : i.message)).join(',');
     } else {
       message = error.message || error.toString();
     }
-    return res.status(BUNDLER_VALIDATION_STATUSES.INVALID_USER_OP_FIELDS).json({
+    return res.send({
       code: BUNDLER_VALIDATION_STATUSES.INVALID_USER_OP_FIELDS,
       error: message,
     });

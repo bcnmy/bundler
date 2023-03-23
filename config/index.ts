@@ -68,6 +68,7 @@ export class Config implements IConfig {
 
       this.config = _.merge(data, staticConfig);
       this.validate();
+      console.log(this.config.queueUrl);
       log.info('Config loaded successfully');
     } catch (error) {
       log.error('Config loading failed', error);
