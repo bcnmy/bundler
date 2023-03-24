@@ -1,4 +1,4 @@
-import { BigNumber, ethers } from 'ethers';
+import { BigNumber, BigNumberish, ethers } from 'ethers';
 
 export enum TransactionType {
   AA = 'AA',
@@ -233,4 +233,20 @@ export type Log = {
 
   transactionHash: string;
   logIndex: number;
+};
+
+export type DefaultGasOverheadType = {
+  fixed: number,
+  perUserOp: number,
+  perUserOpWord: number,
+  zeroByte: number,
+  nonZeroByte: number,
+  bundleSize: number,
+  sigSize: number,
+};
+
+export type StakeInfo = {
+  addr: string;
+  stake: BigNumberish;
+  unstakeDelaySec: BigNumberish;
 };

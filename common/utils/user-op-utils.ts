@@ -1,9 +1,12 @@
 import { ethers } from 'ethers';
+import {
+  BytesLike, defaultAbiCoder, hexlify, keccak256,
+} from 'ethers/lib/utils';
 import { config } from '../../config';
 import { STATUSES } from '../../server/src/middleware';
 import { logger } from '../log-config';
 import {
-  GetMetaDataFromUserOpReturnType, Log, UserOperationEventEvent, UserOperationType,
+  GetMetaDataFromUserOpReturnType, Log, StakeInfo, UserOperationEventEvent, UserOperationType,
 } from '../types';
 import { axiosPostCall } from './axios-calls';
 import { parseError } from './parse-error';
@@ -254,4 +257,125 @@ export const getUserOperationReceiptForDataSaving = async (
     log.info(`error in getUserOperationReceipt: ${parseError(error)}`);
     return null;
   }
+};
+
+function encode(
+  typevalues: Array<{ type: string; val: any }>,
+  forSignature: boolean,
+): string {
+  const types = typevalues.map((typevalue) => (typevalue.type === 'bytes' && forSignature ? 'bytes32' : typevalue.type));
+  const values = typevalues.map((typevalue: any) => (typevalue.type === 'bytes' && forSignature
+    ? keccak256(typevalue.val)
+    : typevalue.val));
+  return defaultAbiCoder.encode(types, values);
+}
+
+const UserOpType = config.abi.entryPointAbi.find(
+  (entry: any) => entry.name === 'simulateValidation',
+)?.inputs?.[0];
+
+export const packUserOp = (
+  userOp: UserOperationType,
+  forSignature = true,
+): string => {
+  if (forSignature) {
+    // lighter signature scheme (must match UserOperation#pack):
+    // do encode a zero-length signature, but strip afterwards the appended zero-length value
+    const userOpType = {
+      components: [
+        {
+          type: 'address',
+          name: 'sender',
+        },
+        {
+          type: 'uint256',
+          name: 'nonce',
+        },
+        {
+          type: 'bytes',
+          name: 'initCode',
+        },
+        {
+          type: 'bytes',
+          name: 'callData',
+        },
+        {
+          type: 'uint256',
+          name: 'callGasLimit',
+        },
+        {
+          type: 'uint256',
+          name: 'verificationGasLimit',
+        },
+        {
+          type: 'uint256',
+          name: 'preVerificationGas',
+        },
+        {
+          type: 'uint256',
+          name: 'maxFeePerGas',
+        },
+        {
+          type: 'uint256',
+          name: 'maxPriorityFeePerGas',
+        },
+        {
+          type: 'bytes',
+          name: 'paymasterAndData',
+        },
+        {
+          type: 'bytes',
+          name: 'signature',
+        },
+      ],
+      name: 'userOp',
+      type: 'tuple',
+    };
+
+    let encoded = defaultAbiCoder.encode(
+      [userOpType as any],
+      [
+        {
+          ...userOp,
+          signature: '0x',
+        },
+      ],
+    );
+
+    encoded = `0x${encoded.slice(66, encoded.length - 64)}`;
+    return encoded;
+  }
+
+  const typevalues = (UserOpType as any).components.map(
+    (c: { name: keyof typeof userOp; type: string }) => ({
+      type: c.type,
+      val: userOp[c.name],
+    }),
+  );
+
+  return encode(typevalues, forSignature);
+};
+
+export const getAddress = (data?: BytesLike): string | undefined => {
+  if (data == null) {
+    return undefined;
+  }
+  const str = hexlify(data);
+  if (str.length >= 42) {
+    return str.slice(0, 42);
+  }
+  return undefined;
+};
+
+// extract address from "data" (first 20 bytes)
+// add it as "addr" member to the "stakeinfo" struct
+// if no address, then return "undefined" instead of struct.
+export const fillEntity = (data: BytesLike, info: StakeInfo): StakeInfo | undefined => {
+  const addr = getAddress(data);
+  return addr == null
+    ? undefined
+    : {
+      ...info,
+      addr,
+    };
 };

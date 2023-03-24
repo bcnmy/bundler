@@ -1,12 +1,14 @@
+import { BigNumber } from 'ethers';
+import { arrayify, hexlify } from 'ethers/lib/utils';
 import { config } from '../../config';
 import { IEVMAccount } from '../../relayer/src/services/account';
 import { BUNDLER_VALIDATION_STATUSES } from '../../server/src/middleware';
 import { logger } from '../log-config';
 import { INetworkService } from '../network';
-import { EVMRawTransactionType, UserOperationType } from '../types';
-import { parseError } from '../utils';
+import { DefaultGasOverheadType, EVMRawTransactionType, UserOperationType } from '../types';
+import { fillEntity, packUserOp, parseError } from '../utils';
 import RpcError from '../utils/rpc-error';
-import { AASimulationDataType, SimulationResponseType } from './types';
+import { BundlerSimulationDataType, EstimateUserOperationGasDataType, SimulationResponseType } from './types';
 
 const log = logger(module);
 export class BundlerSimulationAndValidationService {
@@ -19,7 +21,7 @@ export class BundlerSimulationAndValidationService {
   }
 
   async simulateAndValidate(
-    simulationData: AASimulationDataType,
+    simulationData: BundlerSimulationDataType,
   ): Promise<SimulationResponseType> {
     const { userOp, entryPointContract, chainId } = simulationData;
     const entryPointStatic = entryPointContract.connect(
@@ -33,7 +35,7 @@ export class BundlerSimulationAndValidationService {
       log.info(`simulationResult: ${JSON.stringify(simulationResult)}`);
       BundlerSimulationAndValidationService.parseUserOpSimulationResult(userOp, simulationResult);
     } catch (error: any) {
-      log.info(`AA Simulation failed: ${parseError(error)}`);
+      log.info(`Bundler Simulation failed: ${parseError(error)}`);
       isSimulationSuccessful = false;
       return {
         isSimulationSuccessful,
@@ -107,38 +109,95 @@ export class BundlerSimulationAndValidationService {
         throw new RpcError(msg, BUNDLER_VALIDATION_STATUSES.SIMULATE_PAYMASTER_VALIDATION_FAILED);
       }
     }
-    return true;
+    const {
+      returnInfo,
+      senderInfo,
+      factoryInfo,
+      paymasterInfo,
+      aggregatorInfo, // may be missing (exists only SimulationResultWithAggregator
+    } = simulationResult.errorArgs;
 
-    // const {
-    //   returnInfo,
-    //   senderInfo,
-    // factoryInfo,
-    // paymasterInfo,
-    // aggregatorInfo, // may be missing (exists only SimulationResultWithAggregator
-    // } = simulationResult.errorArgs;
+    return {
+      returnInfo,
+      senderInfo: {
+        ...senderInfo,
+        addr: userOp.sender,
+      },
+      factoryInfo: fillEntity(userOp.initCode, factoryInfo),
+      paymasterInfo: fillEntity(userOp.paymasterAndData, paymasterInfo),
+      aggregatorInfo: fillEntity(aggregatorInfo?.actualAggregator, aggregatorInfo?.stakeInfo),
+    };
+  }
 
-    // extract address from "data" (first 20 bytes)
-    // add it as "addr" member to the "stakeinfo" struct
-    // if no address, then return "undefined" instead of struct.
-    // function fillEntity(data: BytesLike, info: StakeInfo): StakeInfo | undefined {
-    //   const addr = getAddr(data);
-    //   return addr == null
-    //     ? undefined
-    //     : {
-    //       ...info,
-    //       addr,
-    //     };
-    // }
+  async estimateUserOperationGas(
+    estimateUserOperationGasData: EstimateUserOperationGasDataType,
+  ) {
+    const { userOp, entryPointContract, chainId } = estimateUserOperationGasData;
 
-    // return {
-    //   returnInfo,
-    //   senderInfo: {
-    //     ...senderInfo,
-    //     addr: userOp.sender,
-    //   },
-    // factoryInfo: fillEntity(userOp.initCode, factoryInfo),
-    // paymasterInfo: fillEntity(userOp.paymasterAndData, paymasterInfo),
-    // aggregatorInfo: fillEntity(aggregatorInfo?.actualAggregator, aggregatorInfo?.stakeInfo),
-    // };
+    const entryPointStatic = entryPointContract.connect(
+      this.networkService.ethersProvider.getSigner(config.zeroAddress),
+    );
+
+    const simulationResult = await entryPointStatic.callStatic.simulateValidation(userOp)
+      .catch((e: any) => e);
+    log.info(`simulationResult: ${JSON.stringify(simulationResult)}`);
+    const {
+      returnInfo,
+    } = BundlerSimulationAndValidationService.parseUserOpSimulationResult(userOp, simulationResult);
+
+    const callGasLimit = await this.networkService.estimateGas(
+      entryPointContract,
+      'handleOps',
+      [[userOp],
+        config.feeOption.refundReceiver[chainId]],
+      config.zeroAddress,
+    )
+      .then((callGasLimitResponse) => callGasLimitResponse.toNumber())
+      .catch((err) => {
+        const message = err.message.match(/reason="(.*?)"/)?.at(1) ?? 'execution reverted';
+        log.info(`message: ${JSON.stringify(message)}`);
+        return 0;
+      });
+
+    const preVerificationGas = BundlerSimulationAndValidationService.calcPreVerificationGas(userOp);
+
+    const verificationGasLimit = BigNumber.from(returnInfo.preOpGas).toNumber();
+    let deadline: any;
+    if (returnInfo.deadline) {
+      deadline = BigNumber.from(returnInfo.deadline);
+    }
+
+    return {
+      preVerificationGas,
+      verificationGasLimit,
+      callGasLimit,
+      deadline,
+    };
+  }
+
+  static calcPreVerificationGas(
+    userOp: Partial<UserOperationType>,
+    overheads?: Partial<DefaultGasOverheadType>,
+  ) {
+    const { defaultGasOverheads } = config;
+    const ov = { ...defaultGasOverheads, ...(overheads ?? {}) };
+    const p: UserOperationType = {
+      // dummy values, in case the UserOp is incomplete.
+      preVerificationGas: 21000, // dummy value, just for calldata cost
+      signature: hexlify(Buffer.alloc(ov.sigSize, 1)), // dummy signature
+      ...userOp,
+    } as any;
+
+    const packed = arrayify(packUserOp(p, false));
+    const callDataCost = packed
+      .map((x) => (x === 0 ? ov.zeroByte : ov.nonZeroByte))
+      .reduce((sum, x) => sum + x);
+    const ret = Math.round(
+      callDataCost
+        + ov.fixed / ov.bundleSize
+        + ov.perUserOp
+        + ov.perUserOpWord * packed.length,
+    );
+    return ret;
   }
 }

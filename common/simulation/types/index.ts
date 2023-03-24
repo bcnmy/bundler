@@ -26,6 +26,18 @@ export type AASimulationDataType = {
   chainId: number
 };
 
+export type BundlerSimulationDataType = {
+  userOp: UserOperationType,
+  entryPointContract: ethers.Contract,
+  chainId: number
+};
+
+export type EstimateUserOperationGasDataType = {
+  userOp: UserOperationType,
+  entryPointContract: ethers.Contract,
+  chainId: number
+};
+
 // data response type that simulation service returns
 export type SimulationResponseType = {
   isSimulationSuccessful: boolean,
