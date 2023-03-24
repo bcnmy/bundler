@@ -24,6 +24,6 @@ export interface IUserOperation {
   actualGasCost: number,
   actualGasUsed: number,
   reason: string,
-  logs: any,
+  logs: object,
   creationTime: number;
 }

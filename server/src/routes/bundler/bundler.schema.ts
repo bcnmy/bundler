@@ -16,7 +16,7 @@ const userOpForSendUserOp = object.keys({
   callData: string.required().error(new Error('callData is required and should be a hex string')),
   callGasLimit: string.required().error(new Error('callGasLimit is required and should be a hex string')),
   verificationGasLimit: string.required().error(new Error('verificationGasLimit is required and should be a hex string')),
-  preVerificationGas: string.required().error(new Error('preVerificationGas is required and should be a hex string')),
+  preVerificationGas: number.required().error(new Error('preVerificationGas is required and should be a number')),
   maxFeePerGas: string.required().error(new Error('maxFeePerGas is required and should be a hex string')),
   maxPriorityFeePerGas: string.required().error(new Error('maxPriorityFeePerGas is required and should be a hex string')),
   paymasterAndData: string,

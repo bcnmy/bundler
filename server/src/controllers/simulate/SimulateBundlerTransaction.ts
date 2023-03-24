@@ -12,6 +12,7 @@ export const simulateAndValidateBundlerTransaction = async (req: Request) => {
     const userOp = req.body.params[0];
     const entryPointAddress = req.body.params[1];
     const { chainId } = req.params;
+    log.info(`chainId from request params: ${chainId}`);
 
     const entryPointContracts = entryPointMap[parseInt(chainId, 10)];
 
@@ -40,6 +41,7 @@ export const simulateAndValidateBundlerTransaction = async (req: Request) => {
 
     if (!bundlerSimulationAndValidationResponse.isSimulationSuccessful) {
       const { message, code } = bundlerSimulationAndValidationResponse;
+      log.info(`message: ${message} and code: ${code} from bundlerSimulationAndValidationResponse for userOp: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
       return {
         code: code || STATUSES.BAD_REQUEST,
         message,

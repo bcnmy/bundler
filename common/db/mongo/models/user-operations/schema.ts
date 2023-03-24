@@ -48,6 +48,36 @@ export const UserOperationSchema = new Schema<IUserOperation>({
   userOpHash: {
     type: String,
   },
+  status: {
+    type: String,
+  },
+  success: {
+    type: String,
+  },
+  entryPoint: {
+    type: String,
+  },
+  blockNumber: {
+    type: Number,
+  },
+  blockHash: {
+    type: String,
+  },
+  paymaster: {
+    type: String,
+  },
+  actualGasCost: {
+    type: Number,
+  },
+  actualGasUsed: {
+    type: Number,
+  },
+  reason: {
+    type: String,
+  },
+  logs: {
+    type: Object,
+  },
   receipt: {
     type: Object,
   },

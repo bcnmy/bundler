@@ -53,14 +53,13 @@ export const simulateBundlerTransaction = () => async (
     }
 
     if (!response) {
-      // TODO // change response
       return res.status(STATUSES.INTERNAL_SERVER_ERROR).send({
         code: STATUSES.INTERNAL_SERVER_ERROR,
         error: 'Response not received from simulation service',
       });
     }
     if ((response as any).code !== STATUSES.SUCCESS) {
-      return res.status((response as any).code).send({
+      return res.status(STATUSES.BAD_REQUEST).send({
         code: (response as any).code,
         error: (response as any).message,
       });

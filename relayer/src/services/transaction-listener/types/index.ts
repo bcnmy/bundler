@@ -5,6 +5,7 @@ import { IQueue } from '../../../../../common/interface';
 import { INetworkService } from '../../../../../common/network';
 import { RetryTransactionQueueData } from '../../../../../common/queue/types';
 import {
+  EntryPointMapType,
   EVMRawTransactionType, TransactionQueueMessageType, TransactionStatus, TransactionType,
 } from '../../../../../common/types';
 import { IEVMAccount } from '../../account';
@@ -18,6 +19,7 @@ export type EVMTransactionListenerParamsType = {
   cacheService: ICacheService,
   options: {
     chainId: number
+    entryPointMap: EntryPointMapType
   }
 };
 

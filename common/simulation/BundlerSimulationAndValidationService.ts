@@ -40,6 +40,7 @@ export class BundlerSimulationAndValidationService {
         data: {
           gasLimitFromSimulation: 0,
         },
+        code: error.code,
         message: parseError(error),
       };
     }
@@ -63,10 +64,20 @@ export class BundlerSimulationAndValidationService {
         message: parseError(estimatedGasForUserOp),
       };
     }
+
+    let userOpHash: string = '';
+    try {
+      userOpHash = await entryPointContract.getUserOpHash(userOp);
+      log.info(`userOpHash: ${userOpHash} for userOp: ${JSON.stringify(userOp)}`);
+    } catch (error) {
+      log.info(`Error in getting userOpHash for userOp: ${JSON.stringify(userOp)} with error: ${parseError(error)}`);
+    }
+
     return {
       isSimulationSuccessful,
       data: {
         gasLimitFromSimulation: estimatedGasForUserOp,
+        userOpHash,
       },
       message: 'Success',
     };
@@ -83,12 +94,12 @@ export class BundlerSimulationAndValidationService {
       }
       let { paymaster } = simulationResult.errorArgs;
       if (paymaster === config.zeroAddress) {
-        paymaster = null;
+        paymaster = undefined;
       }
       // eslint-disable-next-line
       const msg: string = simulationResult.errorArgs?.reason ?? simulationResult.toString()
 
-      if (!paymaster) {
+      if (paymaster == null) {
         log.info(`account validation failed: ${msg} for userOp: ${JSON.stringify(userOp)}`);
         throw new RpcError(msg, BUNDLER_VALIDATION_STATUSES.SIMULATE_VALIDATION_FAILED);
       } else {

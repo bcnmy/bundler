@@ -66,7 +66,7 @@ export class AASimulationService {
 
     let userOpHash: string = '';
     try {
-      userOpHash = entryPointContract.getUserOpHash(userOp);
+      userOpHash = await entryPointContract.getUserOpHash(userOp);
       log.info(`userOpHash: ${userOpHash} for userOp: ${JSON.stringify(userOp)}`);
     } catch (error) {
       log.info(`Error in getting userOpHash for userOp: ${JSON.stringify(userOp)} with error: ${parseError(error)}`);

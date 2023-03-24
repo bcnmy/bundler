@@ -46,10 +46,9 @@ export const validateBundlerRequest = () => async (
           error: 'Wrong transaction type sent in validate relay request',
         });
     }
-
     const { error } = validationResponse;
     log.info(`error from validation: ${JSON.stringify(error)} for method: ${method}`);
-    const valid = error == null;
+    const valid = error === undefined;
     if (valid) {
       return next();
     }

@@ -1,5 +1,4 @@
 import { ethers } from 'ethers';
-import { hexlify } from 'ethers/lib/utils';
 import { config } from '../../config';
 import { STATUSES } from '../../server/src/middleware';
 import { logger } from '../log-config';
@@ -179,7 +178,7 @@ export const getMetaDataFromUserOp = async (
 };
 
 export const getPaymasterFromPaymasterAndData = (paymasterAndData: string): string => {
-  const paymasterAddress = `0x${paymasterAndData.substring(0, 42)}`;
+  const paymasterAddress = `${paymasterAndData.substring(0, 42)}`;
   log.info(`paymasterAddress: ${paymasterAddress} for paymasterAndData: ${paymasterAndData}`);
   return paymasterAddress;
 };
@@ -209,78 +208,50 @@ const filterLogs = (userOpEvent: UserOperationEventEvent, logs: Log[]): Log[] =>
   return logs.slice(startIndex + 1, endIndex);
 };
 
-const deepHexlify = (obj: any): any => {
-  if (typeof obj === 'function') {
-    return undefined;
-  }
-  if (obj == null || typeof obj === 'string' || typeof obj === 'boolean') {
-    return obj;
-    // eslint-disable-next-line no-underscore-dangle
-  } if (obj._isBigNumber != null || typeof obj !== 'object') {
-    return hexlify(obj).replace(/^0x0/, '0x');
-  }
-  if (Array.isArray(obj)) {
-    return obj.map((member) => deepHexlify(member));
-  }
-  return Object.keys(obj).reduce(
-    (set, key) => ({
-      ...set,
-      [key]: deepHexlify(obj[key]),
-    }),
-    {},
-  );
-};
-
-export const getUserOperationReceipt = async (
+export const getUserOperationReceiptForDataSaving = async (
   chainId: number,
   userOpHash: string,
-  entryPointAddress: string,
+  receipt: any,
+  entryPointContract: ethers.Contract,
 ): Promise<any> => {
-  const { entryPointData, chains } = config;
-  let entryPointContract;
-
-  for (
-    let entryPointIndex = 0;
-    entryPointIndex < entryPointData[chainId].length;
-    entryPointIndex += 1
-  ) {
-    const entryPoint = entryPointData[chainId][entryPointIndex];
-
-    if (entryPoint.address.toLowerCase() === entryPointAddress.toLowerCase()) {
-      const jsonRpcProvider = new ethers.providers.JsonRpcProvider(chains.provider[chainId]);
-      entryPointContract = new ethers.Contract(
-        entryPointAddress,
-        JSON.stringify(entryPoint.abi),
-        jsonRpcProvider,
-      );
-    }
-  }
-
-  if (!entryPointContract) {
-    return null;
-  }
-
-  let event = [];
-
   try {
-    event = await entryPointContract.queryFilter(
-      entryPointContract.filters.UserOperationEvent(userOpHash),
-    ) as any;
-    // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-    if (event[0]) {
-      const receipt = await event.getTransactionReceipt();
-      const logs = filterLogs(event, receipt.logs);
-      return deepHexlify({
-        actualGasCost: event.args.actualGasCost,
-        actualGasUsed: event.args.actualGasUsed,
-        success: event.args.success,
-        logs,
-        receipt,
-      });
+    let event = [];
+
+    try {
+      event = await entryPointContract.queryFilter(
+        entryPointContract.filters.UserOperationEvent(userOpHash),
+      ) as any;
+      log.info(`event: ${JSON.stringify(event)} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
+      if (event[0]) {
+        const userOperationEventArgs = event[0].args;
+        log.info(`userOperationEventArgs: ${JSON.stringify(userOperationEventArgs)}`);
+        const actualGasCostInHex = event[0].args[5];
+        log.info(`actualGasCostInHex: ${actualGasCostInHex} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
+        const actualGasCostInNumber = Number(actualGasCostInHex.toString());
+        log.info(`actualGasCostInNumber: ${actualGasCostInNumber} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
+        const actualGasUsedInHex = event[0].args[6];
+        log.info(`actualGasUsedInHex: ${actualGasUsedInHex} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
+        const actualGasUsedInNumber = Number(actualGasUsedInHex.toString());
+        log.info(`actualGasUsedInNumber: ${actualGasUsedInNumber} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
+
+        const logs = filterLogs(event[0], receipt.logs);
+        log.info(`logs: ${JSON.stringify(logs)} for userOpHash: ${userOpHash} on chainId: ${chainId}`);
+
+        return {
+          actualGasCost: actualGasCostInNumber,
+          actualGasUsed: actualGasUsedInNumber,
+          success: event[0].args[4],
+          logs,
+        };
+      }
+      log.info('No event found');
+      return null;
+    } catch (error) {
+      log.info(`Missing/invalid userOpHash for userOpHash: ${userOpHash} on chainId: ${chainId} with erro: ${parseError(error)}`);
+      return null;
     }
-  } catch (err) {
-    log.info(`Missing/invalid userOpHash for userOpHash: ${userOpHash} on chainId: ${chainId}`);
+  } catch (error) {
+    log.info(`error in getUserOperationReceipt: ${parseError(error)}`);
     return null;
   }
-  return null;
 };

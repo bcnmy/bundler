@@ -201,6 +201,7 @@ let statusService: IStatusService;
       userOperationDao,
       options: {
         chainId,
+        entryPointMap,
       },
     });
     transactionListenerMap[chainId] = transactionListener;
@@ -259,10 +260,12 @@ let statusService: IStatusService;
 
       const addressList = await relayerMangerInstance.createRelayers();
       log.info(
-        `Relayer address list length: ${addressList.length} and minRelayerCount: ${JSON.stringify(relayerManager.minRelayerCount)}`,
+        `Relayer address list length: ${addressList.length} and minRelayerCount: ${JSON.stringify(relayerManager.minRelayerCount)} for relayerManager: ${relayerManager.name}`,
       );
       await relayerMangerInstance.fundRelayers(addressList);
+      log.info(`Relayer manager setup complete for chainId: ${chainId} for relayerManager: ${relayerManager.name}`);
     }
+
     log.info(`Relayer manager setup complete for chainId: ${chainId}`);
 
     log.info(`Setting up retry transaction service for chainId: ${chainId}`);

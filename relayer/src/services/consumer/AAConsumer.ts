@@ -93,10 +93,10 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
         this.relayerManager.addActiveRelayer(activeRelayer.getPublicKey());
       } else {
         this.queue.publish(JSON.parse(msg.content.toString()));
-        throw new Error(`No active relayer for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);
+        log.info(`No active relayer for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);
       }
     } else {
-      throw new Error(`No msg received from queue for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);
+      log.info(`No msg received from queue for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);
     }
   };
 }

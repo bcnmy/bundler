@@ -145,7 +145,9 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
       relayerData = this.transactionProcessingRelayerMap[address];
     }
     if (relayerData) {
-      relayerData.pendingCount -= 1;
+      if (relayerData.pendingCount > 0) {
+        relayerData.pendingCount = -1;
+      }
       log.info(`Pending count of relayer ${address} is ${relayerData.pendingCount} on chainId: ${this.chainId}`);
       const balance = await this.networkService.getBalance(address);
       relayerData.balance = balance;
@@ -178,7 +180,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
   }
 
   /**
-   * Method adds active relayer active relater queue
+   * Method adds active relayer active relayer queue
    * @param relayerAddress
    */
   async addActiveRelayer(relayerAddress: string): Promise<void> {
