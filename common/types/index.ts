@@ -19,7 +19,7 @@ export enum TransactionMethodType {
 
 export enum EthMethodType {
   ESTIMATE_USER_OPERATION_GAS = 'eth_estimateUserOperationGas',
-  GET_USER_OPERATION_BY_HASH = 'eth_estimateUserOperationGas',
+  GET_USER_OPERATION_BY_HASH = 'eth_getUserOperationByHash',
   GET_USER_OPERATION_RECEIPT = 'eth_getUserOperationReceipt',
   SUPPORTED_ENTRY_POINTS = 'eth_supportedEntryPoints',
   CHAIN_ID = 'eth_chainId',

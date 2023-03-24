@@ -30,11 +30,11 @@ export const getUserOperationReceipt = async (req: Request, res: Response) => {
     );
 
     if (!userOperationData) {
-      return {
+      return res.status(STATUSES.SUCCESS).json({
         jsonrpc: '2.0',
         id: 1,
         result: null,
-      };
+      });
     }
 
     const {

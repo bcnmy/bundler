@@ -43,7 +43,7 @@ export const validateBundlerRequest = () => async (
       default:
         return res.status(STATUSES.BAD_REQUEST).send({
           code: STATUSES.BAD_REQUEST,
-          error: 'Wrong transaction type sent in validate relay request',
+          error: 'Wrong transaction type sent in validate BUNDLER request',
         });
     }
     const { error } = validationResponse;

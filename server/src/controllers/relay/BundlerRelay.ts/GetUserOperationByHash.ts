@@ -21,11 +21,11 @@ export const getUserOperationByHash = async (req: Request, res: Response) => {
     );
 
     if (!userOperation) {
-      return {
+      return res.status(STATUSES.SUCCESS).json({
         jsonrpc: '2.0',
         id: 1,
         result: null,
-      };
+      });
     }
 
     const {
@@ -43,6 +43,7 @@ export const getUserOperationByHash = async (req: Request, res: Response) => {
       transactionHash,
       blockNumber,
       blockHash,
+      entryPoint,
     } = userOperation;
 
     const result = {
@@ -57,6 +58,7 @@ export const getUserOperationByHash = async (req: Request, res: Response) => {
       maxFeePerGas,
       maxPriorityFeePerGas,
       signature,
+      entryPoint,
       transactionHash,
       blockNumber,
       blockHash,

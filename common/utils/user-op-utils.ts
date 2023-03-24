@@ -187,28 +187,18 @@ export const getPaymasterFromPaymasterAndData = (paymasterAndData: string): stri
 };
 
 const filterLogs = (userOpEvent: UserOperationEventEvent, logs: Log[]): Log[] => {
-  let startIndex = -1;
-  let endIndex = -1;
-  logs.forEach((eventLog, index) => {
-    if (eventLog?.topics[0] === userOpEvent.topics[0]) {
-      // process UserOperationEvent
-      if (eventLog.topics[1] === userOpEvent.topics[1]) {
-        // it's our userOpHash. save as end of logs array
-        endIndex = index;
-      } else {
-        // it's a different hash. remember it as beginning index,
-        // but only if we didn't find our end index yet.
-        // eslint-disable-next-line no-lonely-if
-        if (endIndex === -1) {
-          startIndex = index;
-        }
-      }
+  const userOpLogs = logs.find((transactionlog: any) => {
+    if (transactionlog.topics.length === userOpEvent.topics.length) {
+      // Sort the `topics` arrays and compare them element by element
+      const sortedTransactionLogTopics = transactionlog.topics.slice().sort();
+      const sortedTopicsArray = userOpEvent.topics.slice().sort();
+      return sortedTransactionLogTopics.every(
+        (topic: string, index: number) => topic === sortedTopicsArray[index],
+      );
     }
+    return false;
   });
-  if (endIndex === -1) {
-    throw new Error('fatal: no UserOperationEvent in logs');
-  }
-  return logs.slice(startIndex + 1, endIndex);
+  return [userOpLogs as Log];
 };
 
 export const getUserOperationReceiptForDataSaving = async (
