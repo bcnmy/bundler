@@ -4,7 +4,11 @@ import { ICacheService } from '../../../../common/cache';
 import { IGasPrice } from '../../../../common/gas-price';
 import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
-import { getMaxRetryCountNotificationMessage } from '../../../../common/notification';
+import {
+  getMaxRetryCountNotificationMessage,
+  getTransactionErrorNotificationMessage,
+  getRelayerFundingNotificationMessage 
+} from '../../../../common/notification';
 import { INotificationManager } from '../../../../common/notification/interface';
 import { EVMRawTransactionType, NetworkBasedGasPriceType, TransactionType } from '../../../../common/types';
 import { getRetryTransactionCountKey, parseError } from '../../../../common/utils';
@@ -218,6 +222,33 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     await this.notificationManager.sendSlackNotification(slackNotifyObject);
   }
 
+  private async sendTransactionFailedSlackNotification(
+    transactionId: string,
+    chainId: number,
+    error: string,
+  ) {
+    try {
+      const message = getTransactionErrorNotificationMessage(transactionId, chainId, error);
+      const slackNotifyObject = this.notificationManager.getSlackNotifyObject(message);
+      await this.notificationManager.sendSlackNotification(slackNotifyObject);
+    } catch (errorInSlack) {
+      log.error(`Error in sending slack notification: ${parseError(errorInSlack)}`);
+    }
+  }
+
+  private async sendRelayerFundingSlackNotification(
+    relayerAddress: string,
+    chainId: number,
+    transactionHash: string) {
+    try {
+      const message = getRelayerFundingNotificationMessage(relayerAddress, chainId, transactionHash);
+      const slackNotifyObject = this.notificationManager.getSlackNotifyObject(message);
+      await this.notificationManager.sendSlackNotification(slackNotifyObject);
+    } catch (errorInSlack) {
+      log.error(`Error in sending slack notification: ${parseError(errorInSlack)}`);
+    }
+  }
+
   async sendTransaction(
     transactionData: TransactionDataType,
     account: IEVMAccount,
@@ -244,10 +275,10 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           this.chainId,
         );
       } catch (error) {
-        log.error(error);
-        log.error('Error in sending slack notification');
+        log.error(`Error in sending slack notification: ${parseError(error)}`);
       }
       // Should we send this response if we are manaully resubmitting transaction?
+      // TODO: send a noOp transaction to the blockchain and notify on slack.
       return {
         state: 'failed',
         code: STATUSES.NOT_FOUND,
@@ -312,6 +343,10 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         relayerManagerName,
       });
 
+      if (transactionType === TransactionType.FUNDING) {
+        await this.sendRelayerFundingSlackNotification(relayerAddress, this.chainId, transactionExecutionResponse.transactionResponse.hash);
+      }
+
       return {
         state: 'success',
         code: STATUSES.SUCCESS,
@@ -320,6 +355,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       };
     } catch (error) {
       log.info(`Error while sending transaction: ${error}`);
+      await this.sendTransactionFailedSlackNotification(transactionId, this.chainId, parseError(error));
       return {
         state: 'failed',
         code: STATUSES.INTERNAL_SERVER_ERROR,
@@ -380,6 +416,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       if (retryTransactionExecutionResponse.success) {
         transactionExecutionResponse = retryTransactionExecutionResponse.transactionResponse;
       } else {
+        await this.sendTransactionFailedSlackNotification(transactionId, this.chainId, retryTransactionExecutionResponse.error);
         return {
           state: 'failed',
           code: STATUSES.INTERNAL_SERVER_ERROR,
