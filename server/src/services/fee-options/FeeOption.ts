@@ -55,8 +55,16 @@ export class FeeOption {
         GasPriceType.DEFAULT,
       );
 
-      // TODO // Check for EIP 1559
-      const gasPrice = Number(gasPriceInString);
+      let gasPrice;
+
+      if (typeof gasPriceInString !== 'string') {
+        const {
+          maxFeePerGas,
+        } = gasPriceInString;
+        gasPrice = Number(maxFeePerGas);
+      } else {
+        gasPrice = Number(gasPriceInString);
+      }
 
       const networkPriceDataInString = await this.cacheService.get(
         getTokenPriceKey(),

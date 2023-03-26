@@ -237,8 +237,16 @@ export class TenderlySimulationService implements IExternalSimulation {
       }
       log.info(`Payment sent in transaction: ${paymentValue} for SCW: ${to} with data: ${data}`);
 
-      // TODO will have to change in EIP 1559 implementation
-      const gasPrice = await this.gasPriceService.getGasPrice(GasPriceType.DEFAULT);
+      const gasPriceInString = await this.gasPriceService.getGasPrice(GasPriceType.DEFAULT);
+      let gasPrice;
+      if (typeof gasPriceInString !== 'string') {
+        const {
+          maxFeePerGas,
+        } = gasPriceInString;
+        gasPrice = maxFeePerGas;
+      } else {
+        gasPrice = gasPriceInString;
+      }
       log.info(`Current gasPrice: ${gasPrice} on chainId: ${chainId}`);
 
       const nativeTokenGasPrice = parseInt(gasPrice as string, 10);

@@ -95,7 +95,7 @@ type RelayerManagerConfigType = Array<{
 type TransactionConfigType = {
   errors: {
     networkResponseMessages: {
-      [key: string]: string,
+      [key: string]: string[],
     },
     networksNonceError: ChainIdWithArrayStringValueType,
     networksInsufficientFundsError: ChainIdWithStringValueType,
