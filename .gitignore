@@ -6,4 +6,4 @@ relayer/dist
 server/dist
 coverage
 config/config.json
-config.json.erc
+config.json.enc

@@ -56,7 +56,11 @@ const log = logger(module);
 
 const routeTransactionToRelayerMap: {
   [chainId: number]: {
-    [transactionType: string]: AARelayService | SCWRelayService | GaslessFallbackRelayService;
+    [transactionType: string]:
+    AARelayService |
+    SCWRelayService |
+    GaslessFallbackRelayService |
+    BundlerRelayService
   };
 } = {};
 
