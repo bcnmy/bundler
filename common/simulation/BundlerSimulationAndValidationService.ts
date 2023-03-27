@@ -2,13 +2,18 @@ import { BigNumber } from 'ethers';
 import { arrayify, hexlify } from 'ethers/lib/utils';
 import { config } from '../../config';
 import { IEVMAccount } from '../../relayer/src/services/account';
-import { BUNDLER_VALIDATION_STATUSES } from '../../server/src/middleware';
+import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../../server/src/middleware';
 import { logger } from '../log-config';
 import { INetworkService } from '../network';
 import { DefaultGasOverheadType, EVMRawTransactionType, UserOperationType } from '../types';
 import { fillEntity, packUserOp, parseError } from '../utils';
 import RpcError from '../utils/rpc-error';
-import { BundlerSimulationDataType, EstimateUserOperationGasDataType, SimulationResponseType } from './types';
+import {
+  BundlerSimulationDataType,
+  EstimateUserOperationGasDataType,
+  EstimateUserOperationGasReturnType,
+  SimulationResponseType,
+} from './types';
 
 const log = logger(module);
 export class BundlerSimulationAndValidationService {
@@ -29,6 +34,7 @@ export class BundlerSimulationAndValidationService {
     );
 
     let isSimulationSuccessful = true;
+    log.info(`userOp: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
     try {
       const simulationResult = await entryPointStatic.callStatic.simulateValidation(userOp)
         .catch((e: any) => e);
@@ -131,61 +137,121 @@ export class BundlerSimulationAndValidationService {
 
   async estimateUserOperationGas(
     estimateUserOperationGasData: EstimateUserOperationGasDataType,
-  ) {
+  ): Promise<EstimateUserOperationGasReturnType> {
     const { userOp, entryPointContract, chainId } = estimateUserOperationGasData;
 
     const entryPointStatic = entryPointContract.connect(
       this.networkService.ethersProvider.getSigner(config.zeroAddress),
     );
 
-    const simulationResult = await entryPointStatic.callStatic.simulateValidation(userOp)
-      .catch((e: any) => e);
-    log.info(`simulationResult: ${JSON.stringify(simulationResult)}`);
-    const {
-      returnInfo,
-    } = BundlerSimulationAndValidationService.parseUserOpSimulationResult(userOp, simulationResult);
+    const fullUserOp = {
+      ...userOp,
+      // default values for missing fields.
+      callGasLimit: BigNumber.from('0'),
+      maxFeePerGas: BigNumber.from('0'),
+      maxPriorityFeePerGas: BigNumber.from('0'),
+      preVerificationGas: BigNumber.from('0'),
+      verificationGasLimit: '0xF4240', // 1000000
+    };
 
-    const callGasLimit = await this.networkService.estimateGas(
-      entryPointContract,
-      'handleOps',
-      [[userOp],
-        config.feeOption.refundReceiver[chainId]],
-      config.zeroAddress,
+    let returnInfo;
+
+    log.info(`fullUserOp: ${JSON.stringify(fullUserOp)} on chainId: ${chainId}`);
+
+    try {
+      const simulationResult: any = await entryPointStatic.callStatic.simulateValidation(fullUserOp)
+        .catch((e: any) => e);
+      log.info(`simulationResult: ${JSON.stringify(simulationResult)}`);
+      returnInfo = BundlerSimulationAndValidationService.parseUserOpSimulationResult(
+        userOp,
+        simulationResult,
+      ).returnInfo;
+    } catch (error: any) {
+      log.info(`Bundler Simulation failed: ${parseError(error)}`);
+      return {
+        code: error.code,
+        message: parseError(error),
+        data: {
+          preVerificationGas: 0,
+          verificationGasLimit: 0,
+          callGasLimit: 0,
+          validAfter: 0,
+          validUntil: 0,
+          deadline: 0,
+        },
+      };
+    }
+
+    const callGasLimit = await this.networkService.estimateCallGas(
+      entryPointContract.address,
+      userOp.sender,
+      userOp.callData,
     )
       .then((callGasLimitResponse) => callGasLimitResponse.toNumber())
-      .catch((err) => {
-        const message = err.message.match(/reason="(.*?)"/)?.at(1) ?? 'execution reverted';
+      .catch((error) => {
+        const message = error.message.match(/reason="(.*?)"/)?.at(1) ?? 'execution reverted';
         log.info(`message: ${JSON.stringify(message)}`);
         return 0;
       });
 
-    const preVerificationGas = BundlerSimulationAndValidationService.calcPreVerificationGas(userOp);
+    log.info(`callGasLimit: ${callGasLimit} on chainId: ${chainId}`);
 
-    const verificationGasLimit = BigNumber.from(returnInfo.preOpGas).toNumber();
+    const preVerificationGas = BundlerSimulationAndValidationService.calcPreVerificationGas(
+      userOp,
+    );
+    log.info(`preVerificationGas: ${preVerificationGas} on chainId: ${chainId}`);
+
+    const { preOpGas } = returnInfo;
+    let {
+      validAfter,
+      validUntil,
+    } = returnInfo;
+
+    validAfter = BigNumber.from(validAfter);
+    validUntil = BigNumber.from(validUntil);
+    if (validUntil === BigNumber.from(0)) {
+      validUntil = undefined;
+    }
+    if (validAfter === BigNumber.from(0)) {
+      validAfter = undefined;
+    }
+
+    const verificationGasLimit = BigNumber.from(preOpGas).toNumber();
+    log.info(`verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId}`);
     let deadline: any;
     if (returnInfo.deadline) {
       deadline = BigNumber.from(returnInfo.deadline);
     }
 
     return {
-      preVerificationGas,
-      verificationGasLimit,
-      callGasLimit,
-      deadline,
+      code: STATUSES.SUCCESS,
+      message: `Gas successfully estimated for userOp: ${JSON.stringify(userOp)} on chainId: ${chainId}`,
+      data: {
+        preVerificationGas,
+        verificationGasLimit,
+        callGasLimit,
+        validAfter,
+        validUntil,
+        deadline,
+      },
     };
   }
 
   static calcPreVerificationGas(
-    userOp: Partial<UserOperationType>,
+    userOp: UserOperationType,
     overheads?: Partial<DefaultGasOverheadType>,
   ) {
     const { defaultGasOverheads } = config;
     const ov = { ...defaultGasOverheads, ...(overheads ?? {}) };
     const p: UserOperationType = {
+      ...userOp,
       // dummy values, in case the UserOp is incomplete.
+      callGasLimit: BigNumber.from('0'),
+      maxFeePerGas: BigNumber.from('0'),
+      maxPriorityFeePerGas: BigNumber.from('0'),
+      verificationGasLimit: '0xF4240', // 1000000
       preVerificationGas: 21000, // dummy value, just for calldata cost
       signature: hexlify(Buffer.alloc(ov.sigSize, 1)), // dummy signature
-      ...userOp,
     } as any;
 
     const packed = arrayify(packUserOp(p, false));

@@ -50,3 +50,16 @@ export type SimulationResponseType = {
   message: string,
   code?: number,
 };
+
+export type EstimateUserOperationGasReturnType = {
+  code: number,
+  message: string,
+  data: {
+    preVerificationGas: number,
+    verificationGasLimit: number,
+    callGasLimit: number,
+    validAfter: number,
+    validUntil: number,
+    deadline: number,
+  },
+};

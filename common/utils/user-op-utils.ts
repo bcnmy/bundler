@@ -211,6 +211,7 @@ export const getUserOperationReceiptForDataSaving = async (
     let event = [];
 
     try {
+      // TODO add from and to block
       event = await entryPointContract.queryFilter(
         entryPointContract.filters.UserOperationEvent(userOpHash),
       ) as any;

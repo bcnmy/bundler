@@ -34,13 +34,42 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
       parseInt(chainId, 10)
     ].estimateUserOperationGas({ userOp, entryPointContract, chainId: parseInt(chainId, 10) });
 
-    return res.status(STATUSES.SUCCESS).json({
+    const {
+      code,
+      message,
+      data,
+    } = estimatedUserOpGas;
+
+    if (code !== STATUSES.SUCCESS) {
+      return res.status(STATUSES.BAD_REQUEST).json({
+        code: code || STATUSES.BAD_REQUEST,
+        message,
+      });
+    }
+
+    const {
+      callGasLimit,
+      verificationGasLimit,
+      preVerificationGas,
+      validUntil,
+      validAfter,
+      deadline,
+    } = data;
+
+    return res.status(STATUSES.BAD_REQUEST).json({
       jsonrpc: '2.0',
       id: 1,
-      result: estimatedUserOpGas,
+      result: {
+        callGasLimit,
+        verificationGasLimit,
+        preVerificationGas,
+        validUntil,
+        validAfter,
+        deadline,
+      },
     });
   } catch (error) {
-    log.error(`Error in supportedEntryPoints handler ${JSON.stringify(error)}`);
+    log.error(`Error in estimateUserOperationGas handler ${JSON.stringify(error)}`);
     return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
       code: STATUSES.INTERNAL_SERVER_ERROR,
       error: `Internal Server Error: ${JSON.stringify(error)}`,
