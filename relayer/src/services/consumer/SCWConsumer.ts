@@ -61,7 +61,7 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
           this.transactionType,
           this.relayerManager.name,
         );
-        log.info(`Response from transaction service after sending transaction on chaindId: ${this.chainId}: ${JSON.stringify(transactionServiceResponse)}`);
+        log.info(`Response from transaction service after sending transaction on chainId: ${this.chainId}: ${JSON.stringify(transactionServiceResponse)}`);
         this.relayerManager.addActiveRelayer(activeRelayer.getPublicKey());
         if (transactionServiceResponse.state === 'success') {
           log.info(`Transaction sent successfully for ${this.transactionType} on chain ${this.chainId}`);
@@ -73,7 +73,7 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
         log.info(`No active relayer for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);
       }
     } else {
-      throw new Error(`No msg received from queue for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);
+      log.info(`No msg received from queue for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);
     }
   };
 }

@@ -203,6 +203,20 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
     return estimatedGas;
   }
 
+  // same as above but accepts different parameters, will combine in a future release
+  async estimateCallGas(
+    from: string,
+    to: string,
+    data: string,
+  ): Promise<BigNumber> {
+    const estimatedGas = await this.useProvider(RpcMethod.estimateGas, {
+      from,
+      to,
+      data,
+    });
+    return estimatedGas;
+  }
+
   async getTransactionReceipt(
     transactionHash: string,
   ): Promise<ethers.providers.TransactionReceipt> {
