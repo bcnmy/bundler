@@ -52,18 +52,27 @@ export class BundlerSimulationAndValidationService {
         message: parseError(error),
       };
     }
+    let estimatedGasForUserOp;
 
-    const estimatedGasForUserOp = await this.networkService.estimateGas(
-      entryPointContract,
-      'handleOps',
-      [[userOp],
-        config.feeOption.refundReceiver[chainId]],
-      config.zeroAddress,
-    );
-    // const estimatedGasForUserOp = BigNumber.from('3000000');
-
-    log.info(`Estimated gas is: ${estimatedGasForUserOp} from ethers for userOp: ${JSON.stringify(userOp)}`);
-    if (!estimatedGasForUserOp || !estimatedGasForUserOp._isBigNumber) {
+    try {
+      estimatedGasForUserOp = await this.networkService.estimateGas(
+        entryPointContract,
+        'handleOps',
+        [[userOp],
+          config.feeOption.refundReceiver[chainId]],
+        config.zeroAddress,
+      );
+      log.info(`Estimated gas is: ${estimatedGasForUserOp} from ethers for userOp: ${JSON.stringify(userOp)}`);
+      if (!estimatedGasForUserOp || !estimatedGasForUserOp._isBigNumber) {
+        return {
+          isSimulationSuccessful: false,
+          data: {
+            gasLimitFromSimulation: 0,
+          },
+          message: parseError(estimatedGasForUserOp),
+        };
+      }
+    } catch (error) {
       return {
         isSimulationSuccessful: false,
         data: {
