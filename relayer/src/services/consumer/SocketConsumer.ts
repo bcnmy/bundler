@@ -69,7 +69,7 @@ export class SocketConsumer implements ISocketConsumer {
         log.error(`Failed to send to client on socket server with error: ${JSON.stringify(error)}`);
       }
     } else {
-      throw new Error(`No msg received from queue in socket service on chainId: ${this.chainId}`);
+      log.info(`No msg received from queue in socket service on chainId: ${this.chainId}`);
     }
   };
 }

@@ -82,7 +82,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     } = createTransactionParams;
     const relayerAddress = account.getPublicKey();
 
-    const nonce = await this.nonceManager.getNonce(relayerAddress);
+    const nonce = await this.nonceManager.getNonce(relayerAddress, false); // TODO: fetch using pending
     log.info(`Nonce for relayerAddress ${relayerAddress} is ${nonce} on chainId: ${this.chainId}`);
     const response = {
       from,
@@ -132,14 +132,14 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           transactionResponse: transactionExecutionResponse,
         };
       } catch (error: any) {
-        const errInString = parseError(error);
+        const errInString = parseError(error).toLowerCase();
         log.info(`Error while executing transaction: ${errInString}`);
         const replacementFeeLowMessage = config.transaction.errors.networkResponseMessages
           .REPLACEMENT_UNDERPRICED;
         const alreadyKnownMessage = config.transaction
           .errors.networkResponseMessages.ALREADY_KNOWN;
-        const insufficientFundsErrorMessage = config
-          .transaction.errors.networksInsufficientFundsError[this.chainId]
+        const insufficientFundsErrorMessage = [config
+          .transaction.errors.networksInsufficientFundsError[this.chainId]]
         || config.transaction.errors.networkResponseMessages.INSUFFICIENT_FUNDS;
 
         if (this.isNonceError(errInString) || errInString.indexOf('increasing the gas price or incrementing the nonce') > -1) {
@@ -148,7 +148,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           log.info(`updating the nonce to ${rawTransaction.nonce}
        for relayer ${rawTransaction.from} on network id ${this.chainId}`);
           retryExecuteTransaction({ rawTransaction, account });
-        } else if (errInString.indexOf(replacementFeeLowMessage) > -1) {
+        } else if (replacementFeeLowMessage.some((str) => errInString.indexOf(str) > -1)) {
           log.info(
             `Replacement underpriced error for relayer ${rawTransaction.from}
        on network id ${this.chainId}`,
@@ -177,11 +177,11 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           }
 
           retryExecuteTransaction({ rawTransaction, account });
-        } else if (errInString.indexOf(alreadyKnownMessage) > -1) {
+        } else if (alreadyKnownMessage.some((str) => errInString.indexOf(str) > -1)) {
           log.info(
             `Already known transaction hash with same payload and nonce for relayer ${rawTransaction.from} on network id ${this.chainId}. Removing nonce from cache and retrying`,
           );
-        } else if (errInString.indexOf(insufficientFundsErrorMessage) > -1) {
+        } else if (insufficientFundsErrorMessage.some((str) => errInString.indexOf(str) > -1)) {
           log.info(`Relayer ${rawTransaction.from} has insufficient funds`);
           // Send previous relayer for funding
         } else {

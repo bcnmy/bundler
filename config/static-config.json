@@ -142,10 +142,10 @@
   "transaction": {
     "errors": {
       "networkResponseMessages": {
-        "ALREADY_KNOWN" : "already known",
-        "REPLACEMENT_UNDERPRICED" : "replacement fee too low",
-        "INSUFFICIENT_FUNDS": "insufficient funds for gas",
-        "INVALID_TRANSACTION": "submit transaction to pool failed"
+        "ALREADY_KNOWN" : ["already known"],
+        "REPLACEMENT_UNDERPRICED" : ["replacement fee too low", "replacement_underpriced"],
+        "INSUFFICIENT_FUNDS": ["insufficient funds for gas"],
+        "INVALID_TRANSACTION": ["submit transaction to pool failed"]
       },
       "networksNonceError": {
         "5": ["nonce too low", "nonce has already been used"],
