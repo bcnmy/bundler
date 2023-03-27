@@ -527,4 +527,5 @@ export {
   transactionDao,
   userOperationDao,
   statusService,
+  networkServiceMap,
 };
