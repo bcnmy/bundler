@@ -144,6 +144,20 @@ export class BundlerSimulationAndValidationService {
       this.networkService.ethersProvider.getSigner(config.zeroAddress),
     );
 
+    const callGasLimit = await this.networkService.estimateCallGas(
+      entryPointContract.address,
+      userOp.sender,
+      userOp.callData,
+    )
+      .then((callGasLimitResponse) => callGasLimitResponse.toNumber())
+      .catch((error) => {
+        const message = error.message.match(/reason="(.*?)"/)?.at(1) ?? 'execution reverted';
+        log.info(`message: ${JSON.stringify(message)}`);
+        return 0;
+      });
+
+    log.info(`callGasLimit: ${callGasLimit} on chainId: ${chainId}`);
+
     const fullUserOp = {
       ...userOp,
       // default values for missing fields.
@@ -182,20 +196,6 @@ export class BundlerSimulationAndValidationService {
         },
       };
     }
-
-    const callGasLimit = await this.networkService.estimateCallGas(
-      entryPointContract.address,
-      userOp.sender,
-      userOp.callData,
-    )
-      .then((callGasLimitResponse) => callGasLimitResponse.toNumber())
-      .catch((error) => {
-        const message = error.message.match(/reason="(.*?)"/)?.at(1) ?? 'execution reverted';
-        log.info(`message: ${JSON.stringify(message)}`);
-        return 0;
-      });
-
-    log.info(`callGasLimit: ${callGasLimit} on chainId: ${chainId}`);
 
     const preVerificationGas = BundlerSimulationAndValidationService.calcPreVerificationGas(
       userOp,
