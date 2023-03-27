@@ -120,9 +120,7 @@ export const fallbackGasTankDepositRequestSchema = object.keys({
   method: string.regex(/eth_sendFallbackGasTankDepositTransaction/),
   params: array.items(object.keys(
     {
-      value: number,
-      to: string.regex(/^0x[a-fA-F0-9]{40}$/).required().error(new Error('to is required')),
-      gasLimit: string.optional().allow(''), // in hex
+      value: number.required().error(new Error('value is required')),
       chainId: number.required().error(new Error('chainId is required')),
     },
   )),
