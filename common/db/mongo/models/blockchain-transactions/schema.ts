@@ -36,6 +36,30 @@ export const BlockchainTransactionSchema = new Schema<IBlockchainTransaction>({
   transactionFee: {
     type: Number,
   },
+  transactionFeeInUSD: {
+    type: Number,
+  },
+  transactionFeeCurrency: {
+    type: String,
+  },
+  refundTokenAddress: {
+    type: String,
+  },
+  refundTokenCurrency: {
+    type: String,
+  },
+  refundAmount: {
+    type: Number,
+  },
+  refundAmountInUSD: {
+    type: Number,
+  },
+  relayerDestinationContractAddress: {
+    type: String,
+  },
+  relayerDestinationContractName: {
+    type: String,
+  },
   rawTransaction: {
     type: Object,
   },

@@ -1,4 +1,4 @@
-import { SymbolMapByChainIdType, TransactionType } from '../../common/types';
+import { SymbolMapByChainIdType, TransactionType, DefaultGasOverheadType } from '../../common/types';
 
 type ChainIdWithStringValueType = {
   [key: number]: string
@@ -95,7 +95,7 @@ type RelayerManagerConfigType = Array<{
 type TransactionConfigType = {
   errors: {
     networkResponseMessages: {
-      [key: string]: string,
+      [key: string]: string[],
     },
     networksNonceError: ChainIdWithArrayStringValueType,
     networksInsufficientFundsError: ChainIdWithStringValueType,
@@ -113,7 +113,10 @@ type ChainsConfigType = {
   decimal: ChainIdWithNumberValueType,
   provider: ChainIdWithStringValueType,
   fallbackUrls: ChainIdWithArrayStringValueType,
-  retryTransactionInterval: ChainIdWithNumberValueType
+  retryTransactionInterval: ChainIdWithNumberValueType,
+  multiSendAddress: ChainIdWithStringValueType,
+  multiSendCallOnlyAddress: ChainIdWithStringValueType,
+  walletFactoryAddress: ChainIdWithStringValueType
 };
 
 type RelayerConfigType = {
@@ -136,6 +139,13 @@ type EntryPointDataConfigType = {
   }>
 };
 
+type FallbackGasTankDataConfigType = {
+  [key: number]: {
+    fallbackContractAbi: Array<any>,
+    address: string,
+  }
+};
+
 type DataSourcesConfigType = {
   mongoUrl: string,
   redisUrl: string,
@@ -150,8 +160,20 @@ type CacheServiceConfigType = {
   lockTTL: number,
 };
 
+type AbiConfigType = {
+  entryPointAbi: Array<any>,
+  smartWalletAbi: Array<any>,
+  multiSendAbi: Array<any>,
+  multiSendCallOnlyAbi: Array<any>
+};
+
+type PaymasterDashboardBackendConfigType = {
+  dappDataUrl: string
+};
+
 export type ConfigType = {
   queueUrl: string,
+  paymasterDashboardBackendConfig: PaymasterDashboardBackendConfigType,
   slack: SlackConfigType,
   dataSources: DataSourcesConfigType,
   socketService: SocketServiceConfigType,
@@ -167,8 +189,11 @@ export type ConfigType = {
   feeOption: FeeOptionConfigType,
   tokenPrice: TokenPriceConfigType,
   entryPointData: EntryPointDataConfigType,
+  fallbackGasTankData: FallbackGasTankDataConfigType,
   zeroAddress: string,
-  simulationData: SimulationDataConfigType
+  simulationData: SimulationDataConfigType,
+  abi: AbiConfigType,
+  defaultGasOverheads: DefaultGasOverheadType
 };
 
 export interface IConfig {

@@ -59,6 +59,7 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
         const { userOp, to } = transactionDataReceivedFromQueue;
         const entryPointContracts = this.entryPointMap[this.chainId];
 
+        // TODO Test this via making it a function
         let entryPointContract;
         for (let entryPointContractIndex = 0;
           entryPointContractIndex < entryPointContracts.length;
@@ -92,10 +93,10 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
         this.relayerManager.addActiveRelayer(activeRelayer.getPublicKey());
       } else {
         this.queue.publish(JSON.parse(msg.content.toString()));
-        throw new Error(`No active relayer for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);
+        log.info(`No active relayer for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);
       }
     } else {
-      throw new Error(`No msg received from queue for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);
+      log.info(`No msg received from queue for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);
     }
   };
 }

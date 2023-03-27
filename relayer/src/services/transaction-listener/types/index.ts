@@ -1,10 +1,11 @@
 import { BigNumber, ethers } from 'ethers';
 import { ICacheService } from '../../../../../common/cache';
-import { ITransactionDAO } from '../../../../../common/db';
+import { ITransactionDAO, IUserOperationDAO } from '../../../../../common/db';
 import { IQueue } from '../../../../../common/interface';
 import { INetworkService } from '../../../../../common/network';
 import { RetryTransactionQueueData } from '../../../../../common/queue/types';
 import {
+  EntryPointMapType,
   EVMRawTransactionType, TransactionQueueMessageType, TransactionStatus, TransactionType,
 } from '../../../../../common/types';
 import { IEVMAccount } from '../../account';
@@ -14,9 +15,11 @@ export type EVMTransactionListenerParamsType = {
   transactionQueue: IQueue<TransactionQueueMessageType>,
   retryTransactionQueue: IQueue<RetryTransactionQueueData>,
   transactionDao: ITransactionDAO,
+  userOperationDao: IUserOperationDAO,
   cacheService: ICacheService,
   options: {
     chainId: number
+    entryPointMap: EntryPointMapType
   }
 };
 
@@ -47,6 +50,8 @@ export type TransactionDataToBeUpdatedInDatabaseType = {
   previousTransactionHash?: string;
   status?: TransactionStatus;
   transactionFee?: number;
+  transactionFeeInUSD?: number;
+  transactionFeeCurrency?: string;
   rawTransaction?: ethers.providers.TransactionResponse;
   gasPrice?: BigNumber;
   receipt?: object;

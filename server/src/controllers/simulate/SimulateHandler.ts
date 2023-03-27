@@ -1,6 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
 import { TransactionMethodType } from '../../../../common/types';
+import { STATUSES } from '../../middleware';
 import { simulateAATransaction } from './SimulateAATransaction';
+import { simulateGaslessFallbackTransaction } from './SimulateGaslessFallbackTransaction';
 import { simulateSCWTransaction } from './SimulateSCWTransaction';
 
 export const simulateTransaction = () => async (
@@ -15,23 +17,25 @@ export const simulateTransaction = () => async (
       response = await simulateAATransaction(req);
     } else if (method === TransactionMethodType.SCW) {
       response = await simulateSCWTransaction(req);
+    } else if (method === TransactionMethodType.GASLESS_FALLBACK) {
+      response = await simulateGaslessFallbackTransaction(req);
     }
     if (!response) {
-      return res.status(500).send({
-        code: 500,
+      return res.status(STATUSES.INTERNAL_SERVER_ERROR).send({
+        code: STATUSES.INTERNAL_SERVER_ERROR,
         error: 'Response not received from simulation service',
       });
     }
-    if ((response as any).code !== 200) {
+    if ((response as any).code !== STATUSES.SUCCESS) {
       return res.status((response as any).code).send({
         code: (response as any).code,
-        error: (response as any).msgFromSimulation,
+        error: (response as any).message,
       });
     }
     return next();
   } catch (error) {
-    return res.status(500).send({
-      code: 500,
+    return res.status(STATUSES.INTERNAL_SERVER_ERROR).send({
+      code: STATUSES.INTERNAL_SERVER_ERROR,
       error: `Internal server error: ${JSON.stringify(error)}`,
     });
   }

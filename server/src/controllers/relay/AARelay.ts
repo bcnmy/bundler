@@ -1,9 +1,16 @@
 import { Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
-import { routeTransactionToRelayerMap, transactionDao } from '../../../../common/service-manager';
-import { isError, TransactionStatus, TransactionType } from '../../../../common/types';
-import { generateTransactionId } from '../../../../common/utils';
+import { networkServiceMap, routeTransactionToRelayerMap, transactionDao } from '../../../../common/service-manager';
+import { generateTransactionId, getMetaDataFromUserOp } from '../../../../common/utils';
+import {
+  isError,
+  RelayerDestinationSmartContractName,
+  TransactionMethodType,
+  TransactionStatus,
+  TransactionType,
+} from '../../../../common/types';
 import { config } from '../../../../config';
+import { STATUSES } from '../../middleware';
 
 const websocketUrl = config.socketService.wssUrl;
 
@@ -21,6 +28,23 @@ export const relayAATransaction = async (req: Request, res: Response) => {
 
     const walletAddress = userOp.sender.toLowerCase();
 
+    await transactionDao.save(chainId, {
+      transactionId,
+      transactionType: TransactionType.AA,
+      status: TransactionStatus.PENDING,
+      chainId,
+      walletAddress,
+      metaData,
+      resubmitted: false,
+      creationTime: Date.now(),
+    });
+
+    if (!routeTransactionToRelayerMap[chainId][TransactionType.AA]) {
+      return res.status(STATUSES.BAD_REQUEST).json({
+        code: STATUSES.BAD_REQUEST,
+        error: `${TransactionMethodType.AA} method not supported for chainId: ${chainId}`,
+      });
+    }
     const response = routeTransactionToRelayerMap[chainId][TransactionType.AA]
       .sendTransactionToRelayer({
         type: TransactionType.AA,
@@ -35,25 +59,41 @@ export const relayAATransaction = async (req: Request, res: Response) => {
         metaData,
       });
 
-    transactionDao.save(chainId, {
-      transactionId,
-      transactionType: TransactionType.AA,
-      status: TransactionStatus.PENDING,
-      chainId,
-      walletAddress,
-      metaData,
-      resubmitted: false,
-      creationTime: Date.now(),
-    });
+    const { dappAPIKey } = metaData;
+    try {
+      const {
+        destinationSmartContractAddresses,
+        destinationSmartContractMethods,
+      } = await getMetaDataFromUserOp(
+        userOp,
+        chainId,
+        dappAPIKey,
+        networkServiceMap[chainId].ethersProvider,
+      );
+      metaData.destinationSmartContractAddresses = destinationSmartContractAddresses;
+      metaData.destinationSmartContractMethods = destinationSmartContractMethods;
+      log.info(`MetaData to be saved: ${JSON.stringify(metaData)} for dappAPIKey: ${dappAPIKey}`);
+
+      await transactionDao.updateMetaDataAndRelayerDestinationContractDataByTransactionId(
+        chainId,
+        transactionId,
+        metaData,
+        entryPointAddress,
+        RelayerDestinationSmartContractName.ENTRY_POINT,
+      );
+    } catch (error) {
+      log.info(`Error in getting meta data from userOp: ${JSON.stringify(userOp)} for dappAPIKey: ${dappAPIKey}`);
+      log.info(`Error: ${error}`);
+    }
 
     if (isError(response)) {
-      return res.status(400).json({
-        code: 400,
+      return res.status(STATUSES.BAD_REQUEST).json({
+        code: STATUSES.BAD_REQUEST,
         error: response.error,
       });
     }
-    return res.status(200).json({
-      code: 200,
+    return res.status(STATUSES.SUCCESS).json({
+      code: STATUSES.SUCCESS,
       data: {
         transactionId,
         connectionUrl: websocketUrl,
@@ -61,8 +101,8 @@ export const relayAATransaction = async (req: Request, res: Response) => {
     });
   } catch (error) {
     log.error(`Error in AA relay ${JSON.stringify(error)}`);
-    return res.status(500).json({
-      code: 500,
+    return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
+      code: STATUSES.INTERNAL_SERVER_ERROR,
       error: `Internal Server Error: ${JSON.stringify(error)}`,
     });
   }

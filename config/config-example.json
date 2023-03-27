@@ -11,6 +11,9 @@
     "token": "",
     "apiKey": ""
   },
+  "paymasterDashboardBackendConfig": {
+    "dappDataUrl": ""
+  },
   "relayer": {
     "nodePathIndex": 0
   },

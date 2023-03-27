@@ -6,7 +6,7 @@ import { logger } from '../../log-config';
 import { INetworkService } from '../../network';
 import { IScheduler } from '../../scheduler';
 import { EVMRawTransactionType } from '../../types';
-import { gasPriceCall } from '../../utils/axios-calls';
+import { axiosGetCall } from '../../utils/axios-calls';
 import { GasPrice } from '../GasPrice';
 import { GasPriceType } from '../types';
 
@@ -31,7 +31,7 @@ export class MaticGasPrice extends GasPrice implements IScheduler {
     const url = config.gasPrice[this.chainId].gasOracle.polygonscanUrl;
     if (!url) throw new Error('Polygon scan gas station url not provided.');
 
-    const { status, result: response } = await gasPriceCall(url);
+    const { status, result: response } = await axiosGetCall(url);
 
     if (status !== '1') throw new Error('invalid response from polygon scan');
 
@@ -51,7 +51,7 @@ export class MaticGasPrice extends GasPrice implements IScheduler {
     const url = config.gasPrice[this.chainId].gasOracle.maticGasStationUrl || '';
     if (!url) throw new Error('Matic gas station url not provided.');
 
-    const response = await gasPriceCall(url);
+    const response = await axiosGetCall(url);
 
     const mediumGasPrice = response.standard;
     const mediumGasPriceInWei = mediumGasPrice * 1e9; // gasPrice is in 10 Gwei unit
@@ -72,7 +72,7 @@ export class MaticGasPrice extends GasPrice implements IScheduler {
     const url = config.gasPrice[this.chainId].gasOracle.maticGasStationUrlForEIP1559 || '';
     if (!url) throw new Error('Matic gas station url for EIP-1559 not provided.');
 
-    const response = await gasPriceCall(url);
+    const response = await axiosGetCall(url);
 
     const safeEIP1559Prices = response.data.safeLow;
     const mediumEIP1559Prices = response.data.standard;
@@ -229,6 +229,10 @@ export class MaticGasPrice extends GasPrice implements IScheduler {
       GasPriceType.FAST,
       Math.round(fastestGasPriceInWei).toString(),
     );
+
+    await this.maticGasStationForEIP1559().catch(async (err) => {
+      log.error(`[POLYGONSCAN] Error in fetching matic gas price for EIP1559: ${err}`);
+    });
   }
 
   schedule() {

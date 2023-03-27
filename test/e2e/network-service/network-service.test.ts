@@ -1,9 +1,9 @@
 /* eslint-disable no-await-in-loop */
 import { BigNumber, ethers } from 'ethers';
-import { config } from '../../config';
-import { EVMNetworkService } from '../../common/network';
-import { logger } from '../../common/log-config';
-import { EVMAccount } from '../../relayer/src/services/account';
+import { config } from '../../../config';
+import { EVMNetworkService } from '../../../common/network';
+import { logger } from '../../../common/log-config';
+import { EVMAccount } from '../../../relayer/src/services/account';
 
 const log = logger(module);
 
@@ -32,7 +32,7 @@ describe('Network Service: Rpc Urls', () => {
     expect(blockNumber).toBeGreaterThan(0);
   });
 
-  it('Fallback urls should be active for chaindId: 5', async () => {
+  it('Fallback urls should be active for chainId: 5', async () => {
     for (
       let fallBackRpcUrlIndex = 0;
       fallBackRpcUrlIndex < networkServiceMap[5].fallbackRpcUrls.length;
@@ -47,7 +47,7 @@ describe('Network Service: Rpc Urls', () => {
     }
   });
 
-  it('Fallback urls should be active for chaindId: 80001', async () => {
+  it('Fallback urls should be active for chainId: 80001', async () => {
     for (
       let fallBackRpcUrlIndex = 0;
       fallBackRpcUrlIndex < networkServiceMap[80001].fallbackRpcUrls.length;
@@ -145,8 +145,8 @@ describe('Network Service: Native Asset Balance', () => {
     const wallet = ethers.Wallet.createRandom();
 
     // owner address
-    // const ownerAddressPublicKey = '0x4C07E2fa10f9871142883139B32Cb03F2A180494';
-    const ownerAddressPrivateKey = 'e3b3818b1b604cf6dfc3133faa9a524f1e2ea0d5894a003c4b857952f6b146f6';
+    // const ownerAddressPublicKey = '0x040a9cbC4453B0eeaE12f3210117B422B890C1ED';
+    const ownerAddressPrivateKey = 'd952fa86f1e2fed30fb3a6da6e5c24d7deb65b6bb46da3ece5f56fd39e64bbd0';
     const ownerWallet = new ethers.Wallet(
       ownerAddressPrivateKey,
       networkServiceMap[5].ethersProvider,
@@ -175,7 +175,7 @@ describe('Network Service: Native Asset Balance', () => {
 });
 
 describe('Network Service: Nonce Check', () => {
-  it('Check if nonce is correctly incremented on chaindId: 80001', async () => {
+  it('Check if nonce is correctly incremented on chainId: 80001', async () => {
     // call getNonce() on an address, nonce should x
 
     // owner address
@@ -206,12 +206,12 @@ describe('Network Service: Nonce Check', () => {
     expect(nonceDifference).toBe(1);
   });
 
-  it('Check if nonce is correctly incremented on chaindId: 5', async () => {
+  it('Check if nonce is correctly incremented on chainId: 5', async () => {
     // call getNonce() on an address, nonce should x
 
     // owner address
-    const ownerAddressPublicKey = '0x4C07E2fa10f9871142883139B32Cb03F2A180494';
-    const ownerAddressPrivateKey = 'e3b3818b1b604cf6dfc3133faa9a524f1e2ea0d5894a003c4b857952f6b146f6';
+    const ownerAddressPublicKey = '0x040a9cbC4453B0eeaE12f3210117B422B890C1ED';
+    const ownerAddressPrivateKey = 'd952fa86f1e2fed30fb3a6da6e5c24d7deb65b6bb46da3ece5f56fd39e64bbd0';
     const ownerWallet = new ethers.Wallet(
       ownerAddressPrivateKey,
       networkServiceMap[5].ethersProvider,
@@ -276,8 +276,8 @@ describe('Network Service: Sending Transaction', () => {
     const wallet = ethers.Wallet.createRandom();
 
     // owner address
-    const ownerAddressPublicKey = '0x4C07E2fa10f9871142883139B32Cb03F2A180494';
-    const ownerAddressPrivateKey = 'e3b3818b1b604cf6dfc3133faa9a524f1e2ea0d5894a003c4b857952f6b146f6';
+    const ownerAddressPublicKey = '0x040a9cbC4453B0eeaE12f3210117B422B890C1ED';
+    const ownerAddressPrivateKey = 'd952fa86f1e2fed30fb3a6da6e5c24d7deb65b6bb46da3ece5f56fd39e64bbd0';
 
     const evmAccount = new EVMAccount(ownerAddressPublicKey, ownerAddressPrivateKey);
 

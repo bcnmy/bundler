@@ -1,13 +1,23 @@
+/* eslint-disable no-await-in-loop */
 import { ICacheService } from '../../../../common/cache';
-import { ITransactionDAO } from '../../../../common/db';
+import { ITransactionDAO, IUserOperationDAO } from '../../../../common/db';
 import { IQueue } from '../../../../common/interface';
 import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
 import { RetryTransactionQueueData } from '../../../../common/queue/types';
 import {
-  EVMRawTransactionType, SocketEventType, TransactionQueueMessageType, TransactionStatus,
+  EntryPointMapType,
+  EVMRawTransactionType,
+  SocketEventType,
+  TransactionQueueMessageType,
+  TransactionStatus,
+  TransactionType,
 } from '../../../../common/types';
-import { getRetryTransactionCountKey } from '../../../../common/utils';
+import {
+  getRetryTransactionCountKey,
+  getTokenPriceKey,
+  getUserOperationReceiptForDataSaving,
+} from '../../../../common/utils';
 import { IEVMAccount } from '../account';
 import { ITransactionPublisher } from '../transaction-publisher';
 import { ITransactionListener } from './interface/ITransactionListener';
@@ -20,6 +30,7 @@ import {
   TransactionDataToBeUpdatedInDatabaseType,
   TransactionListenerNotifyReturnType,
 } from './types';
+import { config } from '../../../../config';
 
 const log = logger(module);
 
@@ -36,6 +47,10 @@ ITransactionPublisher<TransactionQueueMessageType> {
 
   transactionDao: ITransactionDAO;
 
+  userOperationDao: IUserOperationDAO;
+
+  entryPointMap: EntryPointMapType;
+
   cacheService: ICacheService;
 
   constructor(
@@ -47,13 +62,16 @@ ITransactionPublisher<TransactionQueueMessageType> {
       transactionQueue,
       retryTransactionQueue,
       transactionDao,
+      userOperationDao,
       cacheService,
     } = evmTransactionListenerParams;
     this.chainId = options.chainId;
+    this.entryPointMap = options.entryPointMap;
     this.networkService = networkService;
     this.transactionQueue = transactionQueue;
     this.retryTransactionQueue = retryTransactionQueue;
     this.transactionDao = transactionDao;
+    this.userOperationDao = userOperationDao;
     this.cacheService = cacheService;
   }
 
@@ -73,6 +91,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       transactionReceipt,
       transactionId,
       relayerManagerName,
+      transactionType,
     } = onTranasctionSuccessParams;
     if (!transactionReceipt) {
       log.error(`Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
@@ -89,21 +108,97 @@ ITransactionPublisher<TransactionQueueMessageType> {
     });
     if (transactionExecutionResponse) {
       log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
-      let transactionFee: number;
-      if (!transactionReceipt.gasUsed || !transactionReceipt.effectiveGasPrice) {
+      let transactionFee = 0;
+      let transactionFeeInUSD = 0;
+      let transactionFeeCurrency = '';
+      if (!transactionReceipt.gasUsed && !transactionReceipt.effectiveGasPrice) {
         log.info(`gasUsed or effectiveGasPrice field not found in ${JSON.stringify(transactionExecutionResponse)}`);
-        transactionFee = 0;
       } else {
         transactionFee = Number(transactionReceipt.gasUsed.mul(
           transactionReceipt.effectiveGasPrice,
         ));
+        transactionFeeCurrency = config.chains.currency[this.chainId];
+        const coinsRateObj = await this.cacheService.get(getTokenPriceKey());
+        if (!coinsRateObj) {
+          log.info('Coins Rate Obj not fetched from cache'); // TODO should it make call to token price service?
+        } else {
+          transactionFeeInUSD = JSON.parse(coinsRateObj)[this.chainId];
+        }
       }
       await this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
         receipt: transactionReceipt,
         transactionFee,
+        transactionFeeInUSD,
+        transactionFeeCurrency,
         status: TransactionStatus.SUCCESS,
         updationTime: Date.now(),
       }, transactionId, transactionExecutionResponse?.hash);
+    }
+
+    if (transactionType === TransactionType.BUNDLER) {
+      const userOps = await this.userOperationDao.getUserOpsByTransactionId(
+        this.chainId,
+        transactionId,
+      );
+      if (!userOps.length) {
+        log.info(`No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+        return;
+      }
+      for (let userOpIndex = 0; userOpIndex < userOps.length; userOpIndex += 1) {
+        const { userOpHash, entryPoint } = userOps[userOpIndex];
+
+        const entryPointContracts = this.entryPointMap[this.chainId];
+
+        let entryPointContract;
+        for (let entryPointContractIndex = 0;
+          entryPointContractIndex < entryPointContracts.length;
+          entryPointContractIndex += 1) {
+          if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
+           === entryPoint.toLowerCase()) {
+            entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
+            break;
+          }
+        }
+        if (entryPointContract) {
+          const userOpReceipt = await getUserOperationReceiptForDataSaving(
+            this.chainId,
+            userOpHash,
+            transactionReceipt,
+            entryPointContract,
+          );
+          if (!userOpReceipt) {
+            log.info(`userOpReceipt not fetched for userOpHash: ${userOpHash} on chainId: ${this.chainId}`);
+            return;
+          }
+          const {
+            success,
+            actualGasCost,
+            actualGasUsed,
+            reason,
+            logs,
+          } = userOpReceipt;
+
+          await this.userOperationDao.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
+            this.chainId,
+            transactionId,
+            userOpHash,
+            {
+              transactionHash: transactionExecutionResponse?.hash,
+              receipt: transactionReceipt,
+              blockNumber: transactionReceipt.blockNumber,
+              blockHash: transactionReceipt.blockHash,
+              status: TransactionStatus.SUCCESS,
+              success,
+              actualGasCost,
+              actualGasUsed,
+              reason,
+              logs,
+            },
+          );
+        } else {
+          log.info(`entryPoint: ${entryPoint} not found in entry point map`);
+        }
+      }
     }
   }
 
@@ -113,6 +208,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       transactionId,
       transactionReceipt,
       relayerManagerName,
+      transactionType,
     } = onTranasctionFailureParams;
     if (!transactionReceipt) {
       log.error(`Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
@@ -129,21 +225,97 @@ ITransactionPublisher<TransactionQueueMessageType> {
 
     if (transactionExecutionResponse) {
       log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
-      let transactionFee: number;
-      if (!transactionReceipt.gasUsed || !transactionReceipt.effectiveGasPrice) {
+      let transactionFee = 0;
+      let transactionFeeInUSD = 0;
+      let transactionFeeCurrency = '';
+      if (!transactionReceipt.gasUsed && !transactionReceipt.effectiveGasPrice) {
         log.info(`gasUsed or effectiveGasPrice field not found in ${JSON.stringify(transactionExecutionResponse)}`);
-        transactionFee = 0;
       } else {
         transactionFee = Number(transactionReceipt.gasUsed.mul(
           transactionReceipt.effectiveGasPrice,
         ));
+        transactionFeeCurrency = config.chains.currency[this.chainId];
+        const coinsRateObj = await this.cacheService.get(getTokenPriceKey());
+        if (!coinsRateObj) {
+          log.info('Coins Rate Obj not fetched from cache');
+        } else {
+          transactionFeeInUSD = JSON.parse(coinsRateObj)[this.chainId];
+        }
       }
       await this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
         receipt: transactionReceipt,
         transactionFee,
+        transactionFeeInUSD,
+        transactionFeeCurrency,
         status: TransactionStatus.FAILED,
         updationTime: Date.now(),
       }, transactionId, transactionExecutionResponse?.hash);
+    }
+
+    if (transactionType === TransactionType.BUNDLER) {
+      const userOps = await this.userOperationDao.getUserOpsByTransactionId(
+        this.chainId,
+        transactionId,
+      );
+      if (!userOps.length) {
+        log.info(`No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+        return;
+      }
+      for (let userOpIndex = 0; userOpIndex < userOps.length; userOpIndex += 1) {
+        const { userOpHash, entryPoint } = userOps[userOpIndex];
+
+        const entryPointContracts = this.entryPointMap[this.chainId];
+
+        let entryPointContract;
+        for (let entryPointContractIndex = 0;
+          entryPointContractIndex < entryPointContracts.length;
+          entryPointContractIndex += 1) {
+          if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
+           === entryPoint.toLowerCase()) {
+            entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
+            break;
+          }
+        }
+
+        if (entryPointContract) {
+          const userOpReceipt = await getUserOperationReceiptForDataSaving(
+            this.chainId,
+            userOpHash,
+            transactionReceipt,
+            entryPointContract,
+          );
+          if (!userOpReceipt) {
+            log.info(`userOpReceipt not fetched for userOpHash: ${userOpHash} on chainId: ${this.chainId}`);
+            return;
+          }
+          const {
+            success,
+            actualGasCost,
+            actualGasUsed,
+            reason,
+            logs,
+          } = userOpReceipt;
+          await this.userOperationDao.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
+            this.chainId,
+            transactionId,
+            userOpHash,
+            {
+              transactionHash: transactionExecutionResponse?.hash,
+              receipt: transactionReceipt,
+              blockNumber: transactionReceipt.blockNumber,
+              blockHash: transactionReceipt.blockHash,
+              status: TransactionStatus.FAILED,
+              success,
+              actualGasCost,
+              actualGasUsed,
+              reason,
+              logs,
+            },
+          );
+        } else {
+          log.info(`entryPoint: ${entryPoint} not found in entry point map`);
+        }
+      }
     }
   }
 

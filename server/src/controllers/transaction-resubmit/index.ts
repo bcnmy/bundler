@@ -4,6 +4,7 @@ import { relayerManagerTransactionTypeNameMap } from '../../../../common/maps';
 import { EVMRelayerManagerMap, transactionDao, transactionSerivceMap } from '../../../../common/service-manager';
 import { TransactionType } from '../../../../common/types';
 import { parseError } from '../../../../common/utils';
+import { STATUSES } from '../../middleware';
 
 const log = logger(module);
 
@@ -16,8 +17,8 @@ export const transactionResubmitApi = async (req: Request, res: Response) => {
   const transactions = await transactionDao.getByTransactionId(chainId, transactionId);
   try {
     if (transactions?.length !== 1) {
-      return res.status(404).json({
-        code: 404,
+      return res.status(STATUSES.NOT_FOUND).json({
+        code: STATUSES.NOT_FOUND,
         error: 'Transaction not found',
       });
     }
@@ -50,26 +51,26 @@ export const transactionResubmitApi = async (req: Request, res: Response) => {
       log.info(`Resubmitted transaction ${transactionId} on chainId ${chainId} and result ${JSON.stringify(result)}`);
       if (result.success) {
         return res.json({
-          code: 200,
+          code: STATUSES.SUCCESS,
           data: {
             transactionResponse: result.transactionResponse,
           },
         });
       }
-      return res.status(400).json({
-        code: 400,
+      return res.status(STATUSES.BAD_REQUEST).json({
+        code: STATUSES.BAD_REQUEST,
         error: result.error,
       });
     }
 
-    return res.status(404).json({
-      code: 404,
+    return res.status(STATUSES.NOT_FOUND).json({
+      code: STATUSES.NOT_FOUND,
       error: 'Relayer not found',
     });
   } catch (error) {
     log.error(`Error in transaction resubmit ${parseError(error)}`);
-    return res.status(500).json({
-      code: 500,
+    return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
+      code: STATUSES.INTERNAL_SERVER_ERROR,
       error: parseError(error),
     });
   }

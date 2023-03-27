@@ -63,7 +63,7 @@ IRetryTransactionService<IEVMAccount, EVMRawTransactionType> {
           .relayerMap[relayerAddress];
       }
 
-      log.info(`Checking transaction status of transactionHash: ${transactionHash} with transactionId: ${transactionId} on chaindId: ${this.chainId}`);
+      log.info(`Checking transaction status of transactionHash: ${transactionHash} with transactionId: ${transactionId} on chainId: ${this.chainId}`);
       const transactionReceipt = await this.networkService.getTransactionReceipt(transactionHash);
       log.info(`Transaction receipt for transactionHash: ${transactionHash} with transactionId: ${transactionId} on chainId: ${this.chainId} is ${JSON.stringify(transactionReceipt)}`);
 

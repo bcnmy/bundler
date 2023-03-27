@@ -8,6 +8,13 @@ export interface ITransactionDAO {
     chainId: number,
     id: string,
     hash: string,
-    transactionData: object,
+    data: object,
+  ): Promise<void>
+  updateMetaDataAndRelayerDestinationContractDataByTransactionId(
+    chainId: number,
+    id: string,
+    metaData: any,
+    relayerDestinationContractAddress: string,
+    relayerDestinationContractName: string,
   ): Promise<void>
 }

@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
 import { feeOptionsSchema } from '../../routes/relay/relay.schema';
+import { STATUSES } from '../RequestHelpers';
 
 const log = logger(module);
 
@@ -24,8 +25,8 @@ export const validateFeeOption = async (
     });
   } catch (e: any) {
     log.error(e);
-    return res.status(400).send({
-      code: 400,
+    return res.status(STATUSES.BAD_REQUEST).send({
+      code: STATUSES.BAD_REQUEST,
       error: e.errors,
     });
   }
