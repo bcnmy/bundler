@@ -45,15 +45,15 @@ export const bundlerSendUserOpRequestSchema = object.keys({
 const userOpEstimateUserOpGas = object.keys({
   sender: string.regex(/^0x[a-fA-F0-9]{40}$/).required().error(new Error('sender address is required')),
   nonce: string.required().error(new Error('nonce is required and should be a hex string')),
-  initCode: string,
+  initCode: string.required().error(new Error('initCode is required and should be a hex string. Send 0x if not applicable')),
   callData: string.required().error(new Error('callData is required and should be a hex string')),
   callGasLimit: string,
   verificationGasLimit: string,
   preVerificationGas: string,
   maxFeePerGas: string,
   maxPriorityFeePerGas: string,
-  paymasterAndData: string,
-  signature: string.required().error(new Error('signature is required')),
+  paymasterAndData: string.required().error(new Error('paymasterAndData is required and should be a hex string. Send 0x if not applicable')),
+  signature: string,
 });
 
 export const bundlerEstimateUserOpGasRequestSchema = object.keys({
