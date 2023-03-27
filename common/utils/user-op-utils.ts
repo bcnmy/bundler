@@ -37,6 +37,7 @@ export const getMetaDataFromUserOp = async (
     log.info(`Decoded smart wallet data: ${JSON.stringify(decodedDataSmartWallet)} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
 
     const smartWalletExecFunctionName = decodedDataSmartWallet.name;
+    log.info(`Name of smart wallet method: ${JSON.stringify(smartWalletExecFunctionName)} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
 
     if (smartWalletExecFunctionName === 'executeCall') {
       const methodArgsSmartWalletExecuteCall = decodedDataSmartWallet.args;
