@@ -170,7 +170,7 @@ export class BundlerSimulationAndValidationService {
     const fullUserOp = {
       ...userOp,
       // default values for missing fields.
-      signature: hexlify(Buffer.alloc(65, 1)), // dummy signature
+      signature: '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b', // a valid signature
       callGasLimit: BigNumber.from('0'),
       maxFeePerGas: BigNumber.from('0'),
       maxPriorityFeePerGas: BigNumber.from('0'),
