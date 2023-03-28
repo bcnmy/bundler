@@ -115,3 +115,15 @@ export const transactionResubmitSchema = object.keys({
   transactionId: string.required().error(new Error('transactionId is required')),
   gasPrice: number.required().error(new Error('gasPrice is required')),
 });
+
+export const fallbackGasTankDepositRequestSchema = object.keys({
+  method: string.regex(/eth_sendFallbackGasTankDepositTransaction/),
+  params: array.items(object.keys(
+    {
+      value: number.required().error(new Error('value is required')),
+      chainId: number.required().error(new Error('chainId is required')),
+    },
+  )),
+  jsonrpc: string.required().error(new Error('jsonrpc is required')),
+  id: number.required().error(new Error('id is required')),
+});
