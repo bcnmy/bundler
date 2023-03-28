@@ -180,7 +180,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
   }
 
   /**
-   * Method adds active relayer active relater queue
+   * Method adds active relayer active relayer queue
    * @param relayerAddress
    */
   async addActiveRelayer(relayerAddress: string): Promise<void> {

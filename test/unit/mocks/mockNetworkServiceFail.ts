@@ -25,7 +25,7 @@ export class MockNetworkServiceFail implements INetworkService<IEVMAccount, EVMR
     ethersProvider: JsonRpcProvider = new MockJsonProvider();
 
     constructor(tempParams: any) {
-        this.chainId = tempParams.chaindId;
+        this.chainId = tempParams.chainId;
         this.rpcUrl = tempParams.rpcUrl;
         this.fallbackRpcUrls = tempParams.fallbackRpcUrls;
     }
