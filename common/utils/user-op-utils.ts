@@ -1,42 +1,37 @@
-/* eslint-disable prefer-destructuring */
+/* eslint-disable no-continue */
+/* eslint-disable no-await-in-loop */
 import { ethers } from 'ethers';
+import {
+  BytesLike, defaultAbiCoder, hexlify, keccak256,
+} from 'ethers/lib/utils';
 import { config } from '../../config';
 import { STATUSES } from '../../server/src/middleware';
 import { logger } from '../log-config';
-import { GetMetaDataFromUserOpReturnType, UserOperationType } from '../types';
+import {
+  GetMetaDataFromUserOpReturnType, Log, StakeInfo, UserOperationEventEvent, UserOperationType,
+} from '../types';
 import { axiosPostCall } from './axios-calls';
 import { parseError } from './parse-error';
 
 const log = logger(module);
 
-// TODO Add null checks while extracting from call data
 export const getMetaDataFromUserOp = async (
   userOp: UserOperationType,
   chainId: number,
   dappAPIKey: string,
+  ethersProvider: ethers.providers.JsonRpcProvider,
 ): Promise<GetMetaDataFromUserOpReturnType> => {
   try {
     const walletAddress = userOp.sender;
     log.info(`Extracting data for wallet address: ${walletAddress} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
-    let destinationSmartContractAddresses: Array<string> = [];
-    let destinationSmartContractMethodsCallData: Array<string> = [];
+    const destinationSmartContractAddresses: Array<string> = [];
+    const destinationSmartContractMethodsCallData: Array<string> = [];
     const destinationSmartContractMethods: Array<{ address: string, name: string }> = [];
     const { smartWalletAbi } = config.abi;
     const multiSendContractAddress = config.chains.multiSendAddress[chainId];
     log.info(`Multi Send Contract Address: ${multiSendContractAddress} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
 
-    /**
-     * using callData from userOp, callData is data of execFromEntryPoint https://github.com/bcnmy/scw-contracts/blob/master/contracts/smart-contract-wallet/SmartWallet.sol
-     * Will get tagret and from target address fetch abi from abi
-     * target can be multiSend or destination contract
-     */
-
-    // TODO keep interface generic basis on wallet if it is biconomy smart contract wallet
-    // or another wallet and take care of versioning
-    // https://github.com/bcnmy/scw-contracts/blob/5c22c474c90737611cd99d280eb69464cb235d2e/contracts/smart-contract-wallet/SmartWallet.sol#L480
-    // address dest, uint value, bytes calldata func, Enum.Operation operation, uint256 gasLimit
-
-    const { callData } = userOp;
+    const { callData, sender } = userOp;
     const iFaceSmartWallet = new ethers.utils.Interface(JSON.stringify(smartWalletAbi));
     const decodedDataSmartWallet = iFaceSmartWallet.parseTransaction({ data: callData });
     log.info(`Decoded smart wallet data: ${JSON.stringify(decodedDataSmartWallet)} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
@@ -54,8 +49,20 @@ export const getMetaDataFromUserOp = async (
         };
       }
       log.info(`Arguments of smart wallet method: ${JSON.stringify(methodArgsSmartWalletExecuteCall)} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
-      destinationSmartContractAddresses.push(methodArgsSmartWalletExecuteCall[0]);
-      destinationSmartContractMethodsCallData.push(methodArgsSmartWalletExecuteCall[2]);
+      if (!(methodArgsSmartWalletExecuteCall[0].toLowerCase() === sender.toLowerCase())) {
+        log.info(`Destination address is not sender's wallet for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
+        const targetContractCode = await ethersProvider.getCode(
+          methodArgsSmartWalletExecuteCall[0],
+        );
+        log.info(`targetContractCode: ${targetContractCode} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
+        if (!(targetContractCode === '0x')) {
+          log.info(`Destination address is not EOA for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
+          destinationSmartContractAddresses.push(methodArgsSmartWalletExecuteCall[0].toLowerCase());
+          destinationSmartContractMethodsCallData.push(
+            methodArgsSmartWalletExecuteCall[2].toLowerCase(),
+          );
+        }
+      }
     } else if (smartWalletExecFunctionName === 'executeBatchCall') {
       const methodArgsSmartWalletExecuteBatchCall = decodedDataSmartWallet.args;
       if (!methodArgsSmartWalletExecuteBatchCall) {
@@ -66,8 +73,31 @@ export const getMetaDataFromUserOp = async (
         };
       }
       log.info(`Arguments of smart wallet method: ${JSON.stringify(methodArgsSmartWalletExecuteBatchCall)} for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
-      destinationSmartContractAddresses = methodArgsSmartWalletExecuteBatchCall[0];
-      destinationSmartContractMethodsCallData = methodArgsSmartWalletExecuteBatchCall[3];
+      for (
+        let index = 0;
+        index < methodArgsSmartWalletExecuteBatchCall[0].length;
+        index += 1
+      ) {
+        const targetContractCode = await ethersProvider.getCode(
+          methodArgsSmartWalletExecuteBatchCall[0][index],
+        );
+        if (targetContractCode === '0x') {
+          log.info(`Destination address is EOA for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
+          continue;
+        }
+        if ((methodArgsSmartWalletExecuteBatchCall[0][index].toLowerCase()
+          === sender.toLowerCase())) {
+          log.info(`Destination address is sender's wallet for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
+          continue;
+        } else {
+          destinationSmartContractAddresses.push(
+            methodArgsSmartWalletExecuteBatchCall[0][index].toLowerCase(),
+          );
+          destinationSmartContractMethodsCallData.push(
+            methodArgsSmartWalletExecuteBatchCall[2][index].toLowerCase(),
+          );
+        }
+      }
     } else {
       log.info(`User op has call data of: ${smartWalletExecFunctionName} which is not supported for dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
       return {
@@ -153,4 +183,195 @@ export const getMetaDataFromUserOp = async (
       destinationSmartContractMethods: [],
     };
   }
+};
+
+export const getPaymasterFromPaymasterAndData = (paymasterAndData: string): string => {
+  const paymasterAddress = `${paymasterAndData.substring(0, 42)}`;
+  log.info(`paymasterAddress: ${paymasterAddress} for paymasterAndData: ${paymasterAndData}`);
+  return paymasterAddress;
+};
+
+const filterLogs = (userOpEvent: UserOperationEventEvent, logs: Log[]): Log[] => {
+  const userOpLogs = logs.find((transactionlog: any) => {
+    if (transactionlog.topics.length === userOpEvent.topics.length) {
+      // Sort the `topics` arrays and compare them element by element
+      const sortedTransactionLogTopics = transactionlog.topics.slice().sort();
+      const sortedTopicsArray = userOpEvent.topics.slice().sort();
+      return sortedTransactionLogTopics.every(
+        (topic: string, index: number) => topic === sortedTopicsArray[index],
+      );
+    }
+    return false;
+  });
+  return [userOpLogs as Log];
+};
+
+export const getUserOperationReceiptForDataSaving = async (
+  chainId: number,
+  userOpHash: string,
+  receipt: any,
+  entryPointContract: ethers.Contract,
+): Promise<any> => {
+  try {
+    let event = [];
+
+    try {
+      // TODO add from and to block
+      event = await entryPointContract.queryFilter(
+        entryPointContract.filters.UserOperationEvent(userOpHash),
+      ) as any;
+      log.info(`event: ${JSON.stringify(event)} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
+      if (event[0]) {
+        const userOperationEventArgs = event[0].args;
+        log.info(`userOperationEventArgs: ${JSON.stringify(userOperationEventArgs)}`);
+        const actualGasCostInHex = event[0].args[5];
+        log.info(`actualGasCostInHex: ${actualGasCostInHex} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
+        const actualGasCostInNumber = Number(actualGasCostInHex.toString());
+        log.info(`actualGasCostInNumber: ${actualGasCostInNumber} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
+        const actualGasUsedInHex = event[0].args[6];
+        log.info(`actualGasUsedInHex: ${actualGasUsedInHex} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
+        const actualGasUsedInNumber = Number(actualGasUsedInHex.toString());
+        log.info(`actualGasUsedInNumber: ${actualGasUsedInNumber} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
+
+        const logs = filterLogs(event[0], receipt.logs);
+        log.info(`logs: ${JSON.stringify(logs)} for userOpHash: ${userOpHash} on chainId: ${chainId}`);
+
+        return {
+          actualGasCost: actualGasCostInNumber,
+          actualGasUsed: actualGasUsedInNumber,
+          success: event[0].args[4],
+          logs,
+        };
+      }
+      log.info('No event found');
+      return null;
+    } catch (error) {
+      log.info(`Missing/invalid userOpHash for userOpHash: ${userOpHash} on chainId: ${chainId} with erro: ${parseError(error)}`);
+      return null;
+    }
+  } catch (error) {
+    log.info(`error in getUserOperationReceipt: ${parseError(error)}`);
+    return null;
+  }
+};
+
+function encode(
+  typevalues: Array<{ type: string; val: any }>,
+  forSignature: boolean,
+): string {
+  const types = typevalues.map((typevalue) => (typevalue.type === 'bytes' && forSignature ? 'bytes32' : typevalue.type));
+  const values = typevalues.map((typevalue: any) => (typevalue.type === 'bytes' && forSignature
+    ? keccak256(typevalue.val)
+    : typevalue.val));
+  return defaultAbiCoder.encode(types, values);
+}
+
+const UserOpType = config.abi.entryPointAbi.find(
+  (entry: any) => entry.name === 'simulateValidation',
+)?.inputs?.[0];
+
+export const packUserOp = (
+  userOp: UserOperationType,
+  forSignature = true,
+): string => {
+  if (forSignature) {
+    // lighter signature scheme (must match UserOperation#pack):
+    // do encode a zero-length signature, but strip afterwards the appended zero-length value
+    const userOpType = {
+      components: [
+        {
+          type: 'address',
+          name: 'sender',
+        },
+        {
+          type: 'uint256',
+          name: 'nonce',
+        },
+        {
+          type: 'bytes',
+          name: 'initCode',
+        },
+        {
+          type: 'bytes',
+          name: 'callData',
+        },
+        {
+          type: 'uint256',
+          name: 'callGasLimit',
+        },
+        {
+          type: 'uint256',
+          name: 'verificationGasLimit',
+        },
+        {
+          type: 'uint256',
+          name: 'preVerificationGas',
+        },
+        {
+          type: 'uint256',
+          name: 'maxFeePerGas',
+        },
+        {
+          type: 'uint256',
+          name: 'maxPriorityFeePerGas',
+        },
+        {
+          type: 'bytes',
+          name: 'paymasterAndData',
+        },
+        {
+          type: 'bytes',
+          name: 'signature',
+        },
+      ],
+      name: 'userOp',
+      type: 'tuple',
+    };
+
+    let encoded = defaultAbiCoder.encode(
+      [userOpType as any],
+      [
+        {
+          ...userOp,
+          signature: '0x',
+        },
+      ],
+    );
+
+    encoded = `0x${encoded.slice(66, encoded.length - 64)}`;
+    return encoded;
+  }
+
+  const typevalues = (UserOpType as any).components.map(
+    (c: { name: keyof typeof userOp; type: string }) => ({
+      type: c.type,
+      val: userOp[c.name],
+    }),
+  );
+
+  return encode(typevalues, forSignature);
+};
+
+export const getAddress = (data?: BytesLike): string | undefined => {
+  if (data == null) {
+    return undefined;
+  }
+  const str = hexlify(data);
+  if (str.length >= 42) {
+    return str.slice(0, 42);
+  }
+  return undefined;
+};
+
+// extract address from "data" (first 20 bytes)
+// add it as "addr" member to the "stakeinfo" struct
+// if no address, then return "undefined" instead of struct.
+export const fillEntity = (data: BytesLike, info: StakeInfo): StakeInfo | undefined => {
+  const addr = getAddress(data);
+  return addr == null
+    ? undefined
+    : {
+      ...info,
+      addr,
+    };
 };

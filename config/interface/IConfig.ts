@@ -1,4 +1,4 @@
-import { SymbolMapByChainIdType, TransactionType } from '../../common/types';
+import { SymbolMapByChainIdType, TransactionType, DefaultGasOverheadType } from '../../common/types';
 
 type ChainIdWithStringValueType = {
   [key: number]: string
@@ -175,6 +175,7 @@ type CacheServiceConfigType = {
 };
 
 type AbiConfigType = {
+  entryPointAbi: Array<any>,
   smartWalletAbi: Array<any>,
   multiSendAbi: Array<any>,
   multiSendCallOnlyAbi: Array<any>
@@ -207,7 +208,8 @@ export type ConfigType = {
   fallbackGasTankData: FallbackGasTankDataConfigType,
   zeroAddress: string,
   simulationData: SimulationDataConfigType,
-  abi: AbiConfigType
+  abi: AbiConfigType,
+  defaultGasOverheads: DefaultGasOverheadType
 };
 
 export interface IConfig {

@@ -1,4 +1,3 @@
-import { BigNumber } from 'ethers';
 import { config } from '../../config';
 import { IEVMAccount } from '../../relayer/src/services/account';
 import { logger } from '../log-config';
@@ -44,19 +43,27 @@ export class AASimulationService {
         message: parseError(error),
       };
     }
+    let estimatedGasForUserOp;
 
-    let estimatedGasForUserOp = await this.networkService.estimateGas(
-      entryPointContract,
-      'handleOps',
-      [[userOp],
-        config.feeOption.refundReceiver[chainId]],
-      config.zeroAddress,
-    );
-    log.info(`Estimated gas is: ${estimatedGasForUserOp} from ethers for userOp: ${JSON.stringify(userOp)}`);
-    estimatedGasForUserOp = BigNumber.from('3000000');
-
-    log.info(`Estimated gas is: ${estimatedGasForUserOp} for userOp: ${JSON.stringify(userOp)}`);
-    if (!estimatedGasForUserOp._isBigNumber) {
+    try {
+      estimatedGasForUserOp = await this.networkService.estimateGas(
+        entryPointContract,
+        'handleOps',
+        [[userOp],
+          config.feeOption.refundReceiver[chainId]],
+        config.zeroAddress,
+      );
+      log.info(`Estimated gas is: ${estimatedGasForUserOp} from ethers for userOp: ${JSON.stringify(userOp)}`);
+      if (!estimatedGasForUserOp || !estimatedGasForUserOp._isBigNumber) {
+        return {
+          isSimulationSuccessful: false,
+          data: {
+            gasLimitFromSimulation: 0,
+          },
+          message: parseError(estimatedGasForUserOp),
+        };
+      }
+    } catch (error) {
       return {
         isSimulationSuccessful: false,
         data: {
@@ -65,10 +72,20 @@ export class AASimulationService {
         message: parseError(estimatedGasForUserOp),
       };
     }
+
+    let userOpHash: string = '';
+    try {
+      userOpHash = await entryPointContract.getUserOpHash(userOp);
+      log.info(`userOpHash: ${userOpHash} for userOp: ${JSON.stringify(userOp)}`);
+    } catch (error) {
+      log.info(`Error in getting userOpHash for userOp: ${JSON.stringify(userOp)} with error: ${parseError(error)}`);
+    }
+
     return {
       isSimulationSuccessful,
       data: {
         gasLimitFromSimulation: estimatedGasForUserOp,
+        userOpHash,
       },
       message: 'Success',
     };
@@ -85,12 +102,12 @@ export class AASimulationService {
       }
       let { paymaster } = simulationResult.errorArgs;
       if (paymaster === config.zeroAddress) {
-        paymaster = undefined;
+        paymaster = null;
       }
       // eslint-disable-next-line
       const msg: string = simulationResult.errorArgs?.reason ?? simulationResult.toString()
 
-      if (paymaster == null) {
+      if (!paymaster) {
         log.info(`account validation failed: ${msg} for userOp: ${JSON.stringify(userOp)}`);
         throw Error(`account validation failed: ${msg}`);
       } else {

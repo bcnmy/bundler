@@ -23,6 +23,17 @@ export type AAConsumerParamsType = {
   },
 };
 
+export type BundlerConsumerParamsType = {
+  queue: IQueue<AATransactionMessageType>,
+  relayerManager: IRelayerManager<IEVMAccount, EVMRawTransactionType>,
+  transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>,
+  cacheService: ICacheService,
+  options: {
+    chainId: number,
+    entryPointMap: EntryPointMapType
+  },
+};
+
 export type SCWConsumerParamsType = {
   queue: IQueue<SCWTransactionMessageType>,
   relayerManager: IRelayerManager<IEVMAccount, EVMRawTransactionType>,

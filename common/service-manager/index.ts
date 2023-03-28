@@ -3,7 +3,12 @@ import { ethers } from 'ethers';
 import { config } from '../../config';
 import { EVMAccount, IEVMAccount } from '../../relayer/src/services/account';
 import {
-  AAConsumer, SCWConsumer, SocketConsumer, GaslessFallbackConsumer, FallbackGasTankDepositConsumer,
+  AAConsumer,
+  SCWConsumer,
+  SocketConsumer,
+  GaslessFallbackConsumer,
+  BundlerConsumer,
+  FallbackGasTankDepositConsumer,
 } from '../../relayer/src/services/consumer';
 import { EVMNonceManager } from '../../relayer/src/services/nonce-manager';
 import { EVMRelayerManager, IRelayerManager } from '../../relayer/src/services/relayer-manager';
@@ -14,6 +19,7 @@ import { EVMTransactionService } from '../../relayer/src/services/transaction-se
 import { FeeOption } from '../../server/src/services';
 import { RedisCacheService } from '../cache';
 import { Mongo, TransactionDAO } from '../db';
+import { UserOperationDAO } from '../db/dao/UserOperationDAO';
 import { GasPriceManager } from '../gas-price';
 import { IQueue } from '../interface';
 import { logger } from '../log-config';
@@ -23,6 +29,7 @@ import { NotificationManager } from '../notification';
 import { SlackNotificationService } from '../notification/slack/SlackNotificationService';
 import {
   AATransactionQueue,
+  BundlerTransactionQueue,
   RetryTransactionHandlerQueue,
   SCWTransactionQueue,
   TransactionHandlerQueue,
@@ -30,10 +37,15 @@ import {
   FallbackGasTankDepositTransactionQueue,
 } from '../queue';
 import {
-  AARelayService, GaslessFallbackRelayService, SCWRelayService, FallbackGasTankDepositRelayService,
+  AARelayService,
+  GaslessFallbackRelayService,
+  SCWRelayService,
+  BundlerRelayService,
+  FallbackGasTankDepositRelayService,
 } from '../relay-service';
 import {
   AASimulationService,
+  BundlerSimulationAndValidationService,
   GaslessFallbackSimulationService,
   SCWSimulationService,
   FallbackGasTankDepositSimulationService,
@@ -43,6 +55,7 @@ import { IStatusService, StatusService } from '../status';
 import { CMCTokenPriceManager } from '../token-price';
 import {
   AATransactionMessageType,
+  BundlerTransactionMessageType,
   EntryPointMapType,
   EVMRawTransactionType,
   GaslessFallbackTransactionMessageType,
@@ -55,7 +68,11 @@ const log = logger(module);
 
 const routeTransactionToRelayerMap: {
   [chainId: number]: {
-    [transactionType: string]: AARelayService | SCWRelayService | GaslessFallbackRelayService;
+    [transactionType: string]:
+    AARelayService |
+    SCWRelayService |
+    GaslessFallbackRelayService |
+    BundlerRelayService
   };
 } = {};
 
@@ -65,6 +82,10 @@ const feeOptionMap: {
 
 const aaSimulatonServiceMap: {
   [chainId: number]: AASimulationService;
+} = {};
+
+const bundlerSimulatonAndValidationServiceMap: {
+  [chainId: number]: BundlerSimulationAndValidationService
 } = {};
 
 const scwSimulationServiceMap: {
@@ -93,6 +114,7 @@ const EVMRelayerManagerMap: {
 } = {};
 
 const transactionDao = new TransactionDAO();
+const userOperationDao = new UserOperationDAO();
 
 const socketConsumerMap: Record<number, SocketConsumer> = {};
 const retryTransactionSerivceMap: Record<number, EVMRetryTransactionService> = {};
@@ -196,8 +218,10 @@ let statusService: IStatusService;
       transactionQueue,
       retryTransactionQueue,
       transactionDao,
+      userOperationDao,
       options: {
         chainId,
+        entryPointMap,
       },
     });
     transactionListenerMap[chainId] = transactionListener;
@@ -256,10 +280,12 @@ let statusService: IStatusService;
 
       const addressList = await relayerMangerInstance.createRelayers();
       log.info(
-        `Relayer address list length: ${addressList.length} and minRelayerCount: ${JSON.stringify(relayerManager.minRelayerCount)}`,
+        `Relayer address list length: ${addressList.length} and minRelayerCount: ${JSON.stringify(relayerManager.minRelayerCount)} for relayerManager: ${relayerManager.name}`,
       );
       await relayerMangerInstance.fundRelayers(addressList);
+      log.info(`Relayer manager setup complete for chainId: ${chainId} for relayerManager: ${relayerManager.name}`);
     }
+
     log.info(`Relayer manager setup complete for chainId: ${chainId}`);
 
     log.info(`Setting up retry transaction service for chainId: ${chainId}`);
@@ -305,7 +331,7 @@ let statusService: IStatusService;
         if (!aaRelayerManager) {
           throw new Error(`Relayer manager not found for ${type}`);
         }
-        log.info(`Setting up AA transaction queue for chaindId: ${chainId}`);
+        log.info(`Setting up AA transaction queue for chainId: ${chainId}`);
         const aaQueue: IQueue<AATransactionMessageType> = new AATransactionQueue({
           chainId,
         });
@@ -352,7 +378,7 @@ let statusService: IStatusService;
         log.info(`AA consumer, relay service & simulation service setup complete for chainId: ${chainId}`);
       } else if (type === TransactionType.SCW) {
         // queue for scw
-        log.info(`Setting up SCW transaction queue for chaindId: ${chainId}`);
+        log.info(`Setting up SCW transaction queue for chainId: ${chainId}`);
         const scwQueue: IQueue<SCWTransactionMessageType> = new SCWTransactionQueue({
           chainId,
         });
@@ -397,7 +423,7 @@ let statusService: IStatusService;
         log.info(`SCW consumer, relay service & simulation service setup complete for chainId: ${chainId}`);
       } else if (type === TransactionType.GASLESS_FALLBACK) {
         // queue for scw
-        log.info(`Setting up Gasless Fallback transaction queue for chaindId: ${chainId}`);
+        log.info(`Setting up Gasless Fallback transaction queue for chainId: ${chainId}`);
         const gaslessFallbackQueue: IQueue<
         GaslessFallbackTransactionMessageType> = new GaslessFallbackTransactionQueue({
           chainId,
@@ -441,6 +467,60 @@ let statusService: IStatusService;
         );
 
         log.info(`Gasless fallback consumer & relay service simulation service setup complete for chainId: ${chainId}`);
+      } else if (type === TransactionType.BUNDLER) {
+        const bundlerRelayerManager = EVMRelayerManagerMap[
+          relayerManagerTransactionTypeNameMap[type]][chainId];
+        if (!bundlerRelayerManager) {
+          throw new Error(`Relayer manager not found for ${type}`);
+        }
+        log.info(`Setting up Bundler transaction queue for chainId: ${chainId}`);
+        const bundlerQueue: IQueue<BundlerTransactionMessageType> = new BundlerTransactionQueue({
+          chainId,
+        });
+
+        await bundlerQueue.connect();
+        log.info(`Bundler transaction queue setup complete for chainId: ${chainId}`);
+
+        const { entryPointData } = config;
+
+        for (
+          let entryPointIndex = 0;
+          entryPointIndex < entryPointData[chainId].length;
+          entryPointIndex += 1
+        ) {
+          const entryPoint = entryPointData[chainId][entryPointIndex];
+
+          entryPointMap[chainId].push({
+            address: entryPoint.address,
+            entryPointContract: networkService.getContract(
+              JSON.stringify(entryPoint.abi),
+              entryPoint.address,
+            ),
+          });
+        }
+
+        log.info(`Setting up Bundler consumer, relay service, simulation & validation service for chainId: ${chainId}`);
+        const bundlerConsumer = new BundlerConsumer({
+          queue: bundlerQueue,
+          relayerManager: bundlerRelayerManager,
+          transactionService,
+          cacheService,
+          options: {
+            chainId,
+            entryPointMap,
+          },
+        });
+        // start listening for transaction
+        await bundlerQueue.consume(bundlerConsumer.onMessageReceived);
+
+        const bundlerRelayService = new BundlerRelayService(bundlerQueue);
+        routeTransactionToRelayerMap[chainId][type] = bundlerRelayService;
+
+        // eslint-disable-next-line max-len
+        bundlerSimulatonAndValidationServiceMap[chainId] = new BundlerSimulationAndValidationService(
+          networkService,
+        );
+        log.info(`Bundler consumer, relay service, simulation and validation service setup complete for chainId: ${chainId}`);
       } else if (type === TransactionType.FALLBACK_GASTANK_DEPOSIT) {
         // queue for scw
         log.info(`Setting up Fallback gas tank deposit transaction queue for chaindId: ${chainId}`);
@@ -504,6 +584,7 @@ export {
   routeTransactionToRelayerMap,
   feeOptionMap,
   aaSimulatonServiceMap,
+  bundlerSimulatonAndValidationServiceMap,
   scwSimulationServiceMap,
   gaslessFallbackSimulationServiceMap,
   fallbackGasTankDepositSimulationServiceMap,
@@ -511,5 +592,7 @@ export {
   EVMRelayerManagerMap,
   transactionSerivceMap,
   transactionDao,
+  userOperationDao,
   statusService,
+  networkServiceMap,
 };

@@ -44,6 +44,11 @@ export interface INetworkService<AccountType, RawTransactionType> {
     params: object,
     from: string
   ): Promise<BigNumber>
+  estimateCallGas(
+    from: string,
+    to: string,
+    data: string
+  ): Promise<BigNumber>
   sendTransaction(
     rawTransactionData: RawTransactionType,
     account: AccountType,
