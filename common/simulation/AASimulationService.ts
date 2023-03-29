@@ -27,21 +27,35 @@ export class AASimulationService {
     );
 
     let isSimulationSuccessful = true;
-    try {
-      const simulationResult = await entryPointStatic.callStatic.simulateValidation(userOp)
-        .catch((e: any) => e);
-      log.info(`simulationResult: ${JSON.stringify(simulationResult)}`);
-      AASimulationService.parseUserOpSimulationResult(userOp, simulationResult);
-    } catch (error: any) {
-      log.info(`AA Simulation failed: ${parseError(error)}`);
-      isSimulationSuccessful = false;
-      return {
-        isSimulationSuccessful,
-        data: {
+    if(entryPointContract.address.toLowerCase() === "0x119df1582e0dd7334595b8280180f336c959f3bb") {
+      try {
+        await entryPointStatic.callStatic.simulateValidation(userOp, false);
+      } catch (error: any) {
+        log.info(`AA Simulation failed: ${JSON.stringify(error)}`);
+        isSimulationSuccessful = false;
+        return {
+          isSimulationSuccessful,
           gasLimitFromSimulation: 0,
-        },
-        message: parseError(error),
-      };
+          msgFromSimulation: JSON.stringify(error),
+        };
+      }
+    } else {
+      try {
+        const simulationResult = await entryPointStatic.callStatic.simulateValidation(userOp)
+          .catch((e: any) => e);
+        log.info(`simulationResult: ${JSON.stringify(simulationResult)}`);
+        AASimulationService.parseUserOpSimulationResult(userOp, simulationResult);
+      } catch (error: any) {
+        log.info(`AA Simulation failed: ${parseError(error)}`);
+        isSimulationSuccessful = false;
+        return {
+          isSimulationSuccessful,
+          data: {
+            gasLimitFromSimulation: 0,
+          },
+          message: parseError(error),
+        };
+      }
     }
     let estimatedGasForUserOp;
 
