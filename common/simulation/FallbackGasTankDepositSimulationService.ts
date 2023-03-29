@@ -1,17 +1,27 @@
+import { ethers } from 'ethers';
 import { config } from '../../config';
 import { IEVMAccount } from '../../relayer/src/services/account';
+import { logger } from '../log-config';
 import { INetworkService } from '../network';
-import { EVMRawTransactionType } from '../types';
+import { EVMRawTransactionType, FallbackGasTankMapType } from '../types';
 import { parseError } from '../utils';
-import { FallbackGasTankDepositSimulationDataType, SimulationResponseType } from './types';
+import { FallbackGasTankDepositSimualtionParamsType, FallbackGasTankDepositSimulationDataType, SimulationResponseType } from './types';
 
+const log = logger(module);
 export class FallbackGasTankDepositSimulationService {
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
 
+  fallbackGasTankMap: FallbackGasTankMapType;
+
   constructor(
-    networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
+    fallbackGasTankDepositSimulationParams: FallbackGasTankDepositSimualtionParamsType,
   ) {
+    const {
+      networkService,
+      options,
+    } = fallbackGasTankDepositSimulationParams;
     this.networkService = networkService;
+    this.fallbackGasTankMap = options.fallbackGasTankMap;
   }
 
   async simulate(
@@ -21,15 +31,30 @@ export class FallbackGasTankDepositSimulationService {
       const {
         chainId,
         value,
-        to,
+        paymasterId,
       } = simulationData;
+
       const { fallbackGasTankDepositManager } = config;
       const from = fallbackGasTankDepositManager.ownerAccountDetails[chainId].publicKey;
-      const gasLimitFromSimulation = await this.networkService.sendRpcCall('eth_estimateGas', [{
+      log.info(`from: ${from} for chainId: ${chainId}, value: ${value}, paymasterId: ${paymasterId}`);
+
+      const {
+        address,
+        fallbackGasTankContract,
+      } = this.fallbackGasTankMap[chainId];
+
+      log.info(`address of fallback gas tank: ${address} for chainId: ${chainId} and paymasterId: ${paymasterId}`);
+
+      const { data } = await (fallbackGasTankContract as ethers.Contract)
+        .populateTransaction.depositFor(paymasterId);
+
+      const gasLimitFromSimulation = await this.networkService.estimateCallGas(
         from,
-        to,
-        value,
-      }]);
+        address,
+        data as string,
+      );
+
+      log.info(`gasLimitFromSimulation: ${gasLimitFromSimulation} for chainId: ${chainId} and paymasterId: ${paymasterId}`);
 
       return {
         isSimulationSuccessful: true,
@@ -44,7 +69,7 @@ export class FallbackGasTankDepositSimulationService {
         data: {
           gasLimitFromSimulation: 0,
         },
-        message: `Fallback GasTank Deposit Transaction failed simulattion with reason: ${parseError(error)}`,
+        message: `Fallback GasTank Deposit Transaction failed simulation with reason: ${parseError(error)}`,
       };
     }
   }

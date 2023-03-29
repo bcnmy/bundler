@@ -1,13 +1,13 @@
 {
   "socketService": {
-    "wssUrl": "wss://sdk-ws.prod.biconomy.io/connection/websocket",
-    "httpUrl": "https://sdk-ws.prod.biconomy.io/api"
+    "wssUrl": "wss://sdk-testing-ws.staging.biconomy.io/connection/websocket",
+    "httpUrl": "https://sdk-testing-ws.staging.biconomy.io/api"
   },
   "cacheService": {
     "lockTTL": 10000
   },
-  "supportedNetworks": [5, 80001, 137, 97, 420, 421613, 43113],
-  "EIP1559SupportedNetworks": [5, 137, 80001],
+  "supportedNetworks": [5, 80001],
+  "EIP1559SupportedNetworks": [80001],
   "supportedTransactionType": {
     "5": ["AA", "SCW", "GASLESS_FALLBACK", "FALLBACK_GASTANK_DEPOSIT", "BUNDLER"],
     "137": ["AA", "SCW", "GASLESS_FALLBACK", "FALLBACK_GASTANK_DEPOSIT", "BUNDLER"],

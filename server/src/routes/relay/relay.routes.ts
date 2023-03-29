@@ -7,7 +7,6 @@ import {
   validateFeeOption,
   validateTransactionStatus,
   validateTransactionResubmit,
-  authenticateRelayRequest,
 } from '../../middleware';
 
 export const relayApiRouter = Router();
@@ -16,6 +15,6 @@ relayApiRouter.get('/feeOptions', validateFeeOption, feeOptionsApi);
 
 relayApiRouter.get('/status', validateTransactionStatus, transactionStatusApi);
 
-relayApiRouter.post('/', authenticateRelayRequest(), validateRelayRequest(), simulateTransaction(), requestHandler);
+relayApiRouter.post('/', validateRelayRequest(), simulateTransaction(), requestHandler);
 
 relayApiRouter.post('/resubmit', validateTransactionResubmit, transactionResubmitApi);

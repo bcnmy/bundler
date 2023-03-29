@@ -8,16 +8,19 @@ const log = logger(module);
 export const simulateFallbackGasTankDepositTransaction = async (req: Request) => {
   try {
     const {
-      to,
       value,
+      paymasterId,
       chainId,
     } = req.body.params[0];
+    log.info(`value: ${value}`);
+    log.info(`paymasterId: ${paymasterId}`);
+    log.info(`chainId: ${chainId}`);
 
     const fallbackGasTankDepositSimilationResponse = await
     fallbackGasTankDepositSimulationServiceMap[chainId]
       .simulate({
-        to,
         value,
+        paymasterId,
         chainId,
       });
 
@@ -30,8 +33,8 @@ export const simulateFallbackGasTankDepositTransaction = async (req: Request) =>
     }
     const { gasLimitFromSimulation } = fallbackGasTankDepositSimilationResponse.data;
     req.body.params[1] = gasLimitFromSimulation;
-    log.info(`gasLimitFromSimulation: ${gasLimitFromSimulation} for falback gas tank deposit: ${to} on chainId: ${chainId}`);
-    log.info(`Transaction successfully simulated for falback gas tank deposit: ${to} on chainId: ${chainId}`);
+    log.info(`gasLimitFromSimulation: ${gasLimitFromSimulation} for falback gas tank deposit on paymasterId: ${paymasterId} on chainId: ${chainId}`);
+    log.info(`Transaction successfully simulated for falback gas tank depositon paymasterId: ${paymasterId} on chainId: ${chainId}`);
     return {
       code: STATUSES.SUCCESS,
       message: 'Transaction successfully simulated',
