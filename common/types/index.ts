@@ -7,6 +7,7 @@ export enum TransactionType {
   FUNDING = 'FUNDING',
   GASLESS_FALLBACK = 'GASLESS_FALLBACK',
   BUNDLER = 'BUNDLER',
+  FALLBACK_GASTANK_DEPOSIT = 'FALLBACK_GASTANK_DEPOSIT',
 }
 
 export enum TransactionMethodType {
@@ -15,6 +16,7 @@ export enum TransactionMethodType {
   CROSS_CHAIN = 'eth_sendCrossChainTransaction',
   GASLESS_FALLBACK = 'eth_sendGaslessFallbackTransaction',
   BUNDLER = 'eth_sendUserOperation',
+  FALLBACK_GASTANK_DEPOSIT = 'eth_sendFallbackGasTankDepositTransaction',
 }
 
 export enum EthMethodType {
@@ -45,6 +47,16 @@ export type TransactionQueueMessageType = {
   previousTransactionHash?: string,
   receipt?: ethers.providers.TransactionReceipt,
   error?: string,
+};
+
+export type FallbackGasTankDepositTransactionMessageType = {
+  transactionId: string,
+  type: string;
+  to: string;
+  data: string;
+  gasLimit: string;
+  chainId: number;
+  value: string;
 };
 
 export enum TransactionStatus {
@@ -176,6 +188,13 @@ export type EntryPointMapType = {
     address: string,
     entryPointContract: ethers.Contract
   }>
+};
+
+export type FallbackGasTankMapType = {
+  [chainId: number]: {
+    address: string,
+    fallbackGasTankContract: ethers.Contract
+  }
 };
 
 export type GetMetaDataFromUserOpReturnType = {
