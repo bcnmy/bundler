@@ -62,6 +62,7 @@ import {
   SCWTransactionMessageType,
   FallbackGasTankDepositTransactionMessageType,
   TransactionType,
+  FallbackGasTankMapType,
 } from '../types';
 
 const log = logger(module);
@@ -101,6 +102,8 @@ const fallbackGasTankDepositSimulationServiceMap: {
 } = {};
 
 const entryPointMap: EntryPointMapType = {};
+
+const fallbackGasTankMap: FallbackGasTankMapType = {};
 
 const dbInstance = Mongo.getInstance();
 const cacheService = RedisCacheService.getInstance();
@@ -467,6 +470,16 @@ let statusService: IStatusService;
         );
 
         log.info(`Gasless fallback consumer & relay service simulation service setup complete for chainId: ${chainId}`);
+
+        const { address, abi } = config.fallbackGasTankData[chainId];
+
+        fallbackGasTankMap[chainId] = {
+          address,
+          fallbackGasTankContract: networkService.getContract(
+            JSON.stringify(abi),
+            address,
+          ),
+        };
       } else if (type === TransactionType.BUNDLER) {
         const bundlerRelayerManager = EVMRelayerManagerMap[
           relayerManagerTransactionTypeNameMap[type]][chainId];
@@ -564,7 +577,12 @@ let statusService: IStatusService;
 
         // eslint-disable-next-line max-len
         fallbackGasTankDepositSimulationServiceMap[chainId] = new FallbackGasTankDepositSimulationService(
-          networkService,
+          {
+            networkService,
+            options: {
+              fallbackGasTankMap,
+            },
+          },
         );
         log.info(`Fallback Gas Tank Deposit consumer, relay service & simulation service setup complete for chainId: ${chainId}`);
       }

@@ -18,13 +18,16 @@ const log = logger(module);
 export const relayFallbackGasTankDepositTransaction = async (req: Request, res: Response) => {
   try {
     const {
-      to, gasLimit, chainId, value,
+      gasLimit, chainId, value,
     } = req.body.params[0];
 
     const gasLimitFromSimulation = req.body.params[1] ? `0x${(req.body.params[1]).toString(16)}` : '0xF4240';
 
     const transactionId = generateTransactionId(Date.now().toString());
-    log.info(`Sending transaction to relayer with transactionId: ${transactionId} for Gasless Fallback: ${to} on chainId: ${chainId}`);
+    const {
+      address,
+    } = config.fallbackGasTankData[chainId];
+    log.info(`Sending transaction to relayer with transactionId: ${transactionId} for Gasless Fallback: ${address} on chainId: ${chainId}`);
 
     await transactionDao.save(chainId, {
       transactionId,
@@ -41,10 +44,6 @@ export const relayFallbackGasTankDepositTransaction = async (req: Request, res: 
         error: `${TransactionMethodType.FALLBACK_GASTANK_DEPOSIT} method not supported for chainId: ${chainId}`,
       });
     }
-
-    const {
-      address,
-    } = config.fallbackGasTankData[chainId];
 
     // eslint-disable-next-line max-len
     const response = await routeTransactionToRelayerMap[chainId][TransactionType.FALLBACK_GASTANK_DEPOSIT]!

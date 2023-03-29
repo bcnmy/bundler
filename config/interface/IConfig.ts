@@ -141,7 +141,7 @@ type EntryPointDataConfigType = {
 
 type FallbackGasTankDataConfigType = {
   [key: number]: {
-    fallbackContractAbi: Array<any>,
+    abi: Array<any>,
     address: string,
   }
 };
