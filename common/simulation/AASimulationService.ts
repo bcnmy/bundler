@@ -25,9 +25,10 @@ export class AASimulationService {
     const entryPointStatic = entryPointContract.connect(
       this.networkService.ethersProvider.getSigner(config.zeroAddress),
     );
-
+    log.info(`Entry Point address to be used for simulateValidation: ${entryPointContract.address} for chainId: ${chainId}`);
     let isSimulationSuccessful = true;
     if(entryPointContract.address.toLowerCase() === "0x119df1582e0dd7334595b8280180f336c959f3bb") {
+      log.info('Using old entry point');
       try {
         await entryPointStatic.callStatic.simulateValidation(userOp, false);
       } catch (error: any) {
