@@ -15,6 +15,11 @@ relayer:
 
 namespace: "sdk-staging"
 
+affinity_tolerations:
+  enable: false 
+  key: "app"
+  values: "monitoring"
+
 secret:
   projectID: biconomy-staging
   key: sdk-staging-relayer-node-service

@@ -15,6 +15,11 @@ relayer:
 
 namespace: "sdk-prod"
 
+affinity_tolerations:
+  enable: true 
+  key: "app"
+  values: "monitoring"
+  
 secret:
   projectID: biconomy-prod
   key: sdk-prod-relayer-node-service

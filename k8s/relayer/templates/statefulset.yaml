@@ -25,6 +25,22 @@ spec:
       annotations:
         releaseTime: {{ dateInZone "2006-01-02 15:04:05Z" (now) "UTC"| quote }} 
     spec:
+    {{- if $values.affinity_tolerations.enable }}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: {{ $values.affinity_tolerations.key }}
+                operator: In
+                values:
+                - {{ $values.affinity_tolerations.values }}
+      tolerations:
+      - effect: NoSchedule
+        key: {{ $values.affinity_tolerations.key }}
+        operator: Equal
+        value: {{ $values.affinity_tolerations.values }}
+    {{- end }}
       containers:
       - name: {{ $values.relayer.name }}{{ $i }}
         image: {{ $values.relayer.image }}
