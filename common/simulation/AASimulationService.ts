@@ -27,7 +27,7 @@ export class AASimulationService {
     );
     log.info(`Entry Point address to be used for simulateValidation: ${entryPointContract.address} for chainId: ${chainId}`);
     let isSimulationSuccessful = true;
-    if(entryPointContract.address.toLowerCase() === "0x119df1582e0dd7334595b8280180f336c959f3bb") {
+    if (entryPointContract.address.toLowerCase() === '0x119df1582e0dd7334595b8280180f336c959f3bb') {
       log.info('Using old entry point');
       try {
         await entryPointStatic.callStatic.simulateValidation(userOp, false);
@@ -36,8 +36,10 @@ export class AASimulationService {
         isSimulationSuccessful = false;
         return {
           isSimulationSuccessful,
-          gasLimitFromSimulation: 0,
-          msgFromSimulation: JSON.stringify(error),
+          data: {
+            gasLimitFromSimulation: 0,
+          },
+          message: parseError(error),
         };
       }
     } else {
