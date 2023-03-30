@@ -28,3 +28,6 @@ secret:
 
 ingress:
   host: sdk-relayer.test.biconomy.io
+
+dd_trace:
+  enable: false

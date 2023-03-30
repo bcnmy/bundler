@@ -6,6 +6,21 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
+DD-Trace lables and annotations
+*/}}
+{{- define "relayers-service.datatrace" -}}
+tags.us5.datadoghq.com/env: {{ .Values.trace.env}}
+tags.us5.datadoghq.com/service: {{ .Values.trace.service}}
+tags.us5.datadoghq.com/version: {{ .Values.trace.version}}
+
+{{- end }}
+
+{{- define "relayers-service.datatrace-admission" -}}
+admission.us5.datadoghq.com/config.mode: socket
+admission.us5.datadoghq.com/enabled: "true"
+{{- end }}
+
+{{/*
 Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.

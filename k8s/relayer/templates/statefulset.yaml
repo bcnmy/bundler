@@ -12,6 +12,9 @@ metadata:
     app: {{ $values.relayer.name }}
     component: {{ $values.relayer.name }}{{ $i }}
     {{- include "relayers-service.labels" $ | nindent 4 }}
+  {{- if $values.dd_trace.enable }}
+    {{- include "relayers-service.datatrace" $ | nindent 4 }}
+  {{- end }}
 spec:
   serviceName: {{ $values.name }}
   replicas: {{ $values.relayer.replicaCount }}
@@ -22,7 +25,14 @@ spec:
     metadata:
       labels:
         app: {{ $values.relayer.name }}
+      {{- if $values.dd_trace.enable }}
+        {{- include "relayers-service.datatrace" $ | nindent 8 }}
+        {{- include "relayers-service.datatrace-admission" $ | nindent 8 }}
+      {{- end }}
       annotations:
+      {{- if $values.dd_trace.enable }}
+        admission.us5.datadoghq.com/js-lib.version: v3.15.0
+      {{- end }}
         releaseTime: {{ dateInZone "2006-01-02 15:04:05Z" (now) "UTC"| quote }} 
     spec:
     {{- if $values.affinity_tolerations.enable }}
@@ -42,6 +52,34 @@ spec:
         value: {{ $values.affinity_tolerations.values }}
     {{- end }}
       containers:
+      {{- if $values.dd_trace.enable }}
+      - env:
+        - name: {{ $values.env.DD_TRACE_AGENT_URL.name }}
+          value: {{ $values.env.DD_TRACE_AGENT_URL.value }}
+        - name: {{ $values.env.DD_ENV.name }}
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: {{ $values.env.DD_ENV.fieldPath }}
+        - name: {{ $values.env.DD_SERVICE.name }}
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: {{ $values.env.DD_SERVICE.fieldPath }}
+        - name: {{ $values.env.DD_VERSION.name }}
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: {{ $values.env.DD_VERSION.fieldPath }}
+        - name: {{ $values.env.DD_TRACE_DEBUG.name }}
+          value: {{ $values.env.DD_TRACE_DEBUG.value }}
+        - name: {{ $values.env.DD_TRACE_STARTUP_LOGS.name }}
+          value: {{ $values.env.DD_TRACE_STARTUP_LOGS.value }}
+        - name: {{ $values.env.DD_PROFILING_ENABLED.name }}
+          value: {{ $values.env.DD_PROFILING_ENABLED.value }}
+        - name: {{ $values.env.DD_LOGS_INJECTION.name }}
+          value: {{ $values.env.DD_LOGS_INJECTION.value }}
+      {{- end }}
       - name: {{ $values.relayer.name }}{{ $i }}
         image: {{ $values.relayer.image }}
         ports:
@@ -53,6 +91,10 @@ spec:
           - mountPath: "/relayer-node/config.json.enc"
             name: secret
             subPath: "config.json.enc"
+      {{- if $values.dd_trace.enable }}
+          - mountPath: {{ $values.volumeMounts.mountPath }}
+            name: {{ $values.volumeMounts.name }}
+      {{- end }} 
         resources:
           requests:
             memory: {{ $values.relayer.resource.requests.memory }}
@@ -76,4 +118,9 @@ spec:
       - name: secret
         secret:
           secretName: {{ $values.name }}{{ $i }}
+      {{- if $values.dd_trace.enable }}
+      - hostPath:
+          path: {{ $values.volumes.hostPath.path }}
+        name: {{ $values.volumes.name }}  
+      {{- end }}           
 {{- end}}

@@ -33,3 +33,48 @@ secret:
 
 ingress:
   host: sdk-relayer.prod.biconomy.io
+
+trace:
+  env: "production"
+  service: "sdk-relayer-service"
+  version: "v3.15.0"
+
+env:
+  DD_TRACE_AGENT_URL:
+    name: DD_TRACE_AGENT_URL
+    value: unix:///var/run/datadog/apm.socket
+  DD_ENV:
+    name: DD_ENV
+    fieldPath: metadata.labels['tags.us5.datadoghq.com/env']
+  DD_SERVICE:
+    name: DD_SERVICE
+    fieldPath: metadata.labels['tags.us5.datadoghq.com/service']
+  DD_VERSION:
+    name: DD_VERSION
+    fieldPath: metadata.labels['tags.us5.datadoghq.com/version']
+  DD_TRACE_DEBUG:
+    name: DD_TRACE_DEBUG
+    value: "true"
+  DD_TRACE_STARTUP_LOGS:
+    name: DD_TRACE_STARTUP_LOGS
+    value: "true"
+  DD_PROFILING_ENABLED:
+    name: DD_PROFILING_ENABLED
+    value: "true"
+  DD_LOGS_INJECTION:
+    name: DD_LOGS_INJECTION
+    value: "false"
+labels:
+  env: production
+  service: sdk-backend
+  version: v3.15.0
+volumeMounts:   
+  mountPath: /var/run/datadog
+  name: apmsocketpath
+volumes:
+  hostPath:  
+    path: /var/run/datadog/
+  name: apmsocketpath
+
+dd_trace:
+  enable: true

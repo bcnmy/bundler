@@ -33,3 +33,5 @@ secret:
 
 ingress:
   host: sdk-relayer.staging.biconomy.io
+dd_trace:
+  enable: false
