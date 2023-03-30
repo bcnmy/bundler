@@ -7,7 +7,7 @@ import { INetworkService } from '../../../../common/network';
 import {
   getMaxRetryCountNotificationMessage,
   getTransactionErrorNotificationMessage,
-  getRelayerFundingNotificationMessage 
+  getRelayerFundingNotificationMessage,
 } from '../../../../common/notification';
 import { INotificationManager } from '../../../../common/notification/interface';
 import { EVMRawTransactionType, NetworkBasedGasPriceType, TransactionType } from '../../../../common/types';
@@ -239,7 +239,8 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
   private async sendRelayerFundingSlackNotification(
     relayerAddress: string,
     chainId: number,
-    transactionHash: string) {
+    transactionHash: string,
+  ) {
     try {
       const message = getRelayerFundingNotificationMessage(relayerAddress, chainId, transactionHash);
       const slackNotifyObject = this.notificationManager.getSlackNotifyObject(message);

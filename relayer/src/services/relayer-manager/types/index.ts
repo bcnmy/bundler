@@ -2,6 +2,7 @@ import { ethers } from 'ethers';
 import { ICacheService } from '../../../../../common/cache';
 import { IGasPrice } from '../../../../../common/gas-price';
 import { INetworkService } from '../../../../../common/network';
+import { INotificationManager } from '../../../../../common/notification/interface';
 import { EVMRawTransactionType } from '../../../../../common/types';
 import { IEVMAccount } from '../../account';
 import { INonceManager } from '../../nonce-manager';
@@ -15,6 +16,7 @@ export type EVMRelayerManagerServiceParamsType = {
   transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>,
   nonceManager: INonceManager<IEVMAccount, EVMRawTransactionType>,
   relayerQueue: IRelayerQueue<EVMRelayerMetaDataType>,
+  notificationManager: INotificationManager;
   options: {
     name: string;
     chainId: number;

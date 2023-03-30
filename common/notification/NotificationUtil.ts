@@ -58,3 +58,14 @@ export const getRelayerFundingNotificationMessage = (
   const action = undefined;
   return getMessage(NotificationLevel.INFO, message, details, action);
 };
+
+export const getPendingTransactionIncreasingMessage = (
+  relayerAddress: string,
+  chainId: number,
+  pendingCount: number,
+) => {
+  const message = 'Relayer Pending Transaction Increasing';
+  const details = `Relayer Address: ${relayerAddress}\nChain Id: ${chainId}\nPending Transaction Count: ${pendingCount}`;
+  const action = 'Keep an eye on the pending transaction count. If the pending transaction count is increasing, please increase the gas price of the transaction or check for stuck transactions';
+  return getMessage(NotificationLevel.WARN, message, details, action);
+};
