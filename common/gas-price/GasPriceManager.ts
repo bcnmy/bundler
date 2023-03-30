@@ -10,6 +10,7 @@ import { BSCTestnetGasPrice } from './networks/BSCTestnetGasPrice';
 import { OptimismGoerliGasPrice } from './networks/OptimismGoerliGasPrice';
 import { ArbitrumGoerliGasPrice } from './networks/ArbitrumGoerliGasPrice';
 import { AvalanceTestnetGasPrice } from './networks/AvalanceTestnetGasPrice';
+import { EthGasPrice } from './networks/EthGasPrice';
 
 export type GasPriceServiceType = MaticGasPrice | GoerliGasPrice | MumbaiGasPrice | undefined;
 export class GasPriceManager implements IGasPriceManager<GasPriceServiceType> {
@@ -37,6 +38,8 @@ export class GasPriceManager implements IGasPriceManager<GasPriceServiceType> {
 
   setup() {
     switch (this.options.chainId) {
+      case 1:
+        return new EthGasPrice(this.cacheService, this.networkService, this.options);
       case 137:
         return new MaticGasPrice(this.cacheService, this.networkService, this.options);
       case 5:
