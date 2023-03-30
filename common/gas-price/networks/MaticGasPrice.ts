@@ -73,11 +73,12 @@ export class MaticGasPrice extends GasPrice implements IScheduler {
     if (!url) throw new Error('Matic gas station url for EIP-1559 not provided.');
 
     const response = await axiosGetCall(url);
+    log.info(`Response from matic gas station for EIP-1559 is ${JSON.stringify(response)}`);
 
-    const safeEIP1559Prices = response.data.safeLow;
-    const mediumEIP1559Prices = response.data.standard;
-    const fastEIP1559Prices = response.data.fast;
-    const { estimatedBaseFee } = response.data;
+    const safeEIP1559Prices = response.safeLow;
+    const mediumEIP1559Prices = response.standard;
+    const fastEIP1559Prices = response.fast;
+    const { estimatedBaseFee } = response;
 
     const safeMaxPriorityFee = safeEIP1559Prices.maxPriorityFee;
     const safeMaxFee = safeEIP1559Prices.maxFee;
