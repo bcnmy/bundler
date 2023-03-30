@@ -177,11 +177,11 @@ export class MaticGasPrice extends GasPrice implements IScheduler {
     let response: any;
     try {
       response = await this.maticGasStation().catch(async (err) => {
-        log.error('[POLYGONSCAN]', err);
+        log.error(`[MATIC GAS STATION] Error in fetching gas price from matic gas station. ${err}`);
         return this.polygonGasStation();
       });
     } catch (error) {
-      log.error('Error in fetching matic gas price from polygonscan and matic gas station.');
+      log.error('Error in fetching gas price from polygonscan and matic gas station.');
     }
 
     let {
@@ -204,15 +204,15 @@ export class MaticGasPrice extends GasPrice implements IScheduler {
     const upperLimit = config.gasPrice[this.chainId].maxGasPrice;
     if (upperLimit) {
       if (fastGasPriceInWei > upperLimit) {
-        // log.info(`Fast gas price for matic ${fastGasPriceInWei} is more than 500 gwei`)
+        log.info(`Fast gas price for matic ${fastGasPriceInWei} is more than ${upperLimit} gwei`);
         fastGasPriceInWei = upperLimit;
       }
       if (fastestGasPriceInWei > upperLimit) {
-        // log.info(`Fast gas price for matic ${fastestGasPriceInWei} is more than 500 gwei`)
+        log.info(`Fast gas price for matic ${fastestGasPriceInWei} is more than ${upperLimit} gwei`);
         fastestGasPriceInWei = upperLimit;
       }
       if (mediumGasPriceInWei > upperLimit) {
-        // log.info(`Fast gas price for matic ${mediumGasPriceInWei} is more than 500 gwei`)
+        log.info(`Fast gas price for matic ${mediumGasPriceInWei} is more than ${upperLimit} gwei`);
         mediumGasPriceInWei = upperLimit;
       }
     }
@@ -231,7 +231,7 @@ export class MaticGasPrice extends GasPrice implements IScheduler {
     );
 
     await this.maticGasStationForEIP1559().catch(async (err) => {
-      log.error(`[POLYGONSCAN] Error in fetching matic gas price for EIP1559: ${err}`);
+      log.error(`[MATIC GAS STATION] Error in fetching gas price for EIP1559: ${err}`);
     });
   }
 
