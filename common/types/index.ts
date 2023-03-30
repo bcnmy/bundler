@@ -1,4 +1,4 @@
-import { ethers } from 'ethers';
+import { BigNumber, BigNumberish, ethers } from 'ethers';
 
 export enum TransactionType {
   AA = 'AA',
@@ -6,6 +6,7 @@ export enum TransactionType {
   CROSS_CHAIN = 'CROSS_CHAIN',
   FUNDING = 'FUNDING',
   GASLESS_FALLBACK = 'GASLESS_FALLBACK',
+  BUNDLER = 'BUNDLER',
 }
 
 export enum TransactionMethodType {
@@ -13,6 +14,15 @@ export enum TransactionMethodType {
   AA = 'eth_sendUserOperation',
   CROSS_CHAIN = 'eth_sendCrossChainTransaction',
   GASLESS_FALLBACK = 'eth_sendGaslessFallbackTransaction',
+  BUNDLER = 'eth_sendUserOperation',
+}
+
+export enum EthMethodType {
+  ESTIMATE_USER_OPERATION_GAS = 'eth_estimateUserOperationGas',
+  GET_USER_OPERATION_BY_HASH = 'eth_getUserOperationByHash',
+  GET_USER_OPERATION_RECEIPT = 'eth_getUserOperationReceipt',
+  SUPPORTED_ENTRY_POINTS = 'eth_supportedEntryPoints',
+  CHAIN_ID = 'eth_chainId',
 }
 
 export enum RelayerDestinationSmartContractName {
@@ -88,6 +98,17 @@ export type AATransactionMessageType = {
   metaData?: {
     dappAPIKey: string
   }
+};
+
+export type BundlerTransactionMessageType = {
+  type: string;
+  to: string;
+  data: string;
+  gasLimit: string;
+  chainId: number;
+  value: string;
+  transactionId: string;
+  userOp?: UserOperationType;
 };
 
 export type SCWTransactionMessageType = {
@@ -167,4 +188,65 @@ export type FeeSupportedToken = {
   address: string,
   symbol: string,
   decimal: number,
+};
+
+export interface TypedEvent<
+  TArgsArray extends Array<any> = any,
+  TArgsObject = any,
+> extends Event {
+  topics: string[];
+  args: TArgsArray & TArgsObject;
+}
+
+export type UserOperationEventEvent = TypedEvent<
+[string, string, string, BigNumber, boolean, BigNumber, BigNumber],
+{
+  userOpHash: string;
+  sender: string;
+  paymaster: string;
+  nonce: BigNumber;
+  success: boolean;
+  actualGasCost: BigNumber;
+  actualGasUsed: BigNumber;
+}
+>;
+
+export type GetUserOperationReceiptReturnType = {
+  success: string,
+  actualGasCost: number,
+  actualGasUsed: number,
+  reason: string,
+  logs: any,
+};
+
+export type Log = {
+  blockNumber: number;
+  blockHash: string;
+  transactionIndex: number;
+
+  removed: boolean;
+
+  address: string;
+  data: string;
+
+  topics: Array<string>;
+
+  transactionHash: string;
+  logIndex: number;
+};
+
+export type DefaultGasOverheadType = {
+  fixed: number,
+  perUserOp: number,
+  perUserOpWord: number,
+  zeroByte: number,
+  nonZeroByte: number,
+  bundleSize: number,
+  sigSize: number,
+};
+
+export type StakeInfo = {
+  addr: string;
+  stake: BigNumberish;
+  unstakeDelaySec: BigNumberish;
 };

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
-import { routeTransactionToRelayerMap, transactionDao } from '../../../../common/service-manager';
+import { networkServiceMap, routeTransactionToRelayerMap, transactionDao } from '../../../../common/service-manager';
 import { generateTransactionId, getMetaDataFromUserOp } from '../../../../common/utils';
 import {
   isError,
@@ -64,7 +64,12 @@ export const relayAATransaction = async (req: Request, res: Response) => {
       const {
         destinationSmartContractAddresses,
         destinationSmartContractMethods,
-      } = await getMetaDataFromUserOp(userOp, chainId, dappAPIKey);
+      } = await getMetaDataFromUserOp(
+        userOp,
+        chainId,
+        dappAPIKey,
+        networkServiceMap[chainId].ethersProvider,
+      );
       metaData.destinationSmartContractAddresses = destinationSmartContractAddresses;
       metaData.destinationSmartContractMethods = destinationSmartContractMethods;
       log.info(`MetaData to be saved: ${JSON.stringify(metaData)} for dappAPIKey: ${dappAPIKey}`);
