@@ -240,6 +240,7 @@ let statusService: IStatusService;
         transactionService,
         nonceManager,
         relayerQueue,
+        notificationManager,
         options: {
           chainId,
           name: relayerManager.name,

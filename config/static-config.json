@@ -236,48 +236,52 @@
     "5": {
       "updateFrequencyInSeconds": 6,
       "minGasPrice": 1000000000,
-      "maxGasPrice": 500000000000,
+      "maxGasPrice": 1500000000000,
       "baseFeeMultiplier": 1.1
     },
     "137": {
       "updateFrequencyInSeconds": 30,
       "minGasPrice": 30000000000,
-      "maxGasPrice": 500000000000,
+      "maxGasPrice": 1500000000000,
       "baseFeeMultiplier": 1.1,
       "gasOracle": {
         "maticGasStationUrl": "https://gasstation-mainnet.matic.network/v1",
         "maticGasStationUrlForEIP1559": "https://gasstation-mainnet.matic.network/v2",
-        "polygonGasStation": ""
+        "polygonGasStation": "https://api.polygonscan.com/api?module=gastracker&action=gasoracle&apikey="
       }
     },
     "80001": {
       "updateFrequencyInSeconds": 10,
       "minGasPrice": 1000000000,
-      "maxGasPrice": 500000000000,
-      "baseFeeMultiplier": 1.1
+      "maxGasPrice": 1500000000000,
+      "baseFeeMultiplier": 1.1,
+      "gasOracle": {
+        "mumbaiGasStationUrl": "https://gasstation-mumbai.matic.network/v1",
+        "mumbaiGasStationUrlForEIP1559": "https://gasstation-mumbai.matic.network/v2"
+      }
     },
     "97": {
       "updateFrequencyInSeconds": 10,
       "minGasPrice": 1000000000,
-      "maxGasPrice": 500000000000,
+      "maxGasPrice": 1500000000000,
       "baseFeeMultiplier": 1.1
     },
     "420": {
       "updateFrequencyInSeconds": 10,
       "minGasPrice": 1000000000,
-      "maxGasPrice": 500000000000,
+      "maxGasPrice": 1500000000000,
       "baseFeeMultiplier": 1.1
     },
     "421613": {
       "updateFrequencyInSeconds": 10,
       "minGasPrice": 1000000000,
-      "maxGasPrice": 500000000000,
+      "maxGasPrice": 1500000000000,
       "baseFeeMultiplier": 1.1
     },
     "43113": {
       "updateFrequencyInSeconds": 10,
       "minGasPrice": 1000000000,
-      "maxGasPrice": 500000000000,
+      "maxGasPrice": 1500000000000,
       "baseFeeMultiplier": 1.1
     }
   },
