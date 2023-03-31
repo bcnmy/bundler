@@ -52,8 +52,12 @@ spec:
         value: {{ $values.affinity_tolerations.values }}
     {{- end }}
       containers:
-      {{- if $values.dd_trace.enable }}
-      - env:
+      - name: {{ $values.relayer.name }}{{ $i }}
+        image: {{ $values.relayer.image }}
+        ports:
+        - containerPort: {{ $values.relayer.port }}
+        {{- if $values.dd_trace.enable }}
+        env:
         - name: {{ $values.env.DD_TRACE_AGENT_URL.name }}
           value: {{ $values.env.DD_TRACE_AGENT_URL.value }}
         - name: {{ $values.env.DD_ENV.name }}
@@ -80,10 +84,6 @@ spec:
         - name: {{ $values.env.DD_LOGS_INJECTION.name }}
           value: {{ $values.env.DD_LOGS_INJECTION.value }}
       {{- end }}
-      - name: {{ $values.relayer.name }}{{ $i }}
-        image: {{ $values.relayer.image }}
-        ports:
-        - containerPort: {{ $values.relayer.port }}
         envFrom:
           - secretRef:
               name: {{ $values.relayer.name }}-passphrase
