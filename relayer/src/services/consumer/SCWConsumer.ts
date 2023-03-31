@@ -3,7 +3,7 @@ import { ICacheService } from '../../../../common/cache';
 import { logger } from '../../../../common/log-config';
 import { IQueue } from '../../../../common/queue';
 import { EVMRawTransactionType, SCWTransactionMessageType, TransactionType } from '../../../../common/types';
-import { getRetryTransactionCountKey } from '../../../../common/utils';
+import { getRetryTransactionCountKey, parseError } from '../../../../common/utils';
 import { IEVMAccount } from '../account';
 import { IRelayerManager } from '../relayer-manager/interface/IRelayerManager';
 import { ITransactionService } from '../transaction-service';
@@ -54,16 +54,23 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
           transactionDataReceivedFromQueue.transactionId,
           this.chainId,
         ), '0');
+        let transactionServiceResponse;
+        try {
+          transactionServiceResponse = await this.transactionService.sendTransaction(
+            transactionDataReceivedFromQueue,
+            activeRelayer,
+            this.transactionType,
+            this.relayerManager.name,
+          );
+        } catch (error) {
+          log.error(`Error while sending SCW transaction on chainId: ${this.chainId}: ${parseError(error)}`);
+        }
 
-        const transactionServiceResponse = await this.transactionService.sendTransaction(
-          transactionDataReceivedFromQueue,
-          activeRelayer,
-          this.transactionType,
-          this.relayerManager.name,
-        );
         log.info(`Response from transaction service after sending transaction on chainId: ${this.chainId}: ${JSON.stringify(transactionServiceResponse)}`);
+
+        log.info(`Adding active relayer: ${activeRelayer.getPublicKey()} to active relayers list on chainId: ${this.chainId} for ${this.transactionType} transaction`);
         this.relayerManager.addActiveRelayer(activeRelayer.getPublicKey());
-        if (transactionServiceResponse.state === 'success') {
+        if (transactionServiceResponse && transactionServiceResponse.state === 'success') {
           log.info(`Transaction sent successfully for ${this.transactionType} on chain ${this.chainId}`);
         } else {
           log.error(`Transaction failed with error: ${transactionServiceResponse?.error || 'unknown error'} for ${this.transactionType} on chain ${this.chainId}`);

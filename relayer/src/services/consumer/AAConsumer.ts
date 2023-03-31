@@ -6,7 +6,7 @@ import { IQueue } from '../../../../common/queue';
 import {
   AATransactionMessageType, EntryPointMapType, EVMRawTransactionType, TransactionType,
 } from '../../../../common/types';
-import { getRetryTransactionCountKey } from '../../../../common/utils';
+import { getRetryTransactionCountKey, parseError } from '../../../../common/utils';
 import { IEVMAccount } from '../account';
 import { IRelayerManager } from '../relayer-manager';
 import { ITransactionService } from '../transaction-service';
@@ -84,12 +84,17 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
         ), '0');
 
         // call transaction service
-        await this.transactionService.sendTransaction(
-          transactionDataReceivedFromQueue,
-          activeRelayer,
-          this.transactionType,
-          this.relayerManager.name,
-        );
+        try {
+          await this.transactionService.sendTransaction(
+            transactionDataReceivedFromQueue,
+            activeRelayer,
+            this.transactionType,
+            this.relayerManager.name,
+          );
+        } catch (error) {
+          log.error(`Error while sending AA transaction: ${JSON.stringify(transactionDataReceivedFromQueue)}: ${parseError(error)}`);
+        }
+        log.info(`Adding active relayer: ${activeRelayer.getPublicKey()} to active relayers list on chainId: ${this.chainId} for ${this.transactionType} transaction`);
         this.relayerManager.addActiveRelayer(activeRelayer.getPublicKey());
       } else {
         this.queue.publish(JSON.parse(msg.content.toString()));
