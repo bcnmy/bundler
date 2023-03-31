@@ -66,7 +66,7 @@ env:
     value: "false"
 labels:
   env: production
-  service: sdk-backend
+  service: sdk-relayer-service
   version: v3.15.0
 volumeMounts:   
   mountPath: /var/run/datadog
