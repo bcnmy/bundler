@@ -29,5 +29,8 @@ secret:
 ingress:
   host: sdk-relayer.test.biconomy.io
 
+affinity_tolerations:
+  enable: false
+
 dd_trace:
   enable: false
