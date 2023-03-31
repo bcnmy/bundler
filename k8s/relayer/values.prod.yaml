@@ -1,5 +1,7 @@
 name: "relayer-server"
+namespace: "sdk-prod"
 replicas: 3
+
 relayer:
   name: "relayer-server"
   image: "gcr.io/biconomy-prod/sdk/relayer-node-service:latest"
@@ -13,13 +15,6 @@ relayer:
       memory: "1000Mi"
       cpu: "1000m"
 
-namespace: "sdk-prod"
-
-affinity_tolerations:
-  enable: true 
-  key: "app"
-  values: "monitoring"
-  
 secret:
   projectID: biconomy-prod
   key: sdk-prod-relayer-node-service
@@ -33,3 +28,23 @@ secret:
 
 ingress:
   host: sdk-relayer.prod.biconomy.io
+
+# datadog configs
+affinity_tolerations:
+  enable: true 
+  key: "app"
+  values: "monitoring"
+
+datadog:
+  enable: true
+  env: "production"
+
+  service: "sdk-relayer-service"
+  version: "v3.15.0"
+  lib_version: "v3.16.0"
+
+  configs:
+    DD_TRACE_DEBUG: "true"
+    DD_TRACE_STARTUP_LOGS: "true"
+    DD_PROFILING_ENABLED: "true"
+    DD_LOGS_INJECTION: "false"
