@@ -8,14 +8,13 @@ Expand the name of the chart.
 {{/*
 DD-Trace lables and annotations
 */}}
-{{- define "relayers-service.datatrace" -}}
-tags.us5.datadoghq.com/env: {{ .Values.trace.env}}
-tags.us5.datadoghq.com/service: {{ .Values.trace.service}}
-tags.us5.datadoghq.com/version: {{ .Values.trace.version}}
-
+{{- define "datadog.datatrace" -}}
+tags.us5.datadoghq.com/env: {{ .Values.datadog.env }}
+tags.us5.datadoghq.com/service: {{ .Values.datadog.service }}
+tags.us5.datadoghq.com/version: {{ .Values.datadog.version }}
 {{- end }}
 
-{{- define "relayers-service.datatrace-admission" -}}
+{{- define "datadog.datatrace-admission" -}}
 admission.us5.datadoghq.com/config.mode: socket
 admission.us5.datadoghq.com/enabled: "true"
 {{- end }}

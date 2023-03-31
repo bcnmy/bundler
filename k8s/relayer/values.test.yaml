@@ -1,5 +1,8 @@
 name: "relayer-server"
+namespace: "sdk-test"
+
 replicas: 2
+
 relayer:
   name: "relayer-server"
   image: "gcr.io/biconomy-staging/sdk-test/relayer-node-service:latest"
@@ -12,8 +15,6 @@ relayer:
     limits:
       memory: "500Mi"
       cpu: "500m"
-
-namespace: "sdk-test"
 
 secret:
   projectID: biconomy-staging
@@ -29,8 +30,9 @@ secret:
 ingress:
   host: sdk-relayer.test.biconomy.io
 
+# datadog configs
 affinity_tolerations:
   enable: false
 
-dd_trace:
+datadog:
   enable: false
