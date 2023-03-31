@@ -119,12 +119,12 @@ export class AASimulationService {
       }
       let { paymaster } = simulationResult.errorArgs;
       if (paymaster === config.zeroAddress) {
-        paymaster = null;
+        paymaster = undefined;
       }
       // eslint-disable-next-line
       const msg: string = simulationResult.errorArgs?.reason ?? simulationResult.toString()
 
-      if (!paymaster) {
+      if (paymaster == null) {
         log.info(`account validation failed: ${msg} for userOp: ${JSON.stringify(userOp)}`);
         throw Error(`account validation failed: ${msg}`);
       } else {
