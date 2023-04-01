@@ -1,9 +1,9 @@
 /* eslint-disable import/first */
 require('dotenv').config({ path: `${__dirname}/../../.env` });
 
+import tracer from 'dd-trace';
 import { logger } from '../../common/log-config';
 import { configInstance } from '../../config';
-import tracer from 'dd-trace';
 
 tracer.init({ logInjection: false });
 
