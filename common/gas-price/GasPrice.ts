@@ -225,7 +225,10 @@ export class GasPrice implements IGasPrice {
    * @param price price of max fee gas
    */
   async setMaxFeeGasPrice(gasType: GasPriceType, price: string) {
-    await this.cacheService.set(this.getMaxFeePerGasKey(gasType), price);
+    await this.cacheService.set(
+      this.getMaxFeePerGasKey(gasType),
+      parseInt(price, 10).toString(),
+    );
   }
 
   /**
@@ -258,7 +261,10 @@ export class GasPrice implements IGasPrice {
    * @param price price of max priority fee gas
    */
   async setMaxPriorityFeeGasPrice(gasType: GasPriceType, price: string) {
-    await this.cacheService.set(this.getMaxPriorityFeeGasKey(gasType), price);
+    await this.cacheService.set(
+      this.getMaxPriorityFeeGasKey(gasType),
+      parseInt(price, 10).toString(),
+    );
   }
 
   /**

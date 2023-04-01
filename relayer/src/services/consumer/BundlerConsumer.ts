@@ -6,7 +6,7 @@ import { IQueue } from '../../../../common/queue';
 import {
   BundlerTransactionMessageType, EntryPointMapType, EVMRawTransactionType, TransactionType,
 } from '../../../../common/types';
-import { getRetryTransactionCountKey } from '../../../../common/utils';
+import { getRetryTransactionCountKey, parseError } from '../../../../common/utils';
 import { IEVMAccount } from '../account';
 import { IRelayerManager } from '../relayer-manager';
 import { ITransactionService } from '../transaction-service';
@@ -99,7 +99,7 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
             log.error(`Transaction failed with error: ${transactionServiceResponse?.error || 'unknown error'} for ${this.transactionType} on chain ${this.chainId}`);
           }
         } catch (error) {
-          log.info(`Error in transaction service for transactionType: ${this.transactionType} on chainId: ${this.chainId} with error: ${JSON.stringify(error)}`);
+          log.info(`Error in transaction service for transactionType: ${this.transactionType} on chainId: ${this.chainId} with error: ${JSON.stringify(parseError(error))}`);
           log.info(`Adding relayer: ${activeRelayer.getPublicKey()} back to active relayer queue for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);
           this.relayerManager.addActiveRelayer(activeRelayer.getPublicKey());
           log.info(`Added relayer: ${activeRelayer.getPublicKey()} back to active relayer queue for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);
