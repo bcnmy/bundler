@@ -59,8 +59,9 @@ export const relayAATransaction = async (req: Request, res: Response) => {
         metaData,
       });
 
-    const { dappAPIKey } = metaData;
     try {
+      const { dappAPIKey } = metaData;
+      log.info(`dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
       const {
         destinationSmartContractAddresses,
         destinationSmartContractMethods,
@@ -82,7 +83,7 @@ export const relayAATransaction = async (req: Request, res: Response) => {
         RelayerDestinationSmartContractName.ENTRY_POINT,
       );
     } catch (error) {
-      log.info(`Error in getting meta data from userOp: ${JSON.stringify(userOp)} for dappAPIKey: ${dappAPIKey}`);
+      log.info(`Error in getting meta data from userOp: ${JSON.stringify(userOp)}`);
       log.info(`Error: ${error}`);
     }
 
