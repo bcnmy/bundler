@@ -1,63 +1,57 @@
-{{- $replicas := .Values.replicas | int -}}
-{{- $values := .Values }}
-{{- range $i,$e := until $replicas }}
-
----
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ $values.relayer.name }}{{ $i }}
-  namespace: {{ $values.namespace }}
+  name: {{ .Values.relayer.name }}{{ .Values.index }}
+  namespace: {{ .Values.namespace }}
   labels:
-    app: {{ $values.relayer.name }}
-    component: {{ $values.relayer.name }}{{ $i }}
+    app: {{ .Values.relayer.name }}
+    component: {{ .Values.relayer.name }}{{ .Values.index }}
     {{- include "relayers-service.labels" $ | nindent 4 }}
 spec:
-  serviceName: {{ $values.name }}
-  replicas: {{ $values.relayer.replicaCount }}
+  serviceName: {{ .Values.name }}
+  replicas: {{ .Values.relayer.replicaCount }}
   selector:
     matchLabels:
-      app: {{ $values.relayer.name }}
+      app: {{ .Values.relayer.name }}
   template:
     metadata:
       labels:
-        app: {{ $values.relayer.name }}
+        app: {{ .Values.relayer.name }}
       annotations:
         releaseTime: {{ dateInZone "2006-01-02 15:04:05Z" (now) "UTC"| quote }} 
     spec:
       containers:
-      - name: {{ $values.relayer.name }}{{ $i }}
-        image: {{ $values.relayer.image }}
+      - name: {{ .Values.relayer.name }}{{ .Values.index }}
+        image: {{ .Values.relayer.image }}
         ports:
-        - containerPort: {{ $values.relayer.port }}
+        - containerPort: {{ .Values.relayer.port }}
         envFrom:
           - secretRef:
-              name: {{ $values.relayer.name }}-passphrase
+              name: {{ .Values.relayer.name }}-passphrase
         volumeMounts:
           - mountPath: "/relayer-node/config.json.enc"
             name: secret
             subPath: "config.json.enc"
         resources:
           requests:
-            memory: {{ $values.relayer.resource.requests.memory }}
-            cpu: {{ $values.relayer.resource.requests.cpu }}
+            memory: {{ .Values.relayer.resource.requests.memory }}
+            cpu: {{ .Values.relayer.resource.requests.cpu }}
           limits:
-            memory: {{ $values.relayer.resource.limits.memory }}
-            cpu: {{ $values.relayer.resource.limits.cpu }}
+            memory: {{ .Values.relayer.resource.limits.memory }}
+            cpu: {{ .Values.relayer.resource.limits.cpu }}
         livenessProbe:
           httpGet:
             path: /health
-            port: {{ $values.relayer.port }}
+            port: {{ .Values.relayer.port }}
           initialDelaySeconds: 30
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /health
-            port: {{ $values.relayer.port }}
+            port: {{ .Values.relayer.port }}
           initialDelaySeconds: 30
           periodSeconds: 10
       volumes:
       - name: secret
         secret:
-          secretName: {{ $values.name }}{{ $i }}
-{{- end}}
+          secretName: {{ .Values.name }}{{ .Values.index }}
