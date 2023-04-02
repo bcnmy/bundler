@@ -123,7 +123,7 @@ export class AASimulationService {
       }
       // eslint-disable-next-line
       const msg: string = simulationResult.errorArgs?.reason ?? simulationResult.toString()
-
+      log.info(`paymaster: ${paymaster}`);
       if (paymaster == null) {
         log.info(`account validation failed: ${msg} for userOp: ${JSON.stringify(userOp)}`);
         throw Error(`account validation failed: ${msg}`);
