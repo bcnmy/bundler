@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { logger } from '../../../../../common/log-config';
 import { routeTransactionToRelayerMap, transactionDao, userOperationDao } from '../../../../../common/service-manager';
-import { generateTransactionId, getPaymasterFromPaymasterAndData } from '../../../../../common/utils';
+import { generateTransactionId, getPaymasterFromPaymasterAndData, parseError } from '../../../../../common/utils';
 import {
   isError,
   TransactionStatus,
@@ -103,10 +103,10 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
       result: userOpHash,
     });
   } catch (error) {
-    log.error(`Error in bundle user op ${JSON.stringify(error)}`);
+    log.error(`Error in bundle user op ${parseError(error)}`);
     return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
       code: STATUSES.INTERNAL_SERVER_ERROR,
-      error: `Internal Server Error: ${JSON.stringify(error)}`,
+      error: `Internal Server Error: ${parseError(error)}`,
     });
   }
 };

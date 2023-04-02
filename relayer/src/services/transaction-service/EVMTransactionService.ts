@@ -185,8 +185,16 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           log.info(
             `Already known transaction hash with same payload and nonce for relayer ${rawTransaction.from} on network id ${this.chainId}. Removing nonce from cache and retrying`,
           );
+          return {
+            success: false,
+            error: errInString,
+          };
         } else if (insufficientFundsErrorMessage.some((str) => errInString.indexOf(str) > -1)) {
           log.info(`Relayer ${rawTransaction.from} has insufficient funds`);
+          return {
+            success: false,
+            error: errInString,
+          };
           // Send previous relayer for funding
         } else {
           log.info('transaction not being retried');
