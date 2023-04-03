@@ -230,9 +230,11 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
     if (relayer) {
       // check if pending count of relayer is less than threshold
       // else you wait for the transaction to be mined
-      if (relayer.pendingCount < this.pendingTransactionCountThreshold) {
-        await this.relayerQueue.push(relayer);
-      }
+      await this.relayerQueue.push(relayer);
+      // TODO: uncomment below code once we have a way to check if transaction is mined
+      // if (relayer.pendingCount < this.pendingTransactionCountThreshold) {
+      //   await this.relayerQueue.push(relayer);
+      // }
       delete this.transactionProcessingRelayerMap[address];
 
       // check if size of active relayer queue is
