@@ -3,7 +3,7 @@ import { TransactionMethodType } from '../../../../common/types';
 import { STATUSES } from '../../middleware';
 import { simulateAATransaction } from './SimulateAATransaction';
 import { simulateGaslessFallbackTransaction } from './SimulateGaslessFallbackTransaction';
-// import { simulateSCWTransaction } from './SimulateSCWTransaction';
+import { simulateSCWTransaction } from './SimulateSCWTransaction';
 
 export const simulateTransaction = () => async (
   req: Request,
@@ -16,9 +16,7 @@ export const simulateTransaction = () => async (
     if (method === TransactionMethodType.AA) {
       response = await simulateAATransaction(req);
     } else if (method === TransactionMethodType.SCW) {
-      response = {
-        code: STATUSES.SUCCESS,
-      };
+      response = await simulateSCWTransaction(req);
     } else if (method === TransactionMethodType.GASLESS_FALLBACK) {
       response = await simulateGaslessFallbackTransaction(req);
     }
