@@ -3,7 +3,7 @@ import { TransactionMethodType } from '../../../../common/types';
 import { STATUSES } from '../../middleware';
 import { simulateAATransaction } from './SimulateAATransaction';
 import { simulateGaslessFallbackTransaction } from './SimulateGaslessFallbackTransaction';
-import { simulateSCWTransaction } from './SimulateSCWTransaction';
+// import { simulateSCWTransaction } from './SimulateSCWTransaction';
 
 export const simulateTransaction = () => async (
   req: Request,
