@@ -1,5 +1,6 @@
 name: "relayer-server"
-replicas: 3
+index: 0
+
 relayer:
   name: "relayer-server"
   image: "gcr.io/biconomy-prod/sdk/relayer-node-service:latest"
