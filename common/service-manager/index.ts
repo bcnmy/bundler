@@ -228,8 +228,8 @@ let statusService: IStatusService;
     log.info(`Transaction service setup complete for chainId: ${chainId}`);
 
     log.info(`Setting up relayer manager for chainId: ${chainId}`);
-    const relayerQueue = new EVMRelayerQueue([]);
     for (const relayerManager of config.relayerManagers) {
+      const relayerQueue = new EVMRelayerQueue([]);
       if (!EVMRelayerManagerMap[relayerManager.name]) {
         EVMRelayerManagerMap[relayerManager.name] = {};
       }
