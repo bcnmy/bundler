@@ -7,7 +7,7 @@ metadata:
     app: {{ .Values.relayer.name }}
     component: {{ .Values.relayer.name }}{{ .Values.index }}
     {{- include "relayers-service.labels" $ | nindent 4 }}
-  {{- if $values.datadog.enable }}
+  {{- if .Values.datadog.enable }}
     {{- include "datadog.datatrace" $ | nindent 4 }}
   {{- end }}
 spec:
@@ -19,32 +19,32 @@ spec:
   template:
     metadata:
       labels:
-        app: {{ $values.relayer.name }}
-      {{- if $values.datadog.enable }}
+        app: {{ .Values.relayer.name }}
+      {{- if .Values.datadog.enable }}
         {{- include "datadog.datatrace" $ | nindent 8 }}
         {{- include "datadog.datatrace-admission" $ | nindent 8 }}
       {{- end }}
       annotations:
-      {{- if $values.datadog.enable }}
-        admission.us5.datadoghq.com/js-lib.version: {{ $values.datadog.lib_version }}
+      {{- if .Values.datadog.enable }}
+        admission.us5.datadoghq.com/js-lib.version: {{ .Values.datadog.lib_version }}
       {{- end }}
         releaseTime: {{ dateInZone "2006-01-02 15:04:05Z" (now) "UTC"| quote }} 
     spec:
-    {{- if $values.affinity_tolerations.enable }}
+    {{- if .Values.affinity_tolerations.enable }}
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: {{ $values.affinity_tolerations.key }}
+              - key: {{ .Values.affinity_tolerations.key }}
                 operator: In
                 values:
-                - {{ $values.affinity_tolerations.values }}
+                - {{ .Values.affinity_tolerations.values }}
       tolerations:
       - effect: NoSchedule
-        key: {{ $values.affinity_tolerations.key }}
+        key: {{ .Values.affinity_tolerations.key }}
         operator: Equal
-        value: {{ $values.affinity_tolerations.values }}
+        value: {{ .Values.affinity_tolerations.values }}
     {{- end }}
       containers:
       - name: {{ .Values.relayer.name }}{{ .Values.index }}
@@ -52,9 +52,9 @@ spec:
         ports:
         - containerPort: {{ .Values.relayer.port }}
         envFrom:
-          {{- if $values.datadog.enable }}
+          {{- if .Values.datadog.enable }}
           - configMapRef:
-              name: {{ $values.name }}-dd-configmap
+              name: {{ .Values.name }}-dd-configmap
           {{- end }}
           - secretRef:
               name: {{ .Values.relayer.name }}-passphrase
@@ -62,7 +62,7 @@ spec:
           - mountPath: "/relayer-node/config.json.enc"
             name: secret
             subPath: "config.json.enc"
-      {{- if $values.datadog.enable }}
+      {{- if .Values.datadog.enable }}
           - mountPath: /var/run/datadog
             name: apmsocketpath
       {{- end }} 
@@ -88,14 +88,4 @@ spec:
       volumes:
       - name: secret
         secret:
-<<<<<<< HEAD
           secretName: {{ .Values.name }}{{ .Values.index }}
-=======
-          secretName: {{ $values.name }}{{ $i }}
-      {{- if $values.datadog.enable }}
-      - hostPath:
-          path: /var/run/datadog/
-        name: apmsocketpath
-      {{- end }}           
-{{- end}}
->>>>>>> master
