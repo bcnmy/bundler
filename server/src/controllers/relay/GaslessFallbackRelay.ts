@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
 import { routeTransactionToRelayerMap, transactionDao } from '../../../../common/service-manager';
-import { generateTransactionId, getMetaDataFromFallbackUserOp } from '../../../../common/utils';
+import { generateTransactionId, getMetaDataFromFallbackUserOp, parseError } from '../../../../common/utils';
 import {
   isError,
   RelayerDestinationSmartContractName,
@@ -94,10 +94,10 @@ export const relayGaslessFallbackTransaction = async (req: Request, res: Respons
       },
     });
   } catch (error) {
-    log.error(`Error in Gasless Fallback relay ${error}`);
+    log.error(`Error in Gasless Fallback relay ${parseError(error)}`);
     return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
       code: STATUSES.INTERNAL_SERVER_ERROR,
-      error: JSON.stringify(error),
+      error: `Internal Server Error: ${parseError(error)}`,
     });
   }
 };

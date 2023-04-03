@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { STATUSES } from '../../../middleware';
 import { logger } from '../../../../../common/log-config';
 import { config } from '../../../../../config';
+import { parseError } from '../../../../../common/utils';
 
 const log = logger(module);
 
@@ -30,10 +31,10 @@ export const getSupportedEntryPoints = async (req: Request, res: Response) => {
       result: supportedEntryPoints,
     });
   } catch (error) {
-    log.error(`Error in supportedEntryPoints handler ${JSON.stringify(error)}`);
+    log.error(`Error in supportedEntryPoints handler ${parseError(error)}`);
     return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
       code: STATUSES.INTERNAL_SERVER_ERROR,
-      error: `Internal Server Error: ${JSON.stringify(error)}`,
+      error: `Internal Server Error: ${parseError(error)}`,
     });
   }
 };

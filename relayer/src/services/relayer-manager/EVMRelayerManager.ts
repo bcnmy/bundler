@@ -11,6 +11,8 @@ import { ICacheService } from '../../../../common/cache';
 import { IGasPrice } from '../../../../common/gas-price';
 import { logger } from '../../../../common/log-config';
 import { INetworkService } from '../../../../common/network';
+import { getPendingTransactionIncreasingMessage } from '../../../../common/notification';
+import { INotificationManager } from '../../../../common/notification/interface';
 import {
   EVMRawTransactionType,
   TransactionType,
@@ -84,6 +86,8 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
 
   gasPriceService: IGasPrice;
 
+  notificationManager: INotificationManager;
+
   constructor(
     evmRelayerManagerServiceParams: EVMRelayerManagerServiceParamsType,
   ) {
@@ -95,6 +99,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
       nonceManager,
       relayerQueue,
       transactionService,
+      notificationManager,
     } = evmRelayerManagerServiceParams;
     this.chainId = options.chainId;
     this.name = options.name;
@@ -114,6 +119,22 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
     this.transactionService = transactionService;
     this.nonceManager = nonceManager;
     this.cacheService = cacheService;
+    this.notificationManager = notificationManager;
+  }
+
+  private async sendPendingTransactionIncreasingSlackNotification(
+    relayerAddress: string,
+    pendingCount: number,
+  ) {
+    const pendingTransactionIncreasingMessage = getPendingTransactionIncreasingMessage(
+      relayerAddress,
+      this.chainId,
+      pendingCount,
+    );
+    const slackNotifyObject = this.notificationManager.getSlackNotifyObject(
+      pendingTransactionIncreasingMessage,
+    );
+    await this.notificationManager.sendSlackNotification(slackNotifyObject);
   }
 
   /**
@@ -125,6 +146,15 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
     if (activeRelayer) {
       activeRelayer.pendingCount += 1;
       this.transactionProcessingRelayerMap[activeRelayer.address] = activeRelayer;
+      if (
+        activeRelayer.pendingCount
+        > this.pendingTransactionCountThreshold - 5
+      ) {
+        await this.sendPendingTransactionIncreasingSlackNotification(
+          activeRelayer.address,
+          activeRelayer.pendingCount,
+        );
+      }
       return this.relayerMap[activeRelayer.address];
     }
     return null;
@@ -146,22 +176,30 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
     }
     if (relayerData) {
       if (relayerData.pendingCount > 0) {
-        relayerData.pendingCount = -1;
+        relayerData.pendingCount -= 1;
       }
-      log.info(`Pending count of relayer ${address} is ${relayerData.pendingCount} on chainId: ${this.chainId}`);
+      log.info(
+        `Pending count of relayer ${address} is ${relayerData.pendingCount} on chainId: ${this.chainId}`,
+      );
       const balance = await this.networkService.getBalance(address);
       relayerData.balance = balance;
-      log.info(`Balance of relayer ${address} is ${balance} on chainId: ${this.chainId}`);
+      log.info(
+        `Balance of relayer ${address} is ${balance} on chainId: ${this.chainId}`,
+      );
       // if balance is less than threshold, fund the relayer
       if (balance.lt(this.fundingBalanceThreshold)) {
         try {
           await this.fundRelayers([address]);
         } catch (error) {
-          log.info(`Error while funding relayer ${address}:- ${error} on chainId: ${this.chainId}`);
+          log.info(
+            `Error while funding relayer ${address}:- ${error} on chainId: ${this.chainId}`,
+          );
         }
       }
     } else {
-      log.info(`Relayer ${address} is not found in relayer queue or transaction processing relayer map on chainId: ${this.chainId}`);
+      log.info(
+        `Relayer ${address} is not found in relayer queue or transaction processing relayer map on chainId: ${this.chainId}`,
+      );
     }
   }
 
@@ -199,8 +237,13 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
 
       // check if size of active relayer queue is
       // greater than or equal to the inactiveRelayerCountThreshold
-      if ((this.minRelayerCount - this.relayerQueue.size()) >= this.inactiveRelayerCountThreshold) {
-        const newRelayers = await this.createRelayers(this.newRelayerInstanceCount);
+      if (
+        this.minRelayerCount - this.relayerQueue.size()
+        >= this.inactiveRelayerCountThreshold
+      ) {
+        const newRelayers = await this.createRelayers(
+          this.newRelayerInstanceCount,
+        );
         await this.fundRelayers(newRelayers);
       }
       log.info(
@@ -284,10 +327,14 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
       for (const relayer of relayers) {
         const relayerAddress = relayer.getPublicKey().toLowerCase();
         try {
-          log.info(`Creating relayer ${relayerAddress} on chainId: ${this.chainId}`);
+          log.info(
+            `Creating relayer ${relayerAddress} on chainId: ${this.chainId}`,
+          );
           const balance = await this.networkService.getBalance(relayerAddress);
           const nonce = await this.nonceManager.getNonce(relayerAddress);
-          log.info(`Balance of relayer ${relayerAddress} is ${balance} and nonce is ${nonce} on chainId: ${this.chainId} with threshold ${this.fundingBalanceThreshold}`);
+          log.info(
+            `Balance of relayer ${relayerAddress} is ${balance} and nonce is ${nonce} on chainId: ${this.chainId} with threshold ${this.fundingBalanceThreshold}`,
+          );
           this.relayerQueue.push({
             address: relayer.getPublicKey(),
             pendingCount: 0,
@@ -351,7 +398,9 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
    * @param addressList List of relayers to fund
    */
   async fundRelayers(addressList: string[]): Promise<any> {
-    log.info(`Starting to fund relayers on chainId: ${this.chainId} with addresses: ${addressList}`);
+    log.info(
+      `Starting to fund relayers on chainId: ${this.chainId} with addresses: ${addressList}`,
+    );
     for (const relayerAddress of addressList) {
       const address = relayerAddress.toLowerCase();
       const lock = this.cacheService.getRedLock();
@@ -360,10 +409,19 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
           `Has sufficient funds in relayer ${address} on chainId: ${this.chainId}`,
         );
       } else if (lock) {
-        const key = `${this.ownerAccountDetails.getPublicKey()}_${this.chainId}`;
-        log.info(`Waiting for lock to fund relayers on key ${key} for relayer ${relayerAddress} for duration of ${config.cacheService.lockTTL}ms`);
-        const acquiredLock = await lock.acquire([`locks:${key}`], config.cacheService.lockTTL);
-        log.info(`Lock acquired on key ${key} to fund relayer ${relayerAddress} on chainId: ${this.chainId}`);
+        const key = `${this.ownerAccountDetails.getPublicKey()}_${
+          this.chainId
+        }`;
+        log.info(
+          `Waiting for lock to fund relayers on key ${key} for relayer ${relayerAddress} for duration of ${config.cacheService.lockTTL}ms`,
+        );
+        const acquiredLock = await lock.acquire(
+          [`locks:${key}`],
+          config.cacheService.lockTTL,
+        );
+        log.info(
+          `Lock acquired on key ${key} to fund relayer ${relayerAddress} on chainId: ${this.chainId}`,
+        );
         try {
           let gasLimitIndex = 0;
           // different gas limit for arbitrum
@@ -373,8 +431,9 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
 
           const fundingAmount = this.fundingRelayerAmount;
 
-          const ownerAccountNonce = await this.nonceManager
-            .getNonce(this.ownerAccountDetails.getPublicKey());
+          const ownerAccountNonce = await this.nonceManager.getNonce(
+            this.ownerAccountDetails.getPublicKey(),
+          );
 
           const rawTx = {
             from: this.ownerAccountDetails.getPublicKey(),
@@ -406,7 +465,9 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
             this.name,
           );
           await this.cacheService.unlockRedLock(acquiredLock);
-          log.info(`Lock released for relayer ${address} on chainId: ${this.chainId}`);
+          log.info(
+            `Lock released for relayer ${address} on chainId: ${this.chainId}`,
+          );
 
           if (response.state === 'success') {
             log.info(
@@ -419,10 +480,16 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
           }
         } catch (error) {
           await this.cacheService.unlockRedLock(acquiredLock);
-          log.error(`Error while funding relayer ${address} on chainId: ${this.chainId} with error: ${JSON.stringify(error)}`);
+          log.error(
+            `Error while funding relayer ${address} on chainId: ${
+              this.chainId
+            } with error: ${JSON.stringify(error)}`,
+          );
         }
       } else {
-        log.error(`Lock undefined and hence failed to fund relayer ${address} on chainId: ${this.chainId}`);
+        log.error(
+          `Lock undefined and hence failed to fund relayer ${address} on chainId: ${this.chainId}`,
+        );
       }
     }
   }

@@ -7,7 +7,7 @@ import {
   TransactionStatus,
   TransactionType,
 } from '../../../../common/types';
-import { generateTransactionId } from '../../../../common/utils';
+import { generateTransactionId, parseError } from '../../../../common/utils';
 import { config } from '../../../../config';
 import { STATUSES } from '../../middleware';
 
@@ -93,10 +93,10 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    log.error(`Error in SCW relay ${JSON.stringify(error)}`);
+    log.error(`Error in SCW relay ${parseError(error)}`);
     return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
       code: STATUSES.INTERNAL_SERVER_ERROR,
-      error: `Internal Server Error: ${JSON.stringify(error)}`,
+      error: `Internal Server Error: ${parseError(error)}`,
     });
   }
 };

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
 import { networkServiceMap, routeTransactionToRelayerMap, transactionDao } from '../../../../common/service-manager';
-import { generateTransactionId, getMetaDataFromUserOp } from '../../../../common/utils';
+import { generateTransactionId, getMetaDataFromUserOp, parseError } from '../../../../common/utils';
 import {
   isError,
   RelayerDestinationSmartContractName,
@@ -59,8 +59,9 @@ export const relayAATransaction = async (req: Request, res: Response) => {
         metaData,
       });
 
-    const { dappAPIKey } = metaData;
     try {
+      const { dappAPIKey } = metaData;
+      log.info(`dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
       const {
         destinationSmartContractAddresses,
         destinationSmartContractMethods,
@@ -82,7 +83,7 @@ export const relayAATransaction = async (req: Request, res: Response) => {
         RelayerDestinationSmartContractName.ENTRY_POINT,
       );
     } catch (error) {
-      log.info(`Error in getting meta data from userOp: ${JSON.stringify(userOp)} for dappAPIKey: ${dappAPIKey}`);
+      log.info(`Error in getting meta data from userOp: ${JSON.stringify(userOp)}`);
       log.info(`Error: ${error}`);
     }
 
@@ -100,10 +101,10 @@ export const relayAATransaction = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    log.error(`Error in AA relay ${JSON.stringify(error)}`);
+    log.error(`Error in AA relay ${parseError(error)}`);
     return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
       code: STATUSES.INTERNAL_SERVER_ERROR,
-      error: `Internal Server Error: ${JSON.stringify(error)}`,
+      error: `Internal Server Error: ${parseError(error)}`,
     });
   }
 };

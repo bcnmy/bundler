@@ -11,9 +11,6 @@
     "token": "",
     "apiKey": ""
   },
-  "paymasterDashboardBackendConfig": {
-    "dappDataUrl": ""
-  },
   "utilsModuleConfig": {
     "secretKey": "",
     "authTimeFrameSeconds": 3
@@ -41,8 +38,13 @@
     }
   },
   "relayerManagers": [{
+    "name": "",
     "relayerSeed": "",
     "ownerAccountDetails": {
+      "1": {
+        "publicKey": "",
+        "privateKey": ""
+      },
       "5": {
         "publicKey": "",
         "privateKey": ""
@@ -58,16 +60,30 @@
       "97": {
         "publicKey": "",
         "privateKey": ""
-      },
-      "420": {
+      }
+    }
+  },
+  {
+    "name": "",
+    "relayerSeed": "",
+    "ownerAccountDetails": {
+      "1": {
         "publicKey": "",
         "privateKey": ""
       },
-      "421613": {
+      "5": {
         "publicKey": "",
         "privateKey": ""
       },
-      "43113": {
+      "137": {
+        "publicKey": "",
+        "privateKey": ""
+      },
+      "80001": {
+        "publicKey": "",
+        "privateKey": ""
+      },
+      "97": {
         "publicKey": "",
         "privateKey": ""
       }
@@ -107,5 +123,18 @@
   },
   "tokenPrice": {
     "coinMarketCapApi": ""
+  },
+  "gasPrice": {
+    "137": {
+      "updateFrequencyInSeconds": 10,
+      "minGasPrice": 30000000000,
+      "maxGasPrice": 1500000000000,
+      "baseFeeMultiplier": 1.1,
+      "gasOracle": {
+        "maticGasStationUrl": "https://gasstation-mainnet.matic.network/v1",
+        "maticGasStationUrlForEIP1559": "https://gasstation-mainnet.matic.network/v2",
+        "polygonGasStation": ""
+      }
+    }
   }
 }

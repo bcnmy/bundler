@@ -7,6 +7,9 @@ metadata:
     app: {{ .Values.relayer.name }}
     component: {{ .Values.relayer.name }}{{ .Values.index }}
     {{- include "relayers-service.labels" $ | nindent 4 }}
+  {{- if $values.datadog.enable }}
+    {{- include "datadog.datatrace" $ | nindent 4 }}
+  {{- end }}
 spec:
   serviceName: {{ .Values.name }}
   replicas: {{ .Values.relayer.replicaCount }}
@@ -16,22 +19,53 @@ spec:
   template:
     metadata:
       labels:
-        app: {{ .Values.relayer.name }}
+        app: {{ $values.relayer.name }}
+      {{- if $values.datadog.enable }}
+        {{- include "datadog.datatrace" $ | nindent 8 }}
+        {{- include "datadog.datatrace-admission" $ | nindent 8 }}
+      {{- end }}
       annotations:
+      {{- if $values.datadog.enable }}
+        admission.us5.datadoghq.com/js-lib.version: {{ $values.datadog.lib_version }}
+      {{- end }}
         releaseTime: {{ dateInZone "2006-01-02 15:04:05Z" (now) "UTC"| quote }} 
     spec:
+    {{- if $values.affinity_tolerations.enable }}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: {{ $values.affinity_tolerations.key }}
+                operator: In
+                values:
+                - {{ $values.affinity_tolerations.values }}
+      tolerations:
+      - effect: NoSchedule
+        key: {{ $values.affinity_tolerations.key }}
+        operator: Equal
+        value: {{ $values.affinity_tolerations.values }}
+    {{- end }}
       containers:
       - name: {{ .Values.relayer.name }}{{ .Values.index }}
         image: {{ .Values.relayer.image }}
         ports:
         - containerPort: {{ .Values.relayer.port }}
         envFrom:
+          {{- if $values.datadog.enable }}
+          - configMapRef:
+              name: {{ $values.name }}-dd-configmap
+          {{- end }}
           - secretRef:
               name: {{ .Values.relayer.name }}-passphrase
         volumeMounts:
           - mountPath: "/relayer-node/config.json.enc"
             name: secret
             subPath: "config.json.enc"
+      {{- if $values.datadog.enable }}
+          - mountPath: /var/run/datadog
+            name: apmsocketpath
+      {{- end }} 
         resources:
           requests:
             memory: {{ .Values.relayer.resource.requests.memory }}
@@ -54,4 +88,14 @@ spec:
       volumes:
       - name: secret
         secret:
+<<<<<<< HEAD
           secretName: {{ .Values.name }}{{ .Values.index }}
+=======
+          secretName: {{ $values.name }}{{ $i }}
+      {{- if $values.datadog.enable }}
+      - hostPath:
+          path: /var/run/datadog/
+        name: apmsocketpath
+      {{- end }}           
+{{- end}}
+>>>>>>> master

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { STATUSES } from '../../../middleware';
 import { logger } from '../../../../../common/log-config';
 import { bundlerSimulatonAndValidationServiceMap, entryPointMap } from '../../../../../common/service-manager';
+import { parseError } from '../../../../../common/utils';
 
 const log = logger(module);
 
@@ -69,10 +70,10 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    log.error(`Error in estimateUserOperationGas handler ${JSON.stringify(error)}`);
+    log.error(`Error in estimateUserOperationGas handler ${parseError(error)}`);
     return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
       code: STATUSES.INTERNAL_SERVER_ERROR,
-      error: `Internal Server Error: ${JSON.stringify(error)}`,
+      error: `Internal Server Error: ${parseError(error)}`,
     });
   }
 };
