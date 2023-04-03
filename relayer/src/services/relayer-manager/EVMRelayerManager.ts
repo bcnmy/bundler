@@ -227,7 +227,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
   async addActiveRelayer(relayerAddress: string): Promise<void> {
     const address = relayerAddress.toLowerCase();
     log.info(
-      `Adding relayer: ${address} to active relayer map on chainId: ${this.chainId}`,
+      `Adding relayer: ${address} to active relayer map on chainId: ${this.chainId} of Relayer Manager: ${this.name}`,
     );
     const relayer = this.transactionProcessingRelayerMap[address];
     if (relayer) {
@@ -253,11 +253,11 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
         await this.fundRelayers(newRelayers);
       }
       log.info(
-        `Relayer ${address} added to active relayer map on chainId: ${this.chainId}`,
+        `Relayer ${address} added to active relayer map on chainId: ${this.chainId} of Relayer Manager: ${this.name}`,
       );
     } else {
       log.error(
-        `Relayer ${address} not found in processing relayer map on chainId: ${this.chainId}`,
+        `Relayer ${address} not found in processing relayer map on chainId: ${this.chainId} of Relayer Manager: ${this.name}`,
       );
     }
   }

@@ -2,6 +2,9 @@ import { Mutex } from 'async-mutex';
 import { IRelayerQueue } from './interface/IRelayerQueue';
 import { SortEVMRelayerByNonce } from './strategy';
 import { EVMRelayerMetaDataType } from './types';
+import { logger } from '../../../../common/log-config';
+
+const log = logger(module);
 
 const popMutex = new Mutex();
 const pushMutex = new Mutex();
@@ -53,11 +56,19 @@ export class EVMRelayerQueue implements IRelayerQueue<EVMRelayerMetaDataType> {
    * @returns mutex
    */
   async push(item: EVMRelayerMetaDataType): Promise<void> {
-    return pushMutex.runExclusive(() => {
+    await pushMutex.runExclusive(() => {
       this.items.push(item);
       this.items = SortEVMRelayerByNonce.performAlgorithm(
         this.items,
       );
+      log.info(`Relayer queue after push: ${JSON.stringify(this.items)}`);
     });
+  }
+
+  async set(item: EVMRelayerMetaDataType): Promise<void> {
+    const index = this.items.findIndex((i) => i.address === item.address);
+    if (index !== -1) {
+      this.items[index] = item;
+    }
   }
 }
