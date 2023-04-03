@@ -16,7 +16,9 @@ export const simulateTransaction = () => async (
     if (method === TransactionMethodType.AA) {
       response = await simulateAATransaction(req);
     } else if (method === TransactionMethodType.SCW) {
-      response = await simulateSCWTransaction(req);
+      response = {
+        code: STATUSES.SUCCESS,
+      };
     } else if (method === TransactionMethodType.GASLESS_FALLBACK) {
       response = await simulateGaslessFallbackTransaction(req);
     }

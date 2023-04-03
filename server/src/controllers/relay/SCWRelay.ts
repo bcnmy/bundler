@@ -49,35 +49,39 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
     // refundAmount -> Amount of USDC, USDT etc
     // refundAmountInUSD -> Amount of USDC, USDT, WETH in USD
 
-    const { gasToken } = refundInfo;
+    try {
+      const { gasToken } = refundInfo;
 
-    const {
-      refundAmount,
-      refundAmountInUSD,
-    } = req.body.params[2];
-    const refundTokenAddress = gasToken;
-    let refundTokenCurrency = '';
+      const {
+        refundAmount,
+        refundAmountInUSD,
+      } = req.body.params[2];
+      const refundTokenAddress = gasToken;
+      let refundTokenCurrency = '';
 
-    const tokenContractAddresses = config.feeOption.tokenContractAddress[chainId];
-    for (const currency of Object.keys(tokenContractAddresses)) {
-      if (refundTokenAddress.toLowerCase() === tokenContractAddresses[currency].toLowerCase()) {
-        refundTokenCurrency = currency;
+      const tokenContractAddresses = config.feeOption.tokenContractAddress[chainId];
+      for (const currency of Object.keys(tokenContractAddresses)) {
+        if (refundTokenAddress.toLowerCase() === tokenContractAddresses[currency].toLowerCase()) {
+          refundTokenCurrency = currency;
+        }
       }
-    }
 
-    transactionDao.save(chainId, {
-      transactionId,
-      transactionType: TransactionType.SCW,
-      status: TransactionStatus.PENDING,
-      chainId,
-      walletAddress: walletInfo.address,
-      resubmitted: false,
-      refundTokenAddress,
-      refundTokenCurrency,
-      refundAmount,
-      refundAmountInUSD,
-      creationTime: Date.now(),
-    });
+      transactionDao.save(chainId, {
+        transactionId,
+        transactionType: TransactionType.SCW,
+        status: TransactionStatus.PENDING,
+        chainId,
+        walletAddress: walletInfo.address,
+        resubmitted: false,
+        refundTokenAddress,
+        refundTokenCurrency,
+        refundAmount,
+        refundAmountInUSD,
+        creationTime: Date.now(),
+      });
+    } catch (error) {
+      log.info(`Error in SCW relay ${parseError(error)} while savinf refund data`);
+    }
 
     if (isError(response)) {
       return res.status(STATUSES.BAD_REQUEST).json({
