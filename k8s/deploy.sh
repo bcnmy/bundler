@@ -26,7 +26,7 @@ HELM_NAME="$NAME-common";
 printf "\nDeploying $HELM_NAME to $NAMESPACE\n";
 
 helm upgrade --install --wait --timeout 720s $HELM_NAME ./k8s/common/ \
-  -f ./k8s/relayer/values.$ENV.yaml \
+  -f ./k8s/common/values.$ENV.yaml \
   --set-string namespace=$NAMESPACE \
   -n $NAMESPACE
 
