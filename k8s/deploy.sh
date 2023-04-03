@@ -22,6 +22,16 @@ echo "ENV: $ENV";
 echo "Chart Name: $NAME";
 echo "Namespace: $NAMESPACE";
 
+HELM_NAME="$NAME-common";
+printf "\nDeploying $HELM_NAME to $NAMESPACE\n";
+
+helm upgrade --install --wait --timeout 720s $HELM_NAME ./k8s/common/ \
+  -f ./k8s/relayer/values.$ENV.yaml \
+  --set-string namespace=$NAMESPACE \
+  -n $NAMESPACE
+
+echo "Deployed $HELM_NAME to $NAMESPACE";
+
 x=0
 while [ $x -lt  $REPLICAS ]
 do

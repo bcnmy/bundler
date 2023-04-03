@@ -22,10 +22,5 @@ secret:
   config:
     name: config.json.enc
 
-  passphrase:
-    key: sdk-test-relayer-node-service-passphrase
-    name: CONFIG_PASSPHRASE
-    version: latest
-
 ingress:
   host: sdk-relayer.test.biconomy.io
