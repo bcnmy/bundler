@@ -167,14 +167,17 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
    */
   async postTransactionMined(relayerAddress: string): Promise<void> {
     const address = relayerAddress.toLowerCase();
+    log.info(`postTransactionMined called for relayer: ${address} for Relayer Manager: ${this.name} on chainId: ${this.chainId}`);
     let relayerData = this.relayerQueue
       .list()
       .find((relayer) => relayer.address === address);
     if (!relayerData) {
+      log.info(`Relayer: ${relayerAddress} not found in queue fetching from transactionProcessingRelayerMap for Relayer Manager: ${this.name} on chainId: ${this.chainId}`);
       // if relayer is performing transaction then it would not be available in relayer queue
       relayerData = this.transactionProcessingRelayerMap[address];
     }
     if (relayerData) {
+      log.info(`Relayer: ${relayerAddress} found in queue fetching from transactionProcessingRelayerMap for Relayer Manager: ${this.name} on chainId: ${this.chainId}`);
       if (relayerData.pendingCount > 0) {
         relayerData.pendingCount -= 1;
       }
@@ -224,15 +227,18 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
   async addActiveRelayer(relayerAddress: string): Promise<void> {
     const address = relayerAddress.toLowerCase();
     log.info(
-      `Adding relayer: ${address} to active relayer map on chainId: ${this.chainId}`,
+      `Adding relayer: ${address} to active relayer map on chainId: ${this.chainId} of Relayer Manager: ${this.name}`,
     );
     const relayer = this.transactionProcessingRelayerMap[address];
     if (relayer) {
       // check if pending count of relayer is less than threshold
       // else you wait for the transaction to be mined
-      if (relayer.pendingCount < this.pendingTransactionCountThreshold) {
-        await this.relayerQueue.push(relayer);
-      }
+      log.info(`For relayer: ${relayer.address} pendingCount: ${relayer.pendingCount} pendingTransactionCountThreshold: ${this.pendingTransactionCountThreshold} of Relayer Manager: ${this.name} on chainId: ${this.chainId}`);
+      await this.relayerQueue.push(relayer);
+      // TODO: uncomment below code once we have a way to check if transaction is mined
+      // if (relayer.pendingCount < this.pendingTransactionCountThreshold) {
+      //   await this.relayerQueue.push(relayer);
+      // }
       delete this.transactionProcessingRelayerMap[address];
 
       // check if size of active relayer queue is
@@ -247,11 +253,11 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
         await this.fundRelayers(newRelayers);
       }
       log.info(
-        `Relayer ${address} added to active relayer map on chainId: ${this.chainId}`,
+        `Relayer ${address} added to active relayer map on chainId: ${this.chainId} of Relayer Manager: ${this.name}`,
       );
     } else {
       log.error(
-        `Relayer ${address} not found in processing relayer map on chainId: ${this.chainId}`,
+        `Relayer ${address} not found in processing relayer map on chainId: ${this.chainId} of Relayer Manager: ${this.name}`,
       );
     }
   }
