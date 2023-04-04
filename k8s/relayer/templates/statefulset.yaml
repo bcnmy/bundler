@@ -1,102 +1,96 @@
-{{- $replicas := .Values.replicas | int -}}
-{{- $values := .Values }}
-{{- range $i,$e := until $replicas }}
-
----
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ $values.relayer.name }}{{ $i }}
-  namespace: {{ $values.namespace }}
+  name: {{ .Values.relayer.name }}{{ .Values.index }}
+  namespace: {{ .Values.namespace }}
   labels:
-    app: {{ $values.relayer.name }}
-    component: {{ $values.relayer.name }}{{ $i }}
+    app: {{ .Values.relayer.name }}
+    component: {{ .Values.relayer.name }}{{ .Values.index }}
     {{- include "relayers-service.labels" $ | nindent 4 }}
-  {{- if $values.datadog.enable }}
+  {{- if .Values.datadog.enable }}
     {{- include "datadog.datatrace" $ | nindent 4 }}
   {{- end }}
 spec:
-  serviceName: {{ $values.name }}
-  replicas: {{ $values.relayer.replicaCount }}
+  serviceName: {{ .Values.name }}
+  replicas: {{ .Values.relayer.replicaCount }}
   selector:
     matchLabels:
-      app: {{ $values.relayer.name }}
+      app: {{ .Values.relayer.name }}
   template:
     metadata:
       labels:
-        app: {{ $values.relayer.name }}
-      {{- if $values.datadog.enable }}
+        app: {{ .Values.relayer.name }}
+      {{- if .Values.datadog.enable }}
         {{- include "datadog.datatrace" $ | nindent 8 }}
         {{- include "datadog.datatrace-admission" $ | nindent 8 }}
       {{- end }}
       annotations:
-      {{- if $values.datadog.enable }}
-        admission.us5.datadoghq.com/js-lib.version: {{ $values.datadog.lib_version }}
+      {{- if .Values.datadog.enable }}
+        admission.us5.datadoghq.com/js-lib.version: {{ .Values.datadog.lib_version }}
       {{- end }}
         releaseTime: {{ dateInZone "2006-01-02 15:04:05Z" (now) "UTC"| quote }} 
     spec:
-    {{- if $values.affinity_tolerations.enable }}
+    {{- if .Values.affinity_tolerations.enable }}
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: {{ $values.affinity_tolerations.key }}
+              - key: {{ .Values.affinity_tolerations.key }}
                 operator: In
                 values:
-                - {{ $values.affinity_tolerations.values }}
+                - {{ .Values.affinity_tolerations.values }}
       tolerations:
       - effect: NoSchedule
-        key: {{ $values.affinity_tolerations.key }}
+        key: {{ .Values.affinity_tolerations.key }}
         operator: Equal
-        value: {{ $values.affinity_tolerations.values }}
+        value: {{ .Values.affinity_tolerations.values }}
     {{- end }}
       containers:
-      - name: {{ $values.relayer.name }}{{ $i }}
-        image: {{ $values.relayer.image }}
+      - name: {{ .Values.relayer.name }}{{ .Values.index }}
+        image: {{ .Values.relayer.image }}
         ports:
-        - containerPort: {{ $values.relayer.port }}
+        - containerPort: {{ .Values.relayer.port }}
         envFrom:
-          {{- if $values.datadog.enable }}
+          {{- if .Values.datadog.enable }}
           - configMapRef:
-              name: {{ $values.name }}-dd-configmap
+              name: {{ .Values.name }}-dd-configmap
           {{- end }}
           - secretRef:
-              name: {{ $values.relayer.name }}-passphrase
+              name: {{ .Values.relayer.name }}-passphrase
         volumeMounts:
           - mountPath: "/relayer-node/config.json.enc"
             name: secret
             subPath: "config.json.enc"
-      {{- if $values.datadog.enable }}
+      {{- if .Values.datadog.enable }}
           - mountPath: /var/run/datadog
             name: apmsocketpath
       {{- end }} 
         resources:
           requests:
-            memory: {{ $values.relayer.resource.requests.memory }}
-            cpu: {{ $values.relayer.resource.requests.cpu }}
+            memory: {{ .Values.relayer.resource.requests.memory }}
+            cpu: {{ .Values.relayer.resource.requests.cpu }}
           limits:
-            memory: {{ $values.relayer.resource.limits.memory }}
-            cpu: {{ $values.relayer.resource.limits.cpu }}
+            memory: {{ .Values.relayer.resource.limits.memory }}
+            cpu: {{ .Values.relayer.resource.limits.cpu }}
         livenessProbe:
           httpGet:
             path: /health
-            port: {{ $values.relayer.port }}
+            port: {{ .Values.relayer.port }}
           initialDelaySeconds: 30
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /health
-            port: {{ $values.relayer.port }}
+            port: {{ .Values.relayer.port }}
           initialDelaySeconds: 30
           periodSeconds: 10
       volumes:
       - name: secret
         secret:
-          secretName: {{ $values.name }}{{ $i }}
-      {{- if $values.datadog.enable }}
+          secretName: {{ .Values.name }}{{ .Values.index }}
+      {{- if .Values.datadog.enable }}
       - hostPath:
           path: /var/run/datadog/
         name: apmsocketpath
-      {{- end }}           
-{{- end}}
+      {{- end }} 

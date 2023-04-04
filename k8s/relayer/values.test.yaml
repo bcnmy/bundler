@@ -1,7 +1,7 @@
 name: "relayer-server"
 namespace: "sdk-test"
 
-replicas: 2
+index: 0
 
 relayer:
   name: "relayer-server"
@@ -21,11 +21,6 @@ secret:
   key: sdk-test-relayer-node-service
   config:
     name: config.json.enc
-
-  passphrase:
-    key: sdk-test-relayer-node-service-passphrase
-    name: CONFIG_PASSPHRASE
-    version: latest
 
 ingress:
   host: sdk-relayer.test.biconomy.io
