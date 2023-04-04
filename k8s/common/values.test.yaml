@@ -16,3 +16,10 @@ secret:
 
 ingress:
   host: sdk-relayer.test.biconomy.io
+
+# datadog configs
+affinity_tolerations:
+  enable: false
+
+datadog:
+  enable: false
