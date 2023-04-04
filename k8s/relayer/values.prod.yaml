@@ -1,6 +1,7 @@
 name: "relayer-server"
 namespace: "sdk-prod"
-replicas: 3
+index: 0
+
 
 relayer:
   name: "relayer-server"
@@ -21,11 +22,6 @@ secret:
   config:
     name: config.json.enc
   
-  passphrase:
-    key: sdk-prod-relayer-node-service-passphrase
-    name: CONFIG_PASSPHRASE
-    version: latest
-
 ingress:
   host: sdk-relayer.prod.biconomy.io
 
