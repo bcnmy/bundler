@@ -1,38 +1,18 @@
 name: "relayer-server"
-index: 0
 
 relayer:
   name: "relayer-server"
-  image: "gcr.io/biconomy-staging/sdk/relayer-node-service:latest"
   port: "3000"
-  replicaCount: 1
-  resource:
-    requests:
-      memory: "100Mi"
-      cpu: "100m"
-    limits:
-      memory: "500Mi"
-      cpu: "500m"
   
 namespace: "sdk-staging"
 
-affinity_tolerations:
-  enable: false 
-  key: "app"
-  values: "monitoring"
-
 secret:
   projectID: biconomy-staging
-  key: sdk-staging-relayer-node-service
-  config:
-    name: config.json.enc
+
+  passphrase:
+    key: sdk-staging-relayer-node-service-passphrase
+    name: CONFIG_PASSPHRASE
+    version: latest
 
 ingress:
   host: sdk-relayer.staging.biconomy.io
-
-# datadog configs
-affinity_tolerations:
-  enable: false
-  
-datadog:
-  enable: false
