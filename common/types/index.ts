@@ -17,6 +17,7 @@ export enum TransactionMethodType {
   GASLESS_FALLBACK = 'eth_sendGaslessFallbackTransaction',
   BUNDLER = 'eth_sendUserOperation',
   FALLBACK_GASTANK_DEPOSIT = 'eth_sendFallbackGasTankDepositTransaction',
+  GAS_PRICE = 'eth_getUserOpGasPrices',
 }
 
 export enum EthMethodType {

@@ -22,6 +22,8 @@ export const simulateTransaction = () => async (
       response = await simulateGaslessFallbackTransaction(req);
     } else if (method === TransactionMethodType.FALLBACK_GASTANK_DEPOSIT) {
       response = await simulateFallbackGasTankDepositTransaction(req);
+    } else if (method === TransactionMethodType.GAS_PRICE) {
+      return next();
     }
     if (!response) {
       return res.status(STATUSES.INTERNAL_SERVER_ERROR).send({

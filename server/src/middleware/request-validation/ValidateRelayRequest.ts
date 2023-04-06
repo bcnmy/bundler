@@ -6,6 +6,7 @@ import {
   crossChainRequestSchema,
   fallbackGasTankDepositRequestSchema,
   gaslessFallbackRequestSchema,
+  gasPriceRequestSchema,
   scwRequestSchema,
 } from '../../routes/relay/relay.schema';
 import { STATUSES } from '../RequestHelpers';
@@ -35,6 +36,9 @@ export const validateRelayRequest = () => async (
         break;
       case TransactionMethodType.FALLBACK_GASTANK_DEPOSIT:
         validationResponse = fallbackGasTankDepositRequestSchema.validate(req.body);
+        break;
+      case TransactionMethodType.GAS_PRICE:
+        validationResponse = gasPriceRequestSchema.validate(req.body);
         break;
       default:
         return res.status(STATUSES.BAD_REQUEST).send({
