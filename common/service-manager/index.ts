@@ -84,11 +84,11 @@ const feeOptionMap: {
 
 const gasPriceServiceMap: {
   [chainId: number]: MaticGasPrice |
-   GoerliGasPrice | 
-   MumbaiGasPrice | 
-   EthGasPrice | 
-   BSCTestnetGasPrice | 
-   undefined;
+  GoerliGasPrice |
+  MumbaiGasPrice |
+  EthGasPrice |
+  BSCTestnetGasPrice |
+  undefined;
 } = {};
 
 const aaSimulatonServiceMap: {
