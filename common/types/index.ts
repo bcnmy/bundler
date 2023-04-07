@@ -16,7 +16,7 @@ export enum TransactionMethodType {
   CROSS_CHAIN = 'eth_sendCrossChainTransaction',
   GASLESS_FALLBACK = 'eth_sendGaslessFallbackTransaction',
   BUNDLER = 'eth_sendUserOperation',
-  FALLBACK_GASTANK_DEPOSIT = 'eth_sendFallbackGasTankDepositTransaction'
+  FALLBACK_GASTANK_DEPOSIT = 'eth_sendFallbackGasTankDepositTransaction',
 }
 
 export enum EthMethodType {
