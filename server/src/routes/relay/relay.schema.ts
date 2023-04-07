@@ -131,11 +131,9 @@ export const fallbackGasTankDepositRequestSchema = object.keys({
 
 export const gasPriceRequestSchema = object.keys({
   method: string.regex(/eth_getUserOpGasPrices/),
-  params: array.items(object.keys(
-    {
-      chainId: number.required().error(new Error('chainId is required and should be a number')),
-    },
-  )),
+  params: array.items(
+    number.required().error(new Error('chainId is required')),
+  ),
   jsonrpc: string.required().error(new Error('jsonrpc is required')),
   id: number.required().error(new Error('id is required')),
 });

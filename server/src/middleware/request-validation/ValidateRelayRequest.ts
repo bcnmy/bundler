@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
-import { TransactionMethodType } from '../../../../common/types';
+import { EthMethodType, TransactionMethodType } from '../../../../common/types';
 import {
   aaRequestSchema,
   crossChainRequestSchema,
@@ -37,7 +37,7 @@ export const validateRelayRequest = () => async (
       case TransactionMethodType.FALLBACK_GASTANK_DEPOSIT:
         validationResponse = fallbackGasTankDepositRequestSchema.validate(req.body);
         break;
-      case TransactionMethodType.GAS_PRICE:
+      case EthMethodType.GAS_PRICE:
         validationResponse = gasPriceRequestSchema.validate(req.body);
         break;
       default:

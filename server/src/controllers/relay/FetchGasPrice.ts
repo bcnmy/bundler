@@ -10,10 +10,10 @@ const log = logger(module);
 
 export const fetchGasPrice = async (req: Request, res: Response) => {
   try {
-    const { chainId } = req.body.params[0];
-    log.info(`fetchGasPrice for chainId ${chainId}`);
+    log.info(`fetchGasPrice for chainId ${req.body.params}`);
+    const chainId = req.body.params;
 
-    if (!supportedNetworks.includes(chainId)) {
+    if (!supportedNetworks.includes(Number(chainId))) {
       return res.status(STATUSES.NOT_FOUND).json({
         code: STATUSES.NOT_FOUND,
         message: `ChainId ${chainId} is not supported`,
