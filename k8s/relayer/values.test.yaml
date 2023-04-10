@@ -1,7 +1,7 @@
 name: "relayer-server"
 namespace: "sdk-test"
 
-replicas: 2
+index: 0
 
 relayer:
   name: "relayer-server"

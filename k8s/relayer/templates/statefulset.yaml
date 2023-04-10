@@ -89,3 +89,8 @@ spec:
       - name: secret
         secret:
           secretName: {{ .Values.name }}{{ .Values.index }}
+      {{- if .Values.datadog.enable }}
+      - hostPath:
+          path: /var/run/datadog/
+        name: apmsocketpath
+      {{- end }} 

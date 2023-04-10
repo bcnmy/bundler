@@ -1,6 +1,7 @@
 name: "relayer-server"
 namespace: "sdk-prod"
-replicas: 3
+index: 0
+
 
 relayer:
   name: "relayer-server"
