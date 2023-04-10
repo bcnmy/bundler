@@ -8,7 +8,7 @@ if [ $# -ne  4 ]; then
   echo "Usage: ./deploy.sh <number-of-replica> <env> <chart-name-prefix> <namespace>";
   printf "Supported vales for env: test, staging, and production\n\n";
 
-  echo "Example: ./deploy.sh 3 staging staging-sdk-relayer sdk-relayer";
+  echo "Example: ./deploy.sh 3 prod prod-sdk-relayer sdk-prod";
   exit 1;
 fi
 
