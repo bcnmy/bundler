@@ -11,10 +11,6 @@
     "token": "",
     "apiKey": ""
   },
-  "utilsModuleConfig": {
-    "secretKey": "",
-    "authTimeFrameSeconds": 3
-  },
   "relayer": {
     "nodePathIndex": 0
   },
@@ -89,38 +85,6 @@
       }
     }
   }],
-  "fallbackGasTankDepositManager": {
-    "ownerAccountDetails": {
-      "5": {
-        "publicKey": "",
-        "privateKey": ""
-      },
-      "137": {
-        "publicKey": "",
-        "privateKey": ""
-      },
-      "80001": {
-        "publicKey": "",
-        "privateKey": ""
-      },
-      "97": {
-        "publicKey": "",
-        "privateKey": ""
-      },
-      "420": {
-        "publicKey": "",
-        "privateKey": ""
-      },
-      "421613": {
-        "publicKey": "",
-        "privateKey": ""
-      },
-      "43113": {
-        "publicKey": "",
-        "privateKey": ""
-      }
-    }
-  },
   "tokenPrice": {
     "coinMarketCapApi": ""
   },

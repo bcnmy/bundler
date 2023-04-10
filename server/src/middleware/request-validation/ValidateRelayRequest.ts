@@ -4,7 +4,6 @@ import { TransactionMethodType } from '../../../../common/types';
 import {
   aaRequestSchema,
   crossChainRequestSchema,
-  fallbackGasTankDepositRequestSchema,
   gaslessFallbackRequestSchema,
   scwRequestSchema,
 } from '../../routes/relay/relay.schema';
@@ -32,9 +31,6 @@ export const validateRelayRequest = () => async (
         break;
       case TransactionMethodType.CROSS_CHAIN:
         validationResponse = crossChainRequestSchema.validate(req.body);
-        break;
-      case TransactionMethodType.FALLBACK_GASTANK_DEPOSIT:
-        validationResponse = fallbackGasTankDepositRequestSchema.validate(req.body);
         break;
       default:
         return res.status(STATUSES.BAD_REQUEST).send({

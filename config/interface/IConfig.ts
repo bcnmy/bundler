@@ -151,20 +151,6 @@ type DataSourcesConfigType = {
   redisUrl: string,
 };
 
-type UtilsModuleConfigType = {
-  secretKey: string,
-  authTimeFrameSeconds: number
-};
-
-type FallbackGasTankDepositManagerType = {
-  ownerAccountDetails: {
-    [key: string]: {
-      privateKey: string,
-      publicKey: string
-    }
-  }
-};
-
 // TODO // Review how to make it generic
 type SimulationDataConfigType = {
   [key: string]: any
@@ -191,7 +177,6 @@ export type ConfigType = {
   slack: SlackConfigType,
   dataSources: DataSourcesConfigType,
   socketService: SocketServiceConfigType,
-  utilsModuleConfig: UtilsModuleConfigType,
   cacheService: CacheServiceConfigType,
   supportedNetworks: Array<number>,
   EIP1559SupportedNetworks: Array<number>,
@@ -199,7 +184,6 @@ export type ConfigType = {
   chains: ChainsConfigType,
   relayer: RelayerConfigType,
   relayerManagers: RelayerManagerConfigType,
-  fallbackGasTankDepositManager: FallbackGasTankDepositManagerType,
   transaction: TransactionConfigType,
   gasPrice: GasPriceConfigType,
   feeOption: FeeOptionConfigType,
