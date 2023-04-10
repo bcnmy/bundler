@@ -84,7 +84,8 @@
         "privateKey": ""
       }
     }
-  }],
+  }
+],
   "tokenPrice": {
     "coinMarketCapApi": ""
   },
