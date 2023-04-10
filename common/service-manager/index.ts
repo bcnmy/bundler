@@ -20,6 +20,11 @@ import { RedisCacheService } from '../cache';
 import { Mongo, TransactionDAO } from '../db';
 import { UserOperationDAO } from '../db/dao/UserOperationDAO';
 import { GasPriceManager } from '../gas-price';
+import { BSCTestnetGasPrice } from '../gas-price/networks/BSCTestnetGasPrice';
+import { EthGasPrice } from '../gas-price/networks/EthGasPrice';
+import { GoerliGasPrice } from '../gas-price/networks/GoerliGasPrice';
+import { MaticGasPrice } from '../gas-price/networks/MaticGasPrice';
+import { MumbaiGasPrice } from '../gas-price/networks/MumbaiGasPrice';
 import { IQueue } from '../interface';
 import { logger } from '../log-config';
 import { relayerManagerTransactionTypeNameMap } from '../maps';
@@ -75,6 +80,15 @@ const routeTransactionToRelayerMap: {
 
 const feeOptionMap: {
   [chainId: number]: FeeOption;
+} = {};
+
+const gasPriceServiceMap: {
+  [chainId: number]: MaticGasPrice |
+  GoerliGasPrice |
+  MumbaiGasPrice |
+  EthGasPrice |
+  BSCTestnetGasPrice |
+  undefined;
 } = {};
 
 const aaSimulatonServiceMap: {
@@ -183,6 +197,7 @@ let statusService: IStatusService;
     if (!gasPriceService) {
       throw new Error(`Gasprice service is not setup for chainId ${chainId}`);
     }
+    gasPriceServiceMap[chainId] = gasPriceService;
     log.info(`Gas price service setup complete for chainId: ${chainId}`);
 
     log.info(`Setting up transaction queue for chainId: ${chainId}`);
@@ -617,4 +632,5 @@ export {
   userOperationDao,
   statusService,
   networkServiceMap,
+  gasPriceServiceMap,
 };

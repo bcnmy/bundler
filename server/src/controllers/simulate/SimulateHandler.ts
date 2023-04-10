@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { TransactionMethodType } from '../../../../common/types';
+import { EthMethodType, TransactionMethodType } from '../../../../common/types';
 import { STATUSES } from '../../middleware';
 import { simulateAATransaction } from './SimulateAATransaction';
 import { simulateFallbackGasTankDepositTransaction } from './SimulateFallbackGasTankDepositTransaction';
@@ -22,6 +22,8 @@ export const simulateTransaction = () => async (
       response = await simulateGaslessFallbackTransaction(req);
     } else if (method === TransactionMethodType.FALLBACK_GASTANK_DEPOSIT) {
       response = await simulateFallbackGasTankDepositTransaction(req);
+    } else if (method === EthMethodType.GAS_PRICE) {
+      return next();
     }
     if (!response) {
       return res.status(STATUSES.INTERNAL_SERVER_ERROR).send({
