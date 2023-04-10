@@ -18,7 +18,8 @@ export type InitialUserOperationDataType = {
   chainId: number;
   status: string,
   paymaster: string,
-  creationTime: number;
+  creationTime: number,
+  metaData?: object,
 };
 
 export type FinalUserOperationDataType = {

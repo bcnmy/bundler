@@ -1,7 +1,11 @@
 import { Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
-import { networkServiceMap, routeTransactionToRelayerMap, transactionDao } from '../../../../common/service-manager';
-import { generateTransactionId, getMetaDataFromUserOp, parseError } from '../../../../common/utils';
+import {
+  networkServiceMap, routeTransactionToRelayerMap, transactionDao, userOperationDao,
+} from '../../../../common/service-manager';
+import {
+  generateTransactionId, getMetaDataFromUserOp, getPaymasterFromPaymasterAndData, parseError,
+} from '../../../../common/utils';
 import {
   isError,
   RelayerDestinationSmartContractName,
@@ -23,6 +27,7 @@ export const relayAATransaction = async (req: Request, res: Response) => {
     const chainId = req.body.params[2];
     const metaData = req.body.params[3];
     const gasLimitFromSimulation = req.body.params[4];
+    const userOpHash = req.body.params[5];
 
     const transactionId = generateTransactionId(userOp);
 
@@ -34,7 +39,8 @@ export const relayAATransaction = async (req: Request, res: Response) => {
       status: TransactionStatus.PENDING,
       chainId,
       walletAddress,
-      metaData,
+      relayerDestinationContractAddress: entryPointAddress,
+      relayerDestinationContractName: RelayerDestinationSmartContractName.ENTRY_POINT,
       resubmitted: false,
       creationTime: Date.now(),
     });
@@ -75,13 +81,42 @@ export const relayAATransaction = async (req: Request, res: Response) => {
       metaData.destinationSmartContractMethods = destinationSmartContractMethods;
       log.info(`MetaData to be saved: ${JSON.stringify(metaData)} for dappAPIKey: ${dappAPIKey}`);
 
-      await transactionDao.updateMetaDataAndRelayerDestinationContractDataByTransactionId(
-        chainId,
+      const {
+        sender,
+        nonce,
+        initCode,
+        callData,
+        callGasLimit,
+        verificationGasLimit,
+        preVerificationGas,
+        maxFeePerGas,
+        maxPriorityFeePerGas,
+        paymasterAndData,
+        signature,
+      } = userOp;
+      const paymaster = getPaymasterFromPaymasterAndData(paymasterAndData);
+
+      userOperationDao.save(chainId, {
         transactionId,
+        status: TransactionStatus.PENDING,
+        entryPoint: entryPointAddress,
+        sender,
+        nonce,
+        initCode,
+        callData,
+        callGasLimit,
+        verificationGasLimit,
+        preVerificationGas,
+        maxFeePerGas,
+        maxPriorityFeePerGas,
+        paymasterAndData,
+        signature,
+        userOpHash,
+        chainId,
+        paymaster,
         metaData,
-        entryPointAddress,
-        RelayerDestinationSmartContractName.ENTRY_POINT,
-      );
+        creationTime: Date.now(),
+      });
     } catch (error) {
       log.info(`Error in getting meta data from userOp: ${JSON.stringify(userOp)}`);
       log.info(`Error: ${error}`);
