@@ -45,6 +45,8 @@ export const simulateAATransaction = async (req: Request) => {
       };
     }
     req.body.params[4] = aaSimulationResponse.data.gasLimitFromSimulation;
+    req.body.params[5] = aaSimulationResponse.data.userOpHash;
+
     log.info(`Transaction successfully simulated for userOp: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
     return {
       code: STATUSES.SUCCESS,

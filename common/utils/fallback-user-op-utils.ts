@@ -44,10 +44,10 @@ export const getMetaDataFromFallbackUserOp = async (
      * destination contracts
      */
 
-    const { fallbackContractAbi } = config.fallbackGasTankData[chainId];
+    const { abi } = config.fallbackGasTankData[chainId];
 
     const gasTankCallData = data;
-    const iFaceGasTank = new ethers.utils.Interface(fallbackContractAbi);
+    const iFaceGasTank = new ethers.utils.Interface(abi);
     const decodedDataGasTank = iFaceGasTank.parseTransaction({
       data: gasTankCallData,
     });
@@ -364,6 +364,7 @@ export const getMetaDataFromFallbackUserOp = async (
       smartContractDataIndex < destinationSmartContractAddresses.length;
       smartContractDataIndex += 1
     ) {
+      // eslint-disable-next-line @typescript-eslint/no-shadow
       const { abi } = smartContractsData[smartContractDataIndex];
       const destinationSmartContractMethodCallData = destinationSmartContractMethodsCallData[
         smartContractDataIndex

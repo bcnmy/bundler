@@ -135,7 +135,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       }, transactionId, transactionExecutionResponse?.hash);
     }
 
-    if (transactionType === TransactionType.BUNDLER) {
+    if (transactionType === TransactionType.BUNDLER || transactionType === TransactionType.AA) {
       const userOps = await this.userOperationDao.getUserOpsByTransactionId(
         this.chainId,
         transactionId,
@@ -252,7 +252,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       }, transactionId, transactionExecutionResponse?.hash);
     }
 
-    if (transactionType === TransactionType.BUNDLER) {
+    if (transactionType === TransactionType.BUNDLER || transactionType === TransactionType.AA) {
       const userOps = await this.userOperationDao.getUserOpsByTransactionId(
         this.chainId,
         transactionId,

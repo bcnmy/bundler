@@ -39,7 +39,7 @@ export const relayGaslessFallbackTransaction = async (req: Request, res: Respons
       resubmitted: false,
       creationTime: Date.now(),
     });
-    if (!routeTransactionToRelayerMap[chainId][TransactionType.AA]) {
+    if (!routeTransactionToRelayerMap[chainId][TransactionType.GASLESS_FALLBACK]) {
       return res.status(STATUSES.BAD_REQUEST).json({
         code: STATUSES.BAD_REQUEST,
         error: `${TransactionMethodType.GASLESS_FALLBACK} method not supported for chainId: ${chainId}`,

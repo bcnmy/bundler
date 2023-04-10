@@ -30,9 +30,6 @@ export const BlockchainTransactionSchema = new Schema<IBlockchainTransaction>({
   walletAddress: {
     type: String,
   },
-  metaData: {
-    type: Object,
-  },
   transactionFee: {
     type: Number,
   },

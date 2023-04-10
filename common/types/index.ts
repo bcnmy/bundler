@@ -178,6 +178,13 @@ export type EntryPointMapType = {
   }>
 };
 
+export type FallbackGasTankMapType = {
+  [chainId: number]: {
+    address: string,
+    fallbackGasTankContract: ethers.Contract
+  }
+};
+
 export type GetMetaDataFromUserOpReturnType = {
   destinationSmartContractAddresses: Array<string>
   destinationSmartContractMethods: Array<{ name: string, address: string }>

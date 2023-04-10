@@ -3,7 +3,11 @@ import { ethers } from 'ethers';
 import { config } from '../../config';
 import { EVMAccount, IEVMAccount } from '../../relayer/src/services/account';
 import {
-  AAConsumer, SCWConsumer, SocketConsumer, GaslessFallbackConsumer, BundlerConsumer,
+  AAConsumer,
+  SCWConsumer,
+  SocketConsumer,
+  GaslessFallbackConsumer,
+  BundlerConsumer,
 } from '../../relayer/src/services/consumer';
 import { EVMNonceManager } from '../../relayer/src/services/nonce-manager';
 import { EVMRelayerManager, IRelayerManager } from '../../relayer/src/services/relayer-manager';
@@ -31,7 +35,10 @@ import {
   GaslessFallbackTransactionQueue,
 } from '../queue';
 import {
-  AARelayService, GaslessFallbackRelayService, SCWRelayService, BundlerRelayService,
+  AARelayService,
+  GaslessFallbackRelayService,
+  SCWRelayService,
+  BundlerRelayService,
 } from '../relay-service';
 import {
   AASimulationService,
@@ -50,6 +57,7 @@ import {
   GaslessFallbackTransactionMessageType,
   SCWTransactionMessageType,
   TransactionType,
+  FallbackGasTankMapType,
 } from '../types';
 
 const log = logger(module);
@@ -85,6 +93,8 @@ const gaslessFallbackSimulationServiceMap: {
 } = {};
 
 const entryPointMap: EntryPointMapType = {};
+
+const fallbackGasTankMap: FallbackGasTankMapType = {};
 
 const dbInstance = Mongo.getInstance();
 const cacheService = RedisCacheService.getInstance();
@@ -452,6 +462,16 @@ let statusService: IStatusService;
         );
 
         log.info(`Gasless fallback consumer & relay service simulation service setup complete for chainId: ${chainId}`);
+
+        const { address, abi } = config.fallbackGasTankData[chainId];
+
+        fallbackGasTankMap[chainId] = {
+          address,
+          fallbackGasTankContract: networkService.getContract(
+            JSON.stringify(abi),
+            address,
+          ),
+        };
       } else if (type === TransactionType.BUNDLER) {
         const bundlerRelayerManager = EVMRelayerManagerMap[
           relayerManagerTransactionTypeNameMap[type]][chainId];

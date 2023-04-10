@@ -77,7 +77,7 @@ export class TenderlySimulationService implements IExternalSimulation {
     if (!response?.data?.transaction?.status) {
       return {
         isSimulationSuccessful: false,
-        message: response?.data?.transaction?.error_message,
+        message: `Response from Tenderly: ${response?.data?.transaction?.error_message}`,
         data: {
           refundAmount: 0,
           refundAmountInUSD: 0,
