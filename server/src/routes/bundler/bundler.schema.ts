@@ -104,7 +104,6 @@ export const bundlerChainIdRequestSchema = object.keys({
   id: number.required().error(new Error('id is required')),
 });
 
-
 export const gasPriceRequestSchema = object.keys({
   method: string.regex(/eth_getUserOpGasPrices/),
   params: array,

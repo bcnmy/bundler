@@ -11,7 +11,10 @@ const log = logger(module);
 export const fetchGasPrice = async (req: Request, res: Response) => {
   try {
     log.info(`fetchGasPrice for chainId ${req.body.params}`);
-    const { chainId } = req.params;
+    let { chainId } = req.params;
+    if (!chainId) {
+      chainId = req.body.params;
+    }
 
     if (!supportedNetworks.includes(Number(chainId))) {
       return res.status(STATUSES.NOT_FOUND).json({
