@@ -53,11 +53,11 @@
       "97": "0xd34c0841a14cd53428930d4e0b76ea2406603b00"
     },
     "walletFactoryAddress": {
-      "5": "0x9efe4ece49221225db2ef214be171578c39f13a4",
-      "80001": "0x9efe4ece49221225db2ef214be171578c39f13a4",
-      "1": "0x9efe4ece49221225db2ef214be171578c39f13a4",
-      "137": "0x9efe4ece49221225db2ef214be171578c39f13a4",
-      "97": "0x9efe4ece49221225db2ef214be171578c39f13a4"
+      "5": "0x000000f9ee1842bb72f6bbdd75e6d3d4e3e9594c",
+      "80001": "0x000000f9ee1842bb72f6bbdd75e6d3d4e3e9594c",
+      "1": "0x000000f9ee1842bb72f6bbdd75e6d3d4e3e9594c",
+      "137": "0x000000f9ee1842bb72f6bbdd75e6d3d4e3e9594c",
+      "97": "0x000000f9ee1842bb72f6bbdd75e6d3d4e3e9594c"
     }
   },
   "defaultGasOverheads": {
