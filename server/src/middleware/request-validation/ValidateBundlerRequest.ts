@@ -8,6 +8,7 @@ import {
   bundlerGetUserOpReceiptRequestSchema,
   bundlerSendUserOpRequestSchema,
   bundlerSupportedEntryPointsRequestSchema,
+  gasPriceRequestSchema,
 } from '../../routes/bundler/bundler.schema';
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../RequestHelpers';
 
@@ -39,6 +40,9 @@ export const validateBundlerRequest = () => async (
         break;
       case EthMethodType.CHAIN_ID:
         validationResponse = bundlerChainIdRequestSchema.validate(req.body);
+        break;
+      case EthMethodType.GAS_PRICE:
+        validationResponse = gasPriceRequestSchema.validate(req.body);
         break;
       default:
         return res.status(STATUSES.BAD_REQUEST).send({

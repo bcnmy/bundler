@@ -9,6 +9,7 @@ import {
   getUserOperationReceipt,
   getSupportedEntryPoints,
 } from './BundlerRelay.ts';
+import { fetchGasPrice } from './FetchGasPrice';
 
 export const bundlerRequestHandler = async (
   req: Request,
@@ -35,6 +36,9 @@ export const bundlerRequestHandler = async (
       break;
     case EthMethodType.CHAIN_ID:
       response = await getChainId(req, res);
+      break;
+    case EthMethodType.GAS_PRICE:
+      response = await fetchGasPrice(req, res);
       break;
     default:
       return res.status(STATUSES.BAD_REQUEST).send({
