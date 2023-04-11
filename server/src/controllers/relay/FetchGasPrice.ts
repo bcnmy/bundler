@@ -22,7 +22,9 @@ export const fetchGasPrice = async (req: Request, res: Response) => {
         message: `ChainId ${chainId} is not supported`,
       });
     }
+    
     const gasPrice = await gasPriceServiceMap[Number(chainId)]?.getGasPrice();
+
     if (typeof gasPrice !== 'string') {
       log.info(`Gas price for chainId: ${chainId} is: ${JSON.stringify(gasPrice)}`);
 
