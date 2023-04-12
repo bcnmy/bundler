@@ -189,8 +189,10 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
       log.info(
         `Balance of relayer ${address} is ${balance} on chainId: ${this.chainId}`,
       );
+      this.relayerQueue.set(relayerData);
       // if balance is less than threshold, fund the relayer
       if (balance.lt(this.fundingBalanceThreshold)) {
+        log.info(`Balance of relayer ${address} is less than threshold ${this.fundingBalanceThreshold} on chainId: ${this.chainId}`);
         try {
           await this.fundRelayers([address]);
         } catch (error) {
