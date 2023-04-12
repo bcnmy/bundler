@@ -141,9 +141,9 @@
       "networksNonceError": {
         "5": ["nonce too low", "nonce has already been used"],
         "1": ["nonce too low", "nonce has already been used"],
-        "137": ["nonce too low"],
-        "80001": ["nonce too low"],
-        "97": ["nonce too low"]
+        "137": ["nonce too low", "nonce has already been used"],
+        "80001": ["nonce too low", "nonce has already been used"],
+        "97": ["nonce too low", "nonce has already been used"]
       },
       "networksInsufficientFundsError": {
         "5": "insufficient funds for gas",

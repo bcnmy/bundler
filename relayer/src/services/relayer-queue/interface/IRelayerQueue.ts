@@ -4,5 +4,6 @@ export interface IRelayerQueue<RelayerMetaDataType> {
   list(): Array<RelayerMetaDataType>
   pop(): Promise<RelayerMetaDataType | undefined>
   push(item: RelayerMetaDataType): Promise<void>
+  set(item: RelayerMetaDataType): Promise<void>
   size(): number
 }
