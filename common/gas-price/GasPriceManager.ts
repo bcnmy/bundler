@@ -11,7 +11,13 @@ import { MumbaiGasPrice } from './networks/MumbaiGasPrice';
 import { PolygonZKEvmTestnetGasPrice } from './networks/PolygonZKEvmTestnetGasPrice';
 
 export type GasPriceServiceType =
-MaticGasPrice | GoerliGasPrice | MumbaiGasPrice | EthGasPrice | BSCTestnetGasPrice | undefined;
+MaticGasPrice
+| GoerliGasPrice
+| MumbaiGasPrice
+| EthGasPrice
+| BSCTestnetGasPrice
+| PolygonZKEvmTestnetGasPrice
+| undefined;
 export class GasPriceManager implements IGasPriceManager<GasPriceServiceType> {
   cacheService: ICacheService;
 
