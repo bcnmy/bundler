@@ -1,4 +1,5 @@
 import { BigNumber, BigNumberish, ethers } from 'ethers';
+import { IMempoolManager } from '../mempool-manager/interface';
 
 export enum TransactionType {
   AA = 'AA',
@@ -108,7 +109,7 @@ export type BundlerTransactionMessageType = {
   chainId: number;
   value: string;
   transactionId: string;
-  userOp?: UserOperationType;
+  mempoolEntries?: MempoolEntry[]
 };
 
 export type SCWTransactionMessageType = {
@@ -119,7 +120,7 @@ export type SCWTransactionMessageType = {
   chainId: number;
   value: string;
   transactionId: string;
-  walletAddress: string;
+  walletAddress?: string;
 };
 
 export type GaslessFallbackTransactionMessageType = {
@@ -130,7 +131,7 @@ export type GaslessFallbackTransactionMessageType = {
   chainId: number;
   value: string;
   transactionId: string;
-  walletAddress: string;
+  walletAddress?: string;
 };
 
 type ResponseType = {
@@ -256,4 +257,24 @@ export type StakeInfo = {
   addr: string;
   stake: BigNumberish;
   unstakeDelaySec: BigNumberish;
+};
+
+export type MempoolConfigType = {
+  maxLength: number,
+  minLength: number,
+  maxUserOpPerSender: number,
+  minMaxPriorityFeePerGasBumpPercentage: number,
+  minMaxFeePerGasBumpPercentage: number
+};
+
+export type MempoolManagerMapTye = {
+  [chainId: number]: {
+    [entryPointAddress: string]: IMempoolManager
+  }
+};
+
+export type MempoolEntry = {
+  userOp: UserOperationType,
+  userOpHash: string,
+  markedForBundling: boolean,
 };

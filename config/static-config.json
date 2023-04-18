@@ -60,6 +60,52 @@
       "97": "0x000000f9ee1842bb72f6bbdd75e6d3d4e3e9594c"
     }
   },
+  "mempoolConfig": {
+    "maxLength": {
+      "5": 5,
+      "137": 5,
+      "1": 5,
+      "80001": 5,
+      "97": 5
+    },
+    "minLength": {
+      "5": 5,
+      "137": 5,
+      "1": 5,
+      "80001": 5,
+      "97": 5
+    },
+    "maxUserOpPerSender": {
+      "5": 2,
+      "137": 2,
+      "1": 2,
+      "80001": 2,
+      "97": 2
+    },
+    "minMaxPriorityFeePerGasBumpPercentage": {
+      "5": 11,
+      "137": 11,
+      "1": 11,
+      "80001": 11,
+      "97": 11
+    },
+    "minMaxFeePerGasBumpPercentage": {
+      "5": 11,
+      "137": 11,
+      "1": 11,
+      "80001": 11,
+      "97": 11
+    }
+  },
+  "bundlingConfig": {
+    "autoBundlingInterval": {
+      "5": 2,
+      "137": 2,
+      "1": 2,
+      "80001": 2,
+      "97": 2
+    }
+  },
   "defaultGasOverheads": {
     "fixed": 21000,
     "perUserOp": 18300,

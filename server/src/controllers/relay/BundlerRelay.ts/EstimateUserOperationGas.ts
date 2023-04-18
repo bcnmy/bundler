@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { STATUSES } from '../../../middleware';
 import { logger } from '../../../../../common/log-config';
-import { bundlerSimulatonAndValidationServiceMap, entryPointMap } from '../../../../../common/service-manager';
+import { bundlerValidationServiceMap, entryPointMap } from '../../../../../common/service-manager';
 import { parseError } from '../../../../../common/utils';
 
 const log = logger(module);
@@ -31,7 +31,7 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
       };
     }
 
-    const estimatedUserOpGas = await bundlerSimulatonAndValidationServiceMap[
+    const estimatedUserOpGas = await bundlerValidationServiceMap[
       parseInt(chainId, 10)
     ].estimateUserOperationGas({ userOp, entryPointContract, chainId: parseInt(chainId, 10) });
 

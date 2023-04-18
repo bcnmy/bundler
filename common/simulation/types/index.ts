@@ -26,10 +26,20 @@ export type AASimulationDataType = {
   chainId: number
 };
 
-export type BundlerSimulationDataType = {
+export type ValidateUserOpDataType = {
   userOp: UserOperationType,
   entryPointContract: ethers.Contract,
   chainId: number
+};
+
+export type BundlerValidationResponseType = {
+  isValidationSuccessful: boolean,
+  data: {
+    userOpHash?: string,
+    gasLimitFromSimulation: number | BigNumber,
+  },
+  message: string,
+  code?: number,
 };
 
 export type EstimateUserOperationGasDataType = {

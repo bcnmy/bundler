@@ -42,7 +42,7 @@ import {
 } from '../relay-service';
 import {
   AASimulationService,
-  BundlerSimulationAndValidationService,
+  BundlerValidationService,
   GaslessFallbackSimulationService,
   SCWSimulationService,
 } from '../simulation';
@@ -58,7 +58,11 @@ import {
   SCWTransactionMessageType,
   TransactionType,
   FallbackGasTankMapType,
+  MempoolManagerMapTye,
 } from '../types';
+import { MempoolManager } from '../mempool-manager';
+import { BundleExecutionManager } from '../bundle-execution-manager';
+import { BundlingService } from '../bundling-service';
 
 const log = logger(module);
 
@@ -80,8 +84,8 @@ const aaSimulatonServiceMap: {
   [chainId: number]: AASimulationService;
 } = {};
 
-const bundlerSimulatonAndValidationServiceMap: {
-  [chainId: number]: BundlerSimulationAndValidationService
+const bundlerValidationServiceMap: {
+  [chainId: number]: BundlerValidationService
 } = {};
 
 const scwSimulationServiceMap: {
@@ -93,6 +97,8 @@ const gaslessFallbackSimulationServiceMap: {
 } = {};
 
 const entryPointMap: EntryPointMapType = {};
+
+const mempoolManagerMap: MempoolManagerMapTye = {};
 
 const fallbackGasTankMap: FallbackGasTankMapType = {};
 
@@ -502,7 +508,44 @@ let statusService: IStatusService;
               entryPoint.address,
             ),
           });
+
+          log.info(`Setting up Mempool Manager for Bundler on chainId: ${chainId}`);
+          const {
+            mempoolConfig,
+          } = config;
+
+          const mempoolManager = new MempoolManager({
+            options: {
+              chainId,
+              entryPoint: {
+                address: entryPoint.address,
+                contract: networkService.getContract(
+                  JSON.stringify(entryPoint.abi),
+                  entryPoint.address,
+                ),
+              },
+              mempoolConfig: {
+                maxLength: mempoolConfig.maxLength[chainId],
+                minLength: mempoolConfig.minLength[chainId],
+                maxUserOpPerSender: mempoolConfig.maxUserOpPerSender[chainId],
+                minMaxFeePerGasBumpPercentage: mempoolConfig.minMaxFeePerGasBumpPercentage[chainId],
+                minMaxPriorityFeePerGasBumpPercentage:
+                mempoolConfig.minMaxPriorityFeePerGasBumpPercentage[chainId],
+              },
+            },
+          });
+          log.info(`Mempool Manager setup complete for Bundler on chainId: ${chainId}`);
+          mempoolManagerMap[chainId][entryPoint.address] = mempoolManager;
         }
+
+        log.info(`Setting up Bundling Service for Bundler on chainId: ${chainId}`);
+        const bundlingService = new BundlingService({
+          bundlerValidationService: bundlerValidationServiceMap[chainId],
+          options: {
+            chainId,
+          },
+        });
+        log.info(`Bundling Service setup complete for Bundler on chainId: ${chainId}`);
 
         log.info(`Setting up Bundler consumer, relay service, simulation & validation service for chainId: ${chainId}`);
         const bundlerConsumer = new BundlerConsumer({
@@ -522,10 +565,26 @@ let statusService: IStatusService;
         routeTransactionToRelayerMap[chainId][type] = bundlerRelayService;
 
         // eslint-disable-next-line max-len
-        bundlerSimulatonAndValidationServiceMap[chainId] = new BundlerSimulationAndValidationService(
+        bundlerValidationServiceMap[chainId] = new BundlerValidationService(
           networkService,
         );
         log.info(`Bundler consumer, relay service, simulation and validation service setup complete for chainId: ${chainId}`);
+
+        log.info(`Setting up Bundle Execution Manager for Bundler on chainId: ${chainId}`);
+        const {
+          bundlingConfig,
+        } = config;
+
+        const bundleExecutionManger = new BundleExecutionManager({
+          mempoolManagerMap,
+          bundlingService,
+          options: {
+            chainId,
+            autoBundleInterval: bundlingConfig.autoBundlingInterval[chainId],
+          },
+        });
+        log.info(`Bundle Execution Manager setup complete for Bundler on chainId: ${chainId}`);
+        bundleExecutionManger.initAutoBundling();
       }
     }
   }
@@ -541,9 +600,10 @@ let statusService: IStatusService;
 
 export {
   routeTransactionToRelayerMap,
+  mempoolManagerMap,
   feeOptionMap,
   aaSimulatonServiceMap,
-  bundlerSimulatonAndValidationServiceMap,
+  bundlerValidationServiceMap,
   scwSimulationServiceMap,
   gaslessFallbackSimulationServiceMap,
   entryPointMap,

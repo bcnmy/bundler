@@ -1,4 +1,4 @@
-export * from './BundleUserOperation';
+export * from './AddUserOperationToMempool';
 export * from './ChainId';
 export * from './EstimateUserOperationGas';
 export * from './GetUserOperationByHash';

@@ -44,6 +44,8 @@
     "rest-api-errors": "^1.2.5",
     "serialize-error": "8.1.0",
     "typescript": "^4.7.4",
+    "uuid": "^9.0.0",
+    "uuidv4": "^6.2.13",
     "winston": "^3.8.2"
   },
   "devDependencies": {

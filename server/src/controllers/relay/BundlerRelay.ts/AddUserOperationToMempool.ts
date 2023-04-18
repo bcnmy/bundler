@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import { logger } from '../../../../../common/log-config';
-import { routeTransactionToRelayerMap, transactionDao, userOperationDao } from '../../../../../common/service-manager';
-import { generateTransactionId, getPaymasterFromPaymasterAndData, parseError } from '../../../../../common/utils';
+import {
+  mempoolManagerMap, routeTransactionToRelayerMap, userOperationDao,
+} from '../../../../../common/service-manager';
+import { getPaymasterFromPaymasterAndData, parseError } from '../../../../../common/utils';
 import {
   isError,
   TransactionStatus,
@@ -11,28 +13,13 @@ import { STATUSES } from '../../../middleware';
 
 const log = logger(module);
 
-export const bundleUserOperation = async (req: Request, res: Response) => {
+export const addUserOperationToMempool = async (req: Request, res: Response) => {
   try {
     const userOp = req.body.params[0];
     const entryPointAddress = req.body.params[1];
-    const gasLimitFromSimulation = req.body.params[2];
-    const userOpHash = req.body.params[3];
+    const userOpHash = req.body.params[2];
     const { chainId } = req.params;
     const chainIdInNum = parseInt(chainId, 10);
-
-    const transactionId = generateTransactionId(userOp);
-
-    const walletAddress = userOp.sender.toLowerCase();
-
-    transactionDao.save(chainIdInNum, {
-      transactionId,
-      transactionType: TransactionType.BUNDLER,
-      status: TransactionStatus.PENDING,
-      chainId: chainIdInNum,
-      walletAddress,
-      resubmitted: false,
-      creationTime: Date.now(),
-    });
 
     const {
       sender,
@@ -51,8 +38,18 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
     // TODO event also emits paymaster
     const paymaster = getPaymasterFromPaymasterAndData(paymasterAndData);
 
+    if (!routeTransactionToRelayerMap[chainIdInNum][TransactionType.BUNDLER]) {
+      return res.status(STATUSES.BAD_REQUEST).json({
+        code: STATUSES.BAD_REQUEST,
+        error: `${TransactionType.BUNDLER} method not supported for chainId: ${chainId}`,
+      });
+    }
+    const response = await mempoolManagerMap[chainIdInNum][entryPointAddress].addUserOp(
+      userOp,
+      userOpHash,
+    );
+
     userOperationDao.save(chainIdInNum, {
-      transactionId,
       status: TransactionStatus.PENDING,
       entryPoint: entryPointAddress,
       sender,
@@ -72,25 +69,6 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
       creationTime: Date.now(),
     });
 
-    if (!routeTransactionToRelayerMap[chainIdInNum][TransactionType.BUNDLER]) {
-      return res.status(STATUSES.BAD_REQUEST).json({
-        code: STATUSES.BAD_REQUEST,
-        error: `${TransactionType.BUNDLER} method not supported for chainId: ${chainId}`,
-      });
-    }
-    const response = routeTransactionToRelayerMap[chainIdInNum][TransactionType.BUNDLER]
-      .sendTransactionToRelayer({
-        type: TransactionType.BUNDLER,
-        to: entryPointAddress,
-        data: '0x0',
-        gasLimit: `0x${Number(gasLimitFromSimulation).toString(16)}`,
-        chainId: chainIdInNum,
-        value: '0x0',
-        userOp,
-        transactionId,
-        walletAddress,
-      });
-
     if (isError(response)) {
       return res.status(STATUSES.BAD_REQUEST).json({
         code: STATUSES.BAD_REQUEST,
@@ -99,11 +77,11 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
     }
     return res.status(STATUSES.SUCCESS).json({
       jsonrpc: '2.0',
-      id: 1,
+      id: 1, // TODO change to sequential id
       result: userOpHash,
     });
   } catch (error) {
-    log.error(`Error in bundle user op ${parseError(error)}`);
+    log.error(`Error in adding user operation to mempool ${parseError(error)}`);
     return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
       code: STATUSES.INTERNAL_SERVER_ERROR,
       error: `Internal Server Error: ${parseError(error)}`,

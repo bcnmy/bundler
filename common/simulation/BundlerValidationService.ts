@@ -9,14 +9,15 @@ import { DefaultGasOverheadType, EVMRawTransactionType, UserOperationType } from
 import { fillEntity, packUserOp, parseError } from '../utils';
 import RpcError from '../utils/rpc-error';
 import {
-  BundlerSimulationDataType,
+  ValidateUserOpDataType,
   EstimateUserOperationGasDataType,
   EstimateUserOperationGasReturnType,
-  SimulationResponseType,
+  BundlerValidationResponseType,
 } from './types';
+import { IBundlerValidationService } from './interface';
 
 const log = logger(module);
-export class BundlerSimulationAndValidationService {
+export class BundlerValidationService implements IBundlerValidationService {
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
 
   constructor(
@@ -25,26 +26,29 @@ export class BundlerSimulationAndValidationService {
     this.networkService = networkService;
   }
 
-  async simulateAndValidate(
-    simulationData: BundlerSimulationDataType,
-  ): Promise<SimulationResponseType> {
-    const { userOp, entryPointContract, chainId } = simulationData;
+  async validateUserOperation(
+    vaidateUserOpData: ValidateUserOpDataType,
+  ): Promise<BundlerValidationResponseType> {
+    const { userOp, entryPointContract, chainId } = vaidateUserOpData;
     const entryPointStatic = entryPointContract.connect(
       this.networkService.ethersProvider.getSigner(config.zeroAddress),
     );
 
-    let isSimulationSuccessful = true;
+    let isValidationSuccessful = true;
     log.info(`userOp: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
     try {
-      const simulationResult = await entryPointStatic.callStatic.simulateValidation(userOp)
+      const simulateValidationResult = await entryPointStatic.callStatic.simulateValidation(userOp)
         .catch((e: any) => e);
-      log.info(`simulationResult: ${JSON.stringify(simulationResult)}`);
-      BundlerSimulationAndValidationService.parseUserOpSimulationResult(userOp, simulationResult);
+      log.info(`simulateValidationResult: ${JSON.stringify(simulateValidationResult)}`);
+      BundlerValidationService.parseUserOpSimulationResult(
+        userOp,
+        simulateValidationResult,
+      );
     } catch (error: any) {
       log.info(`Bundler Simulation failed: ${parseError(error)}`);
-      isSimulationSuccessful = false;
+      isValidationSuccessful = false;
       return {
-        isSimulationSuccessful,
+        isValidationSuccessful,
         data: {
           gasLimitFromSimulation: 0,
         },
@@ -65,7 +69,7 @@ export class BundlerSimulationAndValidationService {
       log.info(`Estimated gas is: ${estimatedGasForUserOp} from ethers for userOp: ${JSON.stringify(userOp)}`);
       if (!estimatedGasForUserOp || !estimatedGasForUserOp._isBigNumber) {
         return {
-          isSimulationSuccessful: false,
+          isValidationSuccessful: false,
           data: {
             gasLimitFromSimulation: 0,
           },
@@ -74,7 +78,7 @@ export class BundlerSimulationAndValidationService {
       }
     } catch (error) {
       return {
-        isSimulationSuccessful: false,
+        isValidationSuccessful: false,
         data: {
           gasLimitFromSimulation: 0,
         },
@@ -91,7 +95,7 @@ export class BundlerSimulationAndValidationService {
     }
 
     return {
-      isSimulationSuccessful,
+      isValidationSuccessful,
       data: {
         gasLimitFromSimulation: estimatedGasForUserOp,
         userOpHash,
@@ -100,7 +104,7 @@ export class BundlerSimulationAndValidationService {
     };
   }
 
-  static parseUserOpSimulationResult(userOp: UserOperationType, simulationResult: any) {
+  private static parseUserOpSimulationResult(userOp: UserOperationType, simulationResult: any) {
     if (!simulationResult?.errorName?.startsWith('ValidationResult')) {
       log.info(`Inside ${!simulationResult?.errorName?.startsWith('ValidationResult')}`);
       // parse it as FailedOp
@@ -186,7 +190,7 @@ export class BundlerSimulationAndValidationService {
       const simulationResult: any = await entryPointStatic.callStatic.simulateValidation(fullUserOp)
         .catch((e: any) => e);
       log.info(`simulationResult: ${JSON.stringify(simulationResult)}`);
-      returnInfo = BundlerSimulationAndValidationService.parseUserOpSimulationResult(
+      returnInfo = BundlerValidationService.parseUserOpSimulationResult(
         userOp,
         simulationResult,
       ).returnInfo;
@@ -206,7 +210,7 @@ export class BundlerSimulationAndValidationService {
       };
     }
 
-    const preVerificationGas = BundlerSimulationAndValidationService.calcPreVerificationGas(
+    const preVerificationGas = BundlerValidationService.calcPreVerificationGas(
       userOp,
     );
     log.info(`preVerificationGas: ${preVerificationGas} on chainId: ${chainId}`);
@@ -247,7 +251,7 @@ export class BundlerSimulationAndValidationService {
     };
   }
 
-  static calcPreVerificationGas(
+  private static calcPreVerificationGas(
     userOp: UserOperationType,
     overheads?: Partial<DefaultGasOverheadType>,
   ) {

@@ -1,13 +1,13 @@
 import { Request } from 'express';
 import { logger } from '../../../../common/log-config';
-import { bundlerSimulatonAndValidationServiceMap, entryPointMap } from '../../../../common/service-manager';
+import { bundlerValidationServiceMap, entryPointMap } from '../../../../common/service-manager';
 import { parseError } from '../../../../common/utils';
 import { STATUSES } from '../../middleware';
 
 const log = logger(module);
 
 // eslint-disable-next-line consistent-return
-export const simulateAndValidateBundlerTransaction = async (req: Request) => {
+export const validateBundlerTransaction = async (req: Request) => {
   try {
     const userOp = req.body.params[0];
     const entryPointAddress = req.body.params[1];
@@ -33,13 +33,13 @@ export const simulateAndValidateBundlerTransaction = async (req: Request) => {
       };
     }
 
-    const bundlerSimulationAndValidationResponse = await bundlerSimulatonAndValidationServiceMap[
+    const bundlerSimulationAndValidationResponse = await bundlerValidationServiceMap[
       parseInt(chainId, 10)
-    ].simulateAndValidate({ userOp, entryPointContract, chainId: parseInt(chainId, 10) });
+    ].validateUserOperation({ userOp, entryPointContract, chainId: parseInt(chainId, 10) });
 
     log.info(`Bundler simulation and validation response: ${JSON.stringify(bundlerSimulationAndValidationResponse)}`);
 
-    if (!bundlerSimulationAndValidationResponse.isSimulationSuccessful) {
+    if (!bundlerSimulationAndValidationResponse.isValidationSuccessful) {
       const { message, code } = bundlerSimulationAndValidationResponse;
       log.info(`message: ${message} and code: ${code} from bundlerSimulationAndValidationResponse for userOp: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
       return {
@@ -47,8 +47,7 @@ export const simulateAndValidateBundlerTransaction = async (req: Request) => {
         message,
       };
     }
-    req.body.params[2] = bundlerSimulationAndValidationResponse.data.gasLimitFromSimulation;
-    req.body.params[3] = bundlerSimulationAndValidationResponse.data.userOpHash;
+    req.body.params[2] = bundlerSimulationAndValidationResponse.data.userOpHash;
     log.info(`Transaction successfully simulated and validated for userOp: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
     return {
       code: STATUSES.SUCCESS,
