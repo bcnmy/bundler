@@ -271,3 +271,12 @@ export type MempoolEntry = {
   userOpHash: string,
   markedForBundling: boolean,
 };
+
+// TODO change any to fixed types
+export type EntityInfoType = {
+  returnInfo: any,
+  senderInfo: any,
+  factoryInfo: any,
+  paymasterInfo: any,
+  aggregatorInfo: any,
+};

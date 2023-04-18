@@ -10,9 +10,7 @@ export class BundleExecutionManager implements IBundleExecutionManager {
   autoBundleInterval: number;
 
   mempoolManagerMap: {
-    [chainId: number]: {
-      [entryPointAddress: string]: IMempoolManager
-    }
+    [entryPointAddress: string]: IMempoolManager
   };
 
   routeTransactionToRelayerMap: {
@@ -45,10 +43,8 @@ export class BundleExecutionManager implements IBundleExecutionManager {
   }
 
   async attemptBundle(force: boolean = true): Promise<void> {
-    const mempoolManagerForCurrentChainId = this.mempoolManagerMap[this.chainId];
-
-    for (const entryPointAddress of Object.keys(mempoolManagerForCurrentChainId)) {
-      const mempoolManager = mempoolManagerForCurrentChainId[entryPointAddress];
+    for (const entryPointAddress of Object.keys(this.mempoolManagerMap)) {
+      const mempoolManager = this.mempoolManagerMap[entryPointAddress];
       if (
         force
         || mempoolManager.countMempoolEntries() >= mempoolManager.mempoolConfig.maxLength

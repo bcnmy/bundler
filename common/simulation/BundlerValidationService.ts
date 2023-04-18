@@ -5,7 +5,9 @@ import { IEVMAccount } from '../../relayer/src/services/account';
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../../server/src/middleware';
 import { logger } from '../log-config';
 import { INetworkService } from '../network';
-import { DefaultGasOverheadType, EVMRawTransactionType, UserOperationType } from '../types';
+import {
+  DefaultGasOverheadType, EVMRawTransactionType, EntityInfoType, UserOperationType,
+} from '../types';
 import { fillEntity, packUserOp, parseError } from '../utils';
 import RpcError from '../utils/rpc-error';
 import {
@@ -35,12 +37,13 @@ export class BundlerValidationService implements IBundlerValidationService {
     );
 
     let isValidationSuccessful = true;
+    let entityInfo: EntityInfoType;
     log.info(`userOp: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
     try {
       const simulateValidationResult = await entryPointStatic.callStatic.simulateValidation(userOp)
         .catch((e: any) => e);
       log.info(`simulateValidationResult: ${JSON.stringify(simulateValidationResult)}`);
-      BundlerValidationService.parseUserOpSimulationResult(
+      entityInfo = BundlerValidationService.parseUserOpSimulationResult(
         userOp,
         simulateValidationResult,
       );
@@ -98,6 +101,7 @@ export class BundlerValidationService implements IBundlerValidationService {
       isValidationSuccessful,
       data: {
         gasLimitFromSimulation: estimatedGasForUserOp,
+        entityInfo,
         userOpHash,
       },
       message: 'Success',

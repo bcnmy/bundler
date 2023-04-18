@@ -4,9 +4,7 @@ export interface IBundleExecutionManager {
   chainId: number;
   autoBundleInterval: number;
   mempoolManagerMap: {
-    [chainId: number]: {
-      [entryPointAddress: string]: IMempoolManager
-    }
+    [entryPointAddress: string]: IMempoolManager
   };
 
   initAutoBundling(): Promise<void>

@@ -201,6 +201,10 @@ export class Config implements IConfig {
       if (!this.config.bundlingConfig.autoBundlingInterval[chainId]) {
         throw new Error(`Mempool config's autoBundlingInterval required for chain id ${chainId}`);
       }
+
+      if (!this.config.bundlingConfig.maxBundleGas[chainId]) {
+        throw new Error(`Mempool config's maxBundleGas required for chain id ${chainId}`);
+      }
     }
     return true;
   }

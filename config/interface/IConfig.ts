@@ -197,6 +197,9 @@ type PerChainBundlingConfigType = {
   autoBundlingInterval: {
     [chainId: string]: number
   },
+  maxBundleGas: {
+    [chainId: string]: number
+  },
 };
 
 export type ConfigType = {

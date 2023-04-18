@@ -1,5 +1,5 @@
 import { BigNumber, ethers } from 'ethers';
-import { UserOperationType } from '../../types';
+import { EntityInfoType, UserOperationType } from '../../types';
 
 // data response type that external simulation serivcereturns
 export type ExternalSimulationResponseType = {
@@ -36,6 +36,7 @@ export type BundlerValidationResponseType = {
   isValidationSuccessful: boolean,
   data: {
     userOpHash?: string,
+    entityInfo?: EntityInfoType
     gasLimitFromSimulation: number | BigNumber,
   },
   message: string,

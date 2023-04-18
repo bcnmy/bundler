@@ -543,10 +543,17 @@ let statusService: IStatusService;
         }
 
         log.info(`Setting up Bundling Service for Bundler on chainId: ${chainId}`);
+        const {
+          bundlingConfig,
+        } = config;
+
         const bundlingService = new BundlingService({
           bundlerValidationService: bundlerValidationServiceMap[chainId],
+          mempoolManagerMap: mempoolManagerMap[chainId],
+          networkService,
           options: {
             chainId,
+            maxBundleGas: bundlingConfig.maxBundleGas[chainId],
           },
         });
         log.info(`Bundling Service setup complete for Bundler on chainId: ${chainId}`);
@@ -574,13 +581,10 @@ let statusService: IStatusService;
         log.info(`Bundler consumer, relay service, simulation and validation service setup complete for chainId: ${chainId}`);
 
         log.info(`Setting up Bundle Execution Manager for Bundler on chainId: ${chainId}`);
-        const {
-          bundlingConfig,
-        } = config;
 
         const bundleExecutionManger = new BundleExecutionManager({
           bundlingService,
-          mempoolManagerMap,
+          mempoolManagerMap: mempoolManagerMap[chainId],
           routeTransactionToRelayerMap,
           options: {
             chainId,

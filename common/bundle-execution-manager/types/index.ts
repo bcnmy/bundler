@@ -5,9 +5,7 @@ import { BundlerRelayService } from '../../relay-service';
 export type BundleExecutionManagerParamsType = {
   bundlingService: IBundlingService,
   mempoolManagerMap: {
-    [chainId: number]: {
-      [entryPointAddress: string]: IMempoolManager
-    }
+    [entryPointAddress: string]: IMempoolManager
   }
   routeTransactionToRelayerMap: {
     [chainId: number]: {
