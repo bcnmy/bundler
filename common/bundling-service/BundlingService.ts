@@ -18,10 +18,13 @@ export class BundlingService implements IBundlingService {
     this.bundlerValidationService = bundlerValidationService;
   }
 
-  createBundle(
+  async createBundle(
     userOps: UserOperationType[],
     entryPointContract: Contract,
   ): Promise<UserOperationType[]> {
-    throw new Error('Method not implemented.');
+    console.log(this.chainId);
+    console.log(userOps);
+    console.log(entryPointContract);
+    return userOps;
   }
 }

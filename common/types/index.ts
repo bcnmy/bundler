@@ -1,5 +1,4 @@
 import { BigNumber, BigNumberish, ethers } from 'ethers';
-import { IMempoolManager } from '../mempool-manager/interface';
 
 export enum TransactionType {
   AA = 'AA',
@@ -265,12 +264,6 @@ export type MempoolConfigType = {
   maxUserOpPerSender: number,
   minMaxPriorityFeePerGasBumpPercentage: number,
   minMaxFeePerGasBumpPercentage: number
-};
-
-export type MempoolManagerMapTye = {
-  [chainId: number]: {
-    [entryPointAddress: string]: IMempoolManager
-  }
 };
 
 export type MempoolEntry = {

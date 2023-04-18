@@ -1,7 +1,6 @@
 import { IBundlingService } from '../bundling-service/interface';
-import { routeTransactionToRelayerMap } from '../service-manager';
-import { MempoolManagerMapTye, TransactionType } from '../types';
-import { generateTransactionId } from '../utils';
+import { IMempoolManager } from '../mempool-manager/interface';
+import { BundlerRelayService } from '../relay-service';
 import { IBundleExecutionManager } from './interface/IBundleExecutionManager';
 import { BundleExecutionManagerParamsType } from './types';
 
@@ -10,20 +9,33 @@ export class BundleExecutionManager implements IBundleExecutionManager {
 
   autoBundleInterval: number;
 
-  mempoolManagerMap: MempoolManagerMapTye;
+  mempoolManagerMap: {
+    [chainId: number]: {
+      [entryPointAddress: string]: IMempoolManager
+    }
+  };
+
+  routeTransactionToRelayerMap: {
+    [chainId: number]: {
+      [transactionType: string]:
+      BundlerRelayService
+    };
+  };
 
   bundlingService: IBundlingService;
 
   constructor(bundleExecutionManagerParams: BundleExecutionManagerParamsType) {
     const {
-      mempoolManagerMap,
       bundlingService,
+      mempoolManagerMap,
+      routeTransactionToRelayerMap,
       options,
     } = bundleExecutionManagerParams;
     this.chainId = options.chainId;
     this.autoBundleInterval = options.autoBundleInterval;
     this.bundlingService = bundlingService;
     this.mempoolManagerMap = mempoolManagerMap;
+    this.routeTransactionToRelayerMap = routeTransactionToRelayerMap;
   }
 
   async initAutoBundling(): Promise<void> {
@@ -42,19 +54,18 @@ export class BundleExecutionManager implements IBundleExecutionManager {
         || mempoolManager.countMempoolEntries() >= mempoolManager.mempoolConfig.maxLength
       ) {
         const mempoolEntries = mempoolManager.getMempoolEntries();
-        const transactionId = generateTransactionId((Date.now()).toString());
 
         // TODO make call to bundling service and send selected userOps
 
-        routeTransactionToRelayerMap[this.chainId][TransactionType.BUNDLER]
+        this.routeTransactionToRelayerMap[this.chainId].BUNDLER
           .sendTransactionToRelayer({
             to: entryPointAddress,
             value: '0x',
             data: '0x',
             gasLimit: '1000000',
-            type: TransactionType.BUNDLER,
+            type: 'BUNDLER',
             chainId: this.chainId,
-            transactionId,
+            transactionId: 'random',
             mempoolEntries,
           });
       }

@@ -58,11 +58,11 @@ import {
   SCWTransactionMessageType,
   TransactionType,
   FallbackGasTankMapType,
-  MempoolManagerMapTye,
 } from '../types';
 import { MempoolManager } from '../mempool-manager';
 import { BundleExecutionManager } from '../bundle-execution-manager';
 import { BundlingService } from '../bundling-service';
+import { IMempoolManager } from '../mempool-manager/interface';
 
 const log = logger(module);
 
@@ -98,7 +98,11 @@ const gaslessFallbackSimulationServiceMap: {
 
 const entryPointMap: EntryPointMapType = {};
 
-const mempoolManagerMap: MempoolManagerMapTye = {};
+const mempoolManagerMap: {
+  [chainId: number]: {
+    [entryPointAddress: string]: IMempoolManager
+  }
+} = {};
 
 const fallbackGasTankMap: FallbackGasTankMapType = {};
 
@@ -564,7 +568,6 @@ let statusService: IStatusService;
         const bundlerRelayService = new BundlerRelayService(bundlerQueue);
         routeTransactionToRelayerMap[chainId][type] = bundlerRelayService;
 
-        // eslint-disable-next-line max-len
         bundlerValidationServiceMap[chainId] = new BundlerValidationService(
           networkService,
         );
@@ -576,8 +579,9 @@ let statusService: IStatusService;
         } = config;
 
         const bundleExecutionManger = new BundleExecutionManager({
-          mempoolManagerMap,
           bundlingService,
+          mempoolManagerMap,
+          routeTransactionToRelayerMap,
           options: {
             chainId,
             autoBundleInterval: bundlingConfig.autoBundlingInterval[chainId],
