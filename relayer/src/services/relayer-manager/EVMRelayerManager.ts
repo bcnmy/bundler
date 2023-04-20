@@ -172,15 +172,17 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
       .list()
       .find((relayer) => relayer.address === address);
 
-    log.info(`Relayer: ${address} for Relayer Manager: ${this.name} on chainId: ${this.chainId} with data: ${JSON.stringify(relayerData)}`);
+    log.info(`relayerQueue consists: ${JSON.stringify(this.relayerQueue.list())}`);
+    log.info(`Relayer: ${address} for Relayer Manager: ${this.name} on chainId: ${this.chainId} with data: ${JSON.stringify(relayerData)} from relayerQueue`);
 
     if (!relayerData) {
-      log.info(`Relayer: ${address} not found in queue fetching from transactionProcessingRelayerMap for Relayer Manager: ${this.name} on chainId: ${this.chainId}`);
       // if relayer is performing transaction then it would not be available in relayer queue
+      log.info(`transactionProcessingRelayerMap consists: ${JSON.stringify(this.transactionProcessingRelayerMap)}`);
       relayerData = this.transactionProcessingRelayerMap[address];
+      log.info(`Relayer: ${address} for Relayer Manager: ${this.name} on chainId: ${this.chainId} with data: ${JSON.stringify(relayerData)} from transactionProcessingRelayerMap`);
     }
     if (relayerData) {
-      log.info(`Relayer: ${relayerAddress} found in queue fetching from transactionProcessingRelayerMap for Relayer Manager: ${this.name} on chainId: ${this.chainId}`);
+      log.info(`Reducing pending count for relayer: ${address} for Relayer Manager: ${this.name} on chainId: ${this.chainId}`);
       if (relayerData.pendingCount > 0) {
         relayerData.pendingCount -= 1;
       }
@@ -252,6 +254,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
         this.minRelayerCount - this.relayerQueue.size()
         >= this.inactiveRelayerCountThreshold
       ) {
+        log.info(`Creating ${this.newRelayerInstanceCount} new relayers for Relayer Manager: ${this.name} on chainId: ${this.chainId}`);
         const newRelayers = await this.createRelayers(
           this.newRelayerInstanceCount,
         );
