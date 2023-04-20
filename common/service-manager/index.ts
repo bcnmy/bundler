@@ -288,6 +288,7 @@ let statusService: IStatusService;
       retryTransactionQueue,
       transactionService,
       networkService,
+      notificationManager,
       options: {
         chainId,
         EVMRelayerManagerMap, // TODO // Review a better way
