@@ -145,7 +145,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
     const activeRelayer = await this.relayerQueue.pop();
     if (activeRelayer) {
       activeRelayer.pendingCount += 1;
-      this.transactionProcessingRelayerMap[activeRelayer.address] = activeRelayer;
+      this.transactionProcessingRelayerMap[activeRelayer.address.toLowerCase()] = activeRelayer;
       if (
         activeRelayer.pendingCount
         > this.pendingTransactionCountThreshold - 5
@@ -171,8 +171,11 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
     let relayerData = this.relayerQueue
       .list()
       .find((relayer) => relayer.address === address);
+
+    log.info(`Relayer: ${address} for Relayer Manager: ${this.name} on chainId: ${this.chainId} with data: ${JSON.stringify(relayerData)}`);
+
     if (!relayerData) {
-      log.info(`Relayer: ${relayerAddress} not found in queue fetching from transactionProcessingRelayerMap for Relayer Manager: ${this.name} on chainId: ${this.chainId}`);
+      log.info(`Relayer: ${address} not found in queue fetching from transactionProcessingRelayerMap for Relayer Manager: ${this.name} on chainId: ${this.chainId}`);
       // if relayer is performing transaction then it would not be available in relayer queue
       relayerData = this.transactionProcessingRelayerMap[address];
     }
@@ -344,7 +347,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
             `Balance of relayer ${relayerAddress} is ${balance} and nonce is ${nonce} on chainId: ${this.chainId} with threshold ${this.fundingBalanceThreshold}`,
           );
           this.relayerQueue.push({
-            address: relayer.getPublicKey(),
+            address: relayer.getPublicKey().toLowerCase(),
             pendingCount: 0,
             nonce,
             balance,

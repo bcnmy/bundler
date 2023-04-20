@@ -10,6 +10,8 @@ import { IRelayerManager } from '../relayer-manager';
 import { ITransactionService } from '../transaction-service/interface/ITransactionService';
 import { IRetryTransactionService } from './interface/IRetryTransactionService';
 import { EVMRetryTransactionServiceParamsType } from './types';
+import { INotificationManager } from '../../../../common/notification/interface';
+import { getAccountUndefinedNotificationMessage } from '../../../../common/notification';
 
 const log = logger(module);
 export class EVMRetryTransactionService implements
@@ -22,6 +24,8 @@ IRetryTransactionService<IEVMAccount, EVMRawTransactionType> {
 
   queue: IQueue<RetryTransactionQueueData>;
 
+  notificationManager: INotificationManager;
+
   EVMRelayerManagerMap: {
     [name: string] : {
       [chainId: number]: IRelayerManager<IEVMAccount, EVMRawTransactionType>;
@@ -30,12 +34,13 @@ IRetryTransactionService<IEVMAccount, EVMRawTransactionType> {
 
   constructor(evmRetryTransactionServiceParams: EVMRetryTransactionServiceParamsType) {
     const {
-      options, transactionService, networkService, retryTransactionQueue,
+      options, transactionService, networkService, retryTransactionQueue, notificationManager,
     } = evmRetryTransactionServiceParams;
     this.chainId = options.chainId;
     this.EVMRelayerManagerMap = options.EVMRelayerManagerMap;
     this.transactionService = transactionService;
     this.networkService = networkService;
+    this.notificationManager = notificationManager;
     this.queue = retryTransactionQueue;
   }
 
@@ -71,12 +76,26 @@ IRetryTransactionService<IEVMAccount, EVMRawTransactionType> {
         log.info(`Transaction receipt receivied for transactionHash: ${transactionHash} and tranasctionId: ${transactionId}. Hence not retrying the transaction.`);
       } else {
         log.info(`Transaction receipt not receivied for transactionHash: ${transactionHash} and tranasctionId: ${transactionId}. Hence retrying the transaction.`);
-        await this.transactionService.retryTransaction(
-          transactionDataReceivedFromRetryQueue,
-          account,
-          transactionType,
-          relayerManagerName,
-        );
+
+        if (!account) {
+          log.error(`Account not found for transactionHash: ${transactionHash} and transactionId: ${transactionId} on chainId: ${this.chainId}`);
+          // TODO: send slack notification
+          const message = getAccountUndefinedNotificationMessage(
+            transactionId,
+            relayerAddress,
+            transactionType,
+            relayerManagerName,
+          );
+          const slackNotifyObject = this.notificationManager.getSlackNotifyObject(message);
+          await this.notificationManager.sendSlackNotification(slackNotifyObject);
+        } else {
+          await this.transactionService.retryTransaction(
+            transactionDataReceivedFromRetryQueue,
+            account,
+            transactionType,
+            relayerManagerName,
+          );
+        }
       }
     } else {
       log.info(`Message not received on retry transaction queue on chainId: ${this.chainId}`);
