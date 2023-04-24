@@ -12,6 +12,25 @@ export class UserOperationDAO implements IUserOperationDAO {
     await this._db.getUserOperation(chainId).insertMany([userOperationData]);
   }
 
+  async getUserOperationsDataByApiKey(
+    chainId: number,
+    bundlerApiKey: string,
+    startTime: number,
+    endTime: number,
+    limit: number,
+    offSet: number,
+  ): Promise<Array<IUserOperation>> {
+    const data = await this._db.getUserOperation(chainId).aggregate([
+      {
+        $match: {
+          $and: [{ 'metaData.dappAPIKey': bundlerApiKey }, { creationTime: { $gte: startTime } }, { creationTime: { $lte: endTime } }],
+        },
+      },
+    ]).skip(offSet)
+      .limit(limit);
+    return data;
+  }
+
   async getUserOperationDataByUserOpHash(
     chainId: number,
     userOpHash: string,

@@ -8,6 +8,7 @@ import {
   getUserOperationByHash,
   getUserOperationReceipt,
   getSupportedEntryPoints,
+  getUserOperationsByApiKey,
 } from './BundlerRelay.ts';
 
 export const bundlerRequestHandler = async (
@@ -35,6 +36,9 @@ export const bundlerRequestHandler = async (
       break;
     case EthMethodType.CHAIN_ID:
       response = await getChainId(req, res);
+      break;
+    case EthMethodType.GET_USER_OPERATIONS_BY_API_KEY:
+      response = await getUserOperationsByApiKey(req, res);
       break;
     default:
       return res.status(STATUSES.BAD_REQUEST).send({

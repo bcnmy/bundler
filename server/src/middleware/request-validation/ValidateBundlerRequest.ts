@@ -6,6 +6,7 @@ import {
   bundlerEstimateUserOpGasRequestSchema,
   bundlerGetUserOpByHashRequestSchema,
   bundlerGetUserOpReceiptRequestSchema,
+  bundlerGetUserOpsByApiKeyRequestSchema,
   bundlerSendUserOpRequestSchema,
   bundlerSupportedEntryPointsRequestSchema,
 } from '../../routes/bundler/bundler.schema';
@@ -39,6 +40,9 @@ export const validateBundlerRequest = () => async (
         break;
       case EthMethodType.CHAIN_ID:
         validationResponse = bundlerChainIdRequestSchema.validate(req.body);
+        break;
+      case EthMethodType.GET_USER_OPERATIONS_BY_API_KEY:
+        validationResponse = bundlerGetUserOpsByApiKeyRequestSchema.validate(req.body);
         break;
       default:
         return res.status(STATUSES.BAD_REQUEST).send({

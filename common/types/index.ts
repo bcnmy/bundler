@@ -23,6 +23,7 @@ export enum EthMethodType {
   GET_USER_OPERATION_RECEIPT = 'eth_getUserOperationReceipt',
   SUPPORTED_ENTRY_POINTS = 'eth_supportedEntryPoints',
   CHAIN_ID = 'eth_chainId',
+  GET_USER_OPERATIONS_BY_API_KEY = 'eth_getUserOperationsByApiKey',
 }
 
 export enum RelayerDestinationSmartContractName {
