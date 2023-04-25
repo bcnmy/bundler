@@ -7,13 +7,13 @@
     "lockTTL": 10000
   },
   "supportedNetworks": [5, 80001, 137, 97, 1442],
-  "EIP1559SupportedNetworks": [5, 137, 80001],
+  "EIP1559SupportedNetworks": [5, 80001, 137],
   "supportedTransactionType": {
     "5": ["AA", "SCW", "GASLESS_FALLBACK", "BUNDLER"],
     "137": ["AA", "SCW", "GASLESS_FALLBACK", "BUNDLER"],
     "80001": ["AA", "SCW", "GASLESS_FALLBACK", "BUNDLER"],
-    "97": ["AA", "SCW", "GASLESS_FALLBACK", "BUNDLER"],
-    "1": ["AA", "SCW", "GASLESS_FALLBACK", "BUNDLER"]
+    "1442": ["AA", "BUNDLER"],
+    "97": ["AA", "SCW", "GASLESS_FALLBACK"]
   },
   "chains": {
     "currency": {
