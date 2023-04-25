@@ -54,17 +54,6 @@ export type GaslessFallbackConsumerParamsType = {
   },
 };
 
-export type FallbackGasTankDepositConsumerParamsType = {
-  queue: IQueue<GaslessFallbackTransactionMessageType>,
-  relayerManager: IRelayerManager<IEVMAccount, EVMRawTransactionType>,
-  transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>,
-  cacheService: ICacheService,
-  options: {
-    chainId: number,
-    fallbackGasTankDepositOwnerAccountDetails: IEVMAccount
-  },
-};
-
 export type SocketConsumerParamsType = {
   queue: IQueue<TransactionQueueMessageType>;
   options: {

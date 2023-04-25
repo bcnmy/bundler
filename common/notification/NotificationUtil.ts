@@ -8,7 +8,7 @@ enum NotificationLevel {
   ERROR = 'ERROR',
 }
 
-const getMessage = (level: string, message: any, details: any, action: any) => `Level: ${level} \n Message: ${message}\n\nDETAILS\n${details}\n\nAction Required: ${action}`;
+const getMessage = (level: string, message: any, details: any, action: any) => `Level: ${level} \n Message: ${message}\n\nDETAILS\n${details}${action ? `\n\nACTION\n${action}` : ''}`;
 
 // const getInfoMessage = (message: string, details: string, action: string | undefined)
 // => getMessage('INFO', message, details, action || 'None');
@@ -68,4 +68,16 @@ export const getPendingTransactionIncreasingMessage = (
   const details = `Relayer Address: ${relayerAddress}\nChain Id: ${chainId}\nPending Transaction Count: ${pendingCount}`;
   const action = 'Keep an eye on the pending transaction count. If the pending transaction count is increasing, please increase the gas price of the transaction or check for stuck transactions';
   return getMessage(NotificationLevel.WARN, message, details, action);
+};
+
+export const getAccountUndefinedNotificationMessage = (
+  transactionId: string,
+  relayerAddress: string,
+  transactionType: string,
+  relayerManagerName: string,
+) => {
+  const message = 'Account Undefined';
+  const details = `TransactionId: ${transactionId}\nRelayer Address: ${relayerAddress}\nTransaction Type: ${transactionType}\nRelayer Manager Name: ${relayerManagerName}`;
+  const action = undefined;
+  return getMessage(NotificationLevel.ERROR, message, details, action);
 };
