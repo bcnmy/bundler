@@ -55,7 +55,7 @@ const getStartTimeAndEndTimeInMs = (startTime: string | null, endTime: string | 
     if (!Number.isNaN(Date.parse(endTime))) {
       endTimeInMs = Date.parse(endTime);
     } else {
-      endTimeInMs = 0;
+      endTimeInMs = Date.now();
     }
     if (!Number.isNaN(Date.parse(startTime))) {
       startTimeInMs = Date.parse(startTime);
@@ -120,7 +120,16 @@ export const getUserOperationsByApiKey = async (req: Request, res: Response) => 
       });
     }
 
-    const result = [];
+    const totalUserOperationsCount = await userOperationDao.getUserOperationsCountByApiKey(
+      parseInt(chainId, 10),
+      bundlerApiKey,
+      0,
+      Date.now(),
+    );
+
+    log.info(`totalUserOperationsCount: ${totalUserOperationsCount} for apiKey: ${bundlerApiKey} on chainId: ${chainId}`);
+
+    const userOpsData = [];
 
     for (let index = 0; index < userOperationsData.length; index += 1) {
       const {
@@ -148,7 +157,7 @@ export const getUserOperationsByApiKey = async (req: Request, res: Response) => 
         reason,
       } = userOperationsData[index];
 
-      result.push({
+      userOpsData.push({
         sender,
         nonce,
         initCode,
@@ -177,7 +186,13 @@ export const getUserOperationsByApiKey = async (req: Request, res: Response) => 
     return res.status(STATUSES.SUCCESS).json({
       jsonrpc: '2.0',
       id: 1,
-      result,
+      result: {
+        totalNumOfUserOps: totalUserOperationsCount,
+        numOfUserOps: userOpsData.length,
+        limit,
+        offSet,
+        userOpsData,
+      },
     });
   } catch (error) {
     log.error(`Error in getUserOperationsByApiKey handler ${parseError(error)}`);

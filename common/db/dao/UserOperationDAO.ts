@@ -60,4 +60,16 @@ export class UserOperationDAO implements IUserOperationDAO {
     }).sort({ _id: -1 }).lean();
     return data;
   }
+
+  async getUserOperationsCountByApiKey(
+    chainId: number,
+    bundlerApiKey: string,
+    startTime: number,
+    endTime: number,
+  ): Promise<number> {
+    const data = await this._db.getUserOperation(chainId).count(
+      { 'metaData.dappAPIKey': bundlerApiKey, creationTime: { $gte: startTime, $lte: endTime } },
+    );
+    return data;
+  }
 }
