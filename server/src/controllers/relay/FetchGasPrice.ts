@@ -11,7 +11,10 @@ const log = logger(module);
 export const fetchGasPrice = async (req: Request, res: Response) => {
   try {
     log.info(`fetchGasPrice for chainId ${req.body.params}`);
-    const chainId = req.body.params;
+    let { chainId } = req.params;
+    if (!chainId) {
+      chainId = req.body.params;
+    }
 
     if (!supportedNetworks.includes(Number(chainId))) {
       return res.status(STATUSES.NOT_FOUND).json({
@@ -19,7 +22,9 @@ export const fetchGasPrice = async (req: Request, res: Response) => {
         message: `ChainId ${chainId} is not supported`,
       });
     }
-    const gasPrice = await gasPriceServiceMap[chainId]?.getGasPrice();
+    
+    const gasPrice = await gasPriceServiceMap[Number(chainId)]?.getGasPrice();
+
     if (typeof gasPrice !== 'string') {
       log.info(`Gas price for chainId: ${chainId} is: ${JSON.stringify(gasPrice)}`);
 
