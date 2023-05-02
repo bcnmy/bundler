@@ -401,9 +401,11 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
 
       if (typeof bumpedUpGasPrice === 'string') {
         rawTransaction.gasPrice = bumpedUpGasPrice as string;
+        log.info(`Bumped up gas price for transactionId: ${transactionId} is ${bumpedUpGasPrice} on chainId ${this.chainId}`);
       } else if (typeof bumpedUpGasPrice === 'object') {
         rawTransaction.maxFeePerGas = bumpedUpGasPrice.maxFeePerGas;
         rawTransaction.maxPriorityFeePerGas = bumpedUpGasPrice.maxPriorityFeePerGas;
+        log.info(`Bumped up gas price for transactionId: ${transactionId} is ${JSON.stringify(bumpedUpGasPrice)} on chainId ${this.chainId}`);
       }
 
       log.info(`Executing retry transaction for transactionId: ${transactionId}`);

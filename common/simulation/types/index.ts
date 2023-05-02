@@ -1,7 +1,5 @@
 import { BigNumber, ethers } from 'ethers';
-import { IEVMAccount } from '../../../relayer/src/services/account';
-import { INetworkService } from '../../network';
-import { EVMRawTransactionType, FallbackGasTankMapType, UserOperationType } from '../../types';
+import { UserOperationType } from '../../types';
 
 // data response type that external simulation serivcereturns
 export type ExternalSimulationResponseType = {
@@ -20,19 +18,6 @@ export type SimulationDataType = {
   data: string,
   to: string,
   refundInfo?: { tokenGasPrice: string, gasToken: string },
-};
-
-export type FallbackGasTankDepositSimulationDataType = {
-  chainId: number,
-  value: string,
-  paymasterId: string,
-};
-
-export type FallbackGasTankDepositSimualtionParamsType = {
-  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
-  options: {
-    fallbackGasTankMap: FallbackGasTankMapType
-  }
 };
 
 export type AASimulationDataType = {

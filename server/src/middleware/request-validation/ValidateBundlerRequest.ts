@@ -6,6 +6,7 @@ import {
   bundlerEstimateUserOpGasRequestSchema,
   bundlerGetUserOpByHashRequestSchema,
   bundlerGetUserOpReceiptRequestSchema,
+  bundlerGetUserOpsByApiKeyRequestSchema,
   bundlerSendUserOpRequestSchema,
   bundlerSupportedEntryPointsRequestSchema,
   gasPriceRequestSchema,
@@ -43,6 +44,8 @@ export const validateBundlerRequest = () => async (
         break;
       case EthMethodType.GAS_PRICE:
         validationResponse = gasPriceRequestSchema.validate(req.body);
+      case EthMethodType.GET_USER_OPERATIONS_BY_API_KEY:
+        validationResponse = bundlerGetUserOpsByApiKeyRequestSchema.validate(req.body);
         break;
       default:
         return res.status(STATUSES.BAD_REQUEST).send({

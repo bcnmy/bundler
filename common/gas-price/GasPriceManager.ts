@@ -8,9 +8,16 @@ import { EthGasPrice } from './networks/EthGasPrice';
 import { GoerliGasPrice } from './networks/GoerliGasPrice';
 import { MaticGasPrice } from './networks/MaticGasPrice';
 import { MumbaiGasPrice } from './networks/MumbaiGasPrice';
+import { PolygonZKEvmTestnetGasPrice } from './networks/PolygonZKEvmTestnetGasPrice';
 
 export type GasPriceServiceType =
-MaticGasPrice | GoerliGasPrice | MumbaiGasPrice | EthGasPrice | BSCTestnetGasPrice | undefined;
+MaticGasPrice
+| GoerliGasPrice
+| MumbaiGasPrice
+| EthGasPrice
+| BSCTestnetGasPrice
+| PolygonZKEvmTestnetGasPrice
+| undefined;
 export class GasPriceManager implements IGasPriceManager<GasPriceServiceType> {
   cacheService: ICacheService;
 
@@ -46,6 +53,12 @@ export class GasPriceManager implements IGasPriceManager<GasPriceServiceType> {
         return new MumbaiGasPrice(this.cacheService, this.networkService, this.options);
       case 97:
         return new BSCTestnetGasPrice(this.cacheService, this.networkService, this.options);
+      case 1442:
+        return new PolygonZKEvmTestnetGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
       default:
         return undefined;
     }
