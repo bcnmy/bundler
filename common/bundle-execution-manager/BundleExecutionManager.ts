@@ -1,6 +1,7 @@
 import { IBundlingService } from '../bundling-service/interface';
 import { IMempoolManager } from '../mempool-manager/interface';
 import { BundlerRelayService } from '../relay-service';
+import { EntryPointMapType, UserOperationType } from '../types';
 import { IBundleExecutionManager } from './interface/IBundleExecutionManager';
 import { BundleExecutionManagerParamsType } from './types';
 
@@ -20,6 +21,8 @@ export class BundleExecutionManager implements IBundleExecutionManager {
     };
   };
 
+  entryPointMap: EntryPointMapType = {};
+
   bundlingService: IBundlingService;
 
   constructor(bundleExecutionManagerParams: BundleExecutionManagerParamsType) {
@@ -27,6 +30,7 @@ export class BundleExecutionManager implements IBundleExecutionManager {
       bundlingService,
       mempoolManagerMap,
       routeTransactionToRelayerMap,
+      entryPointMap,
       options,
     } = bundleExecutionManagerParams;
     this.chainId = options.chainId;
@@ -34,6 +38,7 @@ export class BundleExecutionManager implements IBundleExecutionManager {
     this.bundlingService = bundlingService;
     this.mempoolManagerMap = mempoolManagerMap;
     this.routeTransactionToRelayerMap = routeTransactionToRelayerMap;
+    this.entryPointMap = entryPointMap;
   }
 
   async initAutoBundling(): Promise<void> {
@@ -51,7 +56,28 @@ export class BundleExecutionManager implements IBundleExecutionManager {
       ) {
         const mempoolEntries = mempoolManager.getMempoolEntries();
 
-        // TODO make call to bundling service and send selected userOps
+        const userOpsFromMempool: UserOperationType[] = [];
+        for (let mempoolIndex = 0; mempoolIndex < mempoolEntries.length; mempoolIndex += 1) {
+          userOpsFromMempool.push(mempoolEntries[mempoolIndex].userOp);
+        }
+
+        const entryPointContracts = this.entryPointMap[this.chainId];
+        let entryPointContract;
+        for (let entryPointContractIndex = 0;
+          entryPointContractIndex < entryPointContracts.length;
+          entryPointContractIndex += 1) {
+          if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
+           === entryPointAddress.toLowerCase()) {
+            entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
+            break;
+          }
+        }
+
+        if (!entryPointContract) {
+          return;
+        }
+
+        this.bundlingService.createBundle(userOpsFromMempool, entryPointContract);
 
         this.routeTransactionToRelayerMap[this.chainId].BUNDLER
           .sendTransactionToRelayer({
