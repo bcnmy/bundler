@@ -6,7 +6,7 @@
   "cacheService": {
     "lockTTL": 10000
   },
-  "supportedNetworks": [421613],
+  "supportedNetworks": [5, 80001, 137, 97, 1442, 421613],
   "EIP1559SupportedNetworks": [5, 80001, 137],
   "supportedTransactionType": {
     "5": ["AA", "SCW", "GASLESS_FALLBACK", "BUNDLER"],
