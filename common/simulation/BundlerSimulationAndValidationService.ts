@@ -21,7 +21,7 @@ import {
   EstimateUserOperationGasReturnType,
   SimulationResponseType,
 } from './types';
-// import { calcGasPrice } from './L2/Abitrum';
+import { calcGasPrice } from './L2/Abitrum';
 
 const log = logger(module);
 export class BundlerSimulationAndValidationService {
@@ -328,7 +328,7 @@ export class BundlerSimulationAndValidationService {
     const callDataCost = packed
       .map((x) => (x === 0 ? ov.zeroByte : ov.nonZeroByte))
       .reduce((sum, x) => sum + x);
-    const ret = Math.round(
+    let ret = Math.round(
       callDataCost
         + ov.fixed / ov.bundleSize
         + ov.perUserOp
@@ -337,8 +337,8 @@ export class BundlerSimulationAndValidationService {
 
     // calculate offset for Arbitrum
     if (chainId === 421613) {
-      // const data = await calcGasPrice(entryPointContract.address, userOp);
-      // console.log('data', data);
+      const data = await calcGasPrice(entryPointContract.address, userOp);
+      ret += data;
     }
     return ret;
   }

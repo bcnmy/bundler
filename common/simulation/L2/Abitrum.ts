@@ -1,19 +1,30 @@
 import { ethers, utils } from 'ethers';
 import { ArbGasInfo__factory } from '@arbitrum/sdk/dist/lib/abi/factories/ArbGasInfo__factory';
 import { NodeInterface__factory } from '@arbitrum/sdk/dist/lib/abi/factories/NodeInterface__factory';
-import { ARB_GAS_INFO, NODE_INTERFACE_ADDRESS } from '@arbitrum/sdk/dist/lib/dataEntities/constants';
+import {
+  ARB_GAS_INFO,
+  NODE_INTERFACE_ADDRESS,
+} from '@arbitrum/sdk/dist/lib/dataEntities/constants';
 import { UserOperationType } from '../../types';
-import { IEntryPointABI } from './Abi';
+import { abi } from '../../../config/static-config.json';
 import { config } from '../../../config';
+import { logger } from '../../log-config';
 
-export const calcGasPrice = async (entryPointAddress: string, userOp: UserOperationType) => {
+const log = logger(module);
+
+export const calcGasPrice = async (
+  entryPointAddress: string,
+  userOp: UserOperationType,
+): Promise<number> => {
   try {
-    console.log('entryPointAddress', entryPointAddress);
-    console.log(userOp);
-    const simulateValidationCallData = new ethers.utils.Interface(IEntryPointABI).encodeFunctionData('simulateValidation', [entryPointAddress, userOp]);
-    console.log('simulateValidationCallData', simulateValidationCallData);
+    log.info('Calculating gas price for user operation');
+    const simulateValidationCallData = new ethers.utils.Interface(
+      abi.entryPointAbi,
+    ).encodeFunctionData('simulateValidation', [entryPointAddress, userOp]);
 
-    const baseL2Provider = ethers.providers.getDefaultProvider(config.chains.provider[421613]);
+    const baseL2Provider = ethers.providers.getDefaultProvider(
+      config.chains.provider[421613],
+    );
     // Instantiation of the ArbGasInfo and NodeInterface objects
     const arbGasInfo = ArbGasInfo__factory.connect(
       ARB_GAS_INFO,
@@ -24,9 +35,8 @@ export const calcGasPrice = async (entryPointAddress: string, userOp: UserOperat
       baseL2Provider,
     );
 
-    console.log('arbGasInfo', arbGasInfo);
-    console.log('nodeInterface', nodeInterface);
-
+    log.info('arbGasInfo', arbGasInfo);
+    log.info('nodeInterface', nodeInterface);
     // Getting the gas prices from ArbGasInfo.getPricesInWei()
     const gasComponents = await arbGasInfo.callStatic.getPricesInWei();
 
@@ -36,7 +46,9 @@ export const calcGasPrice = async (entryPointAddress: string, userOp: UserOperat
       false,
       simulateValidationCallData,
     );
-    const l2GasUsed = gasEstimateComponents.gasEstimate.sub(gasEstimateComponents.gasEstimateForL1);
+    const l2GasUsed = gasEstimateComponents.gasEstimate.sub(
+      gasEstimateComponents.gasEstimateForL1,
+    );
 
     // Setting the variables of the formula
     const P = gasComponents[5];
@@ -59,15 +71,24 @@ export const calcGasPrice = async (entryPointAddress: string, userOp: UserOperat
     // TXFEES (Transaction fees) = P * G
     const TXFEES = P.mul(G);
 
-    console.log('Transaction summary');
-    console.log('-------------------');
-    console.log(`P (L2 Gas Price) = ${utils.formatUnits(P, 'gwei')} gwei`);
-    console.log(`L2G (L2 Gas used) = ${L2G.toNumber()} units`);
-    console.log(`L1P (L1 estimated calldata price per byte) = ${utils.formatUnits(L1P, 'gwei')} gwei`);
-    console.log(`L1S (L1 Calldata size in bytes) = ${L1S} bytes`);
-    console.log('-------------------');
-    console.log(`Transaction estimated fees to pay = ${utils.formatEther(TXFEES)} ETH`);
-  } catch (e) {
-    console.log('Error', e);
+    log.info('Transaction summary');
+    log.info('-------------------');
+    log.info(`P (L2 Gas Price) = ${utils.formatUnits(P, 'gwei')} gwei`);
+    log.info(`L2G (L2 Gas used) = ${L2G.toNumber()} units`);
+    log.info(
+      `L1P (L1 estimated calldata price per byte) = ${utils.formatUnits(
+        L1P,
+        'gwei',
+      )} gwei`,
+    );
+    log.info(`L1S (L1 Calldata size in bytes) = ${L1S} bytes`);
+    log.info('-------------------');
+    log.info(
+      `Transaction estimated fees to pay = ${utils.formatEther(TXFEES)} ETH`,
+    );
+    return L1C.toNumber();
+  } catch (e: any) {
+    log.error('Error', e.message);
+    return 0;
   }
 };

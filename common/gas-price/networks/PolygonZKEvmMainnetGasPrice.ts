@@ -7,7 +7,7 @@ import { IScheduler } from '../../scheduler';
 import { EVMRawTransactionType } from '../../types';
 import { GasPrice } from '../GasPrice';
 
-export class PolygonZKEvmGasPrice extends GasPrice implements IScheduler {
+export class PolygonZKEvmMainnetGasPrice extends GasPrice implements IScheduler {
   updateFrequencyInSeconds: number;
 
   constructor(

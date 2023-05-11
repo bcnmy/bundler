@@ -10,8 +10,8 @@ import { MaticGasPrice } from './networks/MaticGasPrice';
 import { MumbaiGasPrice } from './networks/MumbaiGasPrice';
 import { PolygonZKEvmTestnetGasPrice } from './networks/PolygonZKEvmTestnetGasPrice';
 import { ArbGoerliTestnetGasPrice } from './networks/ArbGoerliTestnetGasPrice';
-import { BSCGasPrice } from './networks/BSCGasPrice';
-import { PolygonZKEvmGasPrice } from './networks/PolygonZKEvmGasPrice';
+import { BSCMainnetGasPrice } from './networks/BSCMainnetGasPrice';
+import { PolygonZKEvmMainnetGasPrice } from './networks/PolygonZKEvmMainnetGasPrice';
 import { ArbOneMainnetGasPrice } from './networks/ArbOneMainnetGasPrice';
 import { ArbNovaMainnetGasPrice } from './networks/ArbNovaMainnetGasPrice';
 
@@ -21,10 +21,10 @@ MaticGasPrice
 | MumbaiGasPrice
 | EthGasPrice
 | BSCTestnetGasPrice
-| BSCGasPrice
+| BSCMainnetGasPrice
 | PolygonZKEvmTestnetGasPrice
 | ArbGoerliTestnetGasPrice
-| PolygonZKEvmGasPrice
+| PolygonZKEvmMainnetGasPrice
 | ArbOneMainnetGasPrice
 | ArbNovaMainnetGasPrice
 | undefined;
@@ -64,7 +64,7 @@ export class GasPriceManager implements IGasPriceManager<GasPriceServiceType> {
       case 97:
         return new BSCTestnetGasPrice(this.cacheService, this.networkService, this.options);
       case 56:
-        return new BSCGasPrice(this.cacheService, this.networkService, this.options);
+        return new BSCMainnetGasPrice(this.cacheService, this.networkService, this.options);
       case 1442:
         return new PolygonZKEvmTestnetGasPrice(
           this.cacheService,
@@ -72,7 +72,7 @@ export class GasPriceManager implements IGasPriceManager<GasPriceServiceType> {
           this.options,
         );
       case 1101:
-        return new PolygonZKEvmGasPrice(
+        return new PolygonZKEvmMainnetGasPrice(
           this.cacheService,
           this.networkService,
           this.options,
