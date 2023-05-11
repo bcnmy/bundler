@@ -5,3 +5,4 @@ export * from './GetUserOperationByHash';
 export * from './GetUserOperationReceipt';
 export * from './SupportedEntryPoints';
 export * from './GetUserOperationsByApiKey';
+export * from './GetGasAndGasPrices';

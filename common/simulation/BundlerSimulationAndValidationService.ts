@@ -1,11 +1,18 @@
-import { BigNumber } from 'ethers';
+import { ethers, BigNumber } from 'ethers';
 import { arrayify, hexlify } from 'ethers/lib/utils';
 import { config } from '../../config';
 import { IEVMAccount } from '../../relayer/src/services/account';
-import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../../server/src/middleware';
+import {
+  BUNDLER_VALIDATION_STATUSES,
+  STATUSES,
+} from '../../server/src/middleware';
 import { logger } from '../log-config';
 import { INetworkService } from '../network';
-import { DefaultGasOverheadType, EVMRawTransactionType, UserOperationType } from '../types';
+import {
+  DefaultGasOverheadType,
+  EVMRawTransactionType,
+  UserOperationType,
+} from '../types';
 import { fillEntity, packUserOp, parseError } from '../utils';
 import RpcError from '../utils/rpc-error';
 import {
@@ -14,6 +21,7 @@ import {
   EstimateUserOperationGasReturnType,
   SimulationResponseType,
 } from './types';
+// import { calcGasPrice } from './L2/Abitrum';
 
 const log = logger(module);
 export class BundlerSimulationAndValidationService {
@@ -36,10 +44,14 @@ export class BundlerSimulationAndValidationService {
     let isSimulationSuccessful = true;
     log.info(`userOp: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
     try {
-      const simulationResult = await entryPointStatic.callStatic.simulateValidation(userOp)
+      const simulationResult = await entryPointStatic.callStatic
+        .simulateValidation(userOp)
         .catch((e: any) => e);
       log.info(`simulationResult: ${JSON.stringify(simulationResult)}`);
-      BundlerSimulationAndValidationService.parseUserOpSimulationResult(userOp, simulationResult);
+      BundlerSimulationAndValidationService.parseUserOpSimulationResult(
+        userOp,
+        simulationResult,
+      );
     } catch (error: any) {
       log.info(`Bundler Simulation failed: ${parseError(error)}`);
       isSimulationSuccessful = false;
@@ -58,11 +70,14 @@ export class BundlerSimulationAndValidationService {
       estimatedGasForUserOp = await this.networkService.estimateGas(
         entryPointContract,
         'handleOps',
-        [[userOp],
-          config.feeOption.refundReceiver[chainId]],
+        [[userOp], config.feeOption.refundReceiver[chainId]],
         config.zeroAddress,
       );
-      log.info(`Estimated gas is: ${estimatedGasForUserOp} from ethers for userOp: ${JSON.stringify(userOp)}`);
+      log.info(
+        `Estimated gas is: ${estimatedGasForUserOp} from ethers for userOp: ${JSON.stringify(
+          userOp,
+        )}`,
+      );
       if (!estimatedGasForUserOp || !estimatedGasForUserOp._isBigNumber) {
         return {
           isSimulationSuccessful: false,
@@ -85,9 +100,15 @@ export class BundlerSimulationAndValidationService {
     let userOpHash: string = '';
     try {
       userOpHash = await entryPointContract.getUserOpHash(userOp);
-      log.info(`userOpHash: ${userOpHash} for userOp: ${JSON.stringify(userOp)}`);
+      log.info(
+        `userOpHash: ${userOpHash} for userOp: ${JSON.stringify(userOp)}`,
+      );
     } catch (error) {
-      log.info(`Error in getting userOpHash for userOp: ${JSON.stringify(userOp)} with error: ${parseError(error)}`);
+      log.info(
+        `Error in getting userOpHash for userOp: ${JSON.stringify(
+          userOp,
+        )} with error: ${parseError(error)}`,
+      );
     }
 
     return {
@@ -100,28 +121,52 @@ export class BundlerSimulationAndValidationService {
     };
   }
 
-  static parseUserOpSimulationResult(userOp: UserOperationType, simulationResult: any) {
+  static parseUserOpSimulationResult(
+    userOp: UserOperationType,
+    simulationResult: any,
+  ) {
     if (!simulationResult?.errorName?.startsWith('ValidationResult')) {
-      log.info(`Inside ${!simulationResult?.errorName?.startsWith('ValidationResult')}`);
+      log.info(
+        `Inside ${!simulationResult?.errorName?.startsWith('ValidationResult')}`,
+      );
       // parse it as FailedOp
       // if its FailedOp, then we have the paymaster param... otherwise its an Error(string)
       log.info(`simulationResult.errorArgs: ${simulationResult.errorArgs}`);
       if (!simulationResult.errorArgs) {
-        throw Error(`errorArgs not present in simulationResult: ${JSON.stringify(simulationResult)}`);
+        throw Error(
+          `errorArgs not present in simulationResult: ${JSON.stringify(
+            simulationResult,
+          )}`,
+        );
       }
       let { paymaster } = simulationResult.errorArgs;
       if (paymaster === config.zeroAddress) {
         paymaster = undefined;
       }
       // eslint-disable-next-line
-      const msg: string = simulationResult.errorArgs?.reason ?? simulationResult.toString()
+      const msg: string =
+        simulationResult.errorArgs?.reason ?? simulationResult.toString();
 
       if (paymaster == null) {
-        log.info(`account validation failed: ${msg} for userOp: ${JSON.stringify(userOp)}`);
-        throw new RpcError(msg, BUNDLER_VALIDATION_STATUSES.SIMULATE_VALIDATION_FAILED);
+        log.info(
+          `account validation failed: ${msg} for userOp: ${JSON.stringify(
+            userOp,
+          )}`,
+        );
+        throw new RpcError(
+          msg,
+          BUNDLER_VALIDATION_STATUSES.SIMULATE_VALIDATION_FAILED,
+        );
       } else {
-        log.info(`paymaster validation failed: ${msg} for userOp: ${JSON.stringify(userOp)}`);
-        throw new RpcError(msg, BUNDLER_VALIDATION_STATUSES.SIMULATE_PAYMASTER_VALIDATION_FAILED);
+        log.info(
+          `paymaster validation failed: ${msg} for userOp: ${JSON.stringify(
+            userOp,
+          )}`,
+        );
+        throw new RpcError(
+          msg,
+          BUNDLER_VALIDATION_STATUSES.SIMULATE_PAYMASTER_VALIDATION_FAILED,
+        );
       }
     }
     const {
@@ -140,7 +185,10 @@ export class BundlerSimulationAndValidationService {
       },
       factoryInfo: fillEntity(userOp.initCode, factoryInfo),
       paymasterInfo: fillEntity(userOp.paymasterAndData, paymasterInfo),
-      aggregatorInfo: fillEntity(aggregatorInfo?.actualAggregator, aggregatorInfo?.stakeInfo),
+      aggregatorInfo: fillEntity(
+        aggregatorInfo?.actualAggregator,
+        aggregatorInfo?.stakeInfo,
+      ),
     };
   }
 
@@ -153,11 +201,12 @@ export class BundlerSimulationAndValidationService {
       this.networkService.ethersProvider.getSigner(config.zeroAddress),
     );
 
-    const callGasLimit = await this.networkService.estimateCallGas(
-      entryPointContract.address,
-      userOp.sender,
-      userOp.callData,
-    )
+    const callGasLimit = await this.networkService
+      .estimateCallGas(
+        entryPointContract.address,
+        userOp.sender,
+        userOp.callData,
+      )
       .then((callGasLimitResponse) => callGasLimitResponse.toNumber())
       .catch((error) => {
         const message = error.message.match(/reason="(.*?)"/)?.at(1) ?? 'execution reverted';
@@ -170,7 +219,8 @@ export class BundlerSimulationAndValidationService {
     const fullUserOp = {
       ...userOp,
       // default values for missing fields.
-      signature: '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b', // a valid signature
+      signature:
+        '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b', // a valid signature
       callGasLimit: BigNumber.from('0'),
       maxFeePerGas: BigNumber.from('0'),
       maxPriorityFeePerGas: BigNumber.from('0'),
@@ -180,10 +230,13 @@ export class BundlerSimulationAndValidationService {
 
     let returnInfo;
 
-    log.info(`fullUserOp: ${JSON.stringify(fullUserOp)} on chainId: ${chainId}`);
+    log.info(
+      `fullUserOp: ${JSON.stringify(fullUserOp)} on chainId: ${chainId}`,
+    );
 
     try {
-      const simulationResult: any = await entryPointStatic.callStatic.simulateValidation(fullUserOp)
+      const simulationResult: any = await entryPointStatic.callStatic
+        .simulateValidation(fullUserOp)
         .catch((e: any) => e);
       log.info(`simulationResult: ${JSON.stringify(simulationResult)}`);
       returnInfo = BundlerSimulationAndValidationService.parseUserOpSimulationResult(
@@ -206,16 +259,8 @@ export class BundlerSimulationAndValidationService {
       };
     }
 
-    const preVerificationGas = BundlerSimulationAndValidationService.calcPreVerificationGas(
-      userOp,
-    );
-    log.info(`preVerificationGas: ${preVerificationGas} on chainId: ${chainId}`);
-
     const { preOpGas } = returnInfo;
-    let {
-      validAfter,
-      validUntil,
-    } = returnInfo;
+    let { validAfter, validUntil } = returnInfo;
 
     validAfter = BigNumber.from(validAfter);
     validUntil = BigNumber.from(validUntil);
@@ -227,15 +272,28 @@ export class BundlerSimulationAndValidationService {
     }
 
     const verificationGasLimit = BigNumber.from(preOpGas).toNumber();
-    log.info(`verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId}`);
+    log.info(
+      `verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId}`,
+    );
     let deadline: any;
     if (returnInfo.deadline) {
       deadline = BigNumber.from(returnInfo.deadline);
     }
 
+    const preVerificationGas = await BundlerSimulationAndValidationService.calcPreVerificationGas(
+      userOp,
+      chainId,
+      entryPointContract,
+    );
+    log.info(
+      `preVerificationGas: ${preVerificationGas} on chainId: ${chainId}`,
+    );
+
     return {
       code: STATUSES.SUCCESS,
-      message: `Gas successfully estimated for userOp: ${JSON.stringify(userOp)} on chainId: ${chainId}`,
+      message: `Gas successfully estimated for userOp: ${JSON.stringify(
+        userOp,
+      )} on chainId: ${chainId}`,
       data: {
         preVerificationGas,
         verificationGasLimit,
@@ -247,8 +305,10 @@ export class BundlerSimulationAndValidationService {
     };
   }
 
-  static calcPreVerificationGas(
+  static async calcPreVerificationGas(
     userOp: UserOperationType,
+    chainId: number,
+    entryPointContract: ethers.Contract,
     overheads?: Partial<DefaultGasOverheadType>,
   ) {
     const { defaultGasOverheads } = config;
@@ -274,6 +334,12 @@ export class BundlerSimulationAndValidationService {
         + ov.perUserOp
         + ov.perUserOpWord * packed.length,
     );
+
+    // calculate offset for Arbitrum
+    if (chainId === 421613) {
+      // const data = await calcGasPrice(entryPointContract.address, userOp);
+      // console.log('data', data);
+    }
     return ret;
   }
 }

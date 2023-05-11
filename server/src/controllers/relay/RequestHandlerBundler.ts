@@ -9,13 +9,10 @@ import {
   getUserOperationReceipt,
   getSupportedEntryPoints,
   getUserOperationsByApiKey,
+  getGasAndGasPrices,
 } from './BundlerRelay.ts';
-import { fetchGasPrice } from './FetchGasPrice';
 
-export const bundlerRequestHandler = async (
-  req: Request,
-  res: Response,
-) => {
+export const bundlerRequestHandler = async (req: Request, res: Response) => {
   const { method } = req.body;
   let response;
   switch (method) {
@@ -38,8 +35,9 @@ export const bundlerRequestHandler = async (
     case EthMethodType.CHAIN_ID:
       response = await getChainId(req, res);
       break;
-    case EthMethodType.GAS_PRICE:
-      response = await fetchGasPrice(req, res);
+    case EthMethodType.GAS_AND_GAS_PRICES:
+      response = await getGasAndGasPrices(req, res);
+      break;
     case EthMethodType.GET_USER_OPERATIONS_BY_API_KEY:
       response = await getUserOperationsByApiKey(req, res);
       break;

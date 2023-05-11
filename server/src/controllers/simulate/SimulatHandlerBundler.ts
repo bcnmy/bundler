@@ -45,7 +45,7 @@ export const simulateBundlerTransaction = () => async (
           message: `Method: ${method} does not require simulation`,
         };
         break;
-      case EthMethodType.GAS_PRICE:
+      case EthMethodType.GAS_AND_GAS_PRICES:
         response = {
           code: STATUSES.SUCCESS,
           message: `Method: ${method} does not require simulation`,
