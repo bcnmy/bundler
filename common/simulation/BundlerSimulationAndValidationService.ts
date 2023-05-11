@@ -15,6 +15,7 @@ import {
 } from '../types';
 import { fillEntity, packUserOp, parseError } from '../utils';
 import RpcError from '../utils/rpc-error';
+import { BLOCKCHAINS } from '../constants';
 import {
   BundlerSimulationDataType,
   EstimateUserOperationGasDataType,
@@ -280,8 +281,15 @@ export class BundlerSimulationAndValidationService {
       deadline = BigNumber.from(returnInfo.deadline);
     }
 
+    const simulateUserOp = {
+      ...fullUserOp,
+      callGasLimit: '0x00',
+      maxFeePerGas: '0x00',
+      maxPriorityFeePerGas: '0x00',
+      preVerificationGas: '0x00',
+    };
     const preVerificationGas = await BundlerSimulationAndValidationService.calcPreVerificationGas(
-      userOp,
+      simulateUserOp,
       chainId,
       entryPointContract,
     );
@@ -336,7 +344,11 @@ export class BundlerSimulationAndValidationService {
     );
 
     // calculate offset for Arbitrum
-    if (chainId === 421613) {
+    if (
+      chainId === BLOCKCHAINS.ARBITRUM_GOERLI_TESTNET
+      || BLOCKCHAINS.ARBITRUM_NOVA_MAINNET
+      || BLOCKCHAINS.ARBITRUM_ONE_MAINNET
+    ) {
       const data = await calcGasPrice(entryPointContract.address, userOp);
       ret += data;
     }

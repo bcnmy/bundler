@@ -10,7 +10,7 @@ import {
   getSupportedEntryPoints,
   getUserOperationsByApiKey,
   getGasAndGasPrices,
-} from './BundlerRelay.ts';
+} from './BundlerRelay';
 
 export const bundlerRequestHandler = async (req: Request, res: Response) => {
   const { method } = req.body;

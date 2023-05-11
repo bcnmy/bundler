@@ -4,7 +4,7 @@ import { STATUSES } from '../../middleware';
 import { relayAATransaction } from './AARelay';
 import { relayGaslessFallbackTransaction } from './GaslessFallbackRelay';
 import { relaySCWTransaction } from './SCWRelay';
-import { getGasAndGasPrices } from './BundlerRelay.ts/GetGasAndGasPrices';
+import { getGasAndGasPrices } from './BundlerRelay/GetGasAndGasPrices';
 
 export const requestHandler = async (
   req: Request,

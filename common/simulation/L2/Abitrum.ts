@@ -17,7 +17,7 @@ export const calcGasPrice = async (
   userOp: UserOperationType,
 ): Promise<number> => {
   try {
-    log.info('Calculating gas price for user operation');
+    log.info('Calculating gas price for user operation', userOp);
     const simulateValidationCallData = new ethers.utils.Interface(
       abi.entryPointAbi,
     ).encodeFunctionData('simulateValidation', [entryPointAddress, userOp]);
