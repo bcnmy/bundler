@@ -19,7 +19,7 @@ export const simulateTransaction = () => async (
       response = await simulateSCWTransaction(req);
     } else if (method === TransactionMethodType.GASLESS_FALLBACK) {
       response = await simulateGaslessFallbackTransaction(req);
-    } else if (method === EthMethodType.GAS_PRICE) {
+    } else if (method === EthMethodType.GAS_AND_GAS_PRICES) {
       return next();
     }
     if (!response) {

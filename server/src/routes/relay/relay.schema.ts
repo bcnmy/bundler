@@ -116,9 +116,19 @@ export const transactionResubmitSchema = object.keys({
   gasPrice: number.required().error(new Error('gasPrice is required')),
 });
 
-export const gasPriceRequestSchema = object.keys({
-  method: string.regex(/eth_getUserOpGasPrices/),
+const PartialUserOp = object.keys({
+  sender: string.regex(/^0x[a-fA-F0-9]{40}$/).required().error(new Error('sender address is required')),
+  nonce: string.required().error(new Error('nonce is required and should be a hex string')),
+  initCode: string,
+  callData: string.required().error(new Error('callData is required and should be a hex string')),
+  paymasterAndData: string,
+});
+
+export const gasAndGasPricesRequestSchema = object.keys({
+  method: string.regex(/eth_getUserOpGasFields/),
   params: array.items(
+    PartialUserOp,
+    entryPointAddress,
     number.required().error(new Error('chainId is required')),
   ),
   jsonrpc: string.required().error(new Error('jsonrpc is required')),
