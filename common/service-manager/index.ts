@@ -48,6 +48,7 @@ import {
 import {
   AASimulationService,
   BundlerSimulationAndValidationService,
+  BundlerGasEstimationService,
   GaslessFallbackSimulationService,
   SCWSimulationService,
 } from '../simulation';
@@ -96,6 +97,10 @@ const aaSimulatonServiceMap: {
 
 const bundlerSimulatonAndValidationServiceMap: {
   [chainId: number]: BundlerSimulationAndValidationService
+} = {};
+
+const bundlerGasEstimationServiceMap: {
+  [chainId: number]: BundlerGasEstimationService
 } = {};
 
 const scwSimulationServiceMap: {
@@ -541,6 +546,11 @@ let statusService: IStatusService;
         bundlerSimulatonAndValidationServiceMap[chainId] = new BundlerSimulationAndValidationService(
           networkService,
         );
+
+        // eslint-disable-next-line max-len
+        bundlerGasEstimationServiceMap[chainId] = new BundlerGasEstimationService(
+          networkService,
+        );
         log.info(`Bundler consumer, relay service, simulation and validation service setup complete for chainId: ${chainId}`);
       }
     }
@@ -560,6 +570,7 @@ export {
   feeOptionMap,
   aaSimulatonServiceMap,
   bundlerSimulatonAndValidationServiceMap,
+  bundlerGasEstimationServiceMap,
   scwSimulationServiceMap,
   gaslessFallbackSimulationServiceMap,
   entryPointMap,
