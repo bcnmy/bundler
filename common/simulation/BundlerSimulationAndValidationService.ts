@@ -15,14 +15,12 @@ import {
 } from '../types';
 import { fillEntity, packUserOp, parseError } from '../utils';
 import RpcError from '../utils/rpc-error';
-import { BLOCKCHAINS } from '../constants';
 import {
   BundlerSimulationDataType,
   EstimateUserOperationGasDataType,
   EstimateUserOperationGasReturnType,
   SimulationResponseType,
 } from './types';
-import { calcGasPrice } from './L2/Abitrum';
 
 const log = logger(module);
 export class BundlerSimulationAndValidationService {
@@ -336,22 +334,13 @@ export class BundlerSimulationAndValidationService {
     const callDataCost = packed
       .map((x) => (x === 0 ? ov.zeroByte : ov.nonZeroByte))
       .reduce((sum, x) => sum + x);
-    let ret = Math.round(
+    const ret = Math.round(
       callDataCost
         + ov.fixed / ov.bundleSize
         + ov.perUserOp
         + ov.perUserOpWord * packed.length,
     );
 
-    // calculate offset for Arbitrum
-    if (
-      chainId === BLOCKCHAINS.ARBITRUM_GOERLI_TESTNET
-      || BLOCKCHAINS.ARBITRUM_NOVA_MAINNET
-      || BLOCKCHAINS.ARBITRUM_ONE_MAINNET
-    ) {
-      const data = await calcGasPrice(entryPointContract.address, userOp);
-      ret += data;
-    }
     return ret;
   }
 }

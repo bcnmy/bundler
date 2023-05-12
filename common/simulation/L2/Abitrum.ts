@@ -6,7 +6,7 @@ import {
   NODE_INTERFACE_ADDRESS,
 } from '@arbitrum/sdk/dist/lib/dataEntities/constants';
 import { UserOperationType } from '../../types';
-import { abi } from '../../../config/static-config.json';
+// import { abi } from '../../../config/static-config.json';
 import { config } from '../../../config';
 import { logger } from '../../log-config';
 
@@ -15,15 +15,17 @@ const log = logger(module);
 export const calcGasPrice = async (
   entryPointAddress: string,
   userOp: UserOperationType,
+  chainId: number,
 ): Promise<number> => {
   try {
     log.info('Calculating gas price for user operation', userOp);
-    const simulateValidationCallData = new ethers.utils.Interface(
-      abi.entryPointAbi,
-    ).encodeFunctionData('simulateValidation', [entryPointAddress, userOp]);
+    // const simulateValidationCallData = new ethers.utils.Interface(
+    //   abi.entryPointAbi,
+    // ).encodeFunctionData('simulateValidation', [entryPointAddress, userOp]);
+    const simulateValidationCallData = '0x';
 
     const baseL2Provider = ethers.providers.getDefaultProvider(
-      config.chains.provider[421613],
+      config.chains.provider[chainId],
     );
     // Instantiation of the ArbGasInfo and NodeInterface objects
     const arbGasInfo = ArbGasInfo__factory.connect(
