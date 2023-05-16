@@ -53,7 +53,7 @@ export class BundlerGasEstimationService {
     let callGasLimit = 0;
     if (userOp.callData === '0x') {
       callGasLimit = 21000;
-    } else if (userOp.initCode) {
+    } else if (userOp.initCode !== '0x') {
       // wallet not deployed yet
       callGasLimit = 600000;
     } else {
