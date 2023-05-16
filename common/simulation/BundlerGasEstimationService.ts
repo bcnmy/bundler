@@ -36,7 +36,7 @@ export class BundlerGasEstimationService {
     const deployerAddress = initCode.substring(0, 42);
     const deployerCallData = `0x${initCode.substring(42)}`;
     return this.networkService
-      .estimateCallGas(deployerAddress, sender, deployerCallData)
+      .estimateCallGas(sender, deployerAddress, deployerCallData)
       .then((callGasLimitResponse) => callGasLimitResponse.toNumber())
       .catch((error) => {
         const message = error.message.match(/reason="(.*?)"/)?.at(1) ?? 'execution reverted';
@@ -53,7 +53,7 @@ export class BundlerGasEstimationService {
     let callGasLimit = 0;
     if (userOp.callData === '0x') {
       callGasLimit = 21000;
-    } else if (userOp.initCode) {
+    } else if (userOp.initCode !== '0x') {
       // wallet not deployed yet
       callGasLimit = 600000;
     } else {
@@ -74,7 +74,7 @@ export class BundlerGasEstimationService {
 
     // 2. verificationGasLimit
     const initGas = await this.estimateCreationGas(
-      userOp.sender,
+      entryPointContract.address,
       userOp.initCode,
     );
     const DefaultGasLimits = {
