@@ -122,7 +122,7 @@ const PartialUserOp = object.keys({
   initCode: string,
   callData: string.required().error(new Error('callData is required and should be a hex string')),
   paymasterAndData: string,
-});
+}).unknown(); // Allow additional keys;
 
 export const gasAndGasPricesRequestSchema = object.keys({
   method: string.regex(/eth_getUserOpGasFields/),
