@@ -13,13 +13,13 @@
     "5": ["AA", "SCW", "GASLESS_FALLBACK", "BUNDLER"],
     "137": ["AA", "SCW", "GASLESS_FALLBACK", "BUNDLER"],
     "80001": ["AA", "SCW", "GASLESS_FALLBACK", "BUNDLER"],
-    "1442": ["AA", "BUNDLER"],
-    "1101": ["AA", "BUNDLER"],
-    "421613": ["AA", "BUNDLER"],
-    "42161": ["AA", "BUNDLER"],
-    "42170": ["AA", "BUNDLER"],
-    "97": ["AA", "SCW", "GASLESS_FALLBACK"],
-    "56": ["AA", "SCW"]
+    "1442": ["AA", "SCW", "BUNDLER"],
+    "1101": ["AA", "SCW", "BUNDLER"],
+    "421613": ["AA", "SCW", "BUNDLER"],
+    "42161": ["AA", "SCW", "BUNDLER"],
+    "42170": ["AA", "SCW", "BUNDLER"],
+    "97": ["AA", "SCW", "BUNDLER"],
+    "56": ["AA", "SCW", "BUNDLER"]
   },
   "chains": {
     "currency": {
