@@ -1,14 +1,15 @@
 {
   "socketService": {
-    "wssUrl": "wss://sdk-testing-ws.staging.biconomy.io/connection/websocket",
-    "httpUrl": "https://sdk-testing-ws.staging.biconomy.io/api"
+    "wssUrl": "wss://sdk-ws.prod.biconomy.io/connection/websocket",
+    "httpUrl": "https://sdk-ws.prod.biconomy.io/api"
   },
   "cacheService": {
     "lockTTL": 10000
   },
-  "supportedNetworks": [5, 80001, 137, 97, 1442, 421613],
-  "EIP1559SupportedNetworks": [5, 80001, 137, 421613],
+  "supportedNetworks": [1, 5, 80001, 137, 97, 56, 1442, 1101, 421613, 42161, 42170],
+  "EIP1559SupportedNetworks": [1, 5, 80001, 137, 421613, 42161, 42170],
   "supportedTransactionType": {
+    "1": ["AA", "SCW", "GASLESS_FALLBACK", "BUNDLER"],
     "5": ["AA", "SCW", "GASLESS_FALLBACK", "BUNDLER"],
     "137": ["AA", "SCW", "GASLESS_FALLBACK", "BUNDLER"],
     "80001": ["AA", "SCW", "GASLESS_FALLBACK", "BUNDLER"],
@@ -163,11 +164,11 @@
       "80001": 0.1,
       "97": 0.1,
       "1": 1,
-      "56": 0.1,
-      "1442": 0.1,
-      "1101": 0.1,
-      "421613": 0.1,
-      "42161": 0.1,
+      "56": 0.2,
+      "1442": 0.2,
+      "1101": 0.2,
+      "421613": 0.2,
+      "42161": 0.2,
       "42170": 0.1
     },
     "fundingBalanceThreshold": {
@@ -190,11 +191,11 @@
       "97": 1,
       "1": 1,
       "56": 1,
-      "1442": 3,
-      "1101": 3,
-      "421613": 3,
-      "42161": 3,
-      "42170": 3
+      "1442": 2,
+      "1101": 2,
+      "421613": 2,
+      "42161": 2,
+      "42170": 2
     }
   }],
   "transaction": {
