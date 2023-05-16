@@ -8,9 +8,26 @@ import { EthGasPrice } from './networks/EthGasPrice';
 import { GoerliGasPrice } from './networks/GoerliGasPrice';
 import { MaticGasPrice } from './networks/MaticGasPrice';
 import { MumbaiGasPrice } from './networks/MumbaiGasPrice';
+import { PolygonZKEvmTestnetGasPrice } from './networks/PolygonZKEvmTestnetGasPrice';
+import { ArbGoerliTestnetGasPrice } from './networks/ArbGoerliTestnetGasPrice';
+import { BSCMainnetGasPrice } from './networks/BSCMainnetGasPrice';
+import { PolygonZKEvmMainnetGasPrice } from './networks/PolygonZKEvmMainnetGasPrice';
+import { ArbOneMainnetGasPrice } from './networks/ArbOneMainnetGasPrice';
+import { ArbNovaMainnetGasPrice } from './networks/ArbNovaMainnetGasPrice';
 
 export type GasPriceServiceType =
-MaticGasPrice | GoerliGasPrice | MumbaiGasPrice | EthGasPrice | BSCTestnetGasPrice | undefined;
+MaticGasPrice
+| GoerliGasPrice
+| MumbaiGasPrice
+| EthGasPrice
+| BSCTestnetGasPrice
+| BSCMainnetGasPrice
+| PolygonZKEvmTestnetGasPrice
+| ArbGoerliTestnetGasPrice
+| PolygonZKEvmMainnetGasPrice
+| ArbOneMainnetGasPrice
+| ArbNovaMainnetGasPrice
+| undefined;
 export class GasPriceManager implements IGasPriceManager<GasPriceServiceType> {
   cacheService: ICacheService;
 
@@ -46,6 +63,38 @@ export class GasPriceManager implements IGasPriceManager<GasPriceServiceType> {
         return new MumbaiGasPrice(this.cacheService, this.networkService, this.options);
       case 97:
         return new BSCTestnetGasPrice(this.cacheService, this.networkService, this.options);
+      case 56:
+        return new BSCMainnetGasPrice(this.cacheService, this.networkService, this.options);
+      case 1442:
+        return new PolygonZKEvmTestnetGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
+      case 1101:
+        return new PolygonZKEvmMainnetGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
+      case 421613:
+        return new ArbGoerliTestnetGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
+      case 42161:
+        return new ArbOneMainnetGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
+      case 42170:
+        return new ArbNovaMainnetGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
       default:
         return undefined;
     }

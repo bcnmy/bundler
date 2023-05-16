@@ -20,6 +20,11 @@ import { RedisCacheService } from '../cache';
 import { Mongo, TransactionDAO } from '../db';
 import { UserOperationDAO } from '../db/dao/UserOperationDAO';
 import { GasPriceManager } from '../gas-price';
+import { BSCTestnetGasPrice } from '../gas-price/networks/BSCTestnetGasPrice';
+import { EthGasPrice } from '../gas-price/networks/EthGasPrice';
+import { GoerliGasPrice } from '../gas-price/networks/GoerliGasPrice';
+import { MaticGasPrice } from '../gas-price/networks/MaticGasPrice';
+import { MumbaiGasPrice } from '../gas-price/networks/MumbaiGasPrice';
 import { IQueue } from '../interface';
 import { logger } from '../log-config';
 import { relayerManagerTransactionTypeNameMap } from '../maps';
@@ -43,6 +48,7 @@ import {
 import {
   AASimulationService,
   BundlerSimulationAndValidationService,
+  BundlerGasEstimationService,
   GaslessFallbackSimulationService,
   SCWSimulationService,
 } from '../simulation';
@@ -76,12 +82,25 @@ const feeOptionMap: {
   [chainId: number]: FeeOption;
 } = {};
 
+const gasPriceServiceMap: {
+  [chainId: number]: MaticGasPrice |
+  GoerliGasPrice |
+  MumbaiGasPrice |
+  EthGasPrice |
+  BSCTestnetGasPrice |
+  undefined;
+} = {};
+
 const aaSimulatonServiceMap: {
   [chainId: number]: AASimulationService;
 } = {};
 
 const bundlerSimulatonAndValidationServiceMap: {
   [chainId: number]: BundlerSimulationAndValidationService
+} = {};
+
+const bundlerGasEstimationServiceMap: {
+  [chainId: number]: BundlerGasEstimationService
 } = {};
 
 const scwSimulationServiceMap: {
@@ -178,6 +197,7 @@ let statusService: IStatusService;
     if (!gasPriceService) {
       throw new Error(`Gasprice service is not setup for chainId ${chainId}`);
     }
+    gasPriceServiceMap[chainId] = gasPriceService;
     log.info(`Gas price service setup complete for chainId: ${chainId}`);
 
     log.info(`Setting up transaction queue for chainId: ${chainId}`);
@@ -526,6 +546,11 @@ let statusService: IStatusService;
         bundlerSimulatonAndValidationServiceMap[chainId] = new BundlerSimulationAndValidationService(
           networkService,
         );
+
+        // eslint-disable-next-line max-len
+        bundlerGasEstimationServiceMap[chainId] = new BundlerGasEstimationService(
+          networkService,
+        );
         log.info(`Bundler consumer, relay service, simulation and validation service setup complete for chainId: ${chainId}`);
       }
     }
@@ -545,6 +570,7 @@ export {
   feeOptionMap,
   aaSimulatonServiceMap,
   bundlerSimulatonAndValidationServiceMap,
+  bundlerGasEstimationServiceMap,
   scwSimulationServiceMap,
   gaslessFallbackSimulationServiceMap,
   entryPointMap,
@@ -554,4 +580,5 @@ export {
   userOperationDao,
   statusService,
   networkServiceMap,
+  gasPriceServiceMap,
 };
