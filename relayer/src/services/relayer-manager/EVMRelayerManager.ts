@@ -439,7 +439,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
         try {
           let gasLimitIndex = 0;
           // different gas limit for arbitrum
-          if ([42161, 421611].includes(this.chainId)) gasLimitIndex = 1;
+          if ([42161, 421611, 42170].includes(this.chainId)) gasLimitIndex = 1;
 
           const gasLimit = this.gasLimitMap[gasLimitIndex];
 
