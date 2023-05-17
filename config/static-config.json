@@ -492,9 +492,11 @@
       "137": ["MATIC", "WMATIC"],
       "80001": ["MATIC", "WMATIC"],
       "97": ["BNB", "WBNB"],
-      "420": ["ETH", "WETH"],
+      "56": ["BNB", "WBNB"],
+      "1101": ["ETH", "WETH"],
       "421613": ["ETH", "WETH"],
-      "43113": ["AVAX", "WAVAX"]
+      "42161": ["ETH", "WETH"],
+      "42170": ["ETH", "WETH"]
     },
     "nativeChainIds": {
       "WETH": 1,
