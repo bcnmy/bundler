@@ -3,7 +3,7 @@ import axios from 'axios';
 import { BigNumber, ethers } from 'ethers';
 import EventEmitter from 'events';
 import { IEVMAccount } from '../../relayer/src/services/account';
-import { ERC20_ABI } from '../constants';
+import { ERC20_ABI, L2Networks } from '../constants';
 import { logger } from '../log-config';
 import { EVMRawTransactionType } from '../types';
 import { IERC20NetworkService, INetworkService, RpcMethod } from './interface';
@@ -106,7 +106,15 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
   async getEIP1559GasPrice(): Promise<Type2TransactionGasPriceType> {
     const feeData = await this.useProvider(RpcMethod.getEIP1159GasPrice);
     const maxFeePerGas = ethers.utils.hexValue(feeData.maxFeePerGas);
-    const maxPriorityFeePerGas = ethers.utils.hexValue(feeData.maxPriorityFeePerGas);
+    // Ethers' getFeeData function hardcodes 1.5 gwei as the minimum tip, which
+    // turns out to be too large for some L2s like Arbitrum.
+    // TODO: Can use this logic in future if we want to set a minimum tip.
+    // const minimumTip = BigNumber.from('1500000000');
+    // if (!maxPriorityFeePerGas || maxPriorityFeePerGas.lt(0)
+    //      || maxPriorityFeePerGas.gt(minimumTip)) {
+    //   maxPriorityFeePerGas = minimumTip;
+    // }
+    const maxPriorityFeePerGas = L2Networks.includes(this.chainId) ? '0x00' : ethers.utils.hexValue(feeData.maxPriorityFeePerGas);
     return {
       maxFeePerGas,
       maxPriorityFeePerGas,
