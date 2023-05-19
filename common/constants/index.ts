@@ -36,3 +36,5 @@ export enum BLOCKCHAINS {
   ARBITRUM_NOVA_MAINNET = 42170,
   GANACHE = 1337,
 }
+
+export const L2Networks = [421613, 42161, 42170];

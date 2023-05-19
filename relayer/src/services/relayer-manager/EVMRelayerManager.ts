@@ -25,6 +25,7 @@ import { EVMRelayerMetaDataType, IRelayerQueue } from '../relayer-queue';
 import { ITransactionService } from '../transaction-service/interface/ITransactionService';
 import { IRelayerManager } from './interface/IRelayerManager';
 import { EVMRelayerManagerServiceParamsType } from './types';
+import { L2Networks } from '../../../../common/constants';
 
 const log = logger(module);
 
@@ -439,7 +440,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
         try {
           let gasLimitIndex = 0;
           // different gas limit for arbitrum
-          if ([42161, 421611, 42170].includes(this.chainId)) gasLimitIndex = 1;
+          if (L2Networks.includes(this.chainId)) gasLimitIndex = 1;
 
           const gasLimit = this.gasLimitMap[gasLimitIndex];
 
