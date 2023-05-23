@@ -76,7 +76,6 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
           deadline,
           maxPriorityFeePerGas: gasPrice?.maxPriorityFeePerGas,
           maxFeePerGas: gasPrice?.maxFeePerGas,
-          gasPrice: null,
         },
       });
     }
@@ -91,9 +90,8 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
         validUntil,
         validAfter,
         deadline,
-        maxPriorityFeePerGas: null,
-        maxFeePerGas: null,
-        gasPrice,
+        maxPriorityFeePerGas: gasPrice,
+        maxFeePerGas: gasPrice,
       },
     });
   } catch (error) {
