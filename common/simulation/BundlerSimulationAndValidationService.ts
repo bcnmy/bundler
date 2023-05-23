@@ -21,6 +21,8 @@ import {
   EstimateUserOperationGasReturnType,
   SimulationResponseType,
 } from './types';
+import { BLOCKCHAINS } from '../constants';
+import { calcGasPrice } from './L2/Abitrum';
 
 const log = logger(module);
 export class BundlerSimulationAndValidationService {
@@ -30,6 +32,23 @@ export class BundlerSimulationAndValidationService {
     networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
   ) {
     this.networkService = networkService;
+  }
+
+  async estimateCreationGas(
+    sender: string,
+    initCode?: string,
+  ): Promise<number> {
+    if (initCode == null || initCode === '0x') return 0;
+    const deployerAddress = initCode.substring(0, 42);
+    const deployerCallData = `0x${initCode.substring(42)}`;
+    return this.networkService
+      .estimateCallGas(sender, deployerAddress, deployerCallData)
+      .then((callGasLimitResponse) => callGasLimitResponse.toNumber())
+      .catch((error) => {
+        const message = error.message.match(/reason="(.*?)"/)?.at(1) ?? 'execution reverted';
+        log.info(`message: ${JSON.stringify(message)}`);
+        return 0;
+      });
   }
 
   async simulateAndValidate(
@@ -195,26 +214,57 @@ export class BundlerSimulationAndValidationService {
     estimateUserOperationGasData: EstimateUserOperationGasDataType,
   ): Promise<EstimateUserOperationGasReturnType> {
     const { userOp, entryPointContract, chainId } = estimateUserOperationGasData;
+    // 1. callGasLimit
+    let callGasLimit = 0;
+    if (userOp.callData === '0x') {
+      callGasLimit = 21000;
+    } else if (userOp.initCode !== '0x') {
+      // wallet not deployed yet
+      callGasLimit = 600000;
+    } else {
+      callGasLimit = await this.networkService
+        .estimateCallGas(
+          entryPointContract.address,
+          userOp.sender,
+          userOp.callData,
+        )
+        .then((callGasLimitResponse) => callGasLimitResponse.toNumber())
+        .catch((error) => {
+          const message = error.message.match(/reason="(.*?)"/)?.at(1) ?? 'execution reverted';
+          log.info(`message: ${JSON.stringify(message)}`);
+          return 0;
+        });
+    }
+    log.info(`callGasLimit: ${callGasLimit} on chainId: ${chainId}`);
 
+    // 2. verificationGasLimit
+    const initGas = await this.estimateCreationGas(
+      entryPointContract.address,
+      userOp.initCode,
+    );
+    const DefaultGasLimits = {
+      validateUserOpGas: 100000,
+      validatePaymasterUserOpGas: 100000,
+      postOpGas: 10877,
+    };
+    const validateUserOpGas = DefaultGasLimits.validatePaymasterUserOpGas
+      + DefaultGasLimits.validateUserOpGas;
+    const { postOpGas } = DefaultGasLimits;
+
+    let verificationGasLimit = BigNumber.from(validateUserOpGas)
+      .add(initGas)
+      .toNumber();
+
+    if (BigNumber.from(postOpGas).gt(verificationGasLimit)) {
+      verificationGasLimit = postOpGas;
+    }
+    log.info(
+      `verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId}`,
+    );
+    // validAfter, validUntil, deadline
     const entryPointStatic = entryPointContract.connect(
       this.networkService.ethersProvider.getSigner(config.zeroAddress),
     );
-
-    const callGasLimit = await this.networkService
-      .estimateCallGas(
-        entryPointContract.address,
-        userOp.sender,
-        userOp.callData,
-      )
-      .then((callGasLimitResponse) => callGasLimitResponse.toNumber())
-      .catch((error) => {
-        const message = error.message.match(/reason="(.*?)"/)?.at(1) ?? 'execution reverted';
-        log.info(`message: ${JSON.stringify(message)}`);
-        return 0;
-      });
-
-    log.info(`callGasLimit: ${callGasLimit} on chainId: ${chainId}`);
-
     const fullUserOp = {
       ...userOp,
       // default values for missing fields.
@@ -258,7 +308,6 @@ export class BundlerSimulationAndValidationService {
       };
     }
 
-    const { preOpGas } = returnInfo;
     let { validAfter, validUntil } = returnInfo;
 
     validAfter = BigNumber.from(validAfter);
@@ -269,23 +318,22 @@ export class BundlerSimulationAndValidationService {
     if (validAfter === BigNumber.from(0)) {
       validAfter = undefined;
     }
-
-    const verificationGasLimit = BigNumber.from(preOpGas).toNumber();
-    log.info(
-      `verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId}`,
-    );
     let deadline: any;
     if (returnInfo.deadline) {
       deadline = BigNumber.from(returnInfo.deadline);
     }
 
     const simulateUserOp = {
-      ...fullUserOp,
+      ...userOp,
+      // default values for missing fields.
+      signature:
+        '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b', // a valid signature
       callGasLimit: '0x00',
       maxFeePerGas: '0x00',
       maxPriorityFeePerGas: '0x00',
       preVerificationGas: '0x00',
     };
+    // 3. preVerificationGas
     const preVerificationGas = await BundlerSimulationAndValidationService.calcPreVerificationGas(
       simulateUserOp,
       chainId,
@@ -334,13 +382,26 @@ export class BundlerSimulationAndValidationService {
     const callDataCost = packed
       .map((x) => (x === 0 ? ov.zeroByte : ov.nonZeroByte))
       .reduce((sum, x) => sum + x);
-    const ret = Math.round(
+    let ret = Math.round(
       callDataCost
         + ov.fixed / ov.bundleSize
         + ov.perUserOp
         + ov.perUserOpWord * packed.length,
     );
 
+    // calculate offset for Arbitrum
+    if (
+      chainId === BLOCKCHAINS.ARBITRUM_GOERLI_TESTNET
+      || BLOCKCHAINS.ARBITRUM_NOVA_MAINNET
+      || BLOCKCHAINS.ARBITRUM_ONE_MAINNET
+    ) {
+      const data = await calcGasPrice(
+        entryPointContract.address,
+        userOp,
+        chainId,
+      );
+      ret += data;
+    }
     return ret;
   }
 }
