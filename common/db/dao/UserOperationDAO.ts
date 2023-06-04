@@ -12,6 +12,25 @@ export class UserOperationDAO implements IUserOperationDAO {
     await this._db.getUserOperation(chainId).insertMany([userOperationData]);
   }
 
+  async getUserOperationsDataByApiKey(
+    chainId: number,
+    bundlerApiKey: string,
+    startTime: number,
+    endTime: number,
+    limit: number,
+    offSet: number,
+  ): Promise<Array<IUserOperation>> {
+    const data = await this._db.getUserOperation(chainId).aggregate([
+      {
+        $match: {
+          $and: [{ 'metaData.dappAPIKey': bundlerApiKey }, { creationTime: { $gte: startTime } }, { creationTime: { $lte: endTime } }],
+        },
+      },
+    ]).skip(offSet)
+      .limit(limit);
+    return data;
+  }
+
   async getUserOperationDataByUserOpHash(
     chainId: number,
     userOpHash: string,
@@ -39,6 +58,18 @@ export class UserOperationDAO implements IUserOperationDAO {
     const data = await this._db.getUserOperation(chainId).find({
       transactionId,
     }).sort({ _id: -1 }).lean();
+    return data;
+  }
+
+  async getUserOperationsCountByApiKey(
+    chainId: number,
+    bundlerApiKey: string,
+    startTime: number,
+    endTime: number,
+  ): Promise<number> {
+    const data = await this._db.getUserOperation(chainId).count(
+      { 'metaData.dappAPIKey': bundlerApiKey, creationTime: { $gte: startTime, $lte: endTime } },
+    );
     return data;
   }
 }

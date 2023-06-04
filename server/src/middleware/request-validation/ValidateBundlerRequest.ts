@@ -6,8 +6,10 @@ import {
   bundlerEstimateUserOpGasRequestSchema,
   bundlerGetUserOpByHashRequestSchema,
   bundlerGetUserOpReceiptRequestSchema,
+  bundlerGetUserOpsByApiKeyRequestSchema,
   bundlerSendUserOpRequestSchema,
   bundlerSupportedEntryPointsRequestSchema,
+  gasAndGasPricesRequestSchema,
 } from '../../routes/bundler/bundler.schema';
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../RequestHelpers';
 
@@ -39,6 +41,12 @@ export const validateBundlerRequest = () => async (
         break;
       case EthMethodType.CHAIN_ID:
         validationResponse = bundlerChainIdRequestSchema.validate(req.body);
+        break;
+      case EthMethodType.GAS_AND_GAS_PRICES:
+        validationResponse = gasAndGasPricesRequestSchema.validate(req.body);
+        break;
+      case EthMethodType.GET_USER_OPERATIONS_BY_API_KEY:
+        validationResponse = bundlerGetUserOpsByApiKeyRequestSchema.validate(req.body);
         break;
       default:
         return res.status(STATUSES.BAD_REQUEST).send({

@@ -25,6 +25,7 @@ import { EVMRelayerMetaDataType, IRelayerQueue } from '../relayer-queue';
 import { ITransactionService } from '../transaction-service/interface/ITransactionService';
 import { IRelayerManager } from './interface/IRelayerManager';
 import { EVMRelayerManagerServiceParamsType } from './types';
+import { L2Networks } from '../../../../common/constants';
 
 const log = logger(module);
 
@@ -145,7 +146,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
     const activeRelayer = await this.relayerQueue.pop();
     if (activeRelayer) {
       activeRelayer.pendingCount += 1;
-      this.transactionProcessingRelayerMap[activeRelayer.address] = activeRelayer;
+      this.transactionProcessingRelayerMap[activeRelayer.address.toLowerCase()] = activeRelayer;
       if (
         activeRelayer.pendingCount
         > this.pendingTransactionCountThreshold - 5
@@ -171,13 +172,18 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
     let relayerData = this.relayerQueue
       .list()
       .find((relayer) => relayer.address === address);
+
+    log.info(`relayerQueue consists: ${JSON.stringify(this.relayerQueue.list())}`);
+    log.info(`Relayer: ${address} for Relayer Manager: ${this.name} on chainId: ${this.chainId} with data: ${JSON.stringify(relayerData)} from relayerQueue`);
+
     if (!relayerData) {
-      log.info(`Relayer: ${relayerAddress} not found in queue fetching from transactionProcessingRelayerMap for Relayer Manager: ${this.name} on chainId: ${this.chainId}`);
       // if relayer is performing transaction then it would not be available in relayer queue
+      log.info(`transactionProcessingRelayerMap consists: ${JSON.stringify(this.transactionProcessingRelayerMap)}`);
       relayerData = this.transactionProcessingRelayerMap[address];
+      log.info(`Relayer: ${address} for Relayer Manager: ${this.name} on chainId: ${this.chainId} with data: ${JSON.stringify(relayerData)} from transactionProcessingRelayerMap`);
     }
     if (relayerData) {
-      log.info(`Relayer: ${relayerAddress} found in queue fetching from transactionProcessingRelayerMap for Relayer Manager: ${this.name} on chainId: ${this.chainId}`);
+      log.info(`Reducing pending count for relayer: ${address} for Relayer Manager: ${this.name} on chainId: ${this.chainId}`);
       if (relayerData.pendingCount > 0) {
         relayerData.pendingCount -= 1;
       }
@@ -249,6 +255,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
         this.minRelayerCount - this.relayerQueue.size()
         >= this.inactiveRelayerCountThreshold
       ) {
+        log.info(`Creating ${this.newRelayerInstanceCount} new relayers for Relayer Manager: ${this.name} on chainId: ${this.chainId}`);
         const newRelayers = await this.createRelayers(
           this.newRelayerInstanceCount,
         );
@@ -344,7 +351,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
             `Balance of relayer ${relayerAddress} is ${balance} and nonce is ${nonce} on chainId: ${this.chainId} with threshold ${this.fundingBalanceThreshold}`,
           );
           this.relayerQueue.push({
-            address: relayer.getPublicKey(),
+            address: relayer.getPublicKey().toLowerCase(),
             pendingCount: 0,
             nonce,
             balance,
@@ -433,7 +440,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
         try {
           let gasLimitIndex = 0;
           // different gas limit for arbitrum
-          if ([42161, 421611].includes(this.chainId)) gasLimitIndex = 1;
+          if (L2Networks.includes(this.chainId)) gasLimitIndex = 1;
 
           const gasLimit = this.gasLimitMap[gasLimitIndex];
 

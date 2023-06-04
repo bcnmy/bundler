@@ -12,6 +12,7 @@
     "test": "jest --detectOpenHandles"
   },
   "dependencies": {
+    "@arbitrum/sdk": "^3.1.3",
     "@slack/web-api": "^6.8.0",
     "@types/crypto-js": "^4.1.1",
     "amqplib": "^0.10.3",

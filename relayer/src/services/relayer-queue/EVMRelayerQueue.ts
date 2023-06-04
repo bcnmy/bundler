@@ -1,6 +1,6 @@
 import { Mutex } from 'async-mutex';
 import { IRelayerQueue } from './interface/IRelayerQueue';
-import { SortEVMRelayerByNonce } from './strategy';
+import { SortEVMRelayerByBalance } from './strategy';
 import { EVMRelayerMetaDataType } from './types';
 import { logger } from '../../../../common/log-config';
 
@@ -58,7 +58,7 @@ export class EVMRelayerQueue implements IRelayerQueue<EVMRelayerMetaDataType> {
   async push(item: EVMRelayerMetaDataType): Promise<void> {
     await pushMutex.runExclusive(() => {
       this.items.push(item);
-      this.items = SortEVMRelayerByNonce.performAlgorithm(
+      this.items = SortEVMRelayerByBalance.performAlgorithm(
         this.items,
       );
       log.info(`Relayer queue after push: ${JSON.stringify(this.items)}`);

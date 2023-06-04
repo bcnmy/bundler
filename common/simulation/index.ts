@@ -2,3 +2,4 @@ export * from './AASimulationService';
 export * from './SCWSimualtionService';
 export * from './GaslessFallbackSimulationService';
 export * from './BundlerValidationService';
+export * from './BundlerGasEstimationService';

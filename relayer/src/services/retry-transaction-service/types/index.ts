@@ -1,4 +1,5 @@
 import { INetworkService } from '../../../../../common/network';
+import { INotificationManager } from '../../../../../common/notification/interface';
 import { IQueue } from '../../../../../common/queue';
 import { RetryTransactionQueueData } from '../../../../../common/queue/types';
 import { EVMRawTransactionType } from '../../../../../common/types';
@@ -10,6 +11,7 @@ export type EVMRetryTransactionServiceParamsType = {
   transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>,
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
   retryTransactionQueue: IQueue<RetryTransactionQueueData>,
+  notificationManager: INotificationManager,
   options: {
     chainId: number,
     EVMRelayerManagerMap: {

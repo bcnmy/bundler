@@ -51,4 +51,18 @@ export interface IUserOperationDAO {
     chainId: number,
     transactionId: string
   ): Promise<IUserOperation[]>
+  getUserOperationsDataByApiKey(
+    chainId: number,
+    bundlerApiKey: string,
+    startTime: number,
+    endTime: number,
+    limit: number,
+    offSet: number,
+  ): Promise<Array<IUserOperation>>
+  getUserOperationsCountByApiKey(
+    chainId: number,
+    bundlerApiKey: string,
+    startTime: number,
+    endTime: number,
+  ): Promise<number>
 }

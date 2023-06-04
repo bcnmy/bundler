@@ -1,10 +1,11 @@
 import { NextFunction, Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
-import { TransactionMethodType } from '../../../../common/types';
+import { EthMethodType, TransactionMethodType } from '../../../../common/types';
 import {
   aaRequestSchema,
   crossChainRequestSchema,
   gaslessFallbackRequestSchema,
+  gasAndGasPricesRequestSchema,
   scwRequestSchema,
 } from '../../routes/relay/relay.schema';
 import { STATUSES } from '../RequestHelpers';
@@ -31,6 +32,9 @@ export const validateRelayRequest = () => async (
         break;
       case TransactionMethodType.CROSS_CHAIN:
         validationResponse = crossChainRequestSchema.validate(req.body);
+        break;
+      case EthMethodType.GAS_AND_GAS_PRICES:
+        validationResponse = gasAndGasPricesRequestSchema.validate(req.body);
         break;
       default:
         return res.status(STATUSES.BAD_REQUEST).send({

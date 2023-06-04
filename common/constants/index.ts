@@ -21,3 +21,20 @@ export const ERC20_ABI = [{
 }, {
   anonymous: false, inputs: [{ indexed: true, name: 'from', type: 'address' }, { indexed: true, name: 'to', type: 'address' }, { indexed: false, name: 'value', type: 'uint256' }], name: 'Transfer', type: 'event',
 }];
+
+export enum BLOCKCHAINS {
+  MAINNET = 1,
+  GOERLI = 5,
+  POLYGON_MAINNET = 137,
+  POLYGON_MUMBAI = 80001,
+  BSC_TESTNET = 97,
+  BSC_MAINNET = 56,
+  POLYGON_ZKEVM_TESTNET = 1442,
+  POLYGON_ZKEVM_MAINNET = 1101,
+  ARBITRUM_GOERLI_TESTNET = 421613,
+  ARBITRUM_ONE_MAINNET = 42161,
+  ARBITRUM_NOVA_MAINNET = 42170,
+  GANACHE = 1337,
+}
+
+export const L2Networks = [421613, 42161, 42170];

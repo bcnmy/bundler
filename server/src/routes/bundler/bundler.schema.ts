@@ -103,3 +103,26 @@ export const bundlerChainIdRequestSchema = object.keys({
   jsonrpc: string.required().error(new Error('jsonrpc is required')),
   id: number.required().error(new Error('id is required')),
 });
+
+export const gasAndGasPricesRequestSchema = object.keys({
+  method: string.regex(/eth_getUserOpGasFields/),
+  params: array,
+  jsonrpc: string.required().error(new Error('jsonrpc is required')),
+  id: number.required().error(new Error('id is required')),
+});
+
+const getUserOperationsByApiKeyBody = object.keys({
+  startTime: string,
+  endTime: string,
+  limit: number,
+  offset: number,
+});
+// eth_getUserOperationsByApiKey
+export const bundlerGetUserOpsByApiKeyRequestSchema = object.keys({
+  method: string.regex(/eth_getUserOperationsByApiKey/),
+  params: array.items(alternatives.try(
+    getUserOperationsByApiKeyBody,
+  )),
+  jsonrpc: string.required().error(new Error('jsonrpc is required')),
+  id: number.required().error(new Error('id is required')),
+});
