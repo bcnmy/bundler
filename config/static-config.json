@@ -17,8 +17,8 @@
     "421613": ["AA", "BUNDLER"],
     "42161": ["AA", "BUNDLER"],
     "42170": ["AA", "BUNDLER"],
-    "97": ["AA", "SCW", "GASLESS_FALLBACK"],
-    "56": ["AA", "SCW"]
+    "97": ["AA", "SCW", "BUNDLER", "GASLESS_FALLBACK"],
+    "56": ["AA", "SCW", "BUNDLER"]
   },
   "chains": {
     "currency": {
