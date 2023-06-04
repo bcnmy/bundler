@@ -48,7 +48,6 @@ import {
 import {
   AASimulationService,
   BundlerValidationService,
-  BundlerSimulationAndValidationService,
   BundlerGasEstimationService,
   GaslessFallbackSimulationService,
   SCWSimulationService,
