@@ -66,7 +66,7 @@ import {
   FallbackGasTankMapType,
 } from '../types';
 import { MempoolManager } from '../mempool-manager';
-import { BundleExecutionManager } from '../bundle-execution-manager';
+import { BundlingExecutionManager } from '../bundling-execution-manager';
 import { BundlingService } from '../bundling-service';
 import { IMempoolManager } from '../mempool-manager/interface';
 
@@ -99,7 +99,7 @@ const aaSimulatonServiceMap: {
   [chainId: number]: AASimulationService;
 } = {};
 
-const userOperationValidationServiceMap: {
+const userOpValidationServiceMap: {
   [chainId: number]: UserOpValidationService
 } = {};
 
@@ -544,7 +544,7 @@ let statusService: IStatusService;
         } = config;
 
         const bundlingService = new BundlingService({
-          bundlerValidationService: userOperationValidationServiceMap[chainId],
+          userOpValidationService: userOpValidationServiceMap[chainId],
           mempoolManagerMap: mempoolManagerMap[chainId],
           networkService,
           options: {
@@ -571,9 +571,12 @@ let statusService: IStatusService;
         const bundlerRelayService = new BundlerRelayService(bundlerQueue);
         routeTransactionToRelayerMap[chainId][type] = bundlerRelayService;
 
-        userOperationValidationServiceMap[chainId] = new UserOpValidationService(
+        userOpValidationServiceMap[chainId] = new UserOpValidationService({
           networkService,
-        );
+          options: {
+            chainId,
+          },
+        });
 
         // eslint-disable-next-line max-len
         bundlerGasEstimationServiceMap[chainId] = new BundlerGasEstimationService(
@@ -583,18 +586,19 @@ let statusService: IStatusService;
 
         log.info(`Setting up Bundle Execution Manager for Bundler on chainId: ${chainId}`);
 
-        const bundleExecutionManger = new BundleExecutionManager({
+        const bundlingExecutionManger = new BundlingExecutionManager({
           bundlingService,
           mempoolManagerMap: mempoolManagerMap[chainId],
           routeTransactionToRelayerMap,
           entryPointMap,
+          userOpValidationService: userOpValidationServiceMap[chainId],
           options: {
             chainId,
             autoBundleInterval: bundlingConfig.autoBundlingInterval[chainId],
           },
         });
         log.info(`Bundle Execution Manager setup complete for Bundler on chainId: ${chainId}`);
-        bundleExecutionManger.initAutoBundling();
+        bundlingExecutionManger.initAutoBundling();
       }
     }
   }
@@ -613,7 +617,7 @@ export {
   mempoolManagerMap,
   feeOptionMap,
   aaSimulatonServiceMap,
-  userOperationValidationServiceMap,
+  userOpValidationServiceMap,
   bundlerGasEstimationServiceMap,
   scwSimulationServiceMap,
   gaslessFallbackSimulationServiceMap,

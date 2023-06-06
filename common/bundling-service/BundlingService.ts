@@ -1,7 +1,7 @@
 /* eslint-disable no-continue */
 /* eslint-disable no-await-in-loop */
 import { BigNumber, Contract } from 'ethers';
-import { IBundlerValidationService } from '../simulation/interface';
+import { IUserOpValidationService } from '../simulation/interface';
 import { EVMRawTransactionType, UserOperationType } from '../types';
 import { IBundlingService } from './interface';
 import { BundlingServiceParamsType } from './types';
@@ -9,11 +9,12 @@ import { INetworkService } from '../network';
 import { IEVMAccount } from '../../relayer/src/services/account';
 import { SortUserOpsByFeeAndGas } from './sorting-algorithm';
 import { IMempoolManager } from '../mempool-manager/interface';
+import { SimulateValidationReturnType } from '../simulation/types';
 
 export class BundlingService implements IBundlingService {
   chainId: number;
 
-  bundlerValidationService: IBundlerValidationService;
+  userOpValidationService: IUserOpValidationService;
 
   mempoolManagerMap: {
     [entryPointAddress: string]: IMempoolManager
@@ -27,7 +28,7 @@ export class BundlingService implements IBundlingService {
 
   constructor(bundlingServiceParams: BundlingServiceParamsType) {
     const {
-      bundlerValidationService,
+      userOpValidationService,
       mempoolManagerMap,
       networkService,
       options,
@@ -35,7 +36,7 @@ export class BundlingService implements IBundlingService {
     this.chainId = options.chainId;
     this.maxBundleGas = options.maxBundleGas;
     this.mempoolManagerMap = mempoolManagerMap;
-    this.bundlerValidationService = bundlerValidationService;
+    this.userOpValidationService = userOpValidationService;
     this.networkService = networkService;
 
     const sortUserOpsByFeeAndGas = new SortUserOpsByFeeAndGas({
@@ -55,18 +56,20 @@ export class BundlingService implements IBundlingService {
     let totalGas = BigNumber.from(0);
 
     for (const userOp of sortedUserOps) {
-      const validationResult = await this.bundlerValidationService.validateUserOperation({
-        userOp,
-        entryPointContract,
-        chainId: this.chainId,
-      });
+      let validationResult: SimulateValidationReturnType;
 
-      if (!validationResult.isValidationSuccessful) {
+      try {
+        validationResult = await this.userOpValidationService.simulateValidation({
+          userOp,
+          entryPointContract,
+        });
+      } catch (error) {
         this.mempoolManagerMap[entryPointContract.address].removeUserOp(userOp);
         continue;
       }
+
       const userOpGasCost = BigNumber.from(
-        validationResult.data.entityInfo?.returnInfo.preOpGas,
+        validationResult.returnInfo.preOpGas,
       ).add(userOp.callGasLimit);
       const newTotalGas = totalGas.add(userOpGasCost);
       if (newTotalGas.gt(this.maxBundleGas)) {

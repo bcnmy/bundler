@@ -1,12 +1,11 @@
 import { IMempoolManager } from '../../mempool-manager/interface';
 
-export interface IBundleExecutionManager {
+export interface IBundlingExecutionManager {
   chainId: number;
   autoBundleInterval: number;
   mempoolManagerMap: {
     [entryPointAddress: string]: IMempoolManager
   };
 
-  initAutoBundling(): Promise<void>
   attemptBundle(force: boolean): Promise<void>
 }

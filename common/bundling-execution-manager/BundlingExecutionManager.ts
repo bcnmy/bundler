@@ -1,11 +1,14 @@
+/* eslint-disable no-await-in-loop */
 import { IBundlingService } from '../bundling-service/interface';
 import { IMempoolManager } from '../mempool-manager/interface';
 import { BundlerRelayService } from '../relay-service';
-import { EntryPointMapType, UserOperationType } from '../types';
-import { IBundleExecutionManager } from './interface/IBundleExecutionManager';
+import { UserOpValidationService } from '../simulation';
+import { EntryPointMapType, TransactionType, UserOperationType } from '../types';
+import { generateTransactionId } from '../utils';
+import { IBundlingExecutionManager } from './interface/IBundlingExecutionManager';
 import { BundleExecutionManagerParamsType } from './types';
 
-export class BundleExecutionManager implements IBundleExecutionManager {
+export class BundlingExecutionManager implements IBundlingExecutionManager {
   chainId: number;
 
   autoBundleInterval: number;
@@ -21,6 +24,8 @@ export class BundleExecutionManager implements IBundleExecutionManager {
     };
   };
 
+  userOpValidationService: UserOpValidationService;
+
   entryPointMap: EntryPointMapType = {};
 
   bundlingService: IBundlingService;
@@ -30,6 +35,7 @@ export class BundleExecutionManager implements IBundleExecutionManager {
       bundlingService,
       mempoolManagerMap,
       routeTransactionToRelayerMap,
+      userOpValidationService,
       entryPointMap,
       options,
     } = bundleExecutionManagerParams;
@@ -38,6 +44,7 @@ export class BundleExecutionManager implements IBundleExecutionManager {
     this.bundlingService = bundlingService;
     this.mempoolManagerMap = mempoolManagerMap;
     this.routeTransactionToRelayerMap = routeTransactionToRelayerMap;
+    this.userOpValidationService = userOpValidationService;
     this.entryPointMap = entryPointMap;
   }
 
@@ -47,7 +54,7 @@ export class BundleExecutionManager implements IBundleExecutionManager {
     }, this.autoBundleInterval * 1000);
   }
 
-  async attemptBundle(force: boolean = true): Promise<void> {
+  async attemptBundle(force: boolean = false): Promise<void> {
     for (const entryPointAddress of Object.keys(this.mempoolManagerMap)) {
       const mempoolManager = this.mempoolManagerMap[entryPointAddress];
       if (
@@ -67,18 +74,28 @@ export class BundleExecutionManager implements IBundleExecutionManager {
           return;
         }
 
-        this.bundlingService.createBundle(userOpsFromMempool, entryPointContract);
+        const userOps = await this.bundlingService.createBundle(
+          userOpsFromMempool,
+          entryPointContract,
+        );
+
+        const gasLimitForHandleOps = await this.userOpValidationService.simulateHandleOps({
+          userOps,
+          entryPointContract,
+        });
+
+        const transactionId = generateTransactionId(JSON.stringify(userOps));
 
         this.routeTransactionToRelayerMap[this.chainId].BUNDLER
           .sendTransactionToRelayer({
             to: entryPointAddress,
             value: '0x',
-            data: '0x',
-            gasLimit: '1000000',
-            type: 'BUNDLER',
+            data: '0x', // will be updated on consumer side
+            gasLimit: gasLimitForHandleOps,
+            type: TransactionType.BUNDLER,
             chainId: this.chainId,
-            transactionId: 'random',
-            mempoolEntries,
+            transactionId,
+            userOps,
           });
       }
     }

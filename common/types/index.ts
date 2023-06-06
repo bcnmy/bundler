@@ -110,7 +110,7 @@ export type BundlerTransactionMessageType = {
   chainId: number;
   value: string;
   transactionId: string;
-  mempoolEntries?: MempoolEntry[]
+  userOps?: UserOperationType[]
 };
 
 export type SCWTransactionMessageType = {

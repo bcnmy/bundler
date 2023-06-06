@@ -35,7 +35,6 @@ export const addUserOperationToMempool = async (req: Request, res: Response) => 
       signature,
     } = userOp;
 
-    // TODO event also emits paymaster
     const paymaster = getPaymasterFromPaymasterAndData(paymasterAndData);
 
     if (!routeTransactionToRelayerMap[chainIdInNum][TransactionType.BUNDLER]) {
@@ -44,7 +43,7 @@ export const addUserOperationToMempool = async (req: Request, res: Response) => 
         error: `${TransactionType.BUNDLER} method not supported for chainId: ${chainId}`,
       });
     }
-    const response = await mempoolManagerMap[chainIdInNum][entryPointAddress].addUserOp(
+    const response = mempoolManagerMap[chainIdInNum][entryPointAddress].addUserOp(
       userOp,
       userOpHash,
     );
@@ -77,7 +76,7 @@ export const addUserOperationToMempool = async (req: Request, res: Response) => 
     }
     return res.status(STATUSES.SUCCESS).json({
       jsonrpc: '2.0',
-      id: 1, // TODO change to sequential id
+      id: 4337,
       result: userOpHash,
     });
   } catch (error) {
