@@ -1,6 +1,6 @@
 import { Request } from 'express';
 import { logger } from '../../../../common/log-config';
-import { bundlerValidationServiceMap, entryPointMap } from '../../../../common/service-manager';
+import { userOperationValidationServiceMap, entryPointMap } from '../../../../common/service-manager';
 import { parseError } from '../../../../common/utils';
 import { STATUSES } from '../../middleware';
 
@@ -14,18 +14,7 @@ export const validateBundlerTransaction = async (req: Request) => {
     const { chainId } = req.params;
     log.info(`chainId from request params: ${chainId}`);
 
-    const entryPointContracts = entryPointMap[parseInt(chainId, 10)];
-
-    let entryPointContract;
-    for (let entryPointContractIndex = 0;
-      entryPointContractIndex < entryPointContracts.length;
-      entryPointContractIndex += 1) {
-      if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
-       === entryPointAddress.toLowerCase()) {
-        entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
-        break;
-      }
-    }
+    const entryPointContract = entryPointMap[parseInt(chainId, 10)][entryPointAddress];
     if (!entryPointContract) {
       return {
         code: STATUSES.BAD_REQUEST,
@@ -33,21 +22,21 @@ export const validateBundlerTransaction = async (req: Request) => {
       };
     }
 
-    const bundlerSimulationAndValidationResponse = await bundlerValidationServiceMap[
+    const response = await userOperationValidationServiceMap[
       parseInt(chainId, 10)
-    ].validateUserOperation({ userOp, entryPointContract, chainId: parseInt(chainId, 10) });
+    ].validate({ userOp, entryPointContract, chainId: parseInt(chainId, 10) });
 
-    log.info(`Bundler simulation and validation response: ${JSON.stringify(bundlerSimulationAndValidationResponse)}`);
+    log.info(`UserOp validation response: ${JSON.stringify(response)}`);
 
-    if (!bundlerSimulationAndValidationResponse.isValidationSuccessful) {
-      const { message, code } = bundlerSimulationAndValidationResponse;
+    if (!response.isValidationSuccessful) {
+      const { message, code } = response;
       log.info(`message: ${message} and code: ${code} from bundlerSimulationAndValidationResponse for userOp: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
       return {
         code: code || STATUSES.BAD_REQUEST,
         message,
       };
     }
-    req.body.params[2] = bundlerSimulationAndValidationResponse.data.userOpHash;
+    req.body.params[2] = response.data.userOpHash;
     log.info(`Transaction successfully simulated and validated for userOp: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
     return {
       code: STATUSES.SUCCESS,

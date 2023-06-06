@@ -137,10 +137,7 @@ type ChainIdSupportedTransactionType = {
 };
 
 type EntryPointDataConfigType = {
-  [key: number]: Array<{
-    abi: Array<any>,
-    address: string,
-  }>
+  [address: string]: Array<any>
 };
 
 type FallbackGasTankDataConfigType = {
@@ -165,7 +162,6 @@ type CacheServiceConfigType = {
 };
 
 type AbiConfigType = {
-  entryPointAbi: Array<any>,
   smartWalletAbi: Array<any>,
   multiSendAbi: Array<any>,
   multiSendCallOnlyAbi: Array<any>

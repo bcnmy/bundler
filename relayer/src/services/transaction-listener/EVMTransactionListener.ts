@@ -152,18 +152,8 @@ ITransactionPublisher<TransactionQueueMessageType> {
       for (let userOpIndex = 0; userOpIndex < userOps.length; userOpIndex += 1) {
         const { userOpHash, entryPoint } = userOps[userOpIndex];
 
-        const entryPointContracts = this.entryPointMap[this.chainId];
+        const entryPointContract = this.entryPointMap[this.chainId][entryPoint];
 
-        let entryPointContract;
-        for (let entryPointContractIndex = 0;
-          entryPointContractIndex < entryPointContracts.length;
-          entryPointContractIndex += 1) {
-          if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
-           === entryPoint.toLowerCase()) {
-            entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
-            break;
-          }
-        }
         if (entryPointContract) {
           const userOpReceipt = await getUserOperationReceiptForDataSaving(
             this.chainId,
@@ -273,18 +263,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       for (let userOpIndex = 0; userOpIndex < userOps.length; userOpIndex += 1) {
         const { userOpHash, entryPoint } = userOps[userOpIndex];
 
-        const entryPointContracts = this.entryPointMap[this.chainId];
-
-        let entryPointContract;
-        for (let entryPointContractIndex = 0;
-          entryPointContractIndex < entryPointContracts.length;
-          entryPointContractIndex += 1) {
-          if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
-           === entryPoint.toLowerCase()) {
-            entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
-            break;
-          }
-        }
+        const entryPointContract = this.entryPointMap[this.chainId][entryPoint];
 
         if (entryPointContract) {
           const userOpReceipt = await getUserOperationReceiptForDataSaving(

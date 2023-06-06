@@ -57,19 +57,8 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
 
       if (activeRelayer) {
         const { userOp, to } = transactionDataReceivedFromQueue;
-        const entryPointContracts = this.entryPointMap[this.chainId];
 
-        // TODO Test this via making it a function
-        let entryPointContract;
-        for (let entryPointContractIndex = 0;
-          entryPointContractIndex < entryPointContracts.length;
-          entryPointContractIndex += 1) {
-          if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
-           === to.toLowerCase()) {
-            entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
-            break;
-          }
-        }
+        const entryPointContract = this.entryPointMap[this.chainId][to];
 
         log.info(`Setting active relayer: ${activeRelayer?.getPublicKey()} as beneficiary for userOp: ${JSON.stringify(userOp)}`);
 

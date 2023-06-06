@@ -4,10 +4,7 @@ import { MempoolConfigType } from '../../types';
 export type MempoolManagerParamsType = {
   options: {
     chainId: number;
-    entryPoint: {
-      address: string,
-      contract: ethers.Contract
-    }
+    entryPoint: ethers.Contract;
     mempoolConfig: MempoolConfigType
   }
 };

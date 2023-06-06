@@ -6,10 +6,7 @@ import { MempoolManagerParamsType } from './types';
 export class MempoolManager implements IMempoolManager {
   chainId: number;
 
-  entryPoint: {
-    address: string,
-    contract: ethers.Contract
-  };
+  entryPoint: ethers.Contract;
 
   mempoolConfig: MempoolConfigType;
 

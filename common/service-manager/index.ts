@@ -47,7 +47,7 @@ import {
 } from '../relay-service';
 import {
   AASimulationService,
-  BundlerValidationService,
+  UserOpValidationService,
   BundlerGasEstimationService,
   GaslessFallbackSimulationService,
   SCWSimulationService,
@@ -99,8 +99,8 @@ const aaSimulatonServiceMap: {
   [chainId: number]: AASimulationService;
 } = {};
 
-const bundlerValidationServiceMap: {
-  [chainId: number]: BundlerValidationService
+const userOperationValidationServiceMap: {
+  [chainId: number]: UserOpValidationService
 } = {};
 
 const bundlerGasEstimationServiceMap: {
@@ -172,11 +172,12 @@ let statusService: IStatusService;
     tokenService.schedule();
   }
 
+  const { entryPointData } = config;
+
   log.info(`Setting up instances for following chainIds: ${JSON.stringify(supportedNetworks)}`);
   for (const chainId of supportedNetworks) {
     log.info(`Setup of services started for chainId: ${chainId}`);
     routeTransactionToRelayerMap[chainId] = {};
-    entryPointMap[chainId] = [];
 
     if (!config.chains.provider[chainId]) {
       throw new Error(`No provider for chainId ${chainId}`);
@@ -190,6 +191,19 @@ let statusService: IStatusService;
     });
     log.info(`Network service setup complete for chainId: ${chainId}`);
     networkServiceMap[chainId] = networkService;
+
+    log.info(`Setting up entryPointMap for chainId: ${chainId}`);
+    entryPointMap[chainId] = {};
+
+    Object.keys(entryPointData).forEach((entryPointAddress: string) => {
+      const entryPointAbi = entryPointData[entryPointAddress];
+      entryPointMap[chainId][entryPointAddress] = networkService.getContract(
+        JSON.stringify(entryPointAbi),
+        entryPointAddress,
+      );
+    });
+
+    log.info(`entryPointMap setup for chainId: ${chainId}`);
 
     log.info(`Setting up gas price manager for chainId: ${chainId}`);
     const gasPriceManager = new GasPriceManager(cacheService, networkService, {
@@ -365,24 +379,6 @@ let statusService: IStatusService;
         await aaQueue.connect();
         log.info(`AA transaction queue setup complete for chainId: ${chainId}`);
 
-        const { entryPointData } = config;
-
-        for (
-          let entryPointIndex = 0;
-          entryPointIndex < entryPointData[chainId].length;
-          entryPointIndex += 1
-        ) {
-          const entryPoint = entryPointData[chainId][entryPointIndex];
-
-          entryPointMap[chainId].push({
-            address: entryPoint.address,
-            entryPointContract: networkService.getContract(
-              JSON.stringify(entryPoint.abi),
-              entryPoint.address,
-            ),
-          });
-        }
-
         log.info(`Setting up AA consumer, relay service & simulation service for chainId: ${chainId}`);
         const aaConsumer = new AAConsumer({
           queue: aaQueue,
@@ -517,38 +513,17 @@ let statusService: IStatusService;
         await bundlerQueue.connect();
         log.info(`Bundler transaction queue setup complete for chainId: ${chainId}`);
 
-        const { entryPointData } = config;
+        const {
+          mempoolConfig,
+        } = config;
 
-        for (
-          let entryPointIndex = 0;
-          entryPointIndex < entryPointData[chainId].length;
-          entryPointIndex += 1
-        ) {
-          const entryPoint = entryPointData[chainId][entryPointIndex];
-
-          entryPointMap[chainId].push({
-            address: entryPoint.address,
-            entryPointContract: networkService.getContract(
-              JSON.stringify(entryPoint.abi),
-              entryPoint.address,
-            ),
-          });
-
-          log.info(`Setting up Mempool Manager for Bundler on chainId: ${chainId}`);
-          const {
-            mempoolConfig,
-          } = config;
+        Object.keys(entryPointMap[chainId]).forEach((entryPointAddress: string) => {
+          log.info(`Setting up Mempool Manager for Bundler on chainId: ${chainId} for entryPointAddress: ${entryPointAddress}`);
 
           const mempoolManager = new MempoolManager({
             options: {
               chainId,
-              entryPoint: {
-                address: entryPoint.address,
-                contract: networkService.getContract(
-                  JSON.stringify(entryPoint.abi),
-                  entryPoint.address,
-                ),
-              },
+              entryPoint: entryPointMap[chainId][entryPointAddress],
               mempoolConfig: {
                 maxLength: mempoolConfig.maxLength[chainId],
                 minLength: mempoolConfig.minLength[chainId],
@@ -560,8 +535,8 @@ let statusService: IStatusService;
             },
           });
           log.info(`Mempool Manager setup complete for Bundler on chainId: ${chainId}`);
-          mempoolManagerMap[chainId][entryPoint.address] = mempoolManager;
-        }
+          mempoolManagerMap[chainId][entryPointAddress] = mempoolManager;
+        });
 
         log.info(`Setting up Bundling Service for Bundler on chainId: ${chainId}`);
         const {
@@ -569,7 +544,7 @@ let statusService: IStatusService;
         } = config;
 
         const bundlingService = new BundlingService({
-          bundlerValidationService: bundlerValidationServiceMap[chainId],
+          bundlerValidationService: userOperationValidationServiceMap[chainId],
           mempoolManagerMap: mempoolManagerMap[chainId],
           networkService,
           options: {
@@ -596,7 +571,7 @@ let statusService: IStatusService;
         const bundlerRelayService = new BundlerRelayService(bundlerQueue);
         routeTransactionToRelayerMap[chainId][type] = bundlerRelayService;
 
-        bundlerValidationServiceMap[chainId] = new BundlerValidationService(
+        userOperationValidationServiceMap[chainId] = new UserOpValidationService(
           networkService,
         );
 
@@ -638,6 +613,7 @@ export {
   mempoolManagerMap,
   feeOptionMap,
   aaSimulatonServiceMap,
+  userOperationValidationServiceMap,
   bundlerGasEstimationServiceMap,
   scwSimulationServiceMap,
   gaslessFallbackSimulationServiceMap,

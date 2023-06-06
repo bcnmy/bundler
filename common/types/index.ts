@@ -174,10 +174,9 @@ export type SymbolMapByChainIdType = {
 };
 
 export type EntryPointMapType = {
-  [chainId: number]: Array<{
-    address: string,
-    entryPointContract: ethers.Contract
-  }>
+  [chainId: number]:{
+    [address: string]: ethers.Contract
+  }
 };
 
 export type FallbackGasTankMapType = {

@@ -61,17 +61,7 @@ export class BundleExecutionManager implements IBundleExecutionManager {
           userOpsFromMempool.push(mempoolEntries[mempoolIndex].userOp);
         }
 
-        const entryPointContracts = this.entryPointMap[this.chainId];
-        let entryPointContract;
-        for (let entryPointContractIndex = 0;
-          entryPointContractIndex < entryPointContracts.length;
-          entryPointContractIndex += 1) {
-          if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
-           === entryPointAddress.toLowerCase()) {
-            entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
-            break;
-          }
-        }
+        const entryPointContract = this.entryPointMap[this.chainId][entryPointAddress];
 
         if (!entryPointContract) {
           return;

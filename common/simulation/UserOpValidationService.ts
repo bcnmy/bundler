@@ -1,3 +1,4 @@
+/* eslint-disable class-methods-use-this */
 import { ethers, BigNumber } from 'ethers';
 import { arrayify, hexlify } from 'ethers/lib/utils';
 import { config } from '../../config';
@@ -11,7 +12,6 @@ import { INetworkService } from '../network';
 import {
   DefaultGasOverheadType,
   EVMRawTransactionType,
-  EntityInfoType,
   UserOperationType,
 } from '../types';
 import { fillEntity, packUserOp, parseError } from '../utils';
@@ -22,10 +22,10 @@ import {
   EstimateUserOperationGasReturnType,
   BundlerValidationResponseType,
 } from './types';
-import { IBundlerValidationService } from './interface';
+import { IUserOpValidationService } from './interface';
 
 const log = logger(module);
-export class BundlerValidationService implements IBundlerValidationService {
+export class UserOpValidationService implements IUserOpValidationService {
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
 
   constructor(
@@ -34,7 +34,7 @@ export class BundlerValidationService implements IBundlerValidationService {
     this.networkService = networkService;
   }
 
-  async validateUserOperation(
+  async validate(
     vaidateUserOpData: ValidateUserOpDataType,
   ): Promise<BundlerValidationResponseType> {
     const { userOp, entryPointContract, chainId } = vaidateUserOpData;
@@ -43,14 +43,13 @@ export class BundlerValidationService implements IBundlerValidationService {
     );
 
     let isValidationSuccessful = true;
-    let entityInfo: EntityInfoType;
     log.info(`userOp: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
     try {
       const simulationResult = await entryPointStatic.callStatic
         .simulateValidation(userOp)
         .catch((e: any) => e);
       log.info(`simulationResult: ${JSON.stringify(simulationResult)}`);
-      BundlerValidationService.parseUserOpSimulationResult(
+      this.parseUserOpSimulationResult(
         userOp,
         simulationResult,
       );
@@ -117,14 +116,13 @@ export class BundlerValidationService implements IBundlerValidationService {
       isValidationSuccessful,
       data: {
         gasLimitFromSimulation: estimatedGasForUserOp,
-        entityInfo,
         userOpHash,
       },
       message: 'Success',
     };
   }
 
-  static parseUserOpSimulationResult(
+  parseUserOpSimulationResult(
     userOp: UserOperationType,
     simulationResult: any,
   ) {
@@ -195,7 +193,7 @@ export class BundlerValidationService implements IBundlerValidationService {
     };
   }
 
-  async estimateUserOperationGas(
+  async estimateGas(
     estimateUserOperationGasData: EstimateUserOperationGasDataType,
   ): Promise<EstimateUserOperationGasReturnType> {
     const { userOp, entryPointContract, chainId } = estimateUserOperationGasData;
@@ -242,7 +240,7 @@ export class BundlerValidationService implements IBundlerValidationService {
         .simulateValidation(fullUserOp)
         .catch((e: any) => e);
       log.info(`simulationResult: ${JSON.stringify(simulationResult)}`);
-      returnInfo = BundlerValidationService.parseUserOpSimulationResult(
+      returnInfo = this.parseUserOpSimulationResult(
         userOp,
         simulationResult,
       ).returnInfo;
@@ -290,7 +288,7 @@ export class BundlerValidationService implements IBundlerValidationService {
       maxPriorityFeePerGas: '0x00',
       preVerificationGas: '0x00',
     };
-    const preVerificationGas = await BundlerValidationService.calcPreVerificationGas(
+    const preVerificationGas = await this.calcPreVerificationGas(
       simulateUserOp,
       chainId,
       entryPointContract,
@@ -315,7 +313,7 @@ export class BundlerValidationService implements IBundlerValidationService {
     };
   }
 
-  static async calcPreVerificationGas(
+  async calcPreVerificationGas(
     userOp: UserOperationType,
     chainId: number,
     entryPointContract: ethers.Contract,

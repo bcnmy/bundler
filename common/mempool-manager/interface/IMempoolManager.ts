@@ -3,10 +3,7 @@ import { UserOperationType, MempoolConfigType, MempoolEntry } from '../../types'
 
 export interface IMempoolManager {
   chainId: number;
-  entryPoint: {
-    address: string,
-    contract: ethers.Contract
-  }
+  entryPoint: ethers.Contract
   mempoolConfig: MempoolConfigType;
   senderUserOpCount: { [address: string]: number };
 

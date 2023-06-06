@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { STATUSES } from '../../../middleware';
 import { logger } from '../../../../../common/log-config';
-import { bundlerValidationServiceMap, entryPointMap } from '../../../../../common/service-manager';
+import { userOperationValidationServiceMap, entryPointMap } from '../../../../../common/service-manager';
 import { parseError } from '../../../../../common/utils';
 
 const log = logger(module);
@@ -12,18 +12,8 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
     const entryPointAddress = req.body.params[1];
     const { chainId } = req.params;
 
-    const entryPointContracts = entryPointMap[parseInt(chainId, 10)];
+    const entryPointContract = entryPointMap[parseInt(chainId, 10)][entryPointAddress];
 
-    let entryPointContract;
-    for (let entryPointContractIndex = 0;
-      entryPointContractIndex < entryPointContracts.length;
-      entryPointContractIndex += 1) {
-      if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
-       === entryPointAddress.toLowerCase()) {
-        entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
-        break;
-      }
-    }
     if (!entryPointContract) {
       return {
         code: STATUSES.BAD_REQUEST,
@@ -31,9 +21,9 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
       };
     }
 
-    const estimatedUserOpGas = await bundlerValidationServiceMap[
+    const estimatedUserOpGas = await userOperationValidationServiceMap[
       parseInt(chainId, 10)
-    ].estimateUserOperationGas({ userOp, entryPointContract, chainId: parseInt(chainId, 10) });
+    ].estimateGas({ userOp, entryPointContract, chainId: parseInt(chainId, 10) });
 
     const {
       code,

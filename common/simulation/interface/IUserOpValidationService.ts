@@ -8,12 +8,12 @@ import {
   ValidateUserOpDataType,
 } from '../types';
 
-export interface IBundlerValidationService {
+export interface IUserOpValidationService {
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
-  validateUserOperation(
+  validate(
     validateUserOpData: ValidateUserOpDataType
   ): Promise<BundlerValidationResponseType>;
-  estimateUserOperationGas(
+  estimateGas(
     estimateUserOperationGasData: EstimateUserOperationGasDataType
   ): Promise<EstimateUserOperationGasReturnType>
 }
