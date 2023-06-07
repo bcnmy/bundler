@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { STATUSES } from '../../../middleware';
 import { logger } from '../../../../../common/log-config';
-import { bundlerSimulatonAndValidationServiceMap, entryPointMap } from '../../../../../common/service-manager';
+import { bundlerSimulatonAndValidationServiceMap, entryPointMap, gasPriceServiceMap } from '../../../../../common/service-manager';
 import { parseError } from '../../../../../common/utils';
 
 const log = logger(module);
@@ -57,6 +57,29 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
       deadline,
     } = data;
 
+    const gasPrice = await gasPriceServiceMap[Number(chainId)]?.getGasPrice();
+
+    if (typeof gasPrice !== 'string') {
+      log.info(
+        `Gas price for chainId: ${chainId} is: ${JSON.stringify(gasPrice)}`,
+      );
+
+      return res.status(STATUSES.SUCCESS).json({
+        jsonrpc: '2.0',
+        id: 1,
+        result: {
+          callGasLimit,
+          verificationGasLimit,
+          preVerificationGas,
+          validUntil,
+          validAfter,
+          deadline,
+          maxPriorityFeePerGas: gasPrice?.maxPriorityFeePerGas,
+          maxFeePerGas: gasPrice?.maxFeePerGas,
+        },
+      });
+    }
+
     return res.status(STATUSES.BAD_REQUEST).json({
       jsonrpc: '2.0',
       id: 1,
@@ -67,6 +90,8 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
         validUntil,
         validAfter,
         deadline,
+        maxPriorityFeePerGas: gasPrice,
+        maxFeePerGas: gasPrice,
       },
     });
   } catch (error) {
