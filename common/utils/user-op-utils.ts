@@ -211,14 +211,15 @@ export const getUserOperationReceiptForDataSaving = async (
   userOpHash: string,
   receipt: any,
   entryPointContract: ethers.Contract,
+  fromBlock: number,
 ): Promise<any> => {
   try {
     let event = [];
-
     try {
       // TODO add from and to block
       event = await entryPointContract.queryFilter(
         entryPointContract.filters.UserOperationEvent(userOpHash),
+        fromBlock,
       ) as any;
       log.info(`event: ${JSON.stringify(event)} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
       if (event[0]) {

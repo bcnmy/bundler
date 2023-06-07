@@ -84,6 +84,8 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
             return await this.ethersProvider.sendTransaction(params.tx);
           case RpcMethod.waitForTransaction:
             return await this.ethersProvider.waitForTransaction(params.transactionHash);
+          case RpcMethod.getLatestBlockNumber:
+            return await this.ethersProvider.getBlockNumber();
           default:
             return null;
         }
@@ -300,6 +302,11 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
     const erc20Contract = this.getContract(JSON.stringify(ERC20_ABI), tokenAddress);
     const decimal = await erc20Contract.decimal;
     return decimal;
+  }
+
+  async getLatesBlockNumber(): Promise<number> {
+    const blockNumber = await this.useProvider(RpcMethod.getLatestBlockNumber);
+    return blockNumber;
   }
 
   async sendRpcCall(method: string, params: Array<object>): Promise<any> {
