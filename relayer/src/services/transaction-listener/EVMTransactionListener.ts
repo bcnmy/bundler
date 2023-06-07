@@ -138,72 +138,96 @@ ITransactionPublisher<TransactionQueueMessageType> {
       } catch (error) {
         log.info(`Error in saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId} with error: ${parseError(error)}`);
       }
-    }
 
-    if (transactionType === TransactionType.BUNDLER || transactionType === TransactionType.AA) {
-      const userOps = await this.userOperationDao.getUserOpsByTransactionId(
-        this.chainId,
-        transactionId,
-      );
-      if (!userOps.length) {
-        log.info(`No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-        return;
-      }
-      for (let userOpIndex = 0; userOpIndex < userOps.length; userOpIndex += 1) {
-        const { userOpHash, entryPoint } = userOps[userOpIndex];
-
-        const entryPointContracts = this.entryPointMap[this.chainId];
-
-        let entryPointContract;
-        for (let entryPointContractIndex = 0;
-          entryPointContractIndex < entryPointContracts.length;
-          entryPointContractIndex += 1) {
-          if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
-           === entryPoint.toLowerCase()) {
-            entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
-            break;
-          }
-        }
-        if (entryPointContract) {
-          const userOpReceipt = await getUserOperationReceiptForDataSaving(
-            this.chainId,
-            userOpHash,
-            transactionReceipt,
-            entryPointContract,
-          );
-          if (!userOpReceipt) {
-            log.info(`userOpReceipt not fetched for userOpHash: ${userOpHash} on chainId: ${this.chainId}`);
-            return;
-          }
-          const {
-            success,
-            actualGasCost,
-            actualGasUsed,
-            reason,
-            logs,
-          } = userOpReceipt;
-
-          await this.userOperationDao.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
+      try {
+        log.info(`transactionType: ${transactionType} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+        if (transactionType === TransactionType.BUNDLER || transactionType === TransactionType.AA) {
+          log.info(`Getting userOps for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+          const userOps = await this.userOperationDao.getUserOpsByTransactionId(
             this.chainId,
             transactionId,
-            userOpHash,
-            {
-              transactionHash: transactionExecutionResponse?.hash,
-              receipt: transactionReceipt,
-              blockNumber: transactionReceipt.blockNumber,
-              blockHash: transactionReceipt.blockHash,
-              status: TransactionStatus.SUCCESS,
-              success,
-              actualGasCost,
-              actualGasUsed,
-              reason,
-              logs,
-            },
           );
-        } else {
-          log.info(`entryPoint: ${entryPoint} not found in entry point map`);
+          log.info(`userOps: ${JSON.stringify(userOps)} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+          if (!userOps.length) {
+            log.info(`No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+            return;
+          }
+          for (let userOpIndex = 0; userOpIndex < userOps.length; userOpIndex += 1) {
+            const { userOpHash, entryPoint } = userOps[userOpIndex];
+
+            const entryPointContracts = this.entryPointMap[this.chainId];
+
+            let entryPointContract;
+            for (let entryPointContractIndex = 0;
+              entryPointContractIndex < entryPointContracts.length;
+              entryPointContractIndex += 1) {
+              if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
+             === entryPoint.toLowerCase()) {
+                // eslint-disable-next-line max-len
+                entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
+                break;
+              }
+            }
+            if (entryPointContract) {
+              const userOpReceipt = await getUserOperationReceiptForDataSaving(
+                this.chainId,
+                userOpHash,
+                transactionReceipt,
+                entryPointContract,
+              );
+              log.info(`userOpReceipt: ${JSON.stringify(userOpReceipt)} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+              if (!userOpReceipt) {
+                log.info(`userOpReceipt not fetched for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+                return;
+              }
+              const {
+                success,
+                actualGasCost,
+                actualGasUsed,
+                reason,
+                logs,
+              } = userOpReceipt;
+
+              log.info(`Updating userOp data: ${JSON.stringify({
+                transactionHash: transactionExecutionResponse?.hash,
+                receipt: transactionReceipt,
+                blockNumber: transactionReceipt.blockNumber,
+                blockHash: transactionReceipt.blockHash,
+                status: TransactionStatus.SUCCESS,
+                success,
+                actualGasCost,
+                actualGasUsed,
+                reason,
+                logs,
+              })} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+              await this.userOperationDao.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
+                this.chainId,
+                transactionId,
+                userOpHash,
+                {
+                  transactionHash: transactionExecutionResponse?.hash,
+                  receipt: transactionReceipt,
+                  blockNumber: transactionReceipt.blockNumber,
+                  blockHash: transactionReceipt.blockHash,
+                  status: TransactionStatus.SUCCESS,
+                  success,
+                  actualGasCost,
+                  actualGasUsed,
+                  reason,
+                  logs,
+                },
+              );
+              log.info(`userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+            } else {
+              log.info(`entryPoint: ${entryPoint} not found in entry point map for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+            }
+          }
         }
+      } catch (error) {
+        log.info(`Error in saving userOp data in database for transactionId: ${transactionId} on chainId ${this.chainId} with error: ${parseError(error)}`);
       }
+    } else {
+      log.info(`No transactionExecutionResponse found for transactionId: ${transactionId} on chainId ${this.chainId}`);
     }
   }
 
@@ -259,72 +283,99 @@ ITransactionPublisher<TransactionQueueMessageType> {
       } catch (error) {
         log.info(`Error in saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId} with error: ${parseError(error)}`);
       }
-    }
 
-    if (transactionType === TransactionType.BUNDLER || transactionType === TransactionType.AA) {
-      const userOps = await this.userOperationDao.getUserOpsByTransactionId(
-        this.chainId,
-        transactionId,
-      );
-      if (!userOps.length) {
-        log.info(`No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-        return;
-      }
-      for (let userOpIndex = 0; userOpIndex < userOps.length; userOpIndex += 1) {
-        const { userOpHash, entryPoint } = userOps[userOpIndex];
+      try {
+        log.info(`transactionType: ${transactionType} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+        if (transactionType === TransactionType.BUNDLER || transactionType === TransactionType.AA) {
+          log.info(`Getting userOps for transactionId: ${transactionId} on chainId: ${this.chainId}`);
 
-        const entryPointContracts = this.entryPointMap[this.chainId];
-
-        let entryPointContract;
-        for (let entryPointContractIndex = 0;
-          entryPointContractIndex < entryPointContracts.length;
-          entryPointContractIndex += 1) {
-          if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
-           === entryPoint.toLowerCase()) {
-            entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
-            break;
-          }
-        }
-
-        if (entryPointContract) {
-          const userOpReceipt = await getUserOperationReceiptForDataSaving(
-            this.chainId,
-            userOpHash,
-            transactionReceipt,
-            entryPointContract,
-          );
-          if (!userOpReceipt) {
-            log.info(`userOpReceipt not fetched for userOpHash: ${userOpHash} on chainId: ${this.chainId}`);
-            return;
-          }
-          const {
-            success,
-            actualGasCost,
-            actualGasUsed,
-            reason,
-            logs,
-          } = userOpReceipt;
-          await this.userOperationDao.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
+          const userOps = await this.userOperationDao.getUserOpsByTransactionId(
             this.chainId,
             transactionId,
-            userOpHash,
-            {
-              transactionHash: transactionExecutionResponse?.hash,
-              receipt: transactionReceipt,
-              blockNumber: transactionReceipt.blockNumber,
-              blockHash: transactionReceipt.blockHash,
-              status: TransactionStatus.FAILED,
-              success,
-              actualGasCost,
-              actualGasUsed,
-              reason,
-              logs,
-            },
           );
-        } else {
-          log.info(`entryPoint: ${entryPoint} not found in entry point map`);
+          log.info(`userOps: ${JSON.stringify(userOps)} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+          if (!userOps.length) {
+            log.info(`No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+            return;
+          }
+          for (let userOpIndex = 0; userOpIndex < userOps.length; userOpIndex += 1) {
+            const { userOpHash, entryPoint } = userOps[userOpIndex];
+
+            const entryPointContracts = this.entryPointMap[this.chainId];
+
+            let entryPointContract;
+            for (let entryPointContractIndex = 0;
+              entryPointContractIndex < entryPointContracts.length;
+              entryPointContractIndex += 1) {
+              if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
+               === entryPoint.toLowerCase()) {
+                // eslint-disable-next-line max-len
+                entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
+                break;
+              }
+            }
+
+            if (entryPointContract) {
+              const userOpReceipt = await getUserOperationReceiptForDataSaving(
+                this.chainId,
+                userOpHash,
+                transactionReceipt,
+                entryPointContract,
+              );
+              log.info(`userOpReceipt: ${JSON.stringify(userOpReceipt)} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+              if (!userOpReceipt) {
+                log.info(`userOpReceipt not fetched for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+                return;
+              }
+              const {
+                success,
+                actualGasCost,
+                actualGasUsed,
+                reason,
+                logs,
+              } = userOpReceipt;
+
+              log.info(`Updating userOp data: ${JSON.stringify({
+                transactionHash: transactionExecutionResponse?.hash,
+                receipt: transactionReceipt,
+                blockNumber: transactionReceipt.blockNumber,
+                blockHash: transactionReceipt.blockHash,
+                status: TransactionStatus.FAILED,
+                success,
+                actualGasCost,
+                actualGasUsed,
+                reason,
+                logs,
+              })} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+
+              await this.userOperationDao.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
+                this.chainId,
+                transactionId,
+                userOpHash,
+                {
+                  transactionHash: transactionExecutionResponse?.hash,
+                  receipt: transactionReceipt,
+                  blockNumber: transactionReceipt.blockNumber,
+                  blockHash: transactionReceipt.blockHash,
+                  status: TransactionStatus.FAILED,
+                  success,
+                  actualGasCost,
+                  actualGasUsed,
+                  reason,
+                  logs,
+                },
+              );
+              log.info(`userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+            } else {
+              log.info(`entryPoint: ${entryPoint} not found in entry point map for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+            }
+          }
         }
+      } catch (error) {
+        log.info(`Error in saving userOp data in database for transactionId: ${transactionId} on chainId ${this.chainId} with error: ${parseError(error)}`);
       }
+    } else {
+      log.info(`No transactionExecutionResponse found for transactionId: ${transactionId} on chainId ${this.chainId}`);
     }
   }
 
