@@ -140,11 +140,14 @@ ITransactionPublisher<TransactionQueueMessageType> {
       }
     }
 
+    log.info(`transactionType: ${transactionType} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
     if (transactionType === TransactionType.BUNDLER || transactionType === TransactionType.AA) {
+      log.info(`Getting userOps for transactionId: ${transactionId} on chainId: ${this.chainId}`);
       const userOps = await this.userOperationDao.getUserOpsByTransactionId(
         this.chainId,
         transactionId,
       );
+      log.info(`userOps: ${JSON.stringify(userOps)} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
       if (!userOps.length) {
         log.info(`No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`);
         return;
@@ -171,8 +174,9 @@ ITransactionPublisher<TransactionQueueMessageType> {
             transactionReceipt,
             entryPointContract,
           );
+          log.info(`userOpReceipt: ${JSON.stringify(userOpReceipt)} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
           if (!userOpReceipt) {
-            log.info(`userOpReceipt not fetched for userOpHash: ${userOpHash} on chainId: ${this.chainId}`);
+            log.info(`userOpReceipt not fetched for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
             return;
           }
           const {
@@ -183,6 +187,18 @@ ITransactionPublisher<TransactionQueueMessageType> {
             logs,
           } = userOpReceipt;
 
+          log.info(`Updating userOp data: ${JSON.stringify({
+            transactionHash: transactionExecutionResponse?.hash,
+            receipt: transactionReceipt,
+            blockNumber: transactionReceipt.blockNumber,
+            blockHash: transactionReceipt.blockHash,
+            status: TransactionStatus.SUCCESS,
+            success,
+            actualGasCost,
+            actualGasUsed,
+            reason,
+            logs,
+          })} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
           await this.userOperationDao.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
             this.chainId,
             transactionId,
@@ -200,8 +216,9 @@ ITransactionPublisher<TransactionQueueMessageType> {
               logs,
             },
           );
+          log.info(`userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
         } else {
-          log.info(`entryPoint: ${entryPoint} not found in entry point map`);
+          log.info(`entryPoint: ${entryPoint} not found in entry point map for transactionId: ${transactionId} on chainId: ${this.chainId}`);
         }
       }
     }
@@ -261,11 +278,16 @@ ITransactionPublisher<TransactionQueueMessageType> {
       }
     }
 
+    log.info(`transactionType: ${transactionType} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+
     if (transactionType === TransactionType.BUNDLER || transactionType === TransactionType.AA) {
+      log.info(`Getting userOps for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+
       const userOps = await this.userOperationDao.getUserOpsByTransactionId(
         this.chainId,
         transactionId,
       );
+      log.info(`userOps: ${JSON.stringify(userOps)} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
       if (!userOps.length) {
         log.info(`No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`);
         return;
@@ -293,8 +315,9 @@ ITransactionPublisher<TransactionQueueMessageType> {
             transactionReceipt,
             entryPointContract,
           );
+          log.info(`userOpReceipt: ${JSON.stringify(userOpReceipt)} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
           if (!userOpReceipt) {
-            log.info(`userOpReceipt not fetched for userOpHash: ${userOpHash} on chainId: ${this.chainId}`);
+            log.info(`userOpReceipt not fetched for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
             return;
           }
           const {
@@ -304,6 +327,20 @@ ITransactionPublisher<TransactionQueueMessageType> {
             reason,
             logs,
           } = userOpReceipt;
+
+          log.info(`Updating userOp data: ${JSON.stringify({
+            transactionHash: transactionExecutionResponse?.hash,
+            receipt: transactionReceipt,
+            blockNumber: transactionReceipt.blockNumber,
+            blockHash: transactionReceipt.blockHash,
+            status: TransactionStatus.FAILED,
+            success,
+            actualGasCost,
+            actualGasUsed,
+            reason,
+            logs,
+          })} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+
           await this.userOperationDao.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
             this.chainId,
             transactionId,
@@ -321,8 +358,9 @@ ITransactionPublisher<TransactionQueueMessageType> {
               logs,
             },
           );
+          log.info(`userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
         } else {
-          log.info(`entryPoint: ${entryPoint} not found in entry point map`);
+          log.info(`entryPoint: ${entryPoint} not found in entry point map for transactionId: ${transactionId} on chainId: ${this.chainId}`);
         }
       }
     }
