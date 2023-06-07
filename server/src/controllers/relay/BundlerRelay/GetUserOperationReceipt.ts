@@ -30,7 +30,7 @@ export const getUserOperationReceipt = async (req: Request, res: Response) => {
       userOpHash,
     );
 
-    if (!userOperationData) {
+    if (!userOperationData || !userOperationData.receipt) {
       return res.status(STATUSES.SUCCESS).json({
         jsonrpc: '2.0',
         id: 1,

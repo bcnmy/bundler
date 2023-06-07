@@ -21,7 +21,7 @@ export const getUserOperationByHash = async (req: Request, res: Response) => {
       userOpHash,
     );
 
-    if (!userOperation) {
+    if (!userOperation || !userOperation.transactionHash) {
       return res.status(STATUSES.SUCCESS).json({
         jsonrpc: '2.0',
         id: 1,
