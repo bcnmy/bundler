@@ -170,7 +170,9 @@ ITransactionPublisher<TransactionQueueMessageType> {
             }
             if (entryPointContract) {
               const latestBlock = await this.networkService.getLatesBlockNumber();
+              log.info(`latestBlock: ${latestBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
               const fromBlock = latestBlock - 1000;
+              log.info(`fromBlock: ${fromBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
               const userOpReceipt = await getUserOperationReceiptForDataSaving(
                 this.chainId,
                 userOpHash,
@@ -320,7 +322,9 @@ ITransactionPublisher<TransactionQueueMessageType> {
 
             if (entryPointContract) {
               const latestBlock = await this.networkService.getLatesBlockNumber();
+              log.info(`latestBlock: ${latestBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
               const fromBlock = latestBlock - 1000;
+              log.info(`fromBlock: ${fromBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
               const userOpReceipt = await getUserOperationReceiptForDataSaving(
                 this.chainId,
                 userOpHash,
