@@ -9,7 +9,7 @@ import { SortUserOpsByFeeAndGas } from '../sorting-algorithm';
 export interface IBundlingService {
   chainId: number;
   userOpValidationService: IUserOpValidationService;
-  mempoolManagerMap: {
+  mempoolManager: {
     [entryPointAddress: string]: IMempoolManager
   };
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;

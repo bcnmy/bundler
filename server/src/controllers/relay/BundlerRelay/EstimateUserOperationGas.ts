@@ -23,7 +23,7 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
 
     const estimatedUserOpGas = await userOpValidationServiceMap[
       parseInt(chainId, 10)
-    ].estimateGas({ userOp, entryPointContract, chainId: parseInt(chainId, 10) });
+    ].estimateUserOperationGas({ userOp, entryPointContract, chainId: parseInt(chainId, 10) });
 
     const {
       code,

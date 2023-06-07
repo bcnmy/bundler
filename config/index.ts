@@ -107,10 +107,6 @@ export class Config implements IConfig {
         throw new Error(`Network insufficient funds error required for chain id ${chainId}`);
       }
 
-      if (!this.config.entryPointData[chainId].length) {
-        throw new Error(`Entry point data address required for chain id ${chainId}`);
-      }
-
       if (!isNumber(this.config.relayer.nodePathIndex)) {
         throw new Error('Relayer node path index required');
       }

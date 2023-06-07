@@ -24,19 +24,12 @@ export const validateBundlerTransaction = async (req: Request) => {
 
     const response = await userOpValidationServiceMap[
       parseInt(chainId, 10)
-    ].validate({ userOp, entryPointContract, chainId: parseInt(chainId, 10) });
+    ].simulateValidation({ userOp, entryPointContract });
 
     log.info(`UserOp validation response: ${JSON.stringify(response)}`);
 
-    if (!response.isValidationSuccessful) {
-      const { message, code } = response;
-      log.info(`message: ${message} and code: ${code} from bundlerSimulationAndValidationResponse for userOp: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
-      return {
-        code: code || STATUSES.BAD_REQUEST,
-        message,
-      };
-    }
-    req.body.params[2] = response.data.userOpHash;
+    // set userOpHash
+    req.body.params[2] = await entryPointContract.getUserOpHash(userOp);
     log.info(`Transaction successfully simulated and validated for userOp: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
     return {
       code: STATUSES.SUCCESS,

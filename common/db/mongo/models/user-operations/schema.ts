@@ -6,7 +6,7 @@ const { Schema } = mongoose;
 export const UserOperationSchema = new Schema<IUserOperation>({
   transactionId: {
     type: String,
-    required: true,
+    // required: true,
   },
   transactionHash: {
     type: String,

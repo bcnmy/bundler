@@ -6,7 +6,7 @@ import { EVMRawTransactionType } from '../../types';
 
 export type BundlingServiceParamsType = {
   userOpValidationService: IUserOpValidationService,
-  mempoolManagerMap: {
+  mempoolManager: {
     [entryPointAddress: string]: IMempoolManager
   },
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>

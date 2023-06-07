@@ -1,19 +1,22 @@
+/* eslint-disable no-continue */
 /* eslint-disable no-await-in-loop */
+import { logger } from '../../server/dist/common/log-config';
 import { IBundlingService } from '../bundling-service/interface';
 import { IMempoolManager } from '../mempool-manager/interface';
 import { BundlerRelayService } from '../relay-service';
 import { UserOpValidationService } from '../simulation';
 import { EntryPointMapType, TransactionType, UserOperationType } from '../types';
-import { generateTransactionId } from '../utils';
+import { generateTransactionId, parseError } from '../utils';
 import { IBundlingExecutionManager } from './interface/IBundlingExecutionManager';
 import { BundleExecutionManagerParamsType } from './types';
 
+const log = logger(module);
 export class BundlingExecutionManager implements IBundlingExecutionManager {
   chainId: number;
 
-  autoBundleInterval: number;
+  autoBundlingInterval: number;
 
-  mempoolManagerMap: {
+  mempoolManager: {
     [entryPointAddress: string]: IMempoolManager
   };
 
@@ -26,77 +29,99 @@ export class BundlingExecutionManager implements IBundlingExecutionManager {
 
   userOpValidationService: UserOpValidationService;
 
-  entryPointMap: EntryPointMapType = {};
+  entryPointMap: EntryPointMapType;
 
   bundlingService: IBundlingService;
 
   constructor(bundleExecutionManagerParams: BundleExecutionManagerParamsType) {
     const {
       bundlingService,
-      mempoolManagerMap,
+      mempoolManager,
       routeTransactionToRelayerMap,
       userOpValidationService,
       entryPointMap,
       options,
     } = bundleExecutionManagerParams;
     this.chainId = options.chainId;
-    this.autoBundleInterval = options.autoBundleInterval;
+    this.autoBundlingInterval = options.autoBundlingInterval;
     this.bundlingService = bundlingService;
-    this.mempoolManagerMap = mempoolManagerMap;
+    this.mempoolManager = mempoolManager;
     this.routeTransactionToRelayerMap = routeTransactionToRelayerMap;
     this.userOpValidationService = userOpValidationService;
     this.entryPointMap = entryPointMap;
   }
 
   async initAutoBundling(): Promise<void> {
+    log.info(`Auto bundling started on chainId: ${this.chainId} with autoBundlingInterval: ${this.autoBundlingInterval} seconds`);
     setInterval(() => {
+      log.info(`Attempting to bundle on chainId: ${this.chainId}`);
       this.attemptBundle(true);
-    }, this.autoBundleInterval * 1000);
+    }, this.autoBundlingInterval * 1000);
   }
 
   async attemptBundle(force: boolean = false): Promise<void> {
-    for (const entryPointAddress of Object.keys(this.mempoolManagerMap)) {
-      const mempoolManager = this.mempoolManagerMap[entryPointAddress];
-      if (
-        force
-        || mempoolManager.countMempoolEntries() >= mempoolManager.mempoolConfig.maxLength
-      ) {
-        const mempoolEntries = mempoolManager.getMempoolEntries();
+    for (const entryPointAddress of Object.keys(this.mempoolManager)) {
+      try {
+        log.info(`Attempting to bundle for mempool of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
+        const mempoolManager = this.mempoolManager[entryPointAddress];
+        if (
+          force
+          || mempoolManager.countMempoolEntries() >= mempoolManager.mempoolConfig.maxLength
+        ) {
+          log.info(`Getting mempool entries for mempool of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
+          const mempoolEntries = mempoolManager.getMempoolEntries();
+          log.info(`Mempool entries are: ${JSON.stringify(mempoolEntries)} of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
 
-        const userOpsFromMempool: UserOperationType[] = [];
-        for (let mempoolIndex = 0; mempoolIndex < mempoolEntries.length; mempoolIndex += 1) {
-          userOpsFromMempool.push(mempoolEntries[mempoolIndex].userOp);
-        }
+          if (mempoolEntries.length === 0) {
+            log.info(`No entries in mempool to bundle of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
+            continue;
+          }
 
-        const entryPointContract = this.entryPointMap[this.chainId][entryPointAddress];
+          const userOpsFromMempool: UserOperationType[] = [];
+          for (let mempoolIndex = 0; mempoolIndex < mempoolEntries.length; mempoolIndex += 1) {
+            userOpsFromMempool.push(mempoolEntries[mempoolIndex].userOp);
+          }
 
-        if (!entryPointContract) {
-          return;
-        }
+          const entryPointContract = this.entryPointMap[this.chainId][entryPointAddress];
 
-        const userOps = await this.bundlingService.createBundle(
-          userOpsFromMempool,
-          entryPointContract,
-        );
+          if (!entryPointContract) {
+            return;
+          }
 
-        const gasLimitForHandleOps = await this.userOpValidationService.simulateHandleOps({
-          userOps,
-          entryPointContract,
-        });
+          const userOps = await this.bundlingService.createBundle(
+            userOpsFromMempool,
+            entryPointContract,
+          );
+          log.info(`UserOps that are ready to be bundled: ${JSON.stringify(userOps)} of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
 
-        const transactionId = generateTransactionId(JSON.stringify(userOps));
-
-        this.routeTransactionToRelayerMap[this.chainId].BUNDLER
-          .sendTransactionToRelayer({
-            to: entryPointAddress,
-            value: '0x',
-            data: '0x', // will be updated on consumer side
-            gasLimit: gasLimitForHandleOps,
-            type: TransactionType.BUNDLER,
-            chainId: this.chainId,
-            transactionId,
+          if (userOps.length === 0) {
+            log.info(`No userOps to be bundled of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
+            return;
+          }
+          log.info(`Simulating handleOps for: ${JSON.stringify(userOps)} of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
+          const gasLimitForHandleOps = await this.userOpValidationService.simulateHandleOps({
             userOps,
+            entryPointContract,
           });
+          log.info(`gasLimitForHandleOps: ${gasLimitForHandleOps} of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
+
+          const transactionId = generateTransactionId(JSON.stringify(userOps));
+          log.info(`transactionId: ${transactionId} of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
+
+          this.routeTransactionToRelayerMap[this.chainId].BUNDLER
+            .sendTransactionToRelayer({
+              to: entryPointAddress,
+              value: '0x0',
+              data: '0x', // will be updated on consumer side
+              gasLimit: gasLimitForHandleOps,
+              type: TransactionType.BUNDLER,
+              chainId: this.chainId,
+              transactionId,
+              userOps,
+            });
+        }
+      } catch (error) {
+        log.error(`Error: ${parseError(error)} in bundling userOps for mempool of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
       }
     }
   }

@@ -6,7 +6,7 @@ import { EntryPointMapType } from '../../types';
 
 export type BundleExecutionManagerParamsType = {
   bundlingService: IBundlingService,
-  mempoolManagerMap: {
+  mempoolManager: {
     [entryPointAddress: string]: IMempoolManager
   }
   routeTransactionToRelayerMap: {
@@ -19,6 +19,6 @@ export type BundleExecutionManagerParamsType = {
   userOpValidationService: UserOpValidationService
   options: {
     chainId: number,
-    autoBundleInterval: number
+    autoBundlingInterval: number
   },
 };

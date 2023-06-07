@@ -10,13 +10,16 @@ import { IEVMAccount } from '../../relayer/src/services/account';
 import { SortUserOpsByFeeAndGas } from './sorting-algorithm';
 import { IMempoolManager } from '../mempool-manager/interface';
 import { SimulateValidationReturnType } from '../simulation/types';
+import { logger } from '../log-config';
+import { parseError } from '../utils';
 
+const log = logger(module);
 export class BundlingService implements IBundlingService {
   chainId: number;
 
   userOpValidationService: IUserOpValidationService;
 
-  mempoolManagerMap: {
+  mempoolManager: {
     [entryPointAddress: string]: IMempoolManager
   };
 
@@ -29,13 +32,13 @@ export class BundlingService implements IBundlingService {
   constructor(bundlingServiceParams: BundlingServiceParamsType) {
     const {
       userOpValidationService,
-      mempoolManagerMap,
+      mempoolManager,
       networkService,
       options,
     } = bundlingServiceParams;
     this.chainId = options.chainId;
     this.maxBundleGas = options.maxBundleGas;
-    this.mempoolManagerMap = mempoolManagerMap;
+    this.mempoolManager = mempoolManager;
     this.userOpValidationService = userOpValidationService;
     this.networkService = networkService;
 
@@ -51,11 +54,13 @@ export class BundlingService implements IBundlingService {
     entryPointContract: Contract,
   ): Promise<UserOperationType[]> {
     const sortedUserOps = await this.sortUserOps(userOps);
+    log.info(`Sorted userOps: ${JSON.stringify(sortedUserOps)} for entryPoint: ${entryPointContract.address}`);
     const bundle: UserOperationType[] = [];
     const senders = new Set<string>();
     let totalGas = BigNumber.from(0);
 
     for (const userOp of sortedUserOps) {
+      log.info(`Validating userOp: ${JSON.stringify(userOp)} before putting in bundle`);
       let validationResult: SimulateValidationReturnType;
 
       try {
@@ -63,22 +68,29 @@ export class BundlingService implements IBundlingService {
           userOp,
           entryPointContract,
         });
+        log.info(`validationResult: ${JSON.stringify(validationResult)} for userOp: ${JSON.stringify(userOp)}`);
       } catch (error) {
-        this.mempoolManagerMap[entryPointContract.address].removeUserOp(userOp);
+        log.info(`Error in validation: ${parseError(error)} for userOp: ${JSON.stringify(userOp)} hence not bundling and removing from mempool`);
+        this.mempoolManager[entryPointContract.address].removeUserOp(userOp);
         continue;
       }
 
       const userOpGasCost = BigNumber.from(
         validationResult.returnInfo.preOpGas,
       ).add(userOp.callGasLimit);
-      const newTotalGas = totalGas.add(userOpGasCost);
-      if (newTotalGas.gt(this.maxBundleGas)) {
+      log.info(`userOpGasCost: ${userOpGasCost} for userOp: ${JSON.stringify(userOp)}`);
+      totalGas = totalGas.add(userOpGasCost);
+      if (totalGas.gt(this.maxBundleGas)) {
         break;
       }
+      log.info(`totalGas: ${totalGas} for userOp: ${JSON.stringify(userOp)}`);
+
       senders.add(userOp.sender);
       bundle.push(userOp);
-      totalGas = newTotalGas;
+      log.info(`userOp: ${JSON.stringify(userOp)} pushed in bundle`);
     }
+    log.info(`bundle length: ${bundle.length} for userOps: ${JSON.stringify(userOps)} and entryPoint: ${entryPointContract.address}`);
+    log.info(`bundle: ${JSON.stringify(bundle)} for userOps: ${JSON.stringify(userOps)} and entryPoint: ${entryPointContract.address}`);
     return bundle;
   }
 

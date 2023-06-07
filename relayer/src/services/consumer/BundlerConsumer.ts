@@ -63,7 +63,7 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
 
         // eslint-disable-next-line no-unsafe-optional-chaining
         const { data } = await entryPointContract
-          .populateTransaction.handleOps([userOps], activeRelayer.getPublicKey());
+          .populateTransaction.handleOps(userOps, activeRelayer.getPublicKey());
         transactionDataReceivedFromQueue.data = data;
 
         await this.cacheService.set(getRetryTransactionCountKey(

@@ -6,7 +6,9 @@ const { Schema } = mongoose;
 export const BlockchainTransactionSchema = new Schema<IBlockchainTransaction>({
   transactionId: {
     type: String,
-    required: true,
+    // TODO
+    // this should be rquired: true
+    // required: true,
   },
   transactionHash: {
     type: String,

@@ -517,6 +517,8 @@ let statusService: IStatusService;
           mempoolConfig,
         } = config;
 
+        mempoolManagerMap[chainId] = {};
+
         Object.keys(entryPointMap[chainId]).forEach((entryPointAddress: string) => {
           log.info(`Setting up Mempool Manager for Bundler on chainId: ${chainId} for entryPointAddress: ${entryPointAddress}`);
 
@@ -538,14 +540,24 @@ let statusService: IStatusService;
           mempoolManagerMap[chainId][entryPointAddress] = mempoolManager;
         });
 
+        log.info(`Setting up userOp Validation Service Map on chainId: ${chainId}`);
+        const userOpValidationService = new UserOpValidationService({
+          networkService,
+          options: {
+            chainId,
+          },
+        });
+        userOpValidationServiceMap[chainId] = userOpValidationService;
+        log.info(`userOp Validation Service Map setup complete on chainId: ${chainId}`);
+
         log.info(`Setting up Bundling Service for Bundler on chainId: ${chainId}`);
         const {
           bundlingConfig,
         } = config;
 
         const bundlingService = new BundlingService({
-          userOpValidationService: userOpValidationServiceMap[chainId],
-          mempoolManagerMap: mempoolManagerMap[chainId],
+          userOpValidationService,
+          mempoolManager: mempoolManagerMap[chainId],
           networkService,
           options: {
             chainId,
@@ -571,13 +583,6 @@ let statusService: IStatusService;
         const bundlerRelayService = new BundlerRelayService(bundlerQueue);
         routeTransactionToRelayerMap[chainId][type] = bundlerRelayService;
 
-        userOpValidationServiceMap[chainId] = new UserOpValidationService({
-          networkService,
-          options: {
-            chainId,
-          },
-        });
-
         // eslint-disable-next-line max-len
         bundlerGasEstimationServiceMap[chainId] = new BundlerGasEstimationService(
           networkService,
@@ -588,13 +593,13 @@ let statusService: IStatusService;
 
         const bundlingExecutionManger = new BundlingExecutionManager({
           bundlingService,
-          mempoolManagerMap: mempoolManagerMap[chainId],
+          mempoolManager: mempoolManagerMap[chainId],
           routeTransactionToRelayerMap,
           entryPointMap,
-          userOpValidationService: userOpValidationServiceMap[chainId],
+          userOpValidationService,
           options: {
             chainId,
-            autoBundleInterval: bundlingConfig.autoBundlingInterval[chainId],
+            autoBundlingInterval: bundlingConfig.autoBundlingInterval[chainId],
           },
         });
         log.info(`Bundle Execution Manager setup complete for Bundler on chainId: ${chainId}`);

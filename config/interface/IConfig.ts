@@ -162,6 +162,7 @@ type CacheServiceConfigType = {
 };
 
 type AbiConfigType = {
+  entryPointAbi: Array<any>,
   smartWalletAbi: Array<any>,
   multiSendAbi: Array<any>,
   multiSendCallOnlyAbi: Array<any>
