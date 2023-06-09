@@ -84,7 +84,7 @@ export class BundlingService implements IBundlingService {
         break;
       }
       log.info(`totalGas: ${totalGas} for userOp: ${JSON.stringify(userOp)}`);
-
+      // TODO check on sender
       senders.add(userOp.sender);
       bundle.push(userOp);
       log.info(`userOp: ${JSON.stringify(userOp)} pushed in bundle`);

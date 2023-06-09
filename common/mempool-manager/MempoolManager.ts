@@ -14,7 +14,7 @@ export class MempoolManager implements IMempoolManager {
 
   senderUserOpCount: { [address: string]: number; } = {};
 
-  // TODO CHange it to cache so that even on server restart the mempool can persist
+  // TODO Change it to cache so that even on server restart the mempool can persist
   private mempool: MempoolEntry[] = [];
 
   constructor(mempoolManagerParams: MempoolManagerParamsType) {

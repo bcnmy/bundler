@@ -53,6 +53,7 @@ export class BundlingExecutionManager implements IBundlingExecutionManager {
 
   async initAutoBundling(): Promise<void> {
     log.info(`Auto bundling started on chainId: ${this.chainId} with autoBundlingInterval: ${this.autoBundlingInterval} seconds`);
+    // TODO it returns an id and it should be able to dynamically update autoBundleInterval
     setInterval(() => {
       log.info(`Attempting to bundle on chainId: ${this.chainId}`);
       this.attemptBundle(true);
