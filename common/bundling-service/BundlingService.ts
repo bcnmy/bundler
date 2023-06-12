@@ -60,6 +60,12 @@ export class BundlingService implements IBundlingService {
     let totalGas = BigNumber.from(0);
 
     for (const userOp of sortedUserOps) {
+      log.info(`Checking if sender: ${userOp.sender} already exists in bundle`);
+      if (!senders.has(userOp.sender.toLowerCase())) {
+        log.info(`The sender: ${userOp.sender} of userOp: ${JSON.stringify(userOp)} already has a userOp in the bundle`);
+        continue;
+      }
+
       log.info(`Validating userOp: ${JSON.stringify(userOp)} before putting in bundle`);
       let validationResult: SimulateValidationReturnType;
 
@@ -84,8 +90,7 @@ export class BundlingService implements IBundlingService {
         break;
       }
       log.info(`totalGas: ${totalGas} for userOp: ${JSON.stringify(userOp)}`);
-      // TODO check on sender
-      senders.add(userOp.sender);
+      senders.add(userOp.sender.toLowerCase());
       bundle.push(userOp);
       log.info(`userOp: ${JSON.stringify(userOp)} pushed in bundle`);
     }
