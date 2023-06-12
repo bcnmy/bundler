@@ -80,7 +80,7 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
       });
     }
 
-    return res.status(STATUSES.BAD_REQUEST).json({
+    return res.status(STATUSES.SUCCESS).json({
       jsonrpc: '2.0',
       id: 1,
       result: {

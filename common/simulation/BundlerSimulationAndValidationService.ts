@@ -35,14 +35,14 @@ export class BundlerSimulationAndValidationService {
   }
 
   async estimateCreationGas(
-    sender: string,
+    entryPointAddress: string,
     initCode?: string,
   ): Promise<number> {
     if (initCode == null || initCode === '0x') return 0;
     const deployerAddress = initCode.substring(0, 42);
     const deployerCallData = `0x${initCode.substring(42)}`;
     return this.networkService
-      .estimateCallGas(sender, deployerAddress, deployerCallData)
+      .estimateCallGas(entryPointAddress, deployerAddress, deployerCallData)
       .then((callGasLimitResponse) => callGasLimitResponse.toNumber())
       .catch((error) => {
         const message = error.message.match(/reason="(.*?)"/)?.at(1) ?? 'execution reverted';
@@ -242,6 +242,7 @@ export class BundlerSimulationAndValidationService {
       entryPointContract.address,
       userOp.initCode,
     );
+    log.info(`initGas: ${initGas} on chainId: ${chainId}`);
     const DefaultGasLimits = {
       validateUserOpGas: 100000,
       validatePaymasterUserOpGas: 100000,
@@ -274,7 +275,7 @@ export class BundlerSimulationAndValidationService {
       maxFeePerGas: BigNumber.from('0'),
       maxPriorityFeePerGas: BigNumber.from('0'),
       preVerificationGas: BigNumber.from('0'),
-      verificationGasLimit: '0xF4240', // 1000000
+      verificationGasLimit,
     };
 
     let returnInfo;
@@ -392,8 +393,8 @@ export class BundlerSimulationAndValidationService {
     // calculate offset for Arbitrum
     if (
       chainId === BLOCKCHAINS.ARBITRUM_GOERLI_TESTNET
-      || BLOCKCHAINS.ARBITRUM_NOVA_MAINNET
-      || BLOCKCHAINS.ARBITRUM_ONE_MAINNET
+      || chainId === BLOCKCHAINS.ARBITRUM_NOVA_MAINNET
+      || chainId === BLOCKCHAINS.ARBITRUM_ONE_MAINNET
     ) {
       const data = await calcGasPrice(
         entryPointContract.address,
