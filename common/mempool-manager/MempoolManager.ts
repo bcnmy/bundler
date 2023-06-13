@@ -82,6 +82,8 @@ export class MempoolManager implements IMempoolManager {
   }
 
   findUserOpBySenderAndNonce(sender: string, nonce: BigNumberish): number {
+    // First check if lock is aquired on the sender and nonce
+    // Add the redis lock
     const index = this.mempool.findIndex((entry) => (
       entry.userOp.sender.toLowerCase() === sender.toLowerCase()
       && BigNumber.from(entry.userOp.nonce).toNumber() === nonce

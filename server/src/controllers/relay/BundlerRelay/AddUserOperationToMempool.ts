@@ -35,6 +35,7 @@ export const addUserOperationToMempool = async (req: Request, res: Response) => 
       signature,
     } = userOp;
 
+    // TODO logic can be added to send specefic userOps to specefic mempool based on entities
     const paymaster = getPaymasterFromPaymasterAndData(paymasterAndData);
 
     if (!routeTransactionToRelayerMap[chainIdInNum][TransactionType.BUNDLER]) {

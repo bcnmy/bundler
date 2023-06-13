@@ -53,7 +53,9 @@ export class BundlingExecutionManager implements IBundlingExecutionManager {
 
   async initAutoBundling(): Promise<void> {
     log.info(`Auto bundling started on chainId: ${this.chainId} with autoBundlingInterval: ${this.autoBundlingInterval} seconds`);
-    // TODO it returns an id and it should be able to dynamically update autoBundleInterval
+    // TODO For later it returns an id and it
+    // should be able to dynamically update autoBundleInterval
+    // TODO add event emitter
     setInterval(() => {
       log.info(`Attempting to bundle on chainId: ${this.chainId}`);
       this.attemptBundle(true);
@@ -64,6 +66,7 @@ export class BundlingExecutionManager implements IBundlingExecutionManager {
     for (const entryPointAddress of Object.keys(this.mempoolManager)) {
       try {
         log.info(`Attempting to bundle for mempool of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
+        // TODO add mutex lock on mempool
         const mempoolManager = this.mempoolManager[entryPointAddress];
         if (
           force

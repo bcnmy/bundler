@@ -7,6 +7,6 @@ const routes = Router();
 
 routes.use('/api/v1/relay', relayApiRouter);
 routes.use('/admin', adminApiRouter);
-routes.use('/api/v1/bundler', bundlerApiRouter);
+routes.use('/api/v1/', bundlerApiRouter);
 
 export { routes };
