@@ -6,13 +6,13 @@
   "cacheService": {
     "lockTTL": 10000
   },
-  "supportedNetworks": [80001],
+  "supportedNetworks": [1, 5, 80001, 137, 421613, 42161, 42170, 97],
   "EIP1559SupportedNetworks": [1, 5, 80001, 137, 421613, 42161, 42170],
   "supportedTransactionType": {
     "1": ["AA", "SCW", "GASLESS_FALLBACK", "BUNDLER"],
     "5": ["AA", "SCW", "GASLESS_FALLBACK", "BUNDLER"],
     "137": ["AA", "SCW", "GASLESS_FALLBACK", "BUNDLER"],
-    "80001": ["BUNDLER"],
+    "80001": ["AA", "SCW", "BUNDLER"],
     "1442": ["AA", "SCW", "BUNDLER"],
     "1101": ["AA", "SCW", "BUNDLER"],
     "421613": ["AA", "SCW", "BUNDLER"],
