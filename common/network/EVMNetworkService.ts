@@ -110,7 +110,6 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
     const maxFeePerGas = ethers.utils.hexValue(feeData.maxFeePerGas);
     // Ethers' getFeeData function hardcodes 1.5 gwei as the minimum tip, which
     // turns out to be too large for some L2s like Arbitrum.
-    // ref: https://github.com/ethers-io/ethers.js/discussions/3537#discussioncomment-4206484
     // TODO: Can use this logic in future if we want to set a minimum tip.
     // const minimumTip = BigNumber.from('1500000000');
     // if (!maxPriorityFeePerGas || maxPriorityFeePerGas.lt(0)
