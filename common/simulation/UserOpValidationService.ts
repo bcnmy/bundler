@@ -23,12 +23,9 @@ import {
   SimulateValidationReturnType,
   UserOpValidationParamsType,
 } from './types';
-<<<<<<< HEAD:common/simulation/UserOpValidationService.ts
 import { IUserOpValidationService } from './interface';
-=======
 import { BLOCKCHAINS } from '../constants';
 import { calcGasPrice } from './L2/Abitrum';
->>>>>>> staging:common/simulation/BundlerSimulationAndValidationService.ts
 
 const log = logger(module);
 export class UserOpValidationService implements IUserOpValidationService {
@@ -47,34 +44,10 @@ export class UserOpValidationService implements IUserOpValidationService {
     this.chainId = options.chainId;
   }
 
-<<<<<<< HEAD:common/simulation/UserOpValidationService.ts
   async simulateValidation(
     simualteValidationParams: SimulateValidationParamsType,
   ): Promise<SimulateValidationReturnType> {
     const { userOp, entryPointContract } = simualteValidationParams;
-=======
-  async estimateCreationGas(
-    sender: string,
-    initCode?: string,
-  ): Promise<number> {
-    if (initCode == null || initCode === '0x') return 0;
-    const deployerAddress = initCode.substring(0, 42);
-    const deployerCallData = `0x${initCode.substring(42)}`;
-    return this.networkService
-      .estimateCallGas(sender, deployerAddress, deployerCallData)
-      .then((callGasLimitResponse) => callGasLimitResponse.toNumber())
-      .catch((error) => {
-        const message = error.message.match(/reason="(.*?)"/)?.at(1) ?? 'execution reverted';
-        log.info(`message: ${JSON.stringify(message)}`);
-        return 0;
-      });
-  }
-
-  async simulateAndValidate(
-    simulationData: BundlerSimulationDataType,
-  ): Promise<SimulationResponseType> {
-    const { userOp, entryPointContract, chainId } = simulationData;
->>>>>>> staging:common/simulation/BundlerSimulationAndValidationService.ts
     const entryPointStatic = entryPointContract.connect(
       this.networkService.ethersProvider.getSigner(config.zeroAddress),
     );
@@ -300,160 +273,7 @@ export class UserOpValidationService implements IUserOpValidationService {
     };
   }
 
-<<<<<<< HEAD:common/simulation/UserOpValidationService.ts
   async calcPreVerificationGas(
-=======
-  async estimateUserOperationGas(
-    estimateUserOperationGasData: EstimateUserOperationGasDataType,
-  ): Promise<EstimateUserOperationGasReturnType> {
-    const { userOp, entryPointContract, chainId } = estimateUserOperationGasData;
-    // 1. callGasLimit
-    let callGasLimit = 0;
-    if (userOp.callData === '0x') {
-      callGasLimit = 21000;
-    } else if (userOp.initCode !== '0x') {
-      // wallet not deployed yet
-      callGasLimit = 600000;
-    } else {
-      callGasLimit = await this.networkService
-        .estimateCallGas(
-          entryPointContract.address,
-          userOp.sender,
-          userOp.callData,
-        )
-        .then((callGasLimitResponse) => callGasLimitResponse.toNumber())
-        .catch((error) => {
-          const message = error.message.match(/reason="(.*?)"/)?.at(1) ?? 'execution reverted';
-          log.info(`message: ${JSON.stringify(message)}`);
-          return 0;
-        });
-    }
-    log.info(`callGasLimit: ${callGasLimit} on chainId: ${chainId}`);
-
-    // 2. verificationGasLimit
-    const initGas = await this.estimateCreationGas(
-      entryPointContract.address,
-      userOp.initCode,
-    );
-    const DefaultGasLimits = {
-      validateUserOpGas: 100000,
-      validatePaymasterUserOpGas: 100000,
-      postOpGas: 10877,
-    };
-    const validateUserOpGas = DefaultGasLimits.validatePaymasterUserOpGas
-      + DefaultGasLimits.validateUserOpGas;
-    const { postOpGas } = DefaultGasLimits;
-
-    let verificationGasLimit = BigNumber.from(validateUserOpGas)
-      .add(initGas)
-      .toNumber();
-
-    if (BigNumber.from(postOpGas).gt(verificationGasLimit)) {
-      verificationGasLimit = postOpGas;
-    }
-    log.info(
-      `verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId}`,
-    );
-    // validAfter, validUntil, deadline
-    const entryPointStatic = entryPointContract.connect(
-      this.networkService.ethersProvider.getSigner(config.zeroAddress),
-    );
-    const fullUserOp = {
-      ...userOp,
-      // default values for missing fields.
-      signature:
-        '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b', // a valid signature
-      callGasLimit: BigNumber.from('0'),
-      maxFeePerGas: BigNumber.from('0'),
-      maxPriorityFeePerGas: BigNumber.from('0'),
-      preVerificationGas: BigNumber.from('0'),
-      verificationGasLimit: '0xF4240', // 1000000
-    };
-
-    let returnInfo;
-
-    log.info(
-      `fullUserOp: ${JSON.stringify(fullUserOp)} on chainId: ${chainId}`,
-    );
-
-    try {
-      const simulationResult: any = await entryPointStatic.callStatic
-        .simulateValidation(fullUserOp)
-        .catch((e: any) => e);
-      log.info(`simulationResult: ${JSON.stringify(simulationResult)}`);
-      returnInfo = BundlerSimulationAndValidationService.parseUserOpSimulationResult(
-        userOp,
-        simulationResult,
-      ).returnInfo;
-    } catch (error: any) {
-      log.info(`Bundler Simulation failed: ${parseError(error)}`);
-      return {
-        code: error.code,
-        message: parseError(error),
-        data: {
-          preVerificationGas: 0,
-          verificationGasLimit: 0,
-          callGasLimit: 0,
-          validAfter: 0,
-          validUntil: 0,
-          deadline: 0,
-        },
-      };
-    }
-
-    let { validAfter, validUntil } = returnInfo;
-
-    validAfter = BigNumber.from(validAfter);
-    validUntil = BigNumber.from(validUntil);
-    if (validUntil === BigNumber.from(0)) {
-      validUntil = undefined;
-    }
-    if (validAfter === BigNumber.from(0)) {
-      validAfter = undefined;
-    }
-    let deadline: any;
-    if (returnInfo.deadline) {
-      deadline = BigNumber.from(returnInfo.deadline);
-    }
-
-    const simulateUserOp = {
-      ...userOp,
-      // default values for missing fields.
-      signature:
-        '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b', // a valid signature
-      callGasLimit: '0x00',
-      maxFeePerGas: '0x00',
-      maxPriorityFeePerGas: '0x00',
-      preVerificationGas: '0x00',
-    };
-    // 3. preVerificationGas
-    const preVerificationGas = await BundlerSimulationAndValidationService.calcPreVerificationGas(
-      simulateUserOp,
-      chainId,
-      entryPointContract,
-    );
-    log.info(
-      `preVerificationGas: ${preVerificationGas} on chainId: ${chainId}`,
-    );
-
-    return {
-      code: STATUSES.SUCCESS,
-      message: `Gas successfully estimated for userOp: ${JSON.stringify(
-        userOp,
-      )} on chainId: ${chainId}`,
-      data: {
-        preVerificationGas,
-        verificationGasLimit,
-        callGasLimit,
-        validAfter,
-        validUntil,
-        deadline,
-      },
-    };
-  }
-
-  static async calcPreVerificationGas(
->>>>>>> staging:common/simulation/BundlerSimulationAndValidationService.ts
     userOp: UserOperationType,
     chainId: number,
     entryPointContract: ethers.Contract,
