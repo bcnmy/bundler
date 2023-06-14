@@ -310,10 +310,14 @@ export class BundlerSimulationAndValidationService {
     }
 
     let { validAfter, validUntil } = returnInfo;
-    const { preOpGas } = returnInfo;
-    if (BigNumber.from(preOpGas).toNumber() + 100000 > verificationGasLimit) {
-      log.info(`preOpGas is more than default verificationGasLimit hence overriding on chainId: ${chainId}`);
-      verificationGasLimit = BigNumber.from(preOpGas).toNumber() + 100000;
+    try {
+      const { preOpGas } = returnInfo;
+      if (BigNumber.from(preOpGas).toNumber() + 100000 > verificationGasLimit) {
+        log.info(`preOpGas is more than default verificationGasLimit hence overriding on chainId: ${chainId}`);
+        verificationGasLimit = BigNumber.from(preOpGas).toNumber() + 100000;
+      }
+    } catch (error) {
+      log.error(`Error in getting preOpGas for chainId: ${chainId}`);
     }
     log.info(
       `post simulation verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId}`,
