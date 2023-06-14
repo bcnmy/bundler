@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { STATUSES } from '../../../middleware';
 import { logger } from '../../../../../common/log-config';
-import { userOpValidationServiceMap, entryPointMap, gasPriceServiceMap } from '../../../../../common/service-manager';
+import { userOpValidationAndGasEstimationServiceMap, entryPointMap, gasPriceServiceMap } from '../../../../../common/service-manager';
 import { parseError } from '../../../../../common/utils';
 
 const log = logger(module);
@@ -21,7 +21,7 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
       };
     }
 
-    const estimatedUserOpGas = await userOpValidationServiceMap[
+    const estimatedUserOpGas = await userOpValidationAndGasEstimationServiceMap[
       parseInt(chainId, 10)
     ].estimateUserOperationGas({ userOp, entryPointContract, chainId: parseInt(chainId, 10) });
 
@@ -70,7 +70,7 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
       });
     }
 
-    return res.status(STATUSES.BAD_REQUEST).json({
+    return res.status(STATUSES.SUCCESS).json({
       jsonrpc: '2.0',
       id: 1,
       result: {

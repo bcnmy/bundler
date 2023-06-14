@@ -16,19 +16,21 @@ import {
 import { fillEntity, packUserOp, parseError } from '../utils';
 import RpcError from '../utils/rpc-error';
 import {
-  EstimateUserOperationGasDataType,
+  EstimateUserOperationGasParamsType,
   EstimateUserOperationGasReturnType,
-  SimulateHandleOpsParamsType,
+  EstimateHandleOpsParamsType,
   SimulateValidationParamsType,
   SimulateValidationReturnType,
   UserOpValidationParamsType,
+  ParseSimulationValidationResultReturnType,
 } from './types';
-import { IUserOpValidationService } from './interface';
+import { IUserOpValidationAndGasEstimationService } from './interface';
 import { BLOCKCHAINS } from '../constants';
 import { calcGasPrice } from './L2/Abitrum';
 
 const log = logger(module);
-export class UserOpValidationService implements IUserOpValidationService {
+export class UserOpValidationAndGasEstimationService implements
+ IUserOpValidationAndGasEstimationService {
   chainId: number;
 
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
@@ -57,17 +59,17 @@ export class UserOpValidationService implements IUserOpValidationService {
       .simulateValidation(userOp)
       .catch((e: any) => e);
     log.info(`simulationResult: ${JSON.stringify(simulationResult)}`);
-    const parsedResult = this.parseUserOpSimulationResult(
+    const parsedResult = this.parseSimulateValidationResult(
       userOp,
       simulationResult,
     );
     return parsedResult;
   }
 
-  async simulateHandleOps(
-    simualteHandleOpsParams: SimulateHandleOpsParamsType,
+  async estimateHandleOps(
+    estimateHandleOpsParams: EstimateHandleOpsParamsType,
   ): Promise<string> {
-    const { userOps, entryPointContract } = simualteHandleOpsParams;
+    const { userOps, entryPointContract } = estimateHandleOpsParams;
 
     // TODO Remove this 0xc75bb3956c596efc6db663cd3e2f64929d6ab0fc
     const { data } = await entryPointContract
@@ -83,45 +85,77 @@ export class UserOpValidationService implements IUserOpValidationService {
   }
 
   async estimateUserOperationGas(
-    estimateUserOperationGasData: EstimateUserOperationGasDataType,
+    estimateUserOperationGasParams: EstimateUserOperationGasParamsType,
   ): Promise<EstimateUserOperationGasReturnType> {
-    const { userOp, entryPointContract } = estimateUserOperationGasData;
+    const { userOp, entryPointContract, chainId } = estimateUserOperationGasParams;
+    // 1. callGasLimit
+    let callGasLimit = 0;
+    if (userOp.callData === '0x') {
+      callGasLimit = 21000;
+    } else if (userOp.initCode !== '0x') {
+      // wallet not deployed yet
+      callGasLimit = 600000;
+    } else {
+      callGasLimit = await this.networkService
+        .estimateCallGas(
+          entryPointContract.address,
+          userOp.sender,
+          userOp.callData,
+        )
+        .then((callGasLimitResponse) => callGasLimitResponse.toNumber())
+        .catch((error) => {
+          const message = error.message.match(/reason="(.*?)"/)?.at(1) ?? 'execution reverted';
+          log.info(`message: ${JSON.stringify(message)}`);
+          return 0;
+        });
+    }
+    log.info(`callGasLimit: ${callGasLimit} on chainId: ${chainId}`);
 
+    // 2. verificationGasLimit
+    const initGas = await this.estimateCreationGas(
+      entryPointContract.address,
+      userOp.initCode,
+    );
+    log.info(`initGas: ${initGas} on chainId: ${chainId}`);
+    const DefaultGasLimits = {
+      validateUserOpGas: 100000,
+      validatePaymasterUserOpGas: 100000,
+      postOpGas: 10877,
+    };
+    const validateUserOpGas = DefaultGasLimits.validatePaymasterUserOpGas
+      + DefaultGasLimits.validateUserOpGas;
+    const { postOpGas } = DefaultGasLimits;
+
+    let verificationGasLimit = BigNumber.from(validateUserOpGas)
+      .add(initGas)
+      .toNumber();
+
+    if (BigNumber.from(postOpGas).gt(verificationGasLimit)) {
+      verificationGasLimit = postOpGas;
+    }
+    log.info(
+      `dummy verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId}`,
+    );
+    // validAfter, validUntil, deadline
     const entryPointStatic = entryPointContract.connect(
       this.networkService.ethersProvider.getSigner(config.zeroAddress),
     );
-
-    const callGasLimit = await this.networkService
-      .estimateCallGas(
-        entryPointContract.address,
-        userOp.sender,
-        userOp.callData,
-      )
-      .then((callGasLimitResponse) => callGasLimitResponse.toNumber())
-      .catch((error) => {
-        const message = error.message.match(/reason="(.*?)"/)?.at(1) ?? 'execution reverted';
-        log.info(`message: ${JSON.stringify(message)}`);
-        return 0;
-      });
-
-    log.info(`callGasLimit: ${callGasLimit} on chainId: ${this.chainId}`);
-
     const fullUserOp = {
       ...userOp,
       // default values for missing fields.
-      signature:
-        '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b', // a valid signature
-      callGasLimit: BigNumber.from('0'),
-      maxFeePerGas: BigNumber.from('0'),
-      maxPriorityFeePerGas: BigNumber.from('0'),
-      preVerificationGas: BigNumber.from('0'),
-      verificationGasLimit: '0xF4240', // 1000000
+      signature: userOp.signature
+        || '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b', // a valid signature
+      callGasLimit: userOp.callGasLimit || BigNumber.from('0'),
+      maxFeePerGas: userOp.maxFeePerGas || BigNumber.from('0'),
+      maxPriorityFeePerGas: userOp.maxPriorityFeePerGas || BigNumber.from('0'),
+      preVerificationGas: userOp.preVerificationGas || BigNumber.from('0'),
+      verificationGasLimit: userOp.verificationGasLimit || '3000000',
     };
 
     let returnInfo;
 
     log.info(
-      `fullUserOp: ${JSON.stringify(fullUserOp)} on chainId: ${this.chainId}`,
+      `fullUserOp: ${JSON.stringify(fullUserOp)} on chainId: ${chainId}`,
     );
 
     try {
@@ -129,7 +163,7 @@ export class UserOpValidationService implements IUserOpValidationService {
         .simulateValidation(fullUserOp)
         .catch((e: any) => e);
       log.info(`simulationResult: ${JSON.stringify(simulationResult)}`);
-      returnInfo = this.parseUserOpSimulationResult(
+      returnInfo = this.parseSimulateValidationResult(
         userOp,
         simulationResult,
       ).returnInfo;
@@ -149,8 +183,12 @@ export class UserOpValidationService implements IUserOpValidationService {
       };
     }
 
-    const { preOpGas } = returnInfo;
     let { validAfter, validUntil } = returnInfo;
+    const { preOpGas } = returnInfo;
+    verificationGasLimit = BigNumber.from(preOpGas).toNumber() + 100000;
+    log.info(
+      `post simulation verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId}`,
+    );
 
     validAfter = BigNumber.from(validAfter);
     validUntil = BigNumber.from(validUntil);
@@ -160,37 +198,36 @@ export class UserOpValidationService implements IUserOpValidationService {
     if (validAfter === BigNumber.from(0)) {
       validAfter = undefined;
     }
-
-    const verificationGasLimit = BigNumber.from(preOpGas).toNumber();
-    log.info(
-      `verificationGasLimit: ${verificationGasLimit} on chainId: ${this.chainId}`,
-    );
     let deadline: any;
     if (returnInfo.deadline) {
       deadline = BigNumber.from(returnInfo.deadline);
     }
 
     const simulateUserOp = {
-      ...fullUserOp,
-      callGasLimit: '0x00',
-      maxFeePerGas: '0x00',
-      maxPriorityFeePerGas: '0x00',
-      preVerificationGas: '0x00',
+      ...userOp,
+      // default values for missing fields.
+      signature: userOp.signature
+        || '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b', // a valid signature
+      callGasLimit: userOp.callGasLimit || '0x00',
+      maxFeePerGas: userOp.maxFeePerGas || '0x00',
+      maxPriorityFeePerGas: userOp.maxPriorityFeePerGas || '0x00',
+      preVerificationGas: userOp.preVerificationGas || '0x00',
     };
+    // 3. preVerificationGas
     const preVerificationGas = await this.calcPreVerificationGas(
       simulateUserOp,
-      this.chainId,
+      chainId,
       entryPointContract,
     );
     log.info(
-      `preVerificationGas: ${preVerificationGas} on chainId: ${this.chainId}`,
+      `preVerificationGas: ${preVerificationGas} on chainId: ${chainId}`,
     );
 
     return {
       code: STATUSES.SUCCESS,
       message: `Gas successfully estimated for userOp: ${JSON.stringify(
         userOp,
-      )} on chainId: ${this.chainId}`,
+      )} on chainId: ${chainId}`,
       data: {
         preVerificationGas,
         verificationGasLimit,
@@ -202,10 +239,27 @@ export class UserOpValidationService implements IUserOpValidationService {
     };
   }
 
-  parseUserOpSimulationResult(
+  async estimateCreationGas(
+    entryPointAddress: string,
+    initCode?: string,
+  ): Promise<number> {
+    if (initCode == null || initCode === '0x') return 0;
+    const deployerAddress = initCode.substring(0, 42);
+    const deployerCallData = `0x${initCode.substring(42)}`;
+    return this.networkService
+      .estimateCallGas(entryPointAddress, deployerAddress, deployerCallData)
+      .then((callGasLimitResponse) => callGasLimitResponse.toNumber())
+      .catch((error) => {
+        const message = error.message.match(/reason="(.*?)"/)?.at(1) ?? 'execution reverted';
+        log.info(`message: ${JSON.stringify(message)}`);
+        return 0;
+      });
+  }
+
+  parseSimulateValidationResult(
     userOp: UserOperationType,
     simulationResult: any,
-  ) {
+  ): ParseSimulationValidationResultReturnType {
     if (!simulationResult?.errorName?.startsWith('ValidationResult')) {
       log.info(
         `Inside ${!simulationResult?.errorName?.startsWith('ValidationResult')}`,
@@ -278,7 +332,7 @@ export class UserOpValidationService implements IUserOpValidationService {
     chainId: number,
     entryPointContract: ethers.Contract,
     overheads?: Partial<DefaultGasOverheadType>,
-  ) {
+  ): Promise<number> {
     const { defaultGasOverheads } = config;
     const ov = { ...defaultGasOverheads, ...(overheads ?? {}) };
     const p: UserOperationType = {

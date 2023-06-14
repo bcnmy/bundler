@@ -53,7 +53,7 @@ export type BundlerValidationResponseType = {
   code?: number,
 };
 
-export type EstimateUserOperationGasDataType = {
+export type EstimateUserOperationGasParamsType = {
   userOp: UserOperationType;
   entryPointContract: ethers.Contract;
   chainId: number;
@@ -107,7 +107,7 @@ export type SimulateValidationParamsType = {
   entryPointContract: ethers.Contract
 };
 
-export type SimulateHandleOpsParamsType = {
+export type EstimateHandleOpsParamsType = {
   userOps: UserOperationType[],
   entryPointContract: ethers.Contract
 };
@@ -118,4 +118,12 @@ export type SimulateValidationReturnType = {
   factoryInfo: StakeInfo | undefined;
   paymasterInfo: StakeInfo | undefined;
   aggregatorInfo: StakeInfo | undefined;
+};
+
+export type ParseSimulationValidationResultReturnType = {
+  returnInfo: any,
+  senderInfo: any,
+  factoryInfo: any,
+  paymasterInfo: any,
+  aggregatorInfo: any
 };

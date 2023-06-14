@@ -1,7 +1,7 @@
 /* eslint-disable no-continue */
 /* eslint-disable no-await-in-loop */
 import { BigNumber, Contract } from 'ethers';
-import { IUserOpValidationService } from '../simulation/interface';
+import { IUserOpValidationAndGasEstimationService } from '../simulation/interface';
 import { EVMRawTransactionType, UserOperationType } from '../types';
 import { IBundlingService } from './interface';
 import { BundlingServiceParamsType } from './types';
@@ -17,7 +17,7 @@ const log = logger(module);
 export class BundlingService implements IBundlingService {
   chainId: number;
 
-  userOpValidationService: IUserOpValidationService;
+  userOpValidationAndGasEstimationService: IUserOpValidationAndGasEstimationService;
 
   mempoolManager: {
     [entryPointAddress: string]: IMempoolManager
@@ -31,7 +31,7 @@ export class BundlingService implements IBundlingService {
 
   constructor(bundlingServiceParams: BundlingServiceParamsType) {
     const {
-      userOpValidationService,
+      userOpValidationAndGasEstimationService,
       mempoolManager,
       networkService,
       options,
@@ -39,7 +39,7 @@ export class BundlingService implements IBundlingService {
     this.chainId = options.chainId;
     this.maxBundleGas = options.maxBundleGas;
     this.mempoolManager = mempoolManager;
-    this.userOpValidationService = userOpValidationService;
+    this.userOpValidationAndGasEstimationService = userOpValidationAndGasEstimationService;
     this.networkService = networkService;
 
     const sortUserOpsByFeeAndGas = new SortUserOpsByFeeAndGas({
@@ -70,7 +70,7 @@ export class BundlingService implements IBundlingService {
       let validationResult: SimulateValidationReturnType;
 
       try {
-        validationResult = await this.userOpValidationService.simulateValidation({
+        validationResult = await this.userOpValidationAndGasEstimationService.simulateValidation({
           userOp,
           entryPointContract,
         });

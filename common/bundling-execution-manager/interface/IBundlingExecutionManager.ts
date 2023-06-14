@@ -1,7 +1,7 @@
 import { IBundlingService } from '../../bundling-service/interface';
 import { IMempoolManager } from '../../mempool-manager/interface';
 import { BundlerRelayService } from '../../relay-service';
-import { UserOpValidationService } from '../../simulation';
+import { IUserOpValidationAndGasEstimationService } from '../../simulation/interface';
 import { EntryPointMapType } from '../../types';
 
 export interface IBundlingExecutionManager {
@@ -17,7 +17,7 @@ export interface IBundlingExecutionManager {
     };
   };
 
-  userOpValidationService: UserOpValidationService;
+  userOpValidationAndGasEstimationService: IUserOpValidationAndGasEstimationService;
 
   entryPointMap: EntryPointMapType;
 

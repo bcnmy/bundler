@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { IUserOpValidationService } from '../../simulation/interface';
+import { IUserOpValidationAndGasEstimationService } from '../../simulation/interface';
 import { EVMRawTransactionType, UserOperationType } from '../../types';
 import { IEVMAccount } from '../../../relayer/src/services/account';
 import { IMempoolManager } from '../../mempool-manager/interface';
@@ -8,7 +8,7 @@ import { SortUserOpsByFeeAndGas } from '../sorting-algorithm';
 
 export interface IBundlingService {
   chainId: number;
-  userOpValidationService: IUserOpValidationService;
+  userOpValidationAndGasEstimationService: IUserOpValidationAndGasEstimationService;
   mempoolManager: {
     [entryPointAddress: string]: IMempoolManager
   };

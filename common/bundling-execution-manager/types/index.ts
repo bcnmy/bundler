@@ -1,7 +1,7 @@
 import { IBundlingService } from '../../bundling-service/interface';
 import { IMempoolManager } from '../../mempool-manager/interface';
 import { BundlerRelayService } from '../../relay-service';
-import { UserOpValidationService } from '../../simulation';
+import { IUserOpValidationAndGasEstimationService } from '../../simulation/interface';
 import { EntryPointMapType } from '../../types';
 
 export type BundleExecutionManagerParamsType = {
@@ -16,7 +16,7 @@ export type BundleExecutionManagerParamsType = {
     };
   }
   entryPointMap: EntryPointMapType
-  userOpValidationService: UserOpValidationService
+  userOpValidationAndGasEstimationService: IUserOpValidationAndGasEstimationService
   options: {
     chainId: number,
     autoBundlingInterval: number

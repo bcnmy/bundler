@@ -1,11 +1,11 @@
 import { IEVMAccount } from '../../../relayer/src/services/account';
 import { IMempoolManager } from '../../mempool-manager/interface';
 import { INetworkService } from '../../network';
-import { IUserOpValidationService } from '../../simulation/interface';
+import { IUserOpValidationAndGasEstimationService } from '../../simulation/interface';
 import { EVMRawTransactionType } from '../../types';
 
 export type BundlingServiceParamsType = {
-  userOpValidationService: IUserOpValidationService,
+  userOpValidationAndGasEstimationService: IUserOpValidationAndGasEstimationService,
   mempoolManager: {
     [entryPointAddress: string]: IMempoolManager
   },

@@ -1,6 +1,6 @@
 import { Request } from 'express';
 import { logger } from '../../../../common/log-config';
-import { userOpValidationServiceMap, entryPointMap } from '../../../../common/service-manager';
+import { userOpValidationAndGasEstimationServiceMap, entryPointMap } from '../../../../common/service-manager';
 import { parseError } from '../../../../common/utils';
 import { STATUSES } from '../../middleware';
 
@@ -22,7 +22,7 @@ export const validateBundlerTransaction = async (req: Request) => {
       };
     }
 
-    const response = await userOpValidationServiceMap[
+    const response = await userOpValidationAndGasEstimationServiceMap[
       parseInt(chainId, 10)
     ].simulateValidation({ userOp, entryPointContract });
 

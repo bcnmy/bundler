@@ -1,5 +1,4 @@
 export * from './AASimulationService';
 export * from './SCWSimualtionService';
 export * from './GaslessFallbackSimulationService';
-export * from './BundlerGasEstimationService';
-export * from './UserOpValidationService';
+export * from './UserOpValidationAndGasEstimationService';

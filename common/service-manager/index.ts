@@ -19,12 +19,6 @@ import { FeeOption } from '../../server/src/services';
 import { RedisCacheService } from '../cache';
 import { Mongo, TransactionDAO } from '../db';
 import { UserOperationDAO } from '../db/dao/UserOperationDAO';
-import { GasPriceManager } from '../gas-price';
-import { BSCTestnetGasPrice } from '../gas-price/networks/BSCTestnetGasPrice';
-import { EthGasPrice } from '../gas-price/networks/EthGasPrice';
-import { GoerliGasPrice } from '../gas-price/networks/GoerliGasPrice';
-import { MaticGasPrice } from '../gas-price/networks/MaticGasPrice';
-import { MumbaiGasPrice } from '../gas-price/networks/MumbaiGasPrice';
 import { IQueue } from '../interface';
 import { logger } from '../log-config';
 import { relayerManagerTransactionTypeNameMap } from '../maps';
@@ -47,10 +41,9 @@ import {
 } from '../relay-service';
 import {
   AASimulationService,
-  UserOpValidationService,
-  BundlerGasEstimationService,
   GaslessFallbackSimulationService,
   SCWSimulationService,
+  UserOpValidationAndGasEstimationService,
 } from '../simulation';
 import { TenderlySimulationService } from '../simulation/external-simulation';
 import { IStatusService, StatusService } from '../status';
@@ -69,6 +62,9 @@ import { MempoolManager } from '../mempool-manager';
 import { BundlingExecutionManager } from '../bundling-execution-manager';
 import { BundlingService } from '../bundling-service';
 import { IMempoolManager } from '../mempool-manager/interface';
+import {
+  MaticGasPrice, GoerliGasPrice, EthGasPrice, GasPriceManager, BSCTestnetGasPrice, MumbaiGasPrice,
+} from '../gas-price';
 
 const log = logger(module);
 
@@ -99,12 +95,8 @@ const aaSimulatonServiceMap: {
   [chainId: number]: AASimulationService;
 } = {};
 
-const userOpValidationServiceMap: {
-  [chainId: number]: UserOpValidationService
-} = {};
-
-const bundlerGasEstimationServiceMap: {
-  [chainId: number]: BundlerGasEstimationService
+const userOpValidationAndGasEstimationServiceMap: {
+  [chainId: number]: UserOpValidationAndGasEstimationService
 } = {};
 
 const scwSimulationServiceMap: {
@@ -541,13 +533,16 @@ let statusService: IStatusService;
         });
 
         log.info(`Setting up userOp Validation Service Map on chainId: ${chainId}`);
-        const userOpValidationService = new UserOpValidationService({
-          networkService,
-          options: {
-            chainId,
+        const userOpValidationAndGasEstimationService = new UserOpValidationAndGasEstimationService(
+          {
+            networkService,
+            options: {
+              chainId,
+            },
           },
-        });
-        userOpValidationServiceMap[chainId] = userOpValidationService;
+        );
+        // eslint-disable-next-line max-len
+        userOpValidationAndGasEstimationServiceMap[chainId] = userOpValidationAndGasEstimationService;
         log.info(`userOp Validation Service Map setup complete on chainId: ${chainId}`);
 
         log.info(`Setting up Bundling Service for Bundler on chainId: ${chainId}`);
@@ -556,7 +551,7 @@ let statusService: IStatusService;
         } = config;
 
         const bundlingService = new BundlingService({
-          userOpValidationService,
+          userOpValidationAndGasEstimationService,
           mempoolManager: mempoolManagerMap[chainId],
           networkService,
           options: {
@@ -583,10 +578,6 @@ let statusService: IStatusService;
         const bundlerRelayService = new BundlerRelayService(bundlerQueue);
         routeTransactionToRelayerMap[chainId][type] = bundlerRelayService;
 
-        // eslint-disable-next-line max-len
-        bundlerGasEstimationServiceMap[chainId] = new BundlerGasEstimationService(
-          networkService,
-        );
         log.info(`Bundler consumer, relay service, simulation and validation service setup complete for chainId: ${chainId}`);
 
         log.info(`Setting up Bundle Execution Manager for Bundler on chainId: ${chainId}`);
@@ -596,7 +587,7 @@ let statusService: IStatusService;
           mempoolManager: mempoolManagerMap[chainId],
           routeTransactionToRelayerMap,
           entryPointMap,
-          userOpValidationService,
+          userOpValidationAndGasEstimationService,
           options: {
             chainId,
             autoBundlingInterval: bundlingConfig.autoBundlingInterval[chainId],
@@ -622,8 +613,7 @@ export {
   mempoolManagerMap,
   feeOptionMap,
   aaSimulatonServiceMap,
-  userOpValidationServiceMap,
-  bundlerGasEstimationServiceMap,
+  userOpValidationAndGasEstimationServiceMap,
   scwSimulationServiceMap,
   gaslessFallbackSimulationServiceMap,
   entryPointMap,

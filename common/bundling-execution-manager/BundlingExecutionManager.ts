@@ -4,7 +4,7 @@ import { logger } from '../../server/dist/common/log-config';
 import { IBundlingService } from '../bundling-service/interface';
 import { IMempoolManager } from '../mempool-manager/interface';
 import { BundlerRelayService } from '../relay-service';
-import { UserOpValidationService } from '../simulation';
+import { IUserOpValidationAndGasEstimationService } from '../simulation/interface';
 import { EntryPointMapType, TransactionType, UserOperationType } from '../types';
 import { generateTransactionId, parseError } from '../utils';
 import { IBundlingExecutionManager } from './interface/IBundlingExecutionManager';
@@ -27,7 +27,7 @@ export class BundlingExecutionManager implements IBundlingExecutionManager {
     };
   };
 
-  userOpValidationService: UserOpValidationService;
+  userOpValidationAndGasEstimationService: IUserOpValidationAndGasEstimationService;
 
   entryPointMap: EntryPointMapType;
 
@@ -38,7 +38,7 @@ export class BundlingExecutionManager implements IBundlingExecutionManager {
       bundlingService,
       mempoolManager,
       routeTransactionToRelayerMap,
-      userOpValidationService,
+      userOpValidationAndGasEstimationService,
       entryPointMap,
       options,
     } = bundleExecutionManagerParams;
@@ -47,7 +47,7 @@ export class BundlingExecutionManager implements IBundlingExecutionManager {
     this.bundlingService = bundlingService;
     this.mempoolManager = mempoolManager;
     this.routeTransactionToRelayerMap = routeTransactionToRelayerMap;
-    this.userOpValidationService = userOpValidationService;
+    this.userOpValidationAndGasEstimationService = userOpValidationAndGasEstimationService;
     this.entryPointMap = entryPointMap;
   }
 
@@ -103,10 +103,11 @@ export class BundlingExecutionManager implements IBundlingExecutionManager {
             return;
           }
           log.info(`Simulating handleOps for: ${JSON.stringify(userOps)} of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
-          const gasLimitForHandleOps = await this.userOpValidationService.simulateHandleOps({
-            userOps,
-            entryPointContract,
-          });
+          const gasLimitForHandleOps = await this.userOpValidationAndGasEstimationService
+            .estimateHandleOps({
+              userOps,
+              entryPointContract,
+            });
           log.info(`gasLimitForHandleOps: ${gasLimitForHandleOps} of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
 
           const transactionId = generateTransactionId(JSON.stringify(userOps));
@@ -117,7 +118,7 @@ export class BundlingExecutionManager implements IBundlingExecutionManager {
               to: entryPointAddress,
               value: '0x0',
               data: '0x', // will be updated on consumer side
-              gasLimit: gasLimitForHandleOps,
+              gasLimit: gasLimitForHandleOps.toString(),
               type: TransactionType.BUNDLER,
               chainId: this.chainId,
               transactionId,
