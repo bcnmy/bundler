@@ -260,7 +260,7 @@ export class BundlerSimulationAndValidationService {
       verificationGasLimit = postOpGas;
     }
     log.info(
-      `verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId}`,
+      `dummy verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId}`,
     );
     // validAfter, validUntil, deadline
     const entryPointStatic = entryPointContract.connect(
@@ -269,13 +269,13 @@ export class BundlerSimulationAndValidationService {
     const fullUserOp = {
       ...userOp,
       // default values for missing fields.
-      signature:
-        '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b', // a valid signature
-      callGasLimit: BigNumber.from('0'),
-      maxFeePerGas: BigNumber.from('0'),
-      maxPriorityFeePerGas: BigNumber.from('0'),
-      preVerificationGas: BigNumber.from('0'),
-      verificationGasLimit,
+      signature: userOp.signature
+        || '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b', // a valid signature
+      callGasLimit: userOp.callGasLimit || BigNumber.from('0'),
+      maxFeePerGas: userOp.maxFeePerGas || BigNumber.from('0'),
+      maxPriorityFeePerGas: userOp.maxPriorityFeePerGas || BigNumber.from('0'),
+      preVerificationGas: userOp.preVerificationGas || BigNumber.from('0'),
+      verificationGasLimit: userOp.verificationGasLimit || '3000000',
     };
 
     let returnInfo;
@@ -310,6 +310,18 @@ export class BundlerSimulationAndValidationService {
     }
 
     let { validAfter, validUntil } = returnInfo;
+    try {
+      const { preOpGas } = returnInfo;
+      if (BigNumber.from(preOpGas).toNumber() + 100000 > verificationGasLimit) {
+        log.info(`preOpGas is more than default verificationGasLimit hence overriding on chainId: ${chainId}`);
+        verificationGasLimit = BigNumber.from(preOpGas).toNumber() + 100000;
+      }
+    } catch (error) {
+      log.error(`Error in getting preOpGas for chainId: ${chainId}`);
+    }
+    log.info(
+      `post simulation verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId}`,
+    );
 
     validAfter = BigNumber.from(validAfter);
     validUntil = BigNumber.from(validUntil);
@@ -327,12 +339,12 @@ export class BundlerSimulationAndValidationService {
     const simulateUserOp = {
       ...userOp,
       // default values for missing fields.
-      signature:
-        '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b', // a valid signature
-      callGasLimit: '0x00',
-      maxFeePerGas: '0x00',
-      maxPriorityFeePerGas: '0x00',
-      preVerificationGas: '0x00',
+      signature: userOp.signature
+        || '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b', // a valid signature
+      callGasLimit: userOp.callGasLimit || '0x00',
+      maxFeePerGas: userOp.maxFeePerGas || '0x00',
+      maxPriorityFeePerGas: userOp.maxPriorityFeePerGas || '0x00',
+      preVerificationGas: userOp.preVerificationGas || '0x00',
     };
     // 3. preVerificationGas
     const preVerificationGas = await BundlerSimulationAndValidationService.calcPreVerificationGas(
@@ -376,7 +388,7 @@ export class BundlerSimulationAndValidationService {
       maxPriorityFeePerGas: BigNumber.from('0'),
       verificationGasLimit: '0xF4240', // 1000000
       preVerificationGas: 21000, // dummy value, just for calldata cost
-      signature: hexlify(Buffer.alloc(ov.sigSize, 1)), // dummy signature
+      signature: userOp.signature || hexlify(Buffer.alloc(ov.sigSize, 1)), // dummy signature
     } as any;
 
     const packed = arrayify(packUserOp(p, false));
