@@ -8,6 +8,8 @@ export interface IMempoolManager {
   mempoolConfig: MempoolConfigType;
   senderUserOpCount: { [address: string]: number };
   cacheService: ICacheService;
+  mempool: MempoolEntry[];
+  mempoolFromCache: MempoolEntry[];
 
   countMempoolEntries(): number;
   getMempoolEntries(): MempoolEntry[];

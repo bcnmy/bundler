@@ -90,6 +90,12 @@ export class BundlingService implements IBundlingService {
         break;
       }
       log.info(`totalGas: ${totalGas} for userOp: ${JSON.stringify(userOp)}`);
+      // const mempoolEntry = this.mempoolManager[entryPointContract.address].mempool.find(
+      //   (entry) => entry.userOp === userOp,
+      // ) as MempoolEntry;
+      // mempoolEntry.markedForBundling = true;
+      this.mempoolManager[entryPointContract.address].removeUserOp(userOp);
+      this.mempoolManager[entryPointContract.address].updateCacheMempool();
       senders.add(userOp.sender.toLowerCase());
       bundle.push(userOp);
       log.info(`userOp: ${JSON.stringify(userOp)} pushed in bundle`);

@@ -18,9 +18,9 @@ export class MempoolManager implements IMempoolManager {
 
   cacheService: ICacheService;
 
-  private mempool: MempoolEntry[] = [];
+  mempool: MempoolEntry[] = [];
 
-  private mempoolFromCache: MempoolEntry[];
+  mempoolFromCache: MempoolEntry[];
 
   private eventHandler: ((force: boolean) => void) | null = null;
 
@@ -52,6 +52,10 @@ export class MempoolManager implements IMempoolManager {
   }
 
   getMempoolEntries(): MempoolEntry[] {
+    // const mempoolEntriesNotMarkedForBundling = this.mempool.filter(
+    //   (entry) => entry.markedForBundling === false,
+    // );
+    // return mempoolEntriesNotMarkedForBundling;
     return this.mempool;
   }
 

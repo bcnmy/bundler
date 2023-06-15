@@ -1,5 +1,6 @@
 /* eslint-disable no-continue */
 /* eslint-disable no-await-in-loop */
+import { Mutex } from 'async-mutex';
 import { logger } from '../../server/dist/common/log-config';
 import { IBundlingService } from '../bundling-service/interface';
 import { IMempoolManager } from '../mempool-manager/interface';
@@ -11,6 +12,9 @@ import { IBundlingExecutionManager } from './interface/IBundlingExecutionManager
 import { BundleExecutionManagerParamsType } from './types';
 
 const log = logger(module);
+
+const bundlingExecutionMutex = new Mutex();
+
 export class BundlingExecutionManager implements IBundlingExecutionManager {
   chainId: number;
 
@@ -69,65 +73,66 @@ export class BundlingExecutionManager implements IBundlingExecutionManager {
     for (const entryPointAddress of Object.keys(this.mempoolManager)) {
       try {
         log.info(`Attempting to bundle for mempool of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
-        // TODO add mutex lock on mempool
-        const mempoolManager = this.mempoolManager[entryPointAddress];
-        if (
-          force
-          || mempoolManager.countMempoolEntries() >= mempoolManager.mempoolConfig.maxLength
-        ) {
-          log.info(`Getting mempool entries for mempool of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
-          const mempoolEntries = mempoolManager.getMempoolEntries();
-          log.info(`Mempool entries are: ${JSON.stringify(mempoolEntries)} of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
+        bundlingExecutionMutex.runExclusive(async () => {
+          const mempoolManager = this.mempoolManager[entryPointAddress];
+          if (
+            force
+            || mempoolManager.countMempoolEntries() >= mempoolManager.mempoolConfig.maxLength
+          ) {
+            log.info(`Getting mempool entries for mempool of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
+            const mempoolEntries = mempoolManager.getMempoolEntries();
+            log.info(`Mempool entries are: ${JSON.stringify(mempoolEntries)} of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
 
-          if (mempoolEntries.length === 0) {
-            log.info(`No entries in mempool to bundle of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
-            continue;
-          }
+            if (mempoolEntries.length === 0) {
+              log.info(`No entries in mempool to bundle of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
+              return;
+            }
 
-          const userOpsFromMempool: UserOperationType[] = [];
-          for (let mempoolIndex = 0; mempoolIndex < mempoolEntries.length; mempoolIndex += 1) {
-            userOpsFromMempool.push(mempoolEntries[mempoolIndex].userOp);
-          }
+            const userOpsFromMempool: UserOperationType[] = [];
+            for (let mempoolIndex = 0; mempoolIndex < mempoolEntries.length; mempoolIndex += 1) {
+              userOpsFromMempool.push(mempoolEntries[mempoolIndex].userOp);
+            }
 
-          const entryPointContract = this.entryPointMap[this.chainId][entryPointAddress];
+            const entryPointContract = this.entryPointMap[this.chainId][entryPointAddress];
 
-          if (!entryPointContract) {
-            return;
-          }
+            if (!entryPointContract) {
+              return;
+            }
 
-          const userOps = await this.bundlingService.createBundle(
-            userOpsFromMempool,
-            entryPointContract,
-          );
-          log.info(`UserOps that are ready to be bundled: ${JSON.stringify(userOps)} of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
-
-          if (userOps.length === 0) {
-            log.info(`No userOps to be bundled of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
-            return;
-          }
-          log.info(`Simulating handleOps for: ${JSON.stringify(userOps)} of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
-          const gasLimitForHandleOps = await this.userOpValidationAndGasEstimationService
-            .estimateHandleOps({
-              userOps,
+            const userOps = await this.bundlingService.createBundle(
+              userOpsFromMempool,
               entryPointContract,
-            });
-          log.info(`gasLimitForHandleOps: ${gasLimitForHandleOps} of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
+            );
+            log.info(`UserOps that are ready to be bundled: ${JSON.stringify(userOps)} of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
 
-          const transactionId = generateTransactionId(JSON.stringify(userOps));
-          log.info(`transactionId: ${transactionId} of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
+            if (userOps.length === 0) {
+              log.info(`No userOps to be bundled of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
+              return;
+            }
+            log.info(`Simulating handleOps for: ${JSON.stringify(userOps)} of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
+            const gasLimitForHandleOps = await this.userOpValidationAndGasEstimationService
+              .estimateHandleOps({
+                userOps,
+                entryPointContract,
+              });
+            log.info(`gasLimitForHandleOps: ${gasLimitForHandleOps} of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
 
-          this.routeTransactionToRelayerMap[this.chainId].BUNDLER
-            .sendTransactionToRelayer({
-              to: entryPointAddress,
-              value: '0x0',
-              data: '0x', // will be updated on consumer side
-              gasLimit: gasLimitForHandleOps.toString(),
-              type: TransactionType.BUNDLER,
-              chainId: this.chainId,
-              transactionId,
-              userOps,
-            });
-        }
+            const transactionId = generateTransactionId(JSON.stringify(userOps));
+            log.info(`transactionId: ${transactionId} of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
+
+            this.routeTransactionToRelayerMap[this.chainId].BUNDLER
+              .sendTransactionToRelayer({
+                to: entryPointAddress,
+                value: '0x0',
+                data: '0x', // will be updated on consumer side
+                gasLimit: gasLimitForHandleOps.toString(),
+                type: TransactionType.BUNDLER,
+                chainId: this.chainId,
+                transactionId,
+                userOps,
+              });
+          }
+        });
       } catch (error) {
         log.error(`Error: ${parseError(error)} in bundling userOps for mempool of entryPoint: ${entryPointAddress} on chainId: ${this.chainId}`);
       }
