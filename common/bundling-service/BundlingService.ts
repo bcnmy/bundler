@@ -94,6 +94,12 @@ export class BundlingService implements IBundlingService {
       //   (entry) => entry.userOp === userOp,
       // ) as MempoolEntry;
       // mempoolEntry.markedForBundling = true;
+      // Removing userOps from mempool
+      // Ideally they should be removed once the transaction has either been mined
+      // Currently feeling it gets complex to do this on transaction side
+      // Either or, whatever goes in the bundle will be executed
+      // Advantage of doing on transaction side is to update reputation of entities
+      // Reputation thing we are not doing so keeping things simple for now
       this.mempoolManager[entryPointContract.address].removeUserOp(userOp);
       this.mempoolManager[entryPointContract.address].updateCacheMempool();
       senders.add(userOp.sender.toLowerCase());
