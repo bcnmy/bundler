@@ -3,6 +3,8 @@ import { MempoolConfigType, MempoolEntry, UserOperationType } from '../types';
 import { IMempoolManager } from './interface';
 import { MempoolManagerParamsType } from './types';
 import { logger } from '../log-config';
+import { getCacheMempoolKey } from '../utils';
+import { ICacheService } from '../cache';
 
 const log = logger(module);
 export class MempoolManager implements IMempoolManager {
@@ -14,17 +16,23 @@ export class MempoolManager implements IMempoolManager {
 
   senderUserOpCount: { [address: string]: number; } = {};
 
-  // TODO Change it to cache so that even on server restart the mempool can persist
+  cacheService: ICacheService;
+
   private mempool: MempoolEntry[] = [];
+
+  private mempoolFromCache: MempoolEntry[];
 
   constructor(mempoolManagerParams: MempoolManagerParamsType) {
     const {
+      cacheService,
       options,
     } = mempoolManagerParams;
 
+    this.cacheService = cacheService;
     this.chainId = options.chainId;
     this.entryPoint = options.entryPoint;
     this.mempoolConfig = options.mempoolConfig;
+    this.mempoolFromCache = options.mempoolFromCache ? JSON.parse(options.mempoolFromCache) : [];
   }
 
   markUserOpIncludedForBundling(userOpHash: string): void {
@@ -69,6 +77,7 @@ export class MempoolManager implements IMempoolManager {
       log.info(`Entry pushed in mempool: ${JSON.stringify(newEntry)} entryPointAddress: ${this.entryPoint.address} on chainId: ${this.chainId}`);
       this.mempool.push(newEntry);
     }
+    this.updateCacheMempool();
   }
 
   removeUserOp(userOpOrHash: string | UserOperationType): void {
@@ -79,6 +88,7 @@ export class MempoolManager implements IMempoolManager {
       index = this.mempool.findIndex((entry) => entry.userOp === userOpOrHash);
     }
     this.mempool.splice(index, 1);
+    this.updateCacheMempool();
   }
 
   findUserOpBySenderAndNonce(sender: string, nonce: BigNumberish): number {
@@ -124,5 +134,15 @@ export class MempoolManager implements IMempoolManager {
       (entry) => entry.userOp.sender.toLowerCase() === sender.toLowerCase(),
     ).length;
     return count;
+  }
+
+  async updateCacheMempool() {
+    this.cacheService.set(
+      getCacheMempoolKey(
+        this.chainId,
+        this.entryPoint.address,
+      ),
+      JSON.stringify(this.mempool),
+    );
   }
 }

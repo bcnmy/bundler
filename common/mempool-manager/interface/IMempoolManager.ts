@@ -1,11 +1,13 @@
 import { ethers } from 'ethers';
 import { UserOperationType, MempoolConfigType, MempoolEntry } from '../../types';
+import { ICacheService } from '../../cache';
 
 export interface IMempoolManager {
   chainId: number;
   entryPoint: ethers.Contract
   mempoolConfig: MempoolConfigType;
   senderUserOpCount: { [address: string]: number };
+  cacheService: ICacheService;
 
   countMempoolEntries(): number;
   getMempoolEntries(): MempoolEntry[];

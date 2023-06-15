@@ -65,6 +65,7 @@ import { IMempoolManager } from '../mempool-manager/interface';
 import {
   MaticGasPrice, GoerliGasPrice, EthGasPrice, GasPriceManager, BSCTestnetGasPrice, MumbaiGasPrice,
 } from '../gas-price';
+import { getCacheMempoolKey } from '../utils';
 
 const log = logger(module);
 
@@ -511,13 +512,22 @@ let statusService: IStatusService;
 
         mempoolManagerMap[chainId] = {};
 
-        Object.keys(entryPointMap[chainId]).forEach((entryPointAddress: string) => {
+        Object.keys(entryPointMap[chainId]).forEach(async (entryPointAddress: string) => {
           log.info(`Setting up Mempool Manager for Bundler on chainId: ${chainId} for entryPointAddress: ${entryPointAddress}`);
 
+          const mempoolFromCache = await cacheService.get(
+            getCacheMempoolKey(
+              chainId,
+              entryPointAddress,
+            ),
+          );
+
           const mempoolManager = new MempoolManager({
+            cacheService,
             options: {
               chainId,
               entryPoint: entryPointMap[chainId][entryPointAddress],
+              mempoolFromCache,
               mempoolConfig: {
                 maxLength: mempoolConfig.maxLength[chainId],
                 minLength: mempoolConfig.minLength[chainId],
