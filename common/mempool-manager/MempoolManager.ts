@@ -22,6 +22,8 @@ export class MempoolManager implements IMempoolManager {
 
   private mempoolFromCache: MempoolEntry[];
 
+  private eventHandler: ((force: boolean) => void) | null = null;
+
   constructor(mempoolManagerParams: MempoolManagerParamsType) {
     const {
       cacheService,
@@ -68,7 +70,9 @@ export class MempoolManager implements IMempoolManager {
       log.info(`old userOp: ${JSON.stringify(oldEntry)} entryPointAddress: ${this.entryPoint.address} on chainId: ${this.chainId}`);
       // Can be old or new userOp
       log.info('Checking if userOp is to be replaced');
-      this.mempool[index] = this.checkAndReplaceUserOpEntry(oldEntry, newEntry);
+      const entry = this.checkAndReplaceUserOpEntry(oldEntry, newEntry);
+      this.mempool[index] = entry;
+      this.fireUserOpAddedEvent();
       log.info(`Entry pushed in mempool: ${JSON.stringify(this.mempool[index])} entryPointAddress: ${this.entryPoint.address} on chainId: ${this.chainId}`);
     } else {
       this.senderUserOpCount[userOp.sender] = (this.senderUserOpCount[userOp.sender] ?? 0) + 1;
@@ -76,6 +80,7 @@ export class MempoolManager implements IMempoolManager {
       // this.checkSenderUserOpCount();
       log.info(`Entry pushed in mempool: ${JSON.stringify(newEntry)} entryPointAddress: ${this.entryPoint.address} on chainId: ${this.chainId}`);
       this.mempool.push(newEntry);
+      this.fireUserOpAddedEvent();
     }
     this.updateCacheMempool();
   }
@@ -144,5 +149,18 @@ export class MempoolManager implements IMempoolManager {
       ),
       JSON.stringify(this.mempool),
     );
+  }
+
+  // method to set the event handler
+  setEventHandler(handler: (force: boolean) => void) {
+    this.eventHandler = handler;
+  }
+
+  // method to fire the event
+  fireUserOpAddedEvent() {
+    if (this.eventHandler) {
+      // Call the event handler function passing the event data
+      this.eventHandler(false);
+    }
   }
 }

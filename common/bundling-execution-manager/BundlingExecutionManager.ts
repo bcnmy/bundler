@@ -49,13 +49,16 @@ export class BundlingExecutionManager implements IBundlingExecutionManager {
     this.routeTransactionToRelayerMap = routeTransactionToRelayerMap;
     this.userOpValidationAndGasEstimationService = userOpValidationAndGasEstimationService;
     this.entryPointMap = entryPointMap;
+
+    for (const entryPointAddress of Object.keys(this.mempoolManager)) {
+      this.mempoolManager[entryPointAddress].setEventHandler(this.attemptBundle);
+    }
   }
 
   async initAutoBundling(): Promise<void> {
     log.info(`Auto bundling started on chainId: ${this.chainId} with autoBundlingInterval: ${this.autoBundlingInterval} seconds`);
     // TODO For later it returns an id and it
     // should be able to dynamically update autoBundleInterval
-    // TODO add event emitter
     setInterval(() => {
       log.info(`Attempting to bundle on chainId: ${this.chainId}`);
       this.attemptBundle(true);

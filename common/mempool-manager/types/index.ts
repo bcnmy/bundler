@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { MempoolConfigType } from '../../types';
+import { MempoolConfigType, MempoolEntry } from '../../types';
 import { ICacheService } from '../../cache';
 
 export type MempoolManagerParamsType = {
@@ -10,4 +10,8 @@ export type MempoolManagerParamsType = {
     entryPoint: ethers.Contract;
     mempoolConfig: MempoolConfigType
   }
+};
+
+export type UserOpAddedEvent = {
+  entry: MempoolEntry
 };

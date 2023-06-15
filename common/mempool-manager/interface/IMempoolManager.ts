@@ -21,4 +21,7 @@ export interface IMempoolManager {
   checkSenderUserOpCount(sender: string): number;
   markUserOpIncludedForBundling(userOpHash: string): void;
   unmarkUserOpIncludedForBundling(userOpHash: string): void;
+  updateCacheMempool(): void;
+  setEventHandler(handler: (force: boolean) => void): void;
+  fireUserOpAddedEvent(): void;
 }
