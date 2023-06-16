@@ -183,13 +183,14 @@ export class MaticGasPrice extends GasPrice implements IScheduler {
       });
     } catch (error) {
       log.error('Error in fetching gas price from polygonscan and matic gas station.');
+      return;
     }
 
     let {
       mediumGasPriceInWei = 20000000000,
       fastGasPriceInWei = 30000000000,
-      fastestGasPriceInWei,
-    } = response;
+      fastestGasPriceInWei = 35000000000,
+    } = response || {};
 
     if (config.gasPrice[this.chainId].gasOracle.polygonscanUrl
        && fastGasPriceInWei < config.gasPrice[this.chainId].minGasPrice) {
