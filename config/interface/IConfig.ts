@@ -140,13 +140,6 @@ type EntryPointDataConfigType = {
   [address: string]: Array<any>
 };
 
-type FallbackGasTankDataConfigType = {
-  [key: number]: {
-    abi: Array<any>,
-    address: string,
-  }
-};
-
 type DataSourcesConfigType = {
   mongoUrl: string,
   redisUrl: string,
@@ -217,7 +210,6 @@ export type ConfigType = {
   feeOption: FeeOptionConfigType,
   tokenPrice: TokenPriceConfigType,
   entryPointData: EntryPointDataConfigType,
-  fallbackGasTankData: FallbackGasTankDataConfigType,
   zeroAddress: string,
   simulationData: SimulationDataConfigType,
   abi: AbiConfigType,
