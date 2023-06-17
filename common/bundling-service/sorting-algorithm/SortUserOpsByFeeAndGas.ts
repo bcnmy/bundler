@@ -15,7 +15,7 @@ export class SortUserOpsByFeeAndGas {
     this.networkService = networkService;
   }
 
-  async sort(userOps: UserOperationType[]): Promise<UserOperationType[]> {
+  sort(userOps: UserOperationType[]): UserOperationType[] {
     userOps.sort((userOp1: UserOperationType, userOp2: UserOperationType) => {
       const userOp1GasPrice = this.getUserOpGasPrice(userOp1);
       const userOp2GasPrice = this.getUserOpGasPrice(userOp2);

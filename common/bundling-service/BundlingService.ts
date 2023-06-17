@@ -112,7 +112,7 @@ export class BundlingService implements IBundlingService {
   }
 
   private async sortUserOps(userOps: UserOperationType[]): Promise<UserOperationType[]> {
-    const sortedUserOps = await this.sortingStrategy.sort(userOps);
+    const sortedUserOps = this.sortingStrategy.sort(userOps);
     return sortedUserOps;
   }
 }
