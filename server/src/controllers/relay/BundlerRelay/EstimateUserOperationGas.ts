@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { STATUSES } from '../../../middleware';
 import { logger } from '../../../../../common/log-config';
-import { bundlerSimulatonAndValidationServiceMap, entryPointMap, gasPriceServiceMap } from '../../../../../common/service-manager';
+import { userOpValidationAndGasEstimationServiceMap, entryPointMap, gasPriceServiceMap } from '../../../../../common/service-manager';
 import { parseError } from '../../../../../common/utils';
 
 const log = logger(module);
@@ -12,18 +12,8 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
     const entryPointAddress = req.body.params[1];
     const { chainId } = req.params;
 
-    const entryPointContracts = entryPointMap[parseInt(chainId, 10)];
+    const entryPointContract = entryPointMap[parseInt(chainId, 10)][entryPointAddress];
 
-    let entryPointContract;
-    for (let entryPointContractIndex = 0;
-      entryPointContractIndex < entryPointContracts.length;
-      entryPointContractIndex += 1) {
-      if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
-       === entryPointAddress.toLowerCase()) {
-        entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
-        break;
-      }
-    }
     if (!entryPointContract) {
       return {
         code: STATUSES.BAD_REQUEST,
@@ -31,7 +21,7 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
       };
     }
 
-    const estimatedUserOpGas = await bundlerSimulatonAndValidationServiceMap[
+    const estimatedUserOpGas = await userOpValidationAndGasEstimationServiceMap[
       parseInt(chainId, 10)
     ].estimateUserOperationGas({ userOp, entryPointContract, chainId: parseInt(chainId, 10) });
 
@@ -80,7 +70,7 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
       });
     }
 
-    return res.status(STATUSES.BAD_REQUEST).json({
+    return res.status(STATUSES.SUCCESS).json({
       jsonrpc: '2.0',
       id: 1,
       result: {

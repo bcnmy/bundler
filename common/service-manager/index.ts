@@ -19,12 +19,6 @@ import { FeeOption } from '../../server/src/services';
 import { RedisCacheService } from '../cache';
 import { Mongo, TransactionDAO } from '../db';
 import { UserOperationDAO } from '../db/dao/UserOperationDAO';
-import { GasPriceManager } from '../gas-price';
-import { BSCTestnetGasPrice } from '../gas-price/networks/BSCTestnetGasPrice';
-import { EthGasPrice } from '../gas-price/networks/EthGasPrice';
-import { GoerliGasPrice } from '../gas-price/networks/GoerliGasPrice';
-import { MaticGasPrice } from '../gas-price/networks/MaticGasPrice';
-import { MumbaiGasPrice } from '../gas-price/networks/MumbaiGasPrice';
 import { IQueue } from '../interface';
 import { logger } from '../log-config';
 import { relayerManagerTransactionTypeNameMap } from '../maps';
@@ -47,10 +41,9 @@ import {
 } from '../relay-service';
 import {
   AASimulationService,
-  BundlerSimulationAndValidationService,
-  BundlerGasEstimationService,
   GaslessFallbackSimulationService,
   SCWSimulationService,
+  UserOpValidationAndGasEstimationService,
 } from '../simulation';
 import { TenderlySimulationService } from '../simulation/external-simulation';
 import { IStatusService, StatusService } from '../status';
@@ -65,6 +58,14 @@ import {
   TransactionType,
   FallbackGasTankMapType,
 } from '../types';
+import { MempoolManager } from '../mempool-manager';
+import { BundlingExecutionManager } from '../bundling-execution-manager';
+import { BundlingService } from '../bundling-service';
+import { IMempoolManager } from '../mempool-manager/interface';
+import {
+  MaticGasPrice, GoerliGasPrice, EthGasPrice, GasPriceManager, BSCTestnetGasPrice, MumbaiGasPrice,
+} from '../gas-price';
+import { getCacheMempoolKey } from '../utils';
 
 const log = logger(module);
 
@@ -95,12 +96,8 @@ const aaSimulatonServiceMap: {
   [chainId: number]: AASimulationService;
 } = {};
 
-const bundlerSimulatonAndValidationServiceMap: {
-  [chainId: number]: BundlerSimulationAndValidationService
-} = {};
-
-const bundlerGasEstimationServiceMap: {
-  [chainId: number]: BundlerGasEstimationService
+const userOpValidationAndGasEstimationServiceMap: {
+  [chainId: number]: UserOpValidationAndGasEstimationService
 } = {};
 
 const scwSimulationServiceMap: {
@@ -112,6 +109,12 @@ const gaslessFallbackSimulationServiceMap: {
 } = {};
 
 const entryPointMap: EntryPointMapType = {};
+
+const mempoolManagerMap: {
+  [chainId: number]: {
+    [entryPointAddress: string]: IMempoolManager
+  }
+} = {};
 
 const fallbackGasTankMap: FallbackGasTankMapType = {};
 
@@ -162,11 +165,12 @@ let statusService: IStatusService;
     tokenService.schedule();
   }
 
+  const { entryPointData } = config;
+
   log.info(`Setting up instances for following chainIds: ${JSON.stringify(supportedNetworks)}`);
   for (const chainId of supportedNetworks) {
     log.info(`Setup of services started for chainId: ${chainId}`);
     routeTransactionToRelayerMap[chainId] = {};
-    entryPointMap[chainId] = [];
 
     if (!config.chains.provider[chainId]) {
       throw new Error(`No provider for chainId ${chainId}`);
@@ -180,6 +184,19 @@ let statusService: IStatusService;
     });
     log.info(`Network service setup complete for chainId: ${chainId}`);
     networkServiceMap[chainId] = networkService;
+
+    log.info(`Setting up entryPointMap for chainId: ${chainId}`);
+    entryPointMap[chainId] = {};
+
+    Object.keys(entryPointData).forEach((entryPointAddress: string) => {
+      const entryPointAbi = entryPointData[entryPointAddress];
+      entryPointMap[chainId][entryPointAddress] = networkService.getContract(
+        JSON.stringify(entryPointAbi),
+        entryPointAddress,
+      );
+    });
+
+    log.info(`entryPointMap setup for chainId: ${chainId}`);
 
     log.info(`Setting up gas price manager for chainId: ${chainId}`);
     const gasPriceManager = new GasPriceManager(cacheService, networkService, {
@@ -355,24 +372,6 @@ let statusService: IStatusService;
         await aaQueue.connect();
         log.info(`AA transaction queue setup complete for chainId: ${chainId}`);
 
-        const { entryPointData } = config;
-
-        for (
-          let entryPointIndex = 0;
-          entryPointIndex < entryPointData[chainId].length;
-          entryPointIndex += 1
-        ) {
-          const entryPoint = entryPointData[chainId][entryPointIndex];
-
-          entryPointMap[chainId].push({
-            address: entryPoint.address,
-            entryPointContract: networkService.getContract(
-              JSON.stringify(entryPoint.abi),
-              entryPoint.address,
-            ),
-          });
-        }
-
         log.info(`Setting up AA consumer, relay service & simulation service for chainId: ${chainId}`);
         const aaConsumer = new AAConsumer({
           queue: aaQueue,
@@ -507,23 +506,81 @@ let statusService: IStatusService;
         await bundlerQueue.connect();
         log.info(`Bundler transaction queue setup complete for chainId: ${chainId}`);
 
-        const { entryPointData } = config;
+        const {
+          mempoolConfig,
+        } = config;
 
-        for (
-          let entryPointIndex = 0;
-          entryPointIndex < entryPointData[chainId].length;
-          entryPointIndex += 1
-        ) {
-          const entryPoint = entryPointData[chainId][entryPointIndex];
+        mempoolManagerMap[chainId] = {};
 
-          entryPointMap[chainId].push({
-            address: entryPoint.address,
-            entryPointContract: networkService.getContract(
-              JSON.stringify(entryPoint.abi),
-              entryPoint.address,
+        Object.keys(entryPointMap[chainId]).forEach(async (entryPointAddress: string) => {
+          log.info(`Setting up Mempool Manager for Bundler on chainId: ${chainId} for entryPointAddress: ${entryPointAddress}`);
+
+          const {
+            relayer,
+          } = config;
+
+          const {
+            nodePathIndex,
+          } = relayer;
+
+          const mempoolFromCache = await cacheService.get(
+            getCacheMempoolKey(
+              chainId,
+              entryPointAddress,
+              nodePathIndex,
             ),
+          );
+          log.info(`mempoolFromCache: ${mempoolFromCache} for entryPointAddress: ${entryPointAddress} on chainId: ${chainId} woth nodePathIndex: ${nodePathIndex}`);
+
+          const mempoolManager = new MempoolManager({
+            cacheService,
+            options: {
+              chainId,
+              entryPoint: entryPointMap[chainId][entryPointAddress],
+              mempoolFromCache,
+              nodePathIndex,
+              mempoolConfig: {
+                maxLength: mempoolConfig.maxLength[chainId],
+                minLength: mempoolConfig.minLength[chainId],
+                maxUserOpPerSender: mempoolConfig.maxUserOpPerSender[chainId],
+                minMaxFeePerGasBumpPercentage: mempoolConfig.minMaxFeePerGasBumpPercentage[chainId],
+                minMaxPriorityFeePerGasBumpPercentage:
+                mempoolConfig.minMaxPriorityFeePerGasBumpPercentage[chainId],
+              },
+            },
           });
-        }
+          log.info(`Mempool Manager setup complete for Bundler on chainId: ${chainId}`);
+          mempoolManagerMap[chainId][entryPointAddress] = mempoolManager;
+        });
+
+        log.info(`Setting up userOp Validation Service Map on chainId: ${chainId}`);
+        const userOpValidationAndGasEstimationService = new UserOpValidationAndGasEstimationService(
+          {
+            networkService,
+            options: {
+              chainId,
+            },
+          },
+        );
+        // eslint-disable-next-line max-len
+        userOpValidationAndGasEstimationServiceMap[chainId] = userOpValidationAndGasEstimationService;
+        log.info(`userOp Validation Service Map setup complete on chainId: ${chainId}`);
+
+        log.info(`Setting up Bundling Service for Bundler on chainId: ${chainId}`);
+        const {
+          bundlingConfig,
+        } = config;
+
+        const bundlingService = new BundlingService({
+          userOpValidationAndGasEstimationService,
+          mempoolManager: mempoolManagerMap[chainId],
+          networkService,
+          options: {
+            chainId,
+            maxBundleGas: bundlingConfig.maxBundleGas[chainId],
+          },
+        });
+        log.info(`Bundling Service setup complete for Bundler on chainId: ${chainId}`);
 
         log.info(`Setting up Bundler consumer, relay service, simulation & validation service for chainId: ${chainId}`);
         const bundlerConsumer = new BundlerConsumer({
@@ -542,16 +599,23 @@ let statusService: IStatusService;
         const bundlerRelayService = new BundlerRelayService(bundlerQueue);
         routeTransactionToRelayerMap[chainId][type] = bundlerRelayService;
 
-        // eslint-disable-next-line max-len
-        bundlerSimulatonAndValidationServiceMap[chainId] = new BundlerSimulationAndValidationService(
-          networkService,
-        );
-
-        // eslint-disable-next-line max-len
-        bundlerGasEstimationServiceMap[chainId] = new BundlerGasEstimationService(
-          networkService,
-        );
         log.info(`Bundler consumer, relay service, simulation and validation service setup complete for chainId: ${chainId}`);
+
+        log.info(`Setting up Bundle Execution Manager for Bundler on chainId: ${chainId}`);
+
+        const bundlingExecutionManger = new BundlingExecutionManager({
+          bundlingService,
+          mempoolManager: mempoolManagerMap[chainId],
+          routeTransactionToRelayerMap,
+          entryPointMap,
+          userOpValidationAndGasEstimationService,
+          options: {
+            chainId,
+            autoBundlingInterval: bundlingConfig.autoBundlingInterval[chainId],
+          },
+        });
+        log.info(`Bundle Execution Manager setup complete for Bundler on chainId: ${chainId}`);
+        bundlingExecutionManger.initAutoBundling();
       }
     }
   }
@@ -567,10 +631,10 @@ let statusService: IStatusService;
 
 export {
   routeTransactionToRelayerMap,
+  mempoolManagerMap,
   feeOptionMap,
   aaSimulatonServiceMap,
-  bundlerSimulatonAndValidationServiceMap,
-  bundlerGasEstimationServiceMap,
+  userOpValidationAndGasEstimationServiceMap,
   scwSimulationServiceMap,
   gaslessFallbackSimulationServiceMap,
   entryPointMap,

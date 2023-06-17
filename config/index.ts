@@ -107,10 +107,6 @@ export class Config implements IConfig {
         throw new Error(`Network insufficient funds error required for chain id ${chainId}`);
       }
 
-      if (!this.config.entryPointData[chainId].length) {
-        throw new Error(`Entry point data address required for chain id ${chainId}`);
-      }
-
       if (!isNumber(this.config.relayer.nodePathIndex)) {
         throw new Error('Relayer node path index required');
       }
@@ -176,6 +172,34 @@ export class Config implements IConfig {
       }
       if (!this.config.tokenPrice.symbolMapByChainId[chainId]) {
         throw new Error(`Symbol map required for chain id ${chainId}`);
+      }
+
+      if (!this.config.mempoolConfig.maxLength[chainId]) {
+        throw new Error(`Mempool config's maxLength required for chain id ${chainId}`);
+      }
+
+      if (!this.config.mempoolConfig.minLength[chainId]) {
+        throw new Error(`Mempool config's minLength required for chain id ${chainId}`);
+      }
+
+      if (!this.config.mempoolConfig.maxUserOpPerSender[chainId]) {
+        throw new Error(`Mempool config's maxUserOpPerSender required for chain id ${chainId}`);
+      }
+
+      if (!this.config.mempoolConfig.minMaxPriorityFeePerGasBumpPercentage[chainId]) {
+        throw new Error(`Mempool config's minMaxPriorityFeePerGasBumpPercentage required for chain id ${chainId}`);
+      }
+
+      if (!this.config.mempoolConfig.minMaxFeePerGasBumpPercentage[chainId]) {
+        throw new Error(`Mempool config's minMaxFeePerGasBumpPercentage required for chain id ${chainId}`);
+      }
+
+      if (!this.config.bundlingConfig.autoBundlingInterval[chainId]) {
+        throw new Error(`Mempool config's autoBundlingInterval required for chain id ${chainId}`);
+      }
+
+      if (!this.config.bundlingConfig.maxBundleGas[chainId]) {
+        throw new Error(`Mempool config's maxBundleGas required for chain id ${chainId}`);
       }
     }
     return true;

@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { EthMethodType, TransactionMethodType } from '../../../../common/types';
 import { STATUSES } from '../../middleware';
 import {
-  bundleUserOperation,
+  addUserOperationToMempool,
   getChainId,
   estimateUserOperationGas,
   getUserOperationByHash,
@@ -17,8 +17,7 @@ export const bundlerRequestHandler = async (req: Request, res: Response) => {
   let response;
   switch (method) {
     case TransactionMethodType.BUNDLER:
-      // here ideally it should add to mempool but would be bundling one user op per bundle
-      response = await bundleUserOperation(req, res);
+      response = await addUserOperationToMempool(req, res);
       break;
     case EthMethodType.ESTIMATE_USER_OPERATION_GAS:
       response = await estimateUserOperationGas(req, res);

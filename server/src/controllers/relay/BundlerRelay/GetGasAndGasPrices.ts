@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { logger } from '../../../../../common/log-config';
 import {
-  bundlerGasEstimationServiceMap,
+  userOpValidationAndGasEstimationServiceMap,
   entryPointMap,
   gasPriceServiceMap,
 } from '../../../../../common/service-manager';
@@ -26,22 +26,8 @@ export const getGasAndGasPrices = async (req: Request, res: Response) => {
       });
     }
 
-    const entryPointContracts = entryPointMap[parseInt(chainId, 10)];
+    const entryPointContract = entryPointMap[parseInt(chainId, 10)][entryPointAddress];
 
-    let entryPointContract;
-    for (
-      let entryPointContractIndex = 0;
-      entryPointContractIndex < entryPointContracts.length;
-      entryPointContractIndex += 1
-    ) {
-      if (
-        entryPointContracts[entryPointContractIndex].address.toLowerCase()
-        === entryPointAddress.toLowerCase()
-      ) {
-        entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
-        break;
-      }
-    }
     if (!entryPointContract) {
       return {
         code: STATUSES.BAD_REQUEST,
@@ -50,7 +36,7 @@ export const getGasAndGasPrices = async (req: Request, res: Response) => {
     }
 
     // use this file to estimate L2 fee
-    const estimatedUserOpGas = await bundlerGasEstimationServiceMap[
+    const estimatedUserOpGas = await userOpValidationAndGasEstimationServiceMap[
       parseInt(chainId, 10)
     ].estimateUserOperationGas({
       userOp,

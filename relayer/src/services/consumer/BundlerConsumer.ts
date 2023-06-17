@@ -1,5 +1,4 @@
 import { ConsumeMessage } from 'amqplib';
-import { ethers } from 'ethers';
 import { ICacheService } from '../../../../common/cache';
 import { logger } from '../../../../common/log-config';
 import { IQueue } from '../../../../common/queue';
@@ -56,26 +55,15 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
       log.info(`Active relayer for ${this.transactionType} is ${activeRelayer?.getPublicKey()}`);
 
       if (activeRelayer) {
-        const { userOp, to } = transactionDataReceivedFromQueue;
-        const entryPointContracts = this.entryPointMap[this.chainId];
+        const { userOps, to } = transactionDataReceivedFromQueue;
 
-        // TODO Test this via making it a function
-        let entryPointContract;
-        for (let entryPointContractIndex = 0;
-          entryPointContractIndex < entryPointContracts.length;
-          entryPointContractIndex += 1) {
-          if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
-           === to.toLowerCase()) {
-            entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
-            break;
-          }
-        }
+        const entryPointContract = this.entryPointMap[this.chainId][to];
 
-        log.info(`Setting active relayer: ${activeRelayer?.getPublicKey()} as beneficiary for userOp: ${JSON.stringify(userOp)}`);
+        log.info(`Setting active relayer: ${activeRelayer?.getPublicKey()} as beneficiary for userOps: ${JSON.stringify(userOps)}`);
 
         // eslint-disable-next-line no-unsafe-optional-chaining
-        const { data } = await (entryPointContract as ethers.Contract)
-          .populateTransaction.handleOps([userOp], activeRelayer.getPublicKey());
+        const { data } = await entryPointContract
+          .populateTransaction.handleOps(userOps, activeRelayer.getPublicKey());
         transactionDataReceivedFromQueue.data = data;
 
         await this.cacheService.set(getRetryTransactionCountKey(

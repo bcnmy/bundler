@@ -17,6 +17,7 @@ import {
   getRetryTransactionCountKey,
   getTokenPriceKey,
   getUserOperationReceiptForDataSaving,
+  parseError,
 } from '../../../../common/utils';
 import { IEVMAccount } from '../account';
 import { ITransactionPublisher } from '../transaction-publisher';
@@ -107,32 +108,36 @@ ITransactionPublisher<TransactionQueueMessageType> {
       event: SocketEventType.onTransactionMined,
     });
     if (transactionExecutionResponse) {
-      log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
-      let transactionFee = 0;
-      let transactionFeeInUSD = 0;
-      let transactionFeeCurrency = '';
-      if (!transactionReceipt.gasUsed && !transactionReceipt.effectiveGasPrice) {
-        log.info(`gasUsed or effectiveGasPrice field not found in ${JSON.stringify(transactionExecutionResponse)}`);
-      } else {
-        transactionFee = Number(transactionReceipt.gasUsed.mul(
-          transactionReceipt.effectiveGasPrice,
-        ));
-        transactionFeeCurrency = config.chains.currency[this.chainId];
-        const coinsRateObj = await this.cacheService.get(getTokenPriceKey());
-        if (!coinsRateObj) {
-          log.info('Coins Rate Obj not fetched from cache'); // TODO should it make call to token price service?
+      try {
+        log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
+        let transactionFee = 0;
+        let transactionFeeInUSD = 0;
+        let transactionFeeCurrency = '';
+        if (!transactionReceipt.gasUsed && !transactionReceipt.effectiveGasPrice) {
+          log.info(`gasUsed or effectiveGasPrice field not found in ${JSON.stringify(transactionExecutionResponse)}`);
         } else {
-          transactionFeeInUSD = JSON.parse(coinsRateObj)[this.chainId];
+          transactionFee = Number(transactionReceipt.gasUsed.mul(
+            transactionReceipt.effectiveGasPrice,
+          ));
+          transactionFeeCurrency = config.chains.currency[this.chainId];
+          const coinsRateObj = await this.cacheService.get(getTokenPriceKey());
+          if (!coinsRateObj) {
+            log.info('Coins Rate Obj not fetched from cache'); // TODO should it make call to token price service?
+          } else {
+            transactionFeeInUSD = JSON.parse(coinsRateObj)[this.chainId];
+          }
         }
+        await this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
+          receipt: transactionReceipt,
+          transactionFee,
+          transactionFeeInUSD,
+          transactionFeeCurrency,
+          status: TransactionStatus.SUCCESS,
+          updationTime: Date.now(),
+        }, transactionId, transactionExecutionResponse?.hash);
+      } catch (error) {
+        log.info(`Error in saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId} with error: ${parseError(error)}`);
       }
-      await this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
-        receipt: transactionReceipt,
-        transactionFee,
-        transactionFeeInUSD,
-        transactionFeeCurrency,
-        status: TransactionStatus.SUCCESS,
-        updationTime: Date.now(),
-      }, transactionId, transactionExecutionResponse?.hash);
     }
 
     if (transactionType === TransactionType.BUNDLER || transactionType === TransactionType.AA) {
@@ -147,18 +152,8 @@ ITransactionPublisher<TransactionQueueMessageType> {
       for (let userOpIndex = 0; userOpIndex < userOps.length; userOpIndex += 1) {
         const { userOpHash, entryPoint } = userOps[userOpIndex];
 
-        const entryPointContracts = this.entryPointMap[this.chainId];
+        const entryPointContract = this.entryPointMap[this.chainId][entryPoint];
 
-        let entryPointContract;
-        for (let entryPointContractIndex = 0;
-          entryPointContractIndex < entryPointContracts.length;
-          entryPointContractIndex += 1) {
-          if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
-           === entryPoint.toLowerCase()) {
-            entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
-            break;
-          }
-        }
         if (entryPointContract) {
           const userOpReceipt = await getUserOperationReceiptForDataSaving(
             this.chainId,
@@ -224,32 +219,36 @@ ITransactionPublisher<TransactionQueueMessageType> {
     });
 
     if (transactionExecutionResponse) {
-      log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
-      let transactionFee = 0;
-      let transactionFeeInUSD = 0;
-      let transactionFeeCurrency = '';
-      if (!transactionReceipt.gasUsed && !transactionReceipt.effectiveGasPrice) {
-        log.info(`gasUsed or effectiveGasPrice field not found in ${JSON.stringify(transactionExecutionResponse)}`);
-      } else {
-        transactionFee = Number(transactionReceipt.gasUsed.mul(
-          transactionReceipt.effectiveGasPrice,
-        ));
-        transactionFeeCurrency = config.chains.currency[this.chainId];
-        const coinsRateObj = await this.cacheService.get(getTokenPriceKey());
-        if (!coinsRateObj) {
-          log.info('Coins Rate Obj not fetched from cache');
+      try {
+        log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
+        let transactionFee = 0;
+        let transactionFeeInUSD = 0;
+        let transactionFeeCurrency = '';
+        if (!transactionReceipt.gasUsed && !transactionReceipt.effectiveGasPrice) {
+          log.info(`gasUsed or effectiveGasPrice field not found in ${JSON.stringify(transactionExecutionResponse)}`);
         } else {
-          transactionFeeInUSD = JSON.parse(coinsRateObj)[this.chainId];
+          transactionFee = Number(transactionReceipt.gasUsed.mul(
+            transactionReceipt.effectiveGasPrice,
+          ));
+          transactionFeeCurrency = config.chains.currency[this.chainId];
+          const coinsRateObj = await this.cacheService.get(getTokenPriceKey());
+          if (!coinsRateObj) {
+            log.info('Coins Rate Obj not fetched from cache');
+          } else {
+            transactionFeeInUSD = JSON.parse(coinsRateObj)[this.chainId];
+          }
         }
+        await this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
+          receipt: transactionReceipt,
+          transactionFee,
+          transactionFeeInUSD,
+          transactionFeeCurrency,
+          status: TransactionStatus.FAILED,
+          updationTime: Date.now(),
+        }, transactionId, transactionExecutionResponse?.hash);
+      } catch (error) {
+        log.info(`Error in saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId} with error: ${parseError(error)}`);
       }
-      await this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
-        receipt: transactionReceipt,
-        transactionFee,
-        transactionFeeInUSD,
-        transactionFeeCurrency,
-        status: TransactionStatus.FAILED,
-        updationTime: Date.now(),
-      }, transactionId, transactionExecutionResponse?.hash);
     }
 
     if (transactionType === TransactionType.BUNDLER || transactionType === TransactionType.AA) {
@@ -264,18 +263,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       for (let userOpIndex = 0; userOpIndex < userOps.length; userOpIndex += 1) {
         const { userOpHash, entryPoint } = userOps[userOpIndex];
 
-        const entryPointContracts = this.entryPointMap[this.chainId];
-
-        let entryPointContract;
-        for (let entryPointContractIndex = 0;
-          entryPointContractIndex < entryPointContracts.length;
-          entryPointContractIndex += 1) {
-          if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
-           === entryPoint.toLowerCase()) {
-            entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
-            break;
-          }
-        }
+        const entryPointContract = this.entryPointMap[this.chainId][entryPoint];
 
         if (entryPointContract) {
           const userOpReceipt = await getUserOperationReceiptForDataSaving(

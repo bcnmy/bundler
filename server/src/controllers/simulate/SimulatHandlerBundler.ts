@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { EthMethodType, TransactionMethodType } from '../../../../common/types';
 import { STATUSES } from '../../middleware';
-import { simulateAndValidateBundlerTransaction } from './SimulateBundlerTransaction';
+import { validateBundlerTransaction } from './SimulateBundlerTransaction';
 
 export const simulateBundlerTransaction = () => async (
   req: Request,
@@ -13,7 +13,7 @@ export const simulateBundlerTransaction = () => async (
     let response = null;
     switch (method) {
       case TransactionMethodType.BUNDLER:
-        response = await simulateAndValidateBundlerTransaction(req);
+        response = await validateBundlerTransaction(req);
         break;
       case EthMethodType.ESTIMATE_USER_OPERATION_GAS:
         response = {

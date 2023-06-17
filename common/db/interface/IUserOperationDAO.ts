@@ -1,7 +1,7 @@
 import { IUserOperation } from '../mongo/interface';
 
 export type InitialUserOperationDataType = {
-  transactionId: string;
+  transactionId?: string,
   entryPoint: string;
   sender: string;
   nonce: number;

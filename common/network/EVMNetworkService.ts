@@ -84,6 +84,8 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
             return await this.ethersProvider.sendTransaction(params.tx);
           case RpcMethod.waitForTransaction:
             return await this.ethersProvider.waitForTransaction(params.transactionHash);
+          case RpcMethod.getBaseFeeForBlock:
+            return await this.ethersProvider.getBlock(params.block);
           default:
             return null;
         }
@@ -299,6 +301,13 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
     const erc20Contract = this.getContract(JSON.stringify(ERC20_ABI), tokenAddress);
     const decimal = await erc20Contract.decimal;
     return decimal;
+  }
+
+  async getBaseFeeForBlock(block: string | number = 'latest'): Promise<string> {
+    const blockData = await this.useProvider(RpcMethod.getBaseFeeForBlock, {
+      block,
+    });
+    return ethers.utils.formatUnits(blockData.baseFeePerGas.toString(), 'gwei');
   }
 
   async sendRpcCall(method: string, params: Array<object>): Promise<any> {

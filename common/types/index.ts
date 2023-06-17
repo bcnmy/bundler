@@ -110,7 +110,7 @@ export type BundlerTransactionMessageType = {
   chainId: number;
   value: string;
   transactionId: string;
-  userOp?: UserOperationType;
+  userOps?: UserOperationType[]
 };
 
 export type SCWTransactionMessageType = {
@@ -121,7 +121,7 @@ export type SCWTransactionMessageType = {
   chainId: number;
   value: string;
   transactionId: string;
-  walletAddress: string;
+  walletAddress?: string;
 };
 
 export type GaslessFallbackTransactionMessageType = {
@@ -132,7 +132,7 @@ export type GaslessFallbackTransactionMessageType = {
   chainId: number;
   value: string;
   transactionId: string;
-  walletAddress: string;
+  walletAddress?: string;
 };
 
 type ResponseType = {
@@ -174,10 +174,9 @@ export type SymbolMapByChainIdType = {
 };
 
 export type EntryPointMapType = {
-  [chainId: number]: Array<{
-    address: string,
-    entryPointContract: ethers.Contract
-  }>
+  [chainId: number]:{
+    [address: string]: ethers.Contract
+  }
 };
 
 export type FallbackGasTankMapType = {
@@ -258,4 +257,27 @@ export type StakeInfo = {
   addr: string;
   stake: BigNumberish;
   unstakeDelaySec: BigNumberish;
+};
+
+export type MempoolConfigType = {
+  maxLength: number,
+  minLength: number,
+  maxUserOpPerSender: number,
+  minMaxPriorityFeePerGasBumpPercentage: number,
+  minMaxFeePerGasBumpPercentage: number
+};
+
+export type MempoolEntry = {
+  userOp: UserOperationType,
+  userOpHash: string,
+  markedForBundling: boolean,
+};
+
+// TODO change any to fixed types
+export type EntityInfoType = {
+  returnInfo: any,
+  senderInfo: any,
+  factoryInfo: any,
+  paymasterInfo: any,
+  aggregatorInfo: any,
 };

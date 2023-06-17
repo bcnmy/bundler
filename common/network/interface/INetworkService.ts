@@ -11,6 +11,7 @@ export enum RpcMethod {
   getTransactionCount,
   sendTransaction,
   waitForTransaction,
+  getBaseFeeForBlock,
 }
 
 export interface INetworkService<AccountType, RawTransactionType> {
@@ -63,4 +64,5 @@ export interface INetworkService<AccountType, RawTransactionType> {
   waitForTransaction(
     transactionHash: string
   ): Promise<ethers.providers.TransactionReceipt>
+  getBaseFeeForBlock(block?: number | string): Promise<string>;
 }

@@ -1,4 +1,8 @@
-import { SymbolMapByChainIdType, TransactionType, DefaultGasOverheadType } from '../../common/types';
+import {
+  SymbolMapByChainIdType,
+  TransactionType,
+  DefaultGasOverheadType,
+} from '../../common/types';
 
 type ChainIdWithStringValueType = {
   [key: number]: string
@@ -133,10 +137,7 @@ type ChainIdSupportedTransactionType = {
 };
 
 type EntryPointDataConfigType = {
-  [key: number]: Array<{
-    abi: Array<any>,
-    address: string,
-  }>
+  [address: string]: Array<any>
 };
 
 type FallbackGasTankDataConfigType = {
@@ -171,6 +172,33 @@ type PaymasterDashboardBackendConfigType = {
   dappDataUrl: string
 };
 
+type PerChainMempoolConfigType = {
+  maxLength: {
+    [chainId: string]: number
+  },
+  minLength: {
+    [chainId: string]: number
+  },
+  maxUserOpPerSender: {
+    [chainId: string]: number
+  },
+  minMaxPriorityFeePerGasBumpPercentage: {
+    [chainId: string]: number
+  },
+  minMaxFeePerGasBumpPercentage: {
+    [chainId: string]: number
+  }
+};
+
+type PerChainBundlingConfigType = {
+  autoBundlingInterval: {
+    [chainId: string]: number
+  },
+  maxBundleGas: {
+    [chainId: string]: number
+  },
+};
+
 export type ConfigType = {
   queueUrl: string,
   paymasterDashboardBackendConfig: PaymasterDashboardBackendConfigType,
@@ -193,7 +221,9 @@ export type ConfigType = {
   zeroAddress: string,
   simulationData: SimulationDataConfigType,
   abi: AbiConfigType,
-  defaultGasOverheads: DefaultGasOverheadType
+  defaultGasOverheads: DefaultGasOverheadType,
+  mempoolConfig: PerChainMempoolConfigType,
+  bundlingConfig: PerChainBundlingConfigType,
 };
 
 export interface IConfig {
