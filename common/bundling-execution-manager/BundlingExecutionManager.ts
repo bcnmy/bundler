@@ -1,7 +1,6 @@
 /* eslint-disable no-continue */
 /* eslint-disable no-await-in-loop */
 import { Mutex } from 'async-mutex';
-import { logger } from '../../server/dist/common/log-config';
 import { IBundlingService } from '../bundling-service/interface';
 import { IMempoolManager } from '../mempool-manager/interface';
 import { BundlerRelayService } from '../relay-service';
@@ -10,6 +9,7 @@ import { EntryPointMapType, TransactionType, UserOperationType } from '../types'
 import { generateTransactionId, parseError } from '../utils';
 import { IBundlingExecutionManager } from './interface/IBundlingExecutionManager';
 import { BundleExecutionManagerParamsType } from './types';
+import { logger } from '../log-config';
 
 const log = logger(module);
 
