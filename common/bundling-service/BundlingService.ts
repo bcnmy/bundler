@@ -61,7 +61,7 @@ export class BundlingService implements IBundlingService {
 
     for (const userOp of sortedUserOps) {
       log.info(`Checking if sender: ${userOp.sender} already exists in bundle`);
-      if (!senders.has(userOp.sender.toLowerCase())) {
+      if (senders.has(userOp.sender.toLowerCase())) {
         log.info(`The sender: ${userOp.sender} of userOp: ${JSON.stringify(userOp)} already has a userOp in the bundle`);
         continue;
       }

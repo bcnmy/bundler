@@ -18,11 +18,13 @@ export class MempoolManager implements IMempoolManager {
 
   cacheService: ICacheService;
 
-  mempool: MempoolEntry[] = [];
+  mempool: MempoolEntry[];
 
   mempoolFromCache: MempoolEntry[];
 
   private eventHandler: ((force: boolean) => void) | null = null;
+
+  nodePathIndex: number;
 
   constructor(mempoolManagerParams: MempoolManagerParamsType) {
     const {
@@ -34,7 +36,9 @@ export class MempoolManager implements IMempoolManager {
     this.chainId = options.chainId;
     this.entryPoint = options.entryPoint;
     this.mempoolConfig = options.mempoolConfig;
-    this.mempoolFromCache = options.mempoolFromCache ? JSON.parse(options.mempoolFromCache) : [];
+    this.mempoolFromCache = options.mempoolFromCache !== '' ? JSON.parse(options.mempoolFromCache as string) : [];
+    this.mempool = this.mempoolFromCache;
+    this.nodePathIndex = options.nodePathIndex;
   }
 
   markUserOpIncludedForBundling(userOpHash: string): void {
@@ -90,12 +94,14 @@ export class MempoolManager implements IMempoolManager {
   }
 
   removeUserOp(userOpOrHash: string | UserOperationType): void {
+    log.info(`Removing userOpOrHash: ${JSON.stringify(userOpOrHash)} from mempool of length: ${this.mempool.length} of entryPointAddress: ${this.entryPoint.address} on chainId: ${this.chainId}`);
     let index = -1;
     if (typeof userOpOrHash === 'string') {
       index = this.mempool.findIndex((entry) => entry.userOpHash === userOpOrHash);
     } else {
       index = this.mempool.findIndex((entry) => entry.userOp === userOpOrHash);
     }
+    log.info(`index: ${index} of userOp to be removed from mempool of length: ${this.mempool.length} of entryPointAddress: ${this.entryPoint.address} on chainId: ${this.chainId}`);
     this.mempool.splice(index, 1);
     this.updateCacheMempool();
   }
@@ -150,6 +156,7 @@ export class MempoolManager implements IMempoolManager {
       getCacheMempoolKey(
         this.chainId,
         this.entryPoint.address,
+        this.nodePathIndex,
       ),
       JSON.stringify(this.mempool),
     );
@@ -157,13 +164,16 @@ export class MempoolManager implements IMempoolManager {
 
   // method to set the event handler
   setEventHandler(handler: (force: boolean) => void) {
+    log.info(`Setting eventHandler on mempool with entryPointAddress: ${this.entryPoint.address} on chainId: ${this.chainId}`);
     this.eventHandler = handler;
   }
 
   // method to fire the event
   fireUserOpAddedEvent() {
+    log.info(`Firing userOpAddedEvent on mempool with entryPointAddress: ${this.entryPoint.address} on chainId: ${this.chainId}`);
     if (this.eventHandler) {
       // Call the event handler function passing the event data
+      log.info(`Calling eventHandler on mempool with entryPointAddress: ${this.entryPoint.address} on chainId: ${this.chainId}`);
       this.eventHandler(false);
     }
   }

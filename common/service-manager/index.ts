@@ -515,12 +515,22 @@ let statusService: IStatusService;
         Object.keys(entryPointMap[chainId]).forEach(async (entryPointAddress: string) => {
           log.info(`Setting up Mempool Manager for Bundler on chainId: ${chainId} for entryPointAddress: ${entryPointAddress}`);
 
+          const {
+            relayer,
+          } = config;
+
+          const {
+            nodePathIndex,
+          } = relayer;
+
           const mempoolFromCache = await cacheService.get(
             getCacheMempoolKey(
               chainId,
               entryPointAddress,
+              nodePathIndex,
             ),
           );
+          log.info(`mempoolFromCache: ${mempoolFromCache} for entryPointAddress: ${entryPointAddress} on chainId: ${chainId} woth nodePathIndex: ${nodePathIndex}`);
 
           const mempoolManager = new MempoolManager({
             cacheService,
@@ -528,6 +538,7 @@ let statusService: IStatusService;
               chainId,
               entryPoint: entryPointMap[chainId][entryPointAddress],
               mempoolFromCache,
+              nodePathIndex,
               mempoolConfig: {
                 maxLength: mempoolConfig.maxLength[chainId],
                 minLength: mempoolConfig.minLength[chainId],

@@ -8,7 +8,8 @@ export type MempoolManagerParamsType = {
     mempoolFromCache?: string,
     chainId: number;
     entryPoint: ethers.Contract;
-    mempoolConfig: MempoolConfigType
+    mempoolConfig: MempoolConfigType;
+    nodePathIndex: number
   }
 };
 

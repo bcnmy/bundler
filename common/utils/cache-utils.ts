@@ -6,4 +6,4 @@ export const getRetryTransactionCountKey = (transactionId: string, chainId: numb
 
 export const getTokenPriceKey = () => 'NETWORK_PRICE_DATA';
 
-export const getCacheMempoolKey = (chainId: number, entryPointAddress: string) => `Cache_Mempool_chainId_${chainId}_entryPointAddress_${entryPointAddress}`;
+export const getCacheMempoolKey = (chainId: number, entryPointAddress: string, nodePathIndex: number) => `Cache_Mempool_chainId_${chainId}_entryPointAddress_${entryPointAddress}_nodePathIndex_${nodePathIndex}`;

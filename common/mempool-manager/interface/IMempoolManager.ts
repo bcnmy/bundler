@@ -10,6 +10,7 @@ export interface IMempoolManager {
   cacheService: ICacheService;
   mempool: MempoolEntry[];
   mempoolFromCache: MempoolEntry[];
+  nodePathIndex: number;
 
   countMempoolEntries(): number;
   getMempoolEntries(): MempoolEntry[];
