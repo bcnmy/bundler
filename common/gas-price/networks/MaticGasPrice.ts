@@ -188,8 +188,8 @@ export class MaticGasPrice extends GasPrice implements IScheduler {
     let {
       mediumGasPriceInWei = 20000000000,
       fastGasPriceInWei = 30000000000,
-      fastestGasPriceInWei,
-    } = response;
+      fastestGasPriceInWei = 35000000000,
+    } = response || {};
 
     if (config.gasPrice[this.chainId].gasOracle.polygonscanUrl
        && fastGasPriceInWei < config.gasPrice[this.chainId].minGasPrice) {
