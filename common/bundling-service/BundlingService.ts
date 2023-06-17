@@ -53,7 +53,7 @@ export class BundlingService implements IBundlingService {
     userOps: UserOperationType[],
     entryPointContract: Contract,
   ): Promise<UserOperationType[]> {
-    const sortedUserOps = await this.sortUserOps(userOps);
+    const sortedUserOps = this.sortUserOps(userOps);
     log.info(`Sorted userOps: ${JSON.stringify(sortedUserOps)} for entryPoint: ${entryPointContract.address}`);
     const bundle: UserOperationType[] = [];
     const senders = new Set<string>();
@@ -111,7 +111,7 @@ export class BundlingService implements IBundlingService {
     return bundle;
   }
 
-  private async sortUserOps(userOps: UserOperationType[]): Promise<UserOperationType[]> {
+  private sortUserOps(userOps: UserOperationType[]): UserOperationType[] {
     const sortedUserOps = this.sortingStrategy.sort(userOps);
     return sortedUserOps;
   }
