@@ -20,17 +20,17 @@ export class SortUserOpsByFeeAndGas {
       return userOp2GasPrice - userOp1GasPrice;
     });
 
-    // userOps.sort((userOp1: UserOperationType, userOp2: UserOperationType) => {
-    //   const sender1 = userOp1.sender;
-    //   const sender2 = userOp2.sender;
-    //   if (sender1.toLowerCase() === sender2.toLowerCase()) {
-    //     if (userOp1.nonce < userOp2.nonce) {
-    //       return 0;
-    //     }
-    //     return 1;
-    //   }
-    //   return 0;
-    // });
+    userOps.sort((userOp1: UserOperationType, userOp2: UserOperationType) => {
+      const sender1 = userOp1.sender;
+      const sender2 = userOp2.sender;
+      if (sender1.toLowerCase() === sender2.toLowerCase()) {
+        if (BigNumber.from(userOp1.nonce).toNumber() < BigNumber.from(userOp2.nonce).toNumber()) {
+          return -1;
+        }
+        return 1;
+      }
+      return 0;
+    });
     return userOps;
   }
 
