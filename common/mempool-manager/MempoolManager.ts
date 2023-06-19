@@ -100,7 +100,7 @@ export class MempoolManager implements IMempoolManager {
     } else {
       index = this.mempool.findIndex((entry) => entry.userOp === userOpOrHash);
     }
-    log.info(`index: ${index} of userOp to be removed from mempool of length: ${this.mempool.length} of entryPointAddress: ${this.entryPoint.address} on chainId: ${this.chainId}`);
+    log.info(`index: ${index} to be removed from mempool of length: ${this.mempool.length} of entryPointAddress: ${this.entryPoint.address} on chainId: ${this.chainId}`);
     this.mempool.splice(index, 1);
     this.updateCacheMempool();
   }
@@ -110,7 +110,7 @@ export class MempoolManager implements IMempoolManager {
     // Add the redis lock
     const index = this.mempool.findIndex((entry) => (
       entry.userOp.sender.toLowerCase() === sender.toLowerCase()
-      && BigNumber.from(entry.userOp.nonce).toNumber() === nonce
+      && BigNumber.from(entry.userOp.nonce).toNumber() === BigNumber.from(nonce).toNumber()
     ));
     return index;
   }
