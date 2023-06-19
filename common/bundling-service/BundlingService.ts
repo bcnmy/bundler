@@ -42,9 +42,7 @@ export class BundlingService implements IBundlingService {
     this.userOpValidationAndGasEstimationService = userOpValidationAndGasEstimationService;
     this.networkService = networkService;
 
-    const sortUserOpsByFeeAndGas = new SortUserOpsByFeeAndGas({
-      networkService,
-    });
+    const sortUserOpsByFeeAndGas = new SortUserOpsByFeeAndGas();
 
     this.sortingStrategy = sortUserOpsByFeeAndGas;
   }

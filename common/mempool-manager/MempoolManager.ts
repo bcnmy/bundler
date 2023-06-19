@@ -70,6 +70,7 @@ export class MempoolManager implements IMempoolManager {
       userOpHash,
       markedForBundling: false,
     };
+
     const index = this.findUserOpBySenderAndNonce(userOp.sender, userOp.nonce);
     log.info(`index: ${index} for userOp: ${JSON.stringify(userOp)} entryPointAddress: ${this.entryPoint.address} on chainId: ${this.chainId}`);
     if (index !== -1) {
@@ -84,8 +85,6 @@ export class MempoolManager implements IMempoolManager {
       log.info(`Entry pushed in mempool: ${JSON.stringify(this.mempool[index])} entryPointAddress: ${this.entryPoint.address} on chainId: ${this.chainId}`);
     } else {
       this.senderUserOpCount[userOp.sender] = (this.senderUserOpCount[userOp.sender] ?? 0) + 1;
-      // TODO add this we have to put some restrictions on num of userOps per sender
-      // this.checkSenderUserOpCount();
       log.info(`Entry pushed in mempool: ${JSON.stringify(newEntry)} entryPointAddress: ${this.entryPoint.address} on chainId: ${this.chainId}`);
       this.mempool.push(newEntry);
       this.fireUserOpAddedEvent();

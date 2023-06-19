@@ -3,6 +3,7 @@ import fs, { existsSync } from 'fs';
 import _, { isNumber } from 'lodash';
 import path from 'path';
 import { logger } from '../common/log-config';
+import 'dotenv/config';
 
 import { ConfigType, IConfig } from './interface/IConfig';
 

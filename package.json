@@ -25,7 +25,7 @@
     "cors": "^2.8.5",
     "crypto-js": "^4.1.1",
     "dd-trace": "^3.16.0",
-    "dotenv": "^16.0.3",
+    "dotenv": "^16.3.0",
     "ethereumjs-util": "^7.1.5",
     "ethers": "^5.7.1",
     "express": "^4.18.2",

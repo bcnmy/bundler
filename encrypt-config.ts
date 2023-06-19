@@ -1,5 +1,6 @@
 import crypto from 'crypto-js';
 import { promises, existsSync } from 'fs';
+import 'dotenv/config';
 
 const KEY_SIZE = 32;
 const PBKDF2_ITERATIONS = 310000;

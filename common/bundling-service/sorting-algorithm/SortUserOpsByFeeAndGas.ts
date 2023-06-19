@@ -1,31 +1,36 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
+/* eslint-disable @typescript-eslint/no-useless-constructor */
 /* eslint-disable class-methods-use-this */
 import { BigNumber } from 'ethers';
-import { EVMRawTransactionType, UserOperationType } from '../../types';
-import { INetworkService } from '../../network';
-import { IEVMAccount } from '../../../relayer/src/services/account';
-import { SortUserOpsByFeeAndGasParamsType } from '../types';
+import { UserOperationType } from '../../types';
 
 export class SortUserOpsByFeeAndGas {
-  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
-
-  constructor(sortUserOpsByFeeAndGasParams: SortUserOpsByFeeAndGasParamsType) {
-    const {
-      networkService,
-    } = sortUserOpsByFeeAndGasParams;
-    this.networkService = networkService;
-  }
+  constructor() {}
 
   sort(userOps: UserOperationType[]): UserOperationType[] {
     userOps.sort((userOp1: UserOperationType, userOp2: UserOperationType) => {
       const userOp1GasPrice = this.getUserOpGasPrice(userOp1);
       const userOp2GasPrice = this.getUserOpGasPrice(userOp2);
+
       if (userOp1GasPrice === userOp2GasPrice) {
         return BigNumber.from(
-          userOp1.preVerificationGas,
-        ).toNumber() - BigNumber.from(userOp2.preVerificationGas).toNumber();
+          userOp2.preVerificationGas,
+        ).toNumber() - BigNumber.from(userOp1.preVerificationGas).toNumber();
       }
-      return userOp1GasPrice - userOp2GasPrice;
+      return userOp2GasPrice - userOp1GasPrice;
     });
+
+    // userOps.sort((userOp1: UserOperationType, userOp2: UserOperationType) => {
+    //   const sender1 = userOp1.sender;
+    //   const sender2 = userOp2.sender;
+    //   if (sender1.toLowerCase() === sender2.toLowerCase()) {
+    //     if (userOp1.nonce < userOp2.nonce) {
+    //       return 0;
+    //     }
+    //     return 1;
+    //   }
+    //   return 0;
+    // });
     return userOps;
   }
 
