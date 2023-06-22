@@ -76,4 +76,15 @@ export class TransactionDAO implements ITransactionDAO {
       relayerDestinationContractName,
     });
   }
+
+  async updateByTransactionIdAndTransactionHashForFrontRunnedTransaction(
+    chainId: number,
+    id: string,
+    hash: string,
+    data: object,
+  ): Promise<void> {
+    await this._db.getBlockchainTransaction(chainId).updateOne({
+      transactionId: id,
+    }, data);
+  }
 }

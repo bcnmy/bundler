@@ -212,6 +212,7 @@ export const getUserOperationReceiptForDataSaving = async (
   receipt: any,
   entryPointContract: ethers.Contract,
   fromBlock: number,
+  ethersProvider?: ethers.providers.JsonRpcProvider,
 ): Promise<any> => {
   try {
     let event = [];
@@ -234,14 +235,31 @@ export const getUserOperationReceiptForDataSaving = async (
         const actualGasUsedInNumber = Number(actualGasUsedInHex.toString());
         log.info(`actualGasUsedInNumber: ${actualGasUsedInNumber} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
 
-        const logs = filterLogs(event[0], receipt.logs);
+        const { transactionHash } = event[0];
+        let logs;
+        if (!(transactionHash.toLowerCase() === receipt.transactionHash.toLowerCase())) {
+          log.info(`Transaction for userOpHash: ${userOpHash} on chainId: ${chainId} was front runned`);
+          const frontRunnedTransactionReceipt = await ethersProvider?.getTransactionReceipt(
+            transactionHash,
+          ) as ethers.providers.TransactionReceipt;
+          logs = filterLogs(event[0], frontRunnedTransactionReceipt.logs);
+          log.info(`logs: ${JSON.stringify(logs)} for userOpHash: ${userOpHash} on chainId: ${chainId}`);
+          return {
+            actualGasCost: actualGasCostInNumber,
+            actualGasUsed: actualGasUsedInNumber,
+            success: event[0].args[4],
+            logs,
+            frontRunnedTransactionReceipt,
+          };
+        }
+        logs = filterLogs(event[0], receipt.logs);
         log.info(`logs: ${JSON.stringify(logs)} for userOpHash: ${userOpHash} on chainId: ${chainId}`);
-
         return {
           actualGasCost: actualGasCostInNumber,
           actualGasUsed: actualGasUsedInNumber,
           success: event[0].args[4],
           logs,
+          frontRunnedTransactionReceipt: null,
         };
       }
       log.info('No event found');

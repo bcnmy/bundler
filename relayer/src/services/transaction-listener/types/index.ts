@@ -58,6 +58,10 @@ export type TransactionDataToBeUpdatedInDatabaseType = {
   resubmitted?: boolean;
   relayerAddress?: string;
   updationTime?: number;
+  frontRunnedReceipt?: object,
+  frontRunnedTransactionFee?: number,
+  frontRunnedTransactionFeeInUSD?: number,
+  frontRunnedTransactionFeeCurrency? : string,
 };
 
 export type NewTransactionDataToBeSavedInDatabaseType = {
@@ -75,4 +79,23 @@ export type NewTransactionDataToBeSavedInDatabaseType = {
   resubmitted: boolean,
   creationTime: number,
   updationTime: number,
+};
+
+export type FrontRunnedTransactionDataToBeUpdatedInDatabaseType = {
+  transactionHash?: string;
+  previousTransactionHash?: string;
+  status?: TransactionStatus;
+  transactionFee?: number;
+  transactionFeeInUSD?: number;
+  transactionFeeCurrency?: string;
+  rawTransaction?: ethers.providers.TransactionResponse;
+  gasPrice?: BigNumber;
+  receipt?: object;
+  resubmitted?: boolean;
+  relayerAddress?: string;
+  updationTime?: number;
+  frontRunnedReceipt?: object,
+  frontRunnedTransactionFee?: number,
+  frontRunnedTransactionFeeInUSD?: number,
+  frontRunnedTransactionFeeCurrency? : string,
 };
