@@ -1,3 +1,4 @@
+{{- if .Values.ingress.hostv2 }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -9,11 +10,11 @@ metadata:
     kubernetes.io/tls-acme: "true"
   labels:
     {{- include "relayers-service.labels" . | nindent 4 }}
-  name: {{ .Values.relayer.name }}-ingress_new
+  name: {{ .Values.relayer.name }}-ingress-v2
   namespace: {{ .Values.namespace }}
 spec:
   rules:
-  - host: {{ .Values.ingress.host_new }}
+  - host: {{ .Values.ingress.hostv2 }}
     http:
       paths:
       - backend:
@@ -25,5 +26,6 @@ spec:
         pathType: ImplementationSpecific
   tls:
   - hosts:
-    - {{ .Values.ingress.host_new }}
-    secretName: {{ .Values.name }}-tls-cert
+    - {{ .Values.ingress.hostv2 }}
+    secretName: {{ .Values.name }}-tls-cert-v2
+{{- end }}
