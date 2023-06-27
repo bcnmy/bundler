@@ -16,6 +16,7 @@ secret:
 
 ingress:
   host: sdk-relayer.staging.biconomy.io
+  override: consistent-hashing
 
 # datadog configs
 affinity_tolerations:

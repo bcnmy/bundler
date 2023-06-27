@@ -5,6 +5,10 @@ metadata:
   namespace: {{ .Values.namespace }}
   labels:
     {{- include "relayers-service.labels" . | nindent 4 }}
+  {{- if .Values.ingress.override }}
+  annotations:
+    konghq.com/override: {{ .Values.ingress.override }}
+  {{- end }}
 spec:
   selector:
     app: {{ .Values.relayer.name }}
