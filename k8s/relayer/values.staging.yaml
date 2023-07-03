@@ -30,9 +30,12 @@ secret:
 ingress:
   host: sdk-relayer.staging.biconomy.io
 
-# datadog configs
-affinity_tolerations:
-  enable: false
+affinity: 
+  antiAffinity:
+    topologyKey: kubernetes.io/hostname
+    weight: 100
+
+  # affinityTolerations: {}
   
 datadog:
   enable: false
