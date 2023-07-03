@@ -25,11 +25,31 @@ secret:
 ingress:
   host: sdk-relayer.prod.biconomy.io
 
-# datadog configs
-affinity_tolerations:
-  enable: true 
-  key: "app"
-  values: "monitoring"
+
+probes:
+  healthEndpoint: /api/v1/health-check
+  liveness:
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 1
+    successThreshold: 1
+    failureThreshold: 3
+  readiness:
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 1
+    successThreshold: 1
+    failureThreshold: 3
+  
+affinity: 
+  antiAffinity:
+    topologyKey: kubernetes.io/hostname
+    weight: 100
+
+  affinityTolerations:
+    key: "app"
+    values: "monitoring"
+
 
 datadog:
   enable: true
@@ -37,10 +57,16 @@ datadog:
 
   service: "sdk-relayer-service"
   version: "v3.15.0"
-  lib_version: "v3.16.0"
+  lib_version: "v3.15.0"
 
   configs:
+    DD_TRACE_AGENT_URL: "unix:///var/run/datadog/apm.socket"
+    DD_ENV: "production"
+    DD_SERVICE: "sdk-relayer-service"
+    DD_VERSION: "v3.15.0"
+    DD_LIB_VERSION: "v3.15.0"
     DD_TRACE_DEBUG: "false"
     DD_TRACE_STARTUP_LOGS: "false"
     DD_PROFILING_ENABLED: "true"
     DD_LOGS_INJECTION: "false"
+

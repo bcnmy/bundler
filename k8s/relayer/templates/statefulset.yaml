@@ -30,22 +30,37 @@ spec:
       {{- end }}
         releaseTime: {{ dateInZone "2006-01-02 15:04:05Z" (now) "UTC"| quote }} 
     spec:
-    {{- if .Values.affinity_tolerations.enable }}
+    {{- if .Values.affinity }}
       affinity:
+        {{- if .Values.affinity.antiAffinity }}
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - {{ .Values.name }}
+              topologyKey:  {{ .Values.affinity.antiAffinity.topologyKey }}
+            weight: {{ .Values.affinity.antiAffinity.weight }}
+        {{- end }} 
+        {{- if .Values.affinity.affinityTolerations }}
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: {{ .Values.affinity_tolerations.key }}
+              - key: {{ .Values.affinity.affinityTolerations.key }}
                 operator: In
                 values:
-                - {{ .Values.affinity_tolerations.values }}
+                - {{ .Values.affinity.affinityTolerations.values }}
       tolerations:
       - effect: NoSchedule
-        key: {{ .Values.affinity_tolerations.key }}
+        key: {{ .Values.affinity.affinityTolerations.key }}
         operator: Equal
-        value: {{ .Values.affinity_tolerations.values }}
-    {{- end }}
+        value: {{ .Values.affinity.affinityTolerations.values }}
+      {{- end }} 
+      {{- end }} 
       containers:
       - name: {{ .Values.relayer.name }}{{ .Values.index }}
         image: {{ .Values.relayer.image }}
@@ -66,6 +81,18 @@ spec:
           - mountPath: /var/run/datadog
             name: apmsocketpath
       {{- end }} 
+      {{- if .Values.probes }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.probes.healthEndpoint }}
+            port: {{ .Values.port }}
+{{ toYaml .Values.probes.liveness | indent 10 }}
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.probes.healthEndpoint }}
+            port: {{ .Values.port }}
+{{ toYaml .Values.probes.readiness | indent 10 }}
+      {{- end }}      
         resources:
           requests:
             memory: {{ .Values.relayer.resource.requests.memory }}
