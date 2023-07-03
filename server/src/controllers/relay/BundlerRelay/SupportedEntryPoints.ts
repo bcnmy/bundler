@@ -8,6 +8,7 @@ const log = logger(module);
 
 export const getSupportedEntryPoints = async (req: Request, res: Response) => {
   try {
+    const { id } = req.body;
     const { chainId } = req.params;
     log.info(`chainId: ${chainId}`);
 
@@ -27,7 +28,7 @@ export const getSupportedEntryPoints = async (req: Request, res: Response) => {
 
     return res.status(STATUSES.SUCCESS).json({
       jsonrpc: '2.0',
-      id: 1,
+      id: id || 1,
       result: supportedEntryPoints,
     });
   } catch (error) {

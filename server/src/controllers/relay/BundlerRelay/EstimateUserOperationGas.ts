@@ -8,6 +8,7 @@ const log = logger(module);
 
 export const estimateUserOperationGas = async (req: Request, res: Response) => {
   try {
+    const { id } = req.body;
     const userOp = req.body.params[0];
     const entryPointAddress = req.body.params[1];
     const { chainId } = req.params;
@@ -33,7 +34,13 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
 
     const estimatedUserOpGas = await bundlerSimulatonAndValidationServiceMap[
       parseInt(chainId, 10)
-    ].estimateUserOperationGas({ userOp, entryPointContract, chainId: parseInt(chainId, 10) });
+    ].validateAndEstimateUserOperationGas(
+      {
+        userOp,
+        entryPointContract,
+        chainId: parseInt(chainId, 10),
+      },
+    );
 
     const {
       code,
@@ -43,8 +50,12 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
 
     if (code !== STATUSES.SUCCESS) {
       return res.status(STATUSES.BAD_REQUEST).json({
-        code: code || STATUSES.BAD_REQUEST,
-        message,
+        jsonrpc: '2.0',
+        id: id || 1,
+        error: {
+          code: code || STATUSES.BAD_REQUEST,
+          message,
+        },
       });
     }
 
@@ -54,7 +65,6 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
       preVerificationGas,
       validUntil,
       validAfter,
-      deadline,
     } = data;
 
     const gasPrice = await gasPriceServiceMap[Number(chainId)]?.getGasPrice();
@@ -73,7 +83,6 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
           preVerificationGas,
           validUntil,
           validAfter,
-          deadline,
           maxPriorityFeePerGas: gasPrice?.maxPriorityFeePerGas,
           maxFeePerGas: gasPrice?.maxFeePerGas,
         },
@@ -89,7 +98,6 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
         preVerificationGas,
         validUntil,
         validAfter,
-        deadline,
         maxPriorityFeePerGas: gasPrice,
         maxFeePerGas: gasPrice,
       },

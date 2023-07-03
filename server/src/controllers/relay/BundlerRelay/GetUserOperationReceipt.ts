@@ -22,6 +22,7 @@ const log = logger(module);
  */
 export const getUserOperationReceipt = async (req: Request, res: Response) => {
   try {
+    const { id } = req.body;
     const userOpHash = req.body.params[0];
     const { chainId } = req.params;
 
@@ -33,7 +34,7 @@ export const getUserOperationReceipt = async (req: Request, res: Response) => {
     if (!userOperationData || !userOperationData.receipt) {
       return res.status(STATUSES.SUCCESS).json({
         jsonrpc: '2.0',
-        id: 1,
+        id: id || 1,
         result: null,
       });
     }

@@ -9,6 +9,7 @@ const log = logger(module);
 // eslint-disable-next-line consistent-return
 export const simulateAndValidateBundlerTransaction = async (req: Request) => {
   try {
+    const { id } = req.body;
     const userOp = req.body.params[0];
     const entryPointAddress = req.body.params[1];
     const { chainId } = req.params;
@@ -35,19 +36,32 @@ export const simulateAndValidateBundlerTransaction = async (req: Request) => {
 
     const bundlerSimulationAndValidationResponse = await bundlerSimulatonAndValidationServiceMap[
       parseInt(chainId, 10)
-    ].simulateAndValidate({ userOp, entryPointContract, chainId: parseInt(chainId, 10) });
+    ].validateAndEstimateUserOperationGas(
+      {
+        userOp,
+        entryPointContract,
+        chainId: parseInt(chainId, 10),
+      },
+    );
 
     log.info(`Bundler simulation and validation response: ${JSON.stringify(bundlerSimulationAndValidationResponse)}`);
 
-    if (!bundlerSimulationAndValidationResponse.isSimulationSuccessful) {
-      const { message, code } = bundlerSimulationAndValidationResponse;
-      log.info(`message: ${message} and code: ${code} from bundlerSimulationAndValidationResponse for userOp: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
+    const {
+      code,
+      message,
+    } = bundlerSimulationAndValidationResponse;
+
+    if (code !== STATUSES.SUCCESS) {
       return {
-        code: code || STATUSES.BAD_REQUEST,
-        message,
+        jsonrpc: '2.0',
+        id: id || 1,
+        error: {
+          code: code || STATUSES.BAD_REQUEST,
+          message,
+        },
       };
     }
-    req.body.params[2] = bundlerSimulationAndValidationResponse.data.gasLimitFromSimulation;
+    req.body.params[2] = bundlerSimulationAndValidationResponse.data.totalGas;
     req.body.params[3] = bundlerSimulationAndValidationResponse.data.userOpHash;
     log.info(`Transaction successfully simulated and validated for userOp: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
     return {

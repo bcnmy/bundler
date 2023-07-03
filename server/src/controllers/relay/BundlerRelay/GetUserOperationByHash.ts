@@ -13,6 +13,7 @@ const log = logger(module);
  */
 export const getUserOperationByHash = async (req: Request, res: Response) => {
   try {
+    const { id } = req.body;
     const { chainId } = req.params;
     const userOpHash = req.body.params[0];
 
@@ -24,7 +25,7 @@ export const getUserOperationByHash = async (req: Request, res: Response) => {
     if (!userOperation || !userOperation.transactionHash) {
       return res.status(STATUSES.SUCCESS).json({
         jsonrpc: '2.0',
-        id: 1,
+        id: id || 1,
         result: null,
       });
     }
