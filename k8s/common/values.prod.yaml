@@ -16,22 +16,6 @@ secret:
 
 ingress:
   host: sdk-relayer.prod.biconomy.io
-
-
-probes:
-  healthEndpoint: /api/v1/health-check
-  liveness:
-    initialDelaySeconds: 5
-    periodSeconds: 10
-    timeoutSeconds: 1
-    successThreshold: 1
-    failureThreshold: 3
-  readiness:
-    initialDelaySeconds: 5
-    periodSeconds: 10
-    timeoutSeconds: 1
-    successThreshold: 1
-    failureThreshold: 3
   
 datadog:
   enable: true
