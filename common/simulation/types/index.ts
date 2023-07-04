@@ -60,7 +60,8 @@ export type EstimateUserOperationGasReturnType = {
     callGasLimit: number;
     validAfter: number;
     validUntil: number;
-    deadline: number;
+    userOpHash?: string;
+    totalGas: number
   };
 };
 

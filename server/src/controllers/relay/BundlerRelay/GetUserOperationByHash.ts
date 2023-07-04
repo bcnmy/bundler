@@ -13,6 +13,7 @@ const log = logger(module);
  */
 export const getUserOperationByHash = async (req: Request, res: Response) => {
   try {
+    const { id } = req.body;
     const { chainId } = req.params;
     const userOpHash = req.body.params[0];
 
@@ -24,7 +25,7 @@ export const getUserOperationByHash = async (req: Request, res: Response) => {
     if (!userOperation || !userOperation.transactionHash) {
       return res.status(STATUSES.SUCCESS).json({
         jsonrpc: '2.0',
-        id: 1,
+        id: id || 1,
         result: null,
       });
     }
@@ -71,10 +72,15 @@ export const getUserOperationByHash = async (req: Request, res: Response) => {
       result,
     });
   } catch (error) {
+    const { id } = req.body;
     log.error(`Error in getUserOperationByHash handler ${parseError(error)}`);
     return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
-      code: STATUSES.INTERNAL_SERVER_ERROR,
-      error: `Internal Server Error: ${parseError(error)}`,
+      jsonrpc: '2.0',
+      id: id || 1,
+      error: {
+        code: STATUSES.INTERNAL_SERVER_ERROR,
+        message: `Internal Server error: ${parseError(error)}`,
+      },
     });
   }
 };

@@ -35,19 +35,28 @@ export const simulateAndValidateBundlerTransaction = async (req: Request) => {
 
     const bundlerSimulationAndValidationResponse = await bundlerSimulatonAndValidationServiceMap[
       parseInt(chainId, 10)
-    ].simulateAndValidate({ userOp, entryPointContract, chainId: parseInt(chainId, 10) });
+    ].validateAndEstimateUserOperationGas(
+      {
+        userOp,
+        entryPointContract,
+        chainId: parseInt(chainId, 10),
+      },
+    );
 
     log.info(`Bundler simulation and validation response: ${JSON.stringify(bundlerSimulationAndValidationResponse)}`);
 
-    if (!bundlerSimulationAndValidationResponse.isSimulationSuccessful) {
-      const { message, code } = bundlerSimulationAndValidationResponse;
-      log.info(`message: ${message} and code: ${code} from bundlerSimulationAndValidationResponse for userOp: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
+    const {
+      code,
+      message,
+    } = bundlerSimulationAndValidationResponse;
+
+    if (code !== STATUSES.SUCCESS) {
       return {
-        code: code || STATUSES.BAD_REQUEST,
+        code,
         message,
       };
     }
-    req.body.params[2] = bundlerSimulationAndValidationResponse.data.gasLimitFromSimulation;
+    req.body.params[2] = bundlerSimulationAndValidationResponse.data.totalGas;
     req.body.params[3] = bundlerSimulationAndValidationResponse.data.userOpHash;
     log.info(`Transaction successfully simulated and validated for userOp: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
     return {
