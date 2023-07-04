@@ -178,10 +178,11 @@ export class BundlerSimulationAndValidationService {
       // if its FailedOp, then we have the paymaster param... otherwise its an Error(string)
       log.info(`simulateHandleOpResult.errorArgs: ${simulateHandleOpResult.errorArgs}`);
       if (!simulateHandleOpResult.errorArgs) {
-        throw Error(
+        throw new RpcError(
           `Error: ${JSON.stringify(
             simulateHandleOpResult,
           )}`,
+          BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
         );
       }
       let { paymaster } = simulateHandleOpResult.errorArgs;
