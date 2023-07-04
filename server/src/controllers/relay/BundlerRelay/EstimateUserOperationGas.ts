@@ -76,7 +76,7 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
 
       return res.status(STATUSES.SUCCESS).json({
         jsonrpc: '2.0',
-        id: 1,
+        id: id || 1,
         result: {
           callGasLimit,
           verificationGasLimit,
@@ -91,7 +91,7 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
 
     return res.status(STATUSES.SUCCESS).json({
       jsonrpc: '2.0',
-      id: 1,
+      id: id || 1,
       result: {
         callGasLimit,
         verificationGasLimit,
@@ -104,9 +104,14 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
     });
   } catch (error) {
     log.error(`Error in estimateUserOperationGas handler ${parseError(error)}`);
+    const { id } = req.body;
     return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
-      code: STATUSES.INTERNAL_SERVER_ERROR,
-      error: `Internal Server Error: ${parseError(error)}`,
+      jsonrpc: '2.0',
+      id: id || 1,
+      error: {
+        code: STATUSES.INTERNAL_SERVER_ERROR,
+        message: `Internal Server error: ${parseError(error)}`,
+      },
     });
   }
 };

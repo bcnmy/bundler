@@ -36,102 +36,120 @@ export class BundlerSimulationAndValidationService {
   async validateAndEstimateUserOperationGas(
     estimateUserOperationGasData: EstimateUserOperationGasDataType,
   ): Promise<EstimateUserOperationGasReturnType> {
-    const { userOp, entryPointContract, chainId } = estimateUserOperationGasData;
-
-    const fullUserOp = {
-      ...userOp,
-      paymasterAndData: userOp.paymasterAndData || '0x',
-      callGasLimit: userOp.callGasLimit || '0x',
-      maxFeePerGas: userOp.maxFeePerGas || '0x',
-      maxPriorityFeePerGas: userOp.maxPriorityFeePerGas || '0x',
-      preVerificationGas: userOp.preVerificationGas || '0x',
-      verificationGasLimit: userOp.verificationGasLimit || '3000000',
-      signature: userOp.signature || '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b',
-    };
-
-    // preVerificationGas
-    const preVerificationGas = await BundlerSimulationAndValidationService.calcPreVerificationGas(
-      fullUserOp,
-      chainId,
-      entryPointContract,
-    );
-
-    // total gas for the entire handleOps call
     try {
-      const entryPointStatic = entryPointContract.connect(
-        this.networkService.ethersProvider.getSigner(config.zeroAddress),
-      );
-      const simulateHandleOpResult = await entryPointStatic.callStatic
-        .simulateHandleOp(
-          userOp,
-          userOp.sender,
-          userOp.callData,
-        )
-        .catch((e: any) => e);
-      log.info(`simulateHandleOpResult: ${JSON.stringify(simulateHandleOpResult)}`);
-      const parsedResult = BundlerSimulationAndValidationService.parseSimulateHandleOpResult(
-        userOp,
-        simulateHandleOpResult,
-      );
-      let {
-        preOpGas,
-        paid,
-        validAfter,
-        validUntil,
-      } = parsedResult;
-      validAfter = BigNumber.from(validAfter);
-      validUntil = BigNumber.from(validUntil);
-      if (validUntil === BigNumber.from(0)) {
-        validUntil = undefined;
-      }
-      if (validAfter === BigNumber.from(0)) {
-        validAfter = undefined;
-      }
+      const { userOp, entryPointContract, chainId } = estimateUserOperationGasData;
+      const {
+        gasPrice,
+      } = await this.networkService.getGasPrice();
 
-      const verificationGasLimit = BigNumber.from(preOpGas).toNumber();
-      let callGasLimit;
-      let totalGas;
-      if (!fullUserOp.maxFeePerGas || fullUserOp.maxFeePerGas === '0x' || fullUserOp.maxFeePerGas === '0') {
-        const {
-          gasPrice,
-        } = await this.networkService.getGasPrice();
-        totalGas = (BigNumber.from(paid).toNumber()) / (BigNumber.from(gasPrice).toNumber());
-        callGasLimit = totalGas - verificationGasLimit + 21000;
-      } else {
-        totalGas = (BigNumber.from(paid).toNumber())
-        / (BigNumber.from(fullUserOp.maxFeePerGas).toNumber());
-        callGasLimit = totalGas - verificationGasLimit + 21000;
-      }
+      log.info(`userOp received: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
 
-      let userOpHash: string = '';
+      const fullUserOp = {
+        ...userOp,
+        paymasterAndData: userOp.paymasterAndData || '0x',
+        callGasLimit: userOp.callGasLimit || '0x',
+        maxFeePerGas: userOp.maxFeePerGas === '0' || userOp.maxFeePerGas === '0x' || !userOp.maxFeePerGas ? gasPrice : userOp.maxFeePerGas,
+        maxPriorityFeePerGas: userOp.maxPriorityFeePerGas === '0' || userOp.maxPriorityFeePerGas === '0x' || !userOp.maxPriorityFeePerGas ? gasPrice : userOp.maxPriorityFeePerGas,
+        preVerificationGas: userOp.preVerificationGas || '0x',
+        verificationGasLimit: userOp.verificationGasLimit || '3000000',
+        signature: userOp.signature || '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b',
+      };
+
+      log.info(`fullUserOp received: ${JSON.stringify(fullUserOp)} on chainId: ${chainId}`);
+
+      // preVerificationGas
+      const preVerificationGas = await BundlerSimulationAndValidationService.calcPreVerificationGas(
+        fullUserOp,
+        chainId,
+        entryPointContract,
+      );
+      log.info(`preVerificationGas: ${preVerificationGas} on chainId: ${chainId}`);
+
+      // total gas for the entire handleOps call
       try {
-        userOpHash = await entryPointContract.getUserOpHash(userOp);
-        log.info(
-          `userOpHash: ${userOpHash} for userOp: ${JSON.stringify(userOp)}`,
+        const entryPointStatic = entryPointContract.connect(
+          this.networkService.ethersProvider.getSigner(config.zeroAddress),
         );
-      } catch (error) {
-        log.info(
-          `Error in getting userOpHash for userOp: ${JSON.stringify(
-            userOp,
-          )} with error: ${parseError(error)}`,
+        const simulateHandleOpResult = await entryPointStatic.callStatic
+          .simulateHandleOp(
+            fullUserOp,
+            fullUserOp.sender,
+            fullUserOp.callData,
+          )
+          .catch((e: any) => e);
+        log.info(`simulateHandleOpResult: ${JSON.stringify(simulateHandleOpResult)}`);
+        const parsedResult = BundlerSimulationAndValidationService.parseSimulateHandleOpResult(
+          fullUserOp,
+          simulateHandleOpResult,
         );
-      }
-
-      return {
-        code: STATUSES.SUCCESS,
-        message: `Gas successfully estimated for userOp: ${JSON.stringify(
-          userOp,
-        )} on chainId: ${chainId}`,
-        data: {
-          preVerificationGas,
-          verificationGasLimit,
-          callGasLimit,
+        let {
+          preOpGas,
+          paid,
           validAfter,
           validUntil,
-          userOpHash,
-          totalGas,
-        },
-      };
+        } = parsedResult;
+        validAfter = BigNumber.from(validAfter);
+        validUntil = BigNumber.from(validUntil);
+        if (validUntil === BigNumber.from(0)) {
+          validUntil = undefined;
+        }
+        if (validAfter === BigNumber.from(0)) {
+          validAfter = undefined;
+        }
+
+        const verificationGasLimit = BigNumber.from(preOpGas).toNumber();
+        log.info(`verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId}`);
+
+        const totalGas = Math.ceil((BigNumber.from(paid).toNumber())
+        / (BigNumber.from(fullUserOp.maxFeePerGas).toNumber()));
+        log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
+
+        const callGasLimit = totalGas - verificationGasLimit + 21000;
+        log.info(`callGasLimit: ${callGasLimit} on chainId: ${chainId}`);
+
+        let userOpHash: string = '';
+        try {
+          userOpHash = await entryPointContract.getUserOpHash(userOp);
+          log.info(
+            `userOpHash: ${userOpHash} for userOp: ${JSON.stringify(userOp)}`,
+          );
+        } catch (error) {
+          log.info(
+            `Error in getting userOpHash for userOp: ${JSON.stringify(
+              userOp,
+            )} with error: ${parseError(error)}`,
+          );
+        }
+
+        return {
+          code: STATUSES.SUCCESS,
+          message: `Gas successfully estimated for userOp: ${JSON.stringify(
+            userOp,
+          )} on chainId: ${chainId}`,
+          data: {
+            preVerificationGas,
+            verificationGasLimit,
+            callGasLimit,
+            validAfter,
+            validUntil,
+            userOpHash,
+            totalGas,
+          },
+        };
+      } catch (error: any) {
+        return {
+          code: error.code,
+          message: parseError(error),
+          data: {
+            preVerificationGas: 0,
+            verificationGasLimit: 0,
+            callGasLimit: 0,
+            validAfter: 0,
+            validUntil: 0,
+            totalGas: 0,
+          },
+        };
+      }
     } catch (error: any) {
       return {
         code: error.code,
@@ -212,7 +230,7 @@ export class BundlerSimulationAndValidationService {
 
     if (!targetSuccess) {
       throw new RpcError(
-        targetResult,
+        'Call data execution failed',
         BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
       );
     }

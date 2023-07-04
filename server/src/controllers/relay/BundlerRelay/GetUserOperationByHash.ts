@@ -72,10 +72,15 @@ export const getUserOperationByHash = async (req: Request, res: Response) => {
       result,
     });
   } catch (error) {
+    const { id } = req.body;
     log.error(`Error in getUserOperationByHash handler ${parseError(error)}`);
     return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
-      code: STATUSES.INTERNAL_SERVER_ERROR,
-      error: `Internal Server Error: ${parseError(error)}`,
+      jsonrpc: '2.0',
+      id: id || 1,
+      error: {
+        code: STATUSES.INTERNAL_SERVER_ERROR,
+        message: `Internal Server error: ${parseError(error)}`,
+      },
     });
   }
 };

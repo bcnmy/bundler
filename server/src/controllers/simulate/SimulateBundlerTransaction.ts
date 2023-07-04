@@ -9,7 +9,6 @@ const log = logger(module);
 // eslint-disable-next-line consistent-return
 export const simulateAndValidateBundlerTransaction = async (req: Request) => {
   try {
-    const { id } = req.body;
     const userOp = req.body.params[0];
     const entryPointAddress = req.body.params[1];
     const { chainId } = req.params;
@@ -53,12 +52,8 @@ export const simulateAndValidateBundlerTransaction = async (req: Request) => {
 
     if (code !== STATUSES.SUCCESS) {
       return {
-        jsonrpc: '2.0',
-        id: id || 1,
-        error: {
-          code: code || STATUSES.BAD_REQUEST,
-          message,
-        },
+        code,
+        message,
       };
     }
     req.body.params[2] = bundlerSimulationAndValidationResponse.data.totalGas;

@@ -13,9 +13,10 @@ const log = logger(module);
 
 export const bundleUserOperation = async (req: Request, res: Response) => {
   try {
+    const { id } = req.body;
     const userOp = req.body.params[0];
     const entryPointAddress = req.body.params[1];
-    const gasLimitFromSimulation = req.body.params[2];
+    const gasLimitFromSimulation = req.body.params[2] + 200000;
     const userOpHash = req.body.params[3];
     const { chainId } = req.params;
     const chainIdInNum = parseInt(chainId, 10);
@@ -74,8 +75,12 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
 
     if (!routeTransactionToRelayerMap[chainIdInNum][TransactionType.BUNDLER]) {
       return res.status(STATUSES.BAD_REQUEST).json({
-        code: STATUSES.BAD_REQUEST,
-        error: `${TransactionType.BUNDLER} method not supported for chainId: ${chainId}`,
+        jsonrpc: '2.0',
+        id: id || 1,
+        error: {
+          code: STATUSES.BAD_REQUEST,
+          message: `${TransactionType.BUNDLER} method not supported for chainId: ${chainId}`,
+        },
       });
     }
     const response = routeTransactionToRelayerMap[chainIdInNum][TransactionType.BUNDLER]
@@ -93,8 +98,12 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
 
     if (isError(response)) {
       return res.status(STATUSES.BAD_REQUEST).json({
-        code: STATUSES.BAD_REQUEST,
-        error: response.error,
+        jsonrpc: '2.0',
+        id: id || 1,
+        error: {
+          code: STATUSES.BAD_REQUEST,
+          message: response.error,
+        },
       });
     }
     return res.status(STATUSES.SUCCESS).json({
@@ -103,10 +112,15 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
       result: userOpHash,
     });
   } catch (error) {
+    const { id } = req.body;
     log.error(`Error in bundle user op ${parseError(error)}`);
     return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
-      code: STATUSES.INTERNAL_SERVER_ERROR,
-      error: `Internal Server Error: ${parseError(error)}`,
+      jsonrpc: '2.0',
+      id: id || 1,
+      error: {
+        code: STATUSES.INTERNAL_SERVER_ERROR,
+        message: `Internal Server error: ${parseError(error)}`,
+      },
     });
   }
 };

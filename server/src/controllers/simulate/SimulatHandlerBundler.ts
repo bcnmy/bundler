@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import { EthMethodType, TransactionMethodType } from '../../../../common/types';
 import { STATUSES } from '../../middleware';
 import { simulateAndValidateBundlerTransaction } from './SimulateBundlerTransaction';
+import { parseError } from '../../../../common/utils';
 
 export const simulateBundlerTransaction = () => async (
   req: Request,
@@ -9,7 +10,7 @@ export const simulateBundlerTransaction = () => async (
   next: NextFunction,
 ) => {
   try {
-    const { method } = req.body;
+    const { method, id } = req.body;
     let response = null;
     switch (method) {
       case TransactionMethodType.BUNDLER:
@@ -53,28 +54,45 @@ export const simulateBundlerTransaction = () => async (
         break;
       default:
         response = {
-          code: STATUSES.BAD_REQUEST,
-          message: `Method not supported: ${method}`,
+          jsonrpc: '2.0',
+          id: id || 1,
+          error: {
+            code: STATUSES.BAD_REQUEST,
+            message: `Method: ${method} not supported by Bundler`,
+          },
         };
     }
 
     if (!response) {
       return res.status(STATUSES.INTERNAL_SERVER_ERROR).send({
-        code: STATUSES.INTERNAL_SERVER_ERROR,
-        error: 'Response not received from simulation service',
+        jsonrpc: '2.0',
+        id: id || 1,
+        error: {
+          code: STATUSES.INTERNAL_SERVER_ERROR,
+          message: 'Internal Server Error',
+        },
       });
     }
     if ((response as any).code !== STATUSES.SUCCESS) {
       return res.status(STATUSES.BAD_REQUEST).send({
-        code: (response as any).code,
-        error: (response as any).message,
+        jsonrpc: '2.0',
+        id: id || 1,
+        error: {
+          code: (response as any).code,
+          error: (response as any).message,
+        },
       });
     }
     return next();
   } catch (error) {
+    const { id } = req.body;
     return res.status(STATUSES.INTERNAL_SERVER_ERROR).send({
-      code: STATUSES.INTERNAL_SERVER_ERROR,
-      error: `Internal server error: ${JSON.stringify(error)}`,
+      jsonrpc: '2.0',
+      id: id || 1,
+      error: {
+        code: STATUSES.INTERNAL_SERVER_ERROR,
+        message: `Internal Server Error: ${parseError(error)}`,
+      },
     });
   }
 };
