@@ -26,7 +26,7 @@ ingress:
   host: sdk-relayer.prod.biconomy.io
 
 probes:
-  healthEndpoint: /api/v1/health-check
+  healthEndpoint: /health
   liveness:
     initialDelaySeconds: 5
     periodSeconds: 10
