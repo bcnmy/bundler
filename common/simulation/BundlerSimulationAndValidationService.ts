@@ -48,7 +48,7 @@ export class BundlerSimulationAndValidationService {
         ...userOp,
         paymasterAndData: userOp.paymasterAndData || '0x',
         callGasLimit: userOp.callGasLimit || '0x',
-        maxFeePerGas: userOp.maxFeePerGas || gasPrice,
+        maxFeePerGas: userOp.maxFeePerGas === '0' || userOp.maxFeePerGas === '0x' || !userOp.maxFeePerGas ? gasPrice : userOp.maxFeePerGas,
         maxPriorityFeePerGas: userOp.maxPriorityFeePerGas === '0' || userOp.maxPriorityFeePerGas === '0x' || !userOp.maxPriorityFeePerGas ? gasPrice : userOp.maxPriorityFeePerGas,
         preVerificationGas: userOp.preVerificationGas || '0x',
         verificationGasLimit: userOp.verificationGasLimit || '3000000',
@@ -101,7 +101,7 @@ export class BundlerSimulationAndValidationService {
         log.info(`verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId}`);
 
         const totalGas = Math.ceil((BigNumber.from(paid).toNumber())
-        / (BigNumber.from(gasPrice).toNumber()));
+        / (BigNumber.from(fullUserOp.maxFeePerGas).toNumber()));
         log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
 
         const callGasLimit = totalGas - verificationGasLimit + 21000;
