@@ -48,7 +48,7 @@ export class BundlerSimulationAndValidationService {
         ...userOp,
         paymasterAndData: userOp.paymasterAndData || '0x',
         callGasLimit: userOp.callGasLimit || '0x',
-        maxFeePerGas: userOp.maxFeePerGas === '0' || userOp.maxFeePerGas === '0x' || !userOp.maxFeePerGas ? gasPrice : userOp.maxFeePerGas,
+        maxFeePerGas: userOp.maxFeePerGas || gasPrice,
         maxPriorityFeePerGas: userOp.maxPriorityFeePerGas === '0' || userOp.maxPriorityFeePerGas === '0x' || !userOp.maxPriorityFeePerGas ? gasPrice : userOp.maxPriorityFeePerGas,
         preVerificationGas: userOp.preVerificationGas || '0x',
         verificationGasLimit: userOp.verificationGasLimit || '3000000',
@@ -101,7 +101,7 @@ export class BundlerSimulationAndValidationService {
         log.info(`verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId}`);
 
         const totalGas = Math.ceil((BigNumber.from(paid).toNumber())
-        / (BigNumber.from(fullUserOp.maxFeePerGas).toNumber()));
+        / (BigNumber.from(gasPrice).toNumber()));
         log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
 
         const callGasLimit = totalGas - verificationGasLimit + 21000;
@@ -178,10 +178,11 @@ export class BundlerSimulationAndValidationService {
       // if its FailedOp, then we have the paymaster param... otherwise its an Error(string)
       log.info(`simulateHandleOpResult.errorArgs: ${simulateHandleOpResult.errorArgs}`);
       if (!simulateHandleOpResult.errorArgs) {
-        throw Error(
+        throw new RpcError(
           `Error: ${JSON.stringify(
             simulateHandleOpResult,
           )}`,
+          BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
         );
       }
       let { paymaster } = simulateHandleOpResult.errorArgs;
