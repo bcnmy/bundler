@@ -16,7 +16,7 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
     const { id } = req.body;
     const userOp = req.body.params[0];
     const entryPointAddress = req.body.params[1];
-    const gasLimitFromSimulation = req.body.params[2] + 200000;
+    const gasLimitFromSimulation = req.body.params[2] + 1000000;
     const userOpHash = req.body.params[3];
     const { chainId } = req.params;
     const chainIdInNum = parseInt(chainId, 10);
@@ -108,7 +108,7 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
     }
     return res.status(STATUSES.SUCCESS).json({
       jsonrpc: '2.0',
-      id: 1,
+      id: id || 1,
       result: userOpHash,
     });
   } catch (error) {

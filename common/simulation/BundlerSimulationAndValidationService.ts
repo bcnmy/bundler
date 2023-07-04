@@ -179,7 +179,7 @@ export class BundlerSimulationAndValidationService {
       log.info(`simulateHandleOpResult.errorArgs: ${simulateHandleOpResult.errorArgs}`);
       if (!simulateHandleOpResult.errorArgs) {
         throw Error(
-          `errorArgs not present in simulateHandleOpResult: ${JSON.stringify(
+          `Error: ${JSON.stringify(
             simulateHandleOpResult,
           )}`,
         );
