@@ -30,7 +30,7 @@ datadog:
     DD_ENV: "production"
     DD_SERVICE: "sdk-relayer-service"
     DD_VERSION: "v3.15.0"
-    DD_LIB_VERSION: "v3.15.0"
+    DD_LIB_VERSION: "v3.16.0"
     DD_TRACE_DEBUG: "false"
     DD_TRACE_STARTUP_LOGS: "false"
     DD_PROFILING_ENABLED: "true"
