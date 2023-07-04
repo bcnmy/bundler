@@ -16,6 +16,7 @@ secret:
 
 ingress:
   host: sdk-relayer.prod.biconomy.io
+  hostv2: bundler.biconomy.io
 
 datadog:
   enable: true
