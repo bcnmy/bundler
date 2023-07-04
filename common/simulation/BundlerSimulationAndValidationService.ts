@@ -38,9 +38,6 @@ export class BundlerSimulationAndValidationService {
   ): Promise<EstimateUserOperationGasReturnType> {
     try {
       const { userOp, entryPointContract, chainId } = estimateUserOperationGasData;
-      const {
-        gasPrice,
-      } = await this.networkService.getGasPrice();
 
       log.info(`userOp received: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
 
@@ -48,8 +45,8 @@ export class BundlerSimulationAndValidationService {
         ...userOp,
         paymasterAndData: userOp.paymasterAndData || '0x',
         callGasLimit: userOp.callGasLimit || '0x',
-        maxFeePerGas: userOp.maxFeePerGas === '0' || userOp.maxFeePerGas === '0x' || !userOp.maxFeePerGas ? gasPrice : userOp.maxFeePerGas,
-        maxPriorityFeePerGas: userOp.maxPriorityFeePerGas === '0' || userOp.maxPriorityFeePerGas === '0x' || !userOp.maxPriorityFeePerGas ? gasPrice : userOp.maxPriorityFeePerGas,
+        maxFeePerGas: userOp.maxFeePerGas === '0' || userOp.maxFeePerGas === '0x' || !userOp.maxFeePerGas ? '1' : userOp.maxFeePerGas,
+        maxPriorityFeePerGas: userOp.maxPriorityFeePerGas === '0' || userOp.maxPriorityFeePerGas === '0x' || !userOp.maxPriorityFeePerGas ? '1' : userOp.maxPriorityFeePerGas,
         preVerificationGas: userOp.preVerificationGas || '0x',
         verificationGasLimit: userOp.verificationGasLimit || '3000000',
         signature: userOp.signature || '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b',
@@ -100,12 +97,20 @@ export class BundlerSimulationAndValidationService {
         const verificationGasLimit = BigNumber.from(preOpGas).toNumber();
         log.info(`verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId}`);
 
-        const totalGas = Math.ceil((BigNumber.from(paid).toNumber())
-        / (BigNumber.from(fullUserOp.maxFeePerGas).toNumber()));
-        log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
+        const totalExecutionGas = Math.ceil((BigNumber.from(paid).toNumber())
+        / (BigNumber.from(userOp.maxFeePerGas === '0' || userOp.maxFeePerGas === '0x' || !userOp.maxFeePerGas ? '1' : userOp.maxFeePerGas).toNumber()));
+        log.info(`totalExecutionGas: ${totalExecutionGas} on chainId: ${chainId}`);
 
-        const callGasLimit = totalGas - verificationGasLimit + 21000;
+        const callGasLimit = totalExecutionGas - preVerificationGas;
         log.info(`callGasLimit: ${callGasLimit} on chainId: ${chainId}`);
+
+        let totalGas;
+        if (userOp.paymasterAndData !== '0x') {
+          totalGas = callGasLimit + 3 * verificationGasLimit + preVerificationGas;
+        } else {
+          totalGas = callGasLimit + verificationGasLimit + preVerificationGas;
+        }
+        log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
 
         let userOpHash: string = '';
         try {
