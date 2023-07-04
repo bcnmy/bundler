@@ -23,7 +23,7 @@ datadog:
 
   service: "sdk-relayer-service"
   version: "v3.15.0"
-  lib_version: "v3.15.0"
+  lib_version: "v3.16.0"
 
   configs:
     DD_TRACE_AGENT_URL: "unix:///var/run/datadog/apm.socket"
