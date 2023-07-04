@@ -85,12 +85,12 @@ spec:
         livenessProbe:
           httpGet:
             path: {{ .Values.probes.healthEndpoint }}
-            port: {{ .Values.port }}
+            port: {{ .Values.relayer.port }}
 {{ toYaml .Values.probes.liveness | indent 10 }}
         readinessProbe:
           httpGet:
             path: {{ .Values.probes.healthEndpoint }}
-            port: {{ .Values.port }}
+            port: {{ .Values.relayer.port }}
 {{ toYaml .Values.probes.readiness | indent 10 }}
       {{- end }}      
         resources:
@@ -100,18 +100,6 @@ spec:
           limits:
             memory: {{ .Values.relayer.resource.limits.memory }}
             cpu: {{ .Values.relayer.resource.limits.cpu }}
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: {{ .Values.relayer.port }}
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: {{ .Values.relayer.port }}
-          initialDelaySeconds: 30
-          periodSeconds: 10
       volumes:
       - name: secret
         secret:

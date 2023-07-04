@@ -27,7 +27,7 @@ ingress:
 
 
 probes:
-  healthEndpoint: /api/v1/health-check
+  healthEndpoint: /health
   liveness:
     initialDelaySeconds: 5
     periodSeconds: 10
