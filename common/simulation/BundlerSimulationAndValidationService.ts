@@ -70,8 +70,8 @@ export class BundlerSimulationAndValidationService {
         const simulateHandleOpResult = await entryPointStatic.callStatic
           .simulateHandleOp(
             fullUserOp,
-            fullUserOp.sender,
-            fullUserOp.callData,
+            '0x0000000000000000000000000000000000000000',
+            '0x',
           )
           .catch((e: any) => e);
         log.info(`simulateHandleOpResult: ${JSON.stringify(simulateHandleOpResult)}`);
@@ -234,12 +234,12 @@ export class BundlerSimulationAndValidationService {
     const targetResult = simulateHandleOpResult.errorArgs[5];
     log.info(`targetResult: ${targetResult}`);
 
-    if (!targetSuccess) {
-      throw new RpcError(
-        'Call data execution failed',
-        BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
-      );
-    }
+    // if (!targetSuccess) {
+    //   throw new RpcError(
+    //     'Call data execution failed',
+    //     BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
+    //   );
+    // }
     return {
       preOpGas,
       paid,
