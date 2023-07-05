@@ -304,81 +304,39 @@ ITransactionPublisher<TransactionQueueMessageType> {
             return;
           }
           for (let userOpIndex = 0; userOpIndex < userOps.length; userOpIndex += 1) {
-            const { userOpHash, entryPoint } = userOps[userOpIndex];
+            const { userOpHash } = userOps[userOpIndex];
 
-            const entryPointContracts = this.entryPointMap[this.chainId];
+            log.info(`Updating userOp data: ${JSON.stringify({
+              transactionHash: transactionExecutionResponse?.hash,
+              receipt: transactionReceipt,
+              blockNumber: transactionReceipt.blockNumber,
+              blockHash: transactionReceipt.blockHash,
+              status: TransactionStatus.FAILED,
+              success: 'false',
+              actualGasCost: 0,
+              actualGasUsed: 0,
+              reason: null,
+              logs: null,
+            })} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
 
-            let entryPointContract;
-            for (let entryPointContractIndex = 0;
-              entryPointContractIndex < entryPointContracts.length;
-              entryPointContractIndex += 1) {
-              if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
-               === entryPoint.toLowerCase()) {
-                // eslint-disable-next-line max-len
-                entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
-                break;
-              }
-            }
-
-            if (entryPointContract) {
-              const latestBlock = await this.networkService.getLatesBlockNumber();
-              log.info(`latestBlock: ${latestBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-              const fromBlock = latestBlock - 1000;
-              log.info(`fromBlock: ${fromBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-              const userOpReceipt = await getUserOperationReceiptForDataSaving(
-                this.chainId,
-                userOpHash,
-                transactionReceipt,
-                entryPointContract,
-                fromBlock,
-              );
-              log.info(`userOpReceipt: ${JSON.stringify(userOpReceipt)} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-              if (!userOpReceipt) {
-                log.info(`userOpReceipt not fetched for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-                return;
-              }
-              const {
-                success,
-                actualGasCost,
-                actualGasUsed,
-                reason,
-                logs,
-              } = userOpReceipt;
-
-              log.info(`Updating userOp data: ${JSON.stringify({
+            await this.userOperationDao.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
+              this.chainId,
+              transactionId,
+              userOpHash,
+              {
                 transactionHash: transactionExecutionResponse?.hash,
                 receipt: transactionReceipt,
                 blockNumber: transactionReceipt.blockNumber,
                 blockHash: transactionReceipt.blockHash,
                 status: TransactionStatus.FAILED,
-                success,
-                actualGasCost,
-                actualGasUsed,
-                reason,
-                logs,
-              })} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-
-              await this.userOperationDao.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
-                this.chainId,
-                transactionId,
-                userOpHash,
-                {
-                  transactionHash: transactionExecutionResponse?.hash,
-                  receipt: transactionReceipt,
-                  blockNumber: transactionReceipt.blockNumber,
-                  blockHash: transactionReceipt.blockHash,
-                  status: TransactionStatus.FAILED,
-                  success,
-                  actualGasCost,
-                  actualGasUsed,
-                  reason,
-                  logs,
-                },
-              );
-              log.info(`userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-            } else {
-              log.info(`entryPoint: ${entryPoint} not found in entry point map for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-            }
+                success: 'false',
+                actualGasCost: 0,
+                actualGasUsed: 0,
+                reason: 'null',
+                logs: null,
+              },
+            );
+            log.info(`userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
           }
         }
       } catch (error) {
