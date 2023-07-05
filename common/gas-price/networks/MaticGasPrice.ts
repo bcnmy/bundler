@@ -79,18 +79,18 @@ export class MaticGasPrice extends GasPrice implements IScheduler {
       log.info('Error in getting gas prices rom matic gas station for EIP-1559');
       response = {
         safeLow: {
-          maxPriorityFee: 20000000000,
-          maxFee: 200000000000,
+          maxPriorityFee: 30,
+          maxFee: 200,
         },
         standard: {
-          maxPriorityFee: 30000000000,
-          maxFee: 250000000000,
+          maxPriorityFee: 35,
+          maxFee: 250,
         },
         fast: {
-          maxPriorityFee: 35000000000,
-          maxFee: 350000000000,
+          maxPriorityFee: 40,
+          maxFee: 350,
         },
-        estimatedBaseFee: 100000000000,
+        estimatedBaseFee: 100,
       };
     }
     log.info(`Response from matic gas station for EIP-1559 is ${JSON.stringify(response)}`);
