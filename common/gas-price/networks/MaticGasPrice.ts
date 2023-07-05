@@ -183,7 +183,6 @@ export class MaticGasPrice extends GasPrice implements IScheduler {
       });
     } catch (error) {
       log.error('Error in fetching gas price from polygonscan and matic gas station.');
-      return;
     }
 
     let {
