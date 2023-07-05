@@ -79,7 +79,7 @@ export const simulateBundlerTransaction = () => async (
         id: id || 1,
         error: {
           code: (response as any).code,
-          error: (response as any).message,
+          message: (response as any).message,
         },
       });
     }
