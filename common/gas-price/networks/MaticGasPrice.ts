@@ -72,7 +72,18 @@ export class MaticGasPrice extends GasPrice implements IScheduler {
     const url = config.gasPrice[this.chainId].gasOracle.maticGasStationUrlForEIP1559 || '';
     if (!url) throw new Error('Matic gas station url for EIP-1559 not provided.');
 
-    const response = await axiosGetCall(url);
+    let response;
+    try {
+      response = await axiosGetCall(url);
+    } catch (error) {
+      log.info('Error in getting gas prices rom matic gas station for EIP-1559');
+      response = {
+        safeLow: 20000000000,
+        standard: 30000000000,
+        fast: 35000000000,
+        estimatedBaseFee: 100000000000,
+      };
+    }
     log.info(`Response from matic gas station for EIP-1559 is ${JSON.stringify(response)}`);
 
     const safeEIP1559Prices = response.safeLow;
