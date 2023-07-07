@@ -67,6 +67,7 @@ export class BundlerSimulationAndValidationService {
         entryPointContract,
       );
       log.info(`preVerificationGas: ${preVerificationGas} for userOp: ${JSON.stringify(fullUserOp)} on chainId: ${chainId}`);
+      fullUserOp.preVerificationGas = preVerificationGas.toString();
 
       try {
         const entryPointStatic = entryPointContract.connect(
