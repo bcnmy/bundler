@@ -76,13 +76,19 @@ export type EstimateUserOpGasFieldsType = {
 };
 
 export type SimulateHandleOpsParamsType = {
-  fullUserOp: any,
+  userOp: UserOperationType,
   entryPointContract: ethers.Contract,
   chainId: number,
 };
 
 export type SimulateHandleOpsReturnType = {
   reason?: string,
-  actualGasUsed: number,
-  totalExecutionGasFromTenderlySimulation: number,
+  totalGas: number,
+  isExecutionSuccess?: boolean
+};
+
+export type ValidateUserOperationData = {
+  userOp: UserOperationType,
+  entryPointContract: ethers.Contract,
+  chainId: number,
 };
