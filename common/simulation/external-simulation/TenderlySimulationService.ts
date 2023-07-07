@@ -1,6 +1,11 @@
 import axios from 'axios';
 import Big from 'big.js';
-import { ExternalSimulationResponseType, SimulationDataType } from '../types';
+import {
+  ExternalSimulationResponseType,
+  SimulateHandleOpsParamsType,
+  SimulateHandleOpsReturnType,
+  SimulationDataType,
+} from '../types';
 import { logger } from '../../log-config';
 import { IGasPrice } from '../../gas-price';
 import { GasPriceType } from '../../gas-price/types';
@@ -138,6 +143,85 @@ export class TenderlySimulationService implements IExternalSimulation {
         gasLimitFromSimulation,
       },
     };
+  }
+
+  async simulateHandleOps(
+    simualteHandleOpsData: SimulateHandleOpsParamsType,
+  ): Promise<SimulateHandleOpsReturnType> {
+    try {
+      const {
+        fullUserOp,
+        entryPointContract,
+        chainId,
+      } = simualteHandleOpsData;
+      log.info(`Sending request to tenderly to run simulation for userOp: ${JSON.stringify(fullUserOp)} on chainId: ${chainId}`);
+      const SIMULATE_URL = `https://api.tenderly.co/api/v1/account/${this.tenderlyUser}/project/${this.tenderlyProject}/simulate`;
+      const tAxios = this.tenderlyInstance();
+
+      const {
+        publicKey,
+      } = config.relayerManagers[0].ownerAccountDetails[chainId];
+      log.info(`Simulating with from address: ${publicKey} on chainId: ${chainId}`);
+
+      const {
+        data,
+      } = await entryPointContract.populateTransaction.handleOps([fullUserOp], publicKey);
+
+      const gasPriceForSimulation = await this.gasPriceService.getGasPriceForSimulation();
+      log.info(`Gas price to be used in simulation: ${gasPriceForSimulation} on chainId: ${chainId}`);
+      const body = {
+        // standard TX fields
+        network_id: chainId.toString(),
+        from: publicKey,
+        input: data,
+        gas: 9000000,
+        gas_price: gasPriceForSimulation.toString(),
+        value: '0',
+        to: entryPointContract.address,
+        // simulation config (tenderly specific)
+        save: true,
+      };
+      let response;
+      try {
+        response = await tAxios.post(SIMULATE_URL, body);
+      } catch (error) {
+        log.info(`Error in Tenderly Simulation: ${JSON.stringify(error)}`);
+        return {
+          totalExecutionGasFromTenderlySimulation: 0,
+          actualGasUsed: 0,
+        };
+      }
+      log.info(`Response from Tenderly: ${JSON.stringify(response?.data?.transaction)}`);
+      if (!response?.data?.transaction?.status) {
+        return {
+          reason: response?.data?.transaction?.error_message,
+          totalExecutionGasFromTenderlySimulation: 0,
+          actualGasUsed: 0,
+        };
+      }
+
+      const transactionLogs = response.data.transaction.transaction_info.call_trace.logs;
+      const totalExecutionGasFromTenderlySimulation = response.data.transaction.transaction_info
+        .call_trace.gas_used
+       + response.data.transaction.transaction_info.call_trace.intrinsic_gas;
+
+      const {
+        reason,
+        actualGasUsed,
+      } = this.getActualGasFromSimulationLogs(transactionLogs);
+
+      return {
+        reason,
+        actualGasUsed,
+        totalExecutionGasFromTenderlySimulation,
+      };
+    } catch (error) {
+      log.error(`Error in Tenderly handleOps simulation: ${parseError(error)}`);
+      return {
+        totalExecutionGasFromTenderlySimulation: 0,
+        actualGasUsed: 0,
+      };
+    }
   }
 
   private tenderlyInstance() {
@@ -312,6 +396,78 @@ export class TenderlySimulationService implements IExternalSimulation {
       return {
         isSimulationSuccessful: false,
         successOrRevertMsg: `Something went wrong with error: ${error}`,
+      };
+    }
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  private getActualGasFromSimulationLogs(
+    transactionLogs: Array<any>,
+  ) {
+    try {
+      const userOperationEventLog = transactionLogs.find((transactionLog: any) => transactionLog.name === 'UserOperationEvent');
+      if (!userOperationEventLog) {
+        log.error('UserOperationEvent not found in logs');
+        return {
+          actualGasUsed: 0,
+        };
+      }
+
+      const successData = userOperationEventLog.inputs.find((input: any) => input.soltype.name === 'success');
+      if (!successData) {
+        log.error('successData not found in logs');
+        return {
+          actualGasUsed: 0,
+        };
+      }
+
+      const success = successData.value;
+
+      if (!success) {
+        const userOperationRevertedEventLog = transactionLogs.find((transactionLog: any) => transactionLog.name === 'UserOperationRevertReason');
+        if (!userOperationRevertedEventLog) {
+          log.error('UserOperationReverted not found in logs');
+          return {
+            reason: 'call data execution failed',
+            actualGasUsed: 0,
+          };
+        }
+        const resultData = userOperationRevertedEventLog.inputs.find((input: any) => input.soltype.name === 'result');
+        if (!resultData) {
+          log.error('successData not found in logs');
+          return {
+            reason: 'call data execution failed',
+            actualGasUsed: 0,
+          };
+        }
+
+        const result = resultData.value;
+
+        return {
+          reason: result,
+          actualGasUsed: 0,
+        };
+      }
+
+      const actualGasUsedData = userOperationEventLog.inputs.find((input: any) => input.soltype.name === 'actualGasUsed');
+      if (!actualGasUsedData) {
+        log.error('actualGasUsedData not found in logs');
+        return {
+          actualGasUsed: 0,
+        };
+      }
+
+      log.info(`actualGasUsedData: ${JSON.stringify(actualGasUsedData)}`);
+
+      const actualGasUsed = actualGasUsedData.value;
+
+      return {
+        actualGasUsed,
+      };
+    } catch (error) {
+      log.error(`Error in parsing handleOps logs with error: ${parseError(error)}`);
+      return {
+        actualGasUsed: 0,
       };
     }
   }
