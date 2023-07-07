@@ -89,7 +89,7 @@ export class BundlerSimulationAndValidationService {
         );
         let {
           preOpGas,
-          paid,
+          // paid,
           validAfter,
           validUntil,
         } = parsedResult;
@@ -121,7 +121,7 @@ export class BundlerSimulationAndValidationService {
               );
             });
           const mul = userOp.paymasterAndData !== '0x' ? 3 : 1;
-          totalGas = callGasLimit + mul * verificationGasLimit + preVerificationGas;
+          totalGas = callGasLimit + mul * verificationGasLimit + preVerificationGas + 200000;
         } else {
           const {
             reason,
@@ -165,14 +165,12 @@ export class BundlerSimulationAndValidationService {
             callGasLimit = actualGasUsed - preOpGas;
             totalGas = totalExecutionGasFromTenderlySimulation;
           } else {
-            // if Tenderly Simulation returns failure then use the values from paid
+            // if Tenderly Simulation returns failure die to API failure
+            // then use default values
 
-            totalGas = Math.ceil((BigNumber.from(paid).toNumber())
-            / (BigNumber.from(userOp.maxFeePerGas === '0' || userOp.maxFeePerGas === '0x' || !userOp.maxFeePerGas ? '1' : userOp.maxFeePerGas).toNumber()));
-            log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
-
-            callGasLimit = totalGas - preOpGas;
-            log.info(`callGasLimit: ${callGasLimit} on chainId: ${chainId}`);
+            callGasLimit = 600000;
+            const mul = userOp.paymasterAndData !== '0x' ? 3 : 1;
+            totalGas = callGasLimit + mul * verificationGasLimit + preVerificationGas + 200000;
           }
         }
 
