@@ -51,10 +51,10 @@ export class BundlerSimulationAndValidationService {
         ...userOp,
         paymasterAndData: userOp.paymasterAndData || '0x',
         callGasLimit: userOp.callGasLimit || '0x',
-        maxFeePerGas: userOp.maxFeePerGas === '0' || userOp.maxFeePerGas === '0x' || !userOp.maxFeePerGas ? '1' : userOp.maxFeePerGas,
-        maxPriorityFeePerGas: userOp.maxPriorityFeePerGas === '0' || userOp.maxPriorityFeePerGas === '0x' || !userOp.maxPriorityFeePerGas ? '1' : userOp.maxPriorityFeePerGas,
+        maxFeePerGas: userOp.maxFeePerGas || '0',
+        maxPriorityFeePerGas: userOp.maxPriorityFeePerGas || '0',
         preVerificationGas: userOp.preVerificationGas || '0x',
-        verificationGasLimit: userOp.verificationGasLimit || '3000000',
+        verificationGasLimit: userOp.verificationGasLimit || '5000000',
         signature: userOp.signature || '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b',
       };
 
