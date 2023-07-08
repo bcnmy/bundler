@@ -51,7 +51,7 @@ export class BundlerSimulationAndValidationService {
       const fullUserOp = {
         ...userOp,
         paymasterAndData: userOp.paymasterAndData || '0x',
-        callGasLimit: userOp.callGasLimit || 0,
+        callGasLimit: userOp.callGasLimit || 600000,
         maxFeePerGas: userOp.maxFeePerGas === 0 || !userOp.maxFeePerGas ? 1 : userOp.maxFeePerGas,
         maxPriorityFeePerGas:
         userOp.maxPriorityFeePerGas === 0
@@ -121,8 +121,8 @@ export class BundlerSimulationAndValidationService {
         let validUntil = decodedParams[3];
         log.info(`validUntil: ${validUntil}`);
 
-        validAfter = BigNumber.from(validAfter);
-        validUntil = BigNumber.from(validUntil);
+        validAfter = BigNumber.from(validAfter).toNumber();
+        validUntil = BigNumber.from(validUntil).toNumber();
         if (validUntil === BigNumber.from(0)) {
           validUntil = undefined;
         }

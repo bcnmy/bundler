@@ -83,8 +83,8 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
           preVerificationGas,
           validUntil,
           validAfter,
-          maxPriorityFeePerGas: gasPrice?.maxPriorityFeePerGas,
-          maxFeePerGas: gasPrice?.maxFeePerGas,
+          maxPriorityFeePerGas: Number(gasPrice?.maxPriorityFeePerGas),
+          maxFeePerGas: Number(gasPrice?.maxFeePerGas),
         },
       });
     }
@@ -98,8 +98,8 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
         preVerificationGas,
         validUntil,
         validAfter,
-        maxPriorityFeePerGas: gasPrice,
-        maxFeePerGas: gasPrice,
+        maxPriorityFeePerGas: Number(gasPrice),
+        maxFeePerGas: Number(gasPrice),
       },
     });
   } catch (error) {
