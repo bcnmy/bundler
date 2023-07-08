@@ -163,8 +163,8 @@ export class BundlerGasEstimationService {
     // calculate offset for Arbitrum
     if (
       chainId === BLOCKCHAINS.ARBITRUM_GOERLI_TESTNET
-      || BLOCKCHAINS.ARBITRUM_NOVA_MAINNET
-      || BLOCKCHAINS.ARBITRUM_ONE_MAINNET
+      || chainId === BLOCKCHAINS.ARBITRUM_NOVA_MAINNET
+      || chainId === BLOCKCHAINS.ARBITRUM_ONE_MAINNET
     ) {
       const data = await calcGasPrice(
         entryPointContract.address,

@@ -130,15 +130,40 @@ export class BundlerSimulationAndValidationService {
           validAfter = undefined;
         }
 
-        const verificationGasLimit = BigNumber.from(preOpGas).toNumber() - preVerificationGas;
+        const verificationGasLimit = BigNumber.from(preOpGas).toNumber();
         log.info(`verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId}`);
 
         const totalGas = Math.ceil((BigNumber.from(paid).toNumber())
         / (userOp.maxFeePerGas === 0 || !userOp.maxFeePerGas ? 1 : userOp.maxFeePerGas));
         log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
 
-        const callGasLimit = totalGas - preOpGas;
-        log.info(`callGasLimit: ${callGasLimit} on chainId: ${chainId}`);
+        let callGasLimit;
+        const callGasLimitFromEP = totalGas - preOpGas;
+        log.info(`callGasLimitFromEP: ${callGasLimitFromEP} on chainId: ${chainId}`);
+
+        // TODO if initCode is 0x then try callGasLimit from EP to sender
+        if (fullUserOp.initCode === '0x') {
+          const callGasLimitFromEthers = await this.networkService
+            .estimateCallGas(
+              entryPointContract.address,
+              userOp.sender,
+              userOp.callData,
+            )
+            .then((callGasLimitResponse) => callGasLimitResponse.toNumber())
+            .catch((error) => {
+              const message = error.message.match(/reason="(.*?)"/)?.at(1) ?? 'execution reverted';
+              log.info(`message: ${JSON.stringify(message)}`);
+              throw new RpcError(
+                message,
+                BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
+              );
+            });
+
+          log.info(`callGasLimitFromEthers: ${callGasLimitFromEthers} on chainId: ${chainId}`);
+          callGasLimit = Math.max(callGasLimitFromEP, callGasLimitFromEthers);
+        } else {
+          callGasLimit = callGasLimitFromEP + 30000;
+        }
 
         return {
           code: STATUSES.SUCCESS,
@@ -191,7 +216,6 @@ export class BundlerSimulationAndValidationService {
       const { userOp, entryPointContract, chainId } = validateUserOperationData;
 
       log.info(`userOp received: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
-
       const {
         reason,
         totalGas,
@@ -205,19 +229,23 @@ export class BundlerSimulationAndValidationService {
         log.info(`Transaction failed with reason: ${reason} on chainId: ${chainId}`);
         if (reason.includes('AA1') || reason.includes('AA2')) {
           log.info(`error in account on chainId: ${chainId}`);
+          const message = this.removeSpecialCharacters(reason);
+          log.info(`message after removing special characters: ${message}`);
           throw new RpcError(
-            this.removeSpecialCharacters(reason),
+            message,
             BUNDLER_VALIDATION_STATUSES.SIMULATE_VALIDATION_FAILED,
           );
         } else if (reason.includes('AA3')) {
           log.info(`error in paymaster on chainId: ${chainId}`);
+          const message = this.removeSpecialCharacters(reason);
+          log.info(`message after removing special characters: ${message}`);
           throw new RpcError(
-            this.removeSpecialCharacters(reason),
+            message,
             BUNDLER_VALIDATION_STATUSES.SIMULATE_PAYMASTER_VALIDATION_FAILED,
           );
         }
         throw new RpcError(
-          this.removeSpecialCharacters(reason),
+          reason,
           BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
         );
       }
@@ -249,12 +277,20 @@ export class BundlerSimulationAndValidationService {
 
   // eslint-disable-next-line class-methods-use-this
   removeSpecialCharacters(input: string): string {
-    const pattern = /[^a-zA-Z0-9]\s/g;
+    const match = input.match(/AA(\d+)\s(.+)/);
 
-    // Use the replace() method with the pattern to remove special characters
-    const result = input.replace(pattern, '');
-
-    return result;
+    if (match) {
+      const errorCode = match[1]; // e.g., "25"
+      const errorMessage = match[2]; // e.g., "invalid account nonce"
+      // eslint-disable-next-line no-control-regex
+      const newMatch = `AA${errorCode} ${errorMessage}`.match(/AA.*?(?=\\u|\u0000)/);
+      if (newMatch) {
+        const extractedString = newMatch[0];
+        return extractedString;
+      }
+      return `AA${errorCode} ${errorMessage}`;
+    }
+    return input;
   }
 
   static parseSimulateHandleOpResult(

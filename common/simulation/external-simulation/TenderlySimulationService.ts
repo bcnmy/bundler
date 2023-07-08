@@ -202,6 +202,7 @@ export class TenderlySimulationService implements IExternalSimulation {
         .call_trace.gas_used
        + response.data.transaction.transaction_info.call_trace.intrinsic_gas;
 
+      log.info(`totalGas: ${totalGas} from Tenderly simulation`);
       const {
         reason,
         isExecutionSuccess,
@@ -408,6 +409,7 @@ export class TenderlySimulationService implements IExternalSimulation {
           isExecutionSuccess: false,
         };
       }
+      log.info(`UserOperationEvent found in logs: ${JSON.stringify(userOperationEventLog)}`);
 
       const successData = userOperationEventLog.inputs.find((input: any) => input.soltype.name === 'success');
       if (!successData) {
@@ -416,6 +418,7 @@ export class TenderlySimulationService implements IExternalSimulation {
           isExecutionSuccess: false,
         };
       }
+      log.info(`successData found in logs: ${JSON.stringify(successData)}`);
 
       const success = successData.value;
 
@@ -428,6 +431,7 @@ export class TenderlySimulationService implements IExternalSimulation {
             isExecutionSuccess: false,
           };
         }
+        log.info(`userOperationRevertedEventLog found in logs: ${JSON.stringify(userOperationRevertedEventLog)}`);
         const resultData = userOperationRevertedEventLog.inputs.find((input: any) => input.soltype.name === 'result');
         if (!resultData) {
           log.error('successData not found in logs');
@@ -436,6 +440,7 @@ export class TenderlySimulationService implements IExternalSimulation {
             isExecutionSuccess: false,
           };
         }
+        log.info(`resultData found in logs: ${JSON.stringify(resultData)}`);
 
         const result = resultData.value;
 
