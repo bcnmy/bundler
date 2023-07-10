@@ -34,7 +34,7 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
 
     const estimatedUserOpGas = await bundlerSimulatonAndValidationServiceMap[
       parseInt(chainId, 10)
-    ].estimateUserOperationGas(
+    ].validateAndEstimateUserOperationGas(
       {
         userOp,
         entryPointContract,
