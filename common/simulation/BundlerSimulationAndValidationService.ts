@@ -19,21 +19,27 @@ import RpcError from '../utils/rpc-error';
 import {
   EstimateUserOperationGasDataType,
   EstimateUserOperationGasReturnType,
+  ValidateUserOperationData,
 } from './types';
 import { BLOCKCHAINS } from '../constants';
 import { calcGasPrice } from './L2/Abitrum';
+import { TenderlySimulationService } from './external-simulation';
 
 const log = logger(module);
 export class BundlerSimulationAndValidationService {
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
 
+  tenderlySimulationService: TenderlySimulationService;
+
   constructor(
     networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
+    tenderlySimulationService: TenderlySimulationService,
   ) {
     this.networkService = networkService;
+    this.tenderlySimulationService = tenderlySimulationService;
   }
 
-  async validateAndEstimateUserOperationGas(
+  async estimateUserOperationGas(
     estimateUserOperationGasData: EstimateUserOperationGasDataType,
   ): Promise<EstimateUserOperationGasReturnType> {
     try {
@@ -41,18 +47,21 @@ export class BundlerSimulationAndValidationService {
 
       log.info(`userOp received: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
 
+      // creating fullUserOp in case of estimation
       const fullUserOp = {
         ...userOp,
         paymasterAndData: userOp.paymasterAndData || '0x',
-        callGasLimit: userOp.callGasLimit || '0x',
-        maxFeePerGas: userOp.maxFeePerGas === '0' || userOp.maxFeePerGas === '0x' || !userOp.maxFeePerGas ? '1' : userOp.maxFeePerGas,
-        maxPriorityFeePerGas: userOp.maxPriorityFeePerGas === '0' || userOp.maxPriorityFeePerGas === '0x' || !userOp.maxPriorityFeePerGas ? '1' : userOp.maxPriorityFeePerGas,
-        preVerificationGas: userOp.preVerificationGas || '0x',
-        verificationGasLimit: userOp.verificationGasLimit || '3000000',
+        callGasLimit: userOp.callGasLimit || 600000,
+        maxFeePerGas: userOp.maxFeePerGas === 0 || (userOp.maxFeePerGas as unknown as string) === '0x' || !userOp.maxFeePerGas ? 1 : userOp.maxFeePerGas,
+        maxPriorityFeePerGas:
+        userOp.maxPriorityFeePerGas === 0 || (userOp.maxPriorityFeePerGas as unknown as string) === '0x'
+        || !userOp.maxPriorityFeePerGas ? 1 : userOp.maxPriorityFeePerGas,
+        preVerificationGas: userOp.preVerificationGas || 0,
+        verificationGasLimit: userOp.verificationGasLimit || 5000000,
         signature: userOp.signature || '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b',
       };
 
-      log.info(`fullUserOp received: ${JSON.stringify(fullUserOp)} on chainId: ${chainId}`);
+      log.info(`fullUserOp created: ${JSON.stringify(fullUserOp)} on chainId: ${chainId}`);
 
       // preVerificationGas
       const preVerificationGas = await BundlerSimulationAndValidationService.calcPreVerificationGas(
@@ -61,30 +70,57 @@ export class BundlerSimulationAndValidationService {
         entryPointContract,
       );
       log.info(`preVerificationGas: ${preVerificationGas} on chainId: ${chainId}`);
+      fullUserOp.preVerificationGas = preVerificationGas;
 
-      // total gas for the entire handleOps call
       try {
-        const entryPointStatic = entryPointContract.connect(
-          this.networkService.ethersProvider.getSigner(config.zeroAddress),
-        );
-        const simulateHandleOpResult = await entryPointStatic.callStatic
-          .simulateHandleOp(
-            fullUserOp,
-            '0x0000000000000000000000000000000000000000',
-            '0x',
-          )
-          .catch((e: any) => e);
-        log.info(`simulateHandleOpResult: ${JSON.stringify(simulateHandleOpResult)}`);
-        const parsedResult = BundlerSimulationAndValidationService.parseSimulateHandleOpResult(
+        const { data } = await entryPointContract.populateTransaction.simulateHandleOp(
           fullUserOp,
-          simulateHandleOpResult,
+          config.zeroAddress,
+          '0x',
         );
-        let {
-          preOpGas,
-          paid,
-          validAfter,
-          validUntil,
-        } = parsedResult;
+
+        const simulateHandleOpResult = await this.networkService.sendRpcCall(
+          'eth_call',
+          [
+            {
+              from: '0x0000000000000000000000000000000000000000',
+              to: entryPointContract.address,
+              data,
+            },
+            'latest',
+            {
+              [fullUserOp.sender]:
+                {
+                  balance: '0xFFFFFFFFFFFFFFFFFFFF',
+                },
+            },
+          ],
+        );
+        const ethCallData = simulateHandleOpResult.data.error.data;
+
+        // The first 4 bytes of the data is the function signature
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const functionSignature = ethCallData.slice(0, 10);
+
+        // The rest of the data is the encoded parameters
+        const encodedParams = `0x${ethCallData.slice(10)}`;
+
+        // Here is the data layout of the parameters
+        const types = ['uint256', 'uint256', 'uint48', 'uint48', 'bool', 'bytes'];
+
+        // Decode the parameters
+        const decodedParams = ethers.utils.defaultAbiCoder.decode(types, encodedParams);
+
+        log.info('Decoded Parameters:');
+        const preOpGas = decodedParams[0];
+        log.info(`preOpGas: ${preOpGas}`);
+        const paid = decodedParams[1];
+        log.info(`paid: ${paid}`);
+        let validAfter = decodedParams[2];
+        log.info(`validAfter: ${validAfter}`);
+        let validUntil = decodedParams[3];
+        log.info(`validUntil: ${validUntil}`);
+
         validAfter = BigNumber.from(validAfter);
         validUntil = BigNumber.from(validUntil);
         if (validUntil === BigNumber.from(0)) {
@@ -97,33 +133,36 @@ export class BundlerSimulationAndValidationService {
         const verificationGasLimit = BigNumber.from(preOpGas).toNumber();
         log.info(`verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId}`);
 
-        const totalExecutionGas = Math.ceil((BigNumber.from(paid).toNumber())
-        / (BigNumber.from(userOp.maxFeePerGas === '0' || userOp.maxFeePerGas === '0x' || !userOp.maxFeePerGas ? '1' : userOp.maxFeePerGas).toNumber()));
-        log.info(`totalExecutionGas: ${totalExecutionGas} on chainId: ${chainId}`);
-
-        const callGasLimit = totalExecutionGas - preVerificationGas;
-        log.info(`callGasLimit: ${callGasLimit} on chainId: ${chainId}`);
-
-        let totalGas;
-        if (userOp.paymasterAndData !== '0x') {
-          totalGas = callGasLimit + 3 * verificationGasLimit + preVerificationGas;
-        } else {
-          totalGas = callGasLimit + verificationGasLimit + preVerificationGas;
-        }
+        const totalGas = Math.ceil((BigNumber.from(paid).toNumber())
+        / (userOp.maxFeePerGas === 0 || !userOp.maxFeePerGas ? 1 : userOp.maxFeePerGas));
         log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
 
-        let userOpHash: string = '';
-        try {
-          userOpHash = await entryPointContract.getUserOpHash(userOp);
-          log.info(
-            `userOpHash: ${userOpHash} for userOp: ${JSON.stringify(userOp)}`,
-          );
-        } catch (error) {
-          log.info(
-            `Error in getting userOpHash for userOp: ${JSON.stringify(
-              userOp,
-            )} with error: ${parseError(error)}`,
-          );
+        let callGasLimit;
+        const callGasLimitFromEP = totalGas - preOpGas;
+        log.info(`callGasLimitFromEP: ${callGasLimitFromEP} on chainId: ${chainId}`);
+
+        // TODO if initCode is 0x then try callGasLimit from EP to sender
+        if (fullUserOp.initCode === '0x') {
+          const callGasLimitFromEthers = await this.networkService
+            .estimateCallGas(
+              entryPointContract.address,
+              userOp.sender,
+              userOp.callData,
+            )
+            .then((callGasLimitResponse) => callGasLimitResponse.toNumber())
+            .catch((error) => {
+              const message = error.message.match(/reason="(.*?)"/)?.at(1) ?? 'execution reverted';
+              log.info(`message: ${JSON.stringify(message)}`);
+              throw new RpcError(
+                message,
+                BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
+              );
+            });
+
+          log.info(`callGasLimitFromEthers: ${callGasLimitFromEthers} on chainId: ${chainId}`);
+          callGasLimit = Math.max(callGasLimitFromEP, callGasLimitFromEthers);
+        } else {
+          callGasLimit = callGasLimitFromEP + 30000;
         }
 
         return {
@@ -137,7 +176,6 @@ export class BundlerSimulationAndValidationService {
             callGasLimit,
             validAfter,
             validUntil,
-            userOpHash,
             totalGas,
           },
         };
@@ -169,6 +207,90 @@ export class BundlerSimulationAndValidationService {
         },
       };
     }
+  }
+
+  async validateUserOperation(
+    validateUserOperationData: ValidateUserOperationData,
+  ) {
+    try {
+      const { userOp, entryPointContract, chainId } = validateUserOperationData;
+
+      log.info(`userOp received: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
+      const {
+        reason,
+        totalGas,
+      } = await this.tenderlySimulationService.simulateHandleOps({
+        userOp,
+        entryPointContract,
+        chainId,
+      });
+
+      if (reason) {
+        log.info(`Transaction failed with reason: ${reason} on chainId: ${chainId}`);
+        if (reason.includes('AA1') || reason.includes('AA2')) {
+          log.info(`error in account on chainId: ${chainId}`);
+          const message = this.removeSpecialCharacters(reason);
+          log.info(`message after removing special characters: ${message}`);
+          throw new RpcError(
+            message,
+            BUNDLER_VALIDATION_STATUSES.SIMULATE_VALIDATION_FAILED,
+          );
+        } else if (reason.includes('AA3')) {
+          log.info(`error in paymaster on chainId: ${chainId}`);
+          const message = this.removeSpecialCharacters(reason);
+          log.info(`message after removing special characters: ${message}`);
+          throw new RpcError(
+            message,
+            BUNDLER_VALIDATION_STATUSES.SIMULATE_PAYMASTER_VALIDATION_FAILED,
+          );
+        }
+        throw new RpcError(
+          reason,
+          BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
+        );
+      }
+
+      const userOpHash = await entryPointContract.getUserOpHash(userOp);
+      log.info(
+        `userOpHash: ${userOpHash} on chainId: ${chainId}`,
+      );
+
+      return {
+        code: STATUSES.SUCCESS,
+        message: 'userOp Validated',
+        data: {
+          totalGas,
+          userOpHash,
+        },
+      };
+    } catch (error: any) {
+      return {
+        code: error.code,
+        message: parseError(error),
+        data: {
+          totalGas: 0,
+          userOpHash: null,
+        },
+      };
+    }
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  removeSpecialCharacters(input: string): string {
+    const match = input.match(/AA(\d+)\s(.+)/);
+
+    if (match) {
+      const errorCode = match[1]; // e.g., "25"
+      const errorMessage = match[2]; // e.g., "invalid account nonce"
+      // eslint-disable-next-line no-control-regex
+      const newMatch = `AA${errorCode} ${errorMessage}`.match(/AA.*?(?=\\u|\u0000)/);
+      if (newMatch) {
+        const extractedString = newMatch[0];
+        return extractedString;
+      }
+      return `AA${errorCode} ${errorMessage}`;
+    }
+    return input;
   }
 
   static parseSimulateHandleOpResult(

@@ -102,10 +102,10 @@ export class BundlerGasEstimationService {
       // default values for missing fields.
       signature:
         '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b', // a valid signature
-      callGasLimit: '0x00',
-      maxFeePerGas: '0x00',
-      maxPriorityFeePerGas: '0x00',
-      preVerificationGas: '0x00',
+      callGasLimit: 0,
+      maxFeePerGas: 0,
+      maxPriorityFeePerGas: 0,
+      preVerificationGas: 0,
     };
     // 3. preVerificationGas
     const preVerificationGas = await BundlerGasEstimationService.calcPreVerificationGas(
@@ -163,8 +163,8 @@ export class BundlerGasEstimationService {
     // calculate offset for Arbitrum
     if (
       chainId === BLOCKCHAINS.ARBITRUM_GOERLI_TESTNET
-      || BLOCKCHAINS.ARBITRUM_NOVA_MAINNET
-      || BLOCKCHAINS.ARBITRUM_ONE_MAINNET
+      || chainId === BLOCKCHAINS.ARBITRUM_NOVA_MAINNET
+      || chainId === BLOCKCHAINS.ARBITRUM_ONE_MAINNET
     ) {
       const data = await calcGasPrice(
         entryPointContract.address,
