@@ -154,7 +154,7 @@ export class BundlerSimulationAndValidationService {
               const message = error.message.match(/reason="(.*?)"/)?.at(1) ?? 'execution reverted';
               log.info(`message: ${JSON.stringify(message)}`);
               throw new RpcError(
-                `call data execution faield withe message: ${message}`,
+                `call data execution failed with message: ${message}`,
                 BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
               );
             });
