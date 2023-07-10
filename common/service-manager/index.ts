@@ -542,20 +542,9 @@ let statusService: IStatusService;
         const bundlerRelayService = new BundlerRelayService(bundlerQueue);
         routeTransactionToRelayerMap[chainId][type] = bundlerRelayService;
 
-        const tenderlySimulationService = new TenderlySimulationService(
-          gasPriceService,
-          cacheService,
-          {
-            tenderlyUser: config.simulationData.tenderlyData.tenderlyUser,
-            tenderlyProject: config.simulationData.tenderlyData.tenderlyProject,
-            tenderlyAccessKey: config.simulationData.tenderlyData.tenderlyAccessKey,
-          },
-        );
-
         // eslint-disable-next-line max-len
         bundlerSimulatonAndValidationServiceMap[chainId] = new BundlerSimulationAndValidationService(
           networkService,
-          tenderlySimulationService,
         );
 
         // eslint-disable-next-line max-len
