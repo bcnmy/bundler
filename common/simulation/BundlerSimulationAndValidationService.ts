@@ -51,13 +51,13 @@ export class BundlerSimulationAndValidationService {
       const fullUserOp = {
         ...userOp,
         paymasterAndData: userOp.paymasterAndData || '0x',
-        callGasLimit: userOp.callGasLimit || 600000,
+        callGasLimit: userOp.callGasLimit || 2000000,
         maxFeePerGas: userOp.maxFeePerGas === 0 || (userOp.maxFeePerGas as unknown as string) === '0x' || (userOp.maxFeePerGas as unknown as string) === '0' || !userOp.maxFeePerGas ? 1 : userOp.maxFeePerGas,
         maxPriorityFeePerGas:
         userOp.maxPriorityFeePerGas === 0 || (userOp.maxPriorityFeePerGas as unknown as string) === '0x' || (userOp.maxPriorityFeePerGas as unknown as string) === '0'
         || !userOp.maxPriorityFeePerGas ? 1 : userOp.maxPriorityFeePerGas,
         preVerificationGas: userOp.preVerificationGas || 0,
-        verificationGasLimit: userOp.verificationGasLimit || 5000000,
+        verificationGasLimit: userOp.verificationGasLimit || 3000000,
         signature: userOp.signature || '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b',
       };
 
@@ -154,15 +154,15 @@ export class BundlerSimulationAndValidationService {
               const message = error.message.match(/reason="(.*?)"/)?.at(1) ?? 'execution reverted';
               log.info(`message: ${JSON.stringify(message)}`);
               throw new RpcError(
-                message,
+                `call data execution faield withe message: ${message}`,
                 BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
               );
             });
 
           log.info(`callGasLimitFromEthers: ${callGasLimitFromEthers} on chainId: ${chainId}`);
-          callGasLimit = Math.max(callGasLimitFromEP, callGasLimitFromEthers);
+          callGasLimit = Math.max(callGasLimitFromEP, callGasLimitFromEthers) + 50000;
         } else {
-          callGasLimit = callGasLimitFromEP + 30000;
+          callGasLimit = callGasLimitFromEP + 50000;
         }
 
         return {
