@@ -1,0 +1,31 @@
+{{- if .Values.ingress.hostv2 }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/acme-challenge-type: http01
+    cert-manager.io/cluster-issuer: letsencrypt
+    ingress.kubernetes.io/force-ssl-redirect: "true"
+    kubernetes.io/ingress.class: kong
+    kubernetes.io/tls-acme: "true"
+  labels:
+    {{- include "relayers-service.labels" . | nindent 4 }}
+  name: {{ .Values.relayer.name }}-ingress-v2
+  namespace: {{ .Values.namespace }}
+spec:
+  rules:
+  - host: {{ .Values.ingress.hostv2 }}
+    http:
+      paths:
+      - backend:
+          service:
+            name: {{ .Values.name }}
+            port:
+              number: 3000
+        path: /
+        pathType: ImplementationSpecific
+  tls:
+  - hosts:
+    - {{ .Values.ingress.hostv2 }}
+    secretName: {{ .Values.name }}-tls-cert-v2
+{{- end }}

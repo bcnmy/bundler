@@ -155,14 +155,14 @@ export function isError<T>(
 
 export type UserOperationType = {
   sender: string;
-  nonce: string;
+  nonce: number;
   initCode: string;
   callData: string;
-  callGasLimit: string;
-  verificationGasLimit: string;
-  preVerificationGas: string;
-  maxFeePerGas: string;
-  maxPriorityFeePerGas: string;
+  callGasLimit: number;
+  verificationGasLimit: number;
+  preVerificationGas: number;
+  maxFeePerGas: number;
+  maxPriorityFeePerGas: number;
   paymasterAndData: string;
   signature: string;
 };

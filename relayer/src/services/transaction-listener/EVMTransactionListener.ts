@@ -336,31 +336,20 @@ ITransactionPublisher<TransactionQueueMessageType> {
                 this.networkService.ethersProvider,
               );
               log.info(`userOpReceipt: ${JSON.stringify(userOpReceipt)} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+
               if (!userOpReceipt) {
                 log.info(`userOpReceipt not fetched for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-                return;
-              }
-              const {
-                success,
-                actualGasCost,
-                actualGasUsed,
-                reason,
-                logs,
-                frontRunnedTransactionReceipt,
-              } = userOpReceipt;
-
-              if (!frontRunnedTransactionReceipt) {
                 log.info(`Updating userOp data: ${JSON.stringify({
                   transactionHash: transactionExecutionResponse?.hash,
                   receipt: transactionReceipt,
                   blockNumber: transactionReceipt.blockNumber,
                   blockHash: transactionReceipt.blockHash,
                   status: TransactionStatus.FAILED,
-                  success,
-                  actualGasCost,
-                  actualGasUsed,
-                  reason,
-                  logs,
+                  success: 'false',
+                  actualGasCost: 0,
+                  actualGasUsed: 0,
+                  reason: null,
+                  logs: null,
                 })} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
 
                 await this.userOperationDao.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
@@ -373,17 +362,50 @@ ITransactionPublisher<TransactionQueueMessageType> {
                     blockNumber: transactionReceipt.blockNumber,
                     blockHash: transactionReceipt.blockHash,
                     status: TransactionStatus.FAILED,
-                    success,
-                    actualGasCost,
-                    actualGasUsed,
-                    reason,
-                    logs,
+                    success: 'false',
+                    actualGasCost: 0,
+                    actualGasUsed: 0,
+                    reason: 'null',
+                    logs: null,
                   },
                 );
                 log.info(`userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-              } else {
-                log.info(`Updating transaction data for a front runned transaction for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-                log.info(`Updating userOp data: ${JSON.stringify({
+                return;
+              }
+              const {
+                success,
+                actualGasCost,
+                actualGasUsed,
+                reason,
+                logs,
+                frontRunnedTransactionReceipt,
+              } = userOpReceipt;
+
+              log.info(`Updating transaction data for a front runned transaction for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+              log.info(`Updating userOp data: ${JSON.stringify({
+                receipt: frontRunnedTransactionReceipt,
+                transactionHash: (
+                  frontRunnedTransactionReceipt as ethers.providers.TransactionReceipt
+                ).transactionHash,
+                blockNumber: (
+                  frontRunnedTransactionReceipt as ethers.providers.TransactionReceipt
+                ).blockNumber,
+                blockHash: (
+                  frontRunnedTransactionReceipt as ethers.providers.TransactionReceipt
+                ).blockHash,
+                status: TransactionStatus.FAILED,
+                success,
+                actualGasCost,
+                actualGasUsed,
+                reason,
+                logs,
+              })} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+
+              await this.userOperationDao.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
+                this.chainId,
+                transactionId,
+                userOpHash,
+                {
                   receipt: frontRunnedTransactionReceipt,
                   transactionHash: (
                     frontRunnedTransactionReceipt as ethers.providers.TransactionReceipt
@@ -400,60 +422,38 @@ ITransactionPublisher<TransactionQueueMessageType> {
                   actualGasUsed,
                   reason,
                   logs,
-                })} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+                },
+              );
 
-                await this.userOperationDao.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
-                  this.chainId,
-                  transactionId,
-                  userOpHash,
-                  {
-                    receipt: frontRunnedTransactionReceipt,
-                    transactionHash: (
-                      frontRunnedTransactionReceipt as ethers.providers.TransactionReceipt
-                    ).transactionHash,
-                    blockNumber: (
-                      frontRunnedTransactionReceipt as ethers.providers.TransactionReceipt
-                    ).blockNumber,
-                    blockHash: (
-                      frontRunnedTransactionReceipt as ethers.providers.TransactionReceipt
-                    ).blockHash,
-                    status: TransactionStatus.FAILED,
-                    success,
-                    actualGasCost,
-                    actualGasUsed,
-                    reason,
-                    logs,
-                  },
-                );
-                log.info(`userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-                let frontRunnedTransactionFee = 0;
-                let frontRunnedTransactionFeeInUSD = 0;
-                let frontRunnedTransactionFeeCurrency = '';
-                if (
-                  !frontRunnedTransactionReceipt.gasUsed
-                  && !frontRunnedTransactionReceipt.effectiveGasPrice) {
-                  log.info(`gasUsed or effectiveGasPrice field not found in ${JSON.stringify(frontRunnedTransactionReceipt)}`);
+              log.info(`userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+              let frontRunnedTransactionFee = 0;
+              let frontRunnedTransactionFeeInUSD = 0;
+              let frontRunnedTransactionFeeCurrency = '';
+              if (
+                !frontRunnedTransactionReceipt.gasUsed
+                && !frontRunnedTransactionReceipt.effectiveGasPrice) {
+                log.info(`gasUsed or effectiveGasPrice field not found in ${JSON.stringify(frontRunnedTransactionReceipt)}`);
+              } else {
+                frontRunnedTransactionFee = Number(frontRunnedTransactionReceipt.gasUsed.mul(
+                  frontRunnedTransactionReceipt.effectiveGasPrice,
+                ));
+                frontRunnedTransactionFeeCurrency = config.chains.currency[this.chainId];
+                const coinsRateObj = await this.cacheService.get(getTokenPriceKey());
+                if (!coinsRateObj) {
+                  log.info('Coins Rate Obj not fetched from cache');
                 } else {
-                  frontRunnedTransactionFee = Number(frontRunnedTransactionReceipt.gasUsed.mul(
-                    frontRunnedTransactionReceipt.effectiveGasPrice,
-                  ));
-                  frontRunnedTransactionFeeCurrency = config.chains.currency[this.chainId];
-                  const coinsRateObj = await this.cacheService.get(getTokenPriceKey());
-                  if (!coinsRateObj) {
-                    log.info('Coins Rate Obj not fetched from cache');
-                  } else {
-                    frontRunnedTransactionFeeInUSD = JSON.parse(coinsRateObj)[this.chainId];
-                  }
+                  frontRunnedTransactionFeeInUSD = JSON.parse(coinsRateObj)[this.chainId];
                 }
-                // eslint-disable-next-line max-len
-                await this.updateFrontRunnedTransactionDataToDatabaseByTransactionIdAndTransactionHash({
-                  frontRunnedReceipt: frontRunnedTransactionReceipt,
-                  frontRunnedTransactionFee,
-                  frontRunnedTransactionFeeInUSD,
-                  frontRunnedTransactionFeeCurrency,
-                  updationTime: Date.now(),
-                }, transactionId, transactionExecutionResponse?.hash);
               }
+
+              // eslint-disable-next-line max-len
+              await this.updateFrontRunnedTransactionDataToDatabaseByTransactionIdAndTransactionHash({
+                frontRunnedReceipt: frontRunnedTransactionReceipt,
+                frontRunnedTransactionFee,
+                frontRunnedTransactionFeeInUSD,
+                frontRunnedTransactionFeeCurrency,
+                updationTime: Date.now(),
+              }, transactionId, transactionExecutionResponse?.hash);
             } else {
               log.info(`entryPoint: ${entryPoint} not found in entry point map for transactionId: ${transactionId} on chainId: ${this.chainId}`);
             }

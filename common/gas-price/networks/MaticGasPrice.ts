@@ -72,7 +72,27 @@ export class MaticGasPrice extends GasPrice implements IScheduler {
     const url = config.gasPrice[this.chainId].gasOracle.maticGasStationUrlForEIP1559 || '';
     if (!url) throw new Error('Matic gas station url for EIP-1559 not provided.');
 
-    const response = await axiosGetCall(url);
+    let response;
+    try {
+      response = await axiosGetCall(url);
+    } catch (error) {
+      log.info('Error in getting gas prices rom matic gas station for EIP-1559');
+      response = {
+        safeLow: {
+          maxPriorityFee: 30,
+          maxFee: 200,
+        },
+        standard: {
+          maxPriorityFee: 35,
+          maxFee: 250,
+        },
+        fast: {
+          maxPriorityFee: 40,
+          maxFee: 350,
+        },
+        estimatedBaseFee: 100,
+      };
+    }
     log.info(`Response from matic gas station for EIP-1559 is ${JSON.stringify(response)}`);
 
     const safeEIP1559Prices = response.safeLow;
@@ -183,7 +203,6 @@ export class MaticGasPrice extends GasPrice implements IScheduler {
       });
     } catch (error) {
       log.error('Error in fetching gas price from polygonscan and matic gas station.');
-      return;
     }
 
     let {

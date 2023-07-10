@@ -7,5 +7,6 @@ import {
 
 export const bundlerApiRouter = Router();
 
+// TODO change to dappApiKey
 bundlerApiRouter.post('/:chainId/:dappAPIKey', validateBundlerRequest(), simulateBundlerTransaction(), bundlerRequestHandler);
 bundlerApiRouter.get('/:chainId/:bundlerApiKey', validateBundlerRequest(), bundlerRequestHandler);

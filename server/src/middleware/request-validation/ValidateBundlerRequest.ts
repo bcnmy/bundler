@@ -21,7 +21,7 @@ export const validateBundlerRequest = () => async (
   next: NextFunction,
 ) => {
   try {
-    const { method } = req.body;
+    const { method, id } = req.body;
     let validationResponse;
     switch (method) {
       case TransactionMethodType.BUNDLER:
@@ -50,8 +50,12 @@ export const validateBundlerRequest = () => async (
         break;
       default:
         return res.status(STATUSES.BAD_REQUEST).send({
-          code: STATUSES.BAD_REQUEST,
-          error: 'Wrong transaction type sent in validate BUNDLER request',
+          jsonrpc: '2.0',
+          id: id || 1,
+          error: {
+            code: STATUSES.BAD_REQUEST,
+            message: 'Wrong transaction type sent in validate BUNDLER request',
+          },
         });
     }
     const { error } = validationResponse;
@@ -68,14 +72,23 @@ export const validateBundlerRequest = () => async (
       message = error.message || error.toString();
     }
     return res.send({
-      code: BUNDLER_VALIDATION_STATUSES.INVALID_USER_OP_FIELDS,
-      error: message,
+      jsonrpc: '2.0',
+      id: id || 1,
+      error: {
+        code: BUNDLER_VALIDATION_STATUSES.INVALID_USER_OP_FIELDS,
+        message,
+      },
     });
   } catch (e: any) {
+    const { id } = req.body;
     log.error(e);
-    return res.status(STATUSES.BAD_REQUEST).send({
-      code: STATUSES.BAD_REQUEST,
-      error: JSON.stringify(e),
+    return res.status(STATUSES.INTERNAL_SERVER_ERROR).send({
+      jsonrpc: '2.0',
+      id: id || 1,
+      error: {
+        code: STATUSES.INTERNAL_SERVER_ERROR,
+        message: JSON.stringify(e),
+      },
     });
   }
 };
