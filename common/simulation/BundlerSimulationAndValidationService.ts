@@ -52,9 +52,9 @@ export class BundlerSimulationAndValidationService {
         ...userOp,
         paymasterAndData: userOp.paymasterAndData || '0x',
         callGasLimit: userOp.callGasLimit || 600000,
-        maxFeePerGas: userOp.maxFeePerGas === 0 || !userOp.maxFeePerGas ? 1 : userOp.maxFeePerGas,
+        maxFeePerGas: userOp.maxFeePerGas === 0 || (userOp.maxFeePerGas as unknown as string) === '0x' || !userOp.maxFeePerGas ? 1 : userOp.maxFeePerGas,
         maxPriorityFeePerGas:
-        userOp.maxPriorityFeePerGas === 0
+        userOp.maxPriorityFeePerGas === 0 || (userOp.maxPriorityFeePerGas as unknown as string) === '0x'
         || !userOp.maxPriorityFeePerGas ? 1 : userOp.maxPriorityFeePerGas,
         preVerificationGas: userOp.preVerificationGas || 0,
         verificationGasLimit: userOp.verificationGasLimit || 5000000,
