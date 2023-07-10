@@ -7,7 +7,7 @@ import { STATUSES } from '../../middleware';
 const log = logger(module);
 
 // eslint-disable-next-line consistent-return
-export const validateBundlerTransaction = async (req: Request) => {
+export const simulateAndValidateBundlerTransaction = async (req: Request) => {
   try {
     const userOp = req.body.params[0];
     const entryPointAddress = req.body.params[1];
@@ -35,7 +35,7 @@ export const validateBundlerTransaction = async (req: Request) => {
 
     const bundlerSimulationAndValidationResponse = await bundlerSimulatonAndValidationServiceMap[
       parseInt(chainId, 10)
-    ].validateUserOperation(
+    ].validateAndEstimateUserOperationGas(
       {
         userOp,
         entryPointContract,
