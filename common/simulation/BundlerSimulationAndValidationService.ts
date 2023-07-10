@@ -160,7 +160,7 @@ export class BundlerSimulationAndValidationService {
             });
 
           log.info(`callGasLimitFromEthers: ${callGasLimitFromEthers} on chainId: ${chainId}`);
-          callGasLimit = Math.max(callGasLimitFromEP, callGasLimitFromEthers) + 50000;
+          callGasLimit = Math.max(callGasLimitFromEP, callGasLimitFromEthers);
         } else {
           callGasLimit = callGasLimitFromEP + 50000;
         }
