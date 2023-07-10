@@ -250,14 +250,16 @@ ITransactionPublisher<TransactionQueueMessageType> {
       log.error(`Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
       return;
     }
-    log.info(`Publishing to transaction queue on failure for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
-    await this.publishToTransactionQueue({
-      transactionId,
-      relayerManagerName,
-      transactionHash: transactionExecutionResponse?.hash,
-      receipt: transactionReceipt,
-      event: SocketEventType.onTransactionMined,
-    });
+    if (!(transactionType === TransactionType.BUNDLER || transactionType === TransactionType.AA)) {
+      log.info(`Publishing to transaction queue on failure for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
+      await this.publishToTransactionQueue({
+        transactionId,
+        relayerManagerName,
+        transactionHash: transactionExecutionResponse?.hash,
+        receipt: transactionReceipt,
+        event: SocketEventType.onTransactionMined,
+      });
+    }
 
     if (transactionExecutionResponse) {
       try {
@@ -338,6 +340,15 @@ ITransactionPublisher<TransactionQueueMessageType> {
               log.info(`userOpReceipt: ${JSON.stringify(userOpReceipt)} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
 
               if (!userOpReceipt) {
+                log.info(`Publishing to transaction queue on failure for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
+                await this.publishToTransactionQueue({
+                  transactionId,
+                  relayerManagerName,
+                  transactionHash: transactionExecutionResponse?.hash,
+                  receipt: transactionReceipt,
+                  event: SocketEventType.onTransactionMined,
+                });
+
                 log.info(`userOpReceipt not fetched for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
                 log.info(`Updating userOp data: ${JSON.stringify({
                   transactionHash: transactionExecutionResponse?.hash,
@@ -380,6 +391,17 @@ ITransactionPublisher<TransactionQueueMessageType> {
                 logs,
                 frontRunnedTransactionReceipt,
               } = userOpReceipt;
+
+              log.info(`Transaction got front runned. Publishing to transaction queue on failure for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
+              await this.publishToTransactionQueue({
+                transactionId,
+                relayerManagerName,
+                transactionHash: (
+                  frontRunnedTransactionReceipt as ethers.providers.TransactionReceipt
+                ).transactionHash,
+                receipt: transactionReceipt,
+                event: SocketEventType.onTransactionMined,
+              });
 
               log.info(`Updating transaction data for a front runned transaction for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
               log.info(`Updating userOp data: ${JSON.stringify({
