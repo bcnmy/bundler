@@ -134,7 +134,7 @@ export class BundlerSimulationAndValidationService {
         log.info(`verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId}`);
 
         const totalGas = Math.ceil((BigNumber.from(paid).toNumber())
-        / (userOp.maxFeePerGas === 0 || !userOp.maxFeePerGas ? 1 : userOp.maxFeePerGas));
+        / (userOp.maxFeePerGas === 0 || (userOp.maxFeePerGas as unknown as string) === '0x' || !userOp.maxFeePerGas ? 1 : userOp.maxFeePerGas));
         log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
 
         let callGasLimit;
