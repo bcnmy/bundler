@@ -427,7 +427,7 @@ export class TenderlySimulationService implements IExternalSimulation {
         if (!userOperationRevertedEventLog) {
           log.error('UserOperationReverted not found in logs');
           return {
-            reason: 'call data execution failed',
+            reason: 'userOp execution failed',
             isExecutionSuccess: false,
           };
         }
@@ -436,7 +436,7 @@ export class TenderlySimulationService implements IExternalSimulation {
         if (!resultData) {
           log.error('successData not found in logs');
           return {
-            reason: 'call data execution failed',
+            reason: 'userOp execution failed',
             isExecutionSuccess: false,
           };
         }
