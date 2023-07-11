@@ -470,6 +470,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
 
               // eslint-disable-next-line max-len
               await this.updateFrontRunnedTransactionDataToDatabaseByTransactionIdAndTransactionHash({
+                frontRunnedTransactionHash: frontRunnedTransactionReceipt.hash,
                 frontRunnedReceipt: frontRunnedTransactionReceipt,
                 frontRunnedTransactionFee,
                 frontRunnedTransactionFeeInUSD,

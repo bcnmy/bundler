@@ -94,6 +94,7 @@ export type FrontRunnedTransactionDataToBeUpdatedInDatabaseType = {
   resubmitted?: boolean;
   relayerAddress?: string;
   updationTime?: number;
+  frontRunnedTransactionHash?: string,
   frontRunnedReceipt?: object,
   frontRunnedTransactionFee?: number,
   frontRunnedTransactionFeeInUSD?: number,

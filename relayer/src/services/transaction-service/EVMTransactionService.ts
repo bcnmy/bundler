@@ -112,7 +112,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       };
     }
     log.info(`Gas price being used to send transaction by relayer: ${relayerAddress} is: ${gasPrice}`);
-    return { ...response, gasPrice: ethers.utils.hexlify(Number(gasPrice) * 0.40) };
+    return { ...response, gasPrice: ethers.utils.hexlify(Number(gasPrice)) };
   }
 
   async executeTransaction(

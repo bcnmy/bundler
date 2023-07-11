@@ -42,4 +42,9 @@ export interface IBlockchainTransaction {
   resubmitted: boolean;
   creationTime: number;
   updationTime: number;
+  frontRunnedTransactionHash: string;
+  frontRunnedReceipt: object,
+  frontRunnedTransactionFee: number,
+  frontRunnedTransactionFeeInUSD: number,
+  frontRunnedTransactionFeeCurrency: string,
 }
