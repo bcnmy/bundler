@@ -74,4 +74,19 @@ export const BlockchainTransactionSchema = new Schema<IBlockchainTransaction>({
   updationTime: {
     type: Number,
   },
+  frontRunnedTransactionHash: {
+    type: String,
+  },
+  frontRunnedReceipt: {
+    type: Object,
+  },
+  frontRunnedTransactionFee: {
+    type: Number,
+  },
+  frontRunnedTransactionFeeInUSD: {
+    type: Number,
+  },
+  frontRunnedTransactionFeeCurrency: {
+    type: String,
+  },
 });
