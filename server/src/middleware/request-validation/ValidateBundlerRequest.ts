@@ -66,10 +66,8 @@ export const validateBundlerRequest = () => async (
     }
     const { details } = error;
     let message;
-    if (details && details[0] && details[0].context) {
-      message = details[0].context.details[0].message || details.map((i) => (i.context ? i.context.message : i.message).join(','));
-    } else if (details) {
-      message = details.map((i) => (i.context ? i.context.message : i.message).join(','));
+    if (details) {
+      message = details.map((i) => (i.context ? i.context.message : i.message)).join(',');
     } else {
       message = error.message || error.toString();
     }
