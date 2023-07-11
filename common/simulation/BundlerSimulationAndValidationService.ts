@@ -172,8 +172,8 @@ export class BundlerSimulationAndValidationService {
         let validUntil = executionResultDecodedParams[3];
         log.info(`validUntil: ${validUntil}`);
 
-        validAfter = BigNumber.from(validAfter);
-        validUntil = BigNumber.from(validUntil);
+        validAfter = Number(BigNumber.from(validAfter));
+        validUntil = Number(BigNumber.from(validUntil));
         if (validUntil === BigNumber.from(0)) {
           validUntil = undefined;
         }
