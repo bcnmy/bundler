@@ -57,7 +57,7 @@ export class BundlerSimulationAndValidationService {
         userOp.maxPriorityFeePerGas === 0 || (userOp.maxPriorityFeePerGas as unknown as string) === '0x' || (userOp.maxPriorityFeePerGas as unknown as string) === '0'
         || !userOp.maxPriorityFeePerGas ? 1 : userOp.maxPriorityFeePerGas,
         preVerificationGas: userOp.preVerificationGas || 0,
-        verificationGasLimit: userOp.verificationGasLimit || 3000000,
+        verificationGasLimit: userOp.verificationGasLimit || 5000000,
         signature: userOp.signature || '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b',
       };
 
@@ -101,24 +101,75 @@ export class BundlerSimulationAndValidationService {
         // The first 4 bytes of the data is the function signature
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const functionSignature = ethCallData.slice(0, 10);
+        log.info(`functionSignature: ${functionSignature}`);
 
         // The rest of the data is the encoded parameters
         const encodedParams = `0x${ethCallData.slice(10)}`;
+        log.info(`encodedParams: ${encodedParams}`);
 
-        // Here is the data layout of the parameters
-        const types = ['uint256', 'uint256', 'uint48', 'uint48', 'bool', 'bytes'];
+        // Here is the data layout of the parameters for ExecutionResult
+        const executionResultTypes = ['uint256', 'uint256', 'uint48', 'uint48', 'bool', 'bytes'];
 
-        // Decode the parameters
-        const decodedParams = ethers.utils.defaultAbiCoder.decode(types, encodedParams);
+        let executionResultDecodedParams;
 
-        log.info('Decoded Parameters:');
-        const preOpGas = decodedParams[0];
+        try {
+          // Decode the parameters
+          executionResultDecodedParams = ethers.utils.defaultAbiCoder.decode(
+            executionResultTypes,
+            encodedParams,
+          );
+        } catch (error: any) {
+          // coming in catch means that revert reason is FailedOp
+          const failedOpTypes = ['uint256', 'string'];
+
+          // Decode the parameters
+          const failedOpDecodedParams = ethers.utils.defaultAbiCoder.decode(
+            failedOpTypes,
+            encodedParams,
+          );
+
+          log.info(`FailedOp Decoded Parameters: ${JSON.stringify(failedOpDecodedParams)}`);
+          const opIndex = failedOpDecodedParams[0];
+          log.info(`opIndex: ${opIndex}`);
+          const revertReason = failedOpDecodedParams[1];
+          log.info(`revertReason: ${revertReason}`);
+
+          if (revertReason.includes('AA1') || revertReason.includes('AA2')) {
+            log.info(`error in account on chainId: ${chainId}`);
+            throw new RpcError(
+              revertReason,
+              BUNDLER_VALIDATION_STATUSES.SIMULATE_VALIDATION_FAILED,
+            );
+          } else if (revertReason.includes('AA3')) {
+            log.info(`error in paymaster on chainId: ${chainId}`);
+            throw new RpcError(
+              revertReason,
+              BUNDLER_VALIDATION_STATUSES.SIMULATE_PAYMASTER_VALIDATION_FAILED,
+            );
+          } else {
+            return {
+              code: error.code,
+              message: parseError(error),
+              data: {
+                preVerificationGas: 0,
+                verificationGasLimit: 0,
+                callGasLimit: 0,
+                validAfter: 0,
+                validUntil: 0,
+                totalGas: 0,
+              },
+            };
+          }
+        }
+
+        log.info(`Execution Result Decoded Parameters: ${JSON.stringify(executionResultDecodedParams)}`);
+        const preOpGas = executionResultDecodedParams[0];
         log.info(`preOpGas: ${preOpGas}`);
-        const paid = decodedParams[1];
+        const paid = executionResultDecodedParams[1];
         log.info(`paid: ${paid}`);
-        let validAfter = decodedParams[2];
+        let validAfter = executionResultDecodedParams[2];
         log.info(`validAfter: ${validAfter}`);
-        let validUntil = decodedParams[3];
+        let validUntil = executionResultDecodedParams[3];
         log.info(`validUntil: ${validUntil}`);
 
         validAfter = BigNumber.from(validAfter);
@@ -134,7 +185,7 @@ export class BundlerSimulationAndValidationService {
         log.info(`verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId}`);
 
         const totalGas = Math.ceil((BigNumber.from(paid).toNumber())
-        / (userOp.maxFeePerGas === 0 || (userOp.maxFeePerGas as unknown as string) === '0x' || (userOp.maxFeePerGas as unknown as string) === '0' || !userOp.maxFeePerGas ? 1 : userOp.maxFeePerGas));
+          / (userOp.maxFeePerGas === 0 || (userOp.maxFeePerGas as unknown as string) === '0x' || (userOp.maxFeePerGas as unknown as string) === '0' || !userOp.maxFeePerGas ? 1 : userOp.maxFeePerGas));
         log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
 
         let callGasLimit;
