@@ -57,7 +57,7 @@ export class BundlerSimulationAndValidationService {
         userOp.maxPriorityFeePerGas === 0 || (userOp.maxPriorityFeePerGas as unknown as string) === '0x' || (userOp.maxPriorityFeePerGas as unknown as string) === '0'
         || !userOp.maxPriorityFeePerGas ? 1 : userOp.maxPriorityFeePerGas,
         preVerificationGas: userOp.preVerificationGas || 0,
-        verificationGasLimit: userOp.verificationGasLimit || 3000000,
+        verificationGasLimit: userOp.verificationGasLimit || 5000000,
         signature: userOp.signature || '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b',
       };
 
@@ -101,84 +101,127 @@ export class BundlerSimulationAndValidationService {
         // The first 4 bytes of the data is the function signature
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const functionSignature = ethCallData.slice(0, 10);
+        log.info(`functionSignature: ${functionSignature}`);
 
         // The rest of the data is the encoded parameters
         const encodedParams = `0x${ethCallData.slice(10)}`;
+        log.info(`encodedParams: ${encodedParams}`);
 
-        // Here is the data layout of the parameters
-        const types = ['uint256', 'uint256', 'uint48', 'uint48', 'bool', 'bytes'];
+        try {
+          // Here is the data layout of the parameters for ExecutionResult
+          const types = ['uint256', 'uint256', 'uint48', 'uint48', 'bool', 'bytes'];
 
-        // Decode the parameters
-        const decodedParams = ethers.utils.defaultAbiCoder.decode(types, encodedParams);
+          // Decode the parameters
+          const decodedParams = ethers.utils.defaultAbiCoder.decode(types, encodedParams);
 
-        log.info('Decoded Parameters:');
-        const preOpGas = decodedParams[0];
-        log.info(`preOpGas: ${preOpGas}`);
-        const paid = decodedParams[1];
-        log.info(`paid: ${paid}`);
-        let validAfter = decodedParams[2];
-        log.info(`validAfter: ${validAfter}`);
-        let validUntil = decodedParams[3];
-        log.info(`validUntil: ${validUntil}`);
+          log.info(`Decoded Parameters: ${JSON.stringify(decodedParams)}`);
+          const preOpGas = decodedParams[0];
+          log.info(`preOpGas: ${preOpGas}`);
+          const paid = decodedParams[1];
+          log.info(`paid: ${paid}`);
+          let validAfter = decodedParams[2];
+          log.info(`validAfter: ${validAfter}`);
+          let validUntil = decodedParams[3];
+          log.info(`validUntil: ${validUntil}`);
 
-        validAfter = BigNumber.from(validAfter);
-        validUntil = BigNumber.from(validUntil);
-        if (validUntil === BigNumber.from(0)) {
-          validUntil = undefined;
+          validAfter = BigNumber.from(validAfter);
+          validUntil = BigNumber.from(validUntil);
+          if (validUntil === BigNumber.from(0)) {
+            validUntil = undefined;
+          }
+          if (validAfter === BigNumber.from(0)) {
+            validAfter = undefined;
+          }
+
+          const verificationGasLimit = BigNumber.from(preOpGas).toNumber();
+          log.info(`verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId}`);
+
+          const totalGas = Math.ceil((BigNumber.from(paid).toNumber())
+          / (userOp.maxFeePerGas === 0 || (userOp.maxFeePerGas as unknown as string) === '0x' || (userOp.maxFeePerGas as unknown as string) === '0' || !userOp.maxFeePerGas ? 1 : userOp.maxFeePerGas));
+          log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
+
+          let callGasLimit;
+          const callGasLimitFromEP = totalGas - preOpGas;
+          log.info(`callGasLimitFromEP: ${callGasLimitFromEP} on chainId: ${chainId}`);
+
+          // TODO if initCode is 0x then try callGasLimit from EP to sender
+          if (fullUserOp.initCode === '0x') {
+            const callGasLimitFromEthers = await this.networkService
+              .estimateCallGas(
+                entryPointContract.address,
+                userOp.sender,
+                userOp.callData,
+              )
+              .then((callGasLimitResponse) => callGasLimitResponse.toNumber())
+              .catch((error) => {
+                const message = error.message.match(/reason="(.*?)"/)?.at(1) ?? 'execution reverted';
+                log.info(`message: ${JSON.stringify(message)}`);
+                throw new RpcError(
+                  `call data execution failed with message: ${message}`,
+                  BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
+                );
+              });
+
+            log.info(`callGasLimitFromEthers: ${callGasLimitFromEthers} on chainId: ${chainId}`);
+            callGasLimit = Math.max(callGasLimitFromEP, callGasLimitFromEthers);
+          } else {
+            callGasLimit = callGasLimitFromEP + 50000;
+          }
+
+          return {
+            code: STATUSES.SUCCESS,
+            message: `Gas successfully estimated for userOp: ${JSON.stringify(
+              userOp,
+            )} on chainId: ${chainId}`,
+            data: {
+              preVerificationGas,
+              verificationGasLimit,
+              callGasLimit,
+              validAfter,
+              validUntil,
+              totalGas,
+            },
+          };
+        } catch (error: any) {
+          // coming in catch means that revert reason is FailedOp
+          const types = ['uint256', 'string'];
+
+          // Decode the parameters
+          const decodedParams = ethers.utils.defaultAbiCoder.decode(types, encodedParams);
+
+          log.info(`Decoded Parameters: ${JSON.stringify(decodedParams)}`);
+          const opIndex = decodedParams[0];
+          log.info(`opIndex: ${opIndex}`);
+          const revertReason = decodedParams[1];
+          log.info(`revertReason: ${revertReason}`);
+
+          if (revertReason.includes('AA1') || revertReason.includes('AA2')) {
+            log.info(`error in account on chainId: ${chainId}`);
+            throw new RpcError(
+              revertReason,
+              BUNDLER_VALIDATION_STATUSES.SIMULATE_VALIDATION_FAILED,
+            );
+          } else if (revertReason.includes('AA3')) {
+            log.info(`error in paymaster on chainId: ${chainId}`);
+            throw new RpcError(
+              revertReason,
+              BUNDLER_VALIDATION_STATUSES.SIMULATE_PAYMASTER_VALIDATION_FAILED,
+            );
+          } else {
+            return {
+              code: error.code,
+              message: parseError(error),
+              data: {
+                preVerificationGas: 0,
+                verificationGasLimit: 0,
+                callGasLimit: 0,
+                validAfter: 0,
+                validUntil: 0,
+                totalGas: 0,
+              },
+            };
+          }
         }
-        if (validAfter === BigNumber.from(0)) {
-          validAfter = undefined;
-        }
-
-        const verificationGasLimit = BigNumber.from(preOpGas).toNumber();
-        log.info(`verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId}`);
-
-        const totalGas = Math.ceil((BigNumber.from(paid).toNumber())
-        / (userOp.maxFeePerGas === 0 || (userOp.maxFeePerGas as unknown as string) === '0x' || (userOp.maxFeePerGas as unknown as string) === '0' || !userOp.maxFeePerGas ? 1 : userOp.maxFeePerGas));
-        log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
-
-        let callGasLimit;
-        const callGasLimitFromEP = totalGas - preOpGas;
-        log.info(`callGasLimitFromEP: ${callGasLimitFromEP} on chainId: ${chainId}`);
-
-        // TODO if initCode is 0x then try callGasLimit from EP to sender
-        if (fullUserOp.initCode === '0x') {
-          const callGasLimitFromEthers = await this.networkService
-            .estimateCallGas(
-              entryPointContract.address,
-              userOp.sender,
-              userOp.callData,
-            )
-            .then((callGasLimitResponse) => callGasLimitResponse.toNumber())
-            .catch((error) => {
-              const message = error.message.match(/reason="(.*?)"/)?.at(1) ?? 'execution reverted';
-              log.info(`message: ${JSON.stringify(message)}`);
-              throw new RpcError(
-                `call data execution failed with message: ${message}`,
-                BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
-              );
-            });
-
-          log.info(`callGasLimitFromEthers: ${callGasLimitFromEthers} on chainId: ${chainId}`);
-          callGasLimit = Math.max(callGasLimitFromEP, callGasLimitFromEthers);
-        } else {
-          callGasLimit = callGasLimitFromEP + 50000;
-        }
-
-        return {
-          code: STATUSES.SUCCESS,
-          message: `Gas successfully estimated for userOp: ${JSON.stringify(
-            userOp,
-          )} on chainId: ${chainId}`,
-          data: {
-            preVerificationGas,
-            verificationGasLimit,
-            callGasLimit,
-            validAfter,
-            validUntil,
-            totalGas,
-          },
-        };
       } catch (error: any) {
         return {
           code: error.code,
