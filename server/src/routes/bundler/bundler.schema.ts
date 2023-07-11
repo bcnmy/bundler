@@ -10,16 +10,16 @@ const {
 
 // eth_sendUserOperation
 const userOpForSendUserOp = object.keys({
-  sender: string.regex(/^0x[a-fA-F0-9]{40}$/).required().error(new Error('sender address is required and should be a hex string')),
-  nonce: number.required().error(new Error('nonce is required and should be a number')),
-  initCode: string.required().error(new Error('nonce is required and should be a hex string')),
-  callData: string.required().error(new Error('callData is required and should be a hex string')),
-  callGasLimit: number.required().error(new Error('callGasLimit is required and should be a number')),
-  verificationGasLimit: number.required().error(new Error('verificationGasLimit is required and should be a number')),
-  preVerificationGas: number.required().error(new Error('preVerificationGas is required and should be a number')),
-  maxFeePerGas: number.required().error(new Error('maxFeePerGas is required and should be a number')),
-  maxPriorityFeePerGas: number.required().error(new Error('maxPriorityFeePerGas is required and should be a number')),
-  paymasterAndData: string.required().error(new Error('paymasterAndData is required and should be a hex string')),
+  sender: string.regex(/^0x[a-fA-F0-9]{40}$/).required().error(new Error('sender address is required')),
+  nonce: string.required().error(new Error('nonce is required and should be a string')),
+  initCode: string,
+  callData: string.required().error(new Error('callData is required and should be a string')),
+  callGasLimit: string.required().error(new Error('callGasLimit is required and should be a string')),
+  verificationGasLimit: string.required().error(new Error('verificationGasLimit is required and should be a string')),
+  preVerificationGas: string.required().error(new Error('preVerificationGas is required and should be a string')),
+  maxFeePerGas: string.required().error(new Error('maxFeePerGas is required and should be a number')),
+  maxPriorityFeePerGas: string.required().error(new Error('maxPriorityFeePerGas is required and should be a string')),
+  paymasterAndData: string,
   signature: string.required().error(new Error('signature is required')),
 });
 
@@ -43,15 +43,15 @@ export const bundlerSendUserOpRequestSchema = object.keys({
  *  so no payment is required by neither account nor paymaster.
  */
 const userOpEstimateUserOpGas = object.keys({
-  sender: string.regex(/^0x[a-fA-F0-9]{40}$/).required().error(new Error('sender address is required and should be a hex string')),
-  nonce: number.required().error(new Error('nonce is required and should be a number')),
-  initCode: string.required().error(new Error('initCode is required and should be a hex string')),
+  sender: string.regex(/^0x[a-fA-F0-9]{40}$/).required().error(new Error('sender address is required')),
+  nonce: string.required().error(new Error('nonce is required and should be a string')),
+  initCode: string.required().error(new Error('initCode is required and should be a hex string. Send 0x if not applicable')),
   callData: string.required().error(new Error('callData is required and should be a hex string')),
-  callGasLimit: number,
-  verificationGasLimit: number,
-  preVerificationGas: number,
-  maxFeePerGas: number,
-  maxPriorityFeePerGas: number,
+  callGasLimit: string,
+  verificationGasLimit: string,
+  preVerificationGas: string,
+  maxFeePerGas: string,
+  maxPriorityFeePerGas: string,
   paymasterAndData: string,
   signature: string,
 });
