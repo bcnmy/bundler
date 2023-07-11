@@ -51,7 +51,7 @@ export class BundlerSimulationAndValidationService {
       const fullUserOp = {
         ...userOp,
         paymasterAndData: userOp.paymasterAndData || '0x',
-        callGasLimit: userOp.callGasLimit || 1000000,
+        callGasLimit: userOp.callGasLimit || 2000000,
         maxFeePerGas: userOp.maxFeePerGas === 0 || (userOp.maxFeePerGas as unknown as string) === '0x' || (userOp.maxFeePerGas as unknown as string) === '0' || !userOp.maxFeePerGas ? 1 : userOp.maxFeePerGas,
         maxPriorityFeePerGas:
         userOp.maxPriorityFeePerGas === 0 || (userOp.maxPriorityFeePerGas as unknown as string) === '0x' || (userOp.maxPriorityFeePerGas as unknown as string) === '0'
@@ -154,13 +154,13 @@ export class BundlerSimulationAndValidationService {
               const message = error.message.match(/reason="(.*?)"/)?.at(1) ?? 'execution reverted';
               log.info(`message: ${JSON.stringify(message)}`);
               throw new RpcError(
-                message,
+                `call data execution failed with message: ${message}`,
                 BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
               );
             });
 
           log.info(`callGasLimitFromEthers: ${callGasLimitFromEthers} on chainId: ${chainId}`);
-          callGasLimit = Math.max(callGasLimitFromEP, callGasLimitFromEthers) + 50000;
+          callGasLimit = Math.max(callGasLimitFromEP, callGasLimitFromEthers);
         } else {
           callGasLimit = callGasLimitFromEP + 50000;
         }
