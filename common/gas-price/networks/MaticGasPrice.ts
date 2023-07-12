@@ -80,15 +80,15 @@ export class MaticGasPrice extends GasPrice implements IScheduler {
       response = {
         safeLow: {
           maxPriorityFee: 30,
-          maxFee: 200,
+          maxFee: 300,
         },
         standard: {
           maxPriorityFee: 35,
-          maxFee: 250,
+          maxFee: 400,
         },
         fast: {
           maxPriorityFee: 40,
-          maxFee: 350,
+          maxFee: 500,
         },
         estimatedBaseFee: 100,
       };
