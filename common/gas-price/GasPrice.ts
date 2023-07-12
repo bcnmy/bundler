@@ -303,11 +303,22 @@ export class GasPrice implements IGasPrice {
               'wei',
             );
 
-            await this.setMaxFeeGasPrice(GasPriceType.DEFAULT, maxFeePerGas);
-            await this.setMaxPriorityFeeGasPrice(
-              GasPriceType.DEFAULT,
-              maxPriorityFeePerGas,
-            );
+            if (this.chainId === 137) {
+              await this.setMaxFeeGasPrice(
+                GasPriceType.DEFAULT,
+                (Number(maxFeePerGas)).toString(),
+              );
+              await this.setMaxPriorityFeeGasPrice(
+                GasPriceType.DEFAULT,
+                (Number(maxPriorityFeePerGas) * 2).toString(),
+              );
+            } else {
+              await this.setMaxFeeGasPrice(GasPriceType.DEFAULT, maxFeePerGas);
+              await this.setMaxPriorityFeeGasPrice(
+                GasPriceType.DEFAULT,
+                maxPriorityFeePerGas,
+              );
+            }
           }
         }
       }
