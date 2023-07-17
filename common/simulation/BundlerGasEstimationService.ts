@@ -17,6 +17,7 @@ import {
   EstimateUserOpGasFieldsType,
 } from './types';
 import { calcGasPrice } from './L2/Abitrum';
+import { calcGasPrice as calcGasPriceOptimism } from './L2/Optimism/Optimism';
 
 const log = logger(module);
 export class BundlerGasEstimationService {
@@ -167,6 +168,16 @@ export class BundlerGasEstimationService {
       || chainId === BLOCKCHAINS.ARBITRUM_ONE_MAINNET
     ) {
       const data = await calcGasPrice(
+        entryPointContract.address,
+        userOp,
+        chainId,
+      );
+      ret += data;
+    } else if (
+      chainId === BLOCKCHAINS.OPTIMISM_GOERLI_TESTNET
+      || chainId === BLOCKCHAINS.OPTIMISM_MAINNET
+    ) {
+      const data = await calcGasPriceOptimism(
         entryPointContract.address,
         userOp,
         chainId,
