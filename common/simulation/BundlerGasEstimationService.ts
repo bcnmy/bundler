@@ -176,6 +176,7 @@ export class BundlerGasEstimationService {
     } else if (
       chainId === BLOCKCHAINS.OPTIMISM_GOERLI_TESTNET
       || chainId === BLOCKCHAINS.OPTIMISM_MAINNET
+      || chainId === BLOCKCHAINS.BASE_GOERLI_TESTNET
     ) {
       const data = await calcGasPriceOptimism(
         entryPointContract.address,
