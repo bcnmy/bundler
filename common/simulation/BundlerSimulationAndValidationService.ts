@@ -185,8 +185,16 @@ export class BundlerSimulationAndValidationService {
         const verificationGasLimit = BigNumber.from(preOpGas).toNumber();
         log.info(`verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId}`);
 
-        const totalGas = Math.ceil((BigNumber.from(paid).toNumber())
-          / (userOp.maxFeePerGas === 0 || (userOp.maxFeePerGas as unknown as string) === '0x' || (userOp.maxFeePerGas as unknown as string) === '0' || !userOp.maxFeePerGas ? 1 : userOp.maxFeePerGas));
+        const totalGas = BigNumber.from(paid)
+          .div(
+            userOp.maxFeePerGas === 0
+            || (userOp.maxFeePerGas as unknown as string) === '0x'
+            || (userOp.maxFeePerGas as unknown as string) === '0'
+            || !userOp.maxFeePerGas
+              ? 1
+              : userOp.maxFeePerGas,
+          )
+          .toNumber();
         log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
 
         let callGasLimit;
