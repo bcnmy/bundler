@@ -23,6 +23,7 @@ import {
 } from './types';
 import { BLOCKCHAINS } from '../constants';
 import { calcGasPrice } from './L2/Abitrum';
+import { calcGasPrice as calcGasPriceOptimism } from './L2/Optimism/Optimism';
 import { TenderlySimulationService } from './external-simulation';
 
 const log = logger(module);
@@ -460,6 +461,17 @@ export class BundlerSimulationAndValidationService {
       || chainId === BLOCKCHAINS.ARBITRUM_ONE_MAINNET
     ) {
       const data = await calcGasPrice(
+        entryPointContract.address,
+        userOp,
+        chainId,
+      );
+      ret += data;
+    } else if (
+      chainId === BLOCKCHAINS.OPTIMISM_GOERLI_TESTNET
+      || chainId === BLOCKCHAINS.OPTIMISM_MAINNET
+      || chainId === BLOCKCHAINS.BASE_GOERLI_TESTNET
+    ) {
+      const data = await calcGasPriceOptimism(
         entryPointContract.address,
         userOp,
         chainId,
