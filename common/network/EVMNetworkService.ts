@@ -107,7 +107,9 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
 
   async getEIP1559GasPrice(): Promise<Type2TransactionGasPriceType> {
     const feeData = await this.useProvider(RpcMethod.getEIP1159GasPrice);
-    const maxFeePerGas = ethers.utils.hexValue(feeData.maxFeePerGas);
+    const maxFeePerGas = L2Networks.includes(this.chainId)
+      ? ethers.utils.hexValue(feeData.lastBaseFeePerGas)
+      : ethers.utils.hexValue(feeData.maxFeePerGas);
     // Ethers' getFeeData function hardcodes 1.5 gwei as the minimum tip, which
     // turns out to be too large for some L2s like Arbitrum.
     // TODO: Can use this logic in future if we want to set a minimum tip.
