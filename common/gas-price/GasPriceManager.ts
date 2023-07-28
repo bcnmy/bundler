@@ -167,13 +167,13 @@ export class GasPriceManager implements IGasPriceManager<GasPriceServiceType> {
         return new BaseGoerliGasPrice(
           this.cacheService,
           this.networkService,
-          this.options
+          this.options,
         );
       case 8453:
         return new BaseMainnetGasPrice(
           this.cacheService,
           this.networkService,
-          this.options
+          this.options,
         );
       case 59140:
         return new LineaTestnetGasPrice(
