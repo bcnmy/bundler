@@ -198,9 +198,7 @@ export class TenderlySimulationService implements IExternalSimulation {
       }
 
       const transactionLogs = response.data.transaction.transaction_info.call_trace.logs;
-      const totalGas = response.data.transaction.transaction_info
-        .call_trace.gas_used
-       + response.data.transaction.transaction_info.call_trace.intrinsic_gas;
+      const totalGas = response.data.transaction.gas_used;
 
       log.info(`totalGas: ${totalGas} from Tenderly simulation`);
       const {
