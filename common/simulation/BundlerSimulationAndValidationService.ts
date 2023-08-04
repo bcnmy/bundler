@@ -82,6 +82,7 @@ export class BundlerSimulationAndValidationService {
 
         let ethCallParams;
 
+        // polygon zk evm nodes don't support state overrides
         if ([1442, 1101].includes(chainId)) {
           log.info('Request on polygon zk evm hence not doing state overrides in eth_call');
           ethCallParams = [
