@@ -21,7 +21,7 @@ import {
   EstimateUserOperationGasReturnType,
   ValidateUserOperationData,
 } from './types';
-import { BLOCKCHAINS } from '../constants';
+import { BLOCKCHAINS, PolygonZKEvmNetworks } from '../constants';
 import { calcGasPrice } from './L2/Abitrum';
 import { calcGasPrice as calcGasPriceOptimism } from './L2/Optimism/Optimism';
 import { TenderlySimulationService } from './external-simulation';
@@ -83,7 +83,7 @@ export class BundlerSimulationAndValidationService {
         let ethCallParams;
 
         // polygon zk evm nodes don't support state overrides
-        if ([1442, 1101].includes(chainId)) {
+        if (PolygonZKEvmNetworks.includes(chainId)) {
           log.info('Request on polygon zk evm hence not doing state overrides in eth_call');
           ethCallParams = [
             {
