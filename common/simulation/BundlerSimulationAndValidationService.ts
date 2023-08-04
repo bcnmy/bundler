@@ -80,9 +80,21 @@ export class BundlerSimulationAndValidationService {
           '0x',
         );
 
-        const simulateHandleOpResult = await this.networkService.sendRpcCall(
-          'eth_call',
-          [
+        let ethCallParams;
+
+        if ([1442, 1101].includes(chainId)) {
+          log.info('Request on polygon zk evm hence not doing state overrides in eth_call');
+          ethCallParams = [
+            {
+              from: '0x0000000000000000000000000000000000000000',
+              to: entryPointContract.address,
+              data,
+            },
+            'latest',
+          ];
+        } else {
+          log.info('Request not on polygon zk evm hence doing state overrides in eth_call');
+          ethCallParams = [
             {
               from: '0x0000000000000000000000000000000000000000',
               to: entryPointContract.address,
@@ -95,7 +107,12 @@ export class BundlerSimulationAndValidationService {
                   balance: '0xFFFFFFFFFFFFFFFFFFFF',
                 },
             },
-          ],
+          ];
+        }
+
+        const simulateHandleOpResult = await this.networkService.sendRpcCall(
+          'eth_call',
+          ethCallParams,
         );
         const ethCallData = simulateHandleOpResult.data.error.data;
 
