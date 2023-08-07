@@ -11,11 +11,11 @@ export const validateBundlerTransaction = async (req: Request) => {
   try {
     const userOp = req.body.params[0];
     const entryPointAddress = req.body.params[1];
-    const { chainId, dappAPIKey } = req.params;
+    const { chainId, bundlerApiKey } = req.params;
     log.info(`chainId from request params: ${chainId}`);
-    log.info(`dappAPIKey from request params: ${dappAPIKey}`);
+    log.info(`bundlerApiKey from request params: ${bundlerApiKey}`);
 
-    if (dappAPIKey === 'nJPK7B3ru.dd7f7861-190d-41bd-af80-6877f74b8f44') {
+    if (bundlerApiKey === 'nJPK7B3ru.dd7f7861-190d-41bd-af80-6877f74b8f44') {
       if (![5, 80001, 97, 1442, 421613, 420, 43113, 84531, 59140].includes(parseInt(chainId, 10))) {
         return {
           code: -32400,
