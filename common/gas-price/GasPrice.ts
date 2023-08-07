@@ -7,6 +7,8 @@ import { INetworkService } from '../network';
 import { EVMRawTransactionType, NetworkBasedGasPriceType } from '../types';
 import { IGasPrice } from './interface/IGasPrice';
 import { GasPriceType } from './types';
+import { OptimismNetworks } from '../constants';
+import { parseError } from '../utils';
 
 const log = logger(module);
 export class GasPrice implements IGasPrice {
@@ -288,26 +290,56 @@ export class GasPrice implements IGasPrice {
 
         // check if the network supports EIP 1559
         if (this.EIP1559SupportedNetworks.includes(this.chainId)) {
-          const maxFeePerGasFromNetwork = (await this.networkService
-            .getEIP1559GasPrice()).maxFeePerGas;
-          const maxPriorityFeePerGasFromNetwork = (await this.networkService
-            .getEIP1559GasPrice())
-            .maxPriorityFeePerGas;
-          if (maxFeePerGasFromNetwork && maxPriorityFeePerGasFromNetwork) {
-            const maxFeePerGas = ethers.utils.formatUnits(
-              maxFeePerGasFromNetwork,
-              'wei',
-            );
-            const maxPriorityFeePerGas = ethers.utils.formatUnits(
-              maxPriorityFeePerGasFromNetwork,
-              'wei',
-            );
+          if (OptimismNetworks.includes(this.chainId)) {
+            try {
+              const {
+                data,
+              } = await this.networkService.sendRpcCall('eth_gasPrice', []);
+              const maxPriorityFeePerGas = ethers.utils.formatUnits(
+                data.result,
+                'wei',
+              );
+              await this.setMaxPriorityFeeGasPrice(
+                GasPriceType.DEFAULT,
+                maxPriorityFeePerGas,
+              );
+              await this.setMaxFeeGasPrice(
+                GasPriceType.DEFAULT,
+                maxPriorityFeePerGas,
+              );
+            } catch (error) {
+              log.info(`Error in getting network gas price from RPC: ${parseError(error)}`);
+              await this.setMaxPriorityFeeGasPrice(
+                GasPriceType.DEFAULT,
+                '100012041',
+              );
+              await this.setMaxFeeGasPrice(
+                GasPriceType.DEFAULT,
+                '150018061',
+              );
+            }
+          } else {
+            const maxFeePerGasFromNetwork = (await this.networkService
+              .getEIP1559GasPrice()).maxFeePerGas;
+            const maxPriorityFeePerGasFromNetwork = (await this.networkService
+              .getEIP1559GasPrice())
+              .maxPriorityFeePerGas;
+            if (maxFeePerGasFromNetwork && maxPriorityFeePerGasFromNetwork) {
+              const maxFeePerGas = ethers.utils.formatUnits(
+                maxFeePerGasFromNetwork,
+                'wei',
+              );
+              const maxPriorityFeePerGas = ethers.utils.formatUnits(
+                maxPriorityFeePerGasFromNetwork,
+                'wei',
+              );
 
-            await this.setMaxFeeGasPrice(GasPriceType.DEFAULT, maxFeePerGas);
-            await this.setMaxPriorityFeeGasPrice(
-              GasPriceType.DEFAULT,
-              maxPriorityFeePerGas,
-            );
+              await this.setMaxFeeGasPrice(GasPriceType.DEFAULT, maxFeePerGas);
+              await this.setMaxPriorityFeeGasPrice(
+                GasPriceType.DEFAULT,
+                maxPriorityFeePerGas,
+              );
+            }
           }
         }
       }
