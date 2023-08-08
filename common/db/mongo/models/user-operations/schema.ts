@@ -87,4 +87,7 @@ export const UserOperationSchema = new Schema<IUserOperation>({
   metaData: {
     type: Object,
   },
+  dappAPIKey: {
+    type: String,
+  },
 });
