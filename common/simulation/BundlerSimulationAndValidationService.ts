@@ -308,7 +308,7 @@ export class BundlerSimulationAndValidationService {
           );
         }
         throw new RpcError(
-          `Transaction reverted in simulation with reason: ${reason}. Use handleOpsCallData to simulate transaction on Tenderly to check transaction execution steps`,
+          `Transaction reverted in simulation with reason: ${reason}. Use handleOpsCallData to simulate transaction to check transaction execution steps`,
           BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
         );
       }
