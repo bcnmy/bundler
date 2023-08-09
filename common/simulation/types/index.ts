@@ -84,6 +84,7 @@ export type SimulateHandleOpsParamsType = {
 export type SimulateHandleOpsReturnType = {
   reason?: string,
   totalGas: number,
+  data?: string,
   isExecutionSuccess?: boolean
 };
 

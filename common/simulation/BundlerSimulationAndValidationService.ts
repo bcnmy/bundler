@@ -290,6 +290,7 @@ export class BundlerSimulationAndValidationService {
   async validateUserOperation(
     validateUserOperationData: ValidateUserOperationData,
   ) {
+    let handleOpsCallData;
     try {
       const { userOp, entryPointContract, chainId } = validateUserOperationData;
 
@@ -297,11 +298,13 @@ export class BundlerSimulationAndValidationService {
       const {
         reason,
         totalGas,
+        data,
       } = await this.tenderlySimulationService.simulateHandleOps({
         userOp,
         entryPointContract,
         chainId,
       });
+      handleOpsCallData = data;
 
       if (reason) {
         log.info(`Transaction failed with reason: ${reason} on chainId: ${chainId}`);
@@ -323,7 +326,7 @@ export class BundlerSimulationAndValidationService {
           );
         }
         throw new RpcError(
-          reason,
+          `Transaction reverted in simulation with reason: ${reason}. Use handleOpsCallData to simulate transaction to check transaction execution steps`,
           BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
         );
       }
@@ -339,6 +342,7 @@ export class BundlerSimulationAndValidationService {
         data: {
           totalGas,
           userOpHash,
+          handleOpsCallData: null,
         },
       };
     } catch (error: any) {
@@ -348,6 +352,7 @@ export class BundlerSimulationAndValidationService {
         data: {
           totalGas: 0,
           userOpHash: null,
+          handleOpsCallData,
         },
       };
     }
