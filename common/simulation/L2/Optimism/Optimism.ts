@@ -25,13 +25,13 @@ export const calcGasPrice = async (
     const gasPriceOracleInterface = new OptimisticL1GasPriceOracle(
       baseL2Provider,
     );
-    const l1Cost = await gasPriceOracleInterface.getL1Fee(handleOpsData);
+    const l1Fee = await gasPriceOracleInterface.getL1Fee(handleOpsData);
 
     // extraPvg = l1Cost / l2Price
-    const l2Price = BigNumber.from(userOp.maxFeePerGas || 1).mul('1000000000');
-    const extraPvg = l1Cost.div(l2Price);
+    const l2Price = BigNumber.from('100000050');
+    const extraPvg = l1Fee.div(l2Price);
 
-    return extraPvg.toNumber();
+    return extraPvg.toNumber() + 200000;
   } catch (e: any) {
     log.error('Error', e.message);
     return 0;
