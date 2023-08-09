@@ -17,6 +17,7 @@ import { ArbNovaMainnetGasPrice } from './networks/ArbNovaMainnetGasPrice';
 import { OptimismGoerliGasPrice } from './networks/OptimismGoerliGasPrice';
 import { AvalanceTestnetGasPrice } from './networks/AvalanceTestnetGasPrice';
 import { BaseGoerliGasPrice } from './networks/BaseGoerliGasPrice';
+import { BaseMainnetGasPrice } from './networks/BaseMainnetGasPrice';
 import { LineaTestnetGasPrice } from './networks/LineaTestnetGasPrice';
 import { LineaMainnetGasPrice } from './networks/LineaMainnetGasPrice';
 import { OptimismMainnetGasPrice } from './networks/OptimismMainnetGasPrice';
@@ -41,6 +42,7 @@ export type GasPriceServiceType =
   | AvalanceTestnetGasPrice
   | AvalanceMainnetGasPrice
   | BaseGoerliGasPrice
+  | BaseMainnetGasPrice
   | LineaTestnetGasPrice
   | LineaMainnetGasPrice
   | MoonbaseAlphaTestnetGasPrice
@@ -163,6 +165,12 @@ export class GasPriceManager implements IGasPriceManager<GasPriceServiceType> {
         );
       case 84531:
         return new BaseGoerliGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
+      case 8453:
+        return new BaseMainnetGasPrice(
           this.cacheService,
           this.networkService,
           this.options,

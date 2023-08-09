@@ -41,6 +41,7 @@ export enum BLOCKCHAINS {
   MOONBEAM_MAINNET = 1284,
   MOONBASE_ALPHA_TESTNET = 1287,
   BASE_GOERLI_TESTNET = 84531,
+  BASE_MAINNET = 8453,
   LINEA_TESTNET = 59140,
   LINEA_MAINET = 59144,
   GANACHE = 1337,
@@ -48,3 +49,5 @@ export enum BLOCKCHAINS {
 
 // Network with base gas diff from 21k and maxPriorityFeePerGas is 0
 export const L2Networks = [421613, 42161, 42170];
+export const PolygonZKEvmNetworks = [1101, 1442];
+export const OptimismNetworks = [420, 10];
