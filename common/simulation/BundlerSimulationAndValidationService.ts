@@ -22,7 +22,7 @@ import {
   ValidateUserOperationData,
 } from './types';
 import {
-  BLOCKCHAINS, BaseNetworks, OptimismNetworks, PolygonZKEvmNetworks,
+  BLOCKCHAINS, BaseNetworks, OptimismNetworks, PolygonZKEvmNetworks, ArbitrumNetworks,
 } from '../constants';
 import { calcGasPrice } from './L2/Abitrum';
 import { calcGasPrice as calcGasPriceOptimism } from './L2/Optimism/Optimism';
@@ -215,8 +215,8 @@ export class BundlerSimulationAndValidationService {
         }
 
         let verificationGasLimit = BigNumber.from(preOpGas).toNumber();
-        if (OptimismNetworks.includes(chainId)) {
-          log.info('Subtracting preVerificationGas from verificationGasLimit as the difference on optimism is alot');
+        if (OptimismNetworks.includes(chainId) || ArbitrumNetworks.includes(chainId)) {
+          log.info('Subtracting preVerificationGas from verificationGasLimit as the difference is alot');
           verificationGasLimit -= preVerificationGas;
         }
         log.info(`verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId}`);
