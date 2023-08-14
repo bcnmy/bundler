@@ -74,6 +74,17 @@ export const simulateBundlerTransaction = () => async (
       });
     }
     if ((response as any).code !== STATUSES.SUCCESS) {
+      if ((response as any).handleOpsCallData !== null) {
+        return res.status(STATUSES.BAD_REQUEST).send({
+          jsonrpc: '2.0',
+          id: id || 1,
+          error: {
+            code: (response as any).code,
+            message: (response as any).message,
+            handleOpsCallData: (response as any).handleOpsCallData,
+          },
+        });
+      }
       return res.status(STATUSES.BAD_REQUEST).send({
         jsonrpc: '2.0',
         id: id || 1,

@@ -21,7 +21,7 @@ import {
   EstimateUserOperationGasReturnType,
   ValidateUserOperationData,
 } from './types';
-import { BLOCKCHAINS } from '../constants';
+import { BLOCKCHAINS, PolygonZKEvmNetworks } from '../constants';
 import { calcGasPrice } from './L2/Abitrum';
 import { calcGasPrice as calcGasPriceOptimism } from './L2/Optimism/Optimism';
 import { TenderlySimulationService } from './external-simulation';
@@ -80,9 +80,22 @@ export class BundlerSimulationAndValidationService {
           '0x',
         );
 
-        const simulateHandleOpResult = await this.networkService.sendRpcCall(
-          'eth_call',
-          [
+        let ethCallParams;
+
+        // polygon zk evm nodes don't support state overrides
+        if (PolygonZKEvmNetworks.includes(chainId)) {
+          log.info('Request on polygon zk evm hence not doing state overrides in eth_call');
+          ethCallParams = [
+            {
+              from: '0x0000000000000000000000000000000000000000',
+              to: entryPointContract.address,
+              data,
+            },
+            'latest',
+          ];
+        } else {
+          log.info('Request not on polygon zk evm hence doing state overrides in eth_call');
+          ethCallParams = [
             {
               from: '0x0000000000000000000000000000000000000000',
               to: entryPointContract.address,
@@ -95,7 +108,12 @@ export class BundlerSimulationAndValidationService {
                   balance: '0xFFFFFFFFFFFFFFFFFFFF',
                 },
             },
-          ],
+          ];
+        }
+
+        const simulateHandleOpResult = await this.networkService.sendRpcCall(
+          'eth_call',
+          ethCallParams,
         );
         const ethCallData = simulateHandleOpResult.data.error.data;
 
@@ -272,6 +290,7 @@ export class BundlerSimulationAndValidationService {
   async validateUserOperation(
     validateUserOperationData: ValidateUserOperationData,
   ) {
+    let handleOpsCallData;
     try {
       const { userOp, entryPointContract, chainId } = validateUserOperationData;
 
@@ -279,11 +298,13 @@ export class BundlerSimulationAndValidationService {
       const {
         reason,
         totalGas,
+        data,
       } = await this.tenderlySimulationService.simulateHandleOps({
         userOp,
         entryPointContract,
         chainId,
       });
+      handleOpsCallData = data;
 
       if (reason) {
         log.info(`Transaction failed with reason: ${reason} on chainId: ${chainId}`);
@@ -305,7 +326,7 @@ export class BundlerSimulationAndValidationService {
           );
         }
         throw new RpcError(
-          reason,
+          `Transaction reverted in simulation with reason: ${reason}. Use handleOpsCallData to simulate transaction to check transaction execution steps`,
           BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
         );
       }
@@ -321,6 +342,7 @@ export class BundlerSimulationAndValidationService {
         data: {
           totalGas,
           userOpHash,
+          handleOpsCallData: null,
         },
       };
     } catch (error: any) {
@@ -330,6 +352,7 @@ export class BundlerSimulationAndValidationService {
         data: {
           totalGas: 0,
           userOpHash: null,
+          handleOpsCallData,
         },
       };
     }

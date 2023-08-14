@@ -4,9 +4,9 @@ import { simulateBundlerTransaction } from '../../controllers/simulate';
 import {
   validateBundlerRequest,
 } from '../../middleware';
+import { authenticateBundlerRequest } from '../../controllers/authenticate';
 
 export const bundlerApiRouter = Router();
 
-// TODO change to bundlerApiKey
-bundlerApiRouter.post('/:chainId/:bundlerApiKey', validateBundlerRequest(), authenticateBundlerRequest(), simulateBundlerTransaction(), bundlerRequestHandler);
+bundlerApiRouter.post('/:chainId/:dappAPIKey', validateBundlerRequest(), authenticateBundlerRequest(), simulateBundlerTransaction(), bundlerRequestHandler);
 bundlerApiRouter.get('/:chainId/:bundlerApiKey', validateBundlerRequest(), bundlerRequestHandler);

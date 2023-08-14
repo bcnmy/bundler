@@ -2,6 +2,7 @@ import { IUserOperation } from '../mongo/interface';
 
 export type InitialUserOperationDataType = {
   transactionId: string;
+  dappAPIKey?: string;
   entryPoint: string;
   sender: string;
   nonce: number;

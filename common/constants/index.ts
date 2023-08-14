@@ -49,3 +49,5 @@ export enum BLOCKCHAINS {
 
 // Network with base gas diff from 21k and maxPriorityFeePerGas is 0
 export const L2Networks = [421613, 42161, 42170];
+export const PolygonZKEvmNetworks = [1101, 1442];
+export const OptimismNetworks = [420, 10];

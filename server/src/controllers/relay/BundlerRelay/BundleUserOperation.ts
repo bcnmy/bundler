@@ -18,7 +18,7 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
     const entryPointAddress = req.body.params[1];
     const gasLimitFromSimulation = req.body.params[2] + 5000000;
     const userOpHash = req.body.params[3];
-    const { chainId } = req.params;
+    const { chainId, dappAPIKey } = req.params;
     const chainIdInNum = parseInt(chainId, 10);
 
     const transactionId = generateTransactionId(userOp);
@@ -49,11 +49,11 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
       signature,
     } = userOp;
 
-    // TODO event also emits paymaster
     const paymaster = getPaymasterFromPaymasterAndData(paymasterAndData);
 
     userOperationDao.save(chainIdInNum, {
       transactionId,
+      dappAPIKey,
       status: TransactionStatus.PENDING,
       entryPoint: entryPointAddress,
       sender,
