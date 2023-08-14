@@ -21,7 +21,7 @@ import {
   EstimateUserOperationGasReturnType,
   ValidateUserOperationData,
 } from './types';
-import { BLOCKCHAINS, PolygonZKEvmNetworks } from '../constants';
+import { BLOCKCHAINS, BaseNetworks, PolygonZKEvmNetworks } from '../constants';
 import { calcGasPrice } from './L2/Abitrum';
 import { calcGasPrice as calcGasPriceOptimism } from './L2/Optimism/Optimism';
 import { TenderlySimulationService } from './external-simulation';
@@ -62,8 +62,6 @@ export class BundlerSimulationAndValidationService {
         signature: userOp.signature || '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b',
       };
 
-      log.info(`fullUserOp created: ${JSON.stringify(fullUserOp)} on chainId: ${chainId}`);
-
       // preVerificationGas
       const preVerificationGas = await BundlerSimulationAndValidationService.calcPreVerificationGas(
         fullUserOp,
@@ -74,6 +72,13 @@ export class BundlerSimulationAndValidationService {
       fullUserOp.preVerificationGas = preVerificationGas;
 
       try {
+        if (BaseNetworks.includes(chainId)) {
+          log.info('Base transaction hence setting lower callGasLimit and verificationGasLimit');
+          fullUserOp.callGasLimit = userOp.callGasLimit || 600000;
+          fullUserOp.verificationGasLimit = userOp.verificationGasLimit || 1000000;
+        }
+        log.info(`fullUserOp created: ${JSON.stringify(fullUserOp)} on chainId: ${chainId}`);
+
         const { data } = await entryPointContract.populateTransaction.simulateHandleOp(
           fullUserOp,
           config.zeroAddress,
@@ -116,6 +121,7 @@ export class BundlerSimulationAndValidationService {
           ethCallParams,
         );
         const ethCallData = simulateHandleOpResult.data.error.data;
+        log.info(`ethCallData: ${ethCallData}`);
 
         // The first 4 bytes of the data is the function signature
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -164,6 +170,12 @@ export class BundlerSimulationAndValidationService {
             throw new RpcError(
               revertReason,
               BUNDLER_VALIDATION_STATUSES.SIMULATE_PAYMASTER_VALIDATION_FAILED,
+            );
+          } else if (revertReason.includes('AA9')) {
+            log.info(`error in inner handle op on chainId: ${chainId}`);
+            throw new RpcError(
+              revertReason,
+              BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
             );
           } else {
             return {
