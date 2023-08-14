@@ -194,6 +194,7 @@ export class TenderlySimulationService implements IExternalSimulation {
         return {
           reason: response?.data?.transaction?.error_message,
           totalGas: 0,
+          data,
         };
       }
 
@@ -209,6 +210,7 @@ export class TenderlySimulationService implements IExternalSimulation {
       return {
         reason,
         totalGas,
+        data,
         isExecutionSuccess,
       };
     } catch (error) {

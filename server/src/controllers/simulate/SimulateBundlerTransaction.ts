@@ -2,7 +2,7 @@ import { Request } from 'express';
 import { logger } from '../../../../common/log-config';
 import { bundlerSimulatonAndValidationServiceMap, entryPointMap } from '../../../../common/service-manager';
 import { parseError } from '../../../../common/utils';
-import { STATUSES } from '../../middleware';
+import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../../middleware';
 
 const log = logger(module);
 
@@ -58,9 +58,17 @@ export const validateBundlerTransaction = async (req: Request) => {
     const {
       code,
       message,
+      data,
     } = bundlerSimulationAndValidationResponse;
 
     if (code !== STATUSES.SUCCESS) {
+      if (code === BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED) {
+        return {
+          code,
+          message,
+          handleOpsCallData: data.handleOpsCallData,
+        };
+      }
       return {
         code,
         message,
