@@ -10,11 +10,11 @@ relayer:
   replicaCount: 1 
   resource:
     requests:
-      memory: "500Mi"
-      cpu: "500m"
+      memory: "2000Mi"
+      cpu: "2000m"
     limits:
-      memory: "1000Mi"
-      cpu: "1000m"
+      memory: "4000Mi"
+      cpu: "4000m"
 
 secret:
   projectID: biconomy-prod
