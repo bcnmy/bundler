@@ -292,30 +292,30 @@ export class GasPrice implements IGasPrice {
         if (this.EIP1559SupportedNetworks.includes(this.chainId)) {
           if (OptimismNetworks.includes(this.chainId)) {
             try {
-              const {
-                data,
-              } = await this.networkService.sendRpcCall('eth_gasPrice', []);
-              const maxPriorityFeePerGas = ethers.utils.formatUnits(
-                data.result,
-                'wei',
-              );
+              // const {
+              //   data,
+              // } = await this.networkService.sendRpcCall('eth_gasPrice', []);
+              // const maxPriorityFeePerGas = ethers.utils.formatUnits(
+              //   data.result,
+              //   'wei',
+              // );
               await this.setMaxPriorityFeeGasPrice(
                 GasPriceType.DEFAULT,
-                maxPriorityFeePerGas,
+                '100000000',
               );
               await this.setMaxFeeGasPrice(
                 GasPriceType.DEFAULT,
-                maxPriorityFeePerGas,
+                '100000000',
               );
             } catch (error) {
               log.info(`Error in getting network gas price from RPC: ${parseError(error)}`);
               await this.setMaxPriorityFeeGasPrice(
                 GasPriceType.DEFAULT,
-                '100012041',
+                '100000000',
               );
               await this.setMaxFeeGasPrice(
                 GasPriceType.DEFAULT,
-                '150018061',
+                '100000000',
               );
             }
           } else {
