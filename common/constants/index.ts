@@ -51,3 +51,5 @@ export enum BLOCKCHAINS {
 export const L2Networks = [421613, 42161, 42170];
 export const PolygonZKEvmNetworks = [1101, 1442];
 export const OptimismNetworks = [420, 10];
+export const BaseNetworks = [84531, 8453];
+export const ArbitrumNetworks = [42170, 421613, 42161];
