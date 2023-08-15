@@ -301,21 +301,21 @@ export class GasPrice implements IGasPrice {
               // );
               await this.setMaxPriorityFeeGasPrice(
                 GasPriceType.DEFAULT,
-                '150000000',
+                '250000000',
               );
               await this.setMaxFeeGasPrice(
                 GasPriceType.DEFAULT,
-                '150000000',
+                '250000000',
               );
             } catch (error) {
               log.info(`Error in getting network gas price from RPC: ${parseError(error)}`);
               await this.setMaxPriorityFeeGasPrice(
                 GasPriceType.DEFAULT,
-                '150000000',
+                '250000000',
               );
               await this.setMaxFeeGasPrice(
                 GasPriceType.DEFAULT,
-                '150000000',
+                '250000000',
               );
             }
           } else {
