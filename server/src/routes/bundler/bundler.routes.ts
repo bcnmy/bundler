@@ -4,7 +4,7 @@ import { simulateBundlerTransaction } from '../../controllers/simulate';
 import {
   validateBundlerRequest,
 } from '../../middleware';
-import { authenticateBundlerRequest } from '../../controllers/authenticate';
+import { authenticateBundlerRequest } from '../../controllers/BAAS-request-handler';
 
 export const bundlerApiRouter = Router();
 

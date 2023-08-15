@@ -259,3 +259,14 @@ export type StakeInfo = {
   stake: BigNumberish;
   unstakeDelaySec: BigNumberish;
 };
+
+export type UpdateRequestDataType = {
+  chainId: number,
+  dappAPIKey: string,
+  bundlerRequestId: string,
+  jsonRpcResponseCode: number,
+  rawResponse: object,
+  jsonRpcResponseResult: object,
+  httpResponseCode: number,
+  errorCode: number
+};
