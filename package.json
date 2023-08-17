@@ -5,7 +5,7 @@
     "format:server": "eslint 'server/src/**' --ext .ts --fix",
     "format:relayer": "eslint 'relayer/src/**' --ext .ts --fix",
     "prepare": "husky install",
-    "dev": "ts-node server/src/index.ts",
+    "dev": "npx nodemon server/src/index.ts ",
     "views": "cp -r server/src/views server/dist/server/src/views",
     "build": "tsc -p server && npm run views",
     "start": "node server/dist/server/src/index.js",
@@ -65,6 +65,7 @@
     "eslint-config-airbnb-typescript": "^17.0.0",
     "eslint-plugin-import": "^2.26.0",
     "jest": "^29.1.2",
+    "nodemon": "^3.0.1",
     "ts-jest": "^29.0.3",
     "ts-node": "^10.9.1"
   }
