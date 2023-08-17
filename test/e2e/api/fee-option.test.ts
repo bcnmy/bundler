@@ -4,7 +4,8 @@ import { EVMNetworkService } from '../../../common/network';
 import { config } from '../../../config';
 import { FeeOption } from '../../../server/src/services';
 
-const chainId = 5;
+// Grab test chain id from environment or default to Goerli
+const chainId = parseInt(process.env.TEST_CHAIN_ID || '5');
 const cacheService = RedisCacheService.getInstance();
 const networkService = new EVMNetworkService({
   chainId,
@@ -55,19 +56,17 @@ describe('get fee options', () => {
         expect(typeof response[0].logoUrl).toBe('string');
         expect(typeof response[0].feeTokenTransferGas).toBe('number');
         expect(typeof response[0].refundReceiver).toBe('string');
-
-        expect(response[0].symbol).toBe('ETH');
+        let chainCurrency = config.chains.currency[chainId];
+        expect(response[0].symbol).toBe(chainCurrency);
         expect(response[0].decimal).toBe(18);
         expect(response[0].offset).toBe(1);
         expect(response[0].address).toBe(
           '0x0000000000000000000000000000000000000000',
         );
-        expect(response[0].logoUrl).toBe(
-          'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png',
-        );
+        expect(response[0].logoUrl).toBe(config.feeOption.logoUrl[chainId][chainCurrency]);
         expect(response[0].feeTokenTransferGas).toBe(7300);
         expect(response[0].refundReceiver).toBe(
-          '0xc75Bb3956c596efc6DB663cd3e2f64929d6AB0fc',
+          config.feeOption.refundReceiver[chainId],
         );
       }
     }

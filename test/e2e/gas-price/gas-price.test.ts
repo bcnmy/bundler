@@ -4,7 +4,7 @@ import { GasPriceType } from '../../../common/gas-price/types';
 import { EVMNetworkService } from '../../../common/network';
 import { config } from '../../../config';
 
-const chainId = 5;
+const chainId = parseInt(process.env.TEST_CHAIN_ID || '5');
 
 const cacheService = RedisCacheService.getInstance();
 
@@ -40,9 +40,13 @@ describe('Gas Price', () => {
   it(`should get gas price from redis for chainId: ${chainId}`, async () => {
     const gasPrice = await gasPriceServiceMap[chainId]?.getGasPrice(GasPriceType.DEFAULT);
     expect(gasPrice).not.toBeNull();
-    expect(typeof gasPrice).toBe('string');
-    expect(Number(gasPrice)).toBeGreaterThan(0);
-    expect(gasPrice).toBe('1000000000');
+    if (typeof gasPrice == "string") { // Not EIP1559 chains
+      expect(Number(gasPrice)).toBeGreaterThan(0);
+      expect(gasPrice).toBe('1000000000');
+    } else if (typeof gasPrice == "object") { // EIP1559 chains
+      expect(Number(gasPrice.maxFeePerGas)).toBeGreaterThan(0);
+      expect(Number(gasPrice.maxPriorityFeePerGas)).toBeGreaterThan(0);
+    }
   });
 
   afterAll(async () => {
