@@ -179,6 +179,12 @@ export class BundlerSimulationAndValidationService {
               revertReason,
               BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
             );
+          } else if (revertReason.includes('AA4')) {
+            log.info('error in verificationGasLimit being incorrect');
+            throw new RpcError(
+              revertReason,
+              BUNDLER_VALIDATION_STATUSES.SIMULATE_VALIDATION_FAILED,
+            );
           } else {
             return {
               code: error.code,
@@ -341,6 +347,22 @@ export class BundlerSimulationAndValidationService {
           throw new RpcError(
             message,
             BUNDLER_VALIDATION_STATUSES.SIMULATE_PAYMASTER_VALIDATION_FAILED,
+          );
+        } else if (reason.includes('AA9')) {
+          log.info(`error in inner handle op on chainId: ${chainId}`);
+          const message = this.removeSpecialCharacters(reason);
+          log.info(`message after removing special characters: ${message}`);
+          throw new RpcError(
+            message,
+            BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
+          );
+        } else if (reason.includes('AA4')) {
+          log.info('error in verificationGasLimit being incorrect');
+          const message = this.removeSpecialCharacters(reason);
+          log.info(`message after removing special characters: ${message}`);
+          throw new RpcError(
+            message,
+            BUNDLER_VALIDATION_STATUSES.SIMULATE_VALIDATION_FAILED,
           );
         }
         throw new RpcError(
