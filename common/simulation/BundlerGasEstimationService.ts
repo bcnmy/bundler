@@ -16,7 +16,7 @@ import {
   EstimateUserOperationGasDataType,
   EstimateUserOpGasFieldsType,
 } from './types';
-import { calcGasPrice } from './L2/Abitrum';
+import { calcGasPrice } from './L2/Arbitrum';
 import { calcGasPrice as calcGasPriceOptimism } from './L2/Optimism/Optimism';
 
 const log = logger(module);
