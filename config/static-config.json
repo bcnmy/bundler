@@ -1604,7 +1604,7 @@
     }
   },
   "aaDashboardBackend": {
-    "url": "http://localhost:3000/api/v2/bundlers/auth"
+    "url": "https://paymaster-dashboard-backend-v2.staging.biconomy.io/api/v2/bundlers/auth"
   },
   "zeroAddress": "0x0000000000000000000000000000000000000000"
 }
