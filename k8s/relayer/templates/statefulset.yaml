@@ -77,14 +77,20 @@ spec:
           httpGet:
             path: /health
             port: {{ .Values.relayer.port }}
-          initialDelaySeconds: 30
-          periodSeconds: 10
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 30
+          failureThreshold: 3
         readinessProbe:
           httpGet:
             path: /health
             port: {{ .Values.relayer.port }}
-          initialDelaySeconds: 30
-          periodSeconds: 10
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 30
+          failureThreshold: 3
       volumes:
       - name: secret
         secret:

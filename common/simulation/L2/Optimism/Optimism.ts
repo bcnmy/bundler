@@ -29,7 +29,7 @@ export const calcGasPrice = async (
     const l1Fee = await gasPriceOracleInterface.getL1Fee(handleOpsData);
 
     // extraPvg = l1Cost / l2Price
-    const l2Price = BigNumber.from('100000000');
+    const l2Price = BigNumber.from('140000000');
     const extraPvg = l1Fee.div(l2Price);
 
     return extraPvg.toNumber();

@@ -311,11 +311,11 @@ export class GasPrice implements IGasPrice {
               log.info(`Error in getting network gas price from RPC: ${parseError(error)}`);
               await this.setMaxPriorityFeeGasPrice(
                 GasPriceType.DEFAULT,
-                '100012041',
+                '250000000',
               );
               await this.setMaxFeeGasPrice(
                 GasPriceType.DEFAULT,
-                '150018061',
+                '250000000',
               );
             }
           } else {
