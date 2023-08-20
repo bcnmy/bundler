@@ -259,3 +259,12 @@ export type StakeInfo = {
   stake: BigNumberish;
   unstakeDelaySec: BigNumberish;
 };
+
+export type UpdateRequestDataType = {
+  chainId: number,
+  apiKey: string,
+  bundlerRequestId: string,
+  transactionId?: string,
+  rawResponse: object,
+  httpResponseCode: number,
+};

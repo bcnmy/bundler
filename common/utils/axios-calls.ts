@@ -10,8 +10,7 @@ export const axiosGetCall = async (url: string, _data?: any) => {
 
 export const axiosPostCall = async (url: string, _data?: any) => {
   try {
-    log.info(`url: ${url}`);
-    log.info(`_data: ${JSON.stringify(_data)}`);
+    log.info(`Making axios post call to url: ${url} with data: ${JSON.stringify(_data)}`);
     const { data } = await axios.post(url, _data, {
       headers: {
         'Content-Type': 'application/json',
@@ -21,6 +20,23 @@ export const axiosPostCall = async (url: string, _data?: any) => {
     return data;
   } catch (error) {
     log.info(`Error in axios post call: ${JSON.stringify(error)}`);
+    return null;
+  }
+};
+
+export const axiosPatchCall = async (url: string, _data?: any) => {
+  try {
+    log.info(`Making axios patch call to url: ${url} with data: ${JSON.stringify(_data)}`);
+
+    const { data } = await axios.patch(url, _data, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    log.info(`data in axios patch call ${JSON.stringify(data)}`);
+    return data;
+  } catch (error) {
+    log.info(`Error in axios patch call: ${JSON.stringify(error)}`);
     return null;
   }
 };
