@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { parseError } from '../../../../common/utils';
-import { STATUSES } from '../../middleware';
+import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../../middleware';
 import { EthMethodType, TransactionMethodType } from '../../../../common/types';
 import { authenticate } from './Authenticate';
 
@@ -55,6 +55,20 @@ export const authenticateBundlerRequest = () => async (
         },
       });
     }
+
+    if (response.code === STATUSES.UNAUTHORIZED) {
+      return res.send({
+        jsonrpc: '2.0',
+        id: id || 1,
+        error: {
+          code: BUNDLER_VALIDATION_STATUSES.UNAUTHORIZED_REQUEST,
+          message: response.message,
+        },
+      });
+    }
+
+    req.body.bundlerRequestId = response.data?.bundlerRequestId;
+
     return next();
   } catch (error) {
     const { id } = req.body;

@@ -1,5 +1,5 @@
 import { UpdateRequestDataType } from '../../../../common/types';
-import { axiosPostCall, parseError } from '../../../../common/utils';
+import { axiosPatchCall, parseError } from '../../../../common/utils';
 import { config } from '../../../../config';
 import { logger } from '../../../../common/log-config';
 
@@ -11,15 +11,19 @@ export const updateRequest = async (
   try {
     const {
       chainId,
-      dappAPIKey,
+      apiKey,
       bundlerRequestId,
-      ...rest
+      rawResponse,
+      httpResponseCode,
+      transactionId,
     } = updateRequestData;
     const aaDashboardBackendBaseUrl = config.aaDashboardBackend.url;
 
-    const response = await axiosPostCall(`${aaDashboardBackendBaseUrl}/${chainId}/${dappAPIKey}`, {
+    const response = await axiosPatchCall(`${aaDashboardBackendBaseUrl}/${chainId}/${apiKey}`, {
       _id: bundlerRequestId,
-      rest,
+      rawResponse,
+      transactionId,
+      httpResponseCode,
     });
 
     log.info(`Response from AA Dashboard Backend for updating request: ${JSON.stringify(response)}`);

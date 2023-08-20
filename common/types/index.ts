@@ -262,11 +262,9 @@ export type StakeInfo = {
 
 export type UpdateRequestDataType = {
   chainId: number,
-  dappAPIKey: string,
+  apiKey: string,
   bundlerRequestId: string,
-  jsonRpcResponseCode: number,
+  transactionId?: string,
   rawResponse: object,
-  jsonRpcResponseResult: object,
   httpResponseCode: number,
-  errorCode: number
 };

@@ -4,9 +4,9 @@ import { simulateBundlerTransaction } from '../../controllers/simulate';
 import {
   validateBundlerRequest,
 } from '../../middleware';
-import { authenticateBundlerRequest } from '../../controllers/BAAS-request-handler';
+import { authenticateBundlerRequest } from '../../controllers/auth';
 
 export const bundlerApiRouter = Router();
 
-bundlerApiRouter.post('/:chainId/:dappAPIKey', validateBundlerRequest(), authenticateBundlerRequest(), simulateBundlerTransaction(), bundlerRequestHandler);
-bundlerApiRouter.get('/:chainId/:bundlerApiKey', validateBundlerRequest(), bundlerRequestHandler);
+bundlerApiRouter.post('/:chainId/:apiKey', validateBundlerRequest(), authenticateBundlerRequest(), simulateBundlerTransaction(), bundlerRequestHandler);
+bundlerApiRouter.get('/:chainId/:apiKey', validateBundlerRequest(), bundlerRequestHandler);

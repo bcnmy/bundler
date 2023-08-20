@@ -8,19 +8,28 @@ const log = logger(module);
 
 export const authenticate = async (req: Request) => {
   try {
-    const { chainId, dappAPIKey } = req.params;
+    const { chainId, apiKey } = req.params;
+    const { method, id, params } = req.body;
     log.info(`chainId from request params: ${chainId}`);
-    log.info(`dappAPIKey from request params: ${dappAPIKey}`);
+    log.info(`apiKey from request params: ${apiKey}`);
+    log.info(`method from request body: ${method}`);
+    log.info(`id from request body: ${id}`);
+    log.info(`params from request body: ${JSON.stringify(params)}`);
 
     const aaDashboardBackendBaseUrl = config.aaDashboardBackend.url;
 
-    const response = await axiosPostCall(`${aaDashboardBackendBaseUrl}/${chainId}/${dappAPIKey}`);
+    const response = await axiosPostCall(`${aaDashboardBackendBaseUrl}/${chainId}/${apiKey}`, {
+      jsonRpcMethod: method,
+      jsonRpcId: id,
+      jsponRpcParams: params,
+      rawRequest: req.body,
+    });
 
     const {
       isAuthenticated,
       message,
       bundlerRequestId,
-    } = response;
+    } = response.data;
 
     log.info(`Response from AA Dashboard Backend: ${JSON.stringify(response)}`);
 
@@ -33,6 +42,8 @@ export const authenticate = async (req: Request) => {
         },
       };
     }
+
+    req.body.params[6] = bundlerRequestId;
 
     return {
       code: STATUSES.ACTION_COMPLETE,
