@@ -224,7 +224,7 @@ export class BundlerSimulationAndValidationService {
       }
 
       // preVerificationGas
-      let preVerificationGas = await BundlerSimulationAndValidationService.calcPreVerificationGas(
+      let preVerificationGas = await this.calcPreVerificationGas(
         userOp,
         chainId,
         entryPointContract,
@@ -481,7 +481,7 @@ export class BundlerSimulationAndValidationService {
     };
   }
 
-  static async calcPreVerificationGas(
+  async calcPreVerificationGas(
     userOp: UserOperationType,
     chainId: number,
     entryPointContract: ethers.Contract,
@@ -501,7 +501,6 @@ export class BundlerSimulationAndValidationService {
         + ov.perUserOpWord * packed.length,
     );
 
-    // calculate offset for Arbitrum
     if (
       ArbitrumNetworks.includes(chainId)
     ) {
@@ -514,9 +513,11 @@ export class BundlerSimulationAndValidationService {
     } else if (
       OptimismNetworks.includes(chainId)
     ) {
+      const baseFeePerGas = await this.networkService.getBaseFeePerGas();
       const data = await calcOptimismPreVerificationGas(
         userOp,
         chainId,
+        baseFeePerGas,
       );
       ret += data;
     }

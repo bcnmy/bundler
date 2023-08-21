@@ -125,6 +125,11 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
     };
   }
 
+  async getBaseFeePerGas(): Promise<number> {
+    const feeData = await this.useProvider(RpcMethod.getEIP1159GasPrice);
+    return Number(feeData.lastBaseFeePerGas);
+  }
+
   async getGasPrice(): Promise<Type0TransactionGasPriceType> {
     const gasPrice = (await this.useProvider(RpcMethod.getGasPrice)).toHexString();
     return {
