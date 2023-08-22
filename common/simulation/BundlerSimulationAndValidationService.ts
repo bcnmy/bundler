@@ -71,10 +71,24 @@ export class BundlerSimulationAndValidationService {
         userOp.maxFeePerGas = 1;
       }
 
+      if (!userOp.maxPriorityFeePerGas || userOp.maxPriorityFeePerGas === 0 || (userOp.maxPriorityFeePerGas as unknown as string) === '0x' || (userOp.maxPriorityFeePerGas as unknown as string) === '0') {
+        // setting a non zero value as division with maxPriorityFeePerGas will happen
+        userOp.maxPriorityFeePerGas = 1;
+      }
+
       if (chainId === 84531) {
         userOp.verificationGasLimit = 1000000;
         userOp.callGasLimit = 1000000;
       }
+
+      // preVerificationGas
+      let preVerificationGas = await this.calcPreVerificationGas(
+        userOp,
+        chainId,
+        entryPointContract,
+      );
+      log.info(`preVerificationGas: ${preVerificationGas} on chainId: ${chainId}`);
+      userOp.preVerificationGas = preVerificationGas;
 
       log.info(`userOp to used to simulate in eth_call: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
 
@@ -223,51 +237,22 @@ export class BundlerSimulationAndValidationService {
         validAfter = undefined;
       }
 
-      // preVerificationGas
-      let preVerificationGas = await this.calcPreVerificationGas(
-        userOp,
-        chainId,
-        entryPointContract,
-      );
-      log.info(`preVerificationGas: ${preVerificationGas} on chainId: ${chainId}`);
-
-      const verificationGasLimit = (
-        (preOpGas - preVerificationGas) * 3
-      ) / 2;
-      log.info(`verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId} after 1.5 multiplier on ${preOpGas} and ${preVerificationGas}`);
+      const verificationGasLimit = Math.round((
+        (preOpGas - preVerificationGas) * 1.2
+      ));
+      log.info(`verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId} after 1.2 multiplier on ${preOpGas} and ${preVerificationGas}`);
 
       const totalGas = paid / userOp.maxFeePerGas;
       log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
 
-      let callGasLimit = totalGas - preOpGas + 21000 + 50000;
+      let callGasLimit = totalGas - preOpGas + 30000;
       log.info(`call gas limit: ${callGasLimit} on chainId: ${chainId}`);
 
-      if (chainId === 10 || chainId === 420 || chainId === 8453 || chainId === 84531) {
-        log.info(`chainId: ${chainId} is OP stack chainId hence increasing callGasLimit by 150K`);
-        callGasLimit += 150000;
-      }
-      log.info(`call gas limit: ${callGasLimit} on chainId: ${chainId}`);
-
-      if (userOp.initCode === '0x') {
-        const callGasLimitFromEthers = await this.networkService
-          .estimateCallGas(
-            entryPointContract.address,
-            userOp.sender,
-            userOp.callData,
-          )
-          .then((callGasLimitResponse) => callGasLimitResponse.toNumber())
-          .catch((error) => {
-            const message = error.message.match(/reason="(.*?)"/)?.at(1) ?? 'execution reverted';
-            log.info(`message: ${JSON.stringify(message)}`);
-            throw new RpcError(
-              `call data execution failed with message: ${message}`,
-              BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
-            );
-          });
-
-        log.info(`callGasLimitFromEthers: ${callGasLimitFromEthers} on chainId: ${chainId}`);
-        callGasLimit = Math.max(callGasLimit, callGasLimitFromEthers);
-      }
+      // if (chainId === 10 || chainId === 420 || chainId === 8453 || chainId === 84531) {
+      //   log.info(`chainId: ${chainId} is OP stack hence increasing callGasLimit by 150K`);
+      //   callGasLimit += 150000;
+      // }
+      log.info(`call gas limit after checking for optimism: ${callGasLimit} on chainId: ${chainId}`);
 
       if (LineaNetworks.includes(chainId)) {
         preVerificationGas += (verificationGasLimit + callGasLimit) / 3;
@@ -288,6 +273,7 @@ export class BundlerSimulationAndValidationService {
         },
       };
     } catch (error: any) {
+      log.error(`Error in estimating user op: ${parseError(error)}`);
       return {
         code: error.code,
         message: parseError(error),

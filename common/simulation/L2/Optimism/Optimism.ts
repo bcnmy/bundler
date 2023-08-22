@@ -13,11 +13,11 @@ const log = logger(module);
 export const calcOptimismPreVerificationGas = async (
   userOp: UserOperationType,
   chainId: number,
-  baseFeePerGas: number,
+  baseFeePerGas?: number,
 ): Promise<number> => {
   log.info(`Calculating pvg for userOp: ${JSON.stringify(userOp)}`);
 
-  if (baseFeePerGas === null) {
+  if (!baseFeePerGas) {
     throw new RpcError(
       `baseFeePerGas not available for chainId: ${chainId}`,
       BUNDLER_VALIDATION_STATUSES.SIMULATE_PAYMASTER_VALIDATION_FAILED,
