@@ -21,7 +21,7 @@ export class Config implements IConfig {
     try {
       // decrypt the config and load it
       const encryptedEnvPath = './config.json.enc';
-      const passphrase = "averystrongpassword";
+      const passphrase = process.env.CONFIG_PASSPHRASE;
       if (!passphrase) {
         throw new Error('Passphrase for config required in .env file');
       }

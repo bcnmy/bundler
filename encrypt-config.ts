@@ -45,7 +45,7 @@ const encryptConfig = async (
   process.exit(1);
 };
 
-const passphrase = "averystrongpassword";
+const passphrase = process.env.CONFIG_PASSPHRASE;
 if (passphrase !== undefined) {
   encryptConfig(passphrase);
 } else {

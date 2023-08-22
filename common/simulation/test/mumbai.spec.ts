@@ -1,5 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import { ethers } from 'ethers';
+import { BytesLike, ethers } from 'ethers';
 import { BiconomySmartAccount } from '@biconomy/account';
 import { logger } from '../../log-config';
 import { BundlerSimulationAndValidationService } from '../BundlerSimulationAndValidationService';
@@ -17,6 +17,7 @@ describe('Mumbai 4337 Gas Estimations', () => {
   let entryPointContract: ethers.Contract;
   let biconomySmartAccount: any;
   let eoa: any;
+  let provider: ethers.providers.JsonRpcProvider;
 
   beforeEach(async () => {
     const networkService = new EVMNetworkService({
@@ -46,7 +47,7 @@ describe('Mumbai 4337 Gas Estimations', () => {
       networkService,
       tenderlySimulationService,
     );
-    const provider = new ethers.providers.JsonRpcProvider(config.chains.provider[80001]);
+    provider = new ethers.providers.JsonRpcProvider(config.chains.provider[80001]);
     entryPointContract = new ethers.Contract('0x5ff137d4b0fdcd49dca30c7cf57e578a026d2789', config.abi.entryPointAbi, provider);
 
     // dummy private key generated for test cases
@@ -206,8 +207,148 @@ describe('Mumbai 4337 Gas Estimations', () => {
   /** verificationGasLimit success test cases */
   // basic smart account deployment + signature and nonce validation
   // high gas for factory smart account deployment
+  it('Should estimate correctly for deployment with factory with high gas', async () => {
+    const getSenderAndInitCode = async () => {
+      const smartAccountFactoryAddress = '0x5991eEFb3498C98AEB4f2Dd5034768D394AD1EA6';
+
+      const smartAccountFactory = new ethers.Contract(
+        smartAccountFactoryAddress,
+        [{
+          inputs: [{ internalType: 'address', name: '_owner', type: 'address' }, { internalType: 'uint256', name: '_index', type: 'uint256' }], name: 'deployCounterFactualAccount', outputs: [{ internalType: 'address', name: 'proxy', type: 'address' }], stateMutability: 'nonpayable', type: 'function',
+        }, {
+          inputs: [{ internalType: 'address', name: '_owner', type: 'address' }, { internalType: 'uint256', name: '_index', type: 'uint256' }], name: 'getAddressForCounterFactualAccount', outputs: [{ internalType: 'address', name: '_account', type: 'address' }], stateMutability: 'view', type: 'function',
+        }],
+        provider,
+      );
+
+      const sender = await smartAccountFactory.getAddressForCounterFactualAccount(eoa, 0);
+
+      const {
+        data,
+      } = await smartAccountFactory.populateTransaction.deployCounterFactualAccount(
+        eoa,
+        ethers.BigNumber.from('0'),
+      );
+
+      const initCode = ethers.utils.hexConcat([
+        smartAccountFactoryAddress,
+        data as BytesLike,
+      ]);
+
+      return {
+        sender,
+        initCode,
+      };
+    };
+
+    const {
+      sender,
+      initCode,
+    } = await getSenderAndInitCode();
+
+    const partialUserOp = {
+      sender,
+      nonce: 0,
+      initCode,
+      callData: '0x',
+      paymasterAndData: '0x',
+      verificationGasLimit: 0,
+      preVerificationGas: 0,
+      callGasLimit: 0,
+      maxFeePerGas: 0,
+      maxPriorityFeePerGas: 0,
+      signature: '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b',
+    };
+
+    const response = await bundlerSimulationAndValidationService.estimateUserOperationGas(
+      {
+        userOp: partialUserOp as UserOperationType,
+        chainId: 80001,
+        entryPointContract,
+      },
+    );
+    expect(response);
+  });
+
   // high gas for account validateUserOp
+  it('Should estimate correctly for account validateUserOp with high gas', async () => {
+    const getSender = async () => {
+      const smartAccountFactoryAddress = '0xF6dD70865c1d97aB2871aE25abA761334700c591';
+
+      const smartAccountFactory = new ethers.Contract(
+        smartAccountFactoryAddress,
+        [{
+          inputs: [{ internalType: 'address', name: '_owner', type: 'address' }, { internalType: 'uint256', name: '_index', type: 'uint256' }], name: 'deployCounterFactualAccount', outputs: [{ internalType: 'address', name: 'proxy', type: 'address' }], stateMutability: 'nonpayable', type: 'function',
+        }, {
+          inputs: [{ internalType: 'address', name: '_owner', type: 'address' }, { internalType: 'uint256', name: '_index', type: 'uint256' }], name: 'getAddressForCounterFactualAccount', outputs: [{ internalType: 'address', name: '_account', type: 'address' }], stateMutability: 'view', type: 'function',
+        }],
+        provider,
+      );
+
+      const sender = await smartAccountFactory.getAddressForCounterFactualAccount(eoa, 0);
+
+      return {
+        sender,
+      };
+    };
+
+    const {
+      sender,
+    } = await getSender();
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const proxy = new ethers.Contract(
+      sender,
+      [
+        {
+          inputs: [{ internalType: 'uint256', name: 'batchId', type: 'uint256' }], name: 'getNonce', outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }], stateMutability: 'view', type: 'function',
+        },
+      ],
+      provider,
+    );
+
+    const partialUserOp = {
+      sender,
+      nonce: 0, // await proxy.getNonce(0) once deployed
+      initCode: '0x',
+      callData: '0x',
+      paymasterAndData: '0x',
+      verificationGasLimit: 0,
+      preVerificationGas: 0,
+      callGasLimit: 0,
+      maxFeePerGas: 0,
+      maxPriorityFeePerGas: 0,
+      signature: '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b',
+    };
+
+    const response = await bundlerSimulationAndValidationService.estimateUserOperationGas(
+      {
+        userOp: partialUserOp as UserOperationType,
+        chainId: 80001,
+        entryPointContract,
+      },
+    );
+    expect(response);
+  });
+
   // high gas for paymaster validatePaymasterUserOp
+  it('Should estimate correctly for paymaster validatePaymasterUserOp with high gas', async () => {
+    const partialUserOp = await biconomySmartAccount.buildUserOp([]);
+
+    // paymaster address with high validationPaymasterUserOp() gas
+    // const paymasterAddress = '0xf7609a20a1DD9614fA0B3Cc35508F686e50dF517';
+    const paymasterAndData = '0xf7609a20a1dd9614fa0b3cc35508f686e50df51700000000000000000000000002649f6d43556e76cf7a515a9f589bb23287378d00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000041f27674355fc0b55eb09f57156156c4ef9ee1c27d11788d8526d8b0ca95b550db6d29d010f8a3a920ff8666e8d1b083913a55e9cae493dd8dec7b5814aa57abfe1b00000000000000000000000000000000000000000000000000000000000000';
+    partialUserOp.paymasterAndData = paymasterAndData;
+
+    const response = await bundlerSimulationAndValidationService.estimateUserOperationGas(
+      {
+        userOp: partialUserOp as UserOperationType,
+        chainId: 80001,
+        entryPointContract,
+      },
+    );
+    expect(response);
+  });
 
   /** preVerificationGas test cases */
   // should give 5% profit

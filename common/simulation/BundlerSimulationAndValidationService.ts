@@ -53,8 +53,8 @@ export class BundlerSimulationAndValidationService {
       log.info(`userOp received: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
 
       // creating fullUserOp in case of estimation
-      userOp.callGasLimit = 1000000;
-      userOp.verificationGasLimit = 1000000;
+      userOp.callGasLimit = 5000000;
+      userOp.verificationGasLimit = 5000000;
       userOp.preVerificationGas = 1000000;
 
       if (!userOp.paymasterAndData) {
