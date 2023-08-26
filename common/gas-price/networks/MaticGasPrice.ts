@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import { schedule } from 'node-cron';
 import { config } from '../../../config';
 import { IEVMAccount } from '../../../relayer/src/services/account';
@@ -194,67 +195,67 @@ export class MaticGasPrice extends GasPrice implements IScheduler {
     }
   }
 
-  async setup() {
-    let response: any;
-    try {
-      response = await this.maticGasStation().catch(async (err) => {
-        log.error(`[MATIC GAS STATION] Error in fetching gas price from matic gas station. ${err}`);
-        return this.polygonGasStation();
-      });
-    } catch (error) {
-      log.error('Error in fetching gas price from polygonscan and matic gas station.');
-    }
+  // async setup() {
+  //   let response: any;
+  //   try {
+  //     response = await this.maticGasStation().catch(async (err) => {
+  //       log.error(`[MATIC GAS STATION] Error in fetching gas price from matic gas station. ${err}`);
+  //       return this.polygonGasStation();
+  //     });
+  //   } catch (error) {
+  //     log.error('Error in fetching gas price from polygonscan and matic gas station.');
+  //   }
 
-    let {
-      mediumGasPriceInWei = 20000000000,
-      fastGasPriceInWei = 30000000000,
-      fastestGasPriceInWei = 35000000000,
-    } = response || {};
+  //   let {
+  //     mediumGasPriceInWei = 20000000000,
+  //     fastGasPriceInWei = 30000000000,
+  //     fastestGasPriceInWei = 35000000000,
+  //   } = response || {};
 
-    if (config.gasPrice[this.chainId].gasOracle.polygonscanUrl
-       && fastGasPriceInWei < config.gasPrice[this.chainId].minGasPrice) {
-      fastGasPriceInWei = config.gasPrice[this.chainId].minGasPrice;
-      // If fastest gas price is less than 110% of fast gas price, increase the fastest gas price
-      // so when its used to bump up gas price, it doesn't end up in "transaction underpriced" error
-      if (fastestGasPriceInWei <= (fastGasPriceInWei * 1.1)) {
-        // Set fastest gas price to be 11% higher than fast gas price
-        fastestGasPriceInWei = (config.gasPrice[this.chainId].minGasPrice) * 1.11;
-      }
-    }
+  //   if (config.gasPrice[this.chainId].gasOracle.polygonscanUrl
+  //      && fastGasPriceInWei < config.gasPrice[this.chainId].minGasPrice) {
+  //     fastGasPriceInWei = config.gasPrice[this.chainId].minGasPrice;
+  //     // If fastest gas price is less than 110% of fast gas price, increase the fastest gas price
+  //     // so when its used to bump up gas price, it doesn't end up in "transaction underpriced" error
+  //     if (fastestGasPriceInWei <= (fastGasPriceInWei * 1.1)) {
+  //       // Set fastest gas price to be 11% higher than fast gas price
+  //       fastestGasPriceInWei = (config.gasPrice[this.chainId].minGasPrice) * 1.11;
+  //     }
+  //   }
 
-    const upperLimit = config.gasPrice[this.chainId].maxGasPrice;
-    if (upperLimit) {
-      if (fastGasPriceInWei > upperLimit) {
-        log.info(`Fast gas price for matic ${fastGasPriceInWei} is more than ${upperLimit} gwei`);
-        fastGasPriceInWei = upperLimit;
-      }
-      if (fastestGasPriceInWei > upperLimit) {
-        log.info(`Fast gas price for matic ${fastestGasPriceInWei} is more than ${upperLimit} gwei`);
-        fastestGasPriceInWei = upperLimit;
-      }
-      if (mediumGasPriceInWei > upperLimit) {
-        log.info(`Fast gas price for matic ${mediumGasPriceInWei} is more than ${upperLimit} gwei`);
-        mediumGasPriceInWei = upperLimit;
-      }
-    }
+  //   const upperLimit = config.gasPrice[this.chainId].maxGasPrice;
+  //   if (upperLimit) {
+  //     if (fastGasPriceInWei > upperLimit) {
+  //       log.info(`Fast gas price for matic ${fastGasPriceInWei} is more than ${upperLimit} gwei`);
+  //       fastGasPriceInWei = upperLimit;
+  //     }
+  //     if (fastestGasPriceInWei > upperLimit) {
+  //       log.info(`Fast gas price for matic ${fastestGasPriceInWei} is more than ${upperLimit} gwei`);
+  //       fastestGasPriceInWei = upperLimit;
+  //     }
+  //     if (mediumGasPriceInWei > upperLimit) {
+  //       log.info(`Fast gas price for matic ${mediumGasPriceInWei} is more than ${upperLimit} gwei`);
+  //       mediumGasPriceInWei = upperLimit;
+  //     }
+  //   }
 
-    await this.setGasPrice(
-      GasPriceType.DEFAULT,
-      Math.round(fastGasPriceInWei).toString(),
-    );
-    await this.setGasPrice(
-      GasPriceType.MEDIUM,
-      Math.round(mediumGasPriceInWei).toString(),
-    );
-    await this.setGasPrice(
-      GasPriceType.FAST,
-      Math.round(fastestGasPriceInWei).toString(),
-    );
+  //   await this.setGasPrice(
+  //     GasPriceType.DEFAULT,
+  //     Math.round(fastGasPriceInWei).toString(),
+  //   );
+  //   await this.setGasPrice(
+  //     GasPriceType.MEDIUM,
+  //     Math.round(mediumGasPriceInWei).toString(),
+  //   );
+  //   await this.setGasPrice(
+  //     GasPriceType.FAST,
+  //     Math.round(fastestGasPriceInWei).toString(),
+  //   );
 
-    await this.maticGasStationForEIP1559().catch(async (err) => {
-      log.error(`[MATIC GAS STATION] Error in fetching gas price for EIP1559: ${err}`);
-    });
-  }
+  //   await this.maticGasStationForEIP1559().catch(async (err) => {
+  //     log.error(`[MATIC GAS STATION] Error in fetching gas price for EIP1559: ${err}`);
+  //   });
+  // }
 
   schedule() {
     schedule(`*/${this.updateFrequencyInSeconds} * * * * *`, () => {
