@@ -16,8 +16,7 @@ import {
   EstimateUserOperationGasDataType,
   EstimateUserOpGasFieldsType,
 } from './types';
-import { calcGasPrice } from './L2/Abitrum';
-import { calcGasPrice as calcGasPriceOptimism } from './L2/Optimism/Optimism';
+import { calcArbitrumPreVerificationGas, calcOptimismPreVerificationGas } from './L2';
 
 const log = logger(module);
 export class BundlerGasEstimationService {
@@ -167,7 +166,7 @@ export class BundlerGasEstimationService {
       || chainId === BLOCKCHAINS.ARBITRUM_NOVA_MAINNET
       || chainId === BLOCKCHAINS.ARBITRUM_ONE_MAINNET
     ) {
-      const data = await calcGasPrice(
+      const data = await calcArbitrumPreVerificationGas(
         entryPointContract.address,
         userOp,
         chainId,
@@ -179,8 +178,7 @@ export class BundlerGasEstimationService {
       || chainId === BLOCKCHAINS.BASE_GOERLI_TESTNET
       || chainId === BLOCKCHAINS.BASE_MAINNET
     ) {
-      const data = await calcGasPriceOptimism(
-        entryPointContract.address,
+      const data = await calcOptimismPreVerificationGas(
         userOp,
         chainId,
       );

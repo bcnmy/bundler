@@ -65,4 +65,5 @@ export interface INetworkService<AccountType, RawTransactionType> {
     transactionHash: string
   ): Promise<ethers.providers.TransactionReceipt>
   getLatesBlockNumber(): Promise<number>
+  getBaseFeePerGas(): Promise<number>
 }

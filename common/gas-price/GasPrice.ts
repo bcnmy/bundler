@@ -318,6 +318,31 @@ export class GasPrice implements IGasPrice {
                 '250000000',
               );
             }
+          } else if ([137, 80001].includes(this.chainId)) {
+            const maxFeePerGasFromNetwork = (await this.networkService
+              .getEIP1559GasPrice()).maxFeePerGas;
+            const maxPriorityFeePerGasFromNetwork = (await this.networkService
+              .getEIP1559GasPrice())
+              .maxPriorityFeePerGas;
+            if (maxFeePerGasFromNetwork && maxPriorityFeePerGasFromNetwork) {
+              const maxFeePerGas = ethers.utils.formatUnits(
+                maxFeePerGasFromNetwork,
+                'wei',
+              );
+              const maxPriorityFeePerGas = ethers.utils.formatUnits(
+                maxPriorityFeePerGasFromNetwork,
+                'wei',
+              );
+
+              await this.setMaxFeeGasPrice(
+                GasPriceType.DEFAULT,
+                (Number(maxFeePerGas) * 1.5).toString(),
+              );
+              await this.setMaxPriorityFeeGasPrice(
+                GasPriceType.DEFAULT,
+                (Number(maxPriorityFeePerGas) * 1.5).toString(),
+              );
+            }
           } else {
             const maxFeePerGasFromNetwork = (await this.networkService
               .getEIP1559GasPrice()).maxFeePerGas;
