@@ -326,9 +326,13 @@ export class GasPrice implements IGasPrice {
               data.result,
               'wei',
             );
+            let maxPriorityFeePerGas = Number(maxFeePerGas) * 0.3;
+            if (maxPriorityFeePerGas < 30000000000) {
+              maxPriorityFeePerGas = 35000000000;
+            }
             await this.setMaxPriorityFeeGasPrice(
               GasPriceType.DEFAULT,
-              (Number(maxFeePerGas) * 0.5).toString(),
+              (maxPriorityFeePerGas).toString(),
             );
             await this.setMaxFeeGasPrice(
               GasPriceType.DEFAULT,
