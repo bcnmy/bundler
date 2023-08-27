@@ -328,11 +328,11 @@ export class GasPrice implements IGasPrice {
             );
             await this.setMaxPriorityFeeGasPrice(
               GasPriceType.DEFAULT,
-              (Number(maxFeePerGas) * 0.3).toString(),
+              (Number(maxFeePerGas) * 0.5).toString(),
             );
             await this.setMaxFeeGasPrice(
               GasPriceType.DEFAULT,
-              (Number(maxFeePerGas) * 1.3).toString(),
+              (Number(maxFeePerGas) * 2).toString(),
             );
           } else if ([80001].includes(this.chainId)) {
             const {
