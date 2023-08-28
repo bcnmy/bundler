@@ -14,13 +14,13 @@ const log = logger(module);
 
 export const bundleUserOperation = async (req: Request, res: Response) => {
   const { id } = req.body;
-  const { chainId, apiKey } = req.params;
+  const { chainId, dappAPIKey } = req.params;
   // const bundlerRequestId = req.body.params[6];
 
   try {
     const userOp = req.body.params[0];
     const entryPointAddress = req.body.params[1];
-    const gasLimitFromSimulation = req.body.params[2] + 500000;
+    const gasLimitFromSimulation = req.body.params[2] + 1000000;
     const userOpHash = req.body.params[3];
 
     const chainIdInNum = parseInt(chainId, 10);
@@ -57,7 +57,7 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
 
     userOperationDao.save(chainIdInNum, {
       transactionId,
-      apiKey,
+      dappAPIKey,
       status: TransactionStatus.PENDING,
       entryPoint: entryPointAddress,
       sender,
