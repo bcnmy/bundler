@@ -22,11 +22,11 @@ const log = logger(module);
   receipt the TransactionReceipt object. Note that the returned TransactionReceipt is for the entire bundle, not only for this UserOperation.
  */
 export const getUserOperationReceipt = async (req: Request, res: Response) => {
-  const { id } = req.body;
-  const { chainId /* apiKey */ } = req.params;
   // const bundlerRequestId = req.body.params[6];
 
   try {
+    const { id } = req.body;
+    const { chainId /* apiKey */ } = req.params;
     const userOpHash = req.body.params[0];
 
     const userOperationData = await userOperationDao.getUserOperationDataByUserOpHash(
@@ -99,6 +99,7 @@ export const getUserOperationReceipt = async (req: Request, res: Response) => {
     });
   } catch (error) {
     log.error(`Error in getUserOperationReceipt handler: ${parseError(error)}`);
+    const { id } = req.body;
     // updateRequest({
     //   chainId: parseInt(chainId, 10),
     //   apiKey,

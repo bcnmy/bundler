@@ -8,11 +8,12 @@ import { parseError } from '../../../../../common/utils';
 const log = logger(module);
 
 export const estimateUserOperationGas = async (req: Request, res: Response) => {
-  const { id } = req.body;
-  const { chainId /* apiKey */ } = req.params;
   // const bundlerRequestId = req.body.params[6];
 
   try {
+    const { id } = req.body;
+    const { chainId /* apiKey */ } = req.params;
+
     const userOp = req.body.params[0];
     const entryPointAddress = req.body.params[1];
 
@@ -162,6 +163,8 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
     });
   } catch (error) {
     log.error(`Error in estimateUserOperationGas handler ${parseError(error)}`);
+    const { id } = req.body;
+
     // updateRequest({
     //   chainId: parseInt(chainId, 10),
     //   apiKey,

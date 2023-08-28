@@ -7,11 +7,12 @@ import { parseError } from '../../../../../common/utils';
 const log = logger(module);
 
 export const getChainId = async (req: Request, res: Response) => {
-  const { id } = req.body;
-  const { chainId /* apiKey */ } = req.params;
   // const bundlerRequestId = req.body.params[6];
 
   try {
+    const { id } = req.body;
+    const { chainId /* apiKey */ } = req.params;
+
     log.info(`chainId in number: ${chainId}`);
 
     const chainIdInHex = `0x${(parseInt(chainId, 10).toString(16))}`;
@@ -36,6 +37,7 @@ export const getChainId = async (req: Request, res: Response) => {
     });
   } catch (error) {
     log.error(`Error in getChainId handler ${JSON.stringify(error)}`);
+    const { id } = req.body;
     // updateRequest({
     //   chainId: parseInt(chainId, 10),
     //   apiKey,

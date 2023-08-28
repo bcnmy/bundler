@@ -8,11 +8,12 @@ import { parseError } from '../../../../../common/utils';
 const log = logger(module);
 
 export const getSupportedEntryPoints = async (req: Request, res: Response) => {
-  const { id } = req.body;
-  const { chainId /* apiKey */ } = req.params;
   // const bundlerRequestId = req.body.params[6];
 
   try {
+    const { id } = req.body;
+    const { chainId /* apiKey */ } = req.params;
+
     log.info(`chainId: ${chainId}`);
 
     const chainIdInInt = parseInt(chainId, 10);
@@ -48,6 +49,7 @@ export const getSupportedEntryPoints = async (req: Request, res: Response) => {
     });
   } catch (error) {
     log.error(`Error in supportedEntryPoints handler ${parseError(error)}`);
+    const { id } = req.body;
     // updateRequest({
     //   chainId: parseInt(chainId, 10),
     //   apiKey,
