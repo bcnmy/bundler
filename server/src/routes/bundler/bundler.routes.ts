@@ -4,6 +4,7 @@ import { simulateBundlerTransaction } from '../../controllers/simulate';
 import {
   validateBundlerRequest,
 } from '../../middleware';
+// import { authenticateBundlerRequest } from '../../controllers/auth';
 
 export const bundlerApiRouter = Router();
 

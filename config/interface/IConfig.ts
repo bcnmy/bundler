@@ -191,6 +191,9 @@ export type ConfigType = {
   entryPointData: EntryPointDataConfigType,
   fallbackGasTankData: FallbackGasTankDataConfigType,
   zeroAddress: string,
+  aaDashboardBackend: {
+    url: string
+  }
   simulationData: SimulationDataConfigType,
   abi: AbiConfigType,
   defaultGasOverheads: DefaultGasOverheadType

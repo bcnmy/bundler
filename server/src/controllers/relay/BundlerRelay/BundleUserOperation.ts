@@ -7,11 +7,14 @@ import {
   TransactionStatus,
   TransactionType,
 } from '../../../../../common/types';
-import { STATUSES } from '../../../middleware';
+import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../../../middleware';
+// import { updateRequest } from '../../auth/UpdateRequest';
 
 const log = logger(module);
 
 export const bundleUserOperation = async (req: Request, res: Response) => {
+  // const bundlerRequestId = req.body.params[6];
+
   try {
     const { id } = req.body;
     const userOp = req.body.params[0];
@@ -19,6 +22,7 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
     const gasLimitFromSimulation = req.body.params[2] + 3000000;
     const userOpHash = req.body.params[3];
     const { chainId, dappAPIKey } = req.params;
+
     const chainIdInNum = parseInt(chainId, 10);
 
     const transactionId = generateTransactionId(userOp);
@@ -74,11 +78,26 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
     });
 
     if (!routeTransactionToRelayerMap[chainIdInNum][TransactionType.BUNDLER]) {
+      // updateRequest({
+      //   chainId: parseInt(chainId, 10),
+      //   apiKey,
+      //   bundlerRequestId,
+      //   transactionId,
+      //   rawResponse: {
+      //     jsonrpc: '2.0',
+      //     id: id || 1,
+      //     error: {
+      //       code: BUNDLER_VALIDATION_STATUSES.BAD_REQUEST,
+      //       message: `${TransactionType.BUNDLER} method not supported for chainId: ${chainId}`,
+      //     },
+      //   },
+      //   httpResponseCode: STATUSES.BAD_REQUEST,
+      // });
       return res.status(STATUSES.BAD_REQUEST).json({
         jsonrpc: '2.0',
         id: id || 1,
         error: {
-          code: STATUSES.BAD_REQUEST,
+          code: BUNDLER_VALIDATION_STATUSES.BAD_REQUEST,
           message: `${TransactionType.BUNDLER} method not supported for chainId: ${chainId}`,
         },
       });
@@ -97,15 +116,43 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
       });
 
     if (isError(response)) {
+      // updateRequest({
+      //   chainId: parseInt(chainId, 10),
+      //   apiKey,
+      //   bundlerRequestId,
+      //   transactionId,
+      //   rawResponse: {
+      //     jsonrpc: '2.0',
+      //     id: id || 1,
+      //     error: {
+      //       code: BUNDLER_VALIDATION_STATUSES.BAD_REQUEST,
+      //       message: response.error,
+      //     },
+      //   },
+      //   httpResponseCode: STATUSES.BAD_REQUEST,
+      // });
       return res.status(STATUSES.BAD_REQUEST).json({
         jsonrpc: '2.0',
         id: id || 1,
         error: {
-          code: STATUSES.BAD_REQUEST,
+          code: BUNDLER_VALIDATION_STATUSES.BAD_REQUEST,
           message: response.error,
         },
       });
     }
+
+    // updateRequest({
+    //   chainId: parseInt(chainId, 10),
+    //   apiKey,
+    //   bundlerRequestId,
+    //   transactionId,
+    //   rawResponse: {
+    //     jsonrpc: '2.0',
+    //     id: id || 1,
+    //     result: userOpHash,
+    //   },
+    //   httpResponseCode: STATUSES.SUCCESS,
+    // });
     return res.status(STATUSES.SUCCESS).json({
       jsonrpc: '2.0',
       id: id || 1,
@@ -114,11 +161,25 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
   } catch (error) {
     const { id } = req.body;
     log.error(`Error in bundle user op ${parseError(error)}`);
+    // updateRequest({
+    //   chainId: parseInt(chainId, 10),
+    //   apiKey,
+    //   bundlerRequestId,
+    //   rawResponse: {
+    //     jsonrpc: '2.0',
+    //     id: id || 1,
+    //     error: {
+    //       code: BUNDLER_VALIDATION_STATUSES.INTERNAL_SERVER_ERROR,
+    //       message: `Internal Server error: ${parseError(error)}`,
+    //     },
+    //   },
+    //   httpResponseCode: STATUSES.INTERNAL_SERVER_ERROR,
+    // });
     return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
       jsonrpc: '2.0',
       id: id || 1,
       error: {
-        code: STATUSES.INTERNAL_SERVER_ERROR,
+        code: BUNDLER_VALIDATION_STATUSES.INTERNAL_SERVER_ERROR,
         message: `Internal Server error: ${parseError(error)}`,
       },
     });
