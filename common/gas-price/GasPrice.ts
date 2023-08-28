@@ -339,7 +339,7 @@ export class GasPrice implements IGasPrice {
             }
             await this.setMaxPriorityFeeGasPrice(
               GasPriceType.DEFAULT,
-              (maxPriorityFeePerGas).toString(),
+              maxPriorityFeePerGas.toString(),
             );
             await this.setMaxFeeGasPrice(
               GasPriceType.DEFAULT,
@@ -355,13 +355,9 @@ export class GasPrice implements IGasPrice {
             );
             // setting the gas price we get from rpc call to max priority and
             // setting maxFeePerGas as a multiplier
-            let maxPriorityFeePerGas = Number(maxFeePerGas) * 0.3;
-            if (maxPriorityFeePerGas < 30000000000) {
-              maxPriorityFeePerGas = 35000000000;
-            }
             await this.setMaxPriorityFeeGasPrice(
               GasPriceType.DEFAULT,
-              maxPriorityFeePerGas.toString(),
+              (Number(maxFeePerGas) * 0.3).toString(),
             );
             await this.setMaxFeeGasPrice(
               GasPriceType.DEFAULT,
