@@ -353,15 +353,14 @@ export class GasPrice implements IGasPrice {
               data.result,
               'wei',
             );
-            // setting the gas price we get from rpc call to max priority and
-            // setting maxFeePerGas as a multiplier
+            const maxPriorityFeePerGas = Number(maxFeePerGas) * 0.5;
             await this.setMaxPriorityFeeGasPrice(
               GasPriceType.DEFAULT,
-              (Number(maxFeePerGas) * 0.3).toString(),
+              maxPriorityFeePerGas.toString(),
             );
             await this.setMaxFeeGasPrice(
               GasPriceType.DEFAULT,
-              maxFeePerGas.toString(),
+              (Number(maxFeePerGas) * 1.5).toString(),
             );
           } else {
             const maxFeePerGasFromNetwork = (await this.networkService
