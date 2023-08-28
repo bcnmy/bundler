@@ -349,18 +349,18 @@ export class GasPrice implements IGasPrice {
             const {
               data,
             } = await this.networkService.sendRpcCall('eth_gasPrice', []);
-            const maxFeePerGas = ethers.utils.formatUnits(
+            const maxPriorityFeePerGas = ethers.utils.formatUnits(
               data.result,
               'wei',
             );
-            const maxPriorityFeePerGas = Number(maxFeePerGas) * 0.5;
+            const maxFeePerGas = Number(maxPriorityFeePerGas) * 1.5;
             await this.setMaxPriorityFeeGasPrice(
               GasPriceType.DEFAULT,
               maxPriorityFeePerGas.toString(),
             );
             await this.setMaxFeeGasPrice(
               GasPriceType.DEFAULT,
-              (Number(maxFeePerGas) * 1.5).toString(),
+              maxFeePerGas.toString(),
             );
           } else {
             const maxFeePerGasFromNetwork = (await this.networkService
