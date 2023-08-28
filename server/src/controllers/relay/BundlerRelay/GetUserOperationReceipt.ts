@@ -4,7 +4,7 @@ import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../../../middleware';
 import { logger } from '../../../../../common/log-config';
 import { userOperationDao } from '../../../../../common/service-manager';
 import { parseError } from '../../../../../common/utils';
-import { updateRequest } from '../../auth/UpdateRequest';
+// import { updateRequest } from '../../auth/UpdateRequest';
 
 const log = logger(module);
 
@@ -23,8 +23,8 @@ const log = logger(module);
  */
 export const getUserOperationReceipt = async (req: Request, res: Response) => {
   const { id } = req.body;
-  const { chainId, apiKey } = req.params;
-  const bundlerRequestId = req.body.params[6];
+  const { chainId /* apiKey */ } = req.params;
+  // const bundlerRequestId = req.body.params[6];
 
   try {
     const userOpHash = req.body.params[0];
@@ -35,17 +35,17 @@ export const getUserOperationReceipt = async (req: Request, res: Response) => {
     );
 
     if (!userOperationData || !userOperationData.receipt) {
-      updateRequest({
-        chainId: parseInt(chainId, 10),
-        apiKey,
-        bundlerRequestId,
-        rawResponse: {
-          jsonrpc: '2.0',
-          id: id || 1,
-          result: null,
-        },
-        httpResponseCode: STATUSES.SUCCESS,
-      });
+      // updateRequest({
+      //   chainId: parseInt(chainId, 10),
+      //   apiKey,
+      //   bundlerRequestId,
+      //   rawResponse: {
+      //     jsonrpc: '2.0',
+      //     id: id || 1,
+      //     result: null,
+      //   },
+      //   httpResponseCode: STATUSES.SUCCESS,
+      // });
       return res.status(STATUSES.SUCCESS).json({
         jsonrpc: '2.0',
         id: id || 1,
@@ -80,17 +80,17 @@ export const getUserOperationReceipt = async (req: Request, res: Response) => {
       receipt,
     };
 
-    updateRequest({
-      chainId: parseInt(chainId, 10),
-      apiKey,
-      bundlerRequestId,
-      rawResponse: {
-        jsonrpc: '2.0',
-        id: 1,
-        result,
-      },
-      httpResponseCode: STATUSES.SUCCESS,
-    });
+    // updateRequest({
+    //   chainId: parseInt(chainId, 10),
+    //   apiKey,
+    //   bundlerRequestId,
+    //   rawResponse: {
+    //     jsonrpc: '2.0',
+    //     id: 1,
+    //     result,
+    //   },
+    //   httpResponseCode: STATUSES.SUCCESS,
+    // });
 
     return res.status(STATUSES.SUCCESS).json({
       jsonrpc: '2.0',
@@ -99,20 +99,20 @@ export const getUserOperationReceipt = async (req: Request, res: Response) => {
     });
   } catch (error) {
     log.error(`Error in getUserOperationReceipt handler: ${parseError(error)}`);
-    updateRequest({
-      chainId: parseInt(chainId, 10),
-      apiKey,
-      bundlerRequestId,
-      rawResponse: {
-        jsonrpc: '2.0',
-        id: id || 1,
-        error: {
-          code: BUNDLER_VALIDATION_STATUSES.INTERNAL_SERVER_ERROR,
-          message: `Internal Server error: ${parseError(error)}`,
-        },
-      },
-      httpResponseCode: STATUSES.INTERNAL_SERVER_ERROR,
-    });
+    // updateRequest({
+    //   chainId: parseInt(chainId, 10),
+    //   apiKey,
+    //   bundlerRequestId,
+    //   rawResponse: {
+    //     jsonrpc: '2.0',
+    //     id: id || 1,
+    //     error: {
+    //       code: BUNDLER_VALIDATION_STATUSES.INTERNAL_SERVER_ERROR,
+    //       message: `Internal Server error: ${parseError(error)}`,
+    //     },
+    //   },
+    //   httpResponseCode: STATUSES.INTERNAL_SERVER_ERROR,
+    // });
     return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
       jsonrpc: '2.0',
       id: id || 1,
