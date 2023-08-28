@@ -10,10 +10,10 @@ relayer:
   replicaCount: 1 
   resource:
     requests:
-      memory: "2000Mi"
-      cpu: "2000m"
+      memory: "6000Mi"
+      cpu: "4000m"
     limits:
-      memory: "4000Mi"
+      memory: "6000Mi"
       cpu: "4000m"
 
 secret:

@@ -242,11 +242,27 @@ export class BundlerSimulationAndValidationService {
       ));
       log.info(`verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId} after 1.2 multiplier on ${preOpGas} and ${preVerificationGas}`);
 
-      const totalGas = paid / userOp.maxFeePerGas;
+      let totalGas = paid / userOp.maxFeePerGas;
       log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
 
       let callGasLimit = totalGas - preOpGas + 30000;
       log.info(`call gas limit: ${callGasLimit} on chainId: ${chainId}`);
+
+      if ([137, 80001].includes(chainId)) {
+        const baseFeePerGas = await this.networkService.getBaseFeePerGas();
+        log.info(`baseFeePerGas: ${baseFeePerGas} on chainId: ${chainId}`);
+        totalGas = Math.round(paid / Math.min(
+          baseFeePerGas + Number(userOp.maxPriorityFeePerGas),
+          Number(userOp.maxFeePerGas),
+        ));
+        log.info(`totalGas after calculating for polygon networks: ${totalGas}`);
+        callGasLimit = Math.round(totalGas - preOpGas + 30000);
+        log.info(`callGasLimit after calculating for polygon networks: ${callGasLimit}`);
+      }
+
+      if (callGasLimit > 500000) {
+        callGasLimit += 100000;
+      }
 
       // if (chainId === 10 || chainId === 420 || chainId === 8453 || chainId === 84531) {
       //   log.info(`chainId: ${chainId} is OP stack hence increasing callGasLimit by 150K`);

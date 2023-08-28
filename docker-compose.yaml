@@ -1,4 +1,3 @@
-
 version: "3.1"
 
 volumes:
@@ -7,34 +6,65 @@ volumes:
   rabbitmq_log:
   rabbitmq_data:
 
+
 services:
   server:
     container_name: api-service
+    env_file: .env
     ports:
       - "0.0.0.0:3000:3000"
     depends_on:
-      - mongo
-      - redis
-      - rabbitmq
-      - centrifugo
-    build:
-      dockerfile: Dockerfile
-    restart: always
+      mongo:
+        condition: service_started
+      redis:
+        condition: service_healthy
+        restart: true
+      rabbitmq:
+        condition: service_healthy
+        restart: true
+      centrifugo:
+        condition: service_healthy
+        restart: true
 
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    restart: always
+    volumes:
+      - .:/usr/app
   redis:
     image: redis:6.0
     container_name: redis
-    command: ["redis-server", "--appendonly", "yes"]
+    command: [ "redis-server", "--appendonly", "yes" ]
+    ports:
+      - "0.0.0.0:6379:6379"
     volumes:
       - redis-data:/data
     restart: always
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 5s
+      timeout: 20s
+      retries: 5
 
   centrifugo:
     container_name: centrifugo
     image: centrifugo/centrifugo:v3.2.2
     volumes:
-      - ./centrifugo_config.json:/centrifugo/config.json
+      - ./centrifugo_config.json:/centrifugo/config.json:ro
     command: centrifugo -c config.json
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "sh",
+          "-c",
+          "wget -nv -O - http://localhost:8000"
+        ]
+      interval: 3s
+      timeout: 3s
+      retries: 3
+
     ulimits:
       nofile:
         soft: 65535
@@ -47,17 +77,17 @@ services:
     container_name: mongo
     restart: always
     ports:
-      - "27017:27017"
+      - "0.0.0.0:27017:27017"
     volumes:
       - mongo-data:/data/db
 
   rabbitmq:
-    image: rabbitmq:3.8-management-alpine
+    image: heidiks/rabbitmq-delayed-message-exchange:3.8.3-management
     container_name: 'rabbitmq'
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:15672"]
-      interval: 30s
-      timeout: 10s
+      test: rabbitmq-diagnostics -q ping
+      interval: 5s
+      timeout: 20s
       retries: 5
     ports:
       - "0.0.0.0:5672:5672"

@@ -8,19 +8,19 @@ import {
   TransactionType,
 } from '../../../../../common/types';
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../../../middleware';
-import { updateRequest } from '../../auth/UpdateRequest';
+// import { updateRequest } from '../../auth/UpdateRequest';
 
 const log = logger(module);
 
 export const bundleUserOperation = async (req: Request, res: Response) => {
   const { id } = req.body;
-  const { chainId, apiKey } = req.params;
-  const bundlerRequestId = req.body.params[6];
+  const { chainId, dappAPIKey } = req.params;
+  // const bundlerRequestId = req.body.params[6];
 
   try {
     const userOp = req.body.params[0];
     const entryPointAddress = req.body.params[1];
-    const gasLimitFromSimulation = req.body.params[2] + 500000;
+    const gasLimitFromSimulation = req.body.params[2] + 1000000;
     const userOpHash = req.body.params[3];
 
     const chainIdInNum = parseInt(chainId, 10);
@@ -57,7 +57,7 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
 
     userOperationDao.save(chainIdInNum, {
       transactionId,
-      apiKey,
+      dappAPIKey,
       status: TransactionStatus.PENDING,
       entryPoint: entryPointAddress,
       sender,
@@ -78,21 +78,21 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
     });
 
     if (!routeTransactionToRelayerMap[chainIdInNum][TransactionType.BUNDLER]) {
-      updateRequest({
-        chainId: parseInt(chainId, 10),
-        apiKey,
-        bundlerRequestId,
-        transactionId,
-        rawResponse: {
-          jsonrpc: '2.0',
-          id: id || 1,
-          error: {
-            code: BUNDLER_VALIDATION_STATUSES.BAD_REQUEST,
-            message: `${TransactionType.BUNDLER} method not supported for chainId: ${chainId}`,
-          },
-        },
-        httpResponseCode: STATUSES.BAD_REQUEST,
-      });
+      // updateRequest({
+      //   chainId: parseInt(chainId, 10),
+      //   apiKey,
+      //   bundlerRequestId,
+      //   transactionId,
+      //   rawResponse: {
+      //     jsonrpc: '2.0',
+      //     id: id || 1,
+      //     error: {
+      //       code: BUNDLER_VALIDATION_STATUSES.BAD_REQUEST,
+      //       message: `${TransactionType.BUNDLER} method not supported for chainId: ${chainId}`,
+      //     },
+      //   },
+      //   httpResponseCode: STATUSES.BAD_REQUEST,
+      // });
       return res.status(STATUSES.BAD_REQUEST).json({
         jsonrpc: '2.0',
         id: id || 1,
@@ -116,21 +116,21 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
       });
 
     if (isError(response)) {
-      updateRequest({
-        chainId: parseInt(chainId, 10),
-        apiKey,
-        bundlerRequestId,
-        transactionId,
-        rawResponse: {
-          jsonrpc: '2.0',
-          id: id || 1,
-          error: {
-            code: BUNDLER_VALIDATION_STATUSES.BAD_REQUEST,
-            message: response.error,
-          },
-        },
-        httpResponseCode: STATUSES.BAD_REQUEST,
-      });
+      // updateRequest({
+      //   chainId: parseInt(chainId, 10),
+      //   apiKey,
+      //   bundlerRequestId,
+      //   transactionId,
+      //   rawResponse: {
+      //     jsonrpc: '2.0',
+      //     id: id || 1,
+      //     error: {
+      //       code: BUNDLER_VALIDATION_STATUSES.BAD_REQUEST,
+      //       message: response.error,
+      //     },
+      //   },
+      //   httpResponseCode: STATUSES.BAD_REQUEST,
+      // });
       return res.status(STATUSES.BAD_REQUEST).json({
         jsonrpc: '2.0',
         id: id || 1,
@@ -141,18 +141,18 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
       });
     }
 
-    updateRequest({
-      chainId: parseInt(chainId, 10),
-      apiKey,
-      bundlerRequestId,
-      transactionId,
-      rawResponse: {
-        jsonrpc: '2.0',
-        id: id || 1,
-        result: userOpHash,
-      },
-      httpResponseCode: STATUSES.SUCCESS,
-    });
+    // updateRequest({
+    //   chainId: parseInt(chainId, 10),
+    //   apiKey,
+    //   bundlerRequestId,
+    //   transactionId,
+    //   rawResponse: {
+    //     jsonrpc: '2.0',
+    //     id: id || 1,
+    //     result: userOpHash,
+    //   },
+    //   httpResponseCode: STATUSES.SUCCESS,
+    // });
     return res.status(STATUSES.SUCCESS).json({
       jsonrpc: '2.0',
       id: id || 1,
@@ -160,20 +160,20 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
     });
   } catch (error) {
     log.error(`Error in bundle user op ${parseError(error)}`);
-    updateRequest({
-      chainId: parseInt(chainId, 10),
-      apiKey,
-      bundlerRequestId,
-      rawResponse: {
-        jsonrpc: '2.0',
-        id: id || 1,
-        error: {
-          code: BUNDLER_VALIDATION_STATUSES.INTERNAL_SERVER_ERROR,
-          message: `Internal Server error: ${parseError(error)}`,
-        },
-      },
-      httpResponseCode: STATUSES.INTERNAL_SERVER_ERROR,
-    });
+    // updateRequest({
+    //   chainId: parseInt(chainId, 10),
+    //   apiKey,
+    //   bundlerRequestId,
+    //   rawResponse: {
+    //     jsonrpc: '2.0',
+    //     id: id || 1,
+    //     error: {
+    //       code: BUNDLER_VALIDATION_STATUSES.INTERNAL_SERVER_ERROR,
+    //       message: `Internal Server error: ${parseError(error)}`,
+    //     },
+    //   },
+    //   httpResponseCode: STATUSES.INTERNAL_SERVER_ERROR,
+    // });
     return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
       jsonrpc: '2.0',
       id: id || 1,

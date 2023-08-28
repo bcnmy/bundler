@@ -1,15 +1,15 @@
 import { Request, Response } from 'express';
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../../../middleware';
 import { logger } from '../../../../../common/log-config';
-import { updateRequest } from '../../auth/UpdateRequest';
+// import { updateRequest } from '../../auth/UpdateRequest';
 import { parseError } from '../../../../../common/utils';
 
 const log = logger(module);
 
 export const getChainId = async (req: Request, res: Response) => {
   const { id } = req.body;
-  const { chainId, apiKey } = req.params;
-  const bundlerRequestId = req.body.params[6];
+  const { chainId /* apiKey */ } = req.params;
+  // const bundlerRequestId = req.body.params[6];
 
   try {
     log.info(`chainId in number: ${chainId}`);
@@ -17,17 +17,17 @@ export const getChainId = async (req: Request, res: Response) => {
     const chainIdInHex = `0x${(parseInt(chainId, 10).toString(16))}`;
     log.info(`chainId in hex: ${chainIdInHex}`);
 
-    updateRequest({
-      chainId: parseInt(chainId, 10),
-      apiKey,
-      bundlerRequestId,
-      rawResponse: {
-        jsonrpc: '2.0',
-        id: id || 1,
-        result: chainIdInHex,
-      },
-      httpResponseCode: STATUSES.SUCCESS,
-    });
+    // updateRequest({
+    //   chainId: parseInt(chainId, 10),
+    //   apiKey,
+    //   bundlerRequestId,
+    //   rawResponse: {
+    //     jsonrpc: '2.0',
+    //     id: id || 1,
+    //     result: chainIdInHex,
+    //   },
+    //   httpResponseCode: STATUSES.SUCCESS,
+    // });
 
     return res.status(STATUSES.SUCCESS).json({
       jsonrpc: '2.0',
@@ -36,20 +36,20 @@ export const getChainId = async (req: Request, res: Response) => {
     });
   } catch (error) {
     log.error(`Error in getChainId handler ${JSON.stringify(error)}`);
-    updateRequest({
-      chainId: parseInt(chainId, 10),
-      apiKey,
-      bundlerRequestId,
-      rawResponse: {
-        jsonrpc: '2.0',
-        id: id || 1,
-        error: {
-          code: BUNDLER_VALIDATION_STATUSES.INTERNAL_SERVER_ERROR,
-          message: `Internal Server error: ${parseError(error)}`,
-        },
-      },
-      httpResponseCode: STATUSES.INTERNAL_SERVER_ERROR,
-    });
+    // updateRequest({
+    //   chainId: parseInt(chainId, 10),
+    //   apiKey,
+    //   bundlerRequestId,
+    //   rawResponse: {
+    //     jsonrpc: '2.0',
+    //     id: id || 1,
+    //     error: {
+    //       code: BUNDLER_VALIDATION_STATUSES.INTERNAL_SERVER_ERROR,
+    //       message: `Internal Server error: ${parseError(error)}`,
+    //     },
+    //   },
+    //   httpResponseCode: STATUSES.INTERNAL_SERVER_ERROR,
+    // });
     return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
       jsonrpc: '2.0',
       id: id || 1,
