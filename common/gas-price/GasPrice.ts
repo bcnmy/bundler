@@ -97,6 +97,13 @@ export class GasPrice implements IGasPrice {
           maxPriorityFeePerGas,
         };
       }
+      if ([137].includes(this.chainId) && Number(result.maxFeePerGas) < 30000000000) {
+        result.maxFeePerGas = '35000000000';
+        await this.setMaxPriorityFeeGasPrice(
+          GasPriceType.DEFAULT,
+          (result.maxFeePerGas).toString(),
+        );
+      }
     } else {
       const gasPrice = await this.cacheService.get(
         this.getGasPriceKey(gasType),
