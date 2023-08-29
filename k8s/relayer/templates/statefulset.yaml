@@ -73,6 +73,23 @@ spec:
           limits:
             memory: {{ .Values.relayer.resource.limits.memory }}
             cpu: {{ .Values.relayer.resource.limits.cpu }}
+        # allow in to total failureThreshold(30) * periodSeconds(10) = 300 seconds
+        startupProbe:
+          httpGet:
+            path: /healthz
+            port: liveness-port
+          failureThreshold: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.relayer.port }}
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 30
+          failureThreshold: 3
+        # cosider application not healhy after 600 seconds
         livenessProbe:
           httpGet:
             path: /health
@@ -81,16 +98,7 @@ spec:
           periodSeconds: 30
           successThreshold: 1
           timeoutSeconds: 30
-          failureThreshold: 3
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: {{ .Values.relayer.port }}
-          initialDelaySeconds: 60
-          periodSeconds: 30
-          successThreshold: 1
-          timeoutSeconds: 30
-          failureThreshold: 3
+          failureThreshold: 10
       volumes:
       - name: secret
         secret:
