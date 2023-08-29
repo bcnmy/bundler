@@ -64,7 +64,7 @@ function pods_health_check {
   kill "${port_forward_pid}"
 }
 
-helm upgrade ./k8s/common/  "${HELM_NAME}"  \
+helm upgrade "${HELM_NAME}"  ./k8s/common/ \
      --install \
      --wait \
      --timeout 720s \
