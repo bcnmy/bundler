@@ -89,16 +89,16 @@ spec:
           successThreshold: 1
           timeoutSeconds: 30
           failureThreshold: 3
-        # cosider application not healhy after 600 seconds
+        # cosider application not healhy after 10 minutes +
         livenessProbe:
           httpGet:
             path: /health
             port: {{ .Values.relayer.port }}
-          initialDelaySeconds: 60
-          periodSeconds: 30
+          initialDelaySeconds: 120
+          periodSeconds: 60
           successThreshold: 1
-          timeoutSeconds: 30
-          failureThreshold: 10
+          timeoutSeconds: 120
+          failureThreshold: 5
       volumes:
       - name: secret
         secret:
