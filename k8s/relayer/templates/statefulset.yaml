@@ -76,8 +76,8 @@ spec:
         # allow in to total failureThreshold(30) * periodSeconds(10) = 300 seconds
         startupProbe:
           httpGet:
-            path: /healthz
-            port: liveness-port
+            path: /health
+            port: {{ .Values.relayer.port }}
           failureThreshold: 30
           periodSeconds: 10
         readinessProbe:
