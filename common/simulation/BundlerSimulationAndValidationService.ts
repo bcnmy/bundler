@@ -272,7 +272,7 @@ export class BundlerSimulationAndValidationService {
       log.info(`call gas limit after checking for optimism: ${callGasLimit} on chainId: ${chainId}`);
 
       if (LineaNetworks.includes(chainId)) {
-        preVerificationGas += (verificationGasLimit + callGasLimit) / 3;
+        preVerificationGas += Math.round((verificationGasLimit + callGasLimit) / 3);
       }
 
       return {
