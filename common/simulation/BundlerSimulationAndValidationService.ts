@@ -57,6 +57,10 @@ export class BundlerSimulationAndValidationService {
       userOp.verificationGasLimit = 5000000;
       userOp.preVerificationGas = 1000000;
 
+      if([43113, 43114].includes(chainId)) {
+        userOp.callGasLimit = 20000000
+      }
+
       if (!userOp.paymasterAndData) {
         userOp.paymasterAndData = '0x';
       }
