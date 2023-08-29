@@ -99,4 +99,4 @@ spec:
       - hostPath:
           path: /var/run/datadog/
         name: apmsocketpath
-      {{- end }} 
+      {https://raw.githubusercontent.com/bcnmy/bundler/c3d2200285cff645943bc8db75cc9d2f37340165/k8s/relayer/templates/statefulset.yaml?token=GHSAT0AAAAAACEMHGH5YRCT37J4UTF57AP2ZHOJ64A{- end }} 
