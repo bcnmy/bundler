@@ -57,7 +57,7 @@ function pods_health_check {
   echo ""
   echo "App OK"
   else
-    echo "App is not"
+    echo "App is not OK"
   fi
 
   port_forward_pid=$(ps aux | grep [p]ort-forward | tr -s ' ' ' ' | cut -d ' ' -f 2)
