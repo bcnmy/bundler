@@ -237,9 +237,10 @@ export class BundlerSimulationAndValidationService {
         validAfter = undefined;
       }
 
+      // 5000 gas for unaccounted gas in verification phase
       const verificationGasLimit = Math.round((
         (preOpGas - preVerificationGas) * 1.2
-      ));
+      )) + 5000;
       log.info(`verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId} after 1.2 multiplier on ${preOpGas} and ${preVerificationGas}`);
 
       let totalGas = paid / userOp.maxFeePerGas;
