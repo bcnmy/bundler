@@ -46,15 +46,22 @@ function pods_health_check {
   sleep 5
 
   echo "Sending request to check if app is healthy"
-  curl localhost:3033/api/v2/56/o9VuULAhY.18c7bb9e-50a9-4d3d-8c17-4fcc32861429 \
+  if curl localhost:3033/api/v2/56/o9VuULAhY.18c7bb9e-50a9-4d3d-8c17-4fcc32861429 \
         --header 'Content-Type: application/json' \
         --data '{
     "method": "eth_chainId",
     "params": [],
     "id": 1693061364,
     "jsonrpc": "2.0"
-}'
-  # TODO: stop gracefully the port forward process
+}' ; then
+  echo ""
+  echo "App OK"
+  else
+    echo "App is not"
+  fi
+
+  port_forward_pid=$(ps aux | grep [p]ort-forward | tr -s ' ' ' ' | cut -d ' ' -f 2)
+  kill "${port_forward_pid}"
 }
 
 helm upgrade ./k8s/common/  "${HELM_NAME}"  \
