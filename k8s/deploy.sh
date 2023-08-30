@@ -64,7 +64,7 @@ function pods_health_check {
   kill "${port_forward_pid}"
 }
 
-helm upgrade "${HELM_NAME}"  ./k8s/common/ \
+helm upgrade "${HELM_NAME}" ./k8s/common/    \
      --install \
      --wait \
      --timeout 720s \
@@ -79,10 +79,10 @@ while [ "${x}" -lt  "${REPLICAS}" ]; do
   HELM_NAME="$NAME-$x";
   printf "\nDeploying %s to %s\n" "${HELM_NAME}" "${NAMESPACE}"
   
-  helm upgrade "${HELM_NAME}" ./k8s/relayer/ \
+  time helm upgrade "${HELM_NAME}" ./k8s/relayer/ \
        --install \
        --wait \
-       --timeout 720s \
+       --timeout 1800s \
        --values ./k8s/relayer/values."${ENV}".yaml \
        --set-string namespace="${NAMESPACE}" \
        --set index="${x}" \
@@ -91,6 +91,8 @@ while [ "${x}" -lt  "${REPLICAS}" ]; do
   echo "Deployed ${HELM_NAME}to ${NAMESPACE}";
   # check if first stateful set was correctly updated
   pods_health_check "${x}"
+  echo "Sleeping 60 seconds now"
+  sleep 60
 
   x=$(( x + 1 ))
 done
