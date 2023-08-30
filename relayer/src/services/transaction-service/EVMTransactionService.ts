@@ -1,5 +1,7 @@
+/* eslint-disable no-else-return */
 /* eslint-disable max-len */
 import { ethers } from 'ethers';
+import { Mutex } from 'async-mutex';
 import { ICacheService } from '../../../../common/cache';
 import { IGasPrice } from '../../../../common/gas-price';
 import { logger } from '../../../../common/log-config';
@@ -11,7 +13,7 @@ import {
 } from '../../../../common/notification';
 import { INotificationManager } from '../../../../common/notification/interface';
 import { EVMRawTransactionType, NetworkBasedGasPriceType, TransactionType } from '../../../../common/types';
-import { getRetryTransactionCountKey, parseError } from '../../../../common/utils';
+import { getRetryTransactionCountKey, getFailedTransactionRetryCountKey, parseError } from '../../../../common/utils';
 import { config } from '../../../../config';
 import { STATUSES } from '../../../../server/src/middleware';
 import { IEVMAccount } from '../account';
@@ -48,6 +50,10 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
 
   notificationManager: INotificationManager;
 
+  addressMutex: {
+    [address: string]: Mutex
+  } = {};
+
   private isNonceError(errInString: string): boolean {
     const nonceErrorMessage = config.transaction.errors.networksNonceError[this.chainId];
     return nonceErrorMessage.some((message: string) => {
@@ -71,6 +77,13 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     this.notificationManager = notificationManager;
   }
 
+  private getMutex(address: string) {
+    if (!this.addressMutex[address]) {
+      this.addressMutex[address] = new Mutex();
+    }
+    return this.addressMutex[address];
+  }
+
   private async createTransaction(
     createTransactionParams: CreateRawTransactionParamsType,
   ): Promise<CreateRawTransactionReturnType> {
@@ -86,7 +99,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     } = createTransactionParams;
     const relayerAddress = account.getPublicKey();
 
-    const nonce = await this.nonceManager.getNonce(relayerAddress, false); // TODO: fetch using pending
+    const nonce = await this.nonceManager.getNonce(relayerAddress);
     log.info(`Nonce for relayerAddress ${relayerAddress} is ${nonce} on chainId: ${this.chainId}`);
     const response = {
       from,
@@ -117,10 +130,28 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
 
   async executeTransaction(
     executeTransactionParams: ExecuteTransactionParamsType,
+    transactionId: string,
   ): Promise<ExecuteTransactionResponseType> {
     const retryExecuteTransaction = async (retryExecuteTransactionParams: ExecuteTransactionParamsType): Promise<ExecuteTransactionResponseType> => {
       const { rawTransaction, account } = retryExecuteTransactionParams;
       try {
+        try {
+          log.info(`Getting failed transaction retry count for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+          const failedTransactionRetryCount = parseInt(await this.cacheService.get(getFailedTransactionRetryCountKey(transactionId, this.chainId)), 10);
+
+          const maxFailedTransactionCount = config.transaction.failedTransactionRetryCount[this.chainId];
+
+          if (failedTransactionRetryCount > maxFailedTransactionCount) {
+            return {
+              success: false,
+              error: `Failed transaction retry limit reached for transactionId: ${transactionId}`,
+            };
+          }
+        } catch (error) {
+          // just loggin error here, don't want to block the transaction if in some case code does not work the intended way
+          log.error(`Error in getting max failed retry transaction count: ${parseError(error)}`);
+        }
+
         log.info(`Sending transaction to network: ${JSON.stringify(rawTransaction)}`);
         const transactionExecutionResponse = await this.networkService.sendTransaction(
           rawTransaction,
@@ -131,11 +162,13 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           log.info('Transaction execution failed and checking for retry');
           throw transactionExecutionResponse;
         }
+        this.nonceManager.markUsed(account.getPublicKey(), rawTransaction.nonce);
         return {
           success: true,
           transactionResponse: transactionExecutionResponse,
         };
       } catch (error: any) {
+        await this.cacheService.increment(getFailedTransactionRetryCountKey(transactionId, this.chainId), 1);
         const errInString = parseError(error).toLowerCase();
         log.info(`Error while executing transaction: ${errInString}`);
         const replacementFeeLowMessage = config.transaction.errors.networkResponseMessages
@@ -151,7 +184,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           rawTransaction.nonce = await this.nonceManager.getAndSetNonceFromNetwork(rawTransaction.from, true);
           log.info(`updating the nonce to ${rawTransaction.nonce}
        for relayer ${rawTransaction.from} on network id ${this.chainId}`);
-          retryExecuteTransaction({ rawTransaction, account });
+          return await retryExecuteTransaction({ rawTransaction, account });
         } else if (replacementFeeLowMessage.some((str) => errInString.indexOf(str) > -1)) {
           log.info(
             `Replacement underpriced error for relayer ${rawTransaction.from}
@@ -180,7 +213,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
             log.info(`increasing gas price for the resubmit transaction ${rawTransaction.gasPrice} for relayer ${rawTransaction.from} on network id ${this.chainId} after bumping up`);
           }
 
-          retryExecuteTransaction({ rawTransaction, account });
+          return await retryExecuteTransaction({ rawTransaction, account });
         } else if (alreadyKnownMessage.some((str) => errInString.indexOf(str) > -1)) {
           log.info(
             `Already known transaction hash with same payload and nonce for relayer ${rawTransaction.from} on network id ${this.chainId}. Removing nonce from cache and retrying`,
@@ -257,6 +290,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     relayerManagerName: string,
   ): Promise<SuccessTransactionResponseType | ErrorTransactionResponseType> {
     const relayerAddress = account.getPublicKey();
+
     const {
       to, value, data, gasLimit,
       speed, transactionId, walletAddress, metaData,
@@ -293,23 +327,29 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     }
 
     log.info(`Transaction request received with transactionId: ${transactionId} on chainId ${this.chainId}`);
-    // create transaction
-    const rawTransaction = await this.createTransaction({
-      from: relayerAddress,
-      to,
-      value,
-      data,
-      gasLimit,
-      speed,
-      account,
-    });
-    log.info(`Raw transaction for transactionId: ${transactionId} is ${JSON.stringify(rawTransaction)} on chainId ${this.chainId}`);
+
+    const addressMutex = this.getMutex(account.getPublicKey());
+    log.info(`Taking lock on address: ${account.getPublicKey()} on chainId: ${this.chainId}`);
+    const release = await addressMutex.acquire();
+    log.info(`Lock taken on address: ${account.getPublicKey()} on chainId: ${this.chainId}`);
 
     try {
+      // create transaction
+      const rawTransaction = await this.createTransaction({
+        from: relayerAddress,
+        to,
+        value,
+        data,
+        gasLimit,
+        speed,
+        account,
+      });
+      log.info(`Raw transaction for transactionId: ${transactionId} is ${JSON.stringify(rawTransaction)} on chainId ${this.chainId}`);
+
       const transactionExecutionResponse = await this.executeTransaction({
         rawTransaction,
         account,
-      });
+      }, transactionId);
       if (!transactionExecutionResponse.success) {
         await this.transactionListener.notify({
           transactionId: transactionId as string,
@@ -330,6 +370,11 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       log.info(`Incrementing nonce for account: ${relayerAddress} on chainId ${this.chainId}`);
       await this.nonceManager.incrementNonce(relayerAddress);
       log.info(`Incremented nonce for account: ${relayerAddress} on chainId ${this.chainId}`);
+
+      // release lock once transaction is sent and nonce is incremented
+      log.info(`Releasing lock on address: ${account.getPublicKey()} on chainId: ${this.chainId}`);
+      release();
+      log.info(`Lock released on address: ${account.getPublicKey()} on chainId: ${this.chainId}`);
 
       log.info(`Notifying transaction listener for transactionId: ${transactionId} on chainId ${this.chainId}`);
       const transactionListenerNotifyResponse = await this.transactionListener.notify({
@@ -355,6 +400,9 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         ...transactionListenerNotifyResponse,
       };
     } catch (error) {
+      log.info(`Releasing lock on address: ${account.getPublicKey()} on chainId: ${this.chainId}`);
+      release();
+      log.info(`Lock released on address: ${account.getPublicKey()} on chainId: ${this.chainId}`);
       log.info(`Error while sending transaction: ${error}`);
       await this.sendTransactionFailedSlackNotification(transactionId, this.chainId, parseError(error));
       return {
@@ -414,7 +462,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       const retryTransactionExecutionResponse = await this.executeTransaction({
         rawTransaction,
         account,
-      });
+      }, transactionId);
       let transactionExecutionResponse;
       if (retryTransactionExecutionResponse.success) {
         transactionExecutionResponse = retryTransactionExecutionResponse.transactionResponse;
