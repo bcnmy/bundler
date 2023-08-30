@@ -168,8 +168,8 @@ export class TenderlySimulationService implements IExternalSimulation {
       } = await entryPointContract.populateTransaction.handleOps([userOp], publicKey);
 
       let gas = 9000000;
-      if([43114, 43113].includes(chainId)) {
-        gas = 25000000
+      if ([43114, 43113].includes(chainId)) {
+        gas = 25000000;
       }
 
       const gasPriceForSimulation = await this.gasPriceService.getGasPriceForSimulation();
