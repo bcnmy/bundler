@@ -58,6 +58,13 @@ export class EVMNonceManager implements INonceManager<IEVMAccount, EVMRawTransac
     return nonceFromNetwork;
   }
 
+  async getAndSetPendingNonceFromNetwork(address: string): Promise<number> {
+    const {
+      data,
+    } = await this.networkService.sendRpcCall('eth_getTransactionCount', [address, 'pending']);
+    return data.result;
+  }
+
   private getAccountNonceKey(address: string) : string {
     return `AccountNonce_${address}_${this.chainId}`;
   }

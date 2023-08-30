@@ -446,14 +446,10 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
 
           const fundingAmount = this.fundingRelayerAmount;
 
-          // const ownerAccountNonce = await this.nonceManager.getNonce(
-          //   this.ownerAccountDetails.getPublicKey(),
-          // );
-
-          const {
-            data,
-          } = await this.networkService.sendRpcCall('eth_getTransactionCount', [this.ownerAccountDetails.getPublicKey(), 'pending']);
-          const ownerAccountPendingNonceFromNetwork = data.result;
+          const ownerAccountPendingNonceFromNetwork = await this.nonceManager
+            .getAndSetPendingNonceFromNetwork(
+              this.ownerAccountDetails.getPublicKey(),
+            );
 
           log.info(`ownerAccountPendingNonceFromNetwork: ${ownerAccountPendingNonceFromNetwork} for ownerAccount: ${this.ownerAccountDetails.getPublicKey()} on chainId: ${this.chainId}`);
 
