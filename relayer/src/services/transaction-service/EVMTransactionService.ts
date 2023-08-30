@@ -13,7 +13,7 @@ import {
 } from '../../../../common/notification';
 import { INotificationManager } from '../../../../common/notification/interface';
 import { EVMRawTransactionType, NetworkBasedGasPriceType, TransactionType } from '../../../../common/types';
-import { getRetryTransactionCountKey, parseError } from '../../../../common/utils';
+import { getRetryTransactionCountKey, getFailedTransactionRetryCountKey, parseError } from '../../../../common/utils';
 import { config } from '../../../../config';
 import { STATUSES } from '../../../../server/src/middleware';
 import { IEVMAccount } from '../account';
@@ -130,10 +130,23 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
 
   async executeTransaction(
     executeTransactionParams: ExecuteTransactionParamsType,
+    transactionId: string,
   ): Promise<ExecuteTransactionResponseType> {
     const retryExecuteTransaction = async (retryExecuteTransactionParams: ExecuteTransactionParamsType): Promise<ExecuteTransactionResponseType> => {
       const { rawTransaction, account } = retryExecuteTransactionParams;
       try {
+        log.info(`Getting failed transaction retry count for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+        const failedTransactionRetryCount = parseInt(await this.cacheService.get(getFailedTransactionRetryCountKey(transactionId, this.chainId)), 10);
+
+        const maxFailedTransactionCount = config.transaction.failedTransactionRetryCount[this.chainId];
+
+        if (failedTransactionRetryCount > maxFailedTransactionCount) {
+          return {
+            success: false,
+            error: `Failed transaction retry limit reached for transactionId: ${transactionId}`,
+          };
+        }
+
         log.info(`Sending transaction to network: ${JSON.stringify(rawTransaction)}`);
         const transactionExecutionResponse = await this.networkService.sendTransaction(
           rawTransaction,
@@ -330,7 +343,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       const transactionExecutionResponse = await this.executeTransaction({
         rawTransaction,
         account,
-      });
+      }, transactionId);
       if (!transactionExecutionResponse.success) {
         await this.transactionListener.notify({
           transactionId: transactionId as string,
@@ -443,7 +456,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       const retryTransactionExecutionResponse = await this.executeTransaction({
         rawTransaction,
         account,
-      });
+      }, transactionId);
       let transactionExecutionResponse;
       if (retryTransactionExecutionResponse.success) {
         transactionExecutionResponse = retryTransactionExecutionResponse.transactionResponse;
