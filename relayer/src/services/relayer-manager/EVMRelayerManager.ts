@@ -450,7 +450,10 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
           //   this.ownerAccountDetails.getPublicKey(),
           // );
 
-          const ownerAccountPendingNonceFromNetwork = await this.networkService.sendRpcCall('eth_getTransactionCount', [this.ownerAccountDetails.getPublicKey(), 'pending']);
+          const {
+            data,
+          } = await this.networkService.sendRpcCall('eth_getTransactionCount', [this.ownerAccountDetails.getPublicKey(), 'pending']);
+          const ownerAccountPendingNonceFromNetwork = data.result;
 
           log.info(`ownerAccountPendingNonceFromNetwork: ${ownerAccountPendingNonceFromNetwork} for ownerAccount: ${this.ownerAccountDetails.getPublicKey()} on chainId: ${this.chainId}`);
 
