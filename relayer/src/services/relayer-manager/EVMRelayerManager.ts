@@ -446,9 +446,13 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
 
           const fundingAmount = this.fundingRelayerAmount;
 
-          const ownerAccountNonce = await this.nonceManager.getNonce(
-            this.ownerAccountDetails.getPublicKey(),
-          );
+          // const ownerAccountNonce = await this.nonceManager.getNonce(
+          //   this.ownerAccountDetails.getPublicKey(),
+          // );
+
+          const ownerAccountPendingNonceFromNetwork = await this.networkService.sendRpcCall('eth_getTransactionCount', [this.ownerAccountDetails.getPublicKey(), 'pending']);
+
+          log.info(`ownerAccountPendingNonceFromNetwork: ${ownerAccountPendingNonceFromNetwork} for ownerAccount: ${this.ownerAccountDetails.getPublicKey()} on chainId: ${this.chainId}`);
 
           const rawTx = {
             from: this.ownerAccountDetails.getPublicKey(),
@@ -458,9 +462,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
             value: ethers.utils
               .parseEther(fundingAmount.toString())
               .toHexString(),
-            nonce: ethers.BigNumber.from(
-              ownerAccountNonce.toString(),
-            ).toHexString(),
+            nonce: ownerAccountPendingNonceFromNetwork,
             chainId: this.chainId,
           };
           const transactionId = generateTransactionId(JSON.stringify(rawTx));
