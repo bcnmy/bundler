@@ -57,6 +57,10 @@ export class BundlerSimulationAndValidationService {
       userOp.verificationGasLimit = 5000000;
       userOp.preVerificationGas = 1000000;
 
+      if ([43113, 43114].includes(chainId)) {
+        userOp.callGasLimit = 20000000;
+      }
+
       if (!userOp.paymasterAndData) {
         userOp.paymasterAndData = '0x';
       }
@@ -237,9 +241,10 @@ export class BundlerSimulationAndValidationService {
         validAfter = undefined;
       }
 
+      // 5000 gas for unaccounted gas in verification phase
       const verificationGasLimit = Math.round((
         (preOpGas - preVerificationGas) * 1.2
-      ));
+      )) + 5000;
       log.info(`verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId} after 1.2 multiplier on ${preOpGas} and ${preVerificationGas}`);
 
       let totalGas = paid / userOp.maxFeePerGas;
@@ -271,7 +276,7 @@ export class BundlerSimulationAndValidationService {
       log.info(`call gas limit after checking for optimism: ${callGasLimit} on chainId: ${chainId}`);
 
       if (LineaNetworks.includes(chainId)) {
-        preVerificationGas += (verificationGasLimit + callGasLimit) / 3;
+        preVerificationGas += Math.round((verificationGasLimit + callGasLimit) / 3);
       }
 
       return {

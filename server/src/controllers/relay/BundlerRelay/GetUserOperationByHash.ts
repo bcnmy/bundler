@@ -13,11 +13,12 @@ const log = logger(module);
  * the addition of entryPoint, blockNumber, blockHash and transactionHash
  */
 export const getUserOperationByHash = async (req: Request, res: Response) => {
-  const { id } = req.body;
-  const { chainId /* apiKey */ } = req.params;
   // const bundlerRequestId = req.body.params[6];
 
   try {
+    const { id } = req.body;
+    const { chainId /* apiKey */ } = req.params;
+
     const userOpHash = req.body.params[0];
 
     const userOperation = await userOperationDao.getUserOperationDataByUserOpHash(
@@ -100,6 +101,7 @@ export const getUserOperationByHash = async (req: Request, res: Response) => {
     });
   } catch (error) {
     log.error(`Error in getUserOperationByHash handler ${parseError(error)}`);
+    const { id } = req.body;
     // updateRequest({
     //   chainId: parseInt(chainId, 10),
     //   apiKey,

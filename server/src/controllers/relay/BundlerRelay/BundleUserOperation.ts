@@ -13,15 +13,15 @@ import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../../../middleware';
 const log = logger(module);
 
 export const bundleUserOperation = async (req: Request, res: Response) => {
-  const { id } = req.body;
-  const { chainId, dappAPIKey } = req.params;
   // const bundlerRequestId = req.body.params[6];
 
   try {
+    const { id } = req.body;
     const userOp = req.body.params[0];
     const entryPointAddress = req.body.params[1];
-    const gasLimitFromSimulation = req.body.params[2] + 1000000;
+    const gasLimitFromSimulation = req.body.params[2] + 2000000;
     const userOpHash = req.body.params[3];
+    const { chainId, dappAPIKey } = req.params;
 
     const chainIdInNum = parseInt(chainId, 10);
 
@@ -159,6 +159,7 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
       result: userOpHash,
     });
   } catch (error) {
+    const { id } = req.body;
     log.error(`Error in bundle user op ${parseError(error)}`);
     // updateRequest({
     //   chainId: parseInt(chainId, 10),

@@ -167,6 +167,11 @@ export class TenderlySimulationService implements IExternalSimulation {
         data,
       } = await entryPointContract.populateTransaction.handleOps([userOp], publicKey);
 
+      let gas = 9000000;
+      if ([43114, 43113].includes(chainId)) {
+        gas = 25000000;
+      }
+
       const gasPriceForSimulation = await this.gasPriceService.getGasPriceForSimulation();
       log.info(`Gas price to be used in simulation: ${gasPriceForSimulation} on chainId: ${chainId}`);
       const body = {
@@ -174,7 +179,7 @@ export class TenderlySimulationService implements IExternalSimulation {
         network_id: chainId.toString(),
         from: '0xc75bb3956c596efc6db663cd3e2f64929d6ab0fc',
         input: data,
-        gas: 9000000,
+        gas,
         gas_price: gasPriceForSimulation.toString(),
         value: '0',
         to: entryPointContract.address,

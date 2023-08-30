@@ -183,6 +183,11 @@ export class BundlerGasEstimationService {
         chainId,
       );
       ret += data;
+    } else if (
+      chainId === BLOCKCHAINS.AVALANCHE_MAINNET
+      || chainId === BLOCKCHAINS.AVALANCHE_TESTNET
+    ) {
+      ret += 20000;
     }
     return ret;
   }
