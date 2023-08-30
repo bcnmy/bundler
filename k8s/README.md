@@ -12,7 +12,7 @@ helm upgrade prod-sdk-relayer-1 ./k8s/relayer/ \
      --install \
      -f ./k8s/relayer/values.prod.yaml \
      --set-string namespace=sdk-prod \
-     -n sdk-prod 
-     --set index=1  
+     -n sdk-prod  \
+     --set index=1  \
      --dry-run
 ```
