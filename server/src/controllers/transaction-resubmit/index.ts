@@ -47,7 +47,7 @@ export const transactionResubmitApi = async (req: Request, res: Response) => {
       const result = await transactionSerivceMap[chainId].executeTransaction({
         rawTransaction,
         account: relayer,
-      });
+      }, transactionId);
       log.info(`Resubmitted transaction ${transactionId} on chainId ${chainId} and result ${JSON.stringify(result)}`);
       if (result.success) {
         return res.json({
