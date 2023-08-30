@@ -6,7 +6,7 @@ import { IQueue } from '../../../../common/queue';
 import {
   AATransactionMessageType, EntryPointMapType, EVMRawTransactionType, TransactionType,
 } from '../../../../common/types';
-import { getRetryTransactionCountKey, parseError } from '../../../../common/utils';
+import { getFailedTransactionRetryCountKey, getRetryTransactionCountKey, parseError } from '../../../../common/utils';
 import { IEVMAccount } from '../account';
 import { IRelayerManager } from '../relayer-manager';
 import { ITransactionService } from '../transaction-service';
@@ -83,6 +83,11 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
           this.chainId,
         ), '0');
 
+        await this.cacheService.set(getFailedTransactionRetryCountKey(
+          transactionDataReceivedFromQueue.transactionId,
+          this.chainId,
+        ), '0');
+
         // call transaction service
         try {
           const transactionServiceResponse = await this.transactionService.sendTransaction(
@@ -100,11 +105,19 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
           } else {
             log.error(`Transaction failed with error: ${transactionServiceResponse?.error || 'unknown error'} for ${this.transactionType} on chain ${this.chainId}`);
           }
+          await this.cacheService.delete(getFailedTransactionRetryCountKey(
+            transactionDataReceivedFromQueue.transactionId,
+            this.chainId,
+          ));
         } catch (error) {
           log.info(`Error in transaction service for transactionType: ${this.transactionType} on chainId: ${this.chainId} with error: ${JSON.stringify(parseError(error))}`);
           log.info(`Adding relayer: ${activeRelayer.getPublicKey()} back to active relayer queue for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);
           this.relayerManager.addActiveRelayer(activeRelayer.getPublicKey());
           log.info(`Added relayer: ${activeRelayer.getPublicKey()} back to active relayer queue for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);
+          await this.cacheService.delete(getFailedTransactionRetryCountKey(
+            transactionDataReceivedFromQueue.transactionId,
+            this.chainId,
+          ));
         }
       } else {
         this.queue.publish(JSON.parse(msg.content.toString()));
