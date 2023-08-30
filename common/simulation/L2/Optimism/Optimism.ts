@@ -41,7 +41,9 @@ export const calcOptimismPreVerificationGas = async (
   const l2PriorityFee = baseFeePerGas + Number(userOp.maxPriorityFeePerGas);
 
   const l2Price = l2MaxFee < l2PriorityFee ? l2MaxFee : l2PriorityFee;
-  const extraPvg = l1Fee.div(l2Price);
+
+  const l2PriceBigNumber = ethers.BigNumber.from(l2Price).mul('1000000000');
+  const extraPvg = l1Fee.div(l2PriceBigNumber);
 
   return extraPvg.toNumber();
 };
