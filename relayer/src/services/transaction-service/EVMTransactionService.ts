@@ -86,7 +86,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     } = createTransactionParams;
     const relayerAddress = account.getPublicKey();
 
-    const nonce = await this.nonceManager.getNonce(relayerAddress, false); // TODO: fetch using pending
+    const nonce = await this.nonceManager.getAndSetPendingNonceFromNetwork(relayerAddress);
     log.info(`Nonce for relayerAddress ${relayerAddress} is ${nonce} on chainId: ${this.chainId}`);
     const response = {
       from,
