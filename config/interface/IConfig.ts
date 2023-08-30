@@ -105,6 +105,9 @@ type TransactionConfigType = {
       [key: number]: number
     }
   },
+  failedTransactionRetryCount: {
+    [key: number]: number
+  },
   bumpGasPriceMultiplier: ChainIdWithNumberValueType,
 };
 
