@@ -1,3 +1,4 @@
+/* eslint-disable no-else-return */
 /* eslint-disable max-len */
 import { ethers } from 'ethers';
 import { Mutex } from 'async-mutex';
@@ -164,7 +165,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           rawTransaction.nonce = await this.nonceManager.getAndSetNonceFromNetwork(rawTransaction.from, true);
           log.info(`updating the nonce to ${rawTransaction.nonce}
        for relayer ${rawTransaction.from} on network id ${this.chainId}`);
-          retryExecuteTransaction({ rawTransaction, account });
+          return await retryExecuteTransaction({ rawTransaction, account });
         } else if (replacementFeeLowMessage.some((str) => errInString.indexOf(str) > -1)) {
           log.info(
             `Replacement underpriced error for relayer ${rawTransaction.from}
@@ -193,7 +194,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
             log.info(`increasing gas price for the resubmit transaction ${rawTransaction.gasPrice} for relayer ${rawTransaction.from} on network id ${this.chainId} after bumping up`);
           }
 
-          retryExecuteTransaction({ rawTransaction, account });
+          return await retryExecuteTransaction({ rawTransaction, account });
         } else if (alreadyKnownMessage.some((str) => errInString.indexOf(str) > -1)) {
           log.info(
             `Already known transaction hash with same payload and nonce for relayer ${rawTransaction.from} on network id ${this.chainId}. Removing nonce from cache and retrying`,
