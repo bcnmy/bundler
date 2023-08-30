@@ -148,7 +148,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
             };
           }
         } catch (error) {
-          // just loggin error here, don't want to block the transaction if in some caseaboce code does not work the intended way
+          // just loggin error here, don't want to block the transaction if in some case code does not work the intended way
           log.error(`Error in getting max failed retry transaction count: ${parseError(error)}`);
         }
 
@@ -168,6 +168,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           transactionResponse: transactionExecutionResponse,
         };
       } catch (error: any) {
+        await this.cacheService.increment(getFailedTransactionRetryCountKey(transactionId, this.chainId), 1);
         const errInString = parseError(error).toLowerCase();
         log.info(`Error while executing transaction: ${errInString}`);
         const replacementFeeLowMessage = config.transaction.errors.networkResponseMessages

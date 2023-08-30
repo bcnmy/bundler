@@ -17,7 +17,7 @@ import {
   EVMRawTransactionType,
   TransactionType,
 } from '../../../../common/types';
-import { generateTransactionId } from '../../../../common/utils';
+import { generateTransactionId, getFailedTransactionRetryCountKey } from '../../../../common/utils';
 import { config } from '../../../../config';
 import { EVMAccount, IEVMAccount } from '../account';
 import { INonceManager } from '../nonce-manager';
@@ -462,6 +462,10 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
               this.chainId
             } with raw tx ${JSON.stringify(rawTx)}`,
           );
+          await this.cacheService.set(getFailedTransactionRetryCountKey(
+            transactionId,
+            this.chainId,
+          ), '0');
           const response = await this.transactionService.sendTransaction(
             {
               ...rawTx,
@@ -481,10 +485,18 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
             log.info(
               `Funding relayer ${address} on chainId: ${this.chainId} completed successfully`,
             );
+            await this.cacheService.delete(getFailedTransactionRetryCountKey(
+              transactionId,
+              this.chainId,
+            ));
           } else {
             log.error(
               `Funding relayer ${address} on chainId: ${this.chainId} failed with error ${response.error}`,
             );
+            await this.cacheService.delete(getFailedTransactionRetryCountKey(
+              transactionId,
+              this.chainId,
+            ));
           }
         } catch (error) {
           await this.cacheService.unlockRedLock(acquiredLock);
