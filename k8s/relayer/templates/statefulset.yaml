@@ -79,7 +79,7 @@ spec:
             path: /health
             port: {{ .Values.relayer.port }}
           failureThreshold: 30
-          periodSeconds: 10
+          periodSeconds: 120
         readinessProbe:
           httpGet:
             path: /health
