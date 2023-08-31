@@ -556,6 +556,7 @@ let statusService: IStatusService;
         bundlerSimulatonAndValidationServiceMap[chainId] = new BundlerSimulationAndValidationService(
           networkService,
           tenderlySimulationService,
+          gasPriceService,
         );
 
         // eslint-disable-next-line max-len
