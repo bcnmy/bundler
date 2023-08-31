@@ -29,6 +29,7 @@ import {
 } from '../constants';
 import { TenderlySimulationService } from './external-simulation';
 import { calcArbitrumPreVerificationGas, calcOptimismPreVerificationGas } from './L2';
+import { IGasPrice } from '../gas-price';
 
 const log = logger(module);
 export class BundlerSimulationAndValidationService {
@@ -36,11 +37,15 @@ export class BundlerSimulationAndValidationService {
 
   tenderlySimulationService: TenderlySimulationService;
 
+  gasPriceService: IGasPrice;
+
   constructor(
     networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
     tenderlySimulationService: TenderlySimulationService,
+    gasPriceService: IGasPrice,
   ) {
     this.networkService = networkService;
+    this.gasPriceService = gasPriceService;
     this.tenderlySimulationService = tenderlySimulationService;
   }
 
@@ -73,11 +78,33 @@ export class BundlerSimulationAndValidationService {
       if (!userOp.maxFeePerGas || userOp.maxFeePerGas === 0 || (userOp.maxFeePerGas as unknown as string) === '0x' || (userOp.maxFeePerGas as unknown as string) === '0') {
         // setting a non zero value as division with maxFeePerGas will happen
         userOp.maxFeePerGas = 1;
+        if (OptimismNetworks.includes(chainId)) {
+          const gasPrice = await this.gasPriceService.getGasPrice();
+          if (typeof gasPrice === 'string') {
+            userOp.maxFeePerGas = Number(gasPrice);
+          } else {
+            const {
+              maxFeePerGas,
+            } = gasPrice;
+            userOp.maxFeePerGas = Number(maxFeePerGas);
+          }
+        }
       }
 
       if (!userOp.maxPriorityFeePerGas || userOp.maxPriorityFeePerGas === 0 || (userOp.maxPriorityFeePerGas as unknown as string) === '0x' || (userOp.maxPriorityFeePerGas as unknown as string) === '0') {
         // setting a non zero value as division with maxPriorityFeePerGas will happen
         userOp.maxPriorityFeePerGas = 1;
+        if (OptimismNetworks.includes(chainId)) {
+          const gasPrice = await this.gasPriceService.getGasPrice();
+          if (typeof gasPrice === 'string') {
+            userOp.maxPriorityFeePerGas = Number(gasPrice);
+          } else {
+            const {
+              maxPriorityFeePerGas,
+            } = gasPrice;
+            userOp.maxPriorityFeePerGas = Number(maxPriorityFeePerGas);
+          }
+        }
       }
 
       if (chainId === 84531) {
