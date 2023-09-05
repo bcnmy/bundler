@@ -98,12 +98,12 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
       );
 
       const premiumMaxPriorityFeePerGas = (
-        Math.round(Number(gasPrice?.maxPriorityFeePerGas) * premium)
+        Math.ceil(Number(gasPrice?.maxPriorityFeePerGas) * premium)
       ).toString();
       log.info(`premiumMaxPriorityFeePerGas: ${premiumMaxPriorityFeePerGas} for chainId: ${chainId}`);
 
       const premiumMaxFeePerGas = (
-        Math.round(Number(gasPrice?.maxFeePerGas) * premium)
+        Math.ceil(Number(gasPrice?.maxFeePerGas) * premium)
       ).toString();
       log.info(`premiumMaxFeePerGas: ${premiumMaxFeePerGas} for chainId: ${chainId}`);
 
@@ -163,7 +163,7 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
     // });
 
     const premiumGasPrice = (
-      Math.round(Number(gasPrice) * premium)
+      Math.ceil(Number(gasPrice) * premium)
     ).toString();
     log.info(`premiumGasPrice: ${premiumGasPrice} for chainId: ${chainId}`);
 
