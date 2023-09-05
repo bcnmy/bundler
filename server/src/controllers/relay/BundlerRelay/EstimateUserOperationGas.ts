@@ -3,6 +3,7 @@ import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../../../middleware';
 import { logger } from '../../../../../common/log-config';
 import { bundlerSimulatonAndValidationServiceMap, entryPointMap, gasPriceServiceMap } from '../../../../../common/service-manager';
 import { parseError } from '../../../../../common/utils';
+import { config } from '../../../../../config';
 // import { updateRequest } from '../../auth/UpdateRequest';
 
 const log = logger(module);
@@ -88,10 +89,23 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
 
     const gasPrice = await gasPriceServiceMap[Number(chainId)]?.getGasPrice();
 
+    const premium = config.chains.premium[parseInt(chainId, 10)] || 1.05;
+    log.info(`premium: ${premium} for chainId: ${chainId}`);
+
     if (typeof gasPrice !== 'string') {
       log.info(
         `Gas price for chainId: ${chainId} is: ${JSON.stringify(gasPrice)}`,
       );
+
+      const premiumMaxPriorityFeePerGas = (
+        Math.round(Number(gasPrice?.maxPriorityFeePerGas) * premium)
+      ).toString();
+      log.info(`premiumMaxPriorityFeePerGas: ${premiumMaxPriorityFeePerGas} for chainId: ${chainId}`);
+
+      const premiumMaxFeePerGas = (
+        Math.round(Number(gasPrice?.maxFeePerGas) * premium)
+      ).toString();
+      log.info(`premiumMaxFeePerGas: ${premiumMaxFeePerGas} for chainId: ${chainId}`);
 
       // updateRequest({
       //   chainId: parseInt(chainId, 10),
@@ -122,8 +136,8 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
           preVerificationGas,
           validUntil,
           validAfter,
-          maxPriorityFeePerGas: gasPrice?.maxPriorityFeePerGas,
-          maxFeePerGas: gasPrice?.maxFeePerGas,
+          maxPriorityFeePerGas: premiumMaxPriorityFeePerGas,
+          maxFeePerGas: premiumMaxFeePerGas,
         },
       });
     }
@@ -148,6 +162,11 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
     //   httpResponseCode: STATUSES.SUCCESS,
     // });
 
+    const premiumGasPrice = (
+      Math.round(Number(gasPrice) * premium)
+    ).toString();
+    log.info(`premiumGasPrice: ${premiumGasPrice} for chainId: ${chainId}`);
+
     return res.status(STATUSES.SUCCESS).json({
       jsonrpc: '2.0',
       id: id || 1,
@@ -157,8 +176,8 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
         preVerificationGas,
         validUntil,
         validAfter,
-        maxPriorityFeePerGas: gasPrice,
-        maxFeePerGas: gasPrice,
+        maxPriorityFeePerGas: premiumGasPrice,
+        maxFeePerGas: premiumGasPrice,
       },
     });
   } catch (error) {

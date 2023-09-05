@@ -112,6 +112,7 @@ type TransactionConfigType = {
 };
 
 type ChainsConfigType = {
+  premium: ChainIdWithNumberValueType,
   currency: ChainIdWithStringValueType,
   decimal: ChainIdWithNumberValueType,
   provider: ChainIdWithStringValueType,

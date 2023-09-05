@@ -83,8 +83,12 @@ export class Config implements IConfig {
       }
 
       // check for chains config
+      if (!this.config.chains.premium[chainId]) {
+        throw new Error(`Premium value required for chain id ${chainId}`);
+      }
+
       if (!this.config.chains.currency[chainId]) {
-        throw new Error(`Signer for chain id ${chainId}`);
+        throw new Error(`Currency required for chain id ${chainId}`);
       }
       if (!this.config.chains.provider[chainId]) {
         throw new Error(`Provider required for chain id ${chainId}`);
