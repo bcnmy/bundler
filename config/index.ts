@@ -96,17 +96,6 @@ export class Config implements IConfig {
         throw new Error(`Retry transaction interval required for chain id ${chainId}`);
       }
 
-      // check for transaction config
-      if (!this.config.transaction.errors.networkResponseMessages) {
-        throw new Error('Network response messages are required');
-      }
-      if (!this.config.transaction.errors.networksNonceError[chainId]) {
-        throw new Error(`Network nonce error required for chain id ${chainId}`);
-      }
-      if (!this.config.transaction.errors.networksInsufficientFundsError[chainId]) {
-        throw new Error(`Network insufficient funds error required for chain id ${chainId}`);
-      }
-
       if (!this.config.entryPointData[chainId].length) {
         throw new Error(`Entry point data address required for chain id ${chainId}`);
       }

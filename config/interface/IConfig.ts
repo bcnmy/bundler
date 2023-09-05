@@ -93,12 +93,8 @@ type RelayerManagerConfigType = Array<{
 }>;
 
 type TransactionConfigType = {
-  errors: {
-    networkResponseMessages: {
-      [key: string]: string[],
-    },
-    networksNonceError: ChainIdWithArrayStringValueType,
-    networksInsufficientFundsError: ChainIdWithStringValueType,
+  rpcResponseErrorMessages: {
+    [key: string]: string[],
   },
   retryCount: {
     [key: string]: {
