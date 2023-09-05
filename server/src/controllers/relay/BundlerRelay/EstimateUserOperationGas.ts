@@ -4,6 +4,7 @@ import { logger } from '../../../../../common/log-config';
 import { bundlerSimulatonAndValidationServiceMap, entryPointMap, gasPriceServiceMap } from '../../../../../common/service-manager';
 import { parseError } from '../../../../../common/utils';
 import { config } from '../../../../../config';
+import { ArbitrumNetworks } from '../../../../../common/constants';
 // import { updateRequest } from '../../auth/UpdateRequest';
 
 const log = logger(module);
@@ -102,10 +103,14 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
       ).toString();
       log.info(`premiumMaxPriorityFeePerGas: ${premiumMaxPriorityFeePerGas} for chainId: ${chainId}`);
 
-      const premiumMaxFeePerGas = (
+      let premiumMaxFeePerGas = (
         Math.ceil(Number(gasPrice?.maxFeePerGas) * premium)
       ).toString();
       log.info(`premiumMaxFeePerGas: ${premiumMaxFeePerGas} for chainId: ${chainId}`);
+
+      if (ArbitrumNetworks.includes(parseInt(chainId, 10))) {
+        premiumMaxFeePerGas = gasPrice?.maxFeePerGas as string;
+      }
 
       // updateRequest({
       //   chainId: parseInt(chainId, 10),
