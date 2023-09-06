@@ -10,6 +10,7 @@ import { IERC20NetworkService, INetworkService, RpcMethod } from './interface';
 import { Type0TransactionGasPriceType, Type2TransactionGasPriceType } from './types';
 
 const log = logger(module);
+// TODO: Network Service to be checked with new provider/contract instances
 export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTransactionType>,
  IERC20NetworkService {
   chainId: number;
