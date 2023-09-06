@@ -54,6 +54,7 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
       const transactionDataReceivedFromQueue = JSON.parse(msg.content.toString());
       log.info(`onMessage received in ${this.transactionType}: ${JSON.stringify(transactionDataReceivedFromQueue)} for transactionId: ${transactionDataReceivedFromQueue.transactionId} on chainId: ${this.chainId}`);
       this.queue.ack(msg);
+
       // eslint-disable-next-line consistent-return
       const sendTransactionWithRetry = async (): Promise<void> => {
         // get active relayer
@@ -95,6 +96,7 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
 
           try {
             // call transaction service
+            log.info(`Calling transactionService to sendTransaction for transactionId: ${transactionDataReceivedFromQueue.transactionId} on chainId: ${this.chainId}`);
             const transactionServiceResponse = await this.transactionService.sendTransaction(
               transactionDataReceivedFromQueue,
               activeRelayer,
@@ -132,7 +134,6 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
         } else {
           this.queue.publish(JSON.parse(msg.content.toString()));
           log.info(`No active relayer for transactionId: ${transactionDataReceivedFromQueue.transactionId} for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);
-          return await sendTransactionWithRetry();
         }
       };
       await sendTransactionWithRetry();

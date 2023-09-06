@@ -94,7 +94,12 @@ type RelayerManagerConfigType = Array<{
 
 type TransactionConfigType = {
   rpcResponseErrorMessages: {
-    [key: string]: string[],
+    'ALREADY_KNOWN': string[],
+    'REPLACEMENT_TRANSACTION_UNDERPRICED': string[],
+    'TRANSACTION_UNDERPRICED': string[],
+    'INSUFFICIENT_FUNDS': string[],
+    'NONCE_TOO_LOW': string[],
+    'GAS_LIMIT_REACHED': string[]
   },
   retryCount: {
     [key: string]: {

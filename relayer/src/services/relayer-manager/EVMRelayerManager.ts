@@ -251,6 +251,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
 
       // check if size of active relayer queue is
       // greater than or equal to the inactiveRelayerCountThreshold
+      // TODO: This will never be executed, check if we need to enable this
       if (
         this.minRelayerCount - this.relayerQueue.size()
         >= this.inactiveRelayerCountThreshold
