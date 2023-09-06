@@ -13,16 +13,20 @@ Handlebars.registerHelper('eachProperty', (context: any, options: any) => {
 
 export const status = async (req: Request, res: Response) => {
   // call the service in common to get all the updated status
-  const redis = await statusService.checkRedis();
-  const mongo = await statusService.checkMongo();
-  const relayerManager = await statusService.checkRelayerManager();
-  const networkService = await statusService.checkNetworkService();
-  const tokenPrice = await statusService.checkTokenPrice();
-  res.render('status', {
-    redis,
-    mongo,
-    relayerManager,
-    networkService,
-    tokenPrice,
-  });
+  try {
+    const redis = await statusService.checkRedis();
+    const mongo = await statusService.checkMongo();
+    const relayerManager = await statusService.checkRelayerManager();
+    const networkService = await statusService.checkNetworkService();
+    const tokenPrice = await statusService.checkTokenPrice();
+    res.render('status', {
+      redis,
+      mongo,
+      relayerManager,
+      networkService,
+      tokenPrice,
+    });
+  } catch (error) {
+    res.render('status', {});
+  }
 };
