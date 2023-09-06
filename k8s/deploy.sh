@@ -1,5 +1,15 @@
 #!/bin/bash
+
+# How to use in staging 
+# ./k8s/deploy.sh 2 staging staging-sdk-relayer sdk-staging
+
 set -e
+
+REPLICAS=$1
+ENV=$2
+NAME=$3
+NAMESPACE=$4
+PODS_NAME="relayer-server"
 
 echo "The number of arguments is: $#"
 
@@ -12,11 +22,6 @@ if [ $# -ne  4 ]; then
   exit 1;
 fi
 
-REPLICAS=$1
-ENV=$2
-NAME=$3
-NAMESPACE=$4
-PODS_NAME="relayer-server"
 
 echo "Number of replicas: $REPLICAS"
 echo "ENV: $ENV"
