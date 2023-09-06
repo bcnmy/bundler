@@ -9,6 +9,11 @@ helm upgrade staging-sdk-relayer-0 ./k8s/relayer/ \
      --namespace sdk-staging \
      --set index=0  \
      --dry-run
+Render helm template locally
+
+```bash
+
+helm upgrade staging-sdk-relayer-0 ./k8s/relayer/ --install -f ./k8s/relayer/values.staging.yaml --set-string namespace=sdk-staging -n sdk-staging --dry-run
 ```
 
 Render template in prod 
@@ -22,3 +27,4 @@ helm upgrade prod-sdk-relayer-1 ./k8s/relayer/ \
      --set index=1  \
      --dry-run
 ```
+

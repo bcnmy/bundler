@@ -97,6 +97,13 @@ export class GasPrice implements IGasPrice {
           maxPriorityFeePerGas,
         };
       }
+      if ([137].includes(this.chainId) && Number(result.maxFeePerGas) < 30000000000) {
+        result.maxFeePerGas = '35000000000';
+        await this.setMaxPriorityFeeGasPrice(
+          GasPriceType.DEFAULT,
+          (result.maxFeePerGas).toString(),
+        );
+      }
     } else {
       const gasPrice = await this.cacheService.get(
         this.getGasPriceKey(gasType),
@@ -318,6 +325,43 @@ export class GasPrice implements IGasPrice {
                 '250000000',
               );
             }
+          } else if ([137].includes(this.chainId)) {
+            const {
+              data,
+            } = await this.networkService.sendRpcCall('eth_gasPrice', []);
+            const maxFeePerGas = ethers.utils.formatUnits(
+              data.result,
+              'wei',
+            );
+            let maxPriorityFeePerGas = Number(maxFeePerGas) * 0.3;
+            if (maxPriorityFeePerGas < 30000000000) {
+              maxPriorityFeePerGas = 30000000000;
+            }
+            await this.setMaxPriorityFeeGasPrice(
+              GasPriceType.DEFAULT,
+              maxPriorityFeePerGas.toString(),
+            );
+            await this.setMaxFeeGasPrice(
+              GasPriceType.DEFAULT,
+              (Number(maxFeePerGas) * 1.5).toString(),
+            );
+          } else if ([80001].includes(this.chainId)) {
+            const {
+              data,
+            } = await this.networkService.sendRpcCall('eth_gasPrice', []);
+            const maxPriorityFeePerGas = ethers.utils.formatUnits(
+              data.result,
+              'wei',
+            );
+            const maxFeePerGas = Number(maxPriorityFeePerGas) * 1.5;
+            await this.setMaxPriorityFeeGasPrice(
+              GasPriceType.DEFAULT,
+              maxPriorityFeePerGas.toString(),
+            );
+            await this.setMaxFeeGasPrice(
+              GasPriceType.DEFAULT,
+              maxFeePerGas.toString(),
+            );
           } else {
             const maxFeePerGasFromNetwork = (await this.networkService
               .getEIP1559GasPrice()).maxFeePerGas;
