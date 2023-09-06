@@ -161,19 +161,22 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         await this.cacheService.increment(getFailedTransactionRetryCountKey(transactionId, this.chainId), 1);
         const errInString = parseError(error).toLowerCase();
         log.info(`Error while executing transaction: ${errInString} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-        const replacementFeeLowErrorMessages = config.transaction.rpcResponseErrorMessages.REPLACEMENT_UNDERPRICED;
-        const alreadyKnownMessage = config.transaction.rpcResponseErrorMessages.ALREADY_KNOWN;
-        const insufficientFundsErrorMessages = config.transaction.rpcResponseErrorMessages.INSUFFICIENT_FUNDS;
-        const nonceTooLowErrorMessages = config.transaction.rpcResponseErrorMessages.NONCE_TOO_LOW;
+        const {
+          ALREADY_KNOWN,
+          REPLACEMENT_TRANSACTION_UNDERPRICED,
+          TRANSACTION_UNDERPRICED,
+          INSUFFICIENT_FUNDS,
+          NONCE_TOO_LOW,
+        } = config.transaction.rpcResponseErrorMessages;
 
-        if (nonceTooLowErrorMessages.some((str) => errInString.indexOf(str) > -1)) {
+        if (NONCE_TOO_LOW.some((str) => errInString.indexOf(str) > -1)) {
           log.info(`Nonce too low error for for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
           const correctNonce = await this.handleNonceTooLow(rawTransaction);
           log.info(`Correct nonce to be used: ${correctNonce} for for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
           rawTransaction.nonce = correctNonce;
           return await retryExecuteTransaction({ rawTransaction, account });
-        } else if (replacementFeeLowErrorMessages.some((str) => errInString.indexOf(str) > -1)) {
-          log.info(`Replacement underpriced error for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+        } else if (REPLACEMENT_TRANSACTION_UNDERPRICED.some((str) => errInString.indexOf(str) > -1) || TRANSACTION_UNDERPRICED.some((str) => errInString.indexOf(str) > -1)) {
+          log.info(`Replacement transaction underpriced or transaction underpriced error for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
           const bumpedUpGasPrice = await this.handleReplacementFeeTooLow(rawTransaction);
 
           if (typeof bumpedUpGasPrice !== 'string') {
@@ -191,10 +194,11 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           }
 
           return await retryExecuteTransaction({ rawTransaction, account });
-        } else if (alreadyKnownMessage.some((str) => errInString.indexOf(str) > -1)) {
-          log.info(`Already known transaction hash with same payload and nonce for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}. Removing nonce from cache and retrying`);
-          // TODO Figure out what to do
-        } else if (insufficientFundsErrorMessages.some((str) => errInString.indexOf(str) > -1)) {
+        } else if (ALREADY_KNOWN.some((str) => errInString.indexOf(str) > -1)) {
+          log.info(`Already known transaction hash with same payload and nonce for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}. Not doing anything`);
+          // https://github.com/ethereum/go-ethereum/blob/25733a4aadba3b60a9766f1e6ac9c787588ba678/core/txpool/errors.go#L22
+          // https://docs.alchemy.com/reference/error-reference
+        } else if (INSUFFICIENT_FUNDS.some((str) => errInString.indexOf(str) > -1)) {
           log.info(`Bundler address: ${rawTransaction.from} has insufficient funds for transactionId: ${transactionId} on chainId: ${this.chainId}`);
           throw new Error('Bundler balance too low. Send bundler for funding');
         } else {
