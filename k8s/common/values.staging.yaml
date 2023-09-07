@@ -22,4 +22,15 @@ affinity_tolerations:
   enable: false
   
 datadog:
-  enable: false
+  enable: true
+  env: "staging"
+
+  service: "sdk-relayer-service"
+  version: "v3.15.0"
+  lib_version: "v3.16.0"
+
+  configs:
+    DD_TRACE_DEBUG: "false"
+    DD_TRACE_STARTUP_LOGS: "false"
+    DD_PROFILING_ENABLED: "true"
+    DD_LOGS_INJECTION: "false"
