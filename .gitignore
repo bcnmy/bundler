@@ -7,3 +7,4 @@ server/dist
 coverage
 config/config.json
 config.json.enc
+*heapsnapshot
