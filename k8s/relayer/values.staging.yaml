@@ -8,18 +8,19 @@ relayer:
   replicaCount: 1
   resource:
     requests:
-      memory: "100Mi"
-      cpu: "100m"
+      memory: "6000Mi"
+      # bundler is nodejs single threaded app, no need for more then 1 CPU
+      cpu: "1000m"
     limits:
-      memory: "500Mi"
-      cpu: "500m"
+      memory: "6000Mi"
+      cpu: "1000m"
   
 namespace: "sdk-staging"
 
 affinity_tolerations:
-  enable: false 
+  enable: true
   key: "app"
-  values: "monitoring"
+  values: "relayer-server"
 
 secret:
   projectID: biconomy-staging
@@ -30,9 +31,17 @@ secret:
 ingress:
   host: sdk-relayer.staging.biconomy.io
 
-# datadog configs
-affinity_tolerations:
-  enable: false
   
 datadog:
-  enable: false
+  enable: true
+  env: "staging"
+
+  service: "sdk-relayer-service"
+  version: "v3.15.0"
+  lib_version: "v3.16.0"
+
+  configs:
+    DD_TRACE_DEBUG: "false"
+    DD_TRACE_STARTUP_LOGS: "false"
+    DD_PROFILING_ENABLED: "true"
+    DD_LOGS_INJECTION: "false"
