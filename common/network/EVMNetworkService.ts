@@ -1,7 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import axios from 'axios';
 import { BigNumber, ethers } from 'ethers';
-import EventEmitter from 'events';
 import { IEVMAccount } from '../../relayer/src/services/account';
 import { ERC20_ABI, L2Networks } from '../constants';
 import { logger } from '../log-config';
@@ -286,23 +285,6 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
       transactionHash,
     });
     return transactionReceipt;
-  }
-
-  async getContractEventEmitter(
-    contractAddress: string,
-    contractAbi: string,
-    topic: string,
-    contractEventName: string,
-  ): Promise<EventEmitter> {
-    const filter = EVMNetworkService.createFilter(contractAddress, topic);
-    const iFace = new ethers.utils.Interface(contractAbi);
-    const contractTopicEventEmitter = new EventEmitter();
-
-    this.ethersProvider.on(filter, async (contractLog) => {
-      const parsedLog = iFace.parseLog(contractLog);
-      contractTopicEventEmitter.emit(contractEventName, parsedLog);
-    });
-    return contractTopicEventEmitter;
   }
 
   async getDecimal(tokenAddress: string): Promise<number> {

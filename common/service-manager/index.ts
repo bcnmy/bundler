@@ -1,5 +1,8 @@
+/* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable no-await-in-loop */
 import { ethers } from 'ethers';
+import numeral from 'numeral';
+import heapdump from 'heapdump';
 import { config } from '../../config';
 import { EVMAccount, IEVMAccount } from '../../relayer/src/services/account';
 import {
@@ -142,6 +145,29 @@ const networkServiceMap: Record<number, EVMNetworkService> = {};
 let statusService: IStatusService;
 
 (async () => {
+  setInterval(() => {
+    const {
+      rss, heapTotal, external, heapUsed,
+    } = process.memoryUsage();
+
+    // Resident Set Size. The amount of RAM the node process is consuming
+    log.info(`rss: ${numeral(rss).format('0.0 ib')}`);
+
+    // Total space available for JavaScript objects presently
+    log.info(`heapTotal: ${numeral(heapTotal).format('0.0 ib')}`);
+
+    // Amount of memory consumed by off heap data (buffers) used by Node
+    log.info(`external: ${numeral(external).format('0.0 ib')}`);
+
+    // Total space occupied by Javascript objects presently
+    log.info(`heapUsed: ${numeral(heapUsed).format('0.0 ib')}`);
+  }, 5000);
+
+  setInterval(() => {
+    log.info('Taking a heapdump');
+    heapdump.writeSnapshot(`/var/local/${Date.now()}.heapsnapshot`);
+  }, 5000);
+
   await dbInstance.connect();
   await cacheService.connect();
 
