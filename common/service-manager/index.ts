@@ -2,7 +2,7 @@
 /* eslint-disable no-await-in-loop */
 import { ethers } from 'ethers';
 import numeral from 'numeral';
-import heapdump from 'heapdump';
+// import heapdump from 'heapdump';
 import { config } from '../../config';
 import { EVMAccount, IEVMAccount } from '../../relayer/src/services/account';
 import {
@@ -163,10 +163,10 @@ let statusService: IStatusService;
     log.info(`heapUsed: ${numeral(heapUsed).format('0.0 ib')}`);
   }, 5000);
 
-  setInterval(() => {
-    log.info('Taking a heapdump');
-    heapdump.writeSnapshot(`/var/local/${Date.now()}.heapsnapshot`);
-  }, 5000);
+  // setInterval(() => {
+  //   log.info('Taking a heapdump');
+  //   heapdump.writeSnapshot(`/var/local/${Date.now()}.heapsnapshot`);
+  // }, 5000);
 
   await dbInstance.connect();
   await cacheService.connect();
