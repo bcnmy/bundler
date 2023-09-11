@@ -1,7 +1,7 @@
-FROM node:18.17.1-alpine3.17
+FROM node:18.17.1-bookworm
 
 # install dependencies
-RUN apk update
+# RUN apk update
 
 # arguments
 ARG PORT=3000
