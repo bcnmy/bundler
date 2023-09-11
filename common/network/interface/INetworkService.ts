@@ -1,5 +1,4 @@
 import { BigNumber, ethers } from 'ethers';
-import EventEmitter from 'events';
 import { Type0TransactionGasPriceType, Type2TransactionGasPriceType } from '../types';
 
 export enum RpcMethod {
@@ -54,12 +53,6 @@ export interface INetworkService<AccountType, RawTransactionType> {
     rawTransactionData: RawTransactionType,
     account: AccountType,
   ): Promise<ethers.providers.TransactionResponse>;
-  getContractEventEmitter(
-    contractAddress: string,
-    contractAbi: string,
-    topic: string,
-    contractEventName: string,
-  ): Promise<EventEmitter>;
   getTransactionReceipt(transactionHash: string): Promise<ethers.providers.TransactionReceipt>;
   waitForTransaction(
     transactionHash: string
