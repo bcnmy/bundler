@@ -3,7 +3,6 @@ import { BigNumber, BigNumberish, ethers } from 'ethers';
 export enum TransactionType {
   AA = 'AA',
   SCW = 'SCW',
-  CROSS_CHAIN = 'CROSS_CHAIN',
   FUNDING = 'FUNDING',
   BUNDLER = 'BUNDLER',
 }
@@ -11,7 +10,6 @@ export enum TransactionType {
 export enum TransactionMethodType {
   SCW = 'eth_sendSmartContractWalletTransaction',
   AA = 'eth_sendUserOperation',
-  CROSS_CHAIN = 'eth_sendCrossChainTransaction',
   BUNDLER = 'eth_sendUserOperation',
 }
 
@@ -57,7 +55,6 @@ export enum TransactionStatus {
 export enum RelayerManagerType {
   AA = 0,
   SCW = 0,
-  CROSS_CHAIN = 1,
 }
 
 export type AccessListItem = {

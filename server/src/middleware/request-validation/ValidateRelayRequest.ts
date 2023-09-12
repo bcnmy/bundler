@@ -3,7 +3,6 @@ import { logger } from '../../../../common/log-config';
 import { EthMethodType, TransactionMethodType } from '../../../../common/types';
 import {
   aaRequestSchema,
-  crossChainRequestSchema,
   gasAndGasPricesRequestSchema,
   scwRequestSchema,
 } from '../../routes/relay/relay.schema';
@@ -25,9 +24,6 @@ export const validateRelayRequest = () => async (
         break;
       case TransactionMethodType.AA:
         validationResponse = aaRequestSchema.validate(req.body);
-        break;
-      case TransactionMethodType.CROSS_CHAIN:
-        validationResponse = crossChainRequestSchema.validate(req.body);
         break;
       case EthMethodType.GAS_AND_GAS_PRICES:
         validationResponse = gasAndGasPricesRequestSchema.validate(req.body);
