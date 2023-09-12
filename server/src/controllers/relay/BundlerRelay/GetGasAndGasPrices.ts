@@ -103,7 +103,7 @@ export const getGasAndGasPrices = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    log.error(`Error in Gasless Fallback relay ${error}`);
+    log.error(`Error in get gas and gas prices ${error}`);
     return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
       code: STATUSES.INTERNAL_SERVER_ERROR,
       error: JSON.stringify(error),
