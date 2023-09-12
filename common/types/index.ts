@@ -5,7 +5,6 @@ export enum TransactionType {
   SCW = 'SCW',
   CROSS_CHAIN = 'CROSS_CHAIN',
   FUNDING = 'FUNDING',
-  GASLESS_FALLBACK = 'GASLESS_FALLBACK',
   BUNDLER = 'BUNDLER',
 }
 
@@ -13,7 +12,6 @@ export enum TransactionMethodType {
   SCW = 'eth_sendSmartContractWalletTransaction',
   AA = 'eth_sendUserOperation',
   CROSS_CHAIN = 'eth_sendCrossChainTransaction',
-  GASLESS_FALLBACK = 'eth_sendGaslessFallbackTransaction',
   BUNDLER = 'eth_sendUserOperation',
 }
 
@@ -29,7 +27,6 @@ export enum EthMethodType {
 
 export enum RelayerDestinationSmartContractName {
   ENTRY_POINT = 'Entry Point',
-  FALLBACK_GASLESS = 'Fallback Gasless',
 }
 
 export enum SocketEventType {
@@ -124,17 +121,6 @@ export type SCWTransactionMessageType = {
   walletAddress: string;
 };
 
-export type GaslessFallbackTransactionMessageType = {
-  type: string;
-  to: string;
-  data: string;
-  gasLimit: string;
-  chainId: number;
-  value: string;
-  transactionId: string;
-  walletAddress: string;
-};
-
 type ResponseType = {
   code: number;
   transactionId: string;
@@ -180,19 +166,11 @@ export type EntryPointMapType = {
   }>
 };
 
-export type FallbackGasTankMapType = {
-  [chainId: number]: {
-    address: string,
-    fallbackGasTankContract: ethers.Contract
-  }
-};
-
 export type GetMetaDataFromUserOpReturnType = {
   destinationSmartContractAddresses: Array<string>
   destinationSmartContractMethods: Array<{ name: string, address: string }>
 };
 
-export type GetMetaDataFromFallbackUserOpReturnType = GetMetaDataFromUserOpReturnType;
 export type FeeSupportedToken = {
   address: string,
   symbol: string,

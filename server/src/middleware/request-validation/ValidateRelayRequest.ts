@@ -4,7 +4,6 @@ import { EthMethodType, TransactionMethodType } from '../../../../common/types';
 import {
   aaRequestSchema,
   crossChainRequestSchema,
-  gaslessFallbackRequestSchema,
   gasAndGasPricesRequestSchema,
   scwRequestSchema,
 } from '../../routes/relay/relay.schema';
@@ -26,9 +25,6 @@ export const validateRelayRequest = () => async (
         break;
       case TransactionMethodType.AA:
         validationResponse = aaRequestSchema.validate(req.body);
-        break;
-      case TransactionMethodType.GASLESS_FALLBACK:
-        validationResponse = gaslessFallbackRequestSchema.validate(req.body);
         break;
       case TransactionMethodType.CROSS_CHAIN:
         validationResponse = crossChainRequestSchema.validate(req.body);

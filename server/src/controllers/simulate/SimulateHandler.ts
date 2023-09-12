@@ -2,7 +2,6 @@ import { NextFunction, Request, Response } from 'express';
 import { EthMethodType, TransactionMethodType } from '../../../../common/types';
 import { STATUSES } from '../../middleware';
 import { simulateAATransaction } from './SimulateAATransaction';
-import { simulateGaslessFallbackTransaction } from './SimulateGaslessFallbackTransaction';
 import { simulateSCWTransaction } from './SimulateSCWTransaction';
 
 export const simulateTransaction = () => async (
@@ -17,8 +16,6 @@ export const simulateTransaction = () => async (
       response = await simulateAATransaction(req);
     } else if (method === TransactionMethodType.SCW) {
       response = await simulateSCWTransaction(req);
-    } else if (method === TransactionMethodType.GASLESS_FALLBACK) {
-      response = await simulateGaslessFallbackTransaction(req);
     } else if (method === EthMethodType.GAS_AND_GAS_PRICES) {
       return next();
     }
