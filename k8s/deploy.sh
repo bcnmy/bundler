@@ -70,8 +70,7 @@ helm upgrade "${HELM_NAME}" ./k8s/common/    \
      --timeout 720s \
      --values ./k8s/common/values."${ENV}".yaml \
      --set-string namespace="${NAMESPACE}" \
-     --namespace "${NAMESPACE}" \
-     --atomic
+     --namespace "${NAMESPACE}"
 
 echo "Deployed $HELM_NAME to $NAMESPACE"
 
@@ -87,8 +86,7 @@ while [ "${x}" -lt  "${REPLICAS}" ]; do
        --values ./k8s/relayer/values."${ENV}".yaml \
        --set-string namespace="${NAMESPACE}" \
        --set index="${x}" \
-       --namespace "${NAMESPACE}" \
-       --atomic
+       --namespace "${NAMESPACE}"
   
   echo "Deployed ${HELM_NAME}to ${NAMESPACE}";
   # check if first stateful set was correctly updated
@@ -100,4 +98,3 @@ while [ "${x}" -lt  "${REPLICAS}" ]; do
 done
 
 printf "\nDeployment completed\n";
-
