@@ -183,7 +183,6 @@ export class TenderlySimulationService implements IExternalSimulation {
         gas_price: gasPriceForSimulation.toString(),
         value: '0',
         to: entryPointContract.address,
-        simulation_type: 'abi',
         // simulation config (tenderly specific)
         save: true,
       };
