@@ -502,60 +502,12 @@
   }
   ],
   "transaction": {
-    "errors": {
-      "rpcResponseErrorMessages": {
-        "ALREADY_KNOWN" : ["already known"],
-        "REPLACEMENT_TRANSACTION_UNDERPRICED" : ["replacement fee too low", "replacement_underpriced", "replacement transaction underpriced"],
-        "TRANSACTION_UNDERPRICED": ["transaction underpriced"],
-        "INSUFFICIENT_FUNDS": ["insufficient funds for gas", "transaction would cause overdraft", "insufficient funds for transfer", "insufficient funds for gas * price + value"],
-        "NONCE_TOO_LOW": ["nonce too low", "nonce has already been used", "increasing the gas price or incrementing the nonce"]
-      },
-      "networksNonceError": {
-        "5": ["nonce too low", "nonce has already been used"],
-        "1": ["nonce too low", "nonce has already been used"],
-        "137": ["nonce too low", "nonce has already been used"],
-        "80001": ["nonce too low", "nonce has already been used"],
-        "97": ["nonce too low", "nonce has already been used"],
-        "56": ["nonce too low", "nonce has already been used"],
-        "1442": ["nonce too low", "nonce has already been used"],
-        "1101": ["nonce too low", "nonce has already been used"],
-        "421613": ["nonce too low", "nonce has already been used"],
-        "42161": ["nonce too low", "nonce has already been used"],
-        "42170": ["nonce too low", "nonce has already been used"],
-        "420": ["nonce too low", "nonce has already been used"],
-        "10": ["nonce too low", "nonce has already been used"],
-        "43113": ["nonce too low", "nonce has already been used"],
-        "43114": ["nonce too low", "nonce has already been used"],
-        "84531": ["nonce too low", "nonce has already been used"],
-        "8453": ["nonce too low", "nonce has already been used"],
-        "59140": ["nonce too low", "nonce has already been used"],
-        "59144": ["nonce too low", "nonce has already been used"],
-        "1287": ["nonce too low", "nonce has already been used"],
-        "1284": ["nonce too low", "nonce has already been used"]
-      },
-      "networksInsufficientFundsError": {
-        "5": "insufficient funds for gas",
-        "1": "insufficient funds for gas",
-        "137": "insufficient funds for gas",
-        "80001": "insufficient funds for gas",
-        "97": "insufficient funds for gas",
-        "56": "insufficient funds for gas",
-        "1442": "insufficient funds for gas",
-        "1101": "insufficient funds for gas",
-        "421613": "insufficient funds for gas",
-        "42161": "insufficient funds for gas",
-        "42170": "insufficient funds for gas",
-        "420": "insufficient funds for gas",
-        "10": "insufficient funds for gas",
-        "43113": "insufficient funds for gas",
-        "43114": "insufficient funds for gas",
-        "84531": "insufficient funds for gas",
-        "8453": "insufficient funds for gas",
-        "59140": "insufficient funds for gas",
-        "59144": "insufficient funds for gas",
-        "1287": "insufficient funds for gas",
-        "1284": "insufficient funds for gas"
-      }
+    "rpcResponseErrorMessages": {
+      "ALREADY_KNOWN" : ["already known"],
+      "REPLACEMENT_TRANSACTION_UNDERPRICED" : ["replacement fee too low", "replacement_underpriced", "replacement transaction underpriced"],
+      "TRANSACTION_UNDERPRICED": ["transaction underpriced"],
+      "INSUFFICIENT_FUNDS": ["insufficient funds for gas", "transaction would cause overdraft", "insufficient funds for transfer", "insufficient funds for gas * price + value"],
+      "NONCE_TOO_LOW": ["nonce too low", "nonce has already been used", "increasing the gas price or incrementing the nonce"]
     },
     "failedTransactionRetryCount": {
       "5": 5,
