@@ -17,7 +17,7 @@ import {
   EVMRawTransactionType,
   TransactionType,
 } from '../../../../common/types';
-import { generateTransactionId, getFailedTransactionRetryCountKey, parseError } from '../../../../common/utils';
+import { generateTransactionId, getFailedTransactionRetryCountKey } from '../../../../common/utils';
 import { config } from '../../../../config';
 import { EVMAccount, IEVMAccount } from '../account';
 import { INonceManager } from '../nonce-manager';
@@ -512,24 +512,6 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
           `Lock undefined and hence failed to fund relayer ${address} on chainId: ${this.chainId}`,
         );
       }
-    }
-  }
-
-  /**
-   * Method funds and adds relayer to active queue
-   * @param address of relayer
-   */
-  async fundAndAddRelayerToActiveQueue(address: string): Promise<void> {
-    try {
-      log.info(`Funding relayer: ${address} on chainId: ${this.chainId}`);
-      await this.fundRelayers([address]);
-      log.info(`Relayer: ${address} funded on chainId: ${this.chainId}`);
-
-      log.info(`Adding relayer: ${address} to active queue on chainId: ${this.chainId}`);
-      await this.addActiveRelayer(address);
-      log.info(`Relayer: ${address} added to active queue on chainId: ${this.chainId}`);
-    } catch (error) {
-      log.error(`Error in funding and adding relayer to active queue: ${parseError(error)}`);
     }
   }
 
