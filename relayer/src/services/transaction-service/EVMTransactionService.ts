@@ -54,6 +54,16 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     [address: string]: Mutex
   } = {};
 
+  private isNonceError(errInString: string): boolean {
+    const nonceErrorMessage = config.transaction.errors.networksNonceError[this.chainId];
+    return nonceErrorMessage.some((message: string) => {
+      if (errInString.toLowerCase().includes(message)) {
+        return true;
+      }
+      return false;
+    });
+  }
+
   constructor(evmTransactionServiceParams: EVMTransactionServiceParamsType) {
     const {
       options, networkService, transactionListener, nonceManager, gasPriceService, cacheService, notificationManager,
@@ -139,17 +149,17 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           }
         } catch (error) {
           // just loggin error here, don't want to block the transaction if in some case code does not work the intended way
-          log.error(`Error in getting max failed retry transaction count: ${parseError(error)} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+          log.error(`Error in getting max failed retry transaction count: ${parseError(error)}`);
         }
 
-        log.info(`Sending transaction to network: ${JSON.stringify(rawTransaction)} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+        log.info(`Sending transaction to network: ${JSON.stringify(rawTransaction)}`);
         const transactionExecutionResponse = await this.networkService.sendTransaction(
           rawTransaction,
           account,
         );
-        log.info(`Transaction execution response: ${JSON.stringify(transactionExecutionResponse)} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+        log.info(`Transaction execution response: ${JSON.stringify(transactionExecutionResponse)}`);
         if (transactionExecutionResponse instanceof Error) {
-          log.info(`Transaction execution failed and checking for retry for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+          log.info('Transaction execution failed and checking for retry');
           throw transactionExecutionResponse;
         }
         this.nonceManager.markUsed(account.getPublicKey(), rawTransaction.nonce);
@@ -160,49 +170,59 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       } catch (error: any) {
         await this.cacheService.increment(getFailedTransactionRetryCountKey(transactionId, this.chainId), 1);
         const errInString = parseError(error).toLowerCase();
-        log.info(`Error while executing transaction: ${errInString} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-        const {
-          ALREADY_KNOWN,
-          REPLACEMENT_TRANSACTION_UNDERPRICED,
-          TRANSACTION_UNDERPRICED,
-          INSUFFICIENT_FUNDS,
-          NONCE_TOO_LOW,
-        } = config.transaction.rpcResponseErrorMessages;
+        log.info(`Error while executing transaction: ${errInString}`);
+        const replacementFeeLowMessage = config.transaction.errors.networkResponseMessages
+          .REPLACEMENT_UNDERPRICED;
+        const alreadyKnownMessage = config.transaction
+          .errors.networkResponseMessages.ALREADY_KNOWN;
+        const insufficientFundsErrorMessage = [config
+          .transaction.errors.networksInsufficientFundsError[this.chainId]]
+        || config.transaction.errors.networkResponseMessages.INSUFFICIENT_FUNDS;
 
-        if (NONCE_TOO_LOW.some((str) => errInString.indexOf(str) > -1)) {
-          log.info(`Nonce too low error for for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-          const correctNonce = await this.handleNonceTooLow(rawTransaction);
-          log.info(`Correct nonce to be used: ${correctNonce} for for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-          rawTransaction.nonce = correctNonce;
+        if (this.isNonceError(errInString) || errInString.indexOf('increasing the gas price or incrementing the nonce') > -1) {
+          log.info(`Nonce too low error for relayer ${rawTransaction.from} on network id ${this.chainId}. Removing nonce from cache and retrying`);
+          rawTransaction.nonce = await this.nonceManager.getAndSetNonceFromNetwork(rawTransaction.from, true);
+          log.info(`updating the nonce to ${rawTransaction.nonce}
+       for relayer ${rawTransaction.from} on network id ${this.chainId}`);
           return await retryExecuteTransaction({ rawTransaction, account });
-        } else if (REPLACEMENT_TRANSACTION_UNDERPRICED.some((str) => errInString.indexOf(str) > -1) || TRANSACTION_UNDERPRICED.some((str) => errInString.indexOf(str) > -1)) {
-          log.info(`Replacement transaction underpriced or transaction underpriced error for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-          const bumpedUpGasPrice = await this.handleReplacementFeeTooLow(rawTransaction);
+        } else if (replacementFeeLowMessage.some((str) => errInString.indexOf(str) > -1)) {
+          log.info(
+            `Replacement underpriced error for relayer ${rawTransaction.from}
+       on network id ${this.chainId}`,
+          );
+          const pastGasPrice = rawTransaction.gasPrice ? rawTransaction.gasPrice : {
+            maxFeePerGas: rawTransaction.maxFeePerGas,
+            maxPriorityFeePerGas: rawTransaction.maxPriorityFeePerGas,
+          };
+          const bumpedUpGasPrice = this.gasPriceService.getBumpedUpGasPrice(
+            pastGasPrice as NetworkBasedGasPriceType,
+            config.transaction.bumpGasPriceMultiplier[this.chainId],
+          );
 
           if (typeof bumpedUpGasPrice !== 'string') {
-            log.info(`rawTransaction.maxFeePerGas ${rawTransaction.maxFeePerGas} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId} before bumping up`);
-            log.info(`rawTransaction.maxPriorityFeePerGas ${rawTransaction.maxPriorityFeePerGas} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId} before bumping up`);
+            log.info(`rawTransaction.maxFeePerGas ${rawTransaction.maxFeePerGas} for relayer ${rawTransaction.from} on network id ${this.chainId} before bumping up`);
+            log.info(`rawTransaction.maxPriorityFeePerGas ${rawTransaction.maxPriorityFeePerGas} for relayer ${rawTransaction.from} on network id ${this.chainId} before bumping up`);
             rawTransaction.maxFeePerGas = bumpedUpGasPrice.maxFeePerGas;
             rawTransaction.maxPriorityFeePerGas = bumpedUpGasPrice.maxPriorityFeePerGas;
-            log.info(`increasing gas price for the resubmit transaction ${rawTransaction.gasPrice} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-            log.info(`rawTransaction.maxFeePerGas ${rawTransaction.maxFeePerGas} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId} after bumping up`);
-            log.info(`rawTransaction.maxPriorityFeePerGas ${rawTransaction.maxPriorityFeePerGas} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId} after bumping up`);
+            log.info(`increasing gas price for the resubmit transaction ${rawTransaction.gasPrice} for relayer ${rawTransaction.from} on network id ${this.chainId}`);
+            log.info(`rawTransaction.maxFeePerGas ${rawTransaction.maxFeePerGas} for relayer ${rawTransaction.from} on network id ${this.chainId} after bumping up`);
+            log.info(`rawTransaction.maxPriorityFeePerGas ${rawTransaction.maxPriorityFeePerGas} for relayer ${rawTransaction.from} on network id ${this.chainId} after bumping up`);
           } else {
-            log.info(`rawTransaction.gasPrice ${rawTransaction.gasPrice} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId} before bumping up`);
+            log.info(`rawTransaction.gasPrice ${rawTransaction.gasPrice} for relayer ${rawTransaction.from} on network id ${this.chainId} before bumping up`);
             rawTransaction.gasPrice = bumpedUpGasPrice;
-            log.info(`increasing gas price for the resubmit transaction ${rawTransaction.gasPrice} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId} after bumping up`);
+            log.info(`increasing gas price for the resubmit transaction ${rawTransaction.gasPrice} for relayer ${rawTransaction.from} on network id ${this.chainId} after bumping up`);
           }
 
           return await retryExecuteTransaction({ rawTransaction, account });
-        } else if (ALREADY_KNOWN.some((str) => errInString.indexOf(str) > -1)) {
-          log.info(`Already known transaction hash with same payload and nonce for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}. Not doing anything`);
-          // https://github.com/ethereum/go-ethereum/blob/25733a4aadba3b60a9766f1e6ac9c787588ba678/core/txpool/errors.go#L22
-          // https://docs.alchemy.com/reference/error-reference
-        } else if (INSUFFICIENT_FUNDS.some((str) => errInString.indexOf(str) > -1)) {
-          log.info(`Bundler address: ${rawTransaction.from} has insufficient funds for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-          throw new Error('Bundler balance too low. Send bundler for funding');
+        } else if (alreadyKnownMessage.some((str) => errInString.indexOf(str) > -1)) {
+          log.info(
+            `Already known transaction hash with same payload and nonce for relayer ${rawTransaction.from} on network id ${this.chainId}. Removing nonce from cache and retrying`,
+          );
+        } else if (insufficientFundsErrorMessage.some((str) => errInString.indexOf(str) > -1)) {
+          log.info(`Relayer ${rawTransaction.from} has insufficient funds`);
+          // Send previous relayer for funding
         } else {
-          log.info(`Error: ${errInString} not handled. Transaction not being retried for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+          log.info('transaction not being retried');
           return {
             success: false,
             error: errInString,
@@ -379,22 +399,10 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         transactionId,
         ...transactionListenerNotifyResponse,
       };
-    } catch (error: any) {
+    } catch (error) {
       log.info(`Releasing lock on address: ${account.getPublicKey()} on chainId: ${this.chainId}`);
       release();
       log.info(`Lock released on address: ${account.getPublicKey()} on chainId: ${this.chainId}`);
-      if (error.message && error.message === 'Bundler balance too low. Send bundler for funding') {
-        return {
-          state: 'failed',
-          code: STATUSES.FUND_BUNDLER,
-          error: parseError(error),
-          transactionId,
-          ...{
-            isTransactionRelayed: false,
-            transactionExecutionResponse: null,
-          },
-        };
-      }
       log.info(`Error while sending transaction: ${error}`);
       await this.sendTransactionFailedSlackNotification(transactionId, this.chainId, parseError(error));
       return {
@@ -504,22 +512,5 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         },
       };
     }
-  }
-
-  private async handleNonceTooLow(rawTransaction: EVMRawTransactionType) {
-    const correctNonce = await this.nonceManager.getAndSetNonceFromNetwork(rawTransaction.from, true);
-    return correctNonce;
-  }
-
-  private async handleReplacementFeeTooLow(rawTransaction: EVMRawTransactionType) {
-    const pastGasPrice = rawTransaction.gasPrice ? rawTransaction.gasPrice : {
-      maxFeePerGas: rawTransaction.maxFeePerGas,
-      maxPriorityFeePerGas: rawTransaction.maxPriorityFeePerGas,
-    };
-    const bumpedUpGasPrice = this.gasPriceService.getBumpedUpGasPrice(
-      pastGasPrice as NetworkBasedGasPriceType,
-      config.transaction.bumpGasPriceMultiplier[this.chainId],
-    );
-    return bumpedUpGasPrice;
   }
 }
