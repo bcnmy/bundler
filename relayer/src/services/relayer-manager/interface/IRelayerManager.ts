@@ -41,4 +41,5 @@ export interface IRelayerManager<AccountType, RawTransactionType> {
   getInactiveRelayerCountThreshold(): number
   setPendingTransactionCountThreshold(pendingTransactionCountThreshold: number): void
   getPendingTransactionCountThreshold(): number
+  fundAndAddRelayerToActiveQueue(address: string): Promise<void>
 }
