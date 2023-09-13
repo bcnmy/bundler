@@ -47,6 +47,7 @@ export class BundlerSimulationAndValidationService {
     this.networkService = networkService;
     this.gasPriceService = gasPriceService;
     this.tenderlySimulationService = tenderlySimulationService;
+    this.gasPriceService = gasPriceService;
   }
 
   async estimateUserOperationGas(
@@ -74,7 +75,6 @@ export class BundlerSimulationAndValidationService {
         // signature not present, using default ECDSA
         userOp.signature = '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b';
       }
-
       if (!userOp.maxFeePerGas || userOp.maxFeePerGas === 0 || (userOp.maxFeePerGas as unknown as string) === '0x' || (userOp.maxFeePerGas as unknown as string) === '0') {
         // setting a non zero value as division with maxFeePerGas will happen
         userOp.maxFeePerGas = 1;
