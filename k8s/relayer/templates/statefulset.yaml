@@ -51,6 +51,9 @@ spec:
         image: {{ .Values.relayer.image }}
         ports:
         - containerPort: {{ .Values.relayer.port }}
+        env:
+          - name: NODE_OPTIONS
+            value: "=--max_old_space_size=6000"
         envFrom:
           {{- if .Values.datadog.enable }}
           - configMapRef:
