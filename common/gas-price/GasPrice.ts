@@ -102,7 +102,7 @@ export class GasPrice implements IGasPrice {
           GasPriceType.DEFAULT,
           '30000000000',
         );
-        result.maxPriorityFeePerGas = '3000000000';
+        result.maxPriorityFeePerGas = '30000000000';
       }
     } else {
       const gasPrice = await this.cacheService.get(
