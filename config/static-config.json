@@ -503,7 +503,7 @@
   ],
   "transaction": {
     "errors": {
-      "networkResponseMessages": {
+      "rpcResponseErrorMessages": {
         "ALREADY_KNOWN" : ["already known"],
         "REPLACEMENT_TRANSACTION_UNDERPRICED" : ["replacement fee too low", "replacement_underpriced", "replacement transaction underpriced"],
         "TRANSACTION_UNDERPRICED": ["transaction underpriced"],
