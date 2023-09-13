@@ -2,7 +2,6 @@
 import winston from 'winston';
 import { hostname } from 'os';
 import rTracer from 'cls-rtracer';
-import { EventEmitter } from 'events';
 
 const consoleTransport = new winston.transports.Console({
   level: process.env.LOG_LEVEL || 'debug',
@@ -11,8 +10,6 @@ const consoleTransport = new winston.transports.Console({
 const transports = [
   consoleTransport,
 ];
-const emitter = new EventEmitter();
-emitter.setMaxListeners(100);
 
 const serverTransport = (path: string) => winston.createLogger({
   // silent: false,

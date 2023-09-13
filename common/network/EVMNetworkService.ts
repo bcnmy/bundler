@@ -1,7 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import axios from 'axios';
 import { BigNumber, ethers } from 'ethers';
-import EventEmitter from 'events';
 import { IEVMAccount } from '../../relayer/src/services/account';
 import { ERC20_ABI, L2Networks } from '../constants';
 import { logger } from '../log-config';
@@ -10,6 +9,7 @@ import { IERC20NetworkService, INetworkService, RpcMethod } from './interface';
 import { Type0TransactionGasPriceType, Type2TransactionGasPriceType } from './types';
 
 const log = logger(module);
+// TODO: Network Service to be checked with new provider/contract instances
 export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTransactionType>,
  IERC20NetworkService {
   chainId: number;
@@ -56,9 +56,6 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
    * @returns based on the rpc method
    */
   useProvider = async (tag: RpcMethod, params?: any): Promise<any> => {
-    this.ethersProvider = new ethers.providers.JsonRpcProvider(
-      this.rpcUrl,
-    );
     let rpcUrlIndex = 0;
     // eslint-disable-next-line consistent-return
     const withFallbackRetry = async () => {
@@ -285,23 +282,6 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
       transactionHash,
     });
     return transactionReceipt;
-  }
-
-  async getContractEventEmitter(
-    contractAddress: string,
-    contractAbi: string,
-    topic: string,
-    contractEventName: string,
-  ): Promise<EventEmitter> {
-    const filter = EVMNetworkService.createFilter(contractAddress, topic);
-    const iFace = new ethers.utils.Interface(contractAbi);
-    const contractTopicEventEmitter = new EventEmitter();
-
-    this.ethersProvider.on(filter, async (contractLog) => {
-      const parsedLog = iFace.parseLog(contractLog);
-      contractTopicEventEmitter.emit(contractEventName, parsedLog);
-    });
-    return contractTopicEventEmitter;
   }
 
   async getDecimal(tokenAddress: string): Promise<number> {

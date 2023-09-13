@@ -5,6 +5,7 @@ import express, {
   NextFunction, Request, Response, ErrorRequestHandler,
 } from 'express';
 import cons from 'consolidate';
+import v8 from 'node:v8';
 import { morganMiddleware } from '../../common/log-config';
 import { routes } from './routes';
 
@@ -66,6 +67,13 @@ app.use('', routes);
 
 app.route('/health')
   .get((req, res) => {
+    res.send('ok');
+  });
+
+app.route('/heap-snapshot')
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  .get((req, res) => {
+    v8.writeHeapSnapshot();
     res.send('ok');
   });
 

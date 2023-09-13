@@ -1,12 +1,14 @@
+/* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable no-await-in-loop */
 import { ethers } from 'ethers';
+import numeral from 'numeral';
+// import heapdump from 'heapdump';
 import { config } from '../../config';
 import { EVMAccount, IEVMAccount } from '../../relayer/src/services/account';
 import {
   AAConsumer,
   SCWConsumer,
   SocketConsumer,
-  GaslessFallbackConsumer,
   BundlerConsumer,
 } from '../../relayer/src/services/consumer';
 import { EVMNonceManager } from '../../relayer/src/services/nonce-manager';
@@ -37,11 +39,9 @@ import {
   RetryTransactionHandlerQueue,
   SCWTransactionQueue,
   TransactionHandlerQueue,
-  GaslessFallbackTransactionQueue,
 } from '../queue';
 import {
   AARelayService,
-  GaslessFallbackRelayService,
   SCWRelayService,
   BundlerRelayService,
 } from '../relay-service';
@@ -49,7 +49,6 @@ import {
   AASimulationService,
   BundlerSimulationAndValidationService,
   BundlerGasEstimationService,
-  GaslessFallbackSimulationService,
   SCWSimulationService,
 } from '../simulation';
 import { TenderlySimulationService } from '../simulation/external-simulation';
@@ -60,10 +59,8 @@ import {
   BundlerTransactionMessageType,
   EntryPointMapType,
   EVMRawTransactionType,
-  GaslessFallbackTransactionMessageType,
   SCWTransactionMessageType,
   TransactionType,
-  FallbackGasTankMapType,
 } from '../types';
 
 const log = logger(module);
@@ -73,7 +70,6 @@ const routeTransactionToRelayerMap: {
     [transactionType: string]:
     AARelayService |
     SCWRelayService |
-    GaslessFallbackRelayService |
     BundlerRelayService
   };
 } = {};
@@ -107,13 +103,7 @@ const scwSimulationServiceMap: {
   [chainId: number]: SCWSimulationService;
 } = {};
 
-const gaslessFallbackSimulationServiceMap: {
-  [chainId: number]: GaslessFallbackSimulationService;
-} = {};
-
 const entryPointMap: EntryPointMapType = {};
-
-const fallbackGasTankMap: FallbackGasTankMapType = {};
 
 const dbInstance = Mongo.getInstance();
 const cacheService = RedisCacheService.getInstance();
@@ -142,6 +132,29 @@ const networkServiceMap: Record<number, EVMNetworkService> = {};
 let statusService: IStatusService;
 
 (async () => {
+  setInterval(() => {
+    const {
+      rss, heapTotal, external, heapUsed,
+    } = process.memoryUsage();
+
+    // Resident Set Size. The amount of RAM the node process is consuming
+    log.info(`rss: ${numeral(rss).format('0.0 ib')}`);
+
+    // Total space available for JavaScript objects presently
+    log.info(`heapTotal: ${numeral(heapTotal).format('0.0 ib')}`);
+
+    // Amount of memory consumed by off heap data (buffers) used by Node
+    log.info(`external: ${numeral(external).format('0.0 ib')}`);
+
+    // Total space occupied by Javascript objects presently
+    log.info(`heapUsed: ${numeral(heapUsed).format('0.0 ib')}`);
+  }, 5000);
+
+  // setInterval(() => {
+  //   log.info('Taking a heapdump');
+  //   heapdump.writeSnapshot(`/var/local/${Date.now()}.heapsnapshot`);
+  // }, 5000);
+
   await dbInstance.connect();
   await cacheService.connect();
 
@@ -437,62 +450,6 @@ let statusService: IStatusService;
           tenderlySimulationService,
         );
         log.info(`SCW consumer, relay service & simulation service setup complete for chainId: ${chainId}`);
-      } else if (type === TransactionType.GASLESS_FALLBACK) {
-        // queue for scw
-        log.info(`Setting up Gasless Fallback transaction queue for chainId: ${chainId}`);
-        const gaslessFallbackQueue: IQueue<
-        GaslessFallbackTransactionMessageType> = new GaslessFallbackTransactionQueue({
-          chainId,
-        });
-        await gaslessFallbackQueue.connect();
-        log.info(`SCW transaction queue setup complete for chainId: ${chainId}`);
-
-        const gaslessFallbackRelayerManager = EVMRelayerManagerMap[
-          relayerManagerTransactionTypeNameMap[type]][chainId];
-        if (!gaslessFallbackRelayerManager) {
-          throw new Error(`Relayer manager not found for ${type}`);
-        }
-
-        log.info(`Setting up Gasless Fallback consumer & relay service for chainId: ${chainId}`);
-        const gaslessFallbackConsumer = new GaslessFallbackConsumer({
-          queue: gaslessFallbackQueue,
-          relayerManager: gaslessFallbackRelayerManager,
-          transactionService,
-          cacheService,
-          options: {
-            chainId,
-          },
-        });
-        await gaslessFallbackQueue.consume(gaslessFallbackConsumer.onMessageReceived);
-
-        const gaslessFallbackRelayService = new GaslessFallbackRelayService(gaslessFallbackQueue);
-        routeTransactionToRelayerMap[chainId][type] = gaslessFallbackRelayService;
-
-        const tenderlySimulationService = new TenderlySimulationService(
-          gasPriceService,
-          cacheService,
-          {
-            tenderlyUser: config.simulationData.tenderlyData.tenderlyUser,
-            tenderlyProject: config.simulationData.tenderlyData.tenderlyProject,
-            tenderlyAccessKey: config.simulationData.tenderlyData.tenderlyAccessKey,
-          },
-        );
-        gaslessFallbackSimulationServiceMap[chainId] = new GaslessFallbackSimulationService(
-          networkService,
-          tenderlySimulationService,
-        );
-
-        log.info(`Gasless fallback consumer & relay service simulation service setup complete for chainId: ${chainId}`);
-
-        const { address, abi } = config.fallbackGasTankData[chainId];
-
-        fallbackGasTankMap[chainId] = {
-          address,
-          fallbackGasTankContract: networkService.getContract(
-            JSON.stringify(abi),
-            address,
-          ),
-        };
       } else if (type === TransactionType.BUNDLER) {
         const bundlerRelayerManager = EVMRelayerManagerMap[
           relayerManagerTransactionTypeNameMap[type]][chainId];
@@ -584,7 +541,6 @@ export {
   bundlerSimulatonAndValidationServiceMap,
   bundlerGasEstimationServiceMap,
   scwSimulationServiceMap,
-  gaslessFallbackSimulationServiceMap,
   entryPointMap,
   EVMRelayerManagerMap,
   transactionSerivceMap,
