@@ -56,9 +56,6 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
    * @returns based on the rpc method
    */
   useProvider = async (tag: RpcMethod, params?: any): Promise<any> => {
-    this.ethersProvider = new ethers.providers.JsonRpcProvider(
-      this.rpcUrl,
-    );
     let rpcUrlIndex = 0;
     // eslint-disable-next-line consistent-return
     const withFallbackRetry = async () => {

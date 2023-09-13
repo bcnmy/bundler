@@ -6,6 +6,8 @@ relayer:
   image: "gcr.io/biconomy-staging/sdk/relayer-node-service:latest"
   port: "3000"
   replicaCount: 1
+  # Increase also the value for NODE_OPTIONS --max_old_space_size
+  # in statefulset.yaml
   resource:
     requests:
       memory: "6000Mi"
