@@ -3,8 +3,6 @@ import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../../../middleware';
 import { logger } from '../../../../../common/log-config';
 import { bundlerSimulatonAndValidationServiceMap, entryPointMap, gasPriceServiceMap } from '../../../../../common/service-manager';
 import { parseError } from '../../../../../common/utils';
-import { config } from '../../../../../config';
-import { ArbitrumNetworks } from '../../../../../common/constants';
 // import { updateRequest } from '../../auth/UpdateRequest';
 
 const log = logger(module);
@@ -90,27 +88,10 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
 
     const gasPrice = await gasPriceServiceMap[Number(chainId)]?.getGasPrice();
 
-    const premium = config.chains.premium[parseInt(chainId, 10)] || 1.05;
-    log.info(`premium: ${premium} for chainId: ${chainId}`);
-
     if (typeof gasPrice !== 'string') {
       log.info(
         `Gas price for chainId: ${chainId} is: ${JSON.stringify(gasPrice)}`,
       );
-
-      const premiumMaxPriorityFeePerGas = (
-        Math.ceil(Number(gasPrice?.maxPriorityFeePerGas) * premium)
-      ).toString();
-      log.info(`premiumMaxPriorityFeePerGas: ${premiumMaxPriorityFeePerGas} for chainId: ${chainId}`);
-
-      let premiumMaxFeePerGas = (
-        Math.ceil(Number(gasPrice?.maxFeePerGas) * premium)
-      ).toString();
-      log.info(`premiumMaxFeePerGas: ${premiumMaxFeePerGas} for chainId: ${chainId}`);
-
-      if (ArbitrumNetworks.includes(parseInt(chainId, 10))) {
-        premiumMaxFeePerGas = gasPrice?.maxFeePerGas as string;
-      }
 
       // updateRequest({
       //   chainId: parseInt(chainId, 10),
@@ -141,8 +122,8 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
           preVerificationGas,
           validUntil,
           validAfter,
-          maxPriorityFeePerGas: premiumMaxPriorityFeePerGas,
-          maxFeePerGas: premiumMaxFeePerGas,
+          maxPriorityFeePerGas: gasPrice?.maxPriorityFeePerGas as string,
+          maxFeePerGas: gasPrice?.maxFeePerGas as string,
         },
       });
     }
@@ -167,11 +148,6 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
     //   httpResponseCode: STATUSES.SUCCESS,
     // });
 
-    const premiumGasPrice = (
-      Math.ceil(Number(gasPrice) * premium)
-    ).toString();
-    log.info(`premiumGasPrice: ${premiumGasPrice} for chainId: ${chainId}`);
-
     return res.status(STATUSES.SUCCESS).json({
       jsonrpc: '2.0',
       id: id || 1,
@@ -181,8 +157,8 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
         preVerificationGas,
         validUntil,
         validAfter,
-        maxPriorityFeePerGas: premiumGasPrice,
-        maxFeePerGas: premiumGasPrice,
+        maxPriorityFeePerGas: gasPrice,
+        maxFeePerGas: gasPrice,
       },
     });
   } catch (error) {
