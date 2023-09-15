@@ -554,6 +554,8 @@ export class BundlerSimulationAndValidationService {
       );
       ret += data;
     }
+    // extra buffer for profit
+    ret += 20000;
     return ret;
   }
 }
