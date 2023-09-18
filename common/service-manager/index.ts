@@ -50,7 +50,7 @@ import {
   BundlerGasEstimationService,
   SCWSimulationService,
 } from '../simulation';
-import { TenderlySimulationService } from '../simulation/external-simulation';
+import { AlchemySimulationService, TenderlySimulationService } from '../simulation/external-simulation';
 import { IStatusService, StatusService } from '../status';
 import { CMCTokenPriceManager } from '../token-price';
 import {
@@ -485,10 +485,15 @@ let statusService: IStatusService;
           },
         );
 
+        const alchemySimulationService = new AlchemySimulationService(
+          networkService,
+        );
+
         // eslint-disable-next-line max-len
         bundlerSimulatonAndValidationServiceMap[chainId] = new BundlerSimulationAndValidationService(
           networkService,
           tenderlySimulationService,
+          alchemySimulationService,
           gasPriceService,
         );
 

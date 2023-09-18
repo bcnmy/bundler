@@ -1,6 +1,6 @@
 /* eslint-disable prefer-const */
 import { ethers, BigNumber } from 'ethers';
-import { arrayify } from 'ethers/lib/utils';
+import { arrayify, defaultAbiCoder, keccak256 } from 'ethers/lib/utils';
 import { config } from '../../config';
 import { IEVMAccount } from '../../relayer/src/services/account';
 import {
@@ -26,8 +26,9 @@ import {
   PolygonZKEvmNetworks,
   ArbitrumNetworks,
   LineaNetworks,
+  AlchemySimulateExecutionSupportedNetworks,
 } from '../constants';
-import { TenderlySimulationService } from './external-simulation';
+import { AlchemySimulationService, TenderlySimulationService } from './external-simulation';
 import { calcArbitrumPreVerificationGas, calcOptimismPreVerificationGas } from './L2';
 import { IGasPrice } from '../gas-price';
 
@@ -39,13 +40,17 @@ export class BundlerSimulationAndValidationService {
 
   gasPriceService: IGasPrice;
 
+  alchemySimulationService: AlchemySimulationService;
+
   constructor(
     networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
     tenderlySimulationService: TenderlySimulationService,
+    alchemySimulationService: AlchemySimulationService,
     gasPriceService: IGasPrice,
   ) {
     this.networkService = networkService;
     this.tenderlySimulationService = tenderlySimulationService;
+    this.alchemySimulationService = alchemySimulationService;
     this.gasPriceService = gasPriceService;
   }
 
@@ -352,15 +357,29 @@ export class BundlerSimulationAndValidationService {
       const { userOp, entryPointContract, chainId } = validateUserOperationData;
 
       log.info(`userOp received: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
-      const {
-        reason,
-        totalGas,
-        data,
-      } = await this.tenderlySimulationService.simulateHandleOps({
-        userOp,
-        entryPointContract,
-        chainId,
-      });
+
+      let reason: string | undefined;
+      let totalGas: number;
+      let data: string | undefined;
+      if (AlchemySimulateExecutionSupportedNetworks.includes(chainId)) {
+        const response = await this.alchemySimulationService.simulateHandleOps({
+          userOp,
+          entryPointContract,
+          chainId,
+        });
+        reason = response.reason;
+        totalGas = response.totalGas;
+        data = response.data;
+      } else {
+        const response = await this.tenderlySimulationService.simulateHandleOps({
+          userOp,
+          entryPointContract,
+          chainId,
+        });
+        reason = response.reason;
+        totalGas = response.totalGas;
+        data = response.data;
+      }
       handleOpsCallData = data;
 
       if (reason) {
@@ -404,7 +423,11 @@ export class BundlerSimulationAndValidationService {
         );
       }
 
-      const userOpHash = await entryPointContract.getUserOpHash(userOp);
+      const userOpHash = this.getUserOpHash(
+        entryPointContract.address,
+        userOp,
+        chainId,
+      );
       log.info(
         `userOpHash: ${userOpHash} on chainId: ${chainId}`,
       );
@@ -563,5 +586,16 @@ export class BundlerSimulationAndValidationService {
       ret += data;
     }
     return ret;
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  getUserOpHash(
+    entryPointAddress: string,
+    userOp: UserOperationType,
+    chainId: number,
+  ) {
+    const userOpHash = keccak256(packUserOp(userOp, true));
+    const enc = defaultAbiCoder.encode(['bytes32', 'address', 'uint256'], [userOpHash, entryPointAddress, chainId]);
+    return keccak256(enc);
   }
 }

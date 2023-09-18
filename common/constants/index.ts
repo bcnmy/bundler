@@ -53,3 +53,4 @@ export const PolygonZKEvmNetworks = [1101, 1442];
 export const OptimismNetworks = [420, 10, 84531, 8453];
 export const LineaNetworks = [59140, 59144];
 export const ArbitrumNetworks = [42170, 421613, 42161];
+export const AlchemySimulateExecutionSupportedNetworks = [1, 5, 137, 80001, 10, 420, 42161, 421613];

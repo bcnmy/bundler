@@ -1,5 +1,6 @@
 import axios from 'axios';
 import Big from 'big.js';
+import { ethers } from 'ethers';
 import {
   ExternalSimulationResponseType,
   SimulateHandleOpsParamsType,
@@ -184,7 +185,7 @@ export class TenderlySimulationService implements IExternalSimulation {
         gas_price: gasPriceForSimulation.toString(),
         value: '0',
         to: entryPointContract.address,
-        simulation_type: 'abi',
+        simulation_type: 'quick',
         // simulation config (tenderly specific)
         save: true,
       };
@@ -212,7 +213,7 @@ export class TenderlySimulationService implements IExternalSimulation {
       const {
         reason,
         isExecutionSuccess,
-      } = this.checkUserOperationExecution(transactionLogs);
+      } = this.checkUserOperationExecution(transactionLogs, entryPointContract);
 
       return {
         reason,
@@ -407,9 +408,10 @@ export class TenderlySimulationService implements IExternalSimulation {
   // eslint-disable-next-line class-methods-use-this
   private checkUserOperationExecution(
     transactionLogs: Array<any>,
+    entryPointContract: ethers.Contract,
   ) {
     try {
-      const userOperationEventLog = transactionLogs.find((transactionLog: any) => transactionLog.name === 'UserOperationEvent');
+      const userOperationEventLog = transactionLogs.find((transactionLog: any) => transactionLog.raw.topics[0] === '0x49628fd1471006c1482da88028e9ce4dbb080b815c9b0344d39e5a8e6ec1419f');
       if (!userOperationEventLog) {
         log.error('UserOperationEvent not found in logs');
         return {
@@ -418,41 +420,21 @@ export class TenderlySimulationService implements IExternalSimulation {
       }
       log.info(`UserOperationEvent found in logs: ${JSON.stringify(userOperationEventLog)}`);
 
-      const successData = userOperationEventLog.inputs.find((input: any) => input.soltype.name === 'success');
-      if (!successData) {
-        log.error('successData not found in logs');
-        return {
-          isExecutionSuccess: false,
-        };
-      }
-      log.info(`successData found in logs: ${JSON.stringify(successData)}`);
+      const {
+        topics, data,
+      } = userOperationEventLog.raw;
 
-      const success = successData.value;
+      const logDescription = entryPointContract.interface.parseLog({
+        topics, data,
+      });
+
+      const {
+        success,
+      } = logDescription.args[4];
 
       if (!success) {
-        const userOperationRevertedEventLog = transactionLogs.find((transactionLog: any) => transactionLog.name === 'UserOperationRevertReason');
-        if (!userOperationRevertedEventLog) {
-          log.error('UserOperationReverted not found in logs');
-          return {
-            reason: 'userOp execution failed',
-            isExecutionSuccess: false,
-          };
-        }
-        log.info(`userOperationRevertedEventLog found in logs: ${JSON.stringify(userOperationRevertedEventLog)}`);
-        const resultData = userOperationRevertedEventLog.inputs.find((input: any) => input.soltype.name === 'result');
-        if (!resultData) {
-          log.error('successData not found in logs');
-          return {
-            reason: 'userOp execution failed',
-            isExecutionSuccess: false,
-          };
-        }
-        log.info(`resultData found in logs: ${JSON.stringify(resultData)}`);
-
-        const result = resultData.value;
-
         return {
-          reason: result,
+          reason: 'userOp execution failed',
           isExecutionSuccess: false,
         };
       }

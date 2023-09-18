@@ -26,16 +26,10 @@ export const validateBundlerTransaction = async (req: Request) => {
 
     const entryPointContracts = entryPointMap[parseInt(chainId, 10)];
 
-    let entryPointContract;
-    for (let entryPointContractIndex = 0;
-      entryPointContractIndex < entryPointContracts.length;
-      entryPointContractIndex += 1) {
-      if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
-       === entryPointAddress.toLowerCase()) {
-        entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
-        break;
-      }
-    }
+    const entryPointContract = entryPointContracts.find(
+      (entryPoint) => entryPoint.address.toLowerCase() === entryPointAddress.toLowerCase(),
+    )?.entryPointContract;
+
     if (!entryPointContract) {
       return {
         code: STATUSES.BAD_REQUEST,
