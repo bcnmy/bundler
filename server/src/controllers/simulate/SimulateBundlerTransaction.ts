@@ -37,6 +37,7 @@ export const validateBundlerTransaction = async (req: Request) => {
       };
     }
 
+    const start = performance.now();
     const bundlerSimulationAndValidationResponse = await bundlerSimulatonAndValidationServiceMap[
       parseInt(chainId, 10)
     ].validateUserOperation(
@@ -46,6 +47,8 @@ export const validateBundlerTransaction = async (req: Request) => {
         chainId: parseInt(chainId, 10),
       },
     );
+    const end = performance.now();
+    log.info(`validateUserOperation of bundlerSimulatonAndValidationServiceMap tookn ${end - start} milliseconds`);
 
     log.info(`Bundler simulation and validation response: ${JSON.stringify(bundlerSimulationAndValidationResponse)}`);
 

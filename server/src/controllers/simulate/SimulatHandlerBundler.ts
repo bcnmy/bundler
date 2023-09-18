@@ -1,8 +1,12 @@
+/* eslint-disable no-case-declarations */
 import { NextFunction, Request, Response } from 'express';
 import { EthMethodType, TransactionMethodType } from '../../../../common/types';
 import { STATUSES } from '../../middleware';
 import { validateBundlerTransaction } from './SimulateBundlerTransaction';
 import { parseError } from '../../../../common/utils';
+import { logger } from '../../../../common/log-config';
+
+const log = logger(module);
 
 export const simulateBundlerTransaction = () => async (
   req: Request,
@@ -10,6 +14,7 @@ export const simulateBundlerTransaction = () => async (
   next: NextFunction,
 ) => {
   try {
+    const start = performance.now();
     const { method, id } = req.body;
     let response = null;
     switch (method) {
@@ -53,6 +58,8 @@ export const simulateBundlerTransaction = () => async (
         };
         break;
       default:
+        const end = performance.now();
+        log.info(`simulateBundlerTransaction took ${end - start} milliseconds`);
         response = {
           jsonrpc: '2.0',
           id: id || 1,
@@ -64,6 +71,8 @@ export const simulateBundlerTransaction = () => async (
     }
 
     if (!response) {
+      const end = performance.now();
+      log.info(`simulateBundlerTransaction took ${end - start} milliseconds`);
       return res.status(STATUSES.INTERNAL_SERVER_ERROR).send({
         jsonrpc: '2.0',
         id: id || 1,
@@ -75,6 +84,8 @@ export const simulateBundlerTransaction = () => async (
     }
     if ((response as any).code !== STATUSES.SUCCESS) {
       if ((response as any).handleOpsCallData !== null) {
+        const end = performance.now();
+        log.info(`simulateBundlerTransaction took ${end - start} milliseconds`);
         return res.status(STATUSES.BAD_REQUEST).send({
           jsonrpc: '2.0',
           id: id || 1,
@@ -85,6 +96,8 @@ export const simulateBundlerTransaction = () => async (
           },
         });
       }
+      const end = performance.now();
+      log.info(`simulateBundlerTransaction took ${end - start} milliseconds`);
       return res.status(STATUSES.BAD_REQUEST).send({
         jsonrpc: '2.0',
         id: id || 1,
@@ -94,6 +107,8 @@ export const simulateBundlerTransaction = () => async (
         },
       });
     }
+    const end = performance.now();
+    log.info(`simulateBundlerTransaction took ${end - start} milliseconds`);
     return next();
   } catch (error) {
     const { id } = req.body;

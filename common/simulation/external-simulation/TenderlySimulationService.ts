@@ -191,7 +191,10 @@ export class TenderlySimulationService implements IExternalSimulation {
       };
       let response;
       try {
+        const start = performance.now();
         response = await tAxios.post(SIMULATE_URL, body);
+        const end = performance.now();
+        log.info(`Tenderly simulation call took: ${end - start} milliseconds`);
       } catch (error) {
         log.info(`Error in Tenderly Simulation: ${JSON.stringify(error)}`);
         return {
@@ -210,10 +213,14 @@ export class TenderlySimulationService implements IExternalSimulation {
       const totalGas = response.data.transaction.gas_used;
 
       log.info(`totalGas: ${totalGas} from Tenderly simulation`);
+
+      const start = performance.now();
       const {
         reason,
         isExecutionSuccess,
       } = this.checkUserOperationExecution(transactionLogs, entryPointContract);
+      const end = performance.now();
+      log.info(`checkUserOperationExecution took: ${end - start} milliseconds`);
 
       return {
         reason,
@@ -411,7 +418,11 @@ export class TenderlySimulationService implements IExternalSimulation {
     entryPointContract: ethers.Contract,
   ) {
     try {
+      const userOperationEventLogStart = performance.now();
       const userOperationEventLog = transactionLogs.find((transactionLog: any) => transactionLog.raw.topics[0] === '0x49628fd1471006c1482da88028e9ce4dbb080b815c9b0344d39e5a8e6ec1419f');
+      const userOperationEventLogEnd = performance.now();
+      log.info(`userOperationEventLog fetching took: ${userOperationEventLogEnd - userOperationEventLogStart} milliseconds`);
+
       if (!userOperationEventLog) {
         log.error('UserOperationEvent not found in logs');
         return {
@@ -424,9 +435,12 @@ export class TenderlySimulationService implements IExternalSimulation {
         topics, data,
       } = userOperationEventLog.raw;
 
+      const parseLogStart = performance.now();
       const logDescription = entryPointContract.interface.parseLog({
         topics, data,
       });
+      const parseLogEnd = performance.now();
+      log.info(`parseLog took: ${parseLogStart - parseLogEnd} milliseconds`);
 
       const {
         success,

@@ -33,6 +33,7 @@ export class AlchemySimulationService {
         data,
       } = await entryPointContract.populateTransaction.handleOps([userOp], publicKey);
 
+      const simulateExecutionStart = performance.now();
       const response = await this.networkService.sendRpcCall(
         'alchemy_simulateExecution',
         [
@@ -44,6 +45,8 @@ export class AlchemySimulationService {
           },
         ],
       );
+      const simulateExecutionEnd = performance.now();
+      log.info(`Network call to alchemy_simulateExecution took: ${simulateExecutionEnd - simulateExecutionStart} milliseconds`);
 
       const {
         calls,
@@ -52,6 +55,7 @@ export class AlchemySimulationService {
 
       // If no logs then transaction reverted, so inside the if it is a successful txn
       if (logs.length !== 0) {
+        const start = performance.now();
         const userOperationEvent = logs.find((events: any) => events.topics[0] === '0x49628fd1471006c1482da88028e9ce4dbb080b815c9b0344d39e5a8e6ec1419f');
         const successData = userOperationEvent.decoded.inputs[4];
         if (successData !== 'true') {
@@ -61,19 +65,29 @@ export class AlchemySimulationService {
             data,
           };
         }
+        const end = performance.now();
+        log.info(`Checking userOp execution took: ${end - start} milliseconds`);
       } else {
+        const start = performance.now();
         const transactionCall = calls.find((call: any) => call.error === 'execution reverted');
         const error = entryPointContract.interface.parseError(transactionCall.output);
         const {
           args,
         } = error;
+        const end = performance.now();
+        log.info(`Checking transaction execution revert took: ${end - start} milliseconds`);
         return {
           reason: args.reason,
           totalGas: 0,
           data,
         };
       }
+
+      const totalGasStart = performance.now();
       const totalGas = calls.reduce((total: any, call: any) => total + Number(call.gasUsed), 0);
+      const totalGasEnd = performance.now();
+      log.info(`Calculating total gas took: ${totalGasEnd - totalGasStart} milliseconds`);
+
       return {
         totalGas,
       };
