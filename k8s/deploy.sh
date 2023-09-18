@@ -100,4 +100,3 @@ while [ "${x}" -lt  "${REPLICAS}" ]; do
 done
 
 printf "\nDeployment completed\n";
-

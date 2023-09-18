@@ -105,7 +105,7 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
             );
             log.info(`Response from transaction service for transactionId: ${transactionDataReceivedFromQueue.transactionId} for ${this.transactionType} after sending transaction on chainId: ${this.chainId}: ${JSON.stringify(transactionServiceResponse)}`);
             if (transactionServiceResponse.state === 'failed' && transactionServiceResponse.code === STATUSES.FUND_BUNDLER) {
-              log.info(`Bundler: ${activeRelayer.getPublicKey()} could not executed transaction due to low fund for transactionId: ${transactionDataReceivedFromQueue.transactionId} on chainId: ${this.chainId}. Sending bundler for funding`);
+              log.info(`Bundler: ${activeRelayer.getPublicKey()} could not execute transaction due to low fund for transactionId: ${transactionDataReceivedFromQueue.transactionId} on chainId: ${this.chainId}. Sending bundler for funding`);
               this.relayerManager.fundAndAddRelayerToActiveQueue(activeRelayer.getPublicKey());
               return await sendTransactionWithRetry();
             }

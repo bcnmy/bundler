@@ -136,8 +136,8 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
           preVerificationGas,
           validUntil,
           validAfter,
-          maxPriorityFeePerGas: premiumMaxPriorityFeePerGas,
-          maxFeePerGas: premiumMaxFeePerGas,
+          maxPriorityFeePerGas: gasPrice?.maxPriorityFeePerGas as string,
+          maxFeePerGas: gasPrice?.maxFeePerGas as string,
         },
       });
     }
@@ -162,11 +162,6 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
     //   httpResponseCode: STATUSES.SUCCESS,
     // });
 
-    const premiumGasPrice = (
-      Math.round(Number(gasPrice) * premium)
-    ).toString();
-    log.info(`premiumGasPrice: ${premiumGasPrice} for chainId: ${chainId}`);
-
     return res.status(STATUSES.SUCCESS).json({
       jsonrpc: '2.0',
       id: id || 1,
@@ -176,8 +171,8 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
         preVerificationGas,
         validUntil,
         validAfter,
-        maxPriorityFeePerGas: premiumGasPrice,
-        maxFeePerGas: premiumGasPrice,
+        maxPriorityFeePerGas: gasPrice,
+        maxFeePerGas: gasPrice,
       },
     });
   } catch (error) {

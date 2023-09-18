@@ -66,6 +66,7 @@ export type CreateRawTransactionParamsType = {
   gasLimit: string;
   speed?: GasPriceType;
   account: IEVMAccount;
+  transactionId: string
 };
 
 export type CreateRawTransactionReturnType = EVMRawTransactionType;

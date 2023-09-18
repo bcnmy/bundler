@@ -74,7 +74,6 @@ export class BundlerSimulationAndValidationService {
         // signature not present, using default ECDSA
         userOp.signature = '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b';
       }
-
       if (!userOp.maxFeePerGas || userOp.maxFeePerGas === 0 || (userOp.maxFeePerGas as unknown as string) === '0x' || (userOp.maxFeePerGas as unknown as string) === '0') {
         // setting a non zero value as division with maxFeePerGas will happen
         userOp.maxFeePerGas = 1;
@@ -290,6 +289,14 @@ export class BundlerSimulationAndValidationService {
         log.info(`totalGas after calculating for polygon networks: ${totalGas}`);
         callGasLimit = Math.round(totalGas - preOpGas + 30000);
         log.info(`callGasLimit after calculating for polygon networks: ${callGasLimit}`);
+      }
+
+      if (totalGas < 500000) {
+        preVerificationGas += 20000;
+      } else if (totalGas > 500000 && totalGas < 1000000) {
+        preVerificationGas += 35000;
+      } else {
+        preVerificationGas += 50000;
       }
 
       if (callGasLimit > 500000) {

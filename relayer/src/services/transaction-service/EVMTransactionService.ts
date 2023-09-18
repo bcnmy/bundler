@@ -86,11 +86,12 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       gasLimit,
       speed,
       account,
+      transactionId,
     } = createTransactionParams;
     const relayerAddress = account.getPublicKey();
 
     const nonce = await this.nonceManager.getNonce(relayerAddress);
-    log.info(`Nonce for relayerAddress ${relayerAddress} is ${nonce} on chainId: ${this.chainId}`);
+    log.info(`Nonce for relayerAddress ${relayerAddress} is ${nonce} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
     const response = {
       from,
       to,
@@ -102,7 +103,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     };
     const gasPrice = await this.gasPriceService.getGasPrice(speed);
     if (typeof gasPrice !== 'string') {
-      log.info(`Gas price being used to send transaction by relayer: ${relayerAddress} is: ${JSON.stringify(gasPrice)}`);
+      log.info(`Gas price being used to send transaction by relayer: ${relayerAddress} is: ${JSON.stringify(gasPrice)} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
       const {
         maxPriorityFeePerGas,
         maxFeePerGas,
@@ -114,7 +115,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         maxPriorityFeePerGas: ethers.utils.hexlify(Number(maxPriorityFeePerGas)),
       };
     }
-    log.info(`Gas price being used to send transaction by relayer: ${relayerAddress} is: ${gasPrice}`);
+    log.info(`Gas price being used to send transaction by relayer: ${relayerAddress} is: ${gasPrice} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
     return { ...response, gasPrice: ethers.utils.hexlify(Number(gasPrice)) };
   }
 
@@ -306,12 +307,12 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       };
     }
 
-    log.info(`Transaction request received with transactionId: ${transactionId} on chainId ${this.chainId}`);
+    log.info(`Transaction request received for transactionId: ${transactionId} on chainId ${this.chainId}`);
 
     const addressMutex = this.getMutex(account.getPublicKey());
-    log.info(`Taking lock on address: ${account.getPublicKey()} on chainId: ${this.chainId}`);
+    log.info(`Taking lock on address: ${account.getPublicKey()} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
     const release = await addressMutex.acquire();
-    log.info(`Lock taken on address: ${account.getPublicKey()} on chainId: ${this.chainId}`);
+    log.info(`Lock taken on address: ${account.getPublicKey()} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
 
     try {
       // create transaction
@@ -323,6 +324,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         gasLimit,
         speed,
         account,
+        transactionId,
       });
       log.info(`Raw transaction for transactionId: ${transactionId} is ${JSON.stringify(rawTransaction)} on chainId ${this.chainId}`);
 
@@ -347,9 +349,14 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
 
       log.info(`Transaction execution response for transactionId ${transactionData.transactionId}: ${JSON.stringify(transactionExecutionResponse)} on chainId ${this.chainId}`);
 
-      log.info(`Incrementing nonce for account: ${relayerAddress} on chainId ${this.chainId}`);
+      log.info(`Incrementing nonce for account: ${relayerAddress} for transactionId: ${transactionId} on chainId ${this.chainId}`);
       await this.nonceManager.incrementNonce(relayerAddress);
-      log.info(`Incremented nonce for account: ${relayerAddress} on chainId ${this.chainId}`);
+      log.info(`Incremented nonce for account: ${relayerAddress} for transactionId: ${transactionId} on chainId ${this.chainId}`);
+
+      // release lock once transaction is sent and nonce is incremented
+      log.info(`Releasing lock on address: ${account.getPublicKey()} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+      release();
+      log.info(`Lock released on address: ${account.getPublicKey()} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
 
       // release lock once transaction is sent and nonce is incremented
       log.info(`Releasing lock on address: ${account.getPublicKey()} on chainId: ${this.chainId}`);
@@ -380,9 +387,9 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         ...transactionListenerNotifyResponse,
       };
     } catch (error: any) {
-      log.info(`Releasing lock on address: ${account.getPublicKey()} on chainId: ${this.chainId}`);
+      log.info(`Releasing lock on address: ${account.getPublicKey()} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
       release();
-      log.info(`Lock released on address: ${account.getPublicKey()} on chainId: ${this.chainId}`);
+      log.info(`Lock released on address: ${account.getPublicKey()} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
       if (error.message && error.message === 'Bundler balance too low. Send bundler for funding') {
         return {
           state: 'failed',
@@ -395,7 +402,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           },
         };
       }
-      log.info(`Error while sending transaction: ${error}`);
+      log.info(`Error while sending transaction: ${error} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
       await this.sendTransactionFailedSlackNotification(transactionId, this.chainId, parseError(error));
       return {
         state: 'failed',
