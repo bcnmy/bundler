@@ -26,16 +26,10 @@ export const validateBundlerTransaction = async (req: Request) => {
 
     const entryPointContracts = entryPointMap[parseInt(chainId, 10)];
 
-    let entryPointContract;
-    for (let entryPointContractIndex = 0;
-      entryPointContractIndex < entryPointContracts.length;
-      entryPointContractIndex += 1) {
-      if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
-       === entryPointAddress.toLowerCase()) {
-        entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
-        break;
-      }
-    }
+    const entryPointContract = entryPointContracts.find(
+      (entryPoint) => entryPoint.address.toLowerCase() === entryPointAddress.toLowerCase(),
+    )?.entryPointContract;
+
     if (!entryPointContract) {
       return {
         code: STATUSES.BAD_REQUEST,
@@ -43,6 +37,7 @@ export const validateBundlerTransaction = async (req: Request) => {
       };
     }
 
+    const start = performance.now();
     const bundlerSimulationAndValidationResponse = await bundlerSimulatonAndValidationServiceMap[
       parseInt(chainId, 10)
     ].validateUserOperation(
@@ -52,6 +47,8 @@ export const validateBundlerTransaction = async (req: Request) => {
         chainId: parseInt(chainId, 10),
       },
     );
+    const end = performance.now();
+    log.info(`validateUserOperation of bundlerSimulatonAndValidationServiceMap tookn ${end - start} milliseconds`);
 
     log.info(`Bundler simulation and validation response: ${JSON.stringify(bundlerSimulationAndValidationResponse)}`);
 
