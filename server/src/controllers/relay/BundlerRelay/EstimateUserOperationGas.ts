@@ -3,7 +3,6 @@ import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../../../middleware';
 import { logger } from '../../../../../common/log-config';
 import { bundlerSimulatonAndValidationServiceMap, entryPointMap, gasPriceServiceMap } from '../../../../../common/service-manager';
 import { parseError } from '../../../../../common/utils';
-import { config } from '../../../../../config';
 // import { updateRequest } from '../../auth/UpdateRequest';
 
 const log = logger(module);
@@ -89,23 +88,10 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
 
     const gasPrice = await gasPriceServiceMap[Number(chainId)]?.getGasPrice();
 
-    const premium = config.chains.premium[parseInt(chainId, 10)] || 1.05;
-    log.info(`premium: ${premium} for chainId: ${chainId}`);
-
     if (typeof gasPrice !== 'string') {
       log.info(
         `Gas price for chainId: ${chainId} is: ${JSON.stringify(gasPrice)}`,
       );
-
-      const premiumMaxPriorityFeePerGas = (
-        Math.round(Number(gasPrice?.maxPriorityFeePerGas) * premium)
-      ).toString();
-      log.info(`premiumMaxPriorityFeePerGas: ${premiumMaxPriorityFeePerGas} for chainId: ${chainId}`);
-
-      const premiumMaxFeePerGas = (
-        Math.round(Number(gasPrice?.maxFeePerGas) * premium)
-      ).toString();
-      log.info(`premiumMaxFeePerGas: ${premiumMaxFeePerGas} for chainId: ${chainId}`);
 
       // updateRequest({
       //   chainId: parseInt(chainId, 10),
