@@ -45,8 +45,8 @@ export class BundlerSimulationAndValidationService {
     gasPriceService: IGasPrice,
   ) {
     this.networkService = networkService;
-    this.gasPriceService = gasPriceService;
     this.tenderlySimulationService = tenderlySimulationService;
+    this.gasPriceService = gasPriceService;
   }
 
   async estimateUserOperationGas(

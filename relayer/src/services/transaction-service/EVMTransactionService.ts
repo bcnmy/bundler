@@ -358,11 +358,6 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       release();
       log.info(`Lock released on address: ${account.getPublicKey()} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
 
-      // release lock once transaction is sent and nonce is incremented
-      log.info(`Releasing lock on address: ${account.getPublicKey()} on chainId: ${this.chainId}`);
-      release();
-      log.info(`Lock released on address: ${account.getPublicKey()} on chainId: ${this.chainId}`);
-
       log.info(`Notifying transaction listener for transactionId: ${transactionId} on chainId ${this.chainId}`);
       const transactionListenerNotifyResponse = await this.transactionListener.notify({
         transactionExecutionResponse: transactionExecutionResponse.transactionResponse,
