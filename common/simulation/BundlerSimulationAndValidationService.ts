@@ -291,6 +291,14 @@ export class BundlerSimulationAndValidationService {
         log.info(`callGasLimit after calculating for polygon networks: ${callGasLimit}`);
       }
 
+      if (totalGas < 500000) {
+        preVerificationGas += 20000;
+      } else if (totalGas > 500000 && totalGas < 1000000) {
+        preVerificationGas += 35000;
+      } else {
+        preVerificationGas += 50000;
+      }
+
       if (callGasLimit > 500000) {
         callGasLimit += 100000;
       }
