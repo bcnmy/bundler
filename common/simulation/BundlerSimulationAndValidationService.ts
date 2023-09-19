@@ -14,7 +14,7 @@ import {
   EVMRawTransactionType,
   UserOperationType,
 } from '../types';
-import { packUserOp, parseError } from '../utils';
+import { packUserOp, packUserOpForUserOpHash, parseError } from '../utils';
 import RpcError from '../utils/rpc-error';
 import {
   EstimateUserOperationGasDataType,
@@ -217,7 +217,7 @@ export class BundlerSimulationAndValidationService {
         log.info(`call gas limit: ${callGasLimit} on chainId: ${chainId}`);
 
         if ([137, 80001].includes(chainId)) {
-          const baseFeePerGas = await this.networkService.getBaseFeePerGas();
+          const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
           log.info(`baseFeePerGas: ${baseFeePerGas} on chainId: ${chainId}`);
           totalGas = Math.round(paid / Math.min(
             baseFeePerGas + Number(userOp.maxPriorityFeePerGas),
@@ -582,7 +582,7 @@ export class BundlerSimulationAndValidationService {
     } else if (
       OptimismNetworks.includes(chainId)
     ) {
-      const baseFeePerGas = await this.networkService.getBaseFeePerGas();
+      const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
       const data = await calcOptimismPreVerificationGas(
         userOp,
         chainId,
@@ -599,7 +599,7 @@ export class BundlerSimulationAndValidationService {
     userOp: UserOperationType,
     chainId: number,
   ) {
-    const userOpHash = keccak256(packUserOp(userOp, true));
+    const userOpHash = keccak256(packUserOpForUserOpHash(userOp, true));
     const enc = defaultAbiCoder.encode(['bytes32', 'address', 'uint256'], [userOpHash, entryPointAddress, chainId]);
     return keccak256(enc);
   }

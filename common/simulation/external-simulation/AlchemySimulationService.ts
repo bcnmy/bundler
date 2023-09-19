@@ -52,13 +52,13 @@ export class AlchemySimulationService {
         calls,
         logs,
       } = response.data.result;
-
+      let totalGas;
       // If no logs then transaction reverted, so inside the if it is a successful txn
       if (logs.length !== 0) {
         const start = performance.now();
-        const userOperationEvent = logs.find((events: any) => events.topics[0] === '0x49628fd1471006c1482da88028e9ce4dbb080b815c9b0344d39e5a8e6ec1419f');
+        const userOperationEvent = logs.find((events: any) => events.decoded.eventName === 'UserOperationEvent');
         const successData = userOperationEvent.decoded.inputs[4];
-        if (successData !== 'true') {
+        if (successData.value !== 'true') {
           return {
             reason: 'userOp execution failed',
             totalGas: 0,
@@ -67,6 +67,11 @@ export class AlchemySimulationService {
         }
         const end = performance.now();
         log.info(`Checking userOp execution took: ${end - start} milliseconds`);
+
+        const totalGasStart = performance.now();
+        totalGas = calls.reduce((total: any, call: any) => total + Number(call.gasUsed), 0);
+        const totalGasEnd = performance.now();
+        log.info(`Calculating total gas took: ${totalGasEnd - totalGasStart} milliseconds`);
       } else {
         const start = performance.now();
         const transactionCall = calls.find((call: any) => call.error === 'execution reverted');
@@ -82,11 +87,6 @@ export class AlchemySimulationService {
           data,
         };
       }
-
-      const totalGasStart = performance.now();
-      const totalGas = calls.reduce((total: any, call: any) => total + Number(call.gasUsed), 0);
-      const totalGasEnd = performance.now();
-      log.info(`Calculating total gas took: ${totalGasEnd - totalGasStart} milliseconds`);
 
       return {
         totalGas,

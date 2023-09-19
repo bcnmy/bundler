@@ -440,12 +440,9 @@ export class TenderlySimulationService implements IExternalSimulation {
         topics, data,
       });
       const parseLogEnd = performance.now();
-      log.info(`parseLog took: ${parseLogStart - parseLogEnd} milliseconds`);
+      log.info(`parseLog took: ${parseLogEnd - parseLogStart} milliseconds`);
 
-      const {
-        success,
-      } = logDescription.args[4];
-
+      const success = logDescription.args[4];
       if (!success) {
         return {
           reason: 'userOp execution failed',
