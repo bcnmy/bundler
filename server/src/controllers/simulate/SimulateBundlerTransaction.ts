@@ -48,7 +48,7 @@ export const validateBundlerTransaction = async (req: Request) => {
       },
     );
     const end = performance.now();
-    log.info(`validateUserOperation of bundlerSimulatonAndValidationServiceMap tookn ${end - start} milliseconds`);
+    log.info(`validateUserOperation of bundlerSimulatonAndValidationServiceMap took ${end - start} milliseconds`);
 
     log.info(`Bundler simulation and validation response: ${JSON.stringify(bundlerSimulationAndValidationResponse)}`);
 
