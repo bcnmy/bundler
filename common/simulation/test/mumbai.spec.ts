@@ -2,10 +2,10 @@
 import { BytesLike, ethers } from 'ethers';
 import { BiconomySmartAccount } from '@biconomy/account';
 import { logger } from '../../log-config';
-import { BundlerSimulationAndValidationService } from '../BundlerSimulationAndValidationService';
+import { BundlerSimulationService } from '../BundlerSimulationService';
 import { config } from '../../../config';
 import { EVMNetworkService } from '../../network';
-import { TenderlySimulationService } from '../external-simulation';
+import { AlchemySimulationService, TenderlySimulationService } from '../external-simulation';
 import { RedisCacheService } from '../../cache';
 import { MumbaiGasPrice } from '../../gas-price/networks/MumbaiGasPrice';
 import { UserOperationType } from '../../types';
@@ -13,7 +13,7 @@ import { UserOperationType } from '../../types';
 const log = logger(module);
 // mumbai gas estimations
 describe('Mumbai 4337 Gas Estimations', () => {
-  let bundlerSimulationAndValidationService: BundlerSimulationAndValidationService;
+  let bundlerSimulationService: BundlerSimulationService;
   let entryPointContract: ethers.Contract;
   let biconomySmartAccount: any;
   let eoa: any;
@@ -34,6 +34,9 @@ describe('Mumbai 4337 Gas Estimations', () => {
         EIP1559SupportedNetworks: [80001],
       },
     );
+    const alchemySimulationService = new AlchemySimulationService(
+      networkService,
+    );
     const tenderlySimulationService = new TenderlySimulationService(
       gasPriceService,
       cacheService,
@@ -43,9 +46,11 @@ describe('Mumbai 4337 Gas Estimations', () => {
         tenderlyAccessKey: config.simulationData.tenderlyData.tenderlyAccessKey,
       },
     );
-    bundlerSimulationAndValidationService = new BundlerSimulationAndValidationService(
+    bundlerSimulationService = new BundlerSimulationService(
       networkService,
       tenderlySimulationService,
+      alchemySimulationService,
+      gasPriceService,
     );
     provider = new ethers.providers.JsonRpcProvider(config.chains.provider[80001]);
     entryPointContract = new ethers.Contract('0x5ff137d4b0fdcd49dca30c7cf57e578a026d2789', config.abi.entryPointAbi, provider);
@@ -77,7 +82,7 @@ describe('Mumbai 4337 Gas Estimations', () => {
 
     const partialUserOp = await biconomySmartAccount.buildUserOp([transaction]);
 
-    const response = await bundlerSimulationAndValidationService.estimateUserOperationGas(
+    const response = await bundlerSimulationService.estimateUserOperationGas(
       {
         userOp: partialUserOp as UserOperationType,
         chainId: 80001,
@@ -104,7 +109,7 @@ describe('Mumbai 4337 Gas Estimations', () => {
 
     const partialUserOp = await biconomySmartAccount.buildUserOp([transaction]);
 
-    const response = await bundlerSimulationAndValidationService.estimateUserOperationGas(
+    const response = await bundlerSimulationService.estimateUserOperationGas(
       {
         userOp: partialUserOp as UserOperationType,
         chainId: 80001,
@@ -136,7 +141,7 @@ describe('Mumbai 4337 Gas Estimations', () => {
 
     const partialUserOp = await biconomySmartAccount.buildUserOp(transactions);
 
-    const response = await bundlerSimulationAndValidationService.estimateUserOperationGas(
+    const response = await bundlerSimulationService.estimateUserOperationGas(
       {
         userOp: partialUserOp as UserOperationType,
         chainId: 80001,
@@ -168,7 +173,7 @@ describe('Mumbai 4337 Gas Estimations', () => {
 
     const partialUserOp = await biconomySmartAccount.buildUserOp(transactions);
 
-    const response = await bundlerSimulationAndValidationService.estimateUserOperationGas(
+    const response = await bundlerSimulationService.estimateUserOperationGas(
       {
         userOp: partialUserOp as UserOperationType,
         chainId: 80001,
@@ -189,7 +194,7 @@ describe('Mumbai 4337 Gas Estimations', () => {
 
     const partialUserOp = await biconomySmartAccount.buildUserOp([transaction]);
 
-    const response = await bundlerSimulationAndValidationService.estimateUserOperationGas(
+    const response = await bundlerSimulationService.estimateUserOperationGas(
       {
         userOp: partialUserOp as UserOperationType,
         chainId: 80001,
@@ -260,7 +265,7 @@ describe('Mumbai 4337 Gas Estimations', () => {
       signature: '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b',
     };
 
-    const response = await bundlerSimulationAndValidationService.estimateUserOperationGas(
+    const response = await bundlerSimulationService.estimateUserOperationGas(
       {
         userOp: partialUserOp as UserOperationType,
         chainId: 80001,
@@ -321,7 +326,7 @@ describe('Mumbai 4337 Gas Estimations', () => {
       signature: '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b',
     };
 
-    const response = await bundlerSimulationAndValidationService.estimateUserOperationGas(
+    const response = await bundlerSimulationService.estimateUserOperationGas(
       {
         userOp: partialUserOp as UserOperationType,
         chainId: 80001,
@@ -340,7 +345,7 @@ describe('Mumbai 4337 Gas Estimations', () => {
     const paymasterAndData = '0xf7609a20a1dd9614fa0b3cc35508f686e50df51700000000000000000000000002649f6d43556e76cf7a515a9f589bb23287378d00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000041f27674355fc0b55eb09f57156156c4ef9ee1c27d11788d8526d8b0ca95b550db6d29d010f8a3a920ff8666e8d1b083913a55e9cae493dd8dec7b5814aa57abfe1b00000000000000000000000000000000000000000000000000000000000000';
     partialUserOp.paymasterAndData = paymasterAndData;
 
-    const response = await bundlerSimulationAndValidationService.estimateUserOperationGas(
+    const response = await bundlerSimulationService.estimateUserOperationGas(
       {
         userOp: partialUserOp as UserOperationType,
         chainId: 80001,

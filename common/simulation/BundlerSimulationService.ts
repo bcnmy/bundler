@@ -19,7 +19,8 @@ import RpcError from '../utils/rpc-error';
 import {
   EstimateUserOperationGasDataType,
   EstimateUserOperationGasReturnType,
-  ValidateUserOperationData,
+  SimulateValidationAndExecutionData,
+  SimulateValidationData,
 } from './types';
 import {
   OptimismNetworks,
@@ -33,7 +34,7 @@ import { calcArbitrumPreVerificationGas, calcOptimismPreVerificationGas } from '
 import { IGasPrice } from '../gas-price';
 
 const log = logger(module);
-export class BundlerSimulationAndValidationService {
+export class BundlerSimulationService {
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
 
   tenderlySimulationService: TenderlySimulationService;
@@ -345,12 +346,12 @@ export class BundlerSimulationAndValidationService {
     }
   }
 
-  async validateUserOperation(
-    validateUserOperationData: ValidateUserOperationData,
+  async simulateValidationAndExecution(
+    simulateValidationAndExecutionData: SimulateValidationAndExecutionData,
   ) {
     let handleOpsCallData;
     try {
-      const { userOp, entryPointContract, chainId } = validateUserOperationData;
+      const { userOp, entryPointContract, chainId } = simulateValidationAndExecutionData;
 
       log.info(`userOp received: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
 
@@ -423,6 +424,134 @@ export class BundlerSimulationAndValidationService {
           `Transaction reverted in simulation with reason: ${reason}. Use handleOpsCallData to simulate transaction to check transaction execution steps`,
           BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
         );
+      }
+
+      const start = performance.now();
+      const userOpHash = this.getUserOpHash(
+        entryPointContract.address,
+        userOp,
+        chainId,
+      );
+      log.info(
+        `userOpHash: ${userOpHash} on chainId: ${chainId}`,
+      );
+      const end = performance.now();
+      log.info(`Getting userOpHash took ${end - start} milliseconds`);
+
+      return {
+        code: STATUSES.SUCCESS,
+        message: 'userOp Validated',
+        data: {
+          totalGas,
+          userOpHash,
+          handleOpsCallData: null,
+        },
+      };
+    } catch (error: any) {
+      return {
+        code: error.code,
+        message: parseError(error),
+        data: {
+          totalGas: 0,
+          userOpHash: null,
+          handleOpsCallData,
+        },
+      };
+    }
+  }
+
+  async simulateValidation(
+    simulateValidationData: SimulateValidationData,
+  ) {
+    let handleOpsCallData;
+    try {
+      const { userOp, entryPointContract, chainId } = simulateValidationData;
+
+      log.info(`userOp received: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
+
+      const {
+        data,
+      } = await entryPointContract.populateTransaction.handleOps([userOp], userOp.sender);
+
+      const {
+        publicKey,
+      } = config.relayerManagers[0].ownerAccountDetails[chainId];
+      log.info(`Simulating with from address: ${publicKey} on chainId: ${chainId}`);
+
+      const gasPriceFromService = await this.gasPriceService.getGasPrice();
+      let gasPrice;
+
+      if (typeof gasPriceFromService === 'string') {
+        gasPrice = Number(gasPriceFromService).toString(16);
+      } else {
+        gasPrice = Number(gasPriceFromService.maxFeePerGas).toString(16);
+      }
+
+      const ethEstimateGasStart = performance.now();
+      const response = await this.networkService.sendRpcCall(
+        'eth_estimateGas',
+        [{
+          from: publicKey,
+          to: entryPointContract.address,
+          data,
+          gasPrice: `0x${gasPrice}`,
+        }],
+      );
+      const ethEstimateGasEnd = performance.now();
+      log.info(`eth_esatimateGas took: ${ethEstimateGasEnd - ethEstimateGasStart} milliseconds`);
+
+      log.info(`Response from eth_estimateGas: ${JSON.stringify(response.data)}`);
+
+      const ethEstimateGasError = response.data.error;
+      let totalGas = 0;
+
+      if (ethEstimateGasError && Object.keys(ethEstimateGasError).length > 0) {
+        const error = entryPointContract.interface.parseError(ethEstimateGasError);
+        const {
+          args,
+        } = error;
+        const { reason } = args;
+        log.info(`Transaction failed with reason: ${reason} on chainId: ${chainId}`);
+        if (reason.includes('AA1') || reason.includes('AA2')) {
+          log.info(`error in account on chainId: ${chainId}`);
+          const message = this.removeSpecialCharacters(reason);
+          log.info(`message after removing special characters: ${message}`);
+          throw new RpcError(
+            message,
+            BUNDLER_VALIDATION_STATUSES.SIMULATE_VALIDATION_FAILED,
+          );
+        } else if (reason.includes('AA3')) {
+          log.info(`error in paymaster on chainId: ${chainId}`);
+          const message = this.removeSpecialCharacters(reason);
+          log.info(`message after removing special characters: ${message}`);
+          throw new RpcError(
+            message,
+            BUNDLER_VALIDATION_STATUSES.SIMULATE_PAYMASTER_VALIDATION_FAILED,
+          );
+        } else if (reason.includes('AA9')) {
+          log.info(`error in inner handle op on chainId: ${chainId}`);
+          const message = this.removeSpecialCharacters(reason);
+          log.info(`message after removing special characters: ${message}`);
+          throw new RpcError(
+            message,
+            BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
+          );
+        } else if (reason.includes('AA4')) {
+          log.info('error in verificationGasLimit being incorrect');
+          const message = this.removeSpecialCharacters(reason);
+          log.info(`message after removing special characters: ${message}`);
+          throw new RpcError(
+            message,
+            BUNDLER_VALIDATION_STATUSES.SIMULATE_VALIDATION_FAILED,
+          );
+        }
+        throw new RpcError(
+          `Transaction reverted in simulation with reason: ${reason}. Use handleOpsCallData to simulate transaction to check transaction execution steps`,
+          BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
+        );
+      } else {
+        const { result } = response.data;
+        totalGas = Number(result);
       }
 
       const start = performance.now();
