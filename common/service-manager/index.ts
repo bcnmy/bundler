@@ -46,7 +46,7 @@ import {
 } from '../relay-service';
 import {
   AASimulationService,
-  BundlerSimulationAndValidationService,
+  BundlerSimulationService,
   BundlerGasEstimationService,
   SCWSimulationService,
 } from '../simulation';
@@ -90,8 +90,8 @@ const aaSimulatonServiceMap: {
   [chainId: number]: AASimulationService;
 } = {};
 
-const bundlerSimulatonAndValidationServiceMap: {
-  [chainId: number]: BundlerSimulationAndValidationService
+const bundlerSimulatonServiceMap: {
+  [chainId: number]: BundlerSimulationService
 } = {};
 
 const bundlerGasEstimationServiceMap: {
@@ -490,7 +490,7 @@ let statusService: IStatusService;
         );
 
         // eslint-disable-next-line max-len
-        bundlerSimulatonAndValidationServiceMap[chainId] = new BundlerSimulationAndValidationService(
+        bundlerSimulatonServiceMap[chainId] = new BundlerSimulationService(
           networkService,
           tenderlySimulationService,
           alchemySimulationService,
@@ -519,7 +519,7 @@ export {
   routeTransactionToRelayerMap,
   feeOptionMap,
   aaSimulatonServiceMap,
-  bundlerSimulatonAndValidationServiceMap,
+  bundlerSimulatonServiceMap,
   bundlerGasEstimationServiceMap,
   scwSimulationServiceMap,
   entryPointMap,
