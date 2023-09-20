@@ -498,7 +498,7 @@ export class BundlerSimulationService {
         }],
       );
       const ethEstimateGasEnd = performance.now();
-      log.info(`eth_esatimateGas took: ${ethEstimateGasEnd - ethEstimateGasStart} milliseconds`);
+      log.info(`eth_estimateGas took: ${ethEstimateGasEnd - ethEstimateGasStart} milliseconds`);
 
       log.info(`Response from eth_estimateGas: ${JSON.stringify(response.data)}`);
 
@@ -506,7 +506,7 @@ export class BundlerSimulationService {
       let totalGas = 0;
 
       if (ethEstimateGasError && Object.keys(ethEstimateGasError).length > 0) {
-        const error = entryPointContract.interface.parseError(ethEstimateGasError);
+        const error = entryPointContract.interface.parseError(ethEstimateGasError.data);
         const {
           args,
         } = error;
