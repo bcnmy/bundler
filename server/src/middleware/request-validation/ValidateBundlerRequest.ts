@@ -63,13 +63,13 @@ export const validateBundlerRequest = () => async (
         });
     }
     const { error } = validationResponse;
-    log.info(`error from validation: ${JSON.stringify(error)} for method: ${method}`);
     const valid = error === undefined;
     if (valid) {
       const end = performance.now();
       log.info(`validateBundlerRequest took ${end - start} milliseconds`);
       return next();
     }
+    log.info(`error from validation: ${JSON.stringify(error)} for method: ${method}`);
     const { details } = error;
     let message;
     if (details) {
