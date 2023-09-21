@@ -359,17 +359,33 @@ export class BundlerSimulationService {
       let totalGas: number;
       let data: string | undefined;
       if (AlchemySimulateExecutionSupportedNetworks.includes(chainId)) {
-        const start = performance.now();
-        const response = await this.alchemySimulationService.simulateHandleOps({
-          userOp,
-          entryPointContract,
-          chainId,
-        });
-        reason = response.reason;
-        totalGas = response.totalGas;
-        data = response.data;
-        const end = performance.now();
-        log.info(`Alchemy Simulation Service's simulateHandleOps took ${end - start} milliseconds`);
+        try {
+          const start = performance.now();
+          const response = await this.alchemySimulationService.simulateHandleOps({
+            userOp,
+            entryPointContract,
+            chainId,
+          });
+          reason = response.reason;
+          totalGas = response.totalGas;
+          data = response.data;
+          const end = performance.now();
+          log.info(`Alchemy Simulation Service's simulateHandleOps took ${end - start} milliseconds`);
+        } catch (error) {
+          log.error(`Error in Alchemy Simulation Service: ${parseError(error)}`);
+          log.info('Retrying simulation with Tenderly Simulation service');
+          const start = performance.now();
+          const response = await this.tenderlySimulationService.simulateHandleOps({
+            userOp,
+            entryPointContract,
+            chainId,
+          });
+          reason = response.reason;
+          totalGas = response.totalGas;
+          data = response.data;
+          const end = performance.now();
+          log.info(`Tenderly Simulation Service's simulateHandleOps took ${end - start} milliseconds`);
+        }
       } else {
         const start = performance.now();
         const response = await this.tenderlySimulationService.simulateHandleOps({
