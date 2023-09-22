@@ -1,4 +1,3 @@
-/* eslint-disable no-case-declarations */
 import { NextFunction, Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
 import { EthMethodType, TransactionMethodType } from '../../../../common/types';
@@ -22,7 +21,6 @@ export const validateBundlerRequest = () => async (
   next: NextFunction,
 ) => {
   try {
-    const start = performance.now();
     const { method, id } = req.body;
     let validationResponse;
     switch (method) {
@@ -51,8 +49,6 @@ export const validateBundlerRequest = () => async (
         validationResponse = bundlerGetUserOpsByApiKeyRequestSchema.validate(req.body);
         break;
       default:
-        const end = performance.now();
-        log.info(`validateBundlerRequest took ${end - start} milliseconds`);
         return res.status(STATUSES.BAD_REQUEST).send({
           jsonrpc: '2.0',
           id: id || 1,
@@ -63,13 +59,11 @@ export const validateBundlerRequest = () => async (
         });
     }
     const { error } = validationResponse;
+    log.info(`error from validation: ${JSON.stringify(error)} for method: ${method}`);
     const valid = error === undefined;
     if (valid) {
-      const end = performance.now();
-      log.info(`validateBundlerRequest took ${end - start} milliseconds`);
       return next();
     }
-    log.info(`error from validation: ${JSON.stringify(error)} for method: ${method}`);
     const { details } = error;
     let message;
     if (details) {
@@ -77,8 +71,6 @@ export const validateBundlerRequest = () => async (
     } else {
       message = error.message || error.toString();
     }
-    const end = performance.now();
-    log.info(`validateBundlerRequest took ${end - start} milliseconds`);
     return res.send({
       jsonrpc: '2.0',
       id: id || 1,
