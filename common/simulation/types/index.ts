@@ -88,10 +88,8 @@ export type SimulateHandleOpsReturnType = {
   isExecutionSuccess?: boolean
 };
 
-export type SimulateValidationAndExecutionData = {
+export type ValidateUserOperationData = {
   userOp: UserOperationType,
   entryPointContract: ethers.Contract,
   chainId: number,
 };
-
-export type SimulateValidationData = SimulateValidationAndExecutionData;
