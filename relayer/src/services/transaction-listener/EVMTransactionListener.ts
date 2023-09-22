@@ -102,45 +102,16 @@ ITransactionPublisher<TransactionQueueMessageType> {
     }
 
     log.info(`Publishing to transaction queue on success for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
-    await this.publishToTransactionQueue({
-      transactionId,
-      relayerManagerName,
-      transactionHash: transactionExecutionResponse?.hash,
-      receipt: transactionReceipt,
-      event: SocketEventType.onTransactionMined,
-    });
+    if (!(transactionType === TransactionType.BUNDLER)) {
+      await this.publishToTransactionQueue({
+        transactionId,
+        relayerManagerName,
+        transactionHash: transactionExecutionResponse?.hash,
+        receipt: transactionReceipt,
+        event: SocketEventType.onTransactionMined,
+      });
+    }
     if (transactionExecutionResponse) {
-      try {
-        log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
-        let transactionFee = 0;
-        let transactionFeeInUSD = 0;
-        let transactionFeeCurrency = '';
-        if (!transactionReceipt.gasUsed && !transactionReceipt.effectiveGasPrice) {
-          log.info(`gasUsed or effectiveGasPrice field not found in ${JSON.stringify(transactionExecutionResponse)}`);
-        } else {
-          transactionFee = Number(transactionReceipt.gasUsed.mul(
-            transactionReceipt.effectiveGasPrice,
-          ));
-          transactionFeeCurrency = config.chains.currency[this.chainId];
-          const coinsRateObj = await this.cacheService.get(getTokenPriceKey());
-          if (!coinsRateObj) {
-            log.info('Coins Rate Obj not fetched from cache'); // TODO should it make call to token price service?
-          } else {
-            transactionFeeInUSD = JSON.parse(coinsRateObj)[this.chainId];
-          }
-        }
-        await this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
-          receipt: transactionReceipt,
-          transactionFee,
-          transactionFeeInUSD,
-          transactionFeeCurrency,
-          status: TransactionStatus.SUCCESS,
-          updationTime: Date.now(),
-        }, transactionId, transactionExecutionResponse?.hash);
-      } catch (error) {
-        log.info(`Error in saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId} with error: ${parseError(error)}`);
-      }
-
       try {
         log.info(`transactionType: ${transactionType} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
         if (transactionType === TransactionType.BUNDLER || transactionType === TransactionType.AA) {
@@ -159,17 +130,10 @@ ITransactionPublisher<TransactionQueueMessageType> {
 
             const entryPointContracts = this.entryPointMap[this.chainId];
 
-            let entryPointContract;
-            for (let entryPointContractIndex = 0;
-              entryPointContractIndex < entryPointContracts.length;
-              entryPointContractIndex += 1) {
-              if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
-             === entryPoint.toLowerCase()) {
-                // eslint-disable-next-line max-len
-                entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
-                break;
-              }
-            }
+            const entryPointContract = entryPointContracts.find(
+              (contract) => contract.address.toLowerCase() === entryPoint.toLowerCase(),
+            )?.entryPointContract;
+
             if (entryPointContract) {
               const latestBlock = await this.networkService.getLatesBlockNumber();
               log.info(`latestBlock: ${latestBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
@@ -233,6 +197,37 @@ ITransactionPublisher<TransactionQueueMessageType> {
       } catch (error) {
         log.info(`Error in saving userOp data in database for transactionId: ${transactionId} on chainId ${this.chainId} with error: ${parseError(error)}`);
       }
+
+      try {
+        log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
+        let transactionFee = 0;
+        let transactionFeeInUSD = 0;
+        let transactionFeeCurrency = '';
+        if (!transactionReceipt.gasUsed && !transactionReceipt.effectiveGasPrice) {
+          log.info(`gasUsed or effectiveGasPrice field not found in ${JSON.stringify(transactionExecutionResponse)}`);
+        } else {
+          transactionFee = Number(transactionReceipt.gasUsed.mul(
+            transactionReceipt.effectiveGasPrice,
+          ));
+          transactionFeeCurrency = config.chains.currency[this.chainId];
+          const coinsRateObj = await this.cacheService.get(getTokenPriceKey());
+          if (!coinsRateObj) {
+            log.info('Coins Rate Obj not fetched from cache'); // TODO should it make call to token price service?
+          } else {
+            transactionFeeInUSD = JSON.parse(coinsRateObj)[this.chainId];
+          }
+        }
+        await this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
+          receipt: transactionReceipt,
+          transactionFee,
+          transactionFeeInUSD,
+          transactionFeeCurrency,
+          status: TransactionStatus.SUCCESS,
+          updationTime: Date.now(),
+        }, transactionId, transactionExecutionResponse?.hash);
+      } catch (error) {
+        log.info(`Error in saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId} with error: ${parseError(error)}`);
+      }
     } else {
       log.info(`No transactionExecutionResponse found for transactionId: ${transactionId} on chainId ${this.chainId}`);
     }
@@ -263,37 +258,6 @@ ITransactionPublisher<TransactionQueueMessageType> {
 
     if (transactionExecutionResponse) {
       try {
-        log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
-        let transactionFee = 0;
-        let transactionFeeInUSD = 0;
-        let transactionFeeCurrency = '';
-        if (!transactionReceipt.gasUsed && !transactionReceipt.effectiveGasPrice) {
-          log.info(`gasUsed or effectiveGasPrice field not found in ${JSON.stringify(transactionExecutionResponse)}`);
-        } else {
-          transactionFee = Number(transactionReceipt.gasUsed.mul(
-            transactionReceipt.effectiveGasPrice,
-          ));
-          transactionFeeCurrency = config.chains.currency[this.chainId];
-          const coinsRateObj = await this.cacheService.get(getTokenPriceKey());
-          if (!coinsRateObj) {
-            log.info('Coins Rate Obj not fetched from cache');
-          } else {
-            transactionFeeInUSD = JSON.parse(coinsRateObj)[this.chainId];
-          }
-        }
-        await this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
-          receipt: transactionReceipt,
-          transactionFee,
-          transactionFeeInUSD,
-          transactionFeeCurrency,
-          status: TransactionStatus.FAILED,
-          updationTime: Date.now(),
-        }, transactionId, transactionExecutionResponse?.hash);
-      } catch (error) {
-        log.info(`Error in saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId} with error: ${parseError(error)}`);
-      }
-
-      try {
         log.info(`transactionType: ${transactionType} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
         if (transactionType === TransactionType.BUNDLER || transactionType === TransactionType.AA) {
           log.info(`Getting userOps for transactionId: ${transactionId} on chainId: ${this.chainId}`);
@@ -312,17 +276,9 @@ ITransactionPublisher<TransactionQueueMessageType> {
 
             const entryPointContracts = this.entryPointMap[this.chainId];
 
-            let entryPointContract;
-            for (let entryPointContractIndex = 0;
-              entryPointContractIndex < entryPointContracts.length;
-              entryPointContractIndex += 1) {
-              if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
-               === entryPoint.toLowerCase()) {
-                // eslint-disable-next-line max-len
-                entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
-                break;
-              }
-            }
+            const entryPointContract = entryPointContracts.find(
+              (contract) => contract.address.toLowerCase() === entryPoint.toLowerCase(),
+            )?.entryPointContract;
 
             if (entryPointContract) {
               const latestBlock = await this.networkService.getLatesBlockNumber();
@@ -484,6 +440,37 @@ ITransactionPublisher<TransactionQueueMessageType> {
         }
       } catch (error) {
         log.info(`Error in saving userOp data in database for transactionId: ${transactionId} on chainId ${this.chainId} with error: ${parseError(error)}`);
+      }
+
+      try {
+        log.info(`Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`);
+        let transactionFee = 0;
+        let transactionFeeInUSD = 0;
+        let transactionFeeCurrency = '';
+        if (!transactionReceipt.gasUsed && !transactionReceipt.effectiveGasPrice) {
+          log.info(`gasUsed or effectiveGasPrice field not found in ${JSON.stringify(transactionExecutionResponse)}`);
+        } else {
+          transactionFee = Number(transactionReceipt.gasUsed.mul(
+            transactionReceipt.effectiveGasPrice,
+          ));
+          transactionFeeCurrency = config.chains.currency[this.chainId];
+          const coinsRateObj = await this.cacheService.get(getTokenPriceKey());
+          if (!coinsRateObj) {
+            log.info('Coins Rate Obj not fetched from cache');
+          } else {
+            transactionFeeInUSD = JSON.parse(coinsRateObj)[this.chainId];
+          }
+        }
+        await this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
+          receipt: transactionReceipt,
+          transactionFee,
+          transactionFeeInUSD,
+          transactionFeeCurrency,
+          status: TransactionStatus.FAILED,
+          updationTime: Date.now(),
+        }, transactionId, transactionExecutionResponse?.hash);
+      } catch (error) {
+        log.info(`Error in saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId} with error: ${parseError(error)}`);
       }
     } else {
       log.info(`No transactionExecutionResponse found for transactionId: ${transactionId} on chainId ${this.chainId}`);
