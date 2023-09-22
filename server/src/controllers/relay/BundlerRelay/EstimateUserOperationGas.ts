@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../../../middleware';
 import { logger } from '../../../../../common/log-config';
-import { bundlerSimulatonAndValidationServiceMap, entryPointMap, gasPriceServiceMap } from '../../../../../common/service-manager';
+import { bundlerSimulatonServiceMap, entryPointMap, gasPriceServiceMap } from '../../../../../common/service-manager';
 import { parseError } from '../../../../../common/utils';
 // import { updateRequest } from '../../auth/UpdateRequest';
 
@@ -36,7 +36,7 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
       };
     }
 
-    const estimatedUserOpGas = await bundlerSimulatonAndValidationServiceMap[
+    const estimatedUserOpGas = await bundlerSimulatonServiceMap[
       parseInt(chainId, 10)
     ].estimateUserOperationGas(
       {

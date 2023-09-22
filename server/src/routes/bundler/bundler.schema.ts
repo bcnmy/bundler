@@ -25,11 +25,16 @@ const userOpForSendUserOp = object.keys({
 
 const entryPointAddress = string.required().error(new Error('entryPointAddress is required'));
 
+const simulationTypeObj = object.keys({
+  simulation_type: string.valid('validation', 'validation_and_execution'),
+});
+
 export const bundlerSendUserOpRequestSchema = object.keys({
   method: string.regex(/eth_sendUserOperation/),
   params: array.items(alternatives.try(
     userOpForSendUserOp,
     entryPointAddress,
+    simulationTypeObj,
   )),
   jsonrpc: string.required().error(new Error('jsonrpc is required')),
   id: number.required().error(new Error('id is required')),
