@@ -16,7 +16,6 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
   // const bundlerRequestId = req.body.params[6];
 
   try {
-    const start = performance.now();
     const { id } = req.body;
     const userOp = req.body.params[0];
     const entryPointAddress = req.body.params[1];
@@ -94,8 +93,6 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
       //   },
       //   httpResponseCode: STATUSES.BAD_REQUEST,
       // });
-      const end = performance.now();
-      log.info(`bundleUserOperation took: ${end - start} milliseconds`);
       return res.status(STATUSES.BAD_REQUEST).json({
         jsonrpc: '2.0',
         id: id || 1,
@@ -134,8 +131,6 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
       //   },
       //   httpResponseCode: STATUSES.BAD_REQUEST,
       // });
-      const end = performance.now();
-      log.info(`bundleUserOperation took: ${end - start} milliseconds`);
       return res.status(STATUSES.BAD_REQUEST).json({
         jsonrpc: '2.0',
         id: id || 1,
@@ -158,8 +153,6 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
     //   },
     //   httpResponseCode: STATUSES.SUCCESS,
     // });
-    const end = performance.now();
-    log.info(`bundleUserOperation took: ${end - start} milliseconds`);
     return res.status(STATUSES.SUCCESS).json({
       jsonrpc: '2.0',
       id: id || 1,

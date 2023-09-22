@@ -56,11 +56,6 @@ export class GasPrice implements IGasPrice {
   private getMaxPriorityFeeGasKey = (gasType: GasPriceType) => `MaxPriorityFeeGas_${this.chainId}_${gasType}`;
 
   /**
-   * Method returns cache key for EIP 1559 Base Fee Per Gas
-   */
-  private getBaseFeePerGasKey = () => `BaseFeePerGas_${this.chainId}`;
-
-  /**
    * Method sets gas price (standard & EIP 1559) in cache
    * @param gasType DEFAULT | MEDIUM | FAST
    * @param price the gas price
@@ -282,27 +277,6 @@ export class GasPrice implements IGasPrice {
   }
 
   /**
-   * Method seets EIP 1559 base fee per gas
-   * @param baseFeePerGas
-   */
-  async setBaseFeePerGas(baseFeePerGas: number): Promise<void> {
-    await this.cacheService.set(
-      this.getBaseFeePerGasKey(),
-      baseFeePerGas.toString(),
-    );
-  }
-
-  /**
-   * Method returns EIP 1559 base fee per gas
-   */
-  async getBaseFeePerGas(): Promise<number> {
-    const baseFeePerGas = await this.cacheService.get(
-      this.getBaseFeePerGasKey(),
-    );
-    return Number(baseFeePerGas);
-  }
-
-  /**
    * Method sets up gas price manager
    * @param gP the gas price to set
    */
@@ -410,10 +384,6 @@ export class GasPrice implements IGasPrice {
                 maxPriorityFeePerGas,
               );
             }
-          }
-          if (OptimismNetworks.includes(this.chainId) || [137, 80001]) {
-            const baseFeePerGas = await this.networkService.getBaseFeePerGas();
-            await this.setBaseFeePerGas(baseFeePerGas);
           }
         }
       }

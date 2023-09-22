@@ -1,6 +1,6 @@
 import { Request } from 'express';
 import { logger } from '../../../../common/log-config';
-import { bundlerSimulatonServiceMap, entryPointMap } from '../../../../common/service-manager';
+import { bundlerSimulatonAndValidationServiceMap, entryPointMap } from '../../../../common/service-manager';
 import { parseError } from '../../../../common/utils';
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../../middleware';
 
@@ -12,7 +12,6 @@ export const validateBundlerTransaction = async (req: Request) => {
     const userOp = req.body.params[0];
     const entryPointAddress = req.body.params[1];
     const { chainId, dappAPIKey } = req.params;
-    const simulationTypeData = req.body.params[2];
     log.info(`chainId from request params: ${chainId}`);
     log.info(`dappAPIKey from request params: ${dappAPIKey}`);
 
@@ -27,10 +26,16 @@ export const validateBundlerTransaction = async (req: Request) => {
 
     const entryPointContracts = entryPointMap[parseInt(chainId, 10)];
 
-    const entryPointContract = entryPointContracts.find(
-      (entryPoint) => entryPoint.address.toLowerCase() === entryPointAddress.toLowerCase(),
-    )?.entryPointContract;
-
+    let entryPointContract;
+    for (let entryPointContractIndex = 0;
+      entryPointContractIndex < entryPointContracts.length;
+      entryPointContractIndex += 1) {
+      if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
+       === entryPointAddress.toLowerCase()) {
+        entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
+        break;
+      }
+    }
     if (!entryPointContract) {
       return {
         code: STATUSES.BAD_REQUEST,
@@ -38,34 +43,15 @@ export const validateBundlerTransaction = async (req: Request) => {
       };
     }
 
-    let bundlerSimulationAndValidationResponse;
-    if (!simulationTypeData || Object.keys(simulationTypeData).length === 0 || simulationTypeData.simulation_type === 'validation') {
-      const start = performance.now();
-      bundlerSimulationAndValidationResponse = await bundlerSimulatonServiceMap[
-        parseInt(chainId, 10)
-      ].simulateValidation(
-        {
-          userOp,
-          entryPointContract,
-          chainId: parseInt(chainId, 10),
-        },
-      );
-      const end = performance.now();
-      log.info(`simulateValidation of bundlerSimulatonServiceMap took ${end - start} milliseconds`);
-    } else {
-      const start = performance.now();
-      bundlerSimulationAndValidationResponse = await bundlerSimulatonServiceMap[
-        parseInt(chainId, 10)
-      ].simulateValidationAndExecution(
-        {
-          userOp,
-          entryPointContract,
-          chainId: parseInt(chainId, 10),
-        },
-      );
-      const end = performance.now();
-      log.info(`simulateValidationAndExecution of bundlerSimulatonServiceMap took ${end - start} milliseconds`);
-    }
+    const bundlerSimulationAndValidationResponse = await bundlerSimulatonAndValidationServiceMap[
+      parseInt(chainId, 10)
+    ].validateUserOperation(
+      {
+        userOp,
+        entryPointContract,
+        chainId: parseInt(chainId, 10),
+      },
+    );
 
     log.info(`Bundler simulation and validation response: ${JSON.stringify(bundlerSimulationAndValidationResponse)}`);
 
