@@ -46,11 +46,11 @@ import {
 } from '../relay-service';
 import {
   AASimulationService,
-  BundlerSimulationAndValidationService,
+  BundlerSimulationService,
   BundlerGasEstimationService,
   SCWSimulationService,
 } from '../simulation';
-import { TenderlySimulationService } from '../simulation/external-simulation';
+import { AlchemySimulationService, TenderlySimulationService } from '../simulation/external-simulation';
 import { IStatusService, StatusService } from '../status';
 import { CMCTokenPriceManager } from '../token-price';
 import {
@@ -90,8 +90,8 @@ const aaSimulatonServiceMap: {
   [chainId: number]: AASimulationService;
 } = {};
 
-const bundlerSimulatonAndValidationServiceMap: {
-  [chainId: number]: BundlerSimulationAndValidationService
+const bundlerSimulatonServiceMap: {
+  [chainId: number]: BundlerSimulationService
 } = {};
 
 const bundlerGasEstimationServiceMap: {
@@ -485,10 +485,15 @@ let statusService: IStatusService;
           },
         );
 
+        const alchemySimulationService = new AlchemySimulationService(
+          networkService,
+        );
+
         // eslint-disable-next-line max-len
-        bundlerSimulatonAndValidationServiceMap[chainId] = new BundlerSimulationAndValidationService(
+        bundlerSimulatonServiceMap[chainId] = new BundlerSimulationService(
           networkService,
           tenderlySimulationService,
+          alchemySimulationService,
           gasPriceService,
         );
 
@@ -514,7 +519,7 @@ export {
   routeTransactionToRelayerMap,
   feeOptionMap,
   aaSimulatonServiceMap,
-  bundlerSimulatonAndValidationServiceMap,
+  bundlerSimulatonServiceMap,
   bundlerGasEstimationServiceMap,
   scwSimulationServiceMap,
   entryPointMap,
