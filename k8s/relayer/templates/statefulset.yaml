@@ -105,9 +105,9 @@ spec:
         lifecycle:
         # https://learnk8s.io/graceful-shutdown
         # still server traffic for 15 seconds after k8s issued the SIG term
-        preStop:
-          exec:
-            command: ["sleep", "15"]
+          preStop:
+            exec:
+              command: ["sleep", "15"]
       volumes:
       - name: secret
         secret:
