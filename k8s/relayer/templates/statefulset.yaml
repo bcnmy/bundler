@@ -102,7 +102,7 @@ spec:
           successThreshold: 1
           timeoutSeconds: 120
           failureThreshold: 5
-              lifecycle:
+        lifecycle:
         # https://learnk8s.io/graceful-shutdown
         # still server traffic for 15 seconds after k8s issued the SIG term
         preStop:
