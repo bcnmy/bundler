@@ -8,7 +8,7 @@
     "dev": "npx nodemon server/src/index.ts ",
     "views": "cp -r server/src/views server/dist/server/src/views",
     "build": "tsc -p server && npm run views",
-    "start": "node server/dist/server/src/index.js",
+    "start": "node --max_old_space_size=6000 server/dist/server/src/index.js",
     "test": "jest --detectOpenHandles"
   },
   "dependencies": {
