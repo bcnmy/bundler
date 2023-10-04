@@ -1,6 +1,6 @@
 /* eslint-disable no-case-declarations */
 import { NextFunction, Request, Response } from 'express';
-import { EthMethodType, TransactionMethodType } from '../../../../common/types';
+import { BiconomyMethodType, EthMethodType, TransactionMethodType } from '../../../../common/types';
 import { STATUSES } from '../../middleware';
 import { validateBundlerTransaction } from './SimulateBundlerTransaction';
 import { parseError } from '../../../../common/utils';
@@ -52,6 +52,12 @@ export const simulateBundlerTransaction = () => async (
         };
         break;
       case EthMethodType.GAS_AND_GAS_PRICES:
+        response = {
+          code: STATUSES.SUCCESS,
+          message: `Method: ${method} does not require simulation`,
+        };
+        break;
+      case BiconomyMethodType.GET_GAS_FEE_VALUES:
         response = {
           code: STATUSES.SUCCESS,
           message: `Method: ${method} does not require simulation`,

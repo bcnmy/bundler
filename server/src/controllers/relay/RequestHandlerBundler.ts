@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { EthMethodType, TransactionMethodType } from '../../../../common/types';
+import { BiconomyMethodType, EthMethodType, TransactionMethodType } from '../../../../common/types';
 import { STATUSES } from '../../middleware';
 import {
   bundleUserOperation,
@@ -10,6 +10,7 @@ import {
   getSupportedEntryPoints,
   getUserOperationsByApiKey,
   getGasAndGasPrices,
+  getGasFeeValues,
 } from './BundlerRelay';
 
 export const bundlerRequestHandler = async (req: Request, res: Response) => {
@@ -40,6 +41,9 @@ export const bundlerRequestHandler = async (req: Request, res: Response) => {
       break;
     case EthMethodType.GET_USER_OPERATIONS_BY_API_KEY:
       response = await getUserOperationsByApiKey(req, res);
+      break;
+    case BiconomyMethodType.GET_GAS_FEE_VALUES:
+      response = await getGasFeeValues(req, res);
       break;
     default:
       return res.status(STATUSES.BAD_REQUEST).send({
