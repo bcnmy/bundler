@@ -36,10 +36,6 @@ export enum BLOCKCHAINS {
   ARBITRUM_NOVA_MAINNET = 42170,
   OPTIMISM_MAINNET = 10,
   OPTIMISM_GOERLI_TESTNET = 420,
-  OP_BNB_MAINNET = 204,
-  OP_BNB_TESTNET = 5611,
-  MANTLE_MAINNET = 5000,
-  MANTLE_TESTNET = 5001,
   AVALANCHE_MAINNET = 43114,
   AVALANCHE_TESTNET = 43113,
   MOONBEAM_MAINNET = 1284,
@@ -54,7 +50,7 @@ export enum BLOCKCHAINS {
 // Network with base gas diff from 21k and maxPriorityFeePerGas is 0
 export const L2Networks = [421613, 42161, 42170];
 export const PolygonZKEvmNetworks = [1101, 1442];
-export const OptimismNetworks = [420, 10, 84531, 8453, 204, 5611];
+export const OptimismNetworks = [420, 10, 84531, 8453];
 export const LineaNetworks = [59140, 59144];
 export const ArbitrumNetworks = [42170, 421613, 42161];
 export const AlchemySimulateExecutionSupportedNetworks = [
