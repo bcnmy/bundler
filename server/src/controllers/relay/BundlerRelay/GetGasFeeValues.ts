@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../../../middleware';
 import { logger } from '../../../../../common/log-config';
-import { entryPointMap, gasPriceServiceMap } from '../../../../../common/service-manager';
+import { gasPriceServiceMap } from '../../../../../common/service-manager';
 import { parseError } from '../../../../../common/utils';
 // import { updateRequest } from '../../auth/UpdateRequest';
 
@@ -13,27 +13,6 @@ export const getGasFeeValues = async (req: Request, res: Response) => {
   try {
     const { id } = req.body;
     const { chainId /* apiKey */ } = req.params;
-
-    const entryPointAddress = req.body.params[1];
-
-    const entryPointContracts = entryPointMap[parseInt(chainId, 10)];
-
-    let entryPointContract;
-    for (let entryPointContractIndex = 0;
-      entryPointContractIndex < entryPointContracts.length;
-      entryPointContractIndex += 1) {
-      if (entryPointContracts[entryPointContractIndex].address.toLowerCase()
-       === entryPointAddress.toLowerCase()) {
-        entryPointContract = entryPointContracts[entryPointContractIndex].entryPointContract;
-        break;
-      }
-    }
-    if (!entryPointContract) {
-      return {
-        code: STATUSES.BAD_REQUEST,
-        message: 'Entry point not supported by Bundler',
-      };
-    }
 
     const gasPrice = await gasPriceServiceMap[Number(chainId)]?.getGasPrice();
 
