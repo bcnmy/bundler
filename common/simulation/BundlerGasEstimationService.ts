@@ -184,6 +184,7 @@ export class BundlerGasEstimationService {
       );
       ret += data;
     }
+    ret += 30000;
     return ret;
   }
 }
