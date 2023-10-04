@@ -23,6 +23,10 @@ export enum EthMethodType {
   GET_USER_OPERATIONS_BY_API_KEY = 'eth_getUserOperationsByApiKey',
 }
 
+export enum BiconomyMethodType {
+  GET_GAS_FEE_VALUES = 'biconomy_getGasFeeValues',
+}
+
 export enum RelayerDestinationSmartContractName {
   ENTRY_POINT = 'Entry Point',
 }

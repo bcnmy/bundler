@@ -1,7 +1,7 @@
 /* eslint-disable no-case-declarations */
 import { NextFunction, Request, Response } from 'express';
 import { logger } from '../../../../common/log-config';
-import { EthMethodType, TransactionMethodType } from '../../../../common/types';
+import { EthMethodType, BiconomyMethodType, TransactionMethodType } from '../../../../common/types';
 import {
   bundlerChainIdRequestSchema,
   bundlerEstimateUserOpGasRequestSchema,
@@ -11,6 +11,7 @@ import {
   bundlerSendUserOpRequestSchema,
   bundlerSupportedEntryPointsRequestSchema,
   gasAndGasPricesRequestSchema,
+  getGasFeeValuesRequestSchema,
 } from '../../routes/bundler/bundler.schema';
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../RequestHelpers';
 
@@ -49,6 +50,9 @@ export const validateBundlerRequest = () => async (
         break;
       case EthMethodType.GET_USER_OPERATIONS_BY_API_KEY:
         validationResponse = bundlerGetUserOpsByApiKeyRequestSchema.validate(req.body);
+        break;
+      case BiconomyMethodType.GET_GAS_FEE_VALUES:
+        validationResponse = getGasFeeValuesRequestSchema.validate(req.body);
         break;
       default:
         const end = performance.now();
