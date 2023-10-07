@@ -1,7 +1,8 @@
+/* eslint-disable import/no-import-module-exports */
 import { ConsumeMessage } from 'amqplib';
 import { ethers } from 'ethers';
 import { ICacheService } from '../../../../common/cache';
-import { logger } from '../../../../common/log-config';
+import { logger } from '../../../../common/logger';
 import { IQueue } from '../../../../common/queue';
 import {
   AATransactionMessageType, EntryPointMapType, EVMRawTransactionType, TransactionType,
@@ -13,7 +14,8 @@ import { ITransactionService } from '../transaction-service';
 import { ITransactionConsumer } from './interface/ITransactionConsumer';
 import { AAConsumerParamsType } from './types';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
+
 export class AAConsumer implements
 ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
   private transactionType: TransactionType = TransactionType.AA;
@@ -110,7 +112,7 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
             this.chainId,
           ));
         } catch (error) {
-          log.info(`Error in transaction service for transactionType: ${this.transactionType} on chainId: ${this.chainId} with error: ${JSON.stringify(parseError(error))}`);
+          log.error(`Error in transaction service for transactionType: ${this.transactionType} on chainId: ${this.chainId} with error: ${JSON.stringify(parseError(error))}`);
           log.info(`Adding relayer: ${activeRelayer.getPublicKey()} back to active relayer queue for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);
           this.relayerManager.addActiveRelayer(activeRelayer.getPublicKey());
           log.info(`Added relayer: ${activeRelayer.getPublicKey()} back to active relayer queue for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);

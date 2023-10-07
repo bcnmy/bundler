@@ -1,7 +1,8 @@
+/* eslint-disable import/no-import-module-exports */
 /* eslint-disable import/no-extraneous-dependencies */
 import { BytesLike, ethers } from 'ethers';
 import { BiconomySmartAccount } from '@biconomy/account';
-import { logger } from '../../log-config';
+import { logger } from '../../logger';
 import { BundlerSimulationService } from '../BundlerSimulationService';
 import { config } from '../../../config';
 import { EVMNetworkService } from '../../network';
@@ -10,7 +11,8 @@ import { RedisCacheService } from '../../cache';
 import { MumbaiGasPrice } from '../../gas-price/networks/MumbaiGasPrice';
 import { UserOperationType } from '../../types';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
+
 // mumbai gas estimations
 describe('Mumbai 4337 Gas Estimations', () => {
   let bundlerSimulationService: BundlerSimulationService;

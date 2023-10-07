@@ -1,10 +1,11 @@
+/* eslint-disable import/no-import-module-exports */
 import Redlock, { Lock } from 'redlock';
 import Redis from 'ioredis';
 import { config } from '../../../config';
-import { logger } from '../../log-config';
+import { logger } from '../../logger';
 import { ICacheService } from '../interface';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 export class RedisCacheService implements ICacheService {
   private static instance: ICacheService;

@@ -1,10 +1,11 @@
+/* eslint-disable import/no-import-module-exports */
 import { Request } from 'express';
-import { logger } from '../../../../common/log-config';
+import { logger } from '../../../../common/logger';
 import { aaSimulatonServiceMap, entryPointMap } from '../../../../common/service-manager';
 import { parseError } from '../../../../common/utils';
 import { STATUSES } from '../../middleware';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 // eslint-disable-next-line consistent-return
 export const simulateAATransaction = async (req: Request) => {

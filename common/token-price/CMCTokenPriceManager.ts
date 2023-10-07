@@ -1,14 +1,15 @@
+/* eslint-disable import/no-import-module-exports */
 import axios from 'axios';
 import { schedule } from 'node-cron';
 import { ICacheService } from '../cache';
-import { logger } from '../log-config';
+import { logger } from '../logger';
 import { IScheduler } from '../scheduler';
 import { SymbolMapByChainIdType } from '../types';
 import { getTokenPriceKey, parseError } from '../utils';
 import { ITokenPrice } from './interface/ITokenPrice';
 import { CoinsRateObjType, NetworkSymbolCategoriesType } from './types';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
   private apiKey: string;

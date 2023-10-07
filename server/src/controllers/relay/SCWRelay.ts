@@ -1,5 +1,6 @@
+/* eslint-disable import/no-import-module-exports */
 import { Request, Response } from 'express';
-import { logger } from '../../../../common/log-config';
+import { logger } from '../../../../common/logger';
 import { routeTransactionToRelayerMap, transactionDao } from '../../../../common/service-manager';
 import {
   isError,
@@ -13,7 +14,7 @@ import { STATUSES } from '../../middleware';
 
 const websocketUrl = config.socketService.wssUrl;
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 export const relaySCWTransaction = async (req: Request, res: Response) => {
   try {
@@ -85,7 +86,7 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
         creationTime: Date.now(),
       });
     } catch (error) {
-      log.info(`Error in SCW relay ${parseError(error)} while savinf refund data`);
+      log.error(`Error in SCW relay ${parseError(error)} while savinf refund data`);
     }
 
     if (isError(response)) {

@@ -1,10 +1,12 @@
+/* eslint-disable import/no-import-module-exports */
 import amqp, { Channel, ConsumeMessage, Replies } from 'amqplib';
 import { config } from '../../config';
-import { logger } from '../log-config';
+import { logger } from '../logger';
 import { BundlerTransactionMessageType, TransactionType } from '../types';
 import { IQueue } from './interface/IQueue';
+import { parseError } from '../utils';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 const { queueUrl } = config;
 
@@ -67,7 +69,7 @@ export class BundlerTransactionQueue implements IQueue<BundlerTransactionMessage
 
       return true;
     } catch (error) {
-      log.error(error);
+      log.error((parseError(error)));
       return false;
     }
   }

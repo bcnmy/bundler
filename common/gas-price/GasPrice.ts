@@ -1,8 +1,9 @@
+/* eslint-disable import/no-import-module-exports */
 import * as ethers from 'ethers';
 import { BigNumber } from 'ethers';
 import { IEVMAccount } from '../../relayer/src/services/account';
 import { ICacheService } from '../cache';
-import { logger } from '../log-config';
+import { logger } from '../logger';
 import { INetworkService } from '../network';
 import { EVMRawTransactionType, NetworkBasedGasPriceType } from '../types';
 import { IGasPrice } from './interface/IGasPrice';
@@ -10,7 +11,7 @@ import { GasPriceType } from './types';
 import { OptimismNetworks } from '../constants';
 import { parseError } from '../utils';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 export class GasPrice implements IGasPrice {
   chainId: number;
 
@@ -341,7 +342,7 @@ export class GasPrice implements IGasPrice {
                 maxPriorityFeePerGas,
               );
             } catch (error) {
-              log.info(`Error in getting network gas price from RPC: ${parseError(error)}`);
+              log.error(`Error in getting network gas price from RPC: ${parseError(error)}`);
               await this.setMaxPriorityFeeGasPrice(
                 GasPriceType.DEFAULT,
                 '250000000',
@@ -423,7 +424,7 @@ export class GasPrice implements IGasPrice {
         `Setting gas price for chainId: ${this.chainId} as ${gasPrice}`,
       );
     } catch (error) {
-      log.info(
+      log.error(
         `Error in setting gas price for network id ${this.chainId} - ${error}`,
       );
     }

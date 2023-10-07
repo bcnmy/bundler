@@ -1,5 +1,6 @@
+/* eslint-disable import/no-import-module-exports */
 import { Request, Response } from 'express';
-import { logger } from '../../../../common/log-config';
+import { logger } from '../../../../common/logger';
 import {
   networkServiceMap, routeTransactionToRelayerMap, transactionDao, userOperationDao,
 } from '../../../../common/service-manager';
@@ -18,7 +19,7 @@ import { STATUSES } from '../../middleware';
 
 const websocketUrl = config.socketService.wssUrl;
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 export const relayAATransaction = async (req: Request, res: Response) => {
   try {
@@ -118,8 +119,8 @@ export const relayAATransaction = async (req: Request, res: Response) => {
         creationTime: Date.now(),
       });
     } catch (error) {
-      log.info(`Error in getting meta data from userOp: ${JSON.stringify(userOp)}`);
-      log.info(`Error: ${error}`);
+      log.error(`Error in getting meta data from userOp: ${JSON.stringify(userOp)}`);
+      log.error(`Error: ${error}`);
     }
 
     if (isError(response)) {

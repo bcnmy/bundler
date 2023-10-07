@@ -1,12 +1,13 @@
+/* eslint-disable import/no-import-module-exports */
 /* eslint-disable no-case-declarations */
 import { NextFunction, Request, Response } from 'express';
 import { BiconomyMethodType, EthMethodType, TransactionMethodType } from '../../../../common/types';
 import { STATUSES } from '../../middleware';
 import { validateBundlerTransaction } from './SimulateBundlerTransaction';
 import { parseError } from '../../../../common/utils';
-import { logger } from '../../../../common/log-config';
+import { logger } from '../../../../common/logger';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 export const simulateBundlerTransaction = () => async (
   req: Request,

@@ -1,10 +1,12 @@
+/* eslint-disable import/no-import-module-exports */
 import { STATUSES } from '../../server/src/middleware';
 import { IQueue } from '../interface';
-import { logger } from '../log-config';
+import { logger } from '../logger';
 import { SCWTransactionMessageType, RelayServiceResponseType } from '../types';
+import { parseError } from '../utils';
 import { IRelayService } from './interface/IRelayService';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 export class SCWRelayService implements IRelayService<SCWTransactionMessageType> {
   queue: IQueue<SCWTransactionMessageType>;
 
@@ -24,6 +26,7 @@ export class SCWRelayService implements IRelayService<SCWTransactionMessageType>
         transactionId: data.transactionId,
       };
     } catch (error) {
+      log.error((parseError(error)));
       response = {
         code: STATUSES.INTERNAL_SERVER_ERROR,
         error: `Internal server error: ${error}`,

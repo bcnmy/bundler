@@ -1,10 +1,11 @@
+/* eslint-disable import/no-import-module-exports */
 import { Request, Response } from 'express';
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../../../middleware';
-import { logger } from '../../../../../common/log-config';
+import { logger } from '../../../../../common/logger';
 // import { updateRequest } from '../../auth/UpdateRequest';
 import { parseError } from '../../../../../common/utils';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 export const getChainId = async (req: Request, res: Response) => {
   // const bundlerRequestId = req.body.params[6];

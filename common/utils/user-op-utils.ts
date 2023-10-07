@@ -1,3 +1,4 @@
+/* eslint-disable import/no-import-module-exports */
 /* eslint-disable no-continue */
 /* eslint-disable no-await-in-loop */
 import { ethers } from 'ethers';
@@ -6,14 +7,14 @@ import {
 } from 'ethers/lib/utils';
 import { config } from '../../config';
 import { STATUSES } from '../../server/src/middleware';
-import { logger } from '../log-config';
+import { logger } from '../logger';
 import {
   GetMetaDataFromUserOpReturnType, Log, StakeInfo, UserOperationEventEvent, UserOperationType,
 } from '../types';
 import { axiosPostCall } from './axios-calls';
 import { parseError } from './parse-error';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 export const getMetaDataFromUserOp = async (
   userOp: UserOperationType,
@@ -177,7 +178,7 @@ export const getMetaDataFromUserOp = async (
       destinationSmartContractMethods,
     };
   } catch (error: any) {
-    log.info(`Error in getting wallet transaction data for userOp: ${userOp} on chainId: ${chainId} with error: ${parseError(error)} for dappAPIKey: ${dappAPIKey}`);
+    log.error(`Error in getting wallet transaction data for userOp: ${userOp} on chainId: ${chainId} with error: ${parseError(error)} for dappAPIKey: ${dappAPIKey}`);
     return {
       destinationSmartContractAddresses: [],
       destinationSmartContractMethods: [],
@@ -265,11 +266,11 @@ export const getUserOperationReceiptForDataSaving = async (
       log.info('No event found');
       return null;
     } catch (error) {
-      log.info(`Missing/invalid userOpHash for userOpHash: ${userOpHash} on chainId: ${chainId} with erro: ${parseError(error)}`);
+      log.error(`Missing/invalid userOpHash for userOpHash: ${userOpHash} on chainId: ${chainId} with erro: ${parseError(error)}`);
       return null;
     }
   } catch (error) {
-    log.info(`error in getUserOperationReceipt: ${parseError(error)}`);
+    log.error(`error in getUserOperationReceipt: ${parseError(error)}`);
     return null;
   }
 };

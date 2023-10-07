@@ -1,6 +1,7 @@
+/* eslint-disable import/no-import-module-exports */
 import { ConsumeMessage } from 'amqplib';
 import { RawTransactionType } from 'network-sdk/dist/types';
-import { logger } from '../../../../common/log-config';
+import { logger } from '../../../../common/logger';
 import { INetworkService } from '../../../../common/network';
 import { IQueue } from '../../../../common/queue';
 import { RetryTransactionQueueData } from '../../../../common/queue/types';
@@ -13,7 +14,7 @@ import { EVMRetryTransactionServiceParamsType } from './types';
 import { INotificationManager } from '../../../../common/notification/interface';
 import { getAccountUndefinedNotificationMessage } from '../../../../common/notification';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 export class EVMRetryTransactionService implements
 IRetryTransactionService<IEVMAccount, EVMRawTransactionType> {
   transactionService: ITransactionService<IEVMAccount, RawTransactionType>;

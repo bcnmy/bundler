@@ -1,5 +1,6 @@
+/* eslint-disable import/no-import-module-exports */
 import { NextFunction, Request, Response } from 'express';
-import { logger } from '../../../../common/log-config';
+import { logger } from '../../../../common/logger';
 import { EthMethodType, TransactionMethodType } from '../../../../common/types';
 import {
   aaRequestSchema,
@@ -8,7 +9,7 @@ import {
 } from '../../routes/relay/relay.schema';
 import { STATUSES } from '../RequestHelpers';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 export const validateRelayRequest = () => async (
   req: Request,

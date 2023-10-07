@@ -1,11 +1,12 @@
+/* eslint-disable import/no-import-module-exports */
 /* eslint-disable no-await-in-loop */
 import { BigNumber, ethers } from 'ethers';
 import { config } from '../../../config';
 import { EVMNetworkService } from '../../../common/network';
-import { logger } from '../../../common/log-config';
+import { logger } from '../../../common/logger';
 import { EVMAccount } from '../../../relayer/src/services/account';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 const networkServiceMap: {
   [chainId: number]: EVMNetworkService;

@@ -1,12 +1,13 @@
+/* eslint-disable import/no-import-module-exports */
 import crypto from 'crypto-js';
 import fs, { existsSync } from 'fs';
 import _, { isNumber } from 'lodash';
 import path from 'path';
-import { logger } from '../common/log-config';
+import { logger } from '../common/logger';
 
 import { ConfigType, IConfig } from './interface/IConfig';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 const KEY_SIZE = 32;
 const PBKDF2_ITERATIONS = 310000;
