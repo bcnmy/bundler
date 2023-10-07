@@ -7,6 +7,7 @@ import express, {
 } from 'express';
 import cons from 'consolidate';
 import logger from 'pino-http';
+import { randomUUID } from 'node:crypto';
 import { routes } from './routes';
 
 const app = express();
@@ -24,7 +25,15 @@ declare global {
 app.options('*', cors()); // include before other routes
 app.use(cors());
 app.use(rTracer.expressMiddleware());
-app.use(logger());
+app.use(logger({
+  genReqId(req, res) {
+    const existingID = req.id ?? req.headers['x-request-id'];
+    if (existingID) return existingID;
+    const id = randomUUID();
+    res.setHeader('Request-Id', id);
+    return id;
+  },
+}));
 app.engine('hbs', cons.handlebars);
 app.set('view engine', 'hbs');
 app.set('views', `${__dirname}/views`);
