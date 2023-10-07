@@ -1,10 +1,11 @@
+/* eslint-disable import/no-import-module-exports */
 import http from 'http';
-import { logger } from '../../common/log-config';
+import { logger } from '../../common/logger';
 import app from './app';
 
 let server: any;
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 function normalizePort(val: string) {
   const portNumber = parseInt(val, 10);

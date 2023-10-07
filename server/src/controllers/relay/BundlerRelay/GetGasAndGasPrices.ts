@@ -1,5 +1,6 @@
+/* eslint-disable import/no-import-module-exports */
 import { Request, Response } from 'express';
-import { logger } from '../../../../../common/log-config';
+import { logger } from '../../../../../common/logger';
 import {
   bundlerGasEstimationServiceMap,
   entryPointMap,
@@ -10,7 +11,7 @@ import { STATUSES } from '../../../middleware';
 
 const { supportedNetworks } = config;
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 export const getGasAndGasPrices = async (req: Request, res: Response) => {
   try {

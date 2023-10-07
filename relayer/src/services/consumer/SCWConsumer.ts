@@ -1,6 +1,7 @@
+/* eslint-disable import/no-import-module-exports */
 import { ConsumeMessage } from 'amqplib';
 import { ICacheService } from '../../../../common/cache';
-import { logger } from '../../../../common/log-config';
+import { logger } from '../../../../common/logger';
 import { IQueue } from '../../../../common/queue';
 import { EVMRawTransactionType, SCWTransactionMessageType, TransactionType } from '../../../../common/types';
 import { getFailedTransactionRetryCountKey, getRetryTransactionCountKey, parseError } from '../../../../common/utils';
@@ -10,7 +11,7 @@ import { ITransactionService } from '../transaction-service';
 import { ITransactionConsumer } from './interface/ITransactionConsumer';
 import { SCWConsumerParamsType } from './types';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 export class SCWConsumer implements
 ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
   private transactionType: TransactionType = TransactionType.SCW;
@@ -81,7 +82,7 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
             this.chainId,
           ));
         } catch (error) {
-          log.info(`Error in transaction service for transactionType: ${this.transactionType} on chainId: ${this.chainId} with error: ${JSON.stringify(parseError(error))}`);
+          log.error(`Error in transaction service for transactionType: ${this.transactionType} on chainId: ${this.chainId} with error: ${JSON.stringify(parseError(error))}`);
           log.info(`Adding relayer: ${activeRelayer.getPublicKey()} back to active relayer queue for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);
           this.relayerManager.addActiveRelayer(activeRelayer.getPublicKey());
           log.info(`Added relayer: ${activeRelayer.getPublicKey()} back to active relayer queue for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);

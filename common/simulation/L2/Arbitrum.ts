@@ -1,3 +1,4 @@
+/* eslint-disable import/no-import-module-exports */
 import { ethers } from 'ethers';
 import { NodeInterface__factory } from '@arbitrum/sdk/dist/lib/abi/factories/NodeInterface__factory';
 import {
@@ -6,9 +7,9 @@ import {
 import { UserOperationType } from '../../types';
 import { abi } from '../../../config/static-config.json';
 import { config } from '../../../config';
-import { logger } from '../../log-config';
+import { logger } from '../../logger';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 export const calcArbitrumPreVerificationGas = async (
   entryPointAddress: string,

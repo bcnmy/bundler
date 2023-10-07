@@ -1,10 +1,11 @@
+/* eslint-disable import/no-import-module-exports */
 import { Request, Response } from 'express';
-import { logger } from '../../../../common/log-config';
+import { logger } from '../../../../common/logger';
 import { transactionDao } from '../../../../common/service-manager';
 import { parseError } from '../../../../common/utils';
 import { STATUSES } from '../../middleware';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 export const transactionStatusApi = async (req: Request, res: Response) => {
   const chainIdInStr = req.query.chainId as string;

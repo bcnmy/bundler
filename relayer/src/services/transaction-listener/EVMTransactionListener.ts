@@ -1,9 +1,10 @@
+/* eslint-disable import/no-import-module-exports */
 /* eslint-disable no-await-in-loop */
 import { ethers } from 'ethers';
 import { ICacheService } from '../../../../common/cache';
 import { ITransactionDAO, IUserOperationDAO } from '../../../../common/db';
 import { IQueue } from '../../../../common/interface';
-import { logger } from '../../../../common/log-config';
+import { logger } from '../../../../common/logger';
 import { INetworkService } from '../../../../common/network';
 import { RetryTransactionQueueData } from '../../../../common/queue/types';
 import {
@@ -35,7 +36,7 @@ import {
 } from './types';
 import { config } from '../../../../config';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 export class EVMTransactionListener implements
 ITransactionListener<IEVMAccount, EVMRawTransactionType>,
@@ -195,7 +196,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
           }
         }
       } catch (error) {
-        log.info(`Error in saving userOp data in database for transactionId: ${transactionId} on chainId ${this.chainId} with error: ${parseError(error)}`);
+        log.error(`Error in saving userOp data in database for transactionId: ${transactionId} on chainId ${this.chainId} with error: ${parseError(error)}`);
       }
 
       try {
@@ -226,10 +227,10 @@ ITransactionPublisher<TransactionQueueMessageType> {
           updationTime: Date.now(),
         }, transactionId, transactionExecutionResponse?.hash);
       } catch (error) {
-        log.info(`Error in saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId} with error: ${parseError(error)}`);
+        log.error(`Error in saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId} with error: ${parseError(error)}`);
       }
     } else {
-      log.info(`No transactionExecutionResponse found for transactionId: ${transactionId} on chainId ${this.chainId}`);
+      log.error(`No transactionExecutionResponse found for transactionId: ${transactionId} on chainId ${this.chainId}`);
     }
   }
 
@@ -439,7 +440,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
           }
         }
       } catch (error) {
-        log.info(`Error in saving userOp data in database for transactionId: ${transactionId} on chainId ${this.chainId} with error: ${parseError(error)}`);
+        log.error(`Error in saving userOp data in database for transactionId: ${transactionId} on chainId ${this.chainId} with error: ${parseError(error)}`);
       }
 
       try {
@@ -470,7 +471,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
           updationTime: Date.now(),
         }, transactionId, transactionExecutionResponse?.hash);
       } catch (error) {
-        log.info(`Error in saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId} with error: ${parseError(error)}`);
+        log.error(`Error in saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId} with error: ${parseError(error)}`);
       }
     } else {
       log.info(`No transactionExecutionResponse found for transactionId: ${transactionId} on chainId ${this.chainId}`);

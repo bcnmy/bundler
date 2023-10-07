@@ -1,3 +1,4 @@
+/* eslint-disable import/no-import-module-exports */
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable no-await-in-loop */
 import { ethers } from 'ethers';
@@ -27,7 +28,7 @@ import { GoerliGasPrice } from '../gas-price/networks/GoerliGasPrice';
 import { MaticGasPrice } from '../gas-price/networks/MaticGasPrice';
 import { MumbaiGasPrice } from '../gas-price/networks/MumbaiGasPrice';
 import { IQueue } from '../interface';
-import { logger } from '../log-config';
+import { logger } from '../logger';
 import { relayerManagerTransactionTypeNameMap } from '../maps';
 import { EVMNetworkService } from '../network';
 import { NotificationManager } from '../notification';
@@ -62,7 +63,7 @@ import {
   TransactionType,
 } from '../types';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 const routeTransactionToRelayerMap: {
   [chainId: number]: {

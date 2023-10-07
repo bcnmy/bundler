@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 import rTracer from 'cls-rtracer';
 import cors from 'cors';
 import express, {
@@ -5,7 +6,8 @@ import express, {
   NextFunction, Request, Response, ErrorRequestHandler,
 } from 'express';
 import cons from 'consolidate';
-import { morganMiddleware } from '../../common/log-config';
+import logger from 'pino-http';
+import { randomUUID } from 'node:crypto';
 import { routes } from './routes';
 
 const app = express();
@@ -23,8 +25,15 @@ declare global {
 app.options('*', cors()); // include before other routes
 app.use(cors());
 app.use(rTracer.expressMiddleware());
-app.use(morganMiddleware);
-
+app.use(logger({
+  genReqId(req, res) {
+    const existingID = req.id ?? req.headers['x-request-id'];
+    if (existingID) return existingID;
+    const id = randomUUID();
+    res.setHeader('Request-Id', id);
+    return id;
+  },
+}));
 app.engine('hbs', cons.handlebars);
 app.set('view engine', 'hbs');
 app.set('views', `${__dirname}/views`);

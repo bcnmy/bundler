@@ -1,14 +1,15 @@
+/* eslint-disable import/no-import-module-exports */
 /* eslint-disable no-await-in-loop */
 import axios from 'axios';
 import { BigNumber, ethers } from 'ethers';
 import { IEVMAccount } from '../../relayer/src/services/account';
 import { ERC20_ABI, L2Networks } from '../constants';
-import { logger } from '../log-config';
+import { logger } from '../logger';
 import { EVMRawTransactionType } from '../types';
 import { IERC20NetworkService, INetworkService, RpcMethod } from './interface';
 import { Type0TransactionGasPriceType, Type2TransactionGasPriceType } from './types';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 // TODO: Network Service to be checked with new provider/contract instances
 export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTransactionType>,
  IERC20NetworkService {
@@ -87,7 +88,7 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
             return null;
         }
       } catch (error: any) {
-        log.info(`Error in network service ${error}`);
+        log.error(`Error in network service ${error}`);
         if (error.toString().toLowerCase().includes() === 'timeout error') {
           for (; rpcUrlIndex < this.fallbackRpcUrls.length; rpcUrlIndex += 1) {
             this.ethersProvider = new ethers.providers.JsonRpcProvider(
