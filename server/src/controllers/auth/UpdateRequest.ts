@@ -1,9 +1,10 @@
+/* eslint-disable import/no-import-module-exports */
 import { UpdateRequestDataType } from '../../../../common/types';
 import { axiosPatchCall, parseError } from '../../../../common/utils';
 import { config } from '../../../../config';
-import { logger } from '../../../../common/log-config';
+import { logger } from '../../../../common/logger';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 export const updateRequest = async (
   updateRequestData: UpdateRequestDataType,

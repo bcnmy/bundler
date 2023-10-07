@@ -1,10 +1,11 @@
+/* eslint-disable import/no-import-module-exports */
 /* eslint-disable no-else-return */
 /* eslint-disable max-len */
 import { ethers } from 'ethers';
 import { Mutex } from 'async-mutex';
 import { ICacheService } from '../../../../common/cache';
 import { IGasPrice } from '../../../../common/gas-price';
-import { logger } from '../../../../common/log-config';
+import { logger } from '../../../../common/logger';
 import { INetworkService } from '../../../../common/network';
 import {
   getMaxRetryCountNotificationMessage,
@@ -32,7 +33,7 @@ import {
   TransactionDataType,
 } from './types';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 export class EVMTransactionService implements
 ITransactionService<IEVMAccount, EVMRawTransactionType> {
@@ -161,7 +162,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       } catch (error: any) {
         await this.cacheService.increment(getFailedTransactionRetryCountKey(transactionId, this.chainId), 1);
         const errInString = parseError(error).toLowerCase();
-        log.info(`Error while executing transaction: ${errInString} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+        log.error(`Error while executing transaction: ${errInString} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
         const {
           ALREADY_KNOWN,
           REPLACEMENT_TRANSACTION_UNDERPRICED,
@@ -494,7 +495,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         ...transactionListenerNotifyResponse,
       };
     } catch (error) {
-      log.info(`Error while retrying transaction: ${error} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+      log.error(`Error while retrying transaction: ${error} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
       return {
         state: 'failed',
         code: STATUSES.INTERNAL_SERVER_ERROR,

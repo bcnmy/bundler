@@ -1,3 +1,4 @@
+/* eslint-disable import/no-import-module-exports */
 /* eslint-disable no-await-in-loop */
 import { Mutex } from 'async-mutex';
 import {
@@ -9,7 +10,7 @@ import { ethers } from 'ethers';
 import hdkey from 'hdkey';
 import { ICacheService } from '../../../../common/cache';
 import { IGasPrice } from '../../../../common/gas-price';
-import { logger } from '../../../../common/log-config';
+import { logger } from '../../../../common/logger';
 import { INetworkService } from '../../../../common/network';
 import { getPendingTransactionIncreasingMessage } from '../../../../common/notification';
 import { INotificationManager } from '../../../../common/notification/interface';
@@ -27,7 +28,7 @@ import { IRelayerManager } from './interface/IRelayerManager';
 import { EVMRelayerManagerServiceParamsType } from './types';
 import { L2Networks } from '../../../../common/constants';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 const createRelayerMutex = new Mutex();
 const nodePathRoot = "m/44'/60'/0'/";
@@ -202,7 +203,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
         try {
           await this.fundRelayers([address]);
         } catch (error) {
-          log.info(
+          log.error(
             `Error while funding relayer ${address}:- ${error} on chainId: ${this.chainId}`,
           );
         }
@@ -359,7 +360,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
           });
           relayersAddressList.push(relayerAddress);
         } catch (error) {
-          log.error(error);
+          log.error((parseError(error)));
           log.info(
             `Error while getting balance and nonce for relayer ${relayerAddress} on chainId: ${this.chainId}`,
           );

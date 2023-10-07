@@ -1,6 +1,7 @@
+/* eslint-disable import/no-import-module-exports */
 /* eslint-disable no-case-declarations */
 import { NextFunction, Request, Response } from 'express';
-import { logger } from '../../../../common/log-config';
+import { logger } from '../../../../common/logger';
 import { EthMethodType, BiconomyMethodType, TransactionMethodType } from '../../../../common/types';
 import {
   bundlerChainIdRequestSchema,
@@ -15,7 +16,7 @@ import {
 } from '../../routes/bundler/bundler.schema';
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../RequestHelpers';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 export const validateBundlerRequest = () => async (
   req: Request,

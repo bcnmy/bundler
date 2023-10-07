@@ -1,9 +1,10 @@
+/* eslint-disable import/no-import-module-exports */
 /* eslint-disable max-len */
 import { schedule } from 'node-cron';
 import { config } from '../../../config';
 import { IEVMAccount } from '../../../relayer/src/services/account';
 import { ICacheService } from '../../cache';
-import { logger } from '../../log-config';
+import { logger } from '../../logger';
 import { INetworkService } from '../../network';
 import { IScheduler } from '../../scheduler';
 import { EVMRawTransactionType } from '../../types';
@@ -11,7 +12,7 @@ import { axiosGetCall } from '../../utils/axios-calls';
 import { GasPrice } from '../GasPrice';
 import { GasPriceType } from '../types';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 export class MaticGasPrice extends GasPrice implements IScheduler {
   updateFrequencyInSeconds: number;
@@ -77,7 +78,7 @@ export class MaticGasPrice extends GasPrice implements IScheduler {
     try {
       response = await axiosGetCall(url);
     } catch (error) {
-      log.info('Error in getting gas prices rom matic gas station for EIP-1559');
+      log.error('Error in getting gas prices rom matic gas station for EIP-1559');
       response = {
         safeLow: {
           maxPriorityFee: 30,

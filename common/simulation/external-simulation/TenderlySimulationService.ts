@@ -1,3 +1,4 @@
+/* eslint-disable import/no-import-module-exports */
 import axios from 'axios';
 import Big from 'big.js';
 import { ethers } from 'ethers';
@@ -7,7 +8,7 @@ import {
   SimulateHandleOpsReturnType,
   SimulationDataType,
 } from '../types';
-import { logger } from '../../log-config';
+import { logger } from '../../logger';
 import { IGasPrice } from '../../gas-price';
 import { GasPriceType } from '../../gas-price/types';
 import { IExternalSimulation } from '../interface';
@@ -15,7 +16,8 @@ import { getTokenPriceKey, parseError } from '../../utils';
 import { config } from '../../../config';
 import { ICacheService } from '../../cache';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
+
 // TODO Remove hard coded values from this class
 export class TenderlySimulationService implements IExternalSimulation {
   gasPriceService: IGasPrice;
@@ -69,7 +71,7 @@ export class TenderlySimulationService implements IExternalSimulation {
     try {
       response = await tAxios.post(SIMULATE_URL, body);
     } catch (error) {
-      log.info(`Error in Tenderly Simulation: ${JSON.stringify(error)}`);
+      log.error(`Error in Tenderly Simulation: ${JSON.stringify(error)}`);
       return {
         isSimulationSuccessful: false,
         message: `Error in Tenderly Simulation: ${parseError(error)}`,
@@ -196,7 +198,7 @@ export class TenderlySimulationService implements IExternalSimulation {
         const end = performance.now();
         log.info(`Tenderly simulation call took: ${end - start} milliseconds`);
       } catch (error) {
-        log.info(`Error in Tenderly Simulation: ${JSON.stringify(error)}`);
+        log.error(`Error in Tenderly Simulation: ${JSON.stringify(error)}`);
         return {
           totalGas: 0,
         };
@@ -404,7 +406,7 @@ export class TenderlySimulationService implements IExternalSimulation {
         },
       };
     } catch (error) {
-      log.info(error);
+      log.error((parseError(error)));
       return {
         isSimulationSuccessful: false,
         successOrRevertMsg: `Something went wrong with error: ${error}`,

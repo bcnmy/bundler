@@ -1,14 +1,15 @@
+/* eslint-disable import/no-import-module-exports */
 /* eslint-disable no-param-reassign */
 import { ethers } from 'ethers';
 import { OptimisticL1GasPriceOracle } from './optimisticL1GasPriceOracle';
 import { UserOperationType } from '../../../types';
 import { abi } from '../../../../config/static-config.json';
 import { config } from '../../../../config';
-import { logger } from '../../../log-config';
+import { logger } from '../../../logger';
 import RpcError from '../../../utils/rpc-error';
 import { BUNDLER_VALIDATION_STATUSES } from '../../../../server/src/middleware';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 export const calcOptimismPreVerificationGas = async (
   userOp: UserOperationType,

@@ -1,8 +1,9 @@
+/* eslint-disable import/no-import-module-exports */
 /* eslint-disable @typescript-eslint/return-await */
 import { ConsumeMessage } from 'amqplib';
 import { ethers } from 'ethers';
 import { ICacheService } from '../../../../common/cache';
-import { logger } from '../../../../common/log-config';
+import { logger } from '../../../../common/logger';
 import { IQueue } from '../../../../common/queue';
 import {
   BundlerTransactionMessageType, EntryPointMapType, EVMRawTransactionType, TransactionType,
@@ -15,7 +16,7 @@ import { ITransactionConsumer } from './interface/ITransactionConsumer';
 import { BundlerConsumerParamsType } from './types';
 import { STATUSES } from '../../../../server/src/middleware';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 export class BundlerConsumer implements
 ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
   private transactionType: TransactionType = TransactionType.BUNDLER;
@@ -122,7 +123,7 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
               this.chainId,
             ));
           } catch (error: any) {
-            log.info(`Error in transaction service for transactionId: ${transactionDataReceivedFromQueue.transactionId} for transactionType: ${this.transactionType} on chainId: ${this.chainId} with error: ${JSON.stringify(parseError(error))}`);
+            log.error(`Error in transaction service for transactionId: ${transactionDataReceivedFromQueue.transactionId} for transactionType: ${this.transactionType} on chainId: ${this.chainId} with error: ${JSON.stringify(parseError(error))}`);
             log.info(`Adding relayer: ${activeRelayer.getPublicKey()} back to active relayer queue for transactionId: ${transactionDataReceivedFromQueue.transactionId} for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);
             this.relayerManager.addActiveRelayer(activeRelayer.getPublicKey());
             log.info(`Added relayer: ${activeRelayer.getPublicKey()} back to active relayer queue for transactionId: ${transactionDataReceivedFromQueue.transactionId} for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);

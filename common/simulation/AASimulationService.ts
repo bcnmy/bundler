@@ -1,12 +1,14 @@
+/* eslint-disable import/no-import-module-exports */
 import { config } from '../../config';
 import { IEVMAccount } from '../../relayer/src/services/account';
-import { logger } from '../log-config';
+import { logger } from '../logger';
 import { INetworkService } from '../network';
 import { EVMRawTransactionType, UserOperationType } from '../types';
 import { parseError } from '../utils';
 import { AASimulationDataType, SimulationResponseType } from './types';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
+
 export class AASimulationService {
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
 
@@ -32,7 +34,7 @@ export class AASimulationService {
       try {
         await entryPointStatic.callStatic.simulateValidation(userOp, false);
       } catch (error: any) {
-        log.info(`AA Simulation failed: ${JSON.stringify(error)}`);
+        log.error(`AA Simulation failed: ${JSON.stringify(error)}`);
         isSimulationSuccessful = false;
         return {
           isSimulationSuccessful,
@@ -49,7 +51,7 @@ export class AASimulationService {
         log.info(`simulationResult: ${JSON.stringify(simulationResult)}`);
         AASimulationService.parseUserOpSimulationResult(userOp, simulationResult);
       } catch (error: any) {
-        log.info(`AA Simulation failed: ${parseError(error)}`);
+        log.error(`AA Simulation failed: ${parseError(error)}`);
         isSimulationSuccessful = false;
         return {
           isSimulationSuccessful,
@@ -81,6 +83,7 @@ export class AASimulationService {
         };
       }
     } catch (error) {
+      log.error((parseError(error)));
       return {
         isSimulationSuccessful: false,
         data: {
@@ -95,7 +98,7 @@ export class AASimulationService {
       userOpHash = await entryPointContract.getUserOpHash(userOp);
       log.info(`userOpHash: ${userOpHash} for userOp: ${JSON.stringify(userOp)}`);
     } catch (error) {
-      log.info(`Error in getting userOpHash for userOp: ${JSON.stringify(userOp)} with error: ${parseError(error)}`);
+      log.error(`Error in getting userOpHash for userOp: ${JSON.stringify(userOp)} with error: ${parseError(error)}`);
     }
 
     return {

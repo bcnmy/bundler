@@ -1,5 +1,6 @@
+/* eslint-disable import/no-import-module-exports */
 import { ICacheService } from '../../../../common/cache';
-import { logger } from '../../../../common/log-config';
+import { logger } from '../../../../common/logger';
 import { INetworkService } from '../../../../common/network';
 import { EVMRawTransactionType } from '../../../../common/types';
 import { parseError } from '../../../../common/utils';
@@ -7,7 +8,8 @@ import { IEVMAccount } from '../account';
 import { INonceManager } from './interface/INonceManager';
 import { EVMNonceManagerParamsType } from './types';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
+
 export class EVMNonceManager implements INonceManager<IEVMAccount, EVMRawTransactionType> {
   chainId: number;
 

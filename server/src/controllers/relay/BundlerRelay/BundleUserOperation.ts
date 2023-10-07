@@ -1,5 +1,6 @@
+/* eslint-disable import/no-import-module-exports */
 import { Request, Response } from 'express';
-import { logger } from '../../../../../common/log-config';
+import { logger } from '../../../../../common/logger';
 import { routeTransactionToRelayerMap, transactionDao, userOperationDao } from '../../../../../common/service-manager';
 import { generateTransactionId, getPaymasterFromPaymasterAndData, parseError } from '../../../../../common/utils';
 import {
@@ -10,7 +11,7 @@ import {
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../../../middleware';
 // import { updateRequest } from '../../auth/UpdateRequest';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 export const bundleUserOperation = async (req: Request, res: Response) => {
   // const bundlerRequestId = req.body.params[6];

@@ -1,6 +1,7 @@
+/* eslint-disable import/no-import-module-exports */
 import mongoose, { Mongoose } from 'mongoose';
 import { config } from '../../../config';
-import { logger } from '../../log-config';
+import { logger } from '../../logger';
 import { IDBService } from '../interface/IDBService';
 import {
   BlockchainTransactionsMap,
@@ -9,7 +10,7 @@ import {
   UserOperationsMapType,
 } from './models';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 export class Mongo implements IDBService {
   private static instance: Mongo;

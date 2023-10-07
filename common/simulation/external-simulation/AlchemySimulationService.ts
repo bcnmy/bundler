@@ -1,12 +1,13 @@
+/* eslint-disable import/no-import-module-exports */
 /* eslint-disable no-continue */
 import { EVMAccount } from '../../../relayer/src/services/account';
 import { INetworkService } from '../../network';
 import { EVMRawTransactionType } from '../../types';
 import { SimulateHandleOpsParamsType } from '../types';
-import { logger } from '../../log-config';
+import { logger } from '../../logger';
 import { config } from '../../../config';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 export class AlchemySimulationService {
   networkService: INetworkService<EVMAccount, EVMRawTransactionType>;

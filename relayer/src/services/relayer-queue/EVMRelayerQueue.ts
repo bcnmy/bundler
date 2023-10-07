@@ -1,10 +1,11 @@
+/* eslint-disable import/no-import-module-exports */
 import { Mutex } from 'async-mutex';
 import { IRelayerQueue } from './interface/IRelayerQueue';
 // import { SortEVMRelayerByBalance } from './strategy';
 import { EVMRelayerMetaDataType } from './types';
-import { logger } from '../../../../common/log-config';
+import { logger } from '../../../../common/logger';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 const popMutex = new Mutex();
 const pushMutex = new Mutex();

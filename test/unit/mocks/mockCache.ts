@@ -1,11 +1,12 @@
+/* eslint-disable import/no-import-module-exports */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable class-methods-use-this */
 /* eslint-disable @typescript-eslint/indent */
 import Redlock, { Lock } from 'redlock';
 import { ICacheService } from '../../../common/cache/interface';
-import { logger } from '../../../common/log-config';
+import { logger } from '../../../common/logger';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 export class MockCache implements ICacheService {
     redisClient: any;

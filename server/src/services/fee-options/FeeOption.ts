@@ -1,15 +1,16 @@
+/* eslint-disable import/no-import-module-exports */
 /* eslint-disable no-await-in-loop */
 import Big from 'big.js';
 import { ICacheService } from '../../../../common/cache';
 import { IGasPrice } from '../../../../common/gas-price';
 import { GasPriceType } from '../../../../common/gas-price/types';
-import { logger } from '../../../../common/log-config';
+import { logger } from '../../../../common/logger';
 import { getTokenPriceKey } from '../../../../common/utils';
 import { config } from '../../../../config';
 import { STATUSES } from '../../middleware';
 import { FeeOptionResponseType } from './types';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
 const convertGasPriceToUSD = async (
   nativeChainId: number,

@@ -1,3 +1,4 @@
+/* eslint-disable import/no-import-module-exports */
 /* eslint-disable prefer-const */
 import { ethers, BigNumber } from 'ethers';
 import { arrayify, defaultAbiCoder, keccak256 } from 'ethers/lib/utils';
@@ -7,7 +8,7 @@ import {
   BUNDLER_VALIDATION_STATUSES,
   STATUSES,
 } from '../../server/src/middleware';
-import { logger } from '../log-config';
+import { logger } from '../logger';
 import { INetworkService } from '../network';
 import {
   DefaultGasOverheadType,
@@ -33,7 +34,8 @@ import { AlchemySimulationService, TenderlySimulationService } from './external-
 import { calcArbitrumPreVerificationGas, calcOptimismPreVerificationGas } from './L2';
 import { IGasPrice } from '../gas-price';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
+
 export class BundlerSimulationService {
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
 
@@ -464,6 +466,7 @@ export class BundlerSimulationService {
         },
       };
     } catch (error: any) {
+      log.error((parseError(error)));
       return {
         code: error.code,
         message: parseError(error),
@@ -592,6 +595,7 @@ export class BundlerSimulationService {
         },
       };
     } catch (error: any) {
+      log.error((parseError(error)));
       return {
         code: error.code,
         message: parseError(error),

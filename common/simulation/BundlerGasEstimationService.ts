@@ -1,9 +1,10 @@
+/* eslint-disable import/no-import-module-exports */
 import { ethers, BigNumber } from 'ethers';
 import { arrayify, hexlify } from 'ethers/lib/utils';
 import { config } from '../../config';
 import { IEVMAccount } from '../../relayer/src/services/account';
 import { STATUSES } from '../../server/src/middleware';
-import { logger } from '../log-config';
+import { logger } from '../logger';
 import { INetworkService } from '../network';
 import {
   DefaultGasOverheadType,
@@ -18,7 +19,8 @@ import {
 } from './types';
 import { calcArbitrumPreVerificationGas, calcOptimismPreVerificationGas } from './L2';
 
-const log = logger(module);
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
+
 export class BundlerGasEstimationService {
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
 
