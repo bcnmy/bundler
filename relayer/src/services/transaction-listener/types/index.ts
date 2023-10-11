@@ -1,6 +1,8 @@
 import { BigNumber, ethers } from 'ethers';
 import { ICacheService } from '../../../../../common/cache';
-import { ITransactionDAO, IUserOperationDAO } from '../../../../../common/db';
+import {
+  ITransactionDAO, IUserOperationDAO, IUserOperationStateDAO,
+} from '../../../../../common/db';
 import { IQueue } from '../../../../../common/interface';
 import { INetworkService } from '../../../../../common/network';
 import { RetryTransactionQueueData } from '../../../../../common/queue/types';
@@ -16,6 +18,7 @@ export type EVMTransactionListenerParamsType = {
   retryTransactionQueue: IQueue<RetryTransactionQueueData>,
   transactionDao: ITransactionDAO,
   userOperationDao: IUserOperationDAO,
+  userOperationStateDao: IUserOperationStateDAO,
   cacheService: ICacheService,
   options: {
     chainId: number

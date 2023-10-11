@@ -7,3 +7,4 @@ export * from './SupportedEntryPoints';
 export * from './GetUserOperationsByApiKey';
 export * from './GetGasAndGasPrices';
 export * from './GetGasFeeValues';
+export * from './GetUserOperationStatus';

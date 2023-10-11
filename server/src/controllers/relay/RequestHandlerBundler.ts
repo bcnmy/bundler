@@ -11,6 +11,7 @@ import {
   getUserOperationsByApiKey,
   getGasAndGasPrices,
   getGasFeeValues,
+  getUserOperationStatus,
 } from './BundlerRelay';
 
 export const bundlerRequestHandler = async (req: Request, res: Response) => {
@@ -44,6 +45,9 @@ export const bundlerRequestHandler = async (req: Request, res: Response) => {
       break;
     case BiconomyMethodType.GET_GAS_FEE_VALUES:
       response = await getGasFeeValues(req, res);
+      break;
+    case BiconomyMethodType.GET_USER_OPERATION_STATUS:
+      response = await getUserOperationStatus(req, res);
       break;
     default:
       return res.status(STATUSES.BAD_REQUEST).send({

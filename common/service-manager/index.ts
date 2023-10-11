@@ -62,6 +62,7 @@ import {
   SCWTransactionMessageType,
   TransactionType,
 } from '../types';
+import { UserOperationStateDAO } from '../db/dao/UserOperationStateDAO';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
@@ -118,6 +119,7 @@ const EVMRelayerManagerMap: {
 
 const transactionDao = new TransactionDAO();
 const userOperationDao = new UserOperationDAO();
+const userOperationStateDao = new UserOperationStateDAO();
 
 const socketConsumerMap: Record<number, SocketConsumer> = {};
 const retryTransactionSerivceMap: Record<number, EVMRetryTransactionService> = {};
@@ -223,6 +225,7 @@ let statusService: IStatusService;
       retryTransactionQueue,
       transactionDao,
       userOperationDao,
+      userOperationStateDao,
       options: {
         chainId,
         entryPointMap,
@@ -240,6 +243,7 @@ let statusService: IStatusService;
       transactionDao,
       cacheService,
       notificationManager,
+      userOperationStateDao,
       options: {
         chainId,
       },
@@ -528,6 +532,7 @@ export {
   transactionSerivceMap,
   transactionDao,
   userOperationDao,
+  userOperationStateDao,
   statusService,
   networkServiceMap,
   gasPriceServiceMap,

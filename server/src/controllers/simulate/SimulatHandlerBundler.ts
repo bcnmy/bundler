@@ -64,6 +64,12 @@ export const simulateBundlerTransaction = () => async (
           message: `Method: ${method} does not require simulation`,
         };
         break;
+      case BiconomyMethodType.GET_USER_OPERATION_STATUS:
+        response = {
+          code: STATUSES.SUCCESS,
+          message: `Method: ${method} does not require simulation`,
+        };
+        break;
       default:
         const end = performance.now();
         log.info(`simulateBundlerTransaction took ${end - start} milliseconds`);

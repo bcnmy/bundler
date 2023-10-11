@@ -13,7 +13,9 @@ import {
   getRelayerFundingNotificationMessage,
 } from '../../../../common/notification';
 import { INotificationManager } from '../../../../common/notification/interface';
-import { EVMRawTransactionType, NetworkBasedGasPriceType, TransactionType } from '../../../../common/types';
+import {
+  EVMRawTransactionType, NetworkBasedGasPriceType, TransactionType, UserOperationStateEnum,
+} from '../../../../common/types';
 import { getRetryTransactionCountKey, getFailedTransactionRetryCountKey, parseError } from '../../../../common/utils';
 import { config } from '../../../../config';
 import { STATUSES } from '../../../../server/src/middleware';
@@ -32,6 +34,7 @@ import {
   SuccessTransactionResponseType,
   TransactionDataType,
 } from './types';
+import { IUserOperationStateDAO } from '../../../../common/db';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
@@ -51,13 +54,15 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
 
   notificationManager: INotificationManager;
 
+  userOperationStateDao: IUserOperationStateDAO;
+
   addressMutex: {
     [address: string]: Mutex
   } = {};
 
   constructor(evmTransactionServiceParams: EVMTransactionServiceParamsType) {
     const {
-      options, networkService, transactionListener, nonceManager, gasPriceService, cacheService, notificationManager,
+      options, networkService, transactionListener, nonceManager, gasPriceService, cacheService, notificationManager, userOperationStateDao,
     } = evmTransactionServiceParams;
     this.chainId = options.chainId;
     this.networkService = networkService;
@@ -66,6 +71,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     this.gasPriceService = gasPriceService;
     this.cacheService = cacheService;
     this.notificationManager = notificationManager;
+    this.userOperationStateDao = userOperationStateDao;
   }
 
   private getMutex(address: string) {
@@ -334,6 +340,16 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         account,
       }, transactionId);
       if (!transactionExecutionResponse.success) {
+        if (transactionType === TransactionType.BUNDLER) {
+          log.info(`Setting: ${UserOperationStateEnum.DROPPED_FROM_BUNDLER_MEMPOOL} for transactionId: ${transactionId} on chainId ${this.chainId}`);
+          this.userOperationStateDao.updateState(
+            this.chainId,
+            {
+              transactionId,
+              state: UserOperationStateEnum.DROPPED_FROM_BUNDLER_MEMPOOL,
+            },
+          );
+        }
         await this.transactionListener.notify({
           transactionId: transactionId as string,
           relayerAddress,
@@ -346,6 +362,18 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           error: transactionExecutionResponse.error,
         });
         throw new Error(transactionExecutionResponse.error);
+      }
+
+      if (transactionType === TransactionType.BUNDLER) {
+        log.info(`Setting: ${UserOperationStateEnum.SUBMITTED} for transactionId: ${transactionId} on chainId ${this.chainId}`);
+        this.userOperationStateDao.updateState(
+          this.chainId,
+          {
+            transactionId,
+            transactionHash: transactionExecutionResponse.transactionResponse.hash,
+            state: UserOperationStateEnum.SUBMITTED,
+          },
+        );
       }
 
       log.info(`Transaction execution response for transactionId ${transactionData.transactionId}: ${JSON.stringify(transactionExecutionResponse)} on chainId ${this.chainId}`);
@@ -461,7 +489,28 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       let transactionExecutionResponse;
       if (retryTransactionExecutionResponse.success) {
         transactionExecutionResponse = retryTransactionExecutionResponse.transactionResponse;
+        if (transactionType === TransactionType.BUNDLER) {
+          log.info(`Setting: ${UserOperationStateEnum.SUBMITTED} for transactionId: ${transactionId} for resubmitted transaction on chainId ${this.chainId}`);
+          this.userOperationStateDao.updateState(
+            this.chainId,
+            {
+              transactionId,
+              transactionHash: transactionExecutionResponse.hash,
+              state: UserOperationStateEnum.SUBMITTED,
+            },
+          );
+        }
       } else {
+        if (transactionType === TransactionType.BUNDLER) {
+          log.info(`Setting: ${UserOperationStateEnum.DROPPED_FROM_BUNDLER_MEMPOOL} for transactionId: ${transactionId} for resubmitted transaction on chainId ${this.chainId}`);
+          this.userOperationStateDao.updateState(
+            this.chainId,
+            {
+              transactionId,
+              state: UserOperationStateEnum.DROPPED_FROM_BUNDLER_MEMPOOL,
+            },
+          );
+        }
         await this.sendTransactionFailedSlackNotification(transactionId, this.chainId, retryTransactionExecutionResponse.error);
         return {
           state: 'failed',
