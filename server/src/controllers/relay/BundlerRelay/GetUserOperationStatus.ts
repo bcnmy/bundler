@@ -55,7 +55,7 @@ const getUserOperationStateData = async (chainId: number, userOpHash: string): P
       error: false,
       result: {
         state: UserOperationStateEnum.SUBMITTED,
-        transacationHash: userOperationStateData.transactionHash,
+        transactionHash: userOperationStateData.transactionHash,
       },
     };
   }
