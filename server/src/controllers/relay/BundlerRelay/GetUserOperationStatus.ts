@@ -160,7 +160,7 @@ export const getUserOperationStatus = async (req: Request, res: Response) => {
     return res.status(STATUSES.SUCCESS).json({
       jsonrpc: '2.0',
       id: 1,
-      error: userOperationStateData.result,
+      result: userOperationStateData.result,
     });
   } catch (error) {
     log.error(`Error in getUserOperationStatus handler: ${parseError(error)}`);
