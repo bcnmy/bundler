@@ -729,14 +729,17 @@ ITransactionPublisher<TransactionQueueMessageType> {
         from, to, data, gasLimit, gasPrice,
       } = getTransactionResponse;
 
+      const gasInHex = BigNumber.from(gasLimit).toHexString().substring(2).replace(/^0+/, '');
+      const gasPriceInHex = BigNumber.from(gasPrice).toHexString().substring(2).replace(/^0+/, '');
+
       const handleOpResult = await this.networkService.sendRpcCall(
         'eth_call',
         [{
           from,
           to,
           data,
-          gas: BigNumber.from(gasLimit).toHexString(),
-          gasPrice: BigNumber.from(gasPrice).toHexString(),
+          gas: `0x${gasInHex}`,
+          gasPrice: `0x${gasPriceInHex}`,
         }],
       );
 
