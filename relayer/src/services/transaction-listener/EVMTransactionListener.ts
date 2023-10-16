@@ -1,8 +1,10 @@
 /* eslint-disable import/no-import-module-exports */
 /* eslint-disable no-await-in-loop */
-import { ethers } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 import { ICacheService } from '../../../../common/cache';
-import { ITransactionDAO, IUserOperationDAO } from '../../../../common/db';
+import {
+  ITransactionDAO, IUserOperationDAO, IUserOperationStateDAO,
+} from '../../../../common/db';
 import { IQueue } from '../../../../common/interface';
 import { logger } from '../../../../common/logger';
 import { INetworkService } from '../../../../common/network';
@@ -14,6 +16,7 @@ import {
   TransactionQueueMessageType,
   TransactionStatus,
   TransactionType,
+  UserOperationStateEnum,
 } from '../../../../common/types';
 import {
   getRetryTransactionCountKey,
@@ -53,6 +56,8 @@ ITransactionPublisher<TransactionQueueMessageType> {
 
   userOperationDao: IUserOperationDAO;
 
+  userOperationStateDao: IUserOperationStateDAO;
+
   entryPointMap: EntryPointMapType;
 
   cacheService: ICacheService;
@@ -67,6 +72,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       retryTransactionQueue,
       transactionDao,
       userOperationDao,
+      userOperationStateDao,
       cacheService,
     } = evmTransactionListenerParams;
     this.chainId = options.chainId;
@@ -76,6 +82,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
     this.retryTransactionQueue = retryTransactionQueue;
     this.transactionDao = transactionDao;
     this.userOperationDao = userOperationDao;
+    this.userOperationStateDao = userOperationStateDao;
     this.cacheService = cacheService;
   }
 
@@ -190,6 +197,16 @@ ITransactionPublisher<TransactionQueueMessageType> {
                 },
               );
               log.info(`userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+
+              log.info(`updating state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+              if (transactionType === TransactionType.BUNDLER) {
+                await this.userOperationStateDao.updateState(this.chainId, {
+                  transactionId,
+                  message: 'Transaction confirmed',
+                  state: UserOperationStateEnum.CONFIRMED,
+                });
+              }
+              log.info(`updated state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
             } else {
               log.info(`entryPoint: ${entryPoint} not found in entry point map for transactionId: ${transactionId} on chainId: ${this.chainId}`);
             }
@@ -338,6 +355,19 @@ ITransactionPublisher<TransactionQueueMessageType> {
                   },
                 );
                 log.info(`userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+
+                log.info(`updating state to: ${UserOperationStateEnum.FAILED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+                if (transactionType === TransactionType.BUNDLER) {
+                  await this.userOperationStateDao.updateState(this.chainId, {
+                    transactionId,
+                    state: UserOperationStateEnum.FAILED,
+                    message: await this.getTransactionFailureMessage(
+                      transactionExecutionResponse?.hash,
+                      entryPointContract,
+                    ),
+                  });
+                }
+                log.info(`updated state to: ${UserOperationStateEnum.FAILED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
                 return;
               }
               const {
@@ -434,6 +464,17 @@ ITransactionPublisher<TransactionQueueMessageType> {
                 frontRunnedTransactionFeeCurrency,
                 updationTime: Date.now(),
               }, transactionId, transactionExecutionResponse?.hash);
+
+              log.info(`updating state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId} for a front runned transaction`);
+              if (transactionType === TransactionType.BUNDLER) {
+                await this.userOperationStateDao.updateState(this.chainId, {
+                  transactionId,
+                  transactionHash: frontRunnedTransactionReceipt.hash,
+                  message: 'Transaction was front runned, check new transaction hash in receipt',
+                  state: UserOperationStateEnum.CONFIRMED,
+                });
+              }
+              log.info(`updated state state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId} for a front runned transaction`);
             } else {
               log.info(`entryPoint: ${entryPoint} not found in entry point map for transactionId: ${transactionId} on chainId: ${this.chainId}`);
             }
@@ -675,5 +716,46 @@ ITransactionPublisher<TransactionQueueMessageType> {
       isTransactionRelayed: true,
       transactionExecutionResponse,
     };
+  }
+
+  async getTransactionFailureMessage(
+    transactionHash: string,
+    entryPointContract: ethers.Contract,
+  ): Promise<string> {
+    try {
+      const getTransactionResponse = await this.networkService.getTransaction(transactionHash);
+
+      const {
+        from, to, data, gasLimit, gasPrice,
+      } = getTransactionResponse;
+
+      const gasInHex = BigNumber.from(gasLimit).toHexString().substring(2).replace(/^0+/, '');
+      const gasPriceInHex = BigNumber.from(gasPrice).toHexString().substring(2).replace(/^0+/, '');
+
+      const handleOpResult = await this.networkService.sendRpcCall(
+        'eth_call',
+        [{
+          from,
+          to,
+          data,
+          gas: `0x${gasInHex}`,
+          gasPrice: `0x${gasPriceInHex}`,
+        }],
+      );
+
+      const ethCallData = handleOpResult.data.error.data;
+      log.info(`ethCallData: ${ethCallData}`);
+
+      const errorDescription = entryPointContract.interface.parseError(ethCallData);
+      const { args } = errorDescription;
+
+      if (errorDescription.name === 'FailedOp') {
+        const revertReason = args[1];
+        return `Transaction failed on chain with reason: ${revertReason}`;
+      }
+      return 'Unable to parse transaction failure reason, please check transaction hash on explorer';
+    } catch (error) {
+      return 'Unable to parse transaction failure reason, please check transaction hash on explorer';
+    }
   }
 }

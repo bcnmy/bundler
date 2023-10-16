@@ -8,6 +8,8 @@ import {
   BlockchainTransactionsMapType,
   UserOperationsMap,
   UserOperationsMapType,
+  UserOperationsStateMap,
+  UserOperationsStateMapType,
 } from './models';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
@@ -79,6 +81,20 @@ export class Mongo implements IDBService {
     const supportedNetworks: number[] = config.supportedNetworks || [];
     if (!supportedNetworks.includes(networkId)) throw new Error(`Network Id ${networkId} is not supported`);
     return UserOperationsMap[networkId];
+  }
+
+  /**
+   * Method returns user operation state model for a given chain id
+   * @param networkId
+   * @returns user operation state model for a given chain id
+   */
+  getUserOperationState(networkId: number): UserOperationsStateMapType[number] {
+    if (!this.client) {
+      throw new Error('Not connected to db');
+    }
+    const supportedNetworks: number[] = config.supportedNetworks || [];
+    if (!supportedNetworks.includes(networkId)) throw new Error(`Network Id ${networkId} is not supported`);
+    return UserOperationsStateMap[networkId];
   }
 
   isConnected(): boolean {

@@ -93,6 +93,16 @@ export const bundlerGetUserOpReceiptRequestSchema = object.keys({
   id: number.required().error(new Error('id is required')),
 });
 
+// biconomy_getUserOperationStatus
+export const getUserOperationStatusSchema = object.keys({
+  method: string.regex(/biconomy_getUserOperationStatus/),
+  params: array.items(alternatives.try(
+    userOpHash,
+  )),
+  jsonrpc: string.required().error(new Error('jsonrpc is required')),
+  id: number.required().error(new Error('id is required')),
+});
+
 // eth_supportedEntryPoints
 export const bundlerSupportedEntryPointsRequestSchema = object.keys({
   method: string.regex(/eth_supportedEntryPoints/),
