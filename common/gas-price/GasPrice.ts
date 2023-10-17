@@ -416,9 +416,8 @@ export class GasPrice implements IGasPrice {
             const baseFeePerGas = await this.networkService.getBaseFeePerGas();
             await this.setBaseFeePerGas(baseFeePerGas);
           }
-        } else {
-          await this.setGasPrice(GasPriceType.DEFAULT, gasPrice);
         }
+        await this.setGasPrice(GasPriceType.DEFAULT, gasPrice);
       }
       log.info(
         `Setting gas price for chainId: ${this.chainId} as ${gasPrice}`,
