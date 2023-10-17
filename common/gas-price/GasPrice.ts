@@ -106,7 +106,7 @@ export class GasPrice implements IGasPrice {
       if ([137].includes(this.chainId) && Number(result.maxPriorityFeePerGas) < 30000000000) {
         await this.setMaxPriorityFeeGasPrice(
           GasPriceType.DEFAULT,
-          '3000000000',
+          '30000000000',
         );
         result.maxPriorityFeePerGas = '30000000000';
       }

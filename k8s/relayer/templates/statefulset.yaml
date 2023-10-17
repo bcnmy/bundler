@@ -54,8 +54,6 @@ spec:
         env:
           - name: NODE_OPTIONS
             value: "=--max_old_space_size=6000"
-          - name: DD_RUNTIME_METRICS_ENABLED
-            value: "true"
         envFrom:
           {{- if .Values.datadog.enable }}
           - configMapRef:
