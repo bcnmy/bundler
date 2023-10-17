@@ -152,10 +152,10 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
         activeRelayer.pendingCount
         > this.pendingTransactionCountThreshold - 5
       ) {
-        await this.sendPendingTransactionIncreasingSlackNotification(
-          activeRelayer.address,
-          activeRelayer.pendingCount,
-        );
+        // await this.sendPendingTransactionIncreasingSlackNotification(
+        //   activeRelayer.address,
+        //   activeRelayer.pendingCount,
+        // );
       }
       return this.relayerMap[activeRelayer.address];
     }
