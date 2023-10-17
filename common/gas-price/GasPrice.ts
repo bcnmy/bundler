@@ -47,14 +47,14 @@ export class GasPrice implements IGasPrice {
    * @param gasType DEFAULT | MEDIUM | FAST
    * @returns cache key
    */
-  private getMaxFeePerGasKey = (gasType: GasPriceType) => `MaxFeeGas_${this.chainId}_${gasType}`;
+  private getMaxFeePerGasKey = (gasType: GasPriceType) => `MaxFeePerGas_${this.chainId}_${gasType}`;
 
   /**
    * Method returns cache key for getting EIP 1559 max priority fee per gas from cache
    * @param gasType DEFAULT | MEDIUM | FAST
    * @returns cache key
    */
-  private getMaxPriorityFeeGasKey = (gasType: GasPriceType) => `MaxPriorityFeeGas_${this.chainId}_${gasType}`;
+  private getMaxPriorityFeePerGasKey = (gasType: GasPriceType) => `MaxPriorityFeePerGas_${this.chainId}_${gasType}`;
 
   /**
    * Method returns cache key for EIP 1559 Base Fee Per Gas
@@ -75,7 +75,7 @@ export class GasPrice implements IGasPrice {
         price.maxFeePerGas,
       );
       await this.cacheService.set(
-        this.getMaxPriorityFeeGasKey(gasType),
+        this.getMaxPriorityFeePerGasKey(gasType),
         price.maxPriorityFeePerGas,
       );
     }
@@ -265,7 +265,7 @@ export class GasPrice implements IGasPrice {
    */
   async getMaxPriorityFeeGasPrice(gasType: GasPriceType): Promise<string> {
     const result = await this.cacheService.get(
-      this.getMaxPriorityFeeGasKey(gasType),
+      this.getMaxPriorityFeePerGasKey(gasType),
     );
     return result;
   }
@@ -277,7 +277,7 @@ export class GasPrice implements IGasPrice {
    */
   async setMaxPriorityFeeGasPrice(gasType: GasPriceType, price: string) {
     await this.cacheService.set(
-      this.getMaxPriorityFeeGasKey(gasType),
+      this.getMaxPriorityFeePerGasKey(gasType),
       parseInt(price, 10).toString(),
     );
   }
