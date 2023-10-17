@@ -40,21 +40,21 @@ export class GasPrice implements IGasPrice {
    * @param gasType DEFAULT | MEDIUM | FAST
    * @returns cache key
    */
-  private getGasPriceKey = (gasType: GasPriceType) => `GasPrice_${this.chainId}_${gasType}`;
+  private getGasFeeKey = (gasType: GasPriceType) => `GasFee_${this.chainId}_${gasType}`;
 
   /**
    * Method returns cache key for getting EIP 1559 max fee per gas from cache
    * @param gasType DEFAULT | MEDIUM | FAST
    * @returns cache key
    */
-  private getMaxFeePerGasKey = (gasType: GasPriceType) => `MaxFeeGas_${this.chainId}_${gasType}`;
+  private getMaxFeePerGasKey = (gasType: GasPriceType) => `MaxFeePerGas_${this.chainId}_${gasType}`;
 
   /**
    * Method returns cache key for getting EIP 1559 max priority fee per gas from cache
    * @param gasType DEFAULT | MEDIUM | FAST
    * @returns cache key
    */
-  private getMaxPriorityFeeGasKey = (gasType: GasPriceType) => `MaxPriorityFeeGas_${this.chainId}_${gasType}`;
+  private getMaxPriorityFeePerGasKey = (gasType: GasPriceType) => `MaxPriorityFeePerGas_${this.chainId}_${gasType}`;
 
   /**
    * Method returns cache key for EIP 1559 Base Fee Per Gas
@@ -68,14 +68,14 @@ export class GasPrice implements IGasPrice {
    */
   async setGasPrice(gasType: GasPriceType, price: NetworkBasedGasPriceType) {
     if (typeof price === 'string') {
-      await this.cacheService.set(this.getGasPriceKey(gasType), price);
+      await this.cacheService.set(this.getGasFeeKey(gasType), price);
     } else {
       await this.cacheService.set(
         this.getMaxFeePerGasKey(gasType),
         price.maxFeePerGas,
       );
       await this.cacheService.set(
-        this.getMaxPriorityFeeGasKey(gasType),
+        this.getMaxPriorityFeePerGasKey(gasType),
         price.maxPriorityFeePerGas,
       );
     }
@@ -112,7 +112,7 @@ export class GasPrice implements IGasPrice {
       // }
     } else {
       const gasPrice = await this.cacheService.get(
-        this.getGasPriceKey(gasType),
+        this.getGasFeeKey(gasType),
       );
       if (!gasPrice) {
         const response = await this.networkService.getGasPrice();
@@ -133,7 +133,7 @@ export class GasPrice implements IGasPrice {
     gasType = GasPriceType.DEFAULT,
   ): Promise<string> {
     let result: string;
-    const gasPrice = await this.cacheService.get(this.getGasPriceKey(gasType));
+    const gasPrice = await this.cacheService.get(this.getGasFeeKey(gasType));
     if (!gasPrice) {
       const response = await this.networkService.getGasPrice();
       result = response.gasPrice;
@@ -265,7 +265,7 @@ export class GasPrice implements IGasPrice {
    */
   async getMaxPriorityFeeGasPrice(gasType: GasPriceType): Promise<string> {
     const result = await this.cacheService.get(
-      this.getMaxPriorityFeeGasKey(gasType),
+      this.getMaxPriorityFeePerGasKey(gasType),
     );
     return result;
   }
@@ -277,7 +277,7 @@ export class GasPrice implements IGasPrice {
    */
   async setMaxPriorityFeeGasPrice(gasType: GasPriceType, price: string) {
     await this.cacheService.set(
-      this.getMaxPriorityFeeGasKey(gasType),
+      this.getMaxPriorityFeePerGasKey(gasType),
       parseInt(price, 10).toString(),
     );
   }

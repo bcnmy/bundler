@@ -49,7 +49,7 @@ IRetryTransactionService<IEVMAccount, EVMRawTransactionType> {
     msg?: ConsumeMessage,
   ) => {
     if (msg) {
-      log.info(`Message received from retry transction queue on chainId: ${this.chainId}: ${JSON.stringify(msg.content.toString())}`);
+      log.info(`Message received from retry transaction queue on chainId: ${this.chainId}: ${JSON.stringify(msg.content.toString())}`);
       this.queue.ack(msg);
       const transactionDataReceivedFromRetryQueue = JSON.parse(msg.content.toString());
 
