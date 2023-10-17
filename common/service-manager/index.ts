@@ -202,6 +202,7 @@ let statusService: IStatusService;
     log.info(`Setting up retry transaction queue for chainId: ${chainId}`);
     const retryTransactionQueue = new RetryTransactionHandlerQueue({
       chainId,
+      nodePathIndex: config.relayer.nodePathIndex,
     });
     retryTransactionQueueMap[chainId] = retryTransactionQueue;
     await retryTransactionQueueMap[chainId].connect();

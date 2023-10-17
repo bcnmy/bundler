@@ -103,13 +103,13 @@ export class GasPrice implements IGasPrice {
           maxPriorityFeePerGas,
         };
       }
-      if ([137].includes(this.chainId) && Number(result.maxPriorityFeePerGas) < 30000000000) {
-        await this.setMaxPriorityFeeGasPrice(
-          GasPriceType.DEFAULT,
-          '30000000000',
-        );
-        result.maxPriorityFeePerGas = '30000000000';
-      }
+      // if ([137].includes(this.chainId) && Number(result.maxPriorityFeePerGas) < 30000000000) {
+      //   await this.setMaxPriorityFeeGasPrice(
+      //     GasPriceType.DEFAULT,
+      //     '3000000000',
+      //   );
+      //   result.maxPriorityFeePerGas = '30000000000';
+      // }
     } else {
       const gasPrice = await this.cacheService.get(
         this.getGasPriceKey(gasType),
@@ -360,7 +360,7 @@ export class GasPrice implements IGasPrice {
               data.result,
               'wei',
             );
-            let maxPriorityFeePerGas = Number(maxFeePerGas) * 0.3;
+            let maxPriorityFeePerGas = Number(maxFeePerGas) * 0.4;
             if (maxPriorityFeePerGas < 30000000000) {
               maxPriorityFeePerGas = 30000000000;
             }
@@ -416,10 +416,10 @@ export class GasPrice implements IGasPrice {
             const baseFeePerGas = await this.networkService.getBaseFeePerGas();
             await this.setBaseFeePerGas(baseFeePerGas);
           }
+        } else {
+          await this.setGasPrice(GasPriceType.DEFAULT, gasPrice);
         }
       }
-      await this.setGasPrice(GasPriceType.DEFAULT, gasPrice);
-
       log.info(
         `Setting gas price for chainId: ${this.chainId} as ${gasPrice}`,
       );
