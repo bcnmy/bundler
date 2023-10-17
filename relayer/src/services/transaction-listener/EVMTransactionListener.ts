@@ -198,15 +198,15 @@ ITransactionPublisher<TransactionQueueMessageType> {
               );
               log.info(`userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
 
-              log.info(`updating state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
               if (transactionType === TransactionType.BUNDLER) {
+                log.info(`updating state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
                 await this.userOperationStateDao.updateState(this.chainId, {
                   transactionId,
                   message: 'Transaction confirmed',
                   state: UserOperationStateEnum.CONFIRMED,
                 });
+                log.info(`updated state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
               }
-              log.info(`updated state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
             } else {
               log.info(`entryPoint: ${entryPoint} not found in entry point map for transactionId: ${transactionId} on chainId: ${this.chainId}`);
             }
@@ -356,8 +356,8 @@ ITransactionPublisher<TransactionQueueMessageType> {
                 );
                 log.info(`userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
 
-                log.info(`updating state to: ${UserOperationStateEnum.FAILED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
                 if (transactionType === TransactionType.BUNDLER) {
+                  log.info(`updating state to: ${UserOperationStateEnum.FAILED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
                   await this.userOperationStateDao.updateState(this.chainId, {
                     transactionId,
                     state: UserOperationStateEnum.FAILED,
@@ -366,8 +366,8 @@ ITransactionPublisher<TransactionQueueMessageType> {
                       entryPointContract,
                     ),
                   });
+                  log.info(`updated state to: ${UserOperationStateEnum.FAILED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
                 }
-                log.info(`updated state to: ${UserOperationStateEnum.FAILED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
                 return;
               }
               const {
@@ -465,16 +465,16 @@ ITransactionPublisher<TransactionQueueMessageType> {
                 updationTime: Date.now(),
               }, transactionId, transactionExecutionResponse?.hash);
 
-              log.info(`updating state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId} for a front runned transaction`);
               if (transactionType === TransactionType.BUNDLER) {
+                log.info(`updating state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId} for a front runned transaction`);
                 await this.userOperationStateDao.updateState(this.chainId, {
                   transactionId,
                   transactionHash: frontRunnedTransactionReceipt.hash,
                   message: 'Transaction was front runned, check new transaction hash in receipt',
                   state: UserOperationStateEnum.CONFIRMED,
                 });
+                log.info(`updated state state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId} for a front runned transaction`);
               }
-              log.info(`updated state state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId} for a front runned transaction`);
             } else {
               log.info(`entryPoint: ${entryPoint} not found in entry point map for transactionId: ${transactionId} on chainId: ${this.chainId}`);
             }
