@@ -1,12 +1,9 @@
 FROM node:18.17.1-bookworm
 
 # install dependencies
-# RUN apk update
-
 # arguments
 ARG PORT=3000
 
-RUN mkdir -p /relayer-node
 WORKDIR /relayer-node
 
 COPY package.json yarn.lock  ./
@@ -17,5 +14,6 @@ COPY . /relayer-node
 
 RUN yarn run build
 EXPOSE 3000
+ENV NODE_OPTIONS==--max_old_space_size=6000
 
 CMD ["yarn", "run", "start"]

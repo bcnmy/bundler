@@ -12,6 +12,15 @@ helm upgrade staging-sdk-relayer-0 ./k8s/relayer/ \
      --atomic \
      --dry-run
 
+# debug a template problem
+helm template staging-sdk-relayer-0 ./k8s/relayer/  \
+     --values ./k8s/relayer/values.staging.yaml \
+     --set-string namespace=sdk-staging \
+     --namespace sdk-staging \
+     --set index=0  \
+     --debug
+
+
 # common
 HELM_NAME="staging-sdk-relayer-common"
 NAMESPACE="sdk-staging"
