@@ -24,7 +24,7 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
     const { id } = req.body;
     const userOp = req.body.params[0];
     const entryPointAddress = req.body.params[1];
-    const gasLimitFromSimulation = req.body.params[2] + 2000000;
+    const gasLimitFromSimulation = req.body.params[2] + 200000;
     const userOpHash = req.body.params[3];
     const { chainId, dappAPIKey } = req.params;
 
