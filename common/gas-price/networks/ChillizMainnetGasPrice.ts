@@ -7,7 +7,7 @@ import { IScheduler } from '../../scheduler';
 import { EVMRawTransactionType } from '../../types';
 import { GasPrice } from '../GasPrice';
 
-export class AstarGasPrice extends GasPrice implements IScheduler {
+export class ChillizMainnetGasPrice extends GasPrice implements IScheduler {
   updateFrequencyInSeconds: number;
 
   constructor(
