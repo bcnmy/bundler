@@ -254,7 +254,7 @@ let statusService: IStatusService;
 
     log.info(`Setting up relayer manager for chainId: ${chainId}`);
     for (const relayerManager of config.relayerManagers) {
-      if (relayerManager.name === 'RM2' && [5000, 5001, 204, 5611, 59144, 59140].includes(chainId)) {
+      if (relayerManager.name === 'RM2' && [5000, 5001, 204, 5611, 59144, 59140, 592, 88888].includes(chainId)) {
         log.info(`chainId: ${chainId} not supported on relayer manager RM2`);
         // eslint-disable-next-line no-continue
         continue;

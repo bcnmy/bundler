@@ -49,6 +49,8 @@ export enum BLOCKCHAINS {
   LINEA_TESTNET = 59140,
   LINEA_MAINET = 59144,
   GANACHE = 1337,
+  ASTAR = 592,
+  CHILLIZ = 88888,
 }
 
 // Network with base gas diff from 21k and maxPriorityFeePerGas is 0
@@ -58,5 +60,5 @@ export const OptimismNetworks = [420, 10, 84531, 8453, 204, 5611];
 export const LineaNetworks = [59140, 59144];
 export const ArbitrumNetworks = [42170, 421613, 42161];
 export const AlchemySimulateExecutionSupportedNetworks = [
-  1, 5, 137, 80001, 10, 420, 42161, 421613, 8453, 84531,
+  1, 5, 137, 80001, 10, 420, 42161, 421613, 8453, 84531, 592,
 ];

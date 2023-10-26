@@ -28,6 +28,8 @@ import { MantleMainnetGasPrice } from './networks/MantleMainnetGasPrice';
 import { MantleTestnetGasPrice } from './networks/MantleTestnetGasPrice';
 import { OpBNBMainnetGasPrice } from './networks/OpBNBMainnetGasPrice';
 import { OpBNBTestnetGasPrice } from './networks/OpBNBTestnetGasPrice';
+import { ChillizGasPrice } from './networks/ChillizGasPrice';
+import { AstarGasPrice } from './networks/AstarGasPrice';
 
 export type GasPriceServiceType =
   | MaticGasPrice
@@ -223,6 +225,18 @@ export class GasPriceManager implements IGasPriceManager<GasPriceServiceType> {
         );
       case 5001:
         return new MantleTestnetGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
+      case 88888:
+        return new ChillizGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
+      case 592:
+        return new AstarGasPrice(
           this.cacheService,
           this.networkService,
           this.options,
