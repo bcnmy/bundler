@@ -28,8 +28,10 @@ import { MantleMainnetGasPrice } from './networks/MantleMainnetGasPrice';
 import { MantleTestnetGasPrice } from './networks/MantleTestnetGasPrice';
 import { OpBNBMainnetGasPrice } from './networks/OpBNBMainnetGasPrice';
 import { OpBNBTestnetGasPrice } from './networks/OpBNBTestnetGasPrice';
-import { ChillizGasPrice } from './networks/ChillizGasPrice';
-import { AstarGasPrice } from './networks/AstarGasPrice';
+import { ChillizMainnetGasPrice } from './networks/ChillizMainnetGasPrice';
+import { AstarMainnetGasPrice } from './networks/AstarMainnetGasPrice';
+import { ChillizTestnetGasPrice } from './networks/ChillizTestnetGasPrice';
+import { AstarTestnetGasPrice } from './networks/AstarTestnetGasPrice';
 
 export type GasPriceServiceType =
   | MaticGasPrice
@@ -230,13 +232,25 @@ export class GasPriceManager implements IGasPriceManager<GasPriceServiceType> {
           this.options,
         );
       case 88888:
-        return new ChillizGasPrice(
+        return new ChillizMainnetGasPrice(
           this.cacheService,
           this.networkService,
           this.options,
         );
       case 592:
-        return new AstarGasPrice(
+        return new AstarMainnetGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
+      case 88882:
+        return new ChillizTestnetGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
+      case 81:
+        return new AstarTestnetGasPrice(
           this.cacheService,
           this.networkService,
           this.options,
