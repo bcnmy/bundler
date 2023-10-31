@@ -1,4 +1,6 @@
+/* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable import/no-import-module-exports */
+import NodeCache from 'node-cache';
 import { ICacheService } from '../../../../common/cache';
 import { logger } from '../../../../common/logger';
 import { INetworkService } from '../../../../common/network';
@@ -17,9 +19,9 @@ export class EVMNonceManager implements INonceManager<IEVMAccount, EVMRawTransac
 
   cacheService: ICacheService;
 
-  pendingNonceTracker: Map<string, number>;
+  pendingNonceTracker: NodeCache;
 
-  usedNonceTracker: Map<string, number>;
+  usedNonceTracker: NodeCache;
 
   constructor(evmNonceManagerParams: EVMNonceManagerParamsType) {
     const {
@@ -28,12 +30,12 @@ export class EVMNonceManager implements INonceManager<IEVMAccount, EVMRawTransac
     this.chainId = options.chainId;
     this.networkService = networkService;
     this.cacheService = cacheService;
-    this.pendingNonceTracker = new Map();
-    this.usedNonceTracker = new Map();
+    this.pendingNonceTracker = new NodeCache();
+    this.usedNonceTracker = new NodeCache();
   }
 
   async getNonce(address: string): Promise<number> {
-    let nonce;
+    let nonce: number | undefined;
     try {
       nonce = this.pendingNonceTracker.get(address.toLowerCase());
       log.info(`Nonce from pendingNonceTracker for account: ${address} on chainId: ${this.chainId} is ${nonce}`);
