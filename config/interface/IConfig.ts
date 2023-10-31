@@ -116,6 +116,7 @@ type ChainsConfigType = {
   premium: ChainIdWithNumberValueType,
   currency: ChainIdWithStringValueType,
   decimal: ChainIdWithNumberValueType,
+  nonceExpiryTTL: ChainIdWithNumberValueType,
   provider: ChainIdWithStringValueType,
   fallbackUrls: ChainIdWithArrayStringValueType,
   retryTransactionInterval: ChainIdWithNumberValueType,

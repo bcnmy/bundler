@@ -30,7 +30,7 @@ export class EVMNonceManager implements INonceManager<IEVMAccount, EVMRawTransac
     this.chainId = options.chainId;
     this.networkService = networkService;
     this.cacheService = cacheService;
-    this.pendingNonceTracker = new NodeCache();
+    this.pendingNonceTracker = new NodeCache({ stdTTL: options.nonceExpiryTTL });
     this.usedNonceTracker = new NodeCache();
   }
 
