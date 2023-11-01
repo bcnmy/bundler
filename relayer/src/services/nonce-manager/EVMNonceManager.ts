@@ -40,7 +40,7 @@ export class EVMNonceManager implements INonceManager<IEVMAccount, EVMRawTransac
       nonce = this.pendingNonceTracker.get(address.toLowerCase());
       log.info(`Nonce from pendingNonceTracker for account: ${address} on chainId: ${this.chainId} is ${nonce}`);
 
-      if (nonce != null && nonce !== undefined) {
+      if (typeof nonce === 'number') {
         if (nonce === this.usedNonceTracker.get(address.toLowerCase())) {
           log.info(`Nonce ${nonce} for address ${address} is already used on chainId: ${this.chainId}. So clearing nonce and getting nonce from network`);
           nonce = await this.getAndSetNonceFromNetwork(address);
