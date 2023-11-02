@@ -24,7 +24,7 @@ export class BundlerRelayService implements IRelayService<BundlerTransactionMess
   async sendTransactionToRelayer(
     data: BundlerTransactionMessageType,
   ): Promise<RelayServiceResponseType> {
-    log.info(`Sending transaction to Bundler tranasction queue with transactionId: ${data.transactionId}`);
+    log.info(`Sending transaction to Bundler transaction queue with transactionId: ${data.transactionId}`);
     let response : RelayServiceResponseType;
     try {
       await this.queue.publish(data);

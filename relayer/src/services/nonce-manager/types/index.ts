@@ -6,6 +6,7 @@ import { IEVMAccount } from '../../account';
 export type EVMNonceManagerParamsType = {
   options: {
     chainId: number;
+    nonceExpiryTTL: number;
   },
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
   cacheService: ICacheService;
