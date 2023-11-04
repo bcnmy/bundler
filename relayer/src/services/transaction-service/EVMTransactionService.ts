@@ -404,12 +404,25 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         await this.sendRelayerFundingSlackNotification(relayerAddress, this.chainId, transactionExecutionResponse.transactionResponse.hash);
       }
 
-      return {
-        state: 'success',
-        code: STATUSES.SUCCESS,
-        transactionId,
-        ...transactionListenerNotifyResponse,
-      };
+      if (transactionListenerNotifyResponse.isTransactionRelayed) {
+        return {
+          state: 'success',
+          code: STATUSES.SUCCESS,
+          transactionId,
+          ...transactionListenerNotifyResponse,
+        };
+      } else {
+        return {
+          state: 'failed',
+          code: STATUSES.ETHERS_WAIT_FOR_TRANSACTION_TIMEOUT,
+          error: 'waitForTransaction ethers timeout error',
+          transactionId,
+          ...{
+            isTransactionRelayed: false,
+            transactionExecutionResponse: null,
+          },
+        };
+      }
     } catch (error: any) {
       log.info(`Releasing lock on address: ${account.getPublicKey()} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
       release();

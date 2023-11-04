@@ -22,6 +22,7 @@ import {
   getRetryTransactionCountKey,
   getTokenPriceKey,
   getUserOperationReceiptForDataSaving,
+  getTransactionMinedKey,
   parseError,
 } from '../../../../common/utils';
 import { IEVMAccount } from '../account';
@@ -96,14 +97,14 @@ ITransactionPublisher<TransactionQueueMessageType> {
     return true;
   }
 
-  private async onTransactionSuccess(onTranasctionSuccessParams: OnTransactionSuccessParamsType) {
+  private async onTransactionSuccess(onTransactionSuccessParams: OnTransactionSuccessParamsType) {
     const {
       transactionExecutionResponse,
       transactionReceipt,
       transactionId,
       relayerManagerName,
       transactionType,
-    } = onTranasctionSuccessParams;
+    } = onTransactionSuccessParams;
     if (!transactionReceipt) {
       log.error(`Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
       return;
@@ -251,14 +252,14 @@ ITransactionPublisher<TransactionQueueMessageType> {
     }
   }
 
-  private async onTransactionFailure(onTranasctionFailureParams: OnTransactionFailureParamsType) {
+  private async onTransactionFailure(onTransactionFailureParams: OnTransactionFailureParamsType) {
     const {
       transactionExecutionResponse,
       transactionId,
       transactionReceipt,
       relayerManagerName,
       transactionType,
-    } = onTranasctionFailureParams;
+    } = onTransactionFailureParams;
     if (!transactionReceipt) {
       log.error(`Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
       return;
@@ -566,6 +567,51 @@ ITransactionPublisher<TransactionQueueMessageType> {
     );
   }
 
+  private async updateTransactionDataForFailureInTransactionExecution(
+    transactionId: string,
+  ): Promise<void> {
+    this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
+      resubmitted: false,
+      status: TransactionStatus.DROPPED,
+      updationTime: Date.now(),
+    }, transactionId, TransactionStatus.DROPPED);
+  }
+
+  private async updateUserOpDataForFailureInTransactionExecution(
+    transactionId: string,
+  ): Promise<void> {
+    const userOps = await this.userOperationDao.getUserOpsByTransactionId(
+      this.chainId,
+      transactionId,
+    );
+    log.info(`userOps: ${JSON.stringify(userOps)} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+    if (!userOps.length) {
+      log.info(`No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+      return;
+    }
+
+    for (let userOpIndex = 0; userOpIndex < userOps.length; userOpIndex += 1) {
+      const { userOpHash } = userOps[userOpIndex];
+      await this.userOperationDao.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
+        this.chainId,
+        transactionId,
+        userOpHash,
+        {
+          transactionHash: undefined,
+          receipt: {},
+          blockNumber: 0,
+          blockHash: 'null',
+          status: TransactionStatus.DROPPED,
+          success: 'false',
+          actualGasCost: 0,
+          actualGasUsed: 0,
+          reason: 'null',
+          logs: null,
+        },
+      );
+    }
+  }
+
   private async waitForTransaction(
     notifyTransactionListenerParams: NotifyTransactionListenerParamsType,
   ) {
@@ -583,14 +629,23 @@ ITransactionPublisher<TransactionQueueMessageType> {
       return;
     }
     // TODO : add error check
-    const tranasctionHash = transactionExecutionResponse.hash;
-    log.info(`Transaction hash is: ${tranasctionHash} for transactionId: ${transactionId} on chainId ${this.chainId}`);
+    const transactionHash = transactionExecutionResponse.hash;
+    log.info(`Transaction hash is: ${transactionHash} for transactionId: ${transactionId} on chainId ${this.chainId}`);
 
-    const transactionReceipt = await this.networkService.waitForTransaction(tranasctionHash);
+    const transactionReceipt = await this.networkService.waitForTransaction(
+      transactionHash,
+      undefined,
+      // timeout is set to 1.5 times because it ensures that transaction would
+      // have resubmitted and no need to keep polling it
+      Number(1.5 * config.chains.retryTransactionInterval[this.chainId]),
+    );
+
     log.info(`Transaction receipt is: ${JSON.stringify(transactionReceipt)} for transactionId: ${transactionId} on chainId ${this.chainId}`);
 
     // TODO: reduce pending count of relayer via RelayerManager
     await this.cacheService.delete(getRetryTransactionCountKey(transactionId, this.chainId));
+
+    await this.cacheService.set(getTransactionMinedKey(transactionId), '1');
 
     if (transactionReceipt.status === 1) {
       log.info(`Transaction is a success for transactionId: ${transactionId} on chainId ${this.chainId}`);
@@ -638,7 +693,15 @@ ITransactionPublisher<TransactionQueueMessageType> {
       error,
     } = notifyTransactionListenerParams;
 
-    if (!transactionExecutionResponse) {
+    // if no transactionExecutionResponse then it means transactions was not published onc hain
+    // update transaction and user op collection
+    if (!transactionExecutionResponse || Object.keys(transactionExecutionResponse).length === 0) {
+      if (transactionType === TransactionType.BUNDLER) {
+        await this.updateTransactionDataForFailureInTransactionExecution(transactionId);
+        if (transactionType === TransactionType.BUNDLER || transactionType === TransactionType.AA) {
+          await this.updateUserOpDataForFailureInTransactionExecution(transactionId);
+        }
+      }
       await this.publishToTransactionQueue({
         transactionId,
         relayerManagerName,
@@ -710,7 +773,17 @@ ITransactionPublisher<TransactionQueueMessageType> {
     });
 
     // wait for transaction
-    this.waitForTransaction(notifyTransactionListenerParams);
+    try {
+      this.waitForTransaction(notifyTransactionListenerParams);
+    } catch (waitForTransactionError) {
+      // timeout error
+      // do nothing for now just log
+      log.error(`Error: ${parseError(waitForTransactionError)} Timeout hit for waiting on hash: ${transactionExecutionResponse.hash} for transactionId: ${transactionId} on chainId ${this.chainId}`);
+      return {
+        isTransactionRelayed: false,
+        transactionExecutionResponse,
+      };
+    }
 
     return {
       isTransactionRelayed: true,

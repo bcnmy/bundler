@@ -17,7 +17,7 @@ export class SCWRelayService implements IRelayService<SCWTransactionMessageType>
   async sendTransactionToRelayer(
     data: SCWTransactionMessageType,
   ): Promise<RelayServiceResponseType> {
-    log.info(`Sending transaction to SCW tranasction queue with transactionId: ${data.transactionId}`);
+    log.info(`Sending transaction to SCW transaction queue with transactionId: ${data.transactionId}`);
     let response : RelayServiceResponseType;
     try {
       await this.queue.publish(data);

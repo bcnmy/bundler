@@ -31,7 +31,7 @@ export class EVMNonceManager implements INonceManager<IEVMAccount, EVMRawTransac
     this.networkService = networkService;
     this.cacheService = cacheService;
     this.pendingNonceTracker = new NodeCache({ stdTTL: options.nonceExpiryTTL });
-    this.usedNonceTracker = new NodeCache();
+    this.usedNonceTracker = new NodeCache({ stdTTL: options.nonceExpiryTTL });
   }
 
   async getNonce(address: string): Promise<number> {
