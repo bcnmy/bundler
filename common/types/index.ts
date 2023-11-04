@@ -256,3 +256,14 @@ export type UpdateRequestDataType = {
   rawResponse: object,
   httpResponseCode: number,
 };
+
+export enum ProviderName {
+  ALCHMEY = 'ALCHMEY',
+  INFURA = 'INFURA',
+  POKT = 'POKT',
+  QUICK_NODE = 'QUICK_NODE',
+  ANKR = 'ANKR',
+  BLAST_API = 'BLAST_API',
+  NODE_REAL = 'NODE_REAL',
+  PUBLIC_RPC = 'PUBLIC_RPC',
+}

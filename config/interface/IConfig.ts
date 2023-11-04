@@ -1,4 +1,6 @@
-import { SymbolMapByChainIdType, TransactionType, DefaultGasOverheadType } from '../../common/types';
+import {
+  SymbolMapByChainIdType, TransactionType, DefaultGasOverheadType,
+} from '../../common/types';
 
 type ChainIdWithStringValueType = {
   [key: number]: string
@@ -21,6 +23,12 @@ type ChainIdAndTokenWithNumberValueType = {
 type ChainIdAndTokenWithStringValueType = {
   [key: number]: {
     [key: string]: string;
+  }
+};
+
+type ChainIdWithProviderNameAndWeightObjectType = {
+  [key: number]: {
+    [providerName: string]: number
   }
 };
 
@@ -122,7 +130,8 @@ type ChainsConfigType = {
   retryTransactionInterval: ChainIdWithNumberValueType,
   multiSendAddress: ChainIdWithStringValueType,
   multiSendCallOnlyAddress: ChainIdWithStringValueType,
-  walletFactoryAddress: ChainIdWithStringValueType
+  walletFactoryAddress: ChainIdWithStringValueType,
+  providerNameAndWeight: ChainIdWithProviderNameAndWeightObjectType
 };
 
 type RelayerConfigType = {
