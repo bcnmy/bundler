@@ -23,7 +23,7 @@ export class RPCHandler implements IRPCHandler {
       options,
     } = rpcHandlerParams;
     this.chainId = options.chainId;
-    this.rpcErrorTracker = new NodeCache({ stdTTL: 60 });
+    this.rpcErrorTracker = new NodeCache({ stdTTL: 60 * 15 });
 
     const providerNameAndWeight = config.chains.providerNameAndWeight[this.chainId];
     this.providerNameAndWeight = providerNameAndWeight;
