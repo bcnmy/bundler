@@ -1,13 +1,21 @@
 node_modules
 .env
 yarn-error.log
-centrifugo_config.json
 relayer/dist
 server/dist
 coverage
-config/config.json
 config.json.enc
 *heapsnapshot
-*.json
 *.enc
-config/
+# Ignore all JSON files
+*.json
+
+# But not these specific files
+!static-config.json
+!config-example.json
+!centrifugo_config.json
+
+# If index.ts is not a .json file, you don't need to explicitly exclude it.
+# However, if it's actually index.json, include it like so:
+#!index.json
+
