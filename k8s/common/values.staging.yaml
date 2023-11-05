@@ -1,0 +1,36 @@
+name: "relayer-server"
+
+relayer:
+  name: "relayer-server"
+  port: "3000"
+  
+namespace: "sdk-staging"
+
+secret:
+  projectID: biconomy-staging
+
+  passphrase:
+    key: sdk-staging-relayer-node-service-passphrase
+    name: CONFIG_PASSPHRASE
+    version: latest
+
+ingress:
+  host: sdk-relayer.staging.biconomy.io
+
+# datadog configs
+affinity_tolerations:
+  enable: false
+  
+datadog:
+  enable: true
+  env: "staging"
+
+  service: "sdk-relayer-service"
+  version: "v3.15.0"
+  lib_version: "v3.16.0"
+
+  configs:
+    DD_TRACE_DEBUG: "false"
+    DD_TRACE_STARTUP_LOGS: "false"
+    DD_PROFILING_ENABLED: "true"
+    DD_LOGS_INJECTION: "false"

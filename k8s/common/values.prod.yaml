@@ -1,0 +1,33 @@
+name: "relayer-server"
+
+relayer:
+  name: "relayer-server"
+  port: "3000"
+
+namespace: "sdk-prod"
+
+secret:
+  projectID: biconomy-prod
+  
+  passphrase:
+    key: sdk-prod-relayer-node-service-passphrase
+    name: CONFIG_PASSPHRASE
+    version: latest
+
+ingress:
+  host: sdk-relayer.prod.biconomy.io
+  hostv2: bundler.biconomy.io
+
+datadog:
+  enable: true
+  env: "production"
+
+  service: "sdk-relayer-service"
+  version: "v3.15.0"
+  lib_version: "v3.16.0"
+
+  configs:
+    DD_TRACE_DEBUG: "false"
+    DD_TRACE_STARTUP_LOGS: "false"
+    DD_PROFILING_ENABLED: "true"
+    DD_LOGS_INJECTION: "false"

@@ -1,0 +1,49 @@
+name: "relayer-server"
+index: 0
+
+relayer:
+  name: "relayer-server"
+  image: "gcr.io/biconomy-staging/sdk/relayer-node-service:latest"
+  port: "3000"
+  replicaCount: 1
+  # Increase also the value for NODE_OPTIONS --max_old_space_size
+  # in statefulset.yaml
+  resource:
+    requests:
+      memory: "6000Mi"
+      # bundler is nodejs single threaded app, no need for more then 1 CPU
+      cpu: "1000m"
+    limits:
+      memory: "6000Mi"
+      cpu: "1000m"
+  
+namespace: "sdk-staging"
+
+affinity_tolerations:
+  enable: true
+  key: "app"
+  values: "relayer-server"
+
+secret:
+  projectID: biconomy-staging
+  key: sdk-staging-relayer-node-service
+  config:
+    name: config.json.enc
+
+ingress:
+  host: sdk-relayer.staging.biconomy.io
+
+  
+datadog:
+  enable: true
+  env: "staging"
+
+  service: "sdk-relayer-service"
+  version: "v3.15.0"
+  lib_version: "v3.16.0"
+
+  configs:
+    DD_TRACE_DEBUG: "false"
+    DD_TRACE_STARTUP_LOGS: "false"
+    DD_PROFILING_ENABLED: "true"
+    DD_LOGS_INJECTION: "false"

@@ -1,0 +1,16 @@
+{{- if .Values.datadog.enable }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name }}-dd-configmap
+  namespace: {{ .Values.namespace }}
+data:
+  DD_TRACE_AGENT_URL: "unix:///var/run/datadog/apm.socket"
+  DD_ENV: {{ .Values.datadog.env }}
+  DD_SERVICE: {{ .Values.datadog.service }}
+  DD_VERSION: {{ .Values.datadog.version }}
+  DD_TRACE_DEBUG: {{ .Values.datadog.configs.DD_TRACE_DEBUG | quote }}
+  DD_TRACE_STARTUP_LOGS: {{ .Values.datadog.configs.DD_TRACE_STARTUP_LOGS | quote }}
+  DD_PROFILING_ENABLED: {{ .Values.datadog.configs.DD_PROFILING_ENABLED | quote }}
+  DD_LOGS_INJECTION: {{ .Values.datadog.configs.DD_LOGS_INJECTION | quote }}
+{{- end }}

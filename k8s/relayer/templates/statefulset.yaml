@@ -1,0 +1,119 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.relayer.name }}{{ .Values.index }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.relayer.name }}
+    component: {{ .Values.relayer.name }}{{ .Values.index }}
+    {{- include "relayers-service.labels" $ | nindent 4 }}
+  {{- if .Values.datadog.enable }}
+    {{- include "datadog.datatrace" $ | nindent 4 }}
+  {{- end }}
+spec:
+  serviceName: {{ .Values.name }}
+  replicas: {{ .Values.relayer.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.relayer.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.relayer.name }}
+      {{- if .Values.datadog.enable }}
+        {{- include "datadog.datatrace" $ | nindent 8 }}
+        {{- include "datadog.datatrace-admission" $ | nindent 8 }}
+      {{- end }}
+      annotations:
+      {{- if .Values.datadog.enable }}
+        admission.us5.datadoghq.com/js-lib.version: {{ .Values.datadog.lib_version }}
+      {{- end }}
+        releaseTime: {{ dateInZone "2006-01-02 15:04:05Z" (now) "UTC"| quote }} 
+    spec:
+    {{- if .Values.affinity_tolerations.enable }}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: {{ .Values.affinity_tolerations.key }}
+                operator: In
+                values:
+                - {{ .Values.affinity_tolerations.values }}
+      tolerations:
+      - effect: NoSchedule
+        key: {{ .Values.affinity_tolerations.key }}
+        operator: Equal
+        value: {{ .Values.affinity_tolerations.values }}
+    {{- end }}
+      containers:
+      - name: {{ .Values.relayer.name }}{{ .Values.index }}
+        image: {{ .Values.relayer.image }}
+        ports:
+        - containerPort: {{ .Values.relayer.port }}
+        env:
+          - name: NODE_OPTIONS
+            value: "=--max_old_space_size=6000"
+        envFrom:
+          {{- if .Values.datadog.enable }}
+          - configMapRef:
+              name: {{ .Values.name }}-dd-configmap
+          {{- end }}
+          - secretRef:
+              name: {{ .Values.relayer.name }}-passphrase
+        volumeMounts:
+          - mountPath: "/relayer-node/config.json.enc"
+            name: secret
+            subPath: "config.json.enc"
+      {{- if .Values.datadog.enable }}
+          - mountPath: /var/run/datadog
+            name: apmsocketpath
+      {{- end }} 
+        resources:
+          requests:
+            memory: {{ .Values.relayer.resource.requests.memory }}
+            cpu: {{ .Values.relayer.resource.requests.cpu }}
+          limits:
+            memory: {{ .Values.relayer.resource.limits.memory }}
+            cpu: {{ .Values.relayer.resource.limits.cpu }}
+        # allow in to total failureThreshold(30) * periodSeconds(10) = 300 seconds
+        startupProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.relayer.port }}
+          failureThreshold: 30
+          periodSeconds: 120
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.relayer.port }}
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 30
+          failureThreshold: 3
+        # cosider application not healhy after 10 minutes +
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.relayer.port }}
+          initialDelaySeconds: 120
+          periodSeconds: 60
+          successThreshold: 1
+          timeoutSeconds: 120
+          failureThreshold: 5
+        lifecycle:
+        # https://learnk8s.io/graceful-shutdown
+        # still server traffic for 15 seconds after k8s issued the SIG term
+          preStop:
+            exec:
+              command: ["sleep", "15"]
+      volumes:
+      - name: secret
+        secret:
+          secretName: {{ .Values.name }}{{ .Values.index }}
+      {{- if .Values.datadog.enable }}
+      - hostPath:
+          path: /var/run/datadog/
+        name: apmsocketpath
+      {{- end }} 

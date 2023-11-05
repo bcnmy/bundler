@@ -1,0 +1,35 @@
+FROM node:18.17.1-bookworm
+
+# Install dependencies
+# RUN apk update && \
+#     apk add --no-cache python3 py3-pip make g++ && \
+#     if [ ! -e /usr/bin/python ]; then ln -sf python3 /usr/bin/python ; fi && \
+#     python3 --version && \
+#     pip3 --version
+
+# Arguments
+ARG PORT=3000
+
+# Set up the directory
+RUN mkdir -p /relayer-node
+WORKDIR /relayer-node
+
+# Copy package files
+COPY package.json yarn.lock ./
+
+# Install packages
+RUN yarn install
+
+# Copy the rest of the files
+COPY . /relayer-node 
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+# Build the application
+RUN yarn run build
+
+# Expose the port
+EXPOSE 3000
+RUN chmod +x /relayer-node/entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+
