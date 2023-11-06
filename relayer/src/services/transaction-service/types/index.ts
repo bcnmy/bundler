@@ -11,6 +11,7 @@ import { IEVMAccount } from '../../account';
 import { INonceManager } from '../../nonce-manager';
 import { ITransactionListener } from '../../transaction-listener';
 import { TransactionListenerNotifyReturnType } from '../../transaction-listener/types';
+import { IRPCHandler } from '../../../../../common/rpc-handler';
 
 export type EVMTransactionServiceParamsType = {
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
@@ -19,6 +20,7 @@ export type EVMTransactionServiceParamsType = {
   gasPriceService: IGasPrice,
   transactionDao: ITransactionDAO,
   cacheService: ICacheService,
+  rpcHandler: IRPCHandler,
   notificationManager: INotificationManager,
   userOperationStateDao: IUserOperationStateDAO
   options: {

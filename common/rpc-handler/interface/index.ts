@@ -4,8 +4,8 @@ import { ProviderName } from '../../types';
 
 export interface IRPCHandler {
   rpcErrorTracker: NodeCache;
-
   chainId: number;
+  currentProviderName: string;
 
   updateRpcErrorTracker(providerName: ProviderName): void
   getNextRPCProvider(): ProviderName
