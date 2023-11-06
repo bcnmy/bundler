@@ -10,4 +10,5 @@ export interface INonceManager<AccountType, RawTransactionType> {
   getAndSetNonceFromNetwork(address: string, pendingCount: boolean): Promise<number>;
   markUsed(address: string, nonce: number): Promise<void>;
   incrementNonce(address: string): Promise<boolean>;
+  getNonceFromNetwork(address: string): Promise<number>;
 }
