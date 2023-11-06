@@ -164,297 +164,317 @@
       "81": 3600,
       "88882": 3600
     },
-    "providerNameAndWeight": {
-    "1": {
-      "ALCHEMY": 0,
-      "INFURA": 1,
-      "POKT": 2,
-      "QUICK_NODE": 3,
-      "ANKR": 4,
-      "BLAST_API": 5,
-      "NODE_REAL": 6,
-      "PUBLIC_RPC": 7
-    },
-    "5": {
-      "ALCHEMY": 0,
-      "INFURA": 1,
-      "POKT": 2,
-      "QUICK_NODE": 3,
-      "ANKR": 4,
-      "BLAST_API": 5,
-      "NODE_REAL": 6,
-      "PUBLIC_RPC": 7
-    },
-    "137": {
-      "ALCHEMY": 0,
-      "INFURA": 1,
-      "POKT": 2,
-      "QUICK_NODE": 3,
-      "ANKR": 4,
-      "BLAST_API": 5,
-      "NODE_REAL": 6,
-      "PUBLIC_RPC": 7
-    },
-    "80001": {
-      "ALCHEMY": 0,
-      "INFURA": 1,
-      "POKT": 2,
-      "QUICK_NODE": 3,
-      "ANKR": 4,
-      "BLAST_API": 5,
-      "NODE_REAL": 6,
-      "PUBLIC_RPC": 7
-    },
-    "1442": {
-      "ALCHEMY": 0,
-      "INFURA": 1,
-      "POKT": 2,
-      "QUICK_NODE": 3,
-      "ANKR": 4,
-      "BLAST_API": 5,
-      "NODE_REAL": 6,
-      "PUBLIC_RPC": 7
-    },
-    "1101": {
-      "ALCHEMY": 0,
-      "INFURA": 1,
-      "POKT": 2,
-      "QUICK_NODE": 3,
-      "ANKR": 4,
-      "BLAST_API": 5,
-      "NODE_REAL": 6,
-      "PUBLIC_RPC": 7
-    },
-    "421613": {
-      "ALCHEMY": 0,
-      "INFURA": 1,
-      "POKT": 2,
-      "QUICK_NODE": 3,
-      "ANKR": 4,
-      "BLAST_API": 5,
-      "NODE_REAL": 6,
-      "PUBLIC_RPC": 7
-    },
-    "42161": {
-      "ALCHEMY": 0,
-      "INFURA": 1,
-      "POKT": 2,
-      "QUICK_NODE": 3,
-      "ANKR": 4,
-      "BLAST_API": 5,
-      "NODE_REAL": 6,
-      "PUBLIC_RPC": 7
-    },
-    "42170": {
-      "ALCHEMY": 0,
-      "INFURA": 1,
-      "POKT": 2,
-      "QUICK_NODE": 3,
-      "ANKR": 4,
-      "BLAST_API": 5,
-      "NODE_REAL": 6,
-      "PUBLIC_RPC": 7
-    },
-    "97": {
-      "ALCHEMY": 0,
-      "INFURA": 1,
-      "POKT": 2,
-      "QUICK_NODE": 3,
-      "ANKR": 4,
-      "BLAST_API": 5,
-      "NODE_REAL": 6,
-      "PUBLIC_RPC": 7
-    },
-    "56": {
-      "ALCHEMY": 0,
-      "INFURA": 1,
-      "POKT": 2,
-      "QUICK_NODE": 3,
-      "ANKR": 4,
-      "BLAST_API": 5,
-      "NODE_REAL": 6,
-      "PUBLIC_RPC": 7
-    },
-    "10": {
-      "ALCHEMY": 0,
-      "INFURA": 1,
-      "POKT": 2,
-      "QUICK_NODE": 3,
-      "ANKR": 4,
-      "BLAST_API": 5,
-      "NODE_REAL": 6,
-      "PUBLIC_RPC": 7
-    },
-    "420": {
-      "ALCHEMY": 0,
-      "INFURA": 1,
-      "POKT": 2,
-      "QUICK_NODE": 3,
-      "ANKR": 4,
-      "BLAST_API": 5,
-      "NODE_REAL": 6,
-      "PUBLIC_RPC": 7
-    },
-    "43113": {
-      "ALCHEMY": 0,
-      "INFURA": 1,
-      "POKT": 2,
-      "QUICK_NODE": 3,
-      "ANKR": 4,
-      "BLAST_API": 5,
-      "NODE_REAL": 6,
-      "PUBLIC_RPC": 7
-    },
-    "43114": {
-      "ALCHEMY": 0,
-      "INFURA": 1,
-      "POKT": 2,
-      "QUICK_NODE": 3,
-      "ANKR": 4,
-      "BLAST_API": 5,
-      "NODE_REAL": 6,
-      "PUBLIC_RPC": 7
-    },
-    "84531": {
-      "ALCHEMY": 0,
-      "INFURA": 1,
-      "POKT": 2,
-      "QUICK_NODE": 3,
-      "ANKR": 4,
-      "BLAST_API": 5,
-      "NODE_REAL": 6,
-      "PUBLIC_RPC": 7
-    },
-    "8453": {
-      "ALCHEMY": 0,
-      "INFURA": 1,
-      "POKT": 2,
-      "QUICK_NODE": 3,
-      "ANKR": 4,
-      "BLAST_API": 5,
-      "NODE_REAL": 6,
-      "PUBLIC_RPC": 7
-    },
-    "59140": {
-      "ALCHEMY": 0,
-      "INFURA": 1,
-      "POKT": 2,
-      "QUICK_NODE": 3,
-      "ANKR": 4,
-      "BLAST_API": 5,
-      "NODE_REAL": 6,
-      "PUBLIC_RPC": 7
-    },
-    "59144": {
-      "ALCHEMY": 0,
-      "INFURA": 1,
-      "POKT": 2,
-      "QUICK_NODE": 3,
-      "ANKR": 4,
-      "BLAST_API": 5,
-      "NODE_REAL": 6,
-      "PUBLIC_RPC": 7
-    },
-    "1287": {
-      "ALCHEMY": 0,
-      "INFURA": 1,
-      "POKT": 2,
-      "QUICK_NODE": 3,
-      "ANKR": 4,
-      "BLAST_API": 5,
-      "NODE_REAL": 6,
-      "PUBLIC_RPC": 7
-    },
-    "1284": {
-      "ALCHEMY": 0,
-      "INFURA": 1,
-      "POKT": 2,
-      "QUICK_NODE": 3,
-      "ANKR": 4,
-      "BLAST_API": 5,
-      "NODE_REAL": 6,
-      "PUBLIC_RPC": 7
-    },
-    "5000": {
-      "ALCHEMY": 0,
-      "INFURA": 1,
-      "POKT": 2,
-      "QUICK_NODE": 3,
-      "ANKR": 4,
-      "BLAST_API": 5,
-      "NODE_REAL": 6,
-      "PUBLIC_RPC": 7
-    },
-    "5001": {
-      "ALCHEMY": 0,
-      "INFURA": 1,
-      "POKT": 2,
-      "QUICK_NODE": 3,
-      "ANKR": 4,
-      "BLAST_API": 5,
-      "NODE_REAL": 6,
-      "PUBLIC_RPC": 7
-    },
-    "204": {
-      "ALCHEMY": 0,
-      "INFURA": 1,
-      "POKT": 2,
-      "QUICK_NODE": 3,
-      "ANKR": 4,
-      "BLAST_API": 5,
-      "NODE_REAL": 6,
-      "PUBLIC_RPC": 7
-    },
-    "5611": {
-      "ALCHEMY": 0,
-      "INFURA": 1,
-      "POKT": 2,
-      "QUICK_NODE": 3,
-      "ANKR": 4,
-      "BLAST_API": 5,
-      "NODE_REAL": 6,
-      "PUBLIC_RPC": 7
-    },
-    "592": {
-      "ALCHEMY": 0,
-      "INFURA": 1,
-      "POKT": 2,
-      "QUICK_NODE": 3,
-      "ANKR": 4,
-      "BLAST_API": 5,
-      "NODE_REAL": 6,
-      "PUBLIC_RPC": 7
-    },
-    "81": {
-      "ALCHEMY": 0,
-      "INFURA": 1,
-      "POKT": 2,
-      "QUICK_NODE": 3,
-      "ANKR": 4,
-      "BLAST_API": 5,
-      "NODE_REAL": 6,
-      "PUBLIC_RPC": 7
-    },
-    "88888": {
-      "ALCHEMY": 0,
-      "INFURA": 1,
-      "POKT": 2,
-      "QUICK_NODE": 3,
-      "ANKR": 4,
-      "BLAST_API": 5,
-      "NODE_REAL": 6,
-      "PUBLIC_RPC": 7
-    },
-    "88882": {
-      "ALCHEMY": 0,
-      "INFURA": 1,
-      "POKT": 2,
-      "QUICK_NODE": 3,
-      "ANKR": 4,
-      "BLAST_API": 5,
-      "NODE_REAL": 6,
-      "PUBLIC_RPC": 7
-    }
+    "providerNameWeightAndRPCUrl": {
+      "1": {
+        "ALCHEMY": {
+          "weight": 0,
+          "rpcUrl": ""
+        },
+        "INFURA": {
+          "weight": 1,
+          "rpcUrl": ""
+        },
+        "PUBLIC_RPC": {
+          "weight": 2,
+          "rpcUrl": ""
+        }
+      },
+      "5":  {
+        "ALCHEMY": {
+          "weight": 0,
+          "rpcUrl": ""
+        },
+        "INFURA": {
+          "weight": 1,
+          "rpcUrl": ""
+        },
+        "PUBLIC_RPC": {
+          "weight": 2,
+          "rpcUrl": ""
+        }
+      },
+      "137":  {
+        "ALCHEMY": {
+          "weight": 0,
+          "rpcUrl": ""
+        },
+        "INFURA": {
+          "weight": 1,
+          "rpcUrl": ""
+        },
+        "POKT": {
+          "weight": 2,
+          "rpcUrl": ""
+        },
+        "PUBLIC_PRC": {
+          "weight": 3,
+          "rpcUrl": ""
+        }
+      },
+      "80001": {
+        "ALCHEMY": {
+          "weight": 0,
+          "rpcUrl": ""
+        },
+        "INFURA": {
+          "weight": 1,
+          "rpcUrl": ""
+        },
+        "POKT": {
+          "weight": 2,
+          "rpcUrl": ""
+        },
+        "PUBLIC_PRC": {
+          "weight": 3,
+          "rpcUrl": ""
+        }
+      },
+      "1442": {
+        "ALCHEMY": {
+          "weight": 0,
+          "rpcUrl": ""
+        },
+        "PUBLIC_PRC": {
+          "weight": 1,
+          "rpcUrl": ""
+        }
+      },
+      "1101": {
+        "ALCHEMY": {
+          "weight": 0,
+          "rpcUrl": ""
+        },
+        "PUBLIC_PRC": {
+          "weight": 1,
+          "rpcUrl": ""
+        }
+      },
+      "421613": {
+        "ALCHEMY": {
+          "weight": 0,
+          "rpcUrl": ""
+        },
+        "PUBLIC_PRC": {
+          "weight": 1,
+          "rpcUrl": ""
+        }
+      },
+      "42161": {
+        "ALCHEMY": {
+          "weight": 0,
+          "rpcUrl": ""
+        },
+        "PUBLIC_PRC": {
+          "weight": 1,
+          "rpcUrl": ""
+        }
+      },
+      "42170": {
+        "QUICK_NODE": {
+          "weight": 0,
+          "rpcUrl": ""
+        },
+        "PUBLIC_PRC": {
+          "weight": 1,
+          "rpcUrl": ""
+        }
+      },
+      "97": {
+        "QUICK_NODE": {
+          "weight": 0,
+          "rpcUrl": ""
+        },
+        "PUBLIC_PRC": {
+          "weight": 1,
+          "rpcUrl": ""
+        }
+      },
+      "56": {
+        "QUICK_NODE": {
+          "weight": 0,
+          "rpcUrl": ""
+        },
+        "PUBLIC_PRC": {
+          "weight": 1,
+          "rpcUrl": ""
+        }
+      },
+      "10": {
+        "ALCHEMY": {
+          "weight": 0,
+          "rpcUrl": ""
+        },
+        "PUBLIC_PRC": {
+          "weight": 1,
+          "rpcUrl": ""
+        }
+      },
+      "420": {
+        "ALCHEMY": {
+          "weight": 0,
+          "rpcUrl": ""
+        },
+        "PUBLIC_PRC": {
+          "weight": 1,
+          "rpcUrl": ""
+        }
+      },
+      "43113": {
+        "QUICK_NODE": {
+          "weight": 0,
+          "rpcUrl": ""
+        },
+        "POKT": {
+          "weight": 1,
+          "rpcUrl": ""
+        },
+        "PUBLIC_PRC": {
+          "weight": 2,
+          "rpcUrl": ""
+        }
+      },
+      "43114": {
+        "QUICK_NODE": {
+          "weight": 0,
+          "rpcUrl": ""
+        },
+        "POKT": {
+          "weight": 1,
+          "rpcUrl": ""
+        },
+        "PUBLIC_PRC": {
+          "weight": 2,
+          "rpcUrl": ""
+        }
+      },
+      "84531": {
+        "ALCHEMY": {
+          "weight": 0,
+          "rpcUrl": ""
+        },
+        "INFURA": {
+          "weight": 1,
+          "rpcUrl": ""
+        },
+        "PUBLIC_PRC": {
+          "weight": 2,
+          "rpcUrl": ""
+        }
+      },
+      "8453": {
+        "ALCHEMY": {
+          "weight": 0,
+          "rpcUrl": ""
+        },
+        "INFURA": {
+          "weight": 1,
+          "rpcUrl": ""
+        },
+        "PUBLIC_PRC": {
+          "weight": 2,
+          "rpcUrl": ""
+        }
+      },
+      "59140": {
+        "INFURA": {
+          "weight": 0,
+          "rpcUrl": ""
+        },
+        "PUBLIC_PRC": {
+          "weight": 1,
+          "rpcUrl": ""
+        }
+      },
+      "59144": {
+        "INFURA": {
+          "weight": 0,
+          "rpcUrl": ""
+        },
+        "PUBLIC_PRC": {
+          "weight": 1,
+          "rpcUrl": ""
+        }
+      },
+      "5000":{
+        "ANKR": {
+          "weight": 0,
+          "rpcUrl": ""
+        },
+        "PUBLIC_PRC": {
+          "weight": 1,
+          "rpcUrl": ""
+        }
+      },
+      "5001": {
+        "ANKR": {
+          "weight": 0,
+          "rpcUrl": ""
+        },
+        "PUBLIC_PRC": {
+          "weight": 1,
+          "rpcUrl": ""
+        }
+      },
+      "204": {
+        "NODE_REAL": {
+          "weight": 0,
+          "rpcUrl": ""
+        },
+        "PUBLIC_PRC": {
+          "weight": 1,
+          "rpcUrl": ""
+        }
+      },
+      "5611": {
+        "NODE_REAL": {
+          "weight": 0,
+          "rpcUrl": ""
+        },
+        "PUBLIC_PRC": {
+          "weight": 1,
+          "rpcUrl": ""
+        }
+      },
+      "592": {
+        "BLAST_API": {
+          "weight": 0,
+          "rpcUrl": ""
+        },
+        "PUBLIC_PRC": {
+          "weight": 1,
+          "rpcUrl": ""
+        }
+      },
+      "81": {
+        "BLAST_API": {
+          "weight": 0,
+          "rpcUrl": ""
+        },
+        "PUBLIC_PRC": {
+          "weight": 1,
+          "rpcUrl": ""
+        }
+      },
+      "88888": {
+        "ANKR": {
+          "weight": 0,
+          "rpcUrl": ""
+        },
+        "PUBLIC_PRC": {
+          "weight": 1,
+          "rpcUrl": ""
+        }
+      },
+      "88882": {
+        "ANKR": {
+          "weight": 0,
+          "rpcUrl": ""
+        },
+        "PUBLIC_PRC": {
+          "weight": 1,
+          "rpcUrl": ""
+        }
+      }
     },
     "fallbackUrls": {},
     "retryTransactionInterval": {

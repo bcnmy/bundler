@@ -26,9 +26,12 @@ type ChainIdAndTokenWithStringValueType = {
   }
 };
 
-type ChainIdWithProviderNameAndWeightObjectType = {
+type ChainIdWithProviderNameWeightAndRPCUrlObjectType = {
   [key: number]: {
-    [providerName: string]: number
+    [providerName: string]: {
+      weight: number,
+      rpcUrl: string
+    }
   }
 };
 
@@ -131,7 +134,7 @@ type ChainsConfigType = {
   multiSendAddress: ChainIdWithStringValueType,
   multiSendCallOnlyAddress: ChainIdWithStringValueType,
   walletFactoryAddress: ChainIdWithStringValueType,
-  providerNameAndWeight: ChainIdWithProviderNameAndWeightObjectType
+  providerNameWeightAndRPCUrl: ChainIdWithProviderNameWeightAndRPCUrlObjectType
 };
 
 type RelayerConfigType = {

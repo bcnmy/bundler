@@ -1,6 +1,6 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import NodeCache from 'node-cache';
-import { ProviderName } from '../types';
+import { ProviderName, ProviderNameWeightAndRPCUrlType } from '../types';
 import { IRPCHandler } from './interface';
 import { RPCHandlerParamsType } from './types';
 import { config } from '../../config';
@@ -12,9 +12,7 @@ export class RPCHandler implements IRPCHandler {
     [key: string]: RegExp
   } = {};
 
-  providerNameAndWeight: {
-    [providerName: string]: number;
-  };
+  providerNameWeightAndRPCUrl: ProviderNameWeightAndRPCUrlType;
 
   chainId: number;
 
@@ -25,9 +23,9 @@ export class RPCHandler implements IRPCHandler {
     this.chainId = options.chainId;
     this.rpcErrorTracker = new NodeCache({ stdTTL: 60 * 15 });
 
-    const providerNameAndWeight = config.chains.providerNameAndWeight[this.chainId];
-    this.providerNameAndWeight = providerNameAndWeight;
-    for (const [providerName] of Object.entries(providerNameAndWeight)) {
+    const providerNameWeightAndRPCUrl = config.chains.providerNameWeightAndRPCUrl[this.chainId];
+    this.providerNameWeightAndRPCUrl = providerNameWeightAndRPCUrl;
+    for (const [providerName] of Object.entries(providerNameWeightAndRPCUrl)) {
       this.providerNameRegex[providerName] = new RegExp(providerName);
     }
   }
@@ -50,7 +48,7 @@ export class RPCHandler implements IRPCHandler {
     // loop over all the available providers
     // as they are sorted in config by decreasing order
     // provider with higher weight will be checked first always
-    for (const [providerName] of Object.entries(this.providerNameAndWeight)) {
+    for (const [providerName] of Object.entries(this.providerNameWeightAndRPCUrl)) {
       const providerErrorCountKeys = [];
       for (const errorTrackerKey of keys) {
         if (this.providerNameRegex[providerName].test(errorTrackerKey)) {

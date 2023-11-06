@@ -267,3 +267,10 @@ export enum ProviderName {
   NODE_REAL = 'NODE_REAL',
   PUBLIC_RPC = 'PUBLIC_RPC',
 }
+
+export type ProviderNameWeightAndRPCUrlType = {
+  [providerName: string]: {
+    weight: number,
+    rpcUrl: string
+  };
+};

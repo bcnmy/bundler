@@ -63,6 +63,7 @@ import {
   TransactionType,
 } from '../types';
 import { UserOperationStateDAO } from '../db/dao/UserOperationStateDAO';
+import { RPCHandler } from '../rpc-handler';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
@@ -164,11 +165,17 @@ let statusService: IStatusService;
       throw new Error(`No provider for chainId ${chainId}`);
     }
 
+    log.info(`Setting up RPC Handler for chainId: ${chainId}`);
+    const rpcHandler = new RPCHandler({
+      options: {
+        chainId,
+      },
+    });
+    log.info(`RPC Handler setup complete for chainId: ${chainId}`);
+
     log.info(`Setting up network service for chainId: ${chainId}`);
-    const networkService = new EVMNetworkService({
+    const networkService = new EVMNetworkService(rpcHandler, {
       chainId,
-      rpcUrl: config.chains.provider[chainId],
-      fallbackRpcUrls: config.chains.fallbackUrls[chainId] || [],
     });
     log.info(`Network service setup complete for chainId: ${chainId}`);
     networkServiceMap[chainId] = networkService;

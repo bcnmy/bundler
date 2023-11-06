@@ -310,7 +310,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
                 transactionReceipt,
                 entryPointContract,
                 fromBlock,
-                this.networkService.ethersProvider,
+                this.networkService.getEthersProvider(),
               );
               log.info(`userOpReceipt: ${JSON.stringify(userOpReceipt)} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
 
