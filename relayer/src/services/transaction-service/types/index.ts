@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import { ICacheService } from '../../../../../common/cache';
-import { ITransactionDAO, IUserOperationStateDAO } from '../../../../../common/db';
+import { IRPCErrorDAO, ITransactionDAO, IUserOperationStateDAO } from '../../../../../common/db';
 import { IGasPrice } from '../../../../../common/gas-price';
 import { GasPriceType } from '../../../../../common/gas-price/types';
 import { INetworkService } from '../../../../../common/network';
@@ -22,7 +22,8 @@ export type EVMTransactionServiceParamsType = {
   cacheService: ICacheService,
   rpcHandler: IRPCHandler,
   notificationManager: INotificationManager,
-  userOperationStateDao: IUserOperationStateDAO
+  userOperationStateDao: IUserOperationStateDAO,
+  rpcErrorDAO: IRPCErrorDAO
   options: {
     chainId: number,
   }

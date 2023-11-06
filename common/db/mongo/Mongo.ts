@@ -10,6 +10,7 @@ import {
   UserOperationsMapType,
   UserOperationsStateMap,
   UserOperationsStateMapType,
+  RPCErrorModel,
 } from './models';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
@@ -95,6 +96,16 @@ export class Mongo implements IDBService {
     const supportedNetworks: number[] = config.supportedNetworks || [];
     if (!supportedNetworks.includes(networkId)) throw new Error(`Network Id ${networkId} is not supported`);
     return UserOperationsStateMap[networkId];
+  }
+
+  /**
+   * Method returns user operation state model
+   */
+  getRPCError() {
+    if (!this.client) {
+      throw new Error('Not connected to db');
+    }
+    return RPCErrorModel;
   }
 
   isConnected(): boolean {

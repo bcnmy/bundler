@@ -34,7 +34,7 @@ import {
   SuccessTransactionResponseType,
   TransactionDataType,
 } from './types';
-import { IUserOperationStateDAO } from '../../../../common/db';
+import { IRPCErrorDAO, IUserOperationStateDAO } from '../../../../common/db';
 import { IRPCHandler } from '../../../../common/rpc-handler';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
@@ -57,6 +57,8 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
 
   userOperationStateDao: IUserOperationStateDAO;
 
+  rpcErrorDAO: IRPCErrorDAO;
+
   rpcHandler: IRPCHandler;
 
   addressMutex: {
@@ -66,7 +68,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
   constructor(evmTransactionServiceParams: EVMTransactionServiceParamsType) {
     const {
       options, networkService, transactionListener, nonceManager, gasPriceService, cacheService, rpcHandler,
-      notificationManager, userOperationStateDao,
+      notificationManager, userOperationStateDao, rpcErrorDAO,
     } = evmTransactionServiceParams;
     this.chainId = options.chainId;
     this.networkService = networkService;
@@ -77,6 +79,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     this.rpcHandler = rpcHandler;
     this.notificationManager = notificationManager;
     this.userOperationStateDao = userOperationStateDao;
+    this.rpcErrorDAO = rpcErrorDAO;
   }
 
   private getMutex(address: string) {
@@ -227,16 +230,34 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           }
           return await retryExecuteTransaction({ rawTransaction, account });
         } else if (RPC_FAILURE.some((str) => errInString.indexOf(str) > -1)) {
+          this.rpcErrorDAO.save({
+            transactionId,
+            providerName: this.rpcHandler.currentProviderName,
+            rawRequest: executeTransactionParams,
+            rawResponse: error,
+          });
           this.rpcHandler.updateRpcErrorTracker(this.rpcHandler.currentProviderName as ProviderName);
           return await retryExecuteTransaction({ rawTransaction, account });
         } else {
           log.info(`Error: ${errInString} not handled. Transaction not being retried for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+          this.rpcErrorDAO.save({
+            transactionId,
+            providerName: this.rpcHandler.currentProviderName,
+            rawRequest: executeTransactionParams,
+            rawResponse: error,
+          });
           this.rpcHandler.updateRpcErrorTracker(this.rpcHandler.currentProviderName as ProviderName);
           return {
             success: false,
             error: errInString,
           };
         }
+        this.rpcErrorDAO.save({
+          transactionId,
+          providerName: this.rpcHandler.currentProviderName,
+          rawRequest: executeTransactionParams,
+          rawResponse: error,
+        });
         this.rpcHandler.updateRpcErrorTracker(this.rpcHandler.currentProviderName as ProviderName);
         return {
           success: false,

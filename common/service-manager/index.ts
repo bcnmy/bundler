@@ -64,6 +64,7 @@ import {
 } from '../types';
 import { UserOperationStateDAO } from '../db/dao/UserOperationStateDAO';
 import { RPCHandler } from '../rpc-handler';
+import { RPCErrorDAO } from '../db/dao/RPCErrorDAO';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
@@ -121,6 +122,7 @@ const EVMRelayerManagerMap: {
 const transactionDao = new TransactionDAO();
 const userOperationDao = new UserOperationDAO();
 const userOperationStateDao = new UserOperationStateDAO();
+const rpcErrorDAO = new RPCErrorDAO();
 
 const socketConsumerMap: Record<number, SocketConsumer> = {};
 const retryTransactionSerivceMap: Record<number, EVMRetryTransactionService> = {};
@@ -254,6 +256,8 @@ let statusService: IStatusService;
       cacheService,
       notificationManager,
       userOperationStateDao,
+      rpcHandler,
+      rpcErrorDAO,
       options: {
         chainId,
       },
@@ -314,6 +318,7 @@ let statusService: IStatusService;
       networkService,
       notificationManager,
       cacheService,
+      nonceManager,
       options: {
         chainId,
         EVMRelayerManagerMap, // TODO // Review a better way
