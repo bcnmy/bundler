@@ -16,29 +16,29 @@ const AES_PADDING = crypto.pad.Pkcs7;
 const AES_MODE = crypto.mode.CBC;
 
 function getEnvMinRelayerCount(): number {
-  if (process.env.MIN_RELAYER_COUNT){
-    return  parseInt(process.env.MIN_RELAYER_COUNT) 
+  if (process.env.MIN_RELAYER_COUNT) {
+    return parseInt(process.env.MIN_RELAYER_COUNT)
   }
   return 0
 }
 
 function getEnvMaxRelayerCount(): number {
-  if (process.env.MAX_RELAYER_COUNT){
-    return  parseInt(process.env.MAX_RELAYER_COUNT) 
+  if (process.env.MAX_RELAYER_COUNT) {
+    return parseInt(process.env.MAX_RELAYER_COUNT)
   }
   return 0
 }
 
 function getEnvfundingBalanceThreshold(): number {
-  if (process.env.FUNDING_BALANCE_THRESHOLD){
-    return  parseFloat(process.env.FUNDING_BALANCE_THRESHOLD) 
+  if (process.env.FUNDING_BALANCE_THRESHOLD) {
+    return parseFloat(process.env.FUNDING_BALANCE_THRESHOLD)
   }
   return 0
 }
 
 function getEnvfundingRelayerAmount(): number {
-  if (process.env.FUNDING_RELAYER_AMOUNT){
-    return  parseFloat(process.env.FUNDING_RELAYER_AMOUNT) 
+  if (process.env.FUNDING_RELAYER_AMOUNT) {
+    return parseFloat(process.env.FUNDING_RELAYER_AMOUNT)
   }
   return 0
 }
@@ -55,7 +55,7 @@ export class Config implements IConfig {
       if (!passphrase) {
         throw new Error('Passphrase for config required in .env file');
       }
-      console.log(`Passphrase <${passphrase}>`)
+      console.log(`Passphrase <${passphrase}>`);
 
       if (!existsSync(encryptedEnvPath)) {
         throw new Error(`Invalid ENV Path: ${encryptedEnvPath}`);
@@ -95,11 +95,12 @@ export class Config implements IConfig {
         throw new Error('Error: HMAC does not match');
       }
       const data = JSON.parse(plaintext) as ConfigType;
+      console.log(data)
       const staticConfig = JSON.parse(fs.readFileSync(path.resolve('./config/static-config.json'), 'utf8'));
 
       this.config = _.merge(data, staticConfig);
 
-      //Setting up supportTed network from env variable if avaialable
+      // Setting up supportTed network from env variable if avaialable
       // this will come from env variable
       const chainId = parseInt(process.env.CHAIN_ID as string, 10);
       console.log(`CHAIN ID <${process.env.CHAIN_ID}>`)
@@ -109,12 +110,12 @@ export class Config implements IConfig {
       console.log(`PROVIDER URL <${this.config.chains.provider[chainId]}>`)
 
 
-      this.config.relayer = {"nodePathIndex" : parseInt(process.env.NODE_PATH_INDEX as string, 10)};
+      this.config.relayer = { nodePathIndex: parseInt(process.env.NODE_PATH_INDEX as string, 10) };
 
-      //rest of the params in .env file in being read by code directly 
-      //not from the config.
+      // rest of the params in .env file in being read by code directly 
+      // not from the config.
       // REDIS_URL, MONGO_URL, QUEUE_URL, CONFIG_PASSPHRASE, NODE_PATH_INDEX
-      //TENDERLY_USER. TENDERLY_PROJECT, TENDERLY_KEY
+      // TENDERLY_USER. TENDERLY_PROJECT, TENDERLY_KEY
       for (const relayerManager of this.config.relayerManagers) {
         const minRelayerCount = getEnvMinRelayerCount();
         const maxRelayerCount = getEnvMaxRelayerCount();
@@ -128,24 +129,23 @@ export class Config implements IConfig {
       }
 
       this.validate();
-      log.info(`Mongodb URL<${this.config.dataSources.mongoUrl}>`)
-      log.info(`Redis URL<${this.config.dataSources.redisUrl}>`)
-      log.info(`QueueURL URL<${this.config.queueUrl}>`)
-      
-      log.info(`Chain Premium<${this.config.chains.premium[chainId]}>`)
-      log.info(`Currewncy Premium<${this.config.chains.currency[chainId]}>`)
-      log.info(`Chain Decimal<${this.config.chains.decimal[chainId]}>`)
-      log.info(`Chain retryTransactionInterval<${this.config.chains.retryTransactionInterval[chainId]}>`)
-      log.info(`Chain Premium<${this.config.chains.premium[chainId]}>`)
-      log.info(`Chain Premium<${this.config.chains.premium[chainId]}>`)
+
       const relayerManager = this.config.relayerManagers[0]
       log.info(`RelayarManager ${relayerManager.name} Min relayer count <${relayerManager.minRelayerCount[chainId]}>`)
       log.info(`RelayarManager ${relayerManager.name} Max relayer count <${relayerManager.maxRelayerCount[chainId]}>`)
       log.info(`RelayarManager ${relayerManager.name} fundingBalanceThreshold  <${relayerManager.fundingBalanceThreshold[chainId]}>`)
       log.info(`RelayarManager ${relayerManager.name} fundingRelayerAmount <${relayerManager.fundingRelayerAmount[chainId]}>`)
       log.info('Config loaded successfully');
+      const providerUrl = process.env.PROVIDER_URL
+        || this.config.chains.provider[chainId];
+
+
+      if (!providerUrl) {
+        throw new Error(`Provider required for chain id ${chainId} in env file`);
+      }
+
     } catch (error) {
-      log.error('Config loading failed', error);
+      log.error('Config constructor failed', error);
       throw error;
     }
   }
@@ -169,13 +169,7 @@ export class Config implements IConfig {
         throw new Error(`Currency required for chain id ${chainId}`);
       }
 
-      const providerUrl = process.env.PROVIDER_URL
-      || this.config.chains.provider[chainId];
 
-
-      if (!providerUrl) {
-        throw new Error(`Provider required for chain id ${chainId}`);
-      }
       if (!this.config.chains.decimal[chainId]) {
         throw new Error(`Decimals required for chain id ${chainId}`);
       }
@@ -189,7 +183,7 @@ export class Config implements IConfig {
 
       const nodePathIndex = process.env.NODE_PATH_INDEX
       console.log(`Node path index <${nodePathIndex}>`)
-      
+
       if (!nodePathIndex) {
         console.log(process.env);
 

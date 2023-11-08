@@ -56,9 +56,13 @@ export class SlackNotificationService implements ISlackNotificationService {
   async postMessage(
     postSlackMessageParams: PostSlackMessageParamsType,
   ): Promise<void> {
-    const result = await this.web.chat.postMessage(postSlackMessageParams);
-    log.info(result);
-    log.info(`Successfully sent message ${postSlackMessageParams.text} to Slack channel with id ${postSlackMessageParams.channel}`);
+    try {
+      const result = await this.web.chat.postMessage(postSlackMessageParams);
+      log.info(result);
+      log.info(`Successfully sent message ${postSlackMessageParams.text} to Slack channel with id ${postSlackMessageParams.channel}`);
+    } catch (e) {
+      log.error('Couldnt send message to slack');
+    }
   }
 
   /**
