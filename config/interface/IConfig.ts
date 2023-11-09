@@ -81,6 +81,8 @@ type TokenPriceConfigType = {
 type RelayerManagerConfigType = Array<{
   name: string, // assume it to be an identifier by the consumer
   relayerSeed: string,
+  ownerPublicKey: string;
+  ownerPrivateKey: string;
   gasLimitMap: ChainIdWithNumberValueType,
   minRelayerCount: ChainIdWithNumberValueType,
   maxRelayerCount: ChainIdWithNumberValueType,

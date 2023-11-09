@@ -36,7 +36,7 @@ export class Mongo implements IDBService {
    * Method connects to a mongo instance
    */
   connect = async () => {
-    const dbUrl = process.env.MONGO_URL || config.dataSources.mongoUrl || '';
+    const dbUrl = config.dataSources.mongoUrl;
     if (!dbUrl) {
       throw new Error('Database url not provided');
     }

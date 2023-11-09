@@ -16,7 +16,7 @@ export class RedisCacheService implements ICacheService {
 
   private constructor() {
     this.redisClient = new Redis(
-      process.env.REDIS_URL || config.dataSources.redisUrl,
+      config.dataSources.redisUrl,
       { lazyConnect: true },
     );
   }

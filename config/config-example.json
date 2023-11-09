@@ -1,98 +1,15 @@
 {
-  "slack": {
-    "token": "xoxb-8708217855M7XEOBb4HD",
-    "channel": "4A9077TC5"
-  },
-  "dataSources": {
-    "mongoUrl": "mongodb://mongo:27017/relayer-node-service",
-    "redisUrl": "redis://redis:6379"
-  },
-  "socketService": {
-    "wssUrl": "ws://centrifugo:8000/connection/websocket",
-    "httpUrl": "centrifugo:8000/api",
-    "token": "9edb7c38-0f55-4627-9bda-4cc050b5f6cb",
-    "apiKey": "usedforpostapi"
-  },
-  "queueUrl": "amqp://rabbitmq:5672",
-  "simulationData": {
-    "tenderlyData": {}
-  },
-  "chains": {
-    "provider": {
-      "5": "",
-      "137": "",
-      "80001": "",
-      "97": "",
-      "420": "",
-      "421613": "",
-      "43113": "https://avalanche-fuji-c-chain.publicnode.com"
-    }
-  },
   "relayerManagers": [
     {
       "relayerSeed": "",
+      "ownerPublicKey": "",
+      "ownerPrivateKey": "",
       "ownerAccountDetails": {
-        "43113": {
-          "publicKey": "0xa003339FFF6A28F1345d45061b0FC42E25092d91",
-          "privateKey": ""
-        },
-        "5": {
-          "publicKey": "0xa003339FFF6A28F1345d45061b0FC42E25092d91",
-          "privateKey": ""
-        },
-        "97": {
-          "publicKey": "0xa003339FFF6A28F1345d45061b0FC42E25092d91",
-          "privateKey": ""
-        },
         "137": {
-          "publicKey": "0x7cC2F9185BbA1340CD187311B5d623C3833cdD61",
-          "privateKey": ""
-        },
-        "80001": {
-          "publicKey": "0xa003339FFF6A28F1345d45061b0FC42E25092d91",
-          "privateKey": ""
-        },
-        "421613": {
-          "publicKey": "0xa003339FFF6A28F1345d45061b0FC42E25092d91",
-          "privateKey": ""
-        },
-        "56": {
-          "publicKey": "0xa003339FFF6A28F1345d45061b0FC42E25092d91",
-          "privateKey": ""
-        },
-        "42161": {
-          "publicKey": "0xa003339FFF6A28F1345d45061b0FC42E25092d91",
-          "privateKey": ""
-        },
-        "420": {
-          "publicKey": "0xa003339FFF6A28F1345d45061b0FC42E25092d91",
-          "privateKey": ""
-        },
-        "10": {
-          "publicKey": "0xa003339FFF6A28F1345d45061b0FC42E25092d91",
-          "privateKey": ""
-        },
-        "84531": {
-          "publicKey": "0xa003339FFF6A28F1345d45061b0FC42E25092d91",
+          "publicKey": "",
           "privateKey": ""
         }
       }
     }
-  ],
-  "tokenPrice": {
-    "coinMarketCapApi": "a305bb95-7c48-4fb6-bc65-4de8c9193f2f"
-  },
-  "gasPrice": {
-    "137": {
-      "updateFrequencyInSeconds": 10,
-      "minGasPrice": 30000000000,
-      "maxGasPrice": 1500000000000,
-      "baseFeeMultiplier": 1.1,
-      "gasOracle": {
-        "maticGasStationUrl": "https://gasstation-mainnet.matic.network/v1",
-        "maticGasStationUrlForEIP1559": "https://gasstation-mainnet.matic.network/v2",
-        "polygonGasStation": ""
-      }
-    }
-  }
+  ]
 }
