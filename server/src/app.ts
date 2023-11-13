@@ -8,7 +8,6 @@ import express, {
 import cons from 'consolidate';
 import logger from 'pino-http';
 import { randomUUID } from 'node:crypto';
-import tracer from 'dd-trace';
 import { routes } from './routes';
 
 const app = express();
@@ -32,17 +31,10 @@ app.use(logger({
     if (existingID) return existingID;
     const id = randomUUID();
     res.setHeader('Request-Id', id);
+    req.headers['x-request-id'] = id;
     return id;
   },
 }));
-
-app.use((req) => {
-  const span = tracer.startSpan('http.request');
-  span.setTag('requestId', req.headers['x-request-id']);
-  const { method } = req.body;
-  span.setTag('jsonRpcMethod', method || 'method_undefined');
-  (req as any).span = span;
-});
 
 app.engine('hbs', cons.handlebars);
 app.set('view engine', 'hbs');
