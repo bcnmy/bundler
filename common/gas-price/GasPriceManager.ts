@@ -30,8 +30,8 @@ import { OpBNBMainnetGasPrice } from './networks/OpBNBMainnetGasPrice';
 import { OpBNBTestnetGasPrice } from './networks/OpBNBTestnetGasPrice';
 import { ChillizMainnetGasPrice } from './networks/ChillizMainnetGasPrice';
 import { AstarMainnetGasPrice } from './networks/AstarMainnetGasPrice';
-import { AstarTestnetGasPrice } from './networks/AstarTestnetGasPrice';
 import { ChillizTestnetGasPrice } from './networks/ChillizTestnetGasPrice';
+import { AstarTestnetGasPrice } from './networks/AstarTestnetGasPrice';
 
 export type GasPriceServiceType =
   | MaticGasPrice
