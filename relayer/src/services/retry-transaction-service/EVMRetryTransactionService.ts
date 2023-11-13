@@ -13,6 +13,8 @@ import { IRetryTransactionService } from './interface/IRetryTransactionService';
 import { EVMRetryTransactionServiceParamsType } from './types';
 import { INotificationManager } from '../../../../common/notification/interface';
 import { getAccountUndefinedNotificationMessage } from '../../../../common/notification';
+import { getTransactionMinedKey } from '../../../../common/utils';
+import { ICacheService } from '../../../../common/cache';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 export class EVMRetryTransactionService implements
@@ -27,6 +29,8 @@ IRetryTransactionService<IEVMAccount, EVMRawTransactionType> {
 
   notificationManager: INotificationManager;
 
+  cacheService: ICacheService;
+
   EVMRelayerManagerMap: {
     [name: string] : {
       [chainId: number]: IRelayerManager<IEVMAccount, EVMRawTransactionType>;
@@ -36,12 +40,14 @@ IRetryTransactionService<IEVMAccount, EVMRawTransactionType> {
   constructor(evmRetryTransactionServiceParams: EVMRetryTransactionServiceParamsType) {
     const {
       options, transactionService, networkService, retryTransactionQueue, notificationManager,
+      cacheService,
     } = evmRetryTransactionServiceParams;
     this.chainId = options.chainId;
     this.EVMRelayerManagerMap = options.EVMRelayerManagerMap;
     this.transactionService = transactionService;
     this.networkService = networkService;
     this.notificationManager = notificationManager;
+    this.cacheService = cacheService;
     this.queue = retryTransactionQueue;
   }
 
@@ -69,14 +75,22 @@ IRetryTransactionService<IEVMAccount, EVMRawTransactionType> {
           .relayerMap[relayerAddress];
       }
 
+      const isTransactionMined = await this.cacheService.get(getTransactionMinedKey(transactionId));
+
+      if (isTransactionMined === '1') {
+        log.info(`isTransactionMined: ${isTransactionMined} for transactionHash: ${transactionHash} and transactionId: ${transactionId} on chainId: ${this.chainId} hence not making RPC call to get receipt`);
+        await this.cacheService.delete(getTransactionMinedKey(transactionId));
+        return;
+      }
+
       log.info(`Checking transaction status of transactionHash: ${transactionHash} with transactionId: ${transactionId} on chainId: ${this.chainId}`);
       const transactionReceipt = await this.networkService.getTransactionReceipt(transactionHash);
       log.info(`Transaction receipt for transactionHash: ${transactionHash} with transactionId: ${transactionId} on chainId: ${this.chainId} is ${JSON.stringify(transactionReceipt)}`);
 
       if (transactionReceipt) {
-        log.info(`Transaction receipt receivied for transactionHash: ${transactionHash} and tranasctionId: ${transactionId}. Hence not retrying the transaction.`);
+        log.info(`Transaction receipt receivied for transactionHash: ${transactionHash} and transactionId: ${transactionId} on chainId: ${this.chainId}. Hence not retrying the transaction.`);
       } else {
-        log.info(`Transaction receipt not receivied for transactionHash: ${transactionHash} and tranasctionId: ${transactionId}. Hence retrying the transaction.`);
+        log.info(`Transaction receipt not receivied for transactionHash: ${transactionHash} and transactionId: ${transactionId} on chainId: ${this.chainId}. Hence retrying the transaction.`);
 
         if (!account) {
           log.error(`Account not found for transactionHash: ${transactionHash} and transactionId: ${transactionId} on chainId: ${this.chainId}`);

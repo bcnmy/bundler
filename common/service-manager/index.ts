@@ -311,6 +311,7 @@ let statusService: IStatusService;
       transactionService,
       networkService,
       notificationManager,
+      cacheService,
       options: {
         chainId,
         EVMRelayerManagerMap, // TODO // Review a better way
