@@ -696,11 +696,9 @@ ITransactionPublisher<TransactionQueueMessageType> {
     // if no transactionExecutionResponse then it means transactions was not published onc hain
     // update transaction and user op collection
     if (!transactionExecutionResponse || Object.keys(transactionExecutionResponse).length === 0) {
-      if (transactionType === TransactionType.BUNDLER) {
-        await this.updateTransactionDataForFailureInTransactionExecution(transactionId);
-        if (transactionType === TransactionType.BUNDLER || transactionType === TransactionType.AA) {
-          await this.updateUserOpDataForFailureInTransactionExecution(transactionId);
-        }
+      if (transactionType === TransactionType.BUNDLER || transactionType === TransactionType.AA) {
+        this.updateTransactionDataForFailureInTransactionExecution(transactionId);
+        this.updateUserOpDataForFailureInTransactionExecution(transactionId);
       }
       await this.publishToTransactionQueue({
         transactionId,
