@@ -209,9 +209,11 @@ let statusService: IStatusService;
     log.info(`Retry transaction queue setup complete for chainId: ${chainId}`);
 
     log.info(`Setting up nonce manager for chainId: ${chainId}`);
+    const nonceExpiryTTL = config.chains.nonceExpiryTTL[chainId];
     const nonceManager = new EVMNonceManager({
       options: {
         chainId,
+        nonceExpiryTTL,
       },
       networkService,
       cacheService,

@@ -45,6 +45,7 @@
     "mongoose": "^6.6.5",
     "morgan": "^1.10.0",
     "network-sdk": "^1.0.1",
+    "node-cache": "^5.1.2",
     "node-cron": "^3.0.2",
     "numeral": "^2.0.6",
     "perf_hooks": "^0.0.1",
