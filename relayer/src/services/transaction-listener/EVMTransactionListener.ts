@@ -696,9 +696,15 @@ ITransactionPublisher<TransactionQueueMessageType> {
     // if no transactionExecutionResponse then it means transactions was not published onc hain
     // update transaction and user op collection
     if (!transactionExecutionResponse || Object.keys(transactionExecutionResponse).length === 0) {
-      if (transactionType === TransactionType.BUNDLER || transactionType === TransactionType.AA) {
-        this.updateTransactionDataForFailureInTransactionExecution(transactionId);
-        this.updateUserOpDataForFailureInTransactionExecution(transactionId);
+      log.error(`transactionExecutionResponse is null for transactionId: ${transactionId} for bundler: ${relayerAddress} hence 
+      updating transaction and userOp data`);
+      try {
+        if (transactionType === TransactionType.BUNDLER || transactionType === TransactionType.AA) {
+          this.updateTransactionDataForFailureInTransactionExecution(transactionId);
+          this.updateUserOpDataForFailureInTransactionExecution(transactionId);
+        }
+      } catch (dataSavingError) {
+        log.error(`Error in updating transaction and userOp data for transactionId: ${transactionId} with error: ${parseError(dataSavingError)}`);
       }
       await this.publishToTransactionQueue({
         transactionId,
@@ -706,7 +712,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
         error,
         event: SocketEventType.onTransactionError,
       });
-      log.error('transactionExecutionResponse is null');
+      log.error(`transactionExecutionResponse is null for transactionId: ${transactionId} for bundler: ${relayerAddress}`);
       return {
         isTransactionRelayed: false,
         transactionExecutionResponse: null,
