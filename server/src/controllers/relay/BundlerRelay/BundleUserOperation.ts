@@ -1,6 +1,5 @@
 /* eslint-disable import/no-import-module-exports */
 import { Request, Response } from 'express';
-import tracer from 'dd-trace';
 import { logger } from '../../../../../common/logger';
 import {
   routeTransactionToRelayerMap, transactionDao, userOperationDao, userOperationStateDao,
@@ -31,10 +30,7 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
 
     const chainIdInNum = parseInt(chainId, 10);
 
-    const transactionIdSpan = tracer.startSpan('http.request');
     const transactionId = generateTransactionId(userOp);
-    transactionIdSpan.setTag('transactionId', transactionId);
-    (req as any).span = transactionIdSpan;
 
     const walletAddress = userOp.sender.toLowerCase();
 
