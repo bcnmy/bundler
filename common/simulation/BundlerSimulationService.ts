@@ -239,6 +239,18 @@ export class BundlerSimulationService {
           preVerificationGas += 50000;
         }
 
+        if (OptimismNetworks.includes(chainId) || ArbitrumNetworks.includes(chainId)) {
+          if (totalGas < 500000) {
+            preVerificationGas += 30000;
+          } else if (totalGas > 500000 && totalGas < 1000000) {
+            preVerificationGas += 65000;
+          } else if (totalGas > 1000000 && totalGas < 2000000) {
+            preVerificationGas += 150000;
+          } else {
+            preVerificationGas += 200000;
+          }
+        }
+
         if (callGasLimit > 500000) {
           callGasLimit += 100000;
         }
