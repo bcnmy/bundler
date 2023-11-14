@@ -127,6 +127,8 @@ let statusService: IStatusService;
 
 (async () => {
   await dbInstance.connect();
+  await dbInstance.createTransactionIdIndexes();
+
   await cacheService.connect();
 
   const slackNotificationService = new SlackNotificationService(
@@ -381,11 +383,11 @@ let statusService: IStatusService;
           cacheService,
           {
             tenderlyUser: process.env.TENDERLY_USER
-            || config.simulationData.tenderlyData.tenderlyUser,
+              || config.simulationData.tenderlyData.tenderlyUser,
             tenderlyProject: process.env.TENDERLY_PROJECT
-            || config.simulationData.tenderlyData.tenderlyProject,
+              || config.simulationData.tenderlyData.tenderlyProject,
             tenderlyAccessKey: process.env.TENDERLY_ACCESS_KEY
-            || config.simulationData.tenderlyData.tenderlyAccessKey,
+              || config.simulationData.tenderlyData.tenderlyAccessKey,
           },
         );
 

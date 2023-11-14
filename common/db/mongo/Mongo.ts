@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 /* eslint-disable import/no-import-module-exports */
 import mongoose, { Mongoose } from 'mongoose';
 import { config } from '../../../config';
@@ -19,6 +20,41 @@ export class Mongo implements IDBService {
 
   private constructor() {
     this.client = null;
+  }
+
+  /**
+   * Method to create an index on the 'transactionId' field in descending order
+   * for all collections in the database, if it doesn't already exist.
+   */
+  async createTransactionIdIndexes(): Promise<void> {
+    if (!this.client) {
+      throw new Error('Not connected to db');
+    }
+
+    try {
+      // Get a list of all collection names in the database
+      const collections = await this.client.connection.db.listCollections().toArray();
+      for (const collection of collections) {
+        const collectionName = collection.name;
+        const collectionObject = this.client.connection.collection(collectionName);
+
+        // Check if the index already exists
+        const indexes = await collectionObject.indexes();
+        const indexExists = indexes.some((index) => index.key && index.key.transactionId === -1);
+
+        // If the index does not exist, create it
+        if (!indexExists) {
+          await collectionObject.createIndex({ transactionId: -1 }, { background: true });
+          log.info(`Index on 'transactionId' created for collection ${collectionName}`);
+        } else {
+          log.info(`Index on 'transactionId' found for collection ${collectionName}`)
+        }
+      }
+    } catch (error) {
+      log.error('Error while creating indexes');
+      log.error(error);
+      process.exit();
+    }
   }
 
   /**
