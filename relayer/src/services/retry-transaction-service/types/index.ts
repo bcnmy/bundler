@@ -13,7 +13,7 @@ export type EVMRetryTransactionServiceParamsType = {
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
   retryTransactionQueue: IQueue<RetryTransactionQueueData>,
   notificationManager: INotificationManager,
-  cacheService: ICacheService
+  cacheService: ICacheService,
   options: {
     chainId: number,
     EVMRelayerManagerMap: {
