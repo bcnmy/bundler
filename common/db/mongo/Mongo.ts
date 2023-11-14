@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable import/no-import-module-exports */
-import mongoose, { Mongoose } from 'mongoose';
+import mongoose, { Model, Mongoose, Collection, Document } from 'mongoose';
 import { config } from '../../../config';
 import { logger } from '../../logger';
 import { IDBService } from '../interface/IDBService';
@@ -12,6 +12,7 @@ import {
 } from './models';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
+
 
 export class Mongo implements IDBService {
   private static instance: Mongo;
@@ -32,28 +33,54 @@ export class Mongo implements IDBService {
     }
 
     try {
-      // Get a list of all collection names in the database
       const collections = await this.client.connection.db.listCollections().toArray();
       for (const collection of collections) {
         const collectionName = collection.name;
-        const collectionObject = this.client.connection.collection(collectionName);
+        const collectionObject = this.client.connection.db.collection(collectionName);
 
-        // Check if the index already exists
-        const indexes = await collectionObject.indexes();
-        const indexExists = indexes.some((index) => index.key && index.key.transactionId === -1);
-
-        // If the index does not exist, create it
-        if (!indexExists) {
-          await collectionObject.createIndex({ transactionId: -1 }, { background: true });
-          log.info(`Index on 'transactionId' created for collection ${collectionName}`);
-        } else {
-          log.info(`Index on 'transactionId' found for collection ${collectionName}`)
+        if (collectionName.startsWith('blockchaintransactions')) {
+          await this.createIndexes(collectionObject,
+            { transactionId: 1 },
+            { transactionId: 1, transactionHash: 1 },
+            collectionName);
+        } else if (collectionName.startsWith('useroperations')) {
+          await this.createIndexes(collectionObject,
+            { transactionId: 1 },
+            { transactionId: 1, userOpHash: 1 },
+            collectionName);
         }
       }
     } catch (error) {
-      log.error('Error while creating indexes');
-      log.error(error);
+      logger.error('Error while creating indexes');
+      logger.error(error);
       process.exit();
+    }
+  }
+
+  async createIndexes(
+    collectionObject: any,
+    singleIndex: object,
+    compoundIndex: object,
+    collectionName: string
+  ): Promise<void> {
+    const indexes = await collectionObject.indexes();
+    const singleIndexExists = indexes.some((index: any) => 'transactionId' in index.key && index.key.transactionId === 1);
+
+    if (!singleIndexExists) {
+      await collectionObject.createIndex(singleIndex, { background: true });
+      logger.info(`Single index on 'transactionId' created for collection ${collectionName}`);
+    } else {
+      logger.info(`Single index on 'transactionId' found for collection ${collectionName}`);
+    }
+
+    const compoundIndexKey = Object.keys(compoundIndex).join('_');
+    const compoundIndexExists = indexes.some((index: any) => index.name === compoundIndexKey);
+
+    if (!compoundIndexExists) {
+      await collectionObject.createIndex(compoundIndex, { background: true });
+      logger.info(`Compound index ${compoundIndexKey} created for collection ${collectionName}`);
+    } else {
+      logger.info(`Compound index ${compoundIndexKey} found for collection ${collectionName}`);
     }
   }
 
