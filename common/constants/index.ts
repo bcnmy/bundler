@@ -64,3 +64,4 @@ export const ArbitrumNetworks = [42170, 421613, 42161];
 export const AlchemySimulateExecutionSupportedNetworks = [
   1, 5, 137, 80001, 10, 420, 42161, 421613, 8453, 84531, 592,
 ];
+export const AstarNetworks = [81, 592];

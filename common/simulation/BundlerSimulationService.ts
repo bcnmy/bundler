@@ -29,6 +29,7 @@ import {
   ArbitrumNetworks,
   LineaNetworks,
   AlchemySimulateExecutionSupportedNetworks,
+  AstarNetworks,
 } from '../constants';
 import { AlchemySimulationService, TenderlySimulationService } from './external-simulation';
 import { calcArbitrumPreVerificationGas, calcOptimismPreVerificationGas } from './L2';
@@ -146,8 +147,8 @@ export class BundlerSimulationService {
       let ethCallParams;
 
       // polygon zk evm nodes don't support state overrides
-      if (PolygonZKEvmNetworks.includes(chainId)) {
-        log.info('Request on polygon zk evm hence not doing state overrides in eth_call');
+      if (PolygonZKEvmNetworks.includes(chainId) || AstarNetworks.includes(chainId)) {
+        log.info(`Request on RPC that does not support state overrides on chainId: ${chainId}`);
         ethCallParams = [
           {
             from: '0x0000000000000000000000000000000000000000',
