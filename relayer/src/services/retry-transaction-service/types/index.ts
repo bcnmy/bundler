@@ -5,7 +5,6 @@ import { IQueue } from '../../../../../common/queue';
 import { RetryTransactionQueueData } from '../../../../../common/queue/types';
 import { EVMRawTransactionType } from '../../../../../common/types';
 import { IEVMAccount } from '../../account';
-import { INonceManager } from '../../nonce-manager';
 import { IRelayerManager } from '../../relayer-manager';
 import { ITransactionService } from '../../transaction-service';
 
@@ -15,7 +14,6 @@ export type EVMRetryTransactionServiceParamsType = {
   retryTransactionQueue: IQueue<RetryTransactionQueueData>,
   notificationManager: INotificationManager,
   cacheService: ICacheService,
-  nonceManager: INonceManager<IEVMAccount, EVMRawTransactionType>
   options: {
     chainId: number,
     EVMRelayerManagerMap: {

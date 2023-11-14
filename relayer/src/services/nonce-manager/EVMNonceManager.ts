@@ -74,10 +74,4 @@ export class EVMNonceManager implements INonceManager<IEVMAccount, EVMRawTransac
     this.pendingNonceTracker.set(address.toLowerCase(), nonceFromNetwork);
     return nonceFromNetwork;
   }
-
-  async getNonceFromNetwork(address: string): Promise<number> {
-    const nonceFromNetwork = await this.networkService.getNonce(address);
-    log.info(`Nonce from network for account: ${address} on chainId: ${this.chainId} is ${nonceFromNetwork}`);
-    return nonceFromNetwork;
-  }
 }

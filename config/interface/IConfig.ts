@@ -1,6 +1,4 @@
-import {
-  SymbolMapByChainIdType, TransactionType, DefaultGasOverheadType,
-} from '../../common/types';
+import { SymbolMapByChainIdType, TransactionType, DefaultGasOverheadType } from '../../common/types';
 
 type ChainIdWithStringValueType = {
   [key: number]: string
@@ -23,15 +21,6 @@ type ChainIdAndTokenWithNumberValueType = {
 type ChainIdAndTokenWithStringValueType = {
   [key: number]: {
     [key: string]: string;
-  }
-};
-
-type ChainIdWithProviderNameWeightAndRPCUrlObjectType = {
-  [key: number]: {
-    [providerName: string]: {
-      weight: number,
-      rpcUrl: string
-    }
   }
 };
 
@@ -110,8 +99,7 @@ type TransactionConfigType = {
     'TRANSACTION_UNDERPRICED': string[],
     'INSUFFICIENT_FUNDS': string[],
     'NONCE_TOO_LOW': string[],
-    'MAX_PRIORITY_FEE_HIGHER_THAN_MAX_FEE': string[],
-    'RPC_FAILURE': string[]
+    'GAS_LIMIT_REACHED': string[]
   },
   retryCount: {
     [key: string]: {
@@ -134,8 +122,7 @@ type ChainsConfigType = {
   retryTransactionInterval: ChainIdWithNumberValueType,
   multiSendAddress: ChainIdWithStringValueType,
   multiSendCallOnlyAddress: ChainIdWithStringValueType,
-  walletFactoryAddress: ChainIdWithStringValueType,
-  providerNameWeightAndRPCUrl: ChainIdWithProviderNameWeightAndRPCUrlObjectType
+  walletFactoryAddress: ChainIdWithStringValueType
 };
 
 type RelayerConfigType = {

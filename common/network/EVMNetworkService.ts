@@ -4,37 +4,47 @@ import axios from 'axios';
 import { BigNumber, ethers } from 'ethers';
 import { IEVMAccount } from '../../relayer/src/services/account';
 import { ERC20_ABI, L2Networks } from '../constants';
-import { EVMRawTransactionType, ProviderNameWeightAndRPCUrlType } from '../types';
+import { logger } from '../logger';
+import { EVMRawTransactionType } from '../types';
 import { IERC20NetworkService, INetworkService, RpcMethod } from './interface';
 import { Type0TransactionGasPriceType, Type2TransactionGasPriceType } from './types';
-import { IRPCHandler } from '../rpc-handler';
-import { config } from '../../config';
 
+const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
+// TODO: Network Service to be checked with new provider/contract instances
 export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTransactionType>,
  IERC20NetworkService {
-  rpcHandler: IRPCHandler;
-
   chainId: number;
 
-  ethersProviders: {
-    [providername: string]: ethers.providers.JsonRpcProvider
-  } = {};
+  rpcUrl: string;
 
-  providerNameWeightAndRPCUrl: ProviderNameWeightAndRPCUrlType;
+  ethersProvider: ethers.providers.JsonRpcProvider;
 
-  constructor(
-    rpcHandler: IRPCHandler,
-    options: { chainId: number },
-  ) {
+  fallbackRpcUrls: string[];
+
+  constructor(options: { chainId: number; rpcUrl: string; fallbackRpcUrls: string[] }) {
     this.chainId = options.chainId;
-    this.providerNameWeightAndRPCUrl = config.chains.providerNameWeightAndRPCUrl[this.chainId];
-    for (const [providerName, providerWeightAndRPCUrl]
-      of Object.entries(this.providerNameWeightAndRPCUrl)) {
-      this.ethersProviders[providerName] = new ethers.providers.JsonRpcProvider(
-        providerWeightAndRPCUrl.rpcUrl,
-      );
-    }
-    this.rpcHandler = rpcHandler;
+    this.rpcUrl = options.rpcUrl;
+    this.fallbackRpcUrls = options.fallbackRpcUrls;
+    this.ethersProvider = new ethers.providers.JsonRpcProvider({
+      url: options.rpcUrl,
+      timeout: 10000,
+    });
+  }
+
+  getActiveRpcUrl(): string {
+    return this.rpcUrl;
+  }
+
+  setActiveRpcUrl(rpcUrl: string): void {
+    this.rpcUrl = rpcUrl;
+  }
+
+  getFallbackRpcUrls(): string[] {
+    return this.fallbackRpcUrls;
+  }
+
+  setFallbackRpcUrls(fallbackRpcUrls: string[]): void {
+    this.fallbackRpcUrls = fallbackRpcUrls;
   }
 
   // REVIEW
@@ -47,42 +57,52 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
    * @returns based on the rpc method
    */
   useProvider = async (tag: RpcMethod, params?: any): Promise<any> => {
-    const providerName = this.rpcHandler.getNextRPCProvider();
+    let rpcUrlIndex = 0;
     // eslint-disable-next-line consistent-return
     const withFallbackRetry = async () => {
       try {
+        // TODO Add null checks on params
         switch (tag) {
           case RpcMethod.getGasPrice:
-            return await this.ethersProviders[providerName].getGasPrice();
+            return await this.ethersProvider.getGasPrice();
           case RpcMethod.getEIP1159GasPrice:
-            return await this.ethersProviders[providerName].getFeeData();
+            return await this.ethersProvider.getFeeData();
           case RpcMethod.getBalance:
-            return await this.ethersProviders[providerName].getBalance(params.address);
+            return await this.ethersProvider.getBalance(params.address);
           case RpcMethod.estimateGas:
-            return await this.ethersProviders[providerName].estimateGas(params);
+            return await this.ethersProvider.estimateGas(params);
           case RpcMethod.getTransactionReceipt:
-            return await this.ethersProviders[providerName].getTransactionReceipt(params);
+            return await this.ethersProvider.getTransactionReceipt(params);
           case RpcMethod.getTransactionCount:
             if (params.pendingNonce === true) {
-              return await this.ethersProviders[providerName].getTransactionCount(params.address, 'pending');
+              return await this.ethersProvider.getTransactionCount(params.address, 'pending');
             }
-            return await this.ethersProviders[providerName].getTransactionCount(params.address);
+            return await this.ethersProvider.getTransactionCount(params.address);
           case RpcMethod.sendTransaction:
-            return await this.ethersProviders[providerName].sendTransaction(params.tx);
+            return await this.ethersProvider.sendTransaction(params.tx);
           case RpcMethod.waitForTransaction:
-            return await this.ethersProviders[providerName].waitForTransaction(
+            return await this.ethersProvider.waitForTransaction(
               params.transactionHash,
               params.confirmations,
               params.timeout,
             );
           case RpcMethod.getLatestBlockNumber:
-            return await this.ethersProviders[providerName].getBlockNumber();
+            return await this.ethersProvider.getBlockNumber();
           case RpcMethod.getTransaction:
-            return await this.ethersProviders[providerName].getTransaction(params.transactionHash);
+            return await this.ethersProvider.getTransaction(params.transactionHash);
           default:
             return null;
         }
       } catch (error: any) {
+        log.error(`Error in network service ${error}`);
+        if (error.toString().toLowerCase().includes() === 'timeout error') {
+          for (; rpcUrlIndex < this.fallbackRpcUrls.length; rpcUrlIndex += 1) {
+            this.ethersProvider = new ethers.providers.JsonRpcProvider(
+              this.fallbackRpcUrls[rpcUrlIndex],
+            );
+            withFallbackRetry();
+          }
+        }
         return error;
       }
     };
@@ -130,9 +150,8 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
 
   // TODO: Avoid creating new contract instance Every time. Save & get from cache
   getContract(_abi: string, contractAddress: string): ethers.Contract {
-    const providerName = this.rpcHandler.getNextRPCProvider();
     const abi = new ethers.utils.Interface(_abi);
-    const contract = new ethers.Contract(contractAddress, abi, this.ethersProviders[providerName]);
+    const contract = new ethers.Contract(contractAddress, abi, this.ethersProvider);
     return contract;
   }
 
@@ -300,20 +319,14 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
     return blockNumber;
   }
 
-  getEthersProvider(): ethers.providers.JsonRpcProvider {
-    const providerName = this.rpcHandler.getNextRPCProvider();
-    return this.ethersProviders[providerName];
-  }
-
   async sendRpcCall(method: string, params: Array<object>): Promise<any> {
-    const providerName = this.rpcHandler.getNextRPCProvider();
     const data = {
       method,
       params,
       jsonrpc: '2.0',
       id: 1,
     };
-    const response = await axios.post(this.providerNameWeightAndRPCUrl[providerName].rpcUrl, data);
+    const response = await axios.post(this.rpcUrl, data);
     return response;
   }
 

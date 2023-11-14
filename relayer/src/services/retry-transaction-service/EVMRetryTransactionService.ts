@@ -15,7 +15,6 @@ import { INotificationManager } from '../../../../common/notification/interface'
 import { getAccountUndefinedNotificationMessage } from '../../../../common/notification';
 import { getTransactionMinedKey } from '../../../../common/utils';
 import { ICacheService } from '../../../../common/cache';
-import { INonceManager } from '../nonce-manager';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 export class EVMRetryTransactionService implements
@@ -32,8 +31,6 @@ IRetryTransactionService<IEVMAccount, EVMRawTransactionType> {
 
   cacheService: ICacheService;
 
-  nonceManager: INonceManager<IEVMAccount, EVMRawTransactionType>;
-
   EVMRelayerManagerMap: {
     [name: string] : {
       [chainId: number]: IRelayerManager<IEVMAccount, EVMRawTransactionType>;
@@ -43,7 +40,7 @@ IRetryTransactionService<IEVMAccount, EVMRawTransactionType> {
   constructor(evmRetryTransactionServiceParams: EVMRetryTransactionServiceParamsType) {
     const {
       options, transactionService, networkService, retryTransactionQueue, notificationManager,
-      cacheService, nonceManager,
+      cacheService,
     } = evmRetryTransactionServiceParams;
     this.chainId = options.chainId;
     this.EVMRelayerManagerMap = options.EVMRelayerManagerMap;
@@ -52,7 +49,6 @@ IRetryTransactionService<IEVMAccount, EVMRawTransactionType> {
     this.notificationManager = notificationManager;
     this.cacheService = cacheService;
     this.queue = retryTransactionQueue;
-    this.nonceManager = nonceManager;
   }
 
   onMessageReceived = async (
@@ -85,19 +81,6 @@ IRetryTransactionService<IEVMAccount, EVMRawTransactionType> {
         log.info(`isTransactionMined: ${isTransactionMined} for transactionHash: ${transactionHash} and transactionId: ${transactionId} on chainId: ${this.chainId} hence not making RPC call to get receipt`);
         await this.cacheService.delete(getTransactionMinedKey(transactionId));
         return;
-      }
-
-      const nonceOfTransactionToBeRetried = transactionDataReceivedFromRetryQueue.nonce;
-      log.info(`nonceOfTransactionToBeRetried: ${nonceOfTransactionToBeRetried} for transactionHash: ${transactionHash} and transactionId: ${transactionId} on chainId: ${this.chainId}`);
-
-      const nonceOfAccountFromNetwork = await this.nonceManager.getNonceFromNetwork(
-        account.getPublicKey(),
-      );
-      log.info(`nonceOfAccountFromNetwork: ${nonceOfAccountFromNetwork} for transactionHash: ${transactionHash} and transactionId: ${transactionId} on chainId: ${this.chainId}`);
-
-      if (nonceOfTransactionToBeRetried - nonceOfAccountFromNetwork > 10) {
-        log.info(`Nonce difference is more than 10 hence not retrying right way and pushing back to retry transaction queue for transactionHash: ${transactionHash} and transactionId: ${transactionId} on chainId: ${this.chainId}`);
-        this.queue.publish(JSON.parse(msg.content.toString()));
       }
 
       log.info(`Checking transaction status of transactionHash: ${transactionHash} with transactionId: ${transactionId} on chainId: ${this.chainId}`);

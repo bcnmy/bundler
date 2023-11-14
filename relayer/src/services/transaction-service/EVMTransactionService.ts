@@ -14,7 +14,7 @@ import {
 } from '../../../../common/notification';
 import { INotificationManager } from '../../../../common/notification/interface';
 import {
-  EVMRawTransactionType, NetworkBasedGasPriceType, ProviderName, TransactionType, UserOperationStateEnum,
+  EVMRawTransactionType, NetworkBasedGasPriceType, TransactionType, UserOperationStateEnum,
 } from '../../../../common/types';
 import { getRetryTransactionCountKey, getFailedTransactionRetryCountKey, parseError } from '../../../../common/utils';
 import { config } from '../../../../config';
@@ -35,7 +35,6 @@ import {
   TransactionDataType,
 } from './types';
 import { IUserOperationStateDAO } from '../../../../common/db';
-import { IRPCHandler } from '../../../../common/rpc-handler';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
@@ -57,16 +56,13 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
 
   userOperationStateDao: IUserOperationStateDAO;
 
-  rpcHandler: IRPCHandler;
-
   addressMutex: {
     [address: string]: Mutex
   } = {};
 
   constructor(evmTransactionServiceParams: EVMTransactionServiceParamsType) {
     const {
-      options, networkService, transactionListener, nonceManager, gasPriceService, cacheService, rpcHandler,
-      notificationManager, userOperationStateDao,
+      options, networkService, transactionListener, nonceManager, gasPriceService, cacheService, notificationManager, userOperationStateDao,
     } = evmTransactionServiceParams;
     this.chainId = options.chainId;
     this.networkService = networkService;
@@ -74,7 +70,6 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     this.nonceManager = nonceManager;
     this.gasPriceService = gasPriceService;
     this.cacheService = cacheService;
-    this.rpcHandler = rpcHandler;
     this.notificationManager = notificationManager;
     this.userOperationStateDao = userOperationStateDao;
   }
@@ -180,8 +175,6 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           TRANSACTION_UNDERPRICED,
           INSUFFICIENT_FUNDS,
           NONCE_TOO_LOW,
-          MAX_PRIORITY_FEE_HIGHER_THAN_MAX_FEE,
-          RPC_FAILURE,
         } = config.transaction.rpcResponseErrorMessages;
 
         if (NONCE_TOO_LOW.some((str) => errInString.indexOf(str) > -1)) {
@@ -216,28 +209,13 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         } else if (INSUFFICIENT_FUNDS.some((str) => errInString.indexOf(str) > -1)) {
           log.info(`Bundler address: ${rawTransaction.from} has insufficient funds for transactionId: ${transactionId} on chainId: ${this.chainId}`);
           throw new Error('Bundler balance too low. Send bundler for funding');
-        } else if (MAX_PRIORITY_FEE_HIGHER_THAN_MAX_FEE.some((str) => errInString.indexOf(str) > -1)) {
-          const bumpedUpGasPrice = await this.handleReplacementFeeTooLow(rawTransaction);
-
-          if (typeof bumpedUpGasPrice !== 'string') {
-            log.info(`rawTransaction.maxFeePerGas ${rawTransaction.maxFeePerGas} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId} before bumping up`);
-            rawTransaction.maxFeePerGas = bumpedUpGasPrice.maxFeePerGas;
-            log.info(`increasing gas price for the resubmit transaction ${rawTransaction.gasPrice} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-            log.info(`rawTransaction.maxFeePerGas ${rawTransaction.maxFeePerGas} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId} after bumping up`);
-          }
-          return await retryExecuteTransaction({ rawTransaction, account });
-        } else if (RPC_FAILURE.some((str) => errInString.indexOf(str) > -1)) {
-          this.rpcHandler.updateRpcErrorTracker(this.rpcHandler.currentProviderName as ProviderName);
-          return await retryExecuteTransaction({ rawTransaction, account });
         } else {
           log.info(`Error: ${errInString} not handled. Transaction not being retried for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-          this.rpcHandler.updateRpcErrorTracker(this.rpcHandler.currentProviderName as ProviderName);
           return {
             success: false,
             error: errInString,
           };
         }
-        this.rpcHandler.updateRpcErrorTracker(this.rpcHandler.currentProviderName as ProviderName);
         return {
           success: false,
           error: errInString,

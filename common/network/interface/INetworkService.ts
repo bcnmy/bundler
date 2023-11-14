@@ -1,7 +1,5 @@
 import { BigNumber, ethers } from 'ethers';
 import { Type0TransactionGasPriceType, Type2TransactionGasPriceType } from '../types';
-import { IRPCHandler } from '../../rpc-handler';
-import { ProviderNameWeightAndRPCUrlType } from '../../types';
 
 export enum RpcMethod {
   getGasPrice,
@@ -17,14 +15,17 @@ export enum RpcMethod {
 }
 
 export interface INetworkService<AccountType, RawTransactionType> {
-  rpcHandler: IRPCHandler;
   chainId: number;
-  ethersProviders: {
-    [providername: string]: ethers.providers.JsonRpcProvider
-  };
+  rpcUrl: string;
+  fallbackRpcUrls: string[];
+  ethersProvider: ethers.providers.JsonRpcProvider;
 
-  providerNameWeightAndRPCUrl: ProviderNameWeightAndRPCUrlType;
-
+  getActiveRpcUrl(): string;
+  setActiveRpcUrl(rpcUrl: string): void;
+  getFallbackRpcUrls(): string[];
+  setFallbackRpcUrls(rpcUrls: string[]): void;
+  // REVIEW
+  // remove any
   useProvider(tag: RpcMethod, params?: any): Promise<any>
   sendRpcCall(method: string, params: Array<any>): Promise<any>
   getGasPrice(): Promise<Type0TransactionGasPriceType>;
@@ -62,5 +63,4 @@ export interface INetworkService<AccountType, RawTransactionType> {
   getLatesBlockNumber(): Promise<number>
   getBaseFeePerGas(): Promise<number>
   getTransaction(transactionHash: string): Promise<ethers.providers.TransactionResponse>
-  getEthersProvider(): ethers.providers.JsonRpcProvider;
 }
