@@ -129,6 +129,7 @@ export class BundlerSimulationService {
         chainId,
         entryPointContract,
       );
+
       log.info(`preVerificationGas: ${preVerificationGas} on chainId: ${chainId}`);
       userOp.preVerificationGas = preVerificationGas;
       const preVerificationGasEnd = performance.now();
@@ -240,15 +241,9 @@ export class BundlerSimulationService {
         }
 
         if (OptimismNetworks.includes(chainId) || ArbitrumNetworks.includes(chainId)) {
-          if (totalGas < 500000) {
-            preVerificationGas += 30000;
-          } else if (totalGas > 500000 && totalGas < 1000000) {
-            preVerificationGas += 65000;
-          } else if (totalGas > 1000000 && totalGas < 2000000) {
-            preVerificationGas += 150000;
-          } else {
-            preVerificationGas += 200000;
-          }
+          preVerificationGas += totalGas * 0.1;
+          preVerificationGas = Math.ceil(preVerificationGas);
+          log.info(`preVerificationGas: ${preVerificationGas} on chainId: ${chainId}`);
         }
 
         if (callGasLimit > 500000) {
