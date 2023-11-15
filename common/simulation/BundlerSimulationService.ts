@@ -242,7 +242,7 @@ export class BundlerSimulationService {
         }
 
         if (OptimismNetworks.includes(chainId) || ArbitrumNetworks.includes(chainId)) {
-          preVerificationGas += totalGas * 0.1;
+          preVerificationGas += totalGas * 0.25;
           preVerificationGas = Math.ceil(preVerificationGas);
           log.info(`preVerificationGas: ${preVerificationGas} on chainId: ${chainId}`);
         }
