@@ -39,6 +39,7 @@ import {
   TransactionListenerNotifyReturnType,
 } from './types';
 import { config } from '../../../../config';
+import { AstarNetworks } from '../../../../common/constants';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
@@ -146,7 +147,10 @@ ITransactionPublisher<TransactionQueueMessageType> {
             if (entryPointContract) {
               const latestBlock = await this.networkService.getLatesBlockNumber();
               log.info(`latestBlock: ${latestBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-              const fromBlock = latestBlock - 1000;
+              let fromBlock = latestBlock - 1000;
+              if (AstarNetworks.includes(this.chainId)) {
+                fromBlock += 501;
+              }
               log.info(`fromBlock: ${fromBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
               const userOpReceipt = await getUserOperationReceiptForDataSaving(
                 this.chainId,
@@ -302,7 +306,10 @@ ITransactionPublisher<TransactionQueueMessageType> {
             if (entryPointContract) {
               const latestBlock = await this.networkService.getLatesBlockNumber();
               log.info(`latestBlock: ${latestBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-              const fromBlock = latestBlock - 1000;
+              let fromBlock = latestBlock - 1000;
+              if (AstarNetworks.includes(this.chainId)) {
+                fromBlock += 501;
+              }
               log.info(`fromBlock: ${fromBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
               const userOpReceipt = await getUserOperationReceiptForDataSaving(
                 this.chainId,
