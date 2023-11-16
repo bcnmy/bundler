@@ -187,7 +187,6 @@ export class Config implements IConfig {
     if (decryptedHmacInBase64 !== hashInBase64) {
       throw new Error('Error: HMAC does not match');
     }
-    console.log(plaintext);
     return plaintext;
   }
 

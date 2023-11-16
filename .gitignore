@@ -6,6 +6,7 @@ server/dist
 coverage
 config.json.enc
 *heapsnapshot
+refundAddresses.ts
 *.enc
 # Ignore all JSON files
 *.json

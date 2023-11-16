@@ -1,6 +1,8 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable import/no-import-module-exports */
-import mongoose, { Model, Mongoose, Collection, Document } from 'mongoose';
+import mongoose, {
+  Mongoose,
+} from 'mongoose';
 import { config } from '../../../config';
 import { logger } from '../../logger';
 import { IDBService } from '../interface/IDBService';
@@ -12,7 +14,6 @@ import {
 } from './models';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
-
 
 export class Mongo implements IDBService {
   private static instance: Mongo;
@@ -39,15 +40,19 @@ export class Mongo implements IDBService {
         const collectionObject = this.client.connection.db.collection(collectionName);
 
         if (collectionName.startsWith('blockchaintransactions')) {
-          await this.createIndexes(collectionObject,
-            { transactionId: 1 },
-            { transactionId: 1, transactionHash: 1 },
-            collectionName);
+          await this.createIndexes(
+            collectionObject,
+            { creationTime: -1, transactionId: 1 },
+            { creationTime: -1, transactionId: 1, transactionHash: 1 },
+            collectionName,
+          );
         } else if (collectionName.startsWith('useroperations')) {
-          await this.createIndexes(collectionObject,
-            { transactionId: 1 },
-            { transactionId: 1, userOpHash: 1 },
-            collectionName);
+          await this.createIndexes(
+            collectionObject,
+            { creationTime: -1, transactionId: 1 },
+            { creationTime: -1, transactionId: 1, userOpHash: 1 },
+            collectionName,
+          );
         }
       }
     } catch (error) {
@@ -57,30 +62,50 @@ export class Mongo implements IDBService {
     }
   }
 
+  // eslint-disable-next-line class-methods-use-this
   async createIndexes(
     collectionObject: any,
-    singleIndex: object,
-    compoundIndex: object,
-    collectionName: string
+    compoundIndexOne: object,
+    compoundIndexTwo: object,
+    collectionName: string,
   ): Promise<void> {
     const indexes = await collectionObject.indexes();
-    const singleIndexExists = indexes.some((index: any) => 'transactionId' in index.key && index.key.transactionId === 1);
+    log.info(indexes);
+    // const singleIndexExists = indexes.some((index: any) => 'transactionId' in index.key && index.key.transactionId === 1);
 
-    if (!singleIndexExists) {
-      await collectionObject.createIndex(singleIndex, { background: true });
-      logger.info(`Single index on 'transactionId' created for collection ${collectionName}`);
+    // if (!singleIndexExists) {
+    //   await collectionObject.createIndex(singleIndex, { background: true });
+    //   logger.info(`Single index on 'transactionId' created for collection ${collectionName}`);
+    // } else {
+    //   logger.info(`Single index on 'transactionId' found for collection ${collectionName}`);
+    // }
+
+    const compoundIndexKeyOne = Object.entries(compoundIndexOne)
+      .map(([key, value]) => `${key}_${value}`)
+      .join('_');
+
+    log.info(`Compund index key name ${compoundIndexKeyOne}`);
+    const compoundIndexExistsOne = indexes.some((index: any) => index.name === compoundIndexKeyOne);
+
+    if (!compoundIndexExistsOne) {
+      await collectionObject.createIndex(compoundIndexOne, { background: true });
+      logger.info(`Compound index ${compoundIndexKeyOne} created for collection ${collectionName}`);
     } else {
-      logger.info(`Single index on 'transactionId' found for collection ${collectionName}`);
+      logger.info(`Compound index ${compoundIndexKeyOne} found for collection ${collectionName}`);
     }
 
-    const compoundIndexKey = Object.keys(compoundIndex).join('_');
-    const compoundIndexExists = indexes.some((index: any) => index.name === compoundIndexKey);
+    const compoundIndexKeyTwo = Object.entries(compoundIndexTwo)
+      .map(([key, value]) => `${key}_${value}`)
+      .join('_');
 
-    if (!compoundIndexExists) {
-      await collectionObject.createIndex(compoundIndex, { background: true });
-      logger.info(`Compound index ${compoundIndexKey} created for collection ${collectionName}`);
+    log.info(`Compund index key name ${compoundIndexKeyTwo}`);
+    const compoundIndexExistsTwo = indexes.some((index: any) => index.name === compoundIndexKeyTwo);
+
+    if (!compoundIndexExistsTwo) {
+      await collectionObject.createIndex(compoundIndexTwo, { background: true });
+      logger.info(`Compound index ${compoundIndexKeyTwo} created for collection ${collectionName}`);
     } else {
-      logger.info(`Compound index ${compoundIndexKey} found for collection ${collectionName}`);
+      logger.info(`Compound index ${compoundIndexKeyTwo} found for collection ${collectionName}`);
     }
   }
 
