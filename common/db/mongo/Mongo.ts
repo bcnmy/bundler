@@ -71,14 +71,6 @@ export class Mongo implements IDBService {
   ): Promise<void> {
     const indexes = await collectionObject.indexes();
     log.info(indexes);
-    // const singleIndexExists = indexes.some((index: any) => 'transactionId' in index.key && index.key.transactionId === 1);
-
-    // if (!singleIndexExists) {
-    //   await collectionObject.createIndex(singleIndex, { background: true });
-    //   logger.info(`Single index on 'transactionId' created for collection ${collectionName}`);
-    // } else {
-    //   logger.info(`Single index on 'transactionId' found for collection ${collectionName}`);
-    // }
 
     const compoundIndexKeyOne = Object.entries(compoundIndexOne)
       .map(([key, value]) => `${key}_${value}`)
