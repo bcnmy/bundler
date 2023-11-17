@@ -210,26 +210,26 @@ export class BundlerSimulationService {
         }
 
         // 5000 gas for unaccounted gas in verification phase
-        const verificationGasLimit = Math.round((
+        const verificationGasLimit = Math.ceil((
           (preOpGas - preVerificationGas) * 1.2
         )) + 5000;
         log.info(`verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId} after 1.2 multiplier on ${preOpGas} and ${preVerificationGas}`);
 
-        let totalGas = paid / userOp.maxFeePerGas;
+        let totalGas = Math.ceil(paid / userOp.maxFeePerGas);
         log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
 
-        let callGasLimit = totalGas - preOpGas + 30000;
+        let callGasLimit = Math.ceil(totalGas - preOpGas + 30000);
         log.info(`call gas limit: ${callGasLimit} on chainId: ${chainId}`);
 
-        if ([137, 80001].includes(chainId)) {
+        if ([137, 80001, 43113, 43114, 42161, 421613, 1].includes(chainId)) {
           const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
           log.info(`baseFeePerGas: ${baseFeePerGas} on chainId: ${chainId}`);
-          totalGas = Math.round(paid / Math.min(
+          totalGas = Math.ceil(paid / Math.min(
             baseFeePerGas + Number(userOp.maxPriorityFeePerGas),
             Number(userOp.maxFeePerGas),
           ));
           log.info(`totalGas after calculating for polygon networks: ${totalGas}`);
-          callGasLimit = Math.round(totalGas - preOpGas + 30000);
+          callGasLimit = Math.ceil(totalGas - preOpGas + 30000);
           log.info(`callGasLimit after calculating for polygon networks: ${callGasLimit}`);
         }
 
@@ -258,7 +258,7 @@ export class BundlerSimulationService {
         log.info(`call gas limit after checking for optimism: ${callGasLimit} on chainId: ${chainId}`);
 
         if (LineaNetworks.includes(chainId)) {
-          preVerificationGas += Math.round((verificationGasLimit + callGasLimit) / 3);
+          preVerificationGas += Math.ceil((verificationGasLimit + callGasLimit) / 3);
         }
 
         const executionResultDecodingEnd = performance.now();
