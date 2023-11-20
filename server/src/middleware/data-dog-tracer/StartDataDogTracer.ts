@@ -1,7 +1,7 @@
 /* eslint-disable import/no-import-module-exports */
-import tracer from 'dd-trace';
 import { NextFunction, Request, Response } from 'express';
 import { logger } from '../../../../common/logger';
+import tracer from '../../../tracer';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
@@ -12,10 +12,17 @@ export const startDataDogTracer = () => async (
 ) => {
   try {
     const { method } = req.body;
-    const span = tracer.startSpan('http.request');
-    span.setTag('requestId', req.headers['x-request-id']);
-    span.setTag('jsonRpcMethod', method || 'method_undefined');
-    (req as any).span = span;
+    let span = tracer.scope().active();
+    if (span !== null) {
+      log.info(`Span already active, hence setting request_id: ${req.headers['x-request-id']} and json_rpc_method: ${method} tag to current span`);
+      span.setTag('request_id', req.headers['x-request-id']);
+      span.setTag('json_rpc_method', method || 'method_undefined');
+    } else {
+      log.info(`Span not active, hence setting request_id: ${req.headers['x-request-id']} and json_rpc_method: ${method} tag to new span`);
+      span = tracer.startSpan('http.request');
+      span.setTag('request_id', req.headers['x-request-id']);
+      span.setTag('json_rpc_method', method || 'method_undefined');
+    }
     return next();
   } catch (error) {
     log.error(`Error in startDataDogTracer: ${JSON.stringify(error)}`);
