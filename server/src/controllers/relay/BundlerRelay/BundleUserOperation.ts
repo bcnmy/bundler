@@ -36,11 +36,11 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
       let span = tracer.scope().active();
       if (span !== null) {
         log.info(`Span already active, hence setting transactionId: ${transactionId} tag to current span`);
-        span.setTag('transaction_id', transactionId);
+        span.setTag('request.transactionId', transactionId);
       } else {
         log.info(`Span not active, hence setting transaction: ${transactionId} tag to new span`);
-        span = tracer.startSpan('http.request');
-        span.setTag('transaction_id', transactionId);
+        span = tracer.startSpan('request');
+        span.setTag('request.transactionId', transactionId);
       }
     } catch (error) {
       log.info(`Error in dd-trace space for transactionId: ${transactionId}`);
