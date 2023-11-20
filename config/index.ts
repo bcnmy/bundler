@@ -9,6 +9,7 @@ import axios from 'axios';
 import { logger } from '../common/logger';
 
 import { ConfigType, IConfig } from './interface/IConfig';
+import { BLOCKCHAINS } from '../common/constants';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
@@ -179,7 +180,7 @@ export class Config implements IConfig {
 
   async checkAndAppendRpcUrls(chainId: number) {
     switch (chainId) {
-      case 1:
+      case BLOCKCHAINS.ETHEREUM_MAINNET:
         const ethereumRPCUrls = [];
         const { ETHEREUM_ALCHEMY_RPC_URL } = process.env;
         if (typeof ETHEREUM_ALCHEMY_RPC_URL !== 'string') {
@@ -207,7 +208,7 @@ export class Config implements IConfig {
         this.config.chains.providerNameWeightAndRPCUrl[chainId].PUBLIC_RPC
           .rpcUrl = ETHEREUM_PUBLIC_RPC_URL;
         break;
-      case 5:
+      case BLOCKCHAINS.GOERLI:
         const goerliRPCUrls = [];
         const { GOERLI_ALCHEMY_RPC_URL } = process.env;
         if (typeof GOERLI_ALCHEMY_RPC_URL !== 'string') {
@@ -235,7 +236,7 @@ export class Config implements IConfig {
         this.config.chains.providerNameWeightAndRPCUrl[chainId].PUBLIC_RPC
           .rpcUrl = GOERLI_PUBLIC_RPC_URL;
         break;
-      case 137:
+      case BLOCKCHAINS.POLYGON_MAINNET:
         const polygonRPCUrls = [];
         const { POLYGON_ALCHEMY_RPC_URL } = process.env;
         if (typeof POLYGON_ALCHEMY_RPC_URL !== 'string') {
@@ -270,7 +271,7 @@ export class Config implements IConfig {
         this.config.chains.providerNameWeightAndRPCUrl[chainId].PUBLIC_RPC
           .rpcUrl = POLYGON_PUBLIC_RPC_URL;
         break;
-      case 80001:
+      case BLOCKCHAINS.POLYGON_MUMBAI:
         const mumbaiRPCUrls = [];
         const { MUMBAI_ALCHEMY_RPC_URL } = process.env;
         if (typeof MUMBAI_ALCHEMY_RPC_URL !== 'string') {
@@ -305,7 +306,7 @@ export class Config implements IConfig {
         this.config.chains.providerNameWeightAndRPCUrl[chainId].PUBLIC_RPC
           .rpcUrl = MUMBAI_PUBLIC_RPC_URL;
         break;
-      case 1442:
+      case BLOCKCHAINS.POLYGON_ZKEVM_TESTNET:
         const polygonZKEVMTestnetRPCUrls = [];
         const { POLYGON_ZKEVM_TESTNET_ALCHEMY_RPC_URL } = process.env;
         if (typeof POLYGON_ZKEVM_TESTNET_ALCHEMY_RPC_URL !== 'string') {
@@ -325,7 +326,7 @@ export class Config implements IConfig {
         this.config.chains.providerNameWeightAndRPCUrl[chainId].PUBLIC_RPC
           .rpcUrl = POLYGON_ZKEVM_TESTNET_PUBLIC_RPC_URL;
         break;
-      case 1101:
+      case BLOCKCHAINS.POLYGON_ZKEVM_MAINNET:
         const polygonZKEVMMainnetRPCUrls = [];
         const { POLYGON_ZKEVM_MAINNET_ALCHEMY_RPC_URL } = process.env;
         if (typeof POLYGON_ZKEVM_MAINNET_ALCHEMY_RPC_URL !== 'string') {
@@ -345,7 +346,7 @@ export class Config implements IConfig {
         this.config.chains.providerNameWeightAndRPCUrl[chainId].PUBLIC_RPC
           .rpcUrl = POLYGON_ZKEVM_MAINNET_PUBLIC_RPC_URL;
         break;
-      case 97:
+      case BLOCKCHAINS.BSC_TESTNET:
         const BSCTestnetRPCUrls = [];
         const { BSC_TESTNET_QUICK_NODE_RPC_URL } = process.env;
         if (typeof BSC_TESTNET_QUICK_NODE_RPC_URL !== 'string') {
@@ -365,7 +366,7 @@ export class Config implements IConfig {
         this.config.chains.providerNameWeightAndRPCUrl[chainId].PUBLIC_RPC
           .rpcUrl = BSC_TESTNET_PUBLIC_RPC_URL;
         break;
-      case 56:
+      case BLOCKCHAINS.BSC_MAINNET:
         const BSCMainnetRPCUrls = [];
         const { BSC_MAINNET_QUICK_NODE_RPC_URL } = process.env;
         if (typeof BSC_MAINNET_QUICK_NODE_RPC_URL !== 'string') {
@@ -385,7 +386,7 @@ export class Config implements IConfig {
         this.config.chains.providerNameWeightAndRPCUrl[chainId].PUBLIC_RPC
           .rpcUrl = BSC_MAINNET_PUBLIC_RPC_URL;
         break;
-      case 42170:
+      case BLOCKCHAINS.ARBITRUM_NOVA_MAINNET:
         const ArbitrumNovaRPCUrls = [];
         const { ARBITRUM_NOVA_ALCHEMY_RPC_URL } = process.env;
         if (typeof ARBITRUM_NOVA_ALCHEMY_RPC_URL !== 'string') {
@@ -405,7 +406,7 @@ export class Config implements IConfig {
         this.config.chains.providerNameWeightAndRPCUrl[chainId].PUBLIC_RPC
           .rpcUrl = ARBITRUM_NOVA_PUBLIC_RPC_URL;
         break;
-      case 421613:
+      case BLOCKCHAINS.ARBITRUM_GOERLI_TESTNET:
         const ArbitrumTestnetRPCUrls = [];
         const { ARBITRUM_TESTNET_ALCHEMY_RPC_URL } = process.env;
         if (typeof ARBITRUM_TESTNET_ALCHEMY_RPC_URL !== 'string') {
@@ -425,7 +426,7 @@ export class Config implements IConfig {
         this.config.chains.providerNameWeightAndRPCUrl[chainId].PUBLIC_RPC
           .rpcUrl = ARBITRUM_TESTNET_PUBLIC_RPC_URL;
         break;
-      case 42161:
+      case BLOCKCHAINS.ARBITRUM_ONE_MAINNET:
         const ArbitrumMainnetRPCUrls = [];
         const { ARBITRUM_MAINNET_ALCHEMY_RPC_URL } = process.env;
         if (typeof ARBITRUM_MAINNET_ALCHEMY_RPC_URL !== 'string') {
@@ -445,7 +446,7 @@ export class Config implements IConfig {
         this.config.chains.providerNameWeightAndRPCUrl[chainId].PUBLIC_RPC
           .rpcUrl = ARBITRUM_MAINNET_PUBLIC_RPC_URL;
         break;
-      case 10:
+      case BLOCKCHAINS.OPTIMISM_MAINNET:
         const OptimismRPCUrls = [];
         const { OPTIMISM_ALCHEMY_RPC_URL } = process.env;
         if (typeof OPTIMISM_ALCHEMY_RPC_URL !== 'string') {
@@ -465,7 +466,7 @@ export class Config implements IConfig {
         this.config.chains.providerNameWeightAndRPCUrl[chainId].PUBLIC_RPC
           .rpcUrl = OPTIMISM_PUBLIC_RPC_URL;
         break;
-      case 410:
+      case BLOCKCHAINS.OPTIMISM_GOERLI_TESTNET:
         const OptimismGoerliRPCUrls = [];
         const { OPTIMISM_GOERLI_ALCHEMY_RPC_URL } = process.env;
         if (typeof OPTIMISM_GOERLI_ALCHEMY_RPC_URL !== 'string') {
@@ -485,7 +486,7 @@ export class Config implements IConfig {
         this.config.chains.providerNameWeightAndRPCUrl[chainId].PUBLIC_RPC
           .rpcUrl = OPTIMISM_GOERLI_PUBLIC_RPC_URL;
         break;
-      case 43113:
+      case BLOCKCHAINS.AVALANCHE_TESTNET:
         const AvalancheTestnetRPCUrls = [];
         const { AVALANCHE_TESTNET_QUICK_NODE_RPC_URL } = process.env;
         if (typeof AVALANCHE_TESTNET_QUICK_NODE_RPC_URL !== 'string') {
@@ -513,7 +514,7 @@ export class Config implements IConfig {
         this.config.chains.providerNameWeightAndRPCUrl[chainId].PUBLIC_RPC
           .rpcUrl = AVALANCHE_TESTNET_PUBLIC_RPC_URL;
         break;
-      case 43114:
+      case BLOCKCHAINS.AVALANCHE_MAINNET:
         const AvalancheMainnetRPCUrls = [];
         const { AVALANCHE_MAINNET_QUICK_NODE_RPC_URL } = process.env;
         if (typeof AVALANCHE_MAINNET_QUICK_NODE_RPC_URL !== 'string') {
@@ -541,7 +542,7 @@ export class Config implements IConfig {
         this.config.chains.providerNameWeightAndRPCUrl[chainId].PUBLIC_RPC
           .rpcUrl = AVALANCHE_MAINNET_PUBLIC_RPC_URL;
         break;
-      case 8453:
+      case BLOCKCHAINS.BASE_MAINNET:
         const BaseMainnetRPCUrls = [];
         const { BASE_MAINNET_ALCHEMY_RPC_URL } = process.env;
         if (typeof BASE_MAINNET_ALCHEMY_RPC_URL !== 'string') {
@@ -569,7 +570,7 @@ export class Config implements IConfig {
         this.config.chains.providerNameWeightAndRPCUrl[chainId].PUBLIC_RPC
           .rpcUrl = BASE_MAINNET_PUBLIC_RPC_URL;
         break;
-      case 84531:
+      case BLOCKCHAINS.BASE_GOERLI_TESTNET:
         const BaseTestnetRPCUrls = [];
         const { BASE_TESTNET_ALCHEMY_RPC_URL } = process.env;
         if (typeof BASE_TESTNET_ALCHEMY_RPC_URL !== 'string') {
@@ -597,7 +598,7 @@ export class Config implements IConfig {
         this.config.chains.providerNameWeightAndRPCUrl[chainId].PUBLIC_RPC
           .rpcUrl = BASE_TESTNET_PUBLIC_RPC_URL;
         break;
-      case 59140:
+      case BLOCKCHAINS.LINEA_TESTNET:
         const LineaTestnetRPCUrls = [];
         const { LINEA_TESTNET_INFURA_RPC_URL } = process.env;
         if (typeof LINEA_TESTNET_INFURA_RPC_URL !== 'string') {
@@ -617,7 +618,7 @@ export class Config implements IConfig {
         this.config.chains.providerNameWeightAndRPCUrl[chainId].PUBLIC_RPC
           .rpcUrl = LINEA_TESTNET_PUBLIC_RPC_URL;
         break;
-      case 59144:
+      case BLOCKCHAINS.LINEA_MAINNET:
         const LineaMainnetRPCUrls = [];
         const { LINEA_MAINNET_INFURA_RPC_URL } = process.env;
         if (typeof LINEA_MAINNET_INFURA_RPC_URL !== 'string') {
@@ -637,7 +638,7 @@ export class Config implements IConfig {
         this.config.chains.providerNameWeightAndRPCUrl[chainId].PUBLIC_RPC
           .rpcUrl = LINEA_MAINNET_PUBLIC_RPC_URL;
         break;
-      case 5001:
+      case BLOCKCHAINS.MANTLE_TESTNET:
         const MantleTestnetRPCUrls = [];
         const { MANTLE_TESTNET_ANKR_RPC_URL } = process.env;
         if (typeof MANTLE_TESTNET_ANKR_RPC_URL !== 'string') {
@@ -657,7 +658,7 @@ export class Config implements IConfig {
         this.config.chains.providerNameWeightAndRPCUrl[chainId].PUBLIC_RPC
           .rpcUrl = MANTLE_TESTNET_PUBLIC_RPC_URL;
         break;
-      case 5000:
+      case BLOCKCHAINS.MANTLE_MAINNET:
         const MantleMainnetRPCUrls = [];
         const { MANTLE_MAINNET_ANKR_RPC_URL } = process.env;
         if (typeof MANTLE_MAINNET_ANKR_RPC_URL !== 'string') {
@@ -677,7 +678,7 @@ export class Config implements IConfig {
         this.config.chains.providerNameWeightAndRPCUrl[chainId].PUBLIC_RPC
           .rpcUrl = MANTLE_MAINNET_PUBLIC_RPC_URL;
         break;
-      case 5611:
+      case BLOCKCHAINS.OP_BNB_TESTNET:
         const OPBNBTestnetRPCUrls = [];
         const { OP_BNB_TESTNET_NODE_REAL_RPC_URL } = process.env;
         if (typeof OP_BNB_TESTNET_NODE_REAL_RPC_URL !== 'string') {
@@ -697,7 +698,7 @@ export class Config implements IConfig {
         this.config.chains.providerNameWeightAndRPCUrl[chainId].PUBLIC_RPC
           .rpcUrl = OP_BNB_TESTNET_PUBLIC_RPC_URL;
         break;
-      case 204:
+      case BLOCKCHAINS.OP_BNB_MAINNET:
         const OPBNBMainnetRPCUrls = [];
         const { OP_BNB_MAINNET_NODE_REAL_RPC_URL } = process.env;
         if (typeof OP_BNB_MAINNET_NODE_REAL_RPC_URL !== 'string') {
@@ -717,7 +718,7 @@ export class Config implements IConfig {
         this.config.chains.providerNameWeightAndRPCUrl[chainId].PUBLIC_RPC
           .rpcUrl = OP_BNB_MAINNET_PUBLIC_RPC_URL;
         break;
-      case 594:
+      case BLOCKCHAINS.ASTAR_TESTNET:
         const AstarTestnetRPCUrls = [];
         const { ASTAR_TESTNET_BLAST_API_RPC_URL } = process.env;
         if (typeof ASTAR_TESTNET_BLAST_API_RPC_URL !== 'string') {
@@ -737,7 +738,7 @@ export class Config implements IConfig {
         this.config.chains.providerNameWeightAndRPCUrl[chainId].PUBLIC_RPC
           .rpcUrl = ASTAR_TESTNET_PUBLIC_RPC_URL;
         break;
-      case 81:
+      case BLOCKCHAINS.ASTAR_MAINNET:
         const AstarMainnetRPCUrls = [];
         const { ASTAR_MAINNET_BLAST_API_RPC_URL } = process.env;
         if (typeof ASTAR_MAINNET_BLAST_API_RPC_URL !== 'string') {
@@ -757,7 +758,7 @@ export class Config implements IConfig {
         this.config.chains.providerNameWeightAndRPCUrl[chainId].PUBLIC_RPC
           .rpcUrl = ASTAR_MAINNET_PUBLIC_RPC_URL;
         break;
-      case 88882:
+      case BLOCKCHAINS.CHILLIZ_TESTNET:
         const ChilizTestnetRPCUrls = [];
         const { CHILIZ_TESTNET_ANKR_RPC_URL } = process.env;
         if (typeof CHILIZ_TESTNET_ANKR_RPC_URL !== 'string') {
@@ -777,7 +778,7 @@ export class Config implements IConfig {
         this.config.chains.providerNameWeightAndRPCUrl[chainId].PUBLIC_RPC
           .rpcUrl = CHILIZ_TESTNET_PUBLIC_RPC_URL;
         break;
-      case 88888:
+      case BLOCKCHAINS.CHILLIZ_MAINNET:
         const ChilizMainnetRPCUrls = [];
         const { CHILIZ_MAINNET_ANKR_RPC_URL } = process.env;
         if (typeof CHILIZ_MAINNET_ANKR_RPC_URL !== 'string') {
