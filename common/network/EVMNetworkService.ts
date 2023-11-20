@@ -7,8 +7,8 @@ import { ERC20_ABI, L2Networks } from '../constants';
 import { EVMRawTransactionType, ProviderNameWeightAndRPCUrlType } from '../types';
 import { IERC20NetworkService, INetworkService, RpcMethod } from './interface';
 import { Type0TransactionGasPriceType, Type2TransactionGasPriceType } from './types';
-import { IRPCHandler } from '../rpc-handler';
 import { config } from '../../config';
+import { IRPCHandler } from '../rpc-handler';
 
 export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTransactionType>,
  IERC20NetworkService {

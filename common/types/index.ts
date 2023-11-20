@@ -258,7 +258,7 @@ export type UpdateRequestDataType = {
 };
 
 export enum ProviderName {
-  ALCHMEY = 'ALCHMEY',
+  ALCHEMY = 'ALCHEMY',
   INFURA = 'INFURA',
   POKT = 'POKT',
   QUICK_NODE = 'QUICK_NODE',

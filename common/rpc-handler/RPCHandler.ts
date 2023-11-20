@@ -46,7 +46,7 @@ export class RPCHandler implements IRPCHandler {
 
   getNextRPCProvider(): ProviderName {
     // start with alchemy as next provider to use
-    let nextProvider = ProviderName.ALCHMEY;
+    let nextProvider = ProviderName.ALCHEMY;
 
     // fetch all keys currently tracked
     const keys = this.rpcErrorTracker.keys();
@@ -75,7 +75,7 @@ export class RPCHandler implements IRPCHandler {
       if (currentProviderErrorCount === 0) {
         log.info(`currentProviderErrorCount is 0 for providerName: ${providerName} on chainId: ${this.chainId}`);
         nextProvider = providerName as ProviderName;
-        break;
+        return providerName as ProviderName;
       }
 
       // if current provider has lower error count than previous iteration
@@ -83,7 +83,7 @@ export class RPCHandler implements IRPCHandler {
       if (currentProviderErrorCount < highestErrorCountTracker) {
         log.info(`currentProviderErrorCount is lower than the highestErrorCountTracker for providerName: ${providerName} on chainId: ${this.chainId}`);
         nextProvider = providerName as ProviderName;
-        break;
+        return providerName as ProviderName;
       }
 
       // if current provider has a higher error count that previous error count

@@ -777,7 +777,9 @@
         "REPLACEMENT_TRANSACTION_UNDERPRICED" : ["replacement fee too low", "replacement_underpriced", "replacement transaction underpriced"],
         "TRANSACTION_UNDERPRICED": ["transaction underpriced"],
         "INSUFFICIENT_FUNDS": ["insufficient funds for gas", "transaction would cause overdraft", "insufficient funds for transfer", "insufficient funds for gas * price + value"],
-        "NONCE_TOO_LOW": ["nonce too low", "nonce has already been used"]
+        "NONCE_TOO_LOW": ["nonce too low", "nonce has already been used"],
+        "MAX_PRIORITY_FEE_HIGHER_THAN_MAX_FEE": ["max priority fee per gas higher than max fee per gas"],
+        "RPC_FAILURE": ["error sending relay", "unable to complete request at this time", "timeout"] 
     },
     "failedTransactionRetryCount": {
       "5": 5,

@@ -39,6 +39,7 @@ import {
   TransactionListenerNotifyReturnType,
 } from './types';
 import { config } from '../../../../config';
+import { AstarNetworks } from '../../../../common/constants';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
@@ -146,7 +147,10 @@ ITransactionPublisher<TransactionQueueMessageType> {
             if (entryPointContract) {
               const latestBlock = await this.networkService.getLatesBlockNumber();
               log.info(`latestBlock: ${latestBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-              const fromBlock = latestBlock - 1000;
+              let fromBlock = latestBlock - 1000;
+              if (AstarNetworks.includes(this.chainId)) {
+                fromBlock += 501;
+              }
               log.info(`fromBlock: ${fromBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
               const userOpReceipt = await getUserOperationReceiptForDataSaving(
                 this.chainId,
@@ -199,15 +203,15 @@ ITransactionPublisher<TransactionQueueMessageType> {
               );
               log.info(`userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
 
-              log.info(`updating state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
               if (transactionType === TransactionType.BUNDLER) {
+                log.info(`updating state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
                 await this.userOperationStateDao.updateState(this.chainId, {
                   transactionId,
                   message: 'Transaction confirmed',
                   state: UserOperationStateEnum.CONFIRMED,
                 });
+                log.info(`updated state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
               }
-              log.info(`updated state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
             } else {
               log.info(`entryPoint: ${entryPoint} not found in entry point map for transactionId: ${transactionId} on chainId: ${this.chainId}`);
             }
@@ -302,7 +306,10 @@ ITransactionPublisher<TransactionQueueMessageType> {
             if (entryPointContract) {
               const latestBlock = await this.networkService.getLatesBlockNumber();
               log.info(`latestBlock: ${latestBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-              const fromBlock = latestBlock - 1000;
+              let fromBlock = latestBlock - 1000;
+              if (AstarNetworks.includes(this.chainId)) {
+                fromBlock += 501;
+              }
               log.info(`fromBlock: ${fromBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
               const userOpReceipt = await getUserOperationReceiptForDataSaving(
                 this.chainId,
@@ -310,7 +317,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
                 transactionReceipt,
                 entryPointContract,
                 fromBlock,
-                this.networkService.getEthersProvider(),
+                this.networkService.ethersProvider,
               );
               log.info(`userOpReceipt: ${JSON.stringify(userOpReceipt)} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
 
@@ -357,8 +364,8 @@ ITransactionPublisher<TransactionQueueMessageType> {
                 );
                 log.info(`userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
 
-                log.info(`updating state to: ${UserOperationStateEnum.FAILED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
                 if (transactionType === TransactionType.BUNDLER) {
+                  log.info(`updating state to: ${UserOperationStateEnum.FAILED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
                   await this.userOperationStateDao.updateState(this.chainId, {
                     transactionId,
                     state: UserOperationStateEnum.FAILED,
@@ -367,8 +374,8 @@ ITransactionPublisher<TransactionQueueMessageType> {
                       entryPointContract,
                     ),
                   });
+                  log.info(`updated state to: ${UserOperationStateEnum.FAILED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
                 }
-                log.info(`updated state to: ${UserOperationStateEnum.FAILED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
                 return;
               }
               const {
@@ -466,16 +473,16 @@ ITransactionPublisher<TransactionQueueMessageType> {
                 updationTime: Date.now(),
               }, transactionId, transactionExecutionResponse?.hash);
 
-              log.info(`updating state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId} for a front runned transaction`);
               if (transactionType === TransactionType.BUNDLER) {
+                log.info(`updating state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId} for a front runned transaction`);
                 await this.userOperationStateDao.updateState(this.chainId, {
                   transactionId,
                   transactionHash: frontRunnedTransactionReceipt.hash,
                   message: 'Transaction was front runned, check new transaction hash in receipt',
                   state: UserOperationStateEnum.CONFIRMED,
                 });
+                log.info(`updated state state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId} for a front runned transaction`);
               }
-              log.info(`updated state state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId} for a front runned transaction`);
             } else {
               log.info(`entryPoint: ${entryPoint} not found in entry point map for transactionId: ${transactionId} on chainId: ${this.chainId}`);
             }
@@ -696,9 +703,15 @@ ITransactionPublisher<TransactionQueueMessageType> {
     // if no transactionExecutionResponse then it means transactions was not published onc hain
     // update transaction and user op collection
     if (!transactionExecutionResponse || Object.keys(transactionExecutionResponse).length === 0) {
-      if (transactionType === TransactionType.BUNDLER || transactionType === TransactionType.AA) {
-        this.updateTransactionDataForFailureInTransactionExecution(transactionId);
-        this.updateUserOpDataForFailureInTransactionExecution(transactionId);
+      log.error(`transactionExecutionResponse is null for transactionId: ${transactionId} for bundler: ${relayerAddress} hence 
+      updating transaction and userOp data`);
+      try {
+        if (transactionType === TransactionType.BUNDLER || transactionType === TransactionType.AA) {
+          this.updateTransactionDataForFailureInTransactionExecution(transactionId);
+          this.updateUserOpDataForFailureInTransactionExecution(transactionId);
+        }
+      } catch (dataSavingError) {
+        log.error(`Error in updating transaction and userOp data for transactionId: ${transactionId} with error: ${parseError(dataSavingError)}`);
       }
       await this.publishToTransactionQueue({
         transactionId,
@@ -706,7 +719,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
         error,
         event: SocketEventType.onTransactionError,
       });
-      log.error('transactionExecutionResponse is null');
+      log.error(`transactionExecutionResponse is null for transactionId: ${transactionId} for bundler: ${relayerAddress}`);
       return {
         isTransactionRelayed: false,
         transactionExecutionResponse: null,

@@ -78,7 +78,7 @@ export class Config implements IConfig {
     }
   }
 
-  async validate(): Promise<boolean> {
+  async validate(): Promise<void> {
     // check for each supported networks if the config is valid
     for (const chainId of this.config.supportedNetworks) {
       if (!this.config.supportedTransactionType[chainId].length) {
@@ -175,8 +175,6 @@ export class Config implements IConfig {
       await this.checkAndAppendRpcUrls(chainId);
       log.info('Config loaded successfully');
     }
-
-    return true;
   }
 
   async checkAndAppendRpcUrls(chainId: number) {
@@ -829,6 +827,13 @@ export class Config implements IConfig {
       }
     } catch (error) {
       throw new Error(`Error in checking if RPC is stable, error: ${JSON.stringify(error)}`);
+    }
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  assertEnv(envVar: string | undefined): void {
+    if (typeof envVar !== 'string') {
+      throw new Error(`${envVar} not set in env`);
     }
   }
 
