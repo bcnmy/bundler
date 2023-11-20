@@ -15,13 +15,13 @@ export const startDataDogTracer = () => async (
     let span = tracer.scope().active();
     if (span !== null) {
       log.info(`Span already active, hence setting request_id: ${req.headers['x-request-id']} and json_rpc_method: ${method} tag to current span`);
-      span.setTag('request_id', req.headers['x-request-id']);
-      span.setTag('json_rpc_method', method || 'method_undefined');
+      span.setTag('request.id', req.headers['x-request-id']);
+      span.setTag('request.json-rpc-method', method || 'method_undefined');
     } else {
       log.info(`Span not active, hence setting request_id: ${req.headers['x-request-id']} and json_rpc_method: ${method} tag to new span`);
-      span = tracer.startSpan('http.request');
-      span.setTag('request_id', req.headers['x-request-id']);
-      span.setTag('json_rpc_method', method || 'method_undefined');
+      span = tracer.startSpan('request');
+      span.setTag('request.id', req.headers['x-request-id']);
+      span.setTag('request.json-rpc-method', method || 'method_undefined');
     }
     return next();
   } catch (error) {
