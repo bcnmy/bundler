@@ -29,6 +29,7 @@ import {
   ArbitrumNetworks,
   LineaNetworks,
   AlchemySimulateExecutionSupportedNetworks,
+  AstarNetworks,
 } from '../constants';
 import { AlchemySimulationService, TenderlySimulationService } from './external-simulation';
 import { calcArbitrumPreVerificationGas, calcOptimismPreVerificationGas } from './L2';
@@ -115,10 +116,6 @@ export class BundlerSimulationService {
         }
       }
 
-      if (chainId === 84531) {
-        userOp.verificationGasLimit = 1000000;
-        userOp.callGasLimit = 1000000;
-      }
       const end = performance.now();
       log.info(`Preparing the userOp took: ${end - start} milliseconds`);
 
@@ -129,6 +126,7 @@ export class BundlerSimulationService {
         chainId,
         entryPointContract,
       );
+
       log.info(`preVerificationGas: ${preVerificationGas} on chainId: ${chainId}`);
       userOp.preVerificationGas = preVerificationGas;
       const preVerificationGasEnd = performance.now();
@@ -145,8 +143,8 @@ export class BundlerSimulationService {
       let ethCallParams;
 
       // polygon zk evm nodes don't support state overrides
-      if (PolygonZKEvmNetworks.includes(chainId)) {
-        log.info('Request on polygon zk evm hence not doing state overrides in eth_call');
+      if (PolygonZKEvmNetworks.includes(chainId) || AstarNetworks.includes(chainId)) {
+        log.info(`Request on RPC that does not support state overrides on chainId: ${chainId}`);
         ethCallParams = [
           {
             from: '0x0000000000000000000000000000000000000000',
@@ -208,26 +206,26 @@ export class BundlerSimulationService {
         }
 
         // 5000 gas for unaccounted gas in verification phase
-        const verificationGasLimit = Math.round((
+        const verificationGasLimit = Math.ceil((
           (preOpGas - preVerificationGas) * 1.2
         )) + 5000;
         log.info(`verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId} after 1.2 multiplier on ${preOpGas} and ${preVerificationGas}`);
 
-        let totalGas = paid / userOp.maxFeePerGas;
+        let totalGas = Math.ceil(paid / userOp.maxFeePerGas);
         log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
 
-        let callGasLimit = totalGas - preOpGas + 30000;
+        let callGasLimit = Math.ceil(totalGas - preOpGas + 30000);
         log.info(`call gas limit: ${callGasLimit} on chainId: ${chainId}`);
 
-        if ([137, 80001].includes(chainId)) {
+        if ([137, 80001, 43113, 43114, 42161, 421613, 1, 8453, 84531].includes(chainId)) {
           const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
           log.info(`baseFeePerGas: ${baseFeePerGas} on chainId: ${chainId}`);
-          totalGas = Math.round(paid / Math.min(
+          totalGas = Math.ceil(paid / Math.min(
             baseFeePerGas + Number(userOp.maxPriorityFeePerGas),
             Number(userOp.maxFeePerGas),
           ));
           log.info(`totalGas after calculating for polygon networks: ${totalGas}`);
-          callGasLimit = Math.round(totalGas - preOpGas + 30000);
+          callGasLimit = Math.ceil(totalGas - preOpGas + 30000);
           log.info(`callGasLimit after calculating for polygon networks: ${callGasLimit}`);
         }
 
@@ -237,6 +235,12 @@ export class BundlerSimulationService {
           preVerificationGas += 35000;
         } else {
           preVerificationGas += 50000;
+        }
+
+        if (OptimismNetworks.includes(chainId) || ArbitrumNetworks.includes(chainId)) {
+          preVerificationGas += totalGas * 0.25;
+          preVerificationGas = Math.ceil(preVerificationGas);
+          log.info(`preVerificationGas: ${preVerificationGas} on chainId: ${chainId}`);
         }
 
         if (callGasLimit > 500000) {
@@ -250,7 +254,7 @@ export class BundlerSimulationService {
         log.info(`call gas limit after checking for optimism: ${callGasLimit} on chainId: ${chainId}`);
 
         if (LineaNetworks.includes(chainId)) {
-          preVerificationGas += Math.round((verificationGasLimit + callGasLimit) / 3);
+          preVerificationGas += Math.ceil((verificationGasLimit + callGasLimit) / 3);
         }
 
         const executionResultDecodingEnd = performance.now();

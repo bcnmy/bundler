@@ -253,7 +253,7 @@
       "42161": 2,
       "42170": 2,
       "420": 2,
-      "10": 2,
+      "10": 1,
       "5000": 1,
       "5001": 1,
       "204": 1,
@@ -377,7 +377,7 @@
       "42161": 0.01,
       "42170": 0.01,
       "420": 0.05,
-      "10": 0.01,
+      "10": 0.05,
       "5001": 0.001,
       "5000": 0.001,
       "5611": 0.001,
@@ -465,8 +465,10 @@
         "REPLACEMENT_TRANSACTION_UNDERPRICED" : ["replacement fee too low", "replacement_underpriced", "replacement transaction underpriced"],
         "TRANSACTION_UNDERPRICED": ["transaction underpriced"],
         "INSUFFICIENT_FUNDS": ["insufficient funds for gas", "transaction would cause overdraft", "insufficient funds for transfer", "insufficient funds for gas * price + value"],
-        "NONCE_TOO_LOW": ["nonce too low", "nonce has already been used"]
-    },
+        "NONCE_TOO_LOW": ["nonce too low", "nonce has already been used"],
+        "MAX_PRIORITY_FEE_HIGHER_THAN_MAX_FEE": ["max priority fee per gas higher than max fee per gas"],
+        "RPC_FAILURE": ["error sending relay", "unable to complete request at this time", "timeout"] 
+      },
     "failedTransactionRetryCount": {
       "5": 5,
       "137": 5,

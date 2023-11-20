@@ -103,13 +103,13 @@ export class GasPrice implements IGasPrice {
           maxPriorityFeePerGas,
         };
       }
-      // if ([137].includes(this.chainId) && Number(result.maxPriorityFeePerGas) < 30000000000) {
-      //   await this.setMaxPriorityFeeGasPrice(
-      //     GasPriceType.DEFAULT,
-      //     '3000000000',
-      //   );
-      //   result.maxPriorityFeePerGas = '30000000000';
-      // }
+      if ([137].includes(this.chainId) && Number(result.maxPriorityFeePerGas) < 30000000000) {
+        await this.setMaxPriorityFeeGasPrice(
+          GasPriceType.DEFAULT,
+          '30000000000',
+        );
+        result.maxPriorityFeePerGas = '30000000000';
+      }
     } else {
       const gasPrice = await this.cacheService.get(
         this.getGasFeeKey(gasType),
@@ -329,17 +329,17 @@ export class GasPrice implements IGasPrice {
               const {
                 data,
               } = await this.networkService.sendRpcCall('eth_gasPrice', []);
-              const maxPriorityFeePerGas = ethers.utils.formatUnits(
+              const maxFeePerGas = ethers.utils.formatUnits(
                 data.result,
                 'wei',
               );
               await this.setMaxPriorityFeeGasPrice(
                 GasPriceType.DEFAULT,
-                maxPriorityFeePerGas,
+                (Number(maxFeePerGas) * 0.7).toString(),
               );
               await this.setMaxFeeGasPrice(
                 GasPriceType.DEFAULT,
-                maxPriorityFeePerGas,
+                maxFeePerGas,
               );
             } catch (error) {
               log.error(`Error in getting network gas price from RPC: ${parseError(error)}`);
@@ -416,9 +416,8 @@ export class GasPrice implements IGasPrice {
             const baseFeePerGas = await this.networkService.getBaseFeePerGas();
             await this.setBaseFeePerGas(baseFeePerGas);
           }
-        } else {
-          await this.setGasPrice(GasPriceType.DEFAULT, gasPrice);
         }
+        await this.setGasPrice(GasPriceType.DEFAULT, gasPrice);
       }
       log.info(
         `Setting gas price for chainId: ${this.chainId} as ${gasPrice}`,
