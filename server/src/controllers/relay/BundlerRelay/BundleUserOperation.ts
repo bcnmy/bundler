@@ -12,6 +12,7 @@ import {
   UserOperationStateEnum,
 } from '../../../../../common/types';
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../../../middleware';
+import tracer from '../../../../tracer';
 // import { updateRequest } from '../../auth/UpdateRequest';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
@@ -32,8 +33,15 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
 
     const transactionId = generateTransactionId(userOp);
     try {
-      const { span } = (req as any);
-      span.setTag('transactionId', transactionId);
+      let span = tracer.scope().active();
+      if (span !== null) {
+        log.info(`Span already active, hence setting transactionId: ${transactionId} tag to current span`);
+        span.setTag('transaction_id', transactionId);
+      } else {
+        log.info(`Span not active, hence setting transaction: ${transactionId} tag to new span`);
+        span = tracer.startSpan('http.request');
+        span.setTag('transaction_id', transactionId);
+      }
     } catch (error) {
       log.info(`Error in dd-trace space for transactionId: ${transactionId}`);
     }
