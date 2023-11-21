@@ -12,7 +12,9 @@ const log = logger.child({ module: module.filename.split('/').slice(-4).join('/'
   if (configInstance.active()) {
     const server = await import('./server');
     server.init();
-    tracer.init({ logInjection: false });
+    log.info('Initialising data dog tracer');
+    tracer.init();
+    log.info('Data dog tracer initialised');
   } else {
     log.info('Config not active');
   }
