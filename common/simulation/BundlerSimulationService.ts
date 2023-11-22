@@ -247,6 +247,10 @@ export class BundlerSimulationService {
           callGasLimit += 100000;
         }
 
+        if (callGasLimit > 2000000) {
+          callGasLimit += 300000;
+        }
+
         // if (chainId === 10 || chainId === 420 || chainId === 8453 || chainId === 84531) {
         //   log.info(`chainId: ${chainId} is OP stack hence increasing callGasLimit by 150K`);
         //   callGasLimit += 150000;
