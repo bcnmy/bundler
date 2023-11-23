@@ -7,7 +7,7 @@
     "lockTTL": 10000
   },
   "supportedNetworks": [],
-  "EIP1559SupportedNetworks": [],
+  "EIP1559SupportedNetworks": [1, 5, 80001, 137, 421613, 42161, 42170, 420, 10, 43113, 43114, 84531, 8453, 1287, 1284, 204, 5611],
   "supportedTransactionType": {
     "1": ["BUNDLER"],
     "5": ["BUNDLER"],
