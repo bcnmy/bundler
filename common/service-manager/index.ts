@@ -17,7 +17,7 @@ import { EVMTransactionListener } from '../../relayer/src/services/transaction-l
 import { EVMTransactionService } from '../../relayer/src/services/transaction-service';
 import { FeeOption } from '../../server/src/services';
 import { RedisCacheService } from '../cache';
-import { Mongo, TransactionDAO } from '../db';
+import { Mongo, TransactionDAO, UserOperationStateDAO } from '../db';
 import { UserOperationDAO } from '../db/dao/UserOperationDAO';
 import { GasPriceManager } from '../gas-price';
 import { BSCTestnetGasPrice } from '../gas-price/networks/BSCTestnetGasPrice';
@@ -112,6 +112,7 @@ const EVMRelayerManagerMap: {
 
 const transactionDao = new TransactionDAO();
 const userOperationDao = new UserOperationDAO();
+const userOperationStateDao = new UserOperationStateDAO();
 
 const socketConsumerMap: Record<number, SocketConsumer> = {};
 const retryTransactionSerivceMap: Record<number, EVMRetryTransactionService> = {};
@@ -144,8 +145,7 @@ let statusService: IStatusService;
     symbolMapByChainId: config.tokenPrice.symbolMapByChainId,
   });
   // added check for relayer node path in order to run on only one server
-  const nodePathIndex = process.env.NODE_PATH_INDEX || config.relayer.nodePathIndex;
-  if (nodePathIndex === 0) {
+  if (config.relayer.nodePathIndex === 0) {
     tokenService.schedule();
   }
 
@@ -198,15 +198,18 @@ let statusService: IStatusService;
     log.info(`Setting up retry transaction queue for chainId: ${chainId}`);
     const retryTransactionQueue = new RetryTransactionHandlerQueue({
       chainId,
+      nodePathIndex: config.relayer.nodePathIndex,
     });
     retryTransactionQueueMap[chainId] = retryTransactionQueue;
     await retryTransactionQueueMap[chainId].connect();
     log.info(`Retry transaction queue setup complete for chainId: ${chainId}`);
 
     log.info(`Setting up nonce manager for chainId: ${chainId}`);
+    const nonceExpiryTTL = config.chains.nonceExpiryTTL[chainId];
     const nonceManager = new EVMNonceManager({
       options: {
         chainId,
+        nonceExpiryTTL,
       },
       networkService,
       cacheService,
@@ -221,6 +224,7 @@ let statusService: IStatusService;
       retryTransactionQueue,
       transactionDao,
       userOperationDao,
+      userOperationStateDao,
       options: {
         chainId,
         entryPointMap,
@@ -238,6 +242,7 @@ let statusService: IStatusService;
       transactionDao,
       cacheService,
       notificationManager,
+      userOperationStateDao,
       options: {
         chainId,
       },
@@ -247,6 +252,11 @@ let statusService: IStatusService;
 
     log.info(`Setting up relayer manager for chainId: ${chainId}`);
     for (const relayerManager of config.relayerManagers) {
+      if (relayerManager.name === 'RM2' && [5000, 5001, 204, 5611, 59144, 59140, 592, 88888, 88882, 81].includes(chainId)) {
+        log.info(`chainId: ${chainId} not supported on relayer manager RM2`);
+        // eslint-disable-next-line no-continue
+        continue;
+      }
       const relayerQueue = new EVMRelayerQueue([]);
       if (!EVMRelayerManagerMap[relayerManager.name]) {
         EVMRelayerManagerMap[relayerManager.name] = {};
@@ -297,6 +307,7 @@ let statusService: IStatusService;
       transactionService,
       networkService,
       notificationManager,
+      cacheService,
       options: {
         chainId,
         EVMRelayerManagerMap, // TODO // Review a better way
@@ -433,6 +444,7 @@ export {
   transactionSerivceMap,
   transactionDao,
   userOperationDao,
+  userOperationStateDao,
   statusService,
   networkServiceMap,
   gasPriceServiceMap,

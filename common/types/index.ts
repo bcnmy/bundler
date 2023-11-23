@@ -25,6 +25,15 @@ export enum EthMethodType {
 
 export enum BiconomyMethodType {
   GET_GAS_FEE_VALUES = 'biconomy_getGasFeeValues',
+  GET_USER_OPERATION_STATUS = 'biconomy_getUserOperationStatus',
+}
+
+export enum UserOperationStateEnum {
+  BUNDLER_MEMPOOL = 'BUNDLER_MEMPOOL',
+  SUBMITTED = 'SUBMITTED',
+  CONFIRMED = 'CONFIRMED',
+  FAILED = 'FAILED',
+  DROPPED_FROM_BUNDLER_MEMPOOL = 'DROPPED_FROM_BUNDLER_MEMPOOL',
 }
 
 export enum RelayerDestinationSmartContractName {

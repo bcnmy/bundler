@@ -8,27 +8,33 @@ import { parseError } from '../utils';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
-const queueUrl = process.env.QUEUE_URL || config.queueUrl;
+const { queueUrl } = config;
 
 export class RetryTransactionHandlerQueue implements IQueue<RetryTransactionQueueData> {
   private channel!: Channel;
 
-  private exchangeName = 'retry_transaction_queue_exchange';
+  exchangeName: string;
 
   private exchangeType = 'x-delayed-message';
 
   chainId: number;
 
-  private queueName = 'retry_transaction_queue';
+  nodePathIndex: number;
+
+  queueName: string;
 
   msg!: ConsumeMessage | null;
 
   constructor(
     options: {
       chainId: number,
+      nodePathIndex: number
     },
   ) {
     this.chainId = options.chainId;
+    this.nodePathIndex = options.nodePathIndex;
+    this.exchangeName = `retry_transaction_queue_exchange_${this.nodePathIndex}`;
+    this.queueName = `retry_transaction_queue_${this.nodePathIndex}`;
   }
 
   async connect() {
@@ -45,7 +51,7 @@ export class RetryTransactionHandlerQueue implements IQueue<RetryTransactionQueu
   }
 
   async publish(data: RetryTransactionQueueData) {
-    const key = `retry_chainid.${this.chainId}`;
+    const key = `retry_chainid.${this.chainId}_${this.nodePathIndex}`;
     log.info(`Publishing data to retry queue on chainId: ${this.chainId} with interval ${config.chains.retryTransactionInterval[this.chainId]} and key ${key}`);
     if (this.channel) {
       this.channel.publish(this.exchangeName, key, Buffer.from(JSON.stringify(data)), {
@@ -65,7 +71,7 @@ export class RetryTransactionHandlerQueue implements IQueue<RetryTransactionQueu
       const retryTransactionQueue: Replies.AssertQueue = await this.channel.assertQueue(
         `${this.queueName}_${this.chainId}`,
       );
-      const key = `retry_chainid.${this.chainId}`;
+      const key = `retry_chainid.${this.chainId}_${this.nodePathIndex}`;
 
       log.info(`[*] Waiting for retry transactions on chainId: ${this.chainId}`);
 

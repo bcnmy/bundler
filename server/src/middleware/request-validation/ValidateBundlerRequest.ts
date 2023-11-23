@@ -13,6 +13,7 @@ import {
   bundlerSupportedEntryPointsRequestSchema,
   gasAndGasPricesRequestSchema,
   getGasFeeValuesRequestSchema,
+  getUserOperationStatusSchema,
 } from '../../routes/bundler/bundler.schema';
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../RequestHelpers';
 
@@ -54,6 +55,9 @@ export const validateBundlerRequest = () => async (
         break;
       case BiconomyMethodType.GET_GAS_FEE_VALUES:
         validationResponse = getGasFeeValuesRequestSchema.validate(req.body);
+        break;
+      case BiconomyMethodType.GET_USER_OPERATION_STATUS:
+        validationResponse = getUserOperationStatusSchema.validate(req.body);
         break;
       default:
         const end = performance.now();

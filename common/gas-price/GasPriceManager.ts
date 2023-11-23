@@ -21,11 +21,17 @@ import { BaseMainnetGasPrice } from './networks/BaseMainnetGasPrice';
 import { LineaTestnetGasPrice } from './networks/LineaTestnetGasPrice';
 import { LineaMainnetGasPrice } from './networks/LineaMainnetGasPrice';
 import { OptimismMainnetGasPrice } from './networks/OptimismMainnetGasPrice';
-import { OpBNBMainnetGasPrice } from './networks/OpBNBMainnetGasPrice';
-
 import { AvalanceMainnetGasPrice } from './networks/AvalanceMainnetGasPrice';
 import { MoonbaseAlphaTestnetGasPrice } from './networks/MoonbaseAlphaTestnetGasPrice';
 import { MoonbeamMainnetGasPrice } from './networks/MoonbeamMainnetGasPrice';
+import { MantleMainnetGasPrice } from './networks/MantleMainnetGasPrice';
+import { MantleTestnetGasPrice } from './networks/MantleTestnetGasPrice';
+import { OpBNBMainnetGasPrice } from './networks/OpBNBMainnetGasPrice';
+import { OpBNBTestnetGasPrice } from './networks/OpBNBTestnetGasPrice';
+import { ChillizMainnetGasPrice } from './networks/ChillizMainnetGasPrice';
+import { AstarMainnetGasPrice } from './networks/AstarMainnetGasPrice';
+import { ChillizTestnetGasPrice } from './networks/ChillizTestnetGasPrice';
+import { AstarTestnetGasPrice } from './networks/AstarTestnetGasPrice';
 
 export type GasPriceServiceType =
   | MaticGasPrice
@@ -41,7 +47,6 @@ export type GasPriceServiceType =
   | ArbNovaMainnetGasPrice
   | OptimismGoerliGasPrice
   | OptimismMainnetGasPrice
-  | OpBNBMainnetGasPrice
   | AvalanceTestnetGasPrice
   | AvalanceMainnetGasPrice
   | BaseGoerliGasPrice
@@ -154,12 +159,6 @@ export class GasPriceManager implements IGasPriceManager<GasPriceServiceType> {
           this.networkService,
           this.options,
         );
-      case 204:
-        return new OpBNBMainnetGasPrice(
-          this.cacheService,
-          this.networkService,
-          this.options,
-        );
       case 43113:
         return new AvalanceTestnetGasPrice(
           this.cacheService,
@@ -204,6 +203,54 @@ export class GasPriceManager implements IGasPriceManager<GasPriceServiceType> {
         );
       case 1284:
         return new MoonbeamMainnetGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
+      case 204:
+        return new OpBNBMainnetGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
+      case 5611:
+        return new OpBNBTestnetGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
+      case 5000:
+        return new MantleMainnetGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
+      case 5001:
+        return new MantleTestnetGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
+      case 88888:
+        return new ChillizMainnetGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
+      case 592:
+        return new AstarMainnetGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
+      case 88882:
+        return new ChillizTestnetGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
+      case 81:
+        return new AstarTestnetGasPrice(
           this.cacheService,
           this.networkService,
           this.options,

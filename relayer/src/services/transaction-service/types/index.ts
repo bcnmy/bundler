@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import { ICacheService } from '../../../../../common/cache';
-import { ITransactionDAO } from '../../../../../common/db';
+import { ITransactionDAO, IUserOperationStateDAO } from '../../../../../common/db';
 import { IGasPrice } from '../../../../../common/gas-price';
 import { GasPriceType } from '../../../../../common/gas-price/types';
 import { INetworkService } from '../../../../../common/network';
@@ -20,6 +20,7 @@ export type EVMTransactionServiceParamsType = {
   transactionDao: ITransactionDAO,
   cacheService: ICacheService,
   notificationManager: INotificationManager,
+  userOperationStateDao: IUserOperationStateDAO
   options: {
     chainId: number,
   }

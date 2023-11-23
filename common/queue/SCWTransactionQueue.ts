@@ -8,7 +8,7 @@ import { parseError } from '../utils';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
-const queueUrl = process.env.QUEUE_URL || config.queueUrl;
+const { queueUrl } = config;
 
 export class SCWTransactionQueue implements IQueue<SCWTransactionMessageType> {
   private channel!: Channel;
