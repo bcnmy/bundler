@@ -488,6 +488,17 @@
         "mumbaiGasStationUrlForEIP1559": "https://gasstation-mumbai.matic.network/v2"
       }
     },
+    "137": {
+      "updateFrequencyInSeconds": 10,
+      "minGasPrice": 30000000000,
+      "maxGasPrice": 1500000000000,
+      "baseFeeMultiplier": 1.1,
+      "gasOracle": {
+        "maticGasStationUrl": "https://gasstation-mainnet.matic.network/v1",
+        "maticGasStationUrlForEIP1559": "https://gasstation-mainnet.matic.network/v2",
+        "polygonGasStation": ""
+      }
+    },
     "97": {
       "updateFrequencyInSeconds": 30,
       "minGasPrice": 1000000000,
