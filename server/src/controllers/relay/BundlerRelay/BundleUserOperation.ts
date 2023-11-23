@@ -1,12 +1,15 @@
 /* eslint-disable import/no-import-module-exports */
 import { Request, Response } from 'express';
 import { logger } from '../../../../../common/logger';
-import { routeTransactionToRelayerMap, transactionDao, userOperationDao } from '../../../../../common/service-manager';
+import {
+  routeTransactionToRelayerMap, transactionDao, userOperationDao, userOperationStateDao,
+} from '../../../../../common/service-manager';
 import { generateTransactionId, getPaymasterFromPaymasterAndData, parseError } from '../../../../../common/utils';
 import {
   isError,
   TransactionStatus,
   TransactionType,
+  UserOperationStateEnum,
 } from '../../../../../common/types';
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../../../middleware';
 // import { updateRequest } from '../../auth/UpdateRequest';
@@ -21,7 +24,7 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
     const { id } = req.body;
     const userOp = req.body.params[0];
     const entryPointAddress = req.body.params[1];
-    const gasLimitFromSimulation = req.body.params[2] + 2000000;
+    const gasLimitFromSimulation = req.body.params[2] + 200000;
     const userOpHash = req.body.params[3];
     const { chainId, dappAPIKey } = req.params;
 
@@ -40,6 +43,13 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
       walletAddress,
       resubmitted: false,
       creationTime: Date.now(),
+    });
+
+    log.info(`Saving userOp state: ${UserOperationStateEnum.BUNDLER_MEMPOOL} for transactionId: ${transactionId} on chainId: ${chainIdInNum}`);
+    userOperationStateDao.save(chainIdInNum, {
+      transactionId,
+      userOpHash,
+      state: UserOperationStateEnum.BUNDLER_MEMPOOL,
     });
 
     const {

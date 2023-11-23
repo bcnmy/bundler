@@ -20,8 +20,7 @@ export const calcArbitrumPreVerificationGas = async (
     abi.entryPointAbi,
   ).encodeFunctionData('handleOps', [[userOp], userOp.sender]);
 
-  const providerUrl = JSON.parse(process.env.PROVIDER_URLS as string)[chainId]
-  || config.chains.provider[chainId];
+  const providerUrl = config.chains.provider[chainId];
 
   const baseL2Provider = ethers.providers.getDefaultProvider(
     providerUrl,

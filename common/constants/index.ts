@@ -36,6 +36,10 @@ export enum BLOCKCHAINS {
   ARBITRUM_NOVA_MAINNET = 42170,
   OPTIMISM_MAINNET = 10,
   OPTIMISM_GOERLI_TESTNET = 420,
+  OP_BNB_MAINNET = 204,
+  OP_BNB_TESTNET = 5611,
+  MANTLE_MAINNET = 5000,
+  MANTLE_TESTNET = 5001,
   AVALANCHE_MAINNET = 43114,
   AVALANCHE_TESTNET = 43113,
   MOONBEAM_MAINNET = 1284,
@@ -45,14 +49,19 @@ export enum BLOCKCHAINS {
   LINEA_TESTNET = 59140,
   LINEA_MAINET = 59144,
   GANACHE = 1337,
+  ASTAR_MAINNET = 592,
+  CHILLIZ_MAINNET = 88888,
+  ASTAR_TESTNET = 81,
+  CHILLIZ_TESTNET = 88882,
 }
 
 // Network with base gas diff from 21k and maxPriorityFeePerGas is 0
 export const L2Networks = [421613, 42161, 42170];
 export const PolygonZKEvmNetworks = [1101, 1442];
-export const OptimismNetworks = [420, 10, 84531, 8453];
+export const OptimismNetworks = [420, 10, 84531, 8453, 204, 5611];
 export const LineaNetworks = [59140, 59144];
 export const ArbitrumNetworks = [42170, 421613, 42161];
 export const AlchemySimulateExecutionSupportedNetworks = [
-  1, 5, 137, 80001, 10, 420, 42161, 421613, 8453, 84531,
+  1, 5, 137, 80001, 10, 420, 42161, 421613, 8453, 84531, 592,
 ];
+export const AstarNetworks = [81, 592];

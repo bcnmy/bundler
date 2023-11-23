@@ -1,8 +1,10 @@
 /* eslint-disable import/no-import-module-exports */
 /* eslint-disable no-await-in-loop */
-import { ethers } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 import { ICacheService } from '../../../../common/cache';
-import { ITransactionDAO, IUserOperationDAO } from '../../../../common/db';
+import {
+  ITransactionDAO, IUserOperationDAO, IUserOperationStateDAO,
+} from '../../../../common/db';
 import { IQueue } from '../../../../common/interface';
 import { logger } from '../../../../common/logger';
 import { INetworkService } from '../../../../common/network';
@@ -14,11 +16,13 @@ import {
   TransactionQueueMessageType,
   TransactionStatus,
   TransactionType,
+  UserOperationStateEnum,
 } from '../../../../common/types';
 import {
   getRetryTransactionCountKey,
   getTokenPriceKey,
   getUserOperationReceiptForDataSaving,
+  getTransactionMinedKey,
   parseError,
 } from '../../../../common/utils';
 import { IEVMAccount } from '../account';
@@ -35,6 +39,7 @@ import {
   TransactionListenerNotifyReturnType,
 } from './types';
 import { config } from '../../../../config';
+import { AstarNetworks } from '../../../../common/constants';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
@@ -53,6 +58,8 @@ ITransactionPublisher<TransactionQueueMessageType> {
 
   userOperationDao: IUserOperationDAO;
 
+  userOperationStateDao: IUserOperationStateDAO;
+
   entryPointMap: EntryPointMapType;
 
   cacheService: ICacheService;
@@ -67,6 +74,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       retryTransactionQueue,
       transactionDao,
       userOperationDao,
+      userOperationStateDao,
       cacheService,
     } = evmTransactionListenerParams;
     this.chainId = options.chainId;
@@ -76,6 +84,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
     this.retryTransactionQueue = retryTransactionQueue;
     this.transactionDao = transactionDao;
     this.userOperationDao = userOperationDao;
+    this.userOperationStateDao = userOperationStateDao;
     this.cacheService = cacheService;
   }
 
@@ -89,23 +98,21 @@ ITransactionPublisher<TransactionQueueMessageType> {
     return true;
   }
 
-  private async onTransactionSuccess(onTranasctionSuccessParams: OnTransactionSuccessParamsType) {
+  private async onTransactionSuccess(onTransactionSuccessParams: OnTransactionSuccessParamsType) {
     const {
       transactionExecutionResponse,
       transactionReceipt,
       transactionId,
       relayerManagerName,
       transactionType,
-    } = onTranasctionSuccessParams;
+    } = onTransactionSuccessParams;
     if (!transactionReceipt) {
       log.error(`Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
       return;
     }
 
-    log.info(`Publishing to transaction queue on success for transactionId: ${transactionId} to transaction queue 
-      on chainId ${this.chainId}`);
-    if (!(transactionType === TransactionType.BUNDLER
-        || transactionType === TransactionType.FUNDING)) {
+    log.info(`Publishing to transaction queue on success for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
+    if (!(transactionType === TransactionType.BUNDLER)) {
       await this.publishToTransactionQueue({
         transactionId,
         relayerManagerName,
@@ -140,7 +147,10 @@ ITransactionPublisher<TransactionQueueMessageType> {
             if (entryPointContract) {
               const latestBlock = await this.networkService.getLatesBlockNumber();
               log.info(`latestBlock: ${latestBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-              const fromBlock = latestBlock - 1000;
+              let fromBlock = latestBlock - 1000;
+              if (AstarNetworks.includes(this.chainId)) {
+                fromBlock += 501;
+              }
               log.info(`fromBlock: ${fromBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
               const userOpReceipt = await getUserOperationReceiptForDataSaving(
                 this.chainId,
@@ -149,8 +159,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
                 entryPointContract,
                 fromBlock,
               );
-              log.info(`userOpReceipt: ${JSON.stringify(userOpReceipt)} for userOpHash: ${userOpHash} for transactionId: ${transactionId} 
-                on chainId: ${this.chainId}`);
+              log.info(`userOpReceipt: ${JSON.stringify(userOpReceipt)} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
               if (!userOpReceipt) {
                 log.info(`userOpReceipt not fetched for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
                 return;
@@ -193,6 +202,16 @@ ITransactionPublisher<TransactionQueueMessageType> {
                 },
               );
               log.info(`userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+
+              if (transactionType === TransactionType.BUNDLER) {
+                log.info(`updating state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+                await this.userOperationStateDao.updateState(this.chainId, {
+                  transactionId,
+                  message: 'Transaction confirmed',
+                  state: UserOperationStateEnum.CONFIRMED,
+                });
+                log.info(`updated state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+              }
             } else {
               log.info(`entryPoint: ${entryPoint} not found in entry point map for transactionId: ${transactionId} on chainId: ${this.chainId}`);
             }
@@ -237,21 +256,19 @@ ITransactionPublisher<TransactionQueueMessageType> {
     }
   }
 
-  private async onTransactionFailure(onTranasctionFailureParams: OnTransactionFailureParamsType) {
+  private async onTransactionFailure(onTransactionFailureParams: OnTransactionFailureParamsType) {
     const {
       transactionExecutionResponse,
       transactionId,
       transactionReceipt,
       relayerManagerName,
       transactionType,
-    } = onTranasctionFailureParams;
+    } = onTransactionFailureParams;
     if (!transactionReceipt) {
       log.error(`Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`);
       return;
     }
-    if (!(transactionType === TransactionType.BUNDLER
-        || transactionType === TransactionType.AA
-        || transactionType === TransactionType.FUNDING)) {
+    if (!(transactionType === TransactionType.BUNDLER || transactionType === TransactionType.AA)) {
       log.info(`Publishing to transaction queue on failure for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
       await this.publishToTransactionQueue({
         transactionId,
@@ -289,7 +306,10 @@ ITransactionPublisher<TransactionQueueMessageType> {
             if (entryPointContract) {
               const latestBlock = await this.networkService.getLatesBlockNumber();
               log.info(`latestBlock: ${latestBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-              const fromBlock = latestBlock - 1000;
+              let fromBlock = latestBlock - 1000;
+              if (AstarNetworks.includes(this.chainId)) {
+                fromBlock += 501;
+              }
               log.info(`fromBlock: ${fromBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
               const userOpReceipt = await getUserOperationReceiptForDataSaving(
                 this.chainId,
@@ -343,6 +363,19 @@ ITransactionPublisher<TransactionQueueMessageType> {
                   },
                 );
                 log.info(`userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+
+                if (transactionType === TransactionType.BUNDLER) {
+                  log.info(`updating state to: ${UserOperationStateEnum.FAILED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+                  await this.userOperationStateDao.updateState(this.chainId, {
+                    transactionId,
+                    state: UserOperationStateEnum.FAILED,
+                    message: await this.getTransactionFailureMessage(
+                      transactionExecutionResponse?.hash,
+                      entryPointContract,
+                    ),
+                  });
+                  log.info(`updated state to: ${UserOperationStateEnum.FAILED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+                }
                 return;
               }
               const {
@@ -439,6 +472,17 @@ ITransactionPublisher<TransactionQueueMessageType> {
                 frontRunnedTransactionFeeCurrency,
                 updationTime: Date.now(),
               }, transactionId, transactionExecutionResponse?.hash);
+
+              if (transactionType === TransactionType.BUNDLER) {
+                log.info(`updating state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId} for a front runned transaction`);
+                await this.userOperationStateDao.updateState(this.chainId, {
+                  transactionId,
+                  transactionHash: frontRunnedTransactionReceipt.hash,
+                  message: 'Transaction was front runned, check new transaction hash in receipt',
+                  state: UserOperationStateEnum.CONFIRMED,
+                });
+                log.info(`updated state state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId} for a front runned transaction`);
+              }
             } else {
               log.info(`entryPoint: ${entryPoint} not found in entry point map for transactionId: ${transactionId} on chainId: ${this.chainId}`);
             }
@@ -530,6 +574,51 @@ ITransactionPublisher<TransactionQueueMessageType> {
     );
   }
 
+  private async updateTransactionDataForFailureInTransactionExecution(
+    transactionId: string,
+  ): Promise<void> {
+    this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
+      resubmitted: false,
+      status: TransactionStatus.DROPPED,
+      updationTime: Date.now(),
+    }, transactionId, TransactionStatus.DROPPED);
+  }
+
+  private async updateUserOpDataForFailureInTransactionExecution(
+    transactionId: string,
+  ): Promise<void> {
+    const userOps = await this.userOperationDao.getUserOpsByTransactionId(
+      this.chainId,
+      transactionId,
+    );
+    log.info(`userOps: ${JSON.stringify(userOps)} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+    if (!userOps.length) {
+      log.info(`No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+      return;
+    }
+
+    for (let userOpIndex = 0; userOpIndex < userOps.length; userOpIndex += 1) {
+      const { userOpHash } = userOps[userOpIndex];
+      await this.userOperationDao.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
+        this.chainId,
+        transactionId,
+        userOpHash,
+        {
+          transactionHash: undefined,
+          receipt: {},
+          blockNumber: 0,
+          blockHash: 'null',
+          status: TransactionStatus.DROPPED,
+          success: 'false',
+          actualGasCost: 0,
+          actualGasUsed: 0,
+          reason: 'null',
+          logs: null,
+        },
+      );
+    }
+  }
+
   private async waitForTransaction(
     notifyTransactionListenerParams: NotifyTransactionListenerParamsType,
   ) {
@@ -547,14 +636,23 @@ ITransactionPublisher<TransactionQueueMessageType> {
       return;
     }
     // TODO : add error check
-    const tranasctionHash = transactionExecutionResponse.hash;
-    log.info(`Transaction hash is: ${tranasctionHash} for transactionId: ${transactionId} on chainId ${this.chainId}`);
+    const transactionHash = transactionExecutionResponse.hash;
+    log.info(`Transaction hash is: ${transactionHash} for transactionId: ${transactionId} on chainId ${this.chainId}`);
 
-    const transactionReceipt = await this.networkService.waitForTransaction(tranasctionHash);
+    const transactionReceipt = await this.networkService.waitForTransaction(
+      transactionHash,
+      undefined,
+      // timeout is set to 1.5 times because it ensures that transaction would
+      // have resubmitted and no need to keep polling it
+      Number(1.5 * config.chains.retryTransactionInterval[this.chainId]),
+    );
+
     log.info(`Transaction receipt is: ${JSON.stringify(transactionReceipt)} for transactionId: ${transactionId} on chainId ${this.chainId}`);
 
     // TODO: reduce pending count of relayer via RelayerManager
     await this.cacheService.delete(getRetryTransactionCountKey(transactionId, this.chainId));
+
+    await this.cacheService.set(getTransactionMinedKey(transactionId), '1');
 
     if (transactionReceipt.status === 1) {
       log.info(`Transaction is a success for transactionId: ${transactionId} on chainId ${this.chainId}`);
@@ -602,14 +700,26 @@ ITransactionPublisher<TransactionQueueMessageType> {
       error,
     } = notifyTransactionListenerParams;
 
-    if (!transactionExecutionResponse) {
+    // if no transactionExecutionResponse then it means transactions was not published onc hain
+    // update transaction and user op collection
+    if (!transactionExecutionResponse || Object.keys(transactionExecutionResponse).length === 0) {
+      log.error(`transactionExecutionResponse is null for transactionId: ${transactionId} for bundler: ${relayerAddress} hence 
+      updating transaction and userOp data`);
+      try {
+        if (transactionType === TransactionType.BUNDLER || transactionType === TransactionType.AA) {
+          this.updateTransactionDataForFailureInTransactionExecution(transactionId);
+          this.updateUserOpDataForFailureInTransactionExecution(transactionId);
+        }
+      } catch (dataSavingError) {
+        log.error(`Error in updating transaction and userOp data for transactionId: ${transactionId} with error: ${parseError(dataSavingError)}`);
+      }
       await this.publishToTransactionQueue({
         transactionId,
         relayerManagerName,
         error,
         event: SocketEventType.onTransactionError,
       });
-      log.error('transactionExecutionResponse is null');
+      log.error(`transactionExecutionResponse is null for transactionId: ${transactionId} for bundler: ${relayerAddress}`);
       return {
         isTransactionRelayed: false,
         transactionExecutionResponse: null,
@@ -659,7 +769,6 @@ ITransactionPublisher<TransactionQueueMessageType> {
       event: previousTransactionHash
         ? SocketEventType.onTransactionHashChanged : SocketEventType.onTransactionHashGenerated,
     });
-
     // retry txn service will check for receipt
     log.info(`Publishing transaction data of transactionId: ${transactionId} to retry transaction queue on chainId ${this.chainId}`);
     await this.publishToRetryTransactionQueue({
@@ -675,11 +784,62 @@ ITransactionPublisher<TransactionQueueMessageType> {
     });
 
     // wait for transaction
-    this.waitForTransaction(notifyTransactionListenerParams);
+    try {
+      this.waitForTransaction(notifyTransactionListenerParams);
+    } catch (waitForTransactionError) {
+      // timeout error
+      // do nothing for now just log
+      log.error(`Error: ${parseError(waitForTransactionError)} Timeout hit for waiting on hash: ${transactionExecutionResponse.hash} for transactionId: ${transactionId} on chainId ${this.chainId}`);
+      return {
+        isTransactionRelayed: false,
+        transactionExecutionResponse,
+      };
+    }
 
     return {
       isTransactionRelayed: true,
       transactionExecutionResponse,
     };
+  }
+
+  async getTransactionFailureMessage(
+    transactionHash: string,
+    entryPointContract: ethers.Contract,
+  ): Promise<string> {
+    try {
+      const getTransactionResponse = await this.networkService.getTransaction(transactionHash);
+
+      const {
+        from, to, data, gasLimit, gasPrice,
+      } = getTransactionResponse;
+
+      const gasInHex = BigNumber.from(gasLimit).toHexString().substring(2).replace(/^0+/, '');
+      const gasPriceInHex = BigNumber.from(gasPrice).toHexString().substring(2).replace(/^0+/, '');
+
+      const handleOpResult = await this.networkService.sendRpcCall(
+        'eth_call',
+        [{
+          from,
+          to,
+          data,
+          gas: `0x${gasInHex}`,
+          gasPrice: `0x${gasPriceInHex}`,
+        }],
+      );
+
+      const ethCallData = handleOpResult.data.error.data;
+      log.info(`ethCallData: ${ethCallData}`);
+
+      const errorDescription = entryPointContract.interface.parseError(ethCallData);
+      const { args } = errorDescription;
+
+      if (errorDescription.name === 'FailedOp') {
+        const revertReason = args[1];
+        return `Transaction failed on chain with reason: ${revertReason}`;
+      }
+      return 'Unable to parse transaction failure reason, please check transaction hash on explorer';
+    } catch (error) {
+      return 'Unable to parse transaction failure reason, please check transaction hash on explorer';
+    }
   }
 }

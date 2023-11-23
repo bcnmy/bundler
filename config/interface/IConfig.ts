@@ -101,7 +101,9 @@ type TransactionConfigType = {
     'TRANSACTION_UNDERPRICED': string[],
     'INSUFFICIENT_FUNDS': string[],
     'NONCE_TOO_LOW': string[],
-    'GAS_LIMIT_REACHED': string[]
+    'GAS_LIMIT_REACHED': string[],
+    'MAX_PRIORITY_FEE_HIGHER_THAN_MAX_FEE': string[],
+    'RPC_FAILURE': string[]
   },
   retryCount: {
     [key: string]: {
@@ -118,6 +120,7 @@ type ChainsConfigType = {
   premium: ChainIdWithNumberValueType,
   currency: ChainIdWithStringValueType,
   decimal: ChainIdWithNumberValueType,
+  nonceExpiryTTL: ChainIdWithNumberValueType,
   provider: ChainIdWithStringValueType,
   fallbackUrls: ChainIdWithArrayStringValueType,
   retryTransactionInterval: ChainIdWithNumberValueType,

@@ -1,3 +1,4 @@
+import { ICacheService } from '../../../../../common/cache';
 import { INetworkService } from '../../../../../common/network';
 import { INotificationManager } from '../../../../../common/notification/interface';
 import { IQueue } from '../../../../../common/queue';
@@ -12,6 +13,7 @@ export type EVMRetryTransactionServiceParamsType = {
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
   retryTransactionQueue: IQueue<RetryTransactionQueueData>,
   notificationManager: INotificationManager,
+  cacheService: ICacheService,
   options: {
     chainId: number,
     EVMRelayerManagerMap: {

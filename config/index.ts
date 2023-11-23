@@ -1,10 +1,8 @@
-/* eslint-disable no-console */
 /* eslint-disable import/no-import-module-exports */
 import crypto from 'crypto-js';
 import fs, { existsSync } from 'fs';
-import _, { isNumber } from 'lodash';
+import _ from 'lodash';
 import path from 'path';
-import { ChainId } from '@biconomy/core-types';
 import { logger } from '../common/logger';
 
 import { ConfigType, IConfig } from './interface/IConfig';
@@ -53,13 +51,12 @@ function getJsonFromEnvVariable(envVariableName: string): any {
 
   try {
     const jsonObject = JSON.parse(jsonString);
-    console.log(jsonObject);
+    log.info(jsonObject);
     return jsonObject;
   } catch (error: any) {
     throw new Error(`Error parsing JSON from ${envVariableName}: ${error.message}`);
   }
 }
-
 
 function getEnvVariable(envVariableName: string): string {
   const value = process.env[envVariableName];
@@ -68,14 +65,14 @@ function getEnvVariable(envVariableName: string): string {
     throw new Error(`Environment variable ${envVariableName} is not defined or empty.`);
   }
 
-  return value
+  return value;
 }
 
 export class Config implements IConfig {
   config: ConfigType;
 
   readEnvVariables() {
-    console.log('Reading env Variables');
+    log.info('Reading env Variables');
     const slackConfig = getJsonFromEnvVariable('SLACK_JSON');
     const simulationDataConfig = getJsonFromEnvVariable('SIMULATION_DATA_JSON');
     const dataSourcesConfig = getJsonFromEnvVariable('DATASOURCES_JSON');
@@ -83,9 +80,7 @@ export class Config implements IConfig {
     const providerConfig = getJsonFromEnvVariable('PROVIDER_JSON');
     const tokenPriceConfig = getJsonFromEnvVariable('TOKEN_PRICE_JSON');
 
-
     this.config.queueUrl = getEnvVariable('QUEUE_URL');
-
 
     this.config.chains.provider = providerConfig;
     this.config.dataSources = dataSourcesConfig;
@@ -96,11 +91,11 @@ export class Config implements IConfig {
 
     // this.config.tokenPrice = tokenPriceConfig;
     const chainId = parseInt(process.env.CHAIN_ID as string, 10);
-    console.log(`CHAIN ID <${process.env.CHAIN_ID}>`);
+    log.info(`CHAIN ID <${process.env.CHAIN_ID}>`);
 
     const supportedNetworks = [chainId];
     this.config.supportedNetworks = supportedNetworks;
-    console.log(`PROVIDER URL <${this.config.chains.provider[chainId]}>`);
+    log.info(`PROVIDER URL <${this.config.chains.provider[chainId]}>`);
 
     this.config.relayer = { nodePathIndex: parseInt(process.env.NODE_PATH_INDEX as string, 10) };
 
@@ -109,7 +104,6 @@ export class Config implements IConfig {
     // REDIS_URL, MONGO_URL, QUEUE_URL, CONFIG_PASSPHRASE, NODE_PATH_INDEX
     // TENDERLY_USER. TENDERLY_PROJECT, TENDERLY_KEY
     for (const relayerManager of this.config.relayerManagers) {
-
       const minRelayerCount = getEnvMinRelayerCount();
       const maxRelayerCount = getEnvMaxRelayerCount();
       const fundingBalanceThreshold = getEnvfundingBalanceThreshold();
@@ -121,12 +115,14 @@ export class Config implements IConfig {
       relayerManager.fundingRelayerAmount[chainId] = fundingRelayerAmount;
       if (!relayerManager.ownerAccountDetails[chainId]) {
         log.info(`Default ownerAccoutnDetails couldnt be found for ${chainId}`);
-        relayerManager.ownerAccountDetails[chainId] = { 'privateKey': relayerManager.ownerPrivateKey, 'publicKey': relayerManager.ownerPublicKey };
+        relayerManager.ownerAccountDetails[chainId] = {
+          privateKey: relayerManager.ownerPrivateKey,
+          publicKey: relayerManager.ownerPublicKey,
+        };
       } else {
         log.info(`Default ownerAccoutnDetails found for ${chainId}`);
       }
     }
-
 
     const relayerManager = this.config.relayerManagers[0];
     log.info(`RelayarManager ${relayerManager.name} publicKey <${relayerManager.ownerAccountDetails[chainId].publicKey}>`);
@@ -137,6 +133,7 @@ export class Config implements IConfig {
     log.info('Reading env Variables completed');
   }
 
+  // eslint-disable-next-line class-methods-use-this
   decryptConfig(): string {
     const encryptedEnvPath = './config.json.enc';
     const passphrase = process.env.CONFIG_PASSPHRASE;
@@ -179,7 +176,6 @@ export class Config implements IConfig {
       process.exit();
     }
 
-
     // Verify HMAC
     const decryptedHmac = crypto.HmacSHA256(plaintext, key);
     const decryptedHmacInBase64 = crypto.enc.Base64.stringify(decryptedHmac);
@@ -212,7 +208,7 @@ export class Config implements IConfig {
   validate(): boolean {
     const { supportedNetworks } = this.config;
     // check for each supported networks if the config is valid
-    console.log(`Supported networks <${supportedNetworks}>`);
+    log.info(`Supported networks <${supportedNetworks}>`);
 
     for (const chainId of supportedNetworks) {
       if (!this.config.supportedTransactionType[chainId].length) {
@@ -227,7 +223,6 @@ export class Config implements IConfig {
       if (!this.config.chains.currency[chainId]) {
         throw new Error(`Currency required for chain id ${chainId}`);
       }
-
       if (!this.config.chains.decimal[chainId]) {
         throw new Error(`Decimals required for chain id ${chainId}`);
       }
@@ -240,10 +235,10 @@ export class Config implements IConfig {
       }
 
       const nodePathIndex = process.env.NODE_PATH_INDEX;
-      console.log(`Node path index <${nodePathIndex}>`);
+      log.info(`Node path index <${nodePathIndex}>`);
 
       if (!nodePathIndex) {
-        console.log(process.env);
+        log.info(process.env);
 
         throw new Error('Relayer node path index required');
       }
@@ -334,5 +329,4 @@ export class Config implements IConfig {
 }
 
 export const configInstance = new Config();
-
 export const config = configInstance.get();

@@ -81,9 +81,15 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
           case RpcMethod.sendTransaction:
             return await this.ethersProvider.sendTransaction(params.tx);
           case RpcMethod.waitForTransaction:
-            return await this.ethersProvider.waitForTransaction(params.transactionHash);
+            return await this.ethersProvider.waitForTransaction(
+              params.transactionHash,
+              params.confirmations,
+              params.timeout,
+            );
           case RpcMethod.getLatestBlockNumber:
             return await this.ethersProvider.getBlockNumber();
+          case RpcMethod.getTransaction:
+            return await this.ethersProvider.getTransaction(params.transactionHash);
           default:
             return null;
         }
@@ -278,11 +284,28 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
    * @param transactionHash transaction hash
    * @returns receipt of the transaction once mined, else waits for the transaction to be mined
    */
-  async waitForTransaction(transactionHash: string): Promise<ethers.providers.TransactionReceipt> {
+  async waitForTransaction(
+    transactionHash: string,
+    confirmations?: number,
+    timeout?: number,
+  ): Promise<ethers.providers.TransactionReceipt> {
     const transactionReceipt = await this.useProvider(RpcMethod.waitForTransaction, {
       transactionHash,
+      confirmations,
+      timeout,
     });
     return transactionReceipt;
+  }
+
+  /**
+   * @param transactionHash transaction hash
+   * @returns transaction once mined, else waits for the transaction to be mined
+  */
+  async getTransaction(transactionHash: string): Promise<ethers.providers.TransactionResponse> {
+    const transaction = await this.useProvider(RpcMethod.getTransaction, {
+      transactionHash,
+    });
+    return transaction;
   }
 
   async getDecimal(tokenAddress: string): Promise<number> {
