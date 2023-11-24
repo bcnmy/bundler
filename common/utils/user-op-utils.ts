@@ -207,10 +207,10 @@ const filterLogs = (userOpEvent: UserOperationEventEvent, logs: Log[]): Log[] =>
   return [userOpLogs as Log];
 };
 
-export const getUserOperationReceiptForDataSaving = async (
+export const getUserOperationReceiptForFailedTransaction = async (
   chainId: number,
   userOpHash: string,
-  receipt: any,
+  receipt: ethers.providers.TransactionReceipt,
   entryPointContract: ethers.Contract,
   fromBlock: number,
   ethersProvider?: ethers.providers.JsonRpcProvider,
@@ -269,6 +269,53 @@ export const getUserOperationReceiptForDataSaving = async (
       log.error(`Missing/invalid userOpHash for userOpHash: ${userOpHash} on chainId: ${chainId} with erro: ${parseError(error)}`);
       return null;
     }
+  } catch (error) {
+    log.error(`error in getUserOperationReceipt: ${parseError(error)}`);
+    return null;
+  }
+};
+
+export const getUserOperationReceiptForSuccessfulTransaction = async (
+  chainId: number,
+  userOpHash: string,
+  receipt: ethers.providers.TransactionReceipt,
+  entryPointContract: ethers.Contract,
+): Promise<any> => {
+  try {
+    const { logs } = receipt;
+    let userOperationEventLog: ethers.providers.Log | {} = {};
+    for (const eventLog of logs) {
+      // TODO get topicId for UserOperationEvent from config
+      if (eventLog.topics[0] === '0x49628fd1471006c1482da88028e9ce4dbb080b815c9b0344d39e5a8e6ec1419f' && eventLog.topics[1].toLowerCase() === userOpHash.toLowerCase()) {
+        userOperationEventLog = eventLog;
+        break;
+      }
+    }
+    const userOperationEvent = entryPointContract.interface.parseLog({
+      topics: (userOperationEventLog as ethers.providers.Log).topics,
+      data: (userOperationEventLog as ethers.providers.Log).data,
+    });
+
+    const actualGasCostInHex = userOperationEvent.args[5];
+    log.info(`actualGasCostInHex: ${actualGasCostInHex} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
+    const actualGasCostInNumber = Number(actualGasCostInHex.toString());
+    log.info(`actualGasCostInNumber: ${actualGasCostInNumber} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
+    const actualGasUsedInHex = userOperationEvent.args[6];
+    log.info(`actualGasUsedInHex: ${actualGasUsedInHex} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
+    const actualGasUsedInNumber = Number(actualGasUsedInHex.toString());
+    log.info(`actualGasUsedInNumber: ${actualGasUsedInNumber} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
+    const success = userOperationEvent.args[4];
+    log.info(`success: ${success} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
+    const userOperationLogs = filterLogs(
+      userOperationEvent as any, // TODO fix types
+      receipt.logs,
+    );
+    return {
+      actualGasCost: actualGasCostInNumber,
+      actualGasUsed: actualGasUsedInNumber,
+      success,
+      logs: userOperationLogs,
+    };
   } catch (error) {
     log.error(`error in getUserOperationReceipt: ${parseError(error)}`);
     return null;

@@ -244,7 +244,13 @@ export class BundlerSimulationService {
         }
 
         if (callGasLimit > 500000) {
+          log.info('Bumping callGasLimit by 100K for 500K+ transactions');
           callGasLimit += 100000;
+        }
+
+        if (callGasLimit > 2000000) {
+          log.info('Bumping callGasLimit by 500K for 2M+ transactions');
+          callGasLimit += 500000;
         }
 
         // if (chainId === 10 || chainId === 420 || chainId === 8453 || chainId === 84531) {
