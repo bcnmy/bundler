@@ -334,9 +334,8 @@ export class GasPrice implements IGasPrice {
               );
               const maxPriorityFeePerGas = ethers.utils.formatUnits(
                 maxPriorityFeePerGasData.result,
-                'wei'
+                'wei',
               );
-              console.log("maxPriorityFeePerGas", maxPriorityFeePerGas);
               await this.setMaxPriorityFeeGasPrice(
                 GasPriceType.DEFAULT,
                 maxPriorityFeePerGas,
