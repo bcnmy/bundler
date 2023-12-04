@@ -326,16 +326,20 @@ export class GasPrice implements IGasPrice {
         if (this.EIP1559SupportedNetworks.includes(this.chainId)) {
           if (OptimismNetworks.includes(this.chainId)) {
             try {
-              const {
-                data,
-              } = await this.networkService.sendRpcCall('eth_gasPrice', []);
+              const maxFeePerGasData = (await this.networkService.sendRpcCall('eth_gasPrice', [])).data;
+              const maxPriorityFeePerGasData = (await this.networkService.sendRpcCall('eth_maxPriorityFeePerGas', [])).data;
               const maxFeePerGas = ethers.utils.formatUnits(
-                data.result,
+                maxFeePerGasData.result,
                 'wei',
               );
+              const maxPriorityFeePerGas = ethers.utils.formatUnits(
+                maxPriorityFeePerGasData.result,
+                'wei'
+              );
+              console.log("maxPriorityFeePerGas", maxPriorityFeePerGas);
               await this.setMaxPriorityFeeGasPrice(
                 GasPriceType.DEFAULT,
-                (Number(maxFeePerGas) * 0.7).toString(),
+                maxPriorityFeePerGas,
               );
               await this.setMaxFeeGasPrice(
                 GasPriceType.DEFAULT,
