@@ -1,5 +1,6 @@
 /* eslint-disable import/no-import-module-exports */
 import { Request, Response } from 'express';
+import { toHex } from 'viem';
 import { logger } from '../../../../common/logger';
 import { relayerManagerTransactionTypeNameMap } from '../../../../common/maps';
 import { EVMRelayerManagerMap, transactionDao, transactionSerivceMap } from '../../../../common/service-manager';
@@ -13,7 +14,7 @@ export const transactionResubmitApi = async (req: Request, res: Response) => {
   const { chainId, transactionId, gasPrice } = req.body;
 
   // convert gas price to hex
-  const gasPriceInHex = `0x${parseInt(gasPrice, 10).toString(16)}`;
+  const gasPriceInHex = BigInt(`0x${parseInt(gasPrice, 10).toString(16)}`);
 
   const transactions = await transactionDao.getByTransactionId(chainId, transactionId);
   try {
@@ -37,11 +38,12 @@ export const transactionResubmitApi = async (req: Request, res: Response) => {
       const rawTransaction = {
         from: relayer.getPublicKey(),
         gasPrice: gasPriceInHex,
-        gasLimit: transaction.rawTransaction.gasLimit._hex,
-        to: transaction.rawTransaction.to,
-        value: transaction.rawTransaction.value._hex,
-        data: transaction.rawTransaction.data,
+        gasLimit: toHex(transaction.rawTransaction.gasLimit._hex),
+        to: toHex(transaction.rawTransaction.to),
+        value: BigInt(transaction.rawTransaction.value._hex),
+        data: toHex(transaction.rawTransaction.data),
         chainId,
+        type: '0',
         nonce: transaction.rawTransaction.nonce,
       };
       log.info(`Resubmitting transaction ${transactionId} with gasPrice ${gasPrice} on chainId ${chainId} and raw transaction data ${JSON.stringify(rawTransaction)}`);

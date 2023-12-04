@@ -1,4 +1,3 @@
-import { ethers } from 'ethers';
 import { ICacheService } from '../../../../../common/cache';
 import { IGasPrice } from '../../../../../common/gas-price';
 import { INetworkService } from '../../../../../common/network';
@@ -11,7 +10,7 @@ export interface IRelayerManager<AccountType, RawTransactionType> {
   chainId: number;
   transactionService: ITransactionService<AccountType, RawTransactionType>;
   newRelayerInstanceCount: number;
-  fundingBalanceThreshold: ethers.BigNumber;
+  fundingBalanceThreshold: BigInt;
   fundingRelayerAmount: number;
   relayerSeed: string;
   ownerAccountDetails: AccountType;

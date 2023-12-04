@@ -1,6 +1,6 @@
 /* eslint-disable import/no-import-module-exports */
 import { ConsumeMessage } from 'amqplib';
-import { ethers } from 'ethers';
+import { Abi, encodeFunctionData } from 'viem';
 import { ICacheService } from '../../../../common/cache';
 import { logger } from '../../../../common/logger';
 import { IQueue } from '../../../../common/queue';
@@ -75,9 +75,12 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
 
         log.info(`Setting active relayer: ${activeRelayer?.getPublicKey()} as beneficiary for userOp: ${JSON.stringify(userOp)}`);
 
-        // eslint-disable-next-line no-unsafe-optional-chaining
-        const { data } = await (entryPointContract as ethers.Contract)
-          .populateTransaction.handleOps([userOp], activeRelayer.getPublicKey());
+        const data = encodeFunctionData({
+          abi: (entryPointContract?.abi as Abi),
+          functionName: 'handleOps',
+          args: [[userOp], activeRelayer.getPublicKey()],
+        });
+
         transactionDataReceivedFromQueue.data = data;
 
         await this.cacheService.set(getRetryTransactionCountKey(

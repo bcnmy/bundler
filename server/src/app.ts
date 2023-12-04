@@ -1,4 +1,3 @@
-/* eslint-disable import/no-extraneous-dependencies */
 import rTracer from 'cls-rtracer';
 import cors from 'cors';
 import express, {

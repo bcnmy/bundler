@@ -28,7 +28,7 @@ export type FinalUserOperationDataType = {
   receipt: object;
   status: string,
   success: string,
-  blockNumber: number,
+  blockNumber: bigint,
   blockHash: string,
   actualGasCost: number,
   actualGasUsed: number,

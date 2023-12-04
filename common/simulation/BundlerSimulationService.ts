@@ -1,7 +1,17 @@
 /* eslint-disable import/no-import-module-exports */
 /* eslint-disable prefer-const */
-import { ethers, BigNumber } from 'ethers';
-import { arrayify, defaultAbiCoder, keccak256 } from 'ethers/lib/utils';
+import {
+  decodeErrorResult,
+  encodeAbiParameters,
+  encodeFunctionData,
+  getContract,
+  keccak256,
+  parseAbiParameters,
+  toBytes,
+  toHex,
+} from 'viem';
+import { NODE_INTERFACE_ADDRESS } from '@arbitrum/sdk/dist/lib/dataEntities/constants';
+import { NodeInterface__factory } from '@arbitrum/sdk/dist/lib/abi/factories/NodeInterface__factory';
 import { config } from '../../config';
 import { IEVMAccount } from '../../relayer/src/services/account';
 import {
@@ -13,6 +23,8 @@ import { INetworkService } from '../network';
 import {
   DefaultGasOverheadType,
   EVMRawTransactionType,
+  EntryPointContractType,
+  OptimismL1GasPriceOracleContractType,
   UserOperationType,
 } from '../types';
 import { packUserOp, packUserOpForUserOpHash, parseError } from '../utils';
@@ -30,9 +42,9 @@ import {
   LineaNetworks,
   AlchemySimulateExecutionSupportedNetworks,
   AstarNetworks,
+  OPTIMISM_L1_GAS_PRICE_ORACLE,
 } from '../constants';
 import { AlchemySimulationService, TenderlySimulationService } from './external-simulation';
-import { calcArbitrumPreVerificationGas, calcOptimismPreVerificationGas } from './L2';
 import { IGasPrice } from '../gas-price';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
@@ -46,6 +58,8 @@ export class BundlerSimulationService {
 
   alchemySimulationService: AlchemySimulationService;
 
+  optimismL1GasPriceOracleMap: { [chainId: number]: OptimismL1GasPriceOracleContractType } = {};
+
   constructor(
     networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
     tenderlySimulationService: TenderlySimulationService,
@@ -56,6 +70,15 @@ export class BundlerSimulationService {
     this.tenderlySimulationService = tenderlySimulationService;
     this.alchemySimulationService = alchemySimulationService;
     this.gasPriceService = gasPriceService;
+
+    if (OptimismNetworks.includes(this.networkService.chainId)) {
+      // setting up optimism gas oracle
+      this.optimismL1GasPriceOracleMap[this.networkService.chainId] = getContract({
+        abi: OPTIMISM_L1_GAS_PRICE_ORACLE,
+        address: '0x420000000000000000000000000000000000000F',
+        publicClient: networkService.provider,
+      });
+    }
   }
 
   async estimateUserOperationGas(
@@ -68,12 +91,12 @@ export class BundlerSimulationService {
       log.info(`userOp received: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
 
       // creating fullUserOp in case of estimation
-      userOp.callGasLimit = 5000000;
-      userOp.verificationGasLimit = 5000000;
-      userOp.preVerificationGas = 1000000;
+      userOp.callGasLimit = BigInt(5000000);
+      userOp.verificationGasLimit = BigInt(5000000);
+      userOp.preVerificationGas = BigInt(1000000);
 
       if ([43113, 43114].includes(chainId)) {
-        userOp.callGasLimit = 20000000;
+        userOp.callGasLimit = BigInt(20000000);
       }
 
       if (!userOp.paymasterAndData) {
@@ -84,34 +107,34 @@ export class BundlerSimulationService {
         // signature not present, using default ECDSA
         userOp.signature = '0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b';
       }
-      if (!userOp.maxFeePerGas || userOp.maxFeePerGas === 0 || (userOp.maxFeePerGas as unknown as string) === '0x' || (userOp.maxFeePerGas as unknown as string) === '0') {
+      if (!userOp.maxFeePerGas || userOp.maxFeePerGas === BigInt(0) || (userOp.maxFeePerGas as unknown as string) === '0x' || (userOp.maxFeePerGas as unknown as string) === '0') {
         // setting a non zero value as division with maxFeePerGas will happen
-        userOp.maxFeePerGas = 1;
+        userOp.maxFeePerGas = BigInt(1);
         if (OptimismNetworks.includes(chainId)) {
           const gasPrice = await this.gasPriceService.getGasPrice();
-          if (typeof gasPrice === 'string') {
-            userOp.maxFeePerGas = Number(gasPrice);
+          if (typeof gasPrice === 'bigint') {
+            userOp.maxFeePerGas = gasPrice;
           } else {
             const {
               maxFeePerGas,
             } = gasPrice;
-            userOp.maxFeePerGas = Number(maxFeePerGas);
+            userOp.maxFeePerGas = maxFeePerGas;
           }
         }
       }
 
-      if (!userOp.maxPriorityFeePerGas || userOp.maxPriorityFeePerGas === 0 || (userOp.maxPriorityFeePerGas as unknown as string) === '0x' || (userOp.maxPriorityFeePerGas as unknown as string) === '0') {
+      if (!userOp.maxPriorityFeePerGas || userOp.maxPriorityFeePerGas === BigInt(0) || (userOp.maxPriorityFeePerGas as unknown as string) === '0x' || (userOp.maxPriorityFeePerGas as unknown as string) === '0') {
         // setting a non zero value as division with maxPriorityFeePerGas will happen
-        userOp.maxPriorityFeePerGas = 1;
+        userOp.maxPriorityFeePerGas = BigInt(1);
         if (OptimismNetworks.includes(chainId)) {
           const gasPrice = await this.gasPriceService.getGasPrice();
-          if (typeof gasPrice === 'string') {
-            userOp.maxPriorityFeePerGas = Number(gasPrice);
+          if (typeof gasPrice === 'bigint') {
+            userOp.maxPriorityFeePerGas = gasPrice;
           } else {
             const {
               maxPriorityFeePerGas,
             } = gasPrice;
-            userOp.maxPriorityFeePerGas = Number(maxPriorityFeePerGas);
+            userOp.maxPriorityFeePerGas = maxPriorityFeePerGas;
           }
         }
       }
@@ -121,11 +144,11 @@ export class BundlerSimulationService {
 
       const preVerificationGasStart = performance.now();
       // preVerificationGas
-      let preVerificationGas = await this.calcPreVerificationGas(
+      let preVerificationGas = BigInt(await this.calcPreVerificationGas(
         userOp,
         chainId,
         entryPointContract,
-      );
+      ));
 
       log.info(`preVerificationGas: ${preVerificationGas} on chainId: ${chainId}`);
       userOp.preVerificationGas = preVerificationGas;
@@ -134,11 +157,11 @@ export class BundlerSimulationService {
 
       log.info(`userOp to used to simulate in eth_call: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
 
-      const { data } = await entryPointContract.populateTransaction.simulateHandleOp(
-        userOp,
-        config.zeroAddress,
-        '0x',
-      );
+      const data = encodeFunctionData({
+        abi: entryPointContract.abi,
+        functionName: 'simulateHandleOp',
+        args: [userOp, config.zeroAddress, '0x'],
+      });
 
       let ethCallParams;
 
@@ -172,85 +195,79 @@ export class BundlerSimulationService {
       }
 
       const ethCallStart = performance.now();
-      const simulateHandleOpResult = await this.networkService.sendRpcCall(
-        'eth_call',
-        ethCallParams,
-      );
+      const simulateHandleOpResult = await this.networkService.ethCall(ethCallParams);
       const ethCallEnd = performance.now();
       log.info(`eth_call took: ${ethCallEnd - ethCallStart} milliseconds`);
 
       const ethCallData = simulateHandleOpResult.data.error.data;
       log.info(`ethCallData: ${ethCallData}`);
 
-      const errorDescription = entryPointContract.interface.parseError(ethCallData);
-      const { args } = errorDescription;
+      const errorDescription = decodeErrorResult({
+        abi: entryPointContract.abi,
+        data: ethCallData,
+      });
 
-      if (errorDescription.name === 'ExecutionResult') {
+      if (errorDescription.errorName === 'ExecutionResult') {
+        const { args } = errorDescription;
         const executionResultDecodingStart = performance.now();
-        const preOpGas = Number(args[0]);
+        const preOpGas = args[0];
         log.info(`preOpGas: ${preOpGas}`);
-        const paid = Number(args[1]);
+        const paid = args[1];
         log.info(`paid: ${paid}`);
         let validAfter = args[2];
         log.info(`validAfter: ${validAfter}`);
         let validUntil = args[3];
         log.info(`validUntil: ${validUntil}`);
 
-        validAfter = BigNumber.from(validAfter);
-        validUntil = BigNumber.from(validUntil);
-        if (validUntil === BigNumber.from(0)) {
-          validUntil = undefined;
-        }
-        if (validAfter === BigNumber.from(0)) {
-          validAfter = undefined;
-        }
-
         // 5000 gas for unaccounted gas in verification phase
-        const verificationGasLimit = Math.ceil((
-          (preOpGas - preVerificationGas) * 1.2
-        )) + 5000;
+        const verificationGasLimit = BigInt(Math.ceil((
+          (Number(toHex(preOpGas - preVerificationGas)) * 1.2)
+        )) + 5000);
         log.info(`verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId} after 1.2 multiplier on ${preOpGas} and ${preVerificationGas}`);
 
-        let totalGas = Math.ceil(paid / userOp.maxFeePerGas);
+        let totalGas = BigInt(Math.ceil(Number(toHex(paid)) / Number(toHex(userOp.maxFeePerGas))));
         log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
 
-        let callGasLimit = Math.ceil(totalGas - preOpGas + 30000);
+        let callGasLimit = BigInt(
+          Math.ceil(Number(toHex(totalGas)) - Number(toHex(preOpGas)) + 30000),
+        );
         log.info(`call gas limit: ${callGasLimit} on chainId: ${chainId}`);
 
         if ([137, 80001, 43113, 43114, 42161, 421613, 1, 8453, 84531].includes(chainId)) {
           const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
           log.info(`baseFeePerGas: ${baseFeePerGas} on chainId: ${chainId}`);
-          totalGas = Math.ceil(paid / Math.min(
-            baseFeePerGas + Number(userOp.maxPriorityFeePerGas),
-            Number(userOp.maxFeePerGas),
-          ));
+          totalGas = BigInt(Math.ceil(Number(toHex(paid)) / Math.min(
+            Number(toHex(baseFeePerGas + userOp.maxPriorityFeePerGas)),
+            Number(toHex(userOp.maxFeePerGas)),
+          )));
           log.info(`totalGas after calculating for polygon networks: ${totalGas}`);
-          callGasLimit = Math.ceil(totalGas - preOpGas + 30000);
+          callGasLimit = BigInt(
+            Math.ceil(Number(toHex(totalGas)) - Number(toHex(preOpGas)) + 30000),
+          );
           log.info(`callGasLimit after calculating for polygon networks: ${callGasLimit}`);
         }
 
         if (totalGas < 500000) {
-          preVerificationGas += 20000;
+          preVerificationGas += BigInt(20000);
         } else if (totalGas > 500000 && totalGas < 1000000) {
-          preVerificationGas += 35000;
+          preVerificationGas += BigInt(35000);
         } else {
-          preVerificationGas += 50000;
+          preVerificationGas += BigInt(50000);
         }
 
         if (OptimismNetworks.includes(chainId) || ArbitrumNetworks.includes(chainId)) {
-          preVerificationGas += totalGas * 0.25;
-          preVerificationGas = Math.ceil(preVerificationGas);
+          preVerificationGas += BigInt(Math.ceil(Number(toHex(totalGas)) * 0.25));
           log.info(`preVerificationGas: ${preVerificationGas} on chainId: ${chainId}`);
         }
 
         if (callGasLimit > 500000) {
           log.info('Bumping callGasLimit by 100K for 500K+ transactions');
-          callGasLimit += 100000;
+          callGasLimit += BigInt(100000);
         }
 
         if (callGasLimit > 2000000) {
           log.info('Bumping callGasLimit by 500K for 2M+ transactions');
-          callGasLimit += 500000;
+          callGasLimit += BigInt(500000);
         }
 
         // if (chainId === 10 || chainId === 420 || chainId === 8453 || chainId === 84531) {
@@ -260,7 +277,9 @@ export class BundlerSimulationService {
         log.info(`call gas limit after checking for optimism: ${callGasLimit} on chainId: ${chainId}`);
 
         if (LineaNetworks.includes(chainId)) {
-          preVerificationGas += Math.ceil((verificationGasLimit + callGasLimit) / 3);
+          preVerificationGas += BigInt(
+            Math.ceil(Number(toHex(verificationGasLimit + callGasLimit)) / 3),
+          );
         }
 
         const executionResultDecodingEnd = performance.now();
@@ -281,7 +300,8 @@ export class BundlerSimulationService {
           },
         };
       }
-      if (errorDescription.name === 'FailedOp') {
+      if (errorDescription.errorName === 'FailedOp') {
+        const { args } = errorDescription;
         const revertReason = args[1];
         if (revertReason.includes('AA1') || revertReason.includes('AA2')) {
           log.info(`error in account on chainId: ${chainId}`);
@@ -318,12 +338,12 @@ export class BundlerSimulationService {
             code: STATUSES.NOT_FOUND,
             message: 'Revert reason not matching known cases',
             data: {
-              preVerificationGas: 0,
-              verificationGasLimit: 0,
-              callGasLimit: 0,
+              preVerificationGas: BigInt(0),
+              verificationGasLimit: BigInt(0),
+              callGasLimit: BigInt(0),
               validAfter: 0,
               validUntil: 0,
-              totalGas: 0,
+              totalGas: BigInt(0),
             },
           };
         }
@@ -332,12 +352,12 @@ export class BundlerSimulationService {
           code: STATUSES.NOT_FOUND,
           message: 'Entry Point execution revert method not found',
           data: {
-            preVerificationGas: 0,
-            verificationGasLimit: 0,
-            callGasLimit: 0,
+            preVerificationGas: BigInt(0),
+            verificationGasLimit: BigInt(0),
+            callGasLimit: BigInt(0),
             validAfter: 0,
             validUntil: 0,
-            totalGas: 0,
+            totalGas: BigInt(0),
           },
         };
       }
@@ -347,12 +367,12 @@ export class BundlerSimulationService {
         code: error.code,
         message: parseError(error),
         data: {
-          preVerificationGas: 0,
-          verificationGasLimit: 0,
-          callGasLimit: 0,
+          preVerificationGas: BigInt(0),
+          verificationGasLimit: BigInt(0),
+          callGasLimit: BigInt(0),
           validAfter: 0,
           validUntil: 0,
-          totalGas: 0,
+          totalGas: BigInt(0),
         },
       };
     }
@@ -378,7 +398,7 @@ export class BundlerSimulationService {
             entryPointContract,
             chainId,
           });
-          reason = response.reason;
+          reason = response.reason as string | undefined;
           totalGas = response.totalGas;
           data = response.data;
           const end = performance.now();
@@ -498,9 +518,11 @@ export class BundlerSimulationService {
 
       log.info(`userOp received: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
 
-      const {
-        data,
-      } = await entryPointContract.populateTransaction.handleOps([userOp], userOp.sender);
+      const data = encodeFunctionData({
+        abi: entryPointContract.abi,
+        functionName: 'handleOps',
+        args: [[userOp], userOp.sender],
+      });
 
       const {
         publicKey,
@@ -510,15 +532,14 @@ export class BundlerSimulationService {
       const gasPriceFromService = await this.gasPriceService.getGasPrice();
       let gasPrice;
 
-      if (typeof gasPriceFromService === 'string') {
+      if (typeof gasPriceFromService === 'bigint') {
         gasPrice = Number(gasPriceFromService).toString(16);
       } else {
         gasPrice = Number(gasPriceFromService.maxFeePerGas).toString(16);
       }
 
       const ethEstimateGasStart = performance.now();
-      const response = await this.networkService.sendRpcCall(
-        'eth_estimateGas',
+      const response = await this.networkService.estimateGas(
         [{
           from: publicKey,
           to: entryPointContract.address,
@@ -529,17 +550,26 @@ export class BundlerSimulationService {
       const ethEstimateGasEnd = performance.now();
       log.info(`eth_estimateGas took: ${ethEstimateGasEnd - ethEstimateGasStart} milliseconds`);
 
-      log.info(`Response from eth_estimateGas: ${JSON.stringify(response.data)}`);
+      log.info(`Response from eth_estimateGas: ${JSON.stringify(response)}`);
 
-      const ethEstimateGasError = response.data.error;
+      const ethEstimateGasError = response.error;
       let totalGas = 0;
 
       if (ethEstimateGasError && Object.keys(ethEstimateGasError).length > 0) {
-        const error = entryPointContract.interface.parseError(ethEstimateGasError.data);
+        const error = decodeErrorResult({
+          abi: entryPointContract.abi,
+          data: ethEstimateGasError.data,
+        });
+        if (error.errorName !== 'FailedOp') {
+          throw new RpcError(
+            'Transaction reverted in simulation with reason',
+            BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
+          );
+        }
         const {
           args,
         } = error;
-        const { reason } = args;
+        const reason = args[0].toString();
         log.info(`Transaction failed with reason: ${reason} on chainId: ${chainId}`);
         if (reason.includes('AA1') || reason.includes('AA2')) {
           log.info(`error in account on chainId: ${chainId}`);
@@ -712,13 +742,13 @@ export class BundlerSimulationService {
   async calcPreVerificationGas(
     userOp: UserOperationType,
     chainId: number,
-    entryPointContract: ethers.Contract,
+    entryPointContract: EntryPointContractType,
     overheads?: Partial<DefaultGasOverheadType>,
   ) {
     const { defaultGasOverheads } = config;
     const ov = { ...defaultGasOverheads, ...(overheads ?? {}) };
 
-    const packed = arrayify(packUserOp(userOp, false));
+    const packed = toBytes(packUserOp(userOp, false));
     const callDataCost = packed
       .map((x) => (x === 0 ? ov.zeroByte : ov.nonZeroByte))
       .reduce((sum, x) => sum + x);
@@ -732,34 +762,61 @@ export class BundlerSimulationService {
     if (
       ArbitrumNetworks.includes(chainId)
     ) {
-      const data = await calcArbitrumPreVerificationGas(
-        entryPointContract.address,
-        userOp,
-        chainId,
-      );
-      ret += data;
+      const handleOpsData = encodeFunctionData({
+        abi: entryPointContract.abi,
+        functionName: 'handleOps',
+        args: [[userOp], userOp.sender],
+      });
+
+      const gasEstimateForL1 = await this.networkService.provider.readContract({
+        address: NODE_INTERFACE_ADDRESS,
+        abi: NodeInterface__factory as any,
+        functionName: 'gasEstimateL1Component',
+        args: [handleOpsData],
+      });
+
+      ret += (gasEstimateForL1 as any).toNumber();
     } else if (
       OptimismNetworks.includes(chainId)
     ) {
       const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
-      const data = await calcOptimismPreVerificationGas(
-        userOp,
-        chainId,
-        baseFeePerGas,
-      );
-      ret += data;
+      if (!baseFeePerGas) {
+        throw new RpcError(
+          `baseFeePerGas not available for chainId: ${chainId}`,
+          BUNDLER_VALIDATION_STATUSES.SIMULATE_PAYMASTER_VALIDATION_FAILED,
+        );
+      }
+      const handleOpsData = encodeFunctionData({
+        abi: entryPointContract.abi,
+        functionName: 'handleOps',
+        args: [[userOp], userOp.sender],
+      });
+
+      const l1Fee = await this.networkService.provider.readContract({
+        address: this.optimismL1GasPriceOracleMap[this.networkService.chainId].address,
+        abi: this.optimismL1GasPriceOracleMap[this.networkService.chainId].abi,
+        functionName: 'getL1Fee',
+        args: [handleOpsData],
+      });
+      // extraPvg = l1Cost / l2Price
+      const l2MaxFee = userOp.maxFeePerGas;
+      const l2PriorityFee = baseFeePerGas + userOp.maxPriorityFeePerGas;
+
+      const l2Price = l2MaxFee < l2PriorityFee ? l2MaxFee : l2PriorityFee;
+      const extraPvg = l1Fee / l2Price;
+      ret += Number(toHex(extraPvg));
     }
     return ret;
   }
 
   // eslint-disable-next-line class-methods-use-this
   getUserOpHash(
-    entryPointAddress: string,
+    entryPointAddress: `0x${string}`,
     userOp: UserOperationType,
     chainId: number,
   ) {
     const userOpHash = keccak256(packUserOpForUserOpHash(userOp, true));
-    const enc = defaultAbiCoder.encode(['bytes32', 'address', 'uint256'], [userOpHash, entryPointAddress, chainId]);
+    const enc = encodeAbiParameters(parseAbiParameters("bytes32', address, uint256"), [userOpHash, entryPointAddress, BigInt(chainId)]);
     return keccak256(enc);
   }
 }
