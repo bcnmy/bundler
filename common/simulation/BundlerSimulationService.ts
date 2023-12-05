@@ -221,13 +221,16 @@ export class BundlerSimulationService {
           ...OptimismNetworks].includes(chainId)) {
           const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
           log.info(`baseFeePerGas: ${baseFeePerGas} on chainId: ${chainId}`);
+          log.info(`maxPriorityFeePerGas: ${Number(userOp.maxPriorityFeePerGas)} on chainId: ${chainId}`);
+          log.info(`maxFeePerGas: ${Number(userOp.maxFeePerGas)} on chainId: ${chainId}}`);
+          log.info(`baseFeePerGas + maxPriorityFeePerGas: ${baseFeePerGas + Number(userOp.maxPriorityFeePerGas)} on chainId: ${chainId}`);
           totalGas = Math.ceil(paid / Math.min(
             baseFeePerGas + Number(userOp.maxPriorityFeePerGas),
             Number(userOp.maxFeePerGas),
           ));
-          log.info(`totalGas after calculating for polygon networks: ${totalGas}`);
+          log.info(`totalGas after calculating with base fee: ${totalGas} on chainId: ${chainId}`);
           callGasLimit = Math.ceil(totalGas - preOpGas + 30000);
-          log.info(`callGasLimit after calculating for polygon networks: ${callGasLimit}`);
+          log.info(`callGasLimit after calculating with base fee: ${callGasLimit} on chainId: ${chainId}`);
         }
 
         if (totalGas < 500000) {
