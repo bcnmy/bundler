@@ -256,3 +256,13 @@ export type UpdateRequestDataType = {
   rawResponse: object,
   httpResponseCode: number,
 };
+
+export type StateOverrideSetType = {
+  [key: string]: {
+    balance?: string,
+    nonce?: string,
+    code?: string,
+    state?: object,
+    stateDiff?: object
+  }
+};

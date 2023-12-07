@@ -62,7 +62,10 @@ export class BundlerSimulationService {
     estimateUserOperationGasData: EstimateUserOperationGasDataType,
   ): Promise<EstimateUserOperationGasReturnType> {
     try {
-      const { userOp, entryPointContract, chainId } = estimateUserOperationGasData;
+      const {
+        userOp, entryPointContract,
+        chainId, stateOverrideSet,
+      } = estimateUserOperationGasData;
 
       const start = performance.now();
       log.info(`userOp received: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
@@ -154,6 +157,14 @@ export class BundlerSimulationService {
           'latest',
         ];
       } else {
+        const stateOverrideSetForEthCall = stateOverrideSet
+        && Object.keys(stateOverrideSet).length > 0
+          ? stateOverrideSet : {
+            [userOp.sender]:
+              {
+                balance: '0xFFFFFFFFFFFFFFFFFFFF',
+              },
+          };
         log.info('Request not on polygon zk evm hence doing state overrides in eth_call');
         ethCallParams = [
           {
@@ -162,25 +173,60 @@ export class BundlerSimulationService {
             data,
           },
           'latest',
-          {
-            [userOp.sender]:
-                {
-                  balance: '0xFFFFFFFFFFFFFFFFFFFF',
-                },
-          },
+          stateOverrideSetForEthCall,
         ];
       }
 
-      const ethCallStart = performance.now();
-      const simulateHandleOpResult = await this.networkService.sendRpcCall(
-        'eth_call',
-        ethCallParams,
-      );
-      const ethCallEnd = performance.now();
-      log.info(`eth_call took: ${ethCallEnd - ethCallStart} milliseconds`);
+      log.info(`ethCallParams: ${JSON.stringify(ethCallParams)} on chainId: ${chainId}`);
 
-      const ethCallData = simulateHandleOpResult.data.error.data;
-      log.info(`ethCallData: ${ethCallData}`);
+      const ethCallStart = performance.now();
+      let ethCallData;
+      try {
+        const simulateHandleOpResult = await this.networkService.sendRpcCall(
+          'eth_call',
+          ethCallParams,
+        );
+
+        const ethCallEnd = performance.now();
+        log.info(`eth_call took: ${ethCallEnd - ethCallStart} milliseconds`);
+
+        log.info(`eth_call response: ${JSON.stringify(simulateHandleOpResult.data)} on chainId: ${chainId}`);
+
+        ethCallData = simulateHandleOpResult.data.error.data;
+        log.info(`ethCallData: ${ethCallData}`);
+
+        if (ethCallData === undefined) {
+          const errorMessage = simulateHandleOpResult.data.error.message
+            ? simulateHandleOpResult.data.error.message : 'eth_call RPC error';
+          return {
+            code: STATUSES.BAD_REQUEST,
+            message: `Error while simulating userOp: ${parseError(errorMessage)}`,
+            data: {
+              preVerificationGas: 0,
+              verificationGasLimit: 0,
+              callGasLimit: 0,
+              validAfter: 0,
+              validUntil: 0,
+              totalGas: 0,
+            },
+          };
+        }
+      } catch (error: any) {
+        const errorMessage = error.response.data.error.message
+          ? error.response.data.error.message : error;
+        return {
+          code: STATUSES.BAD_REQUEST,
+          message: `Error while simulating userOp: ${parseError(errorMessage)}`,
+          data: {
+            preVerificationGas: 0,
+            verificationGasLimit: 0,
+            callGasLimit: 0,
+            validAfter: 0,
+            validUntil: 0,
+            totalGas: 0,
+          },
+        };
+      }
 
       const errorDescription = entryPointContract.interface.parseError(ethCallData);
       const { args } = errorDescription;
