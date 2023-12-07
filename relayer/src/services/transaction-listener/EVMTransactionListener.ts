@@ -21,10 +21,9 @@ import {
 import {
   getRetryTransactionCountKey,
   getTokenPriceKey,
+  getUserOperationReceiptForDataSaving,
   getTransactionMinedKey,
   parseError,
-  getUserOperationReceiptForFailedTransaction,
-  getUserOperationReceiptForSuccessfulTransaction,
 } from '../../../../common/utils';
 import { IEVMAccount } from '../account';
 import { ITransactionPublisher } from '../transaction-publisher';
@@ -146,11 +145,19 @@ ITransactionPublisher<TransactionQueueMessageType> {
             )?.entryPointContract;
 
             if (entryPointContract) {
-              const userOpReceipt = await getUserOperationReceiptForSuccessfulTransaction(
+              const latestBlock = await this.networkService.getLatesBlockNumber();
+              log.info(`latestBlock: ${latestBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+              let fromBlock = latestBlock - 1000;
+              if (AstarNetworks.includes(this.chainId)) {
+                fromBlock += 501;
+              }
+              log.info(`fromBlock: ${fromBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+              const userOpReceipt = await getUserOperationReceiptForDataSaving(
                 this.chainId,
                 userOpHash,
                 transactionReceipt,
                 entryPointContract,
+                fromBlock,
               );
               log.info(`userOpReceipt: ${JSON.stringify(userOpReceipt)} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
               if (!userOpReceipt) {
@@ -304,7 +311,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
                 fromBlock += 501;
               }
               log.info(`fromBlock: ${fromBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-              const userOpReceipt = await getUserOperationReceiptForFailedTransaction(
+              const userOpReceipt = await getUserOperationReceiptForDataSaving(
                 this.chainId,
                 userOpHash,
                 transactionReceipt,
