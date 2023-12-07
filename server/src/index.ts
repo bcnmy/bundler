@@ -2,8 +2,11 @@
 /* eslint-disable import/first */
 require('dotenv').config({ path: `${__dirname}/../../.env` });
 
+import tracer from 'dd-trace';
 import { logger } from '../../common/logger';
 import { configInstance } from '../../config';
+
+tracer.init({ logInjection: false });
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
