@@ -61,11 +61,20 @@ const userOpEstimateUserOpGas = object.keys({
   signature: string,
 });
 
+const stateOverrideSet = object.pattern(string, object.keys({
+  balance: string,
+  nonce: string,
+  code: string,
+  state: object,
+  stateDiff: object,
+}));
+
 export const bundlerEstimateUserOpGasRequestSchema = object.keys({
   method: string.regex(/eth_estimateUserOperationGas/),
   params: array.items(alternatives.try(
     userOpEstimateUserOpGas,
     entryPointAddress,
+    stateOverrideSet,
   )),
   jsonrpc: string.required().error(new Error('jsonrpc is required')),
   id: number.required().error(new Error('id is required')),
