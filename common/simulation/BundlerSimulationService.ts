@@ -562,26 +562,26 @@ export class BundlerSimulationService {
         gasPrice = Math.ceil((Number(gasPriceFromService.maxFeePerGas) * 2)).toString(16);
       }
 
-      const ethEstimateParams = [{
+      const ethEstimateGasParams = [{
         from: publicKey,
         to: entryPointContract.address,
         data,
         gasPrice: `0x${gasPrice}`,
       }];
 
-      log.info(`ethEstimateParams: ${JSON.stringify(ethEstimateParams)} on chainId: ${chainId}`);
+      log.info(`ethEstimateGasParams: ${JSON.stringify(ethEstimateGasParams)} on chainId: ${chainId}`);
 
       const ethEstimateGasStart = performance.now();
-      const ethEstimateResponse = await this.networkService.sendRpcCall(
+      const ethEstimatGasResponse = await this.networkService.sendRpcCall(
         'eth_estimateGas',
-        ethEstimateParams,
+        ethEstimateGasParams,
       );
       const ethEstimateGasEnd = performance.now();
       log.info(`eth_estimateGas took: ${ethEstimateGasEnd - ethEstimateGasStart} milliseconds`);
 
-      log.info(`Response from eth_estimateGas: ${JSON.stringify(ethEstimateResponse.data)}`);
+      log.info(`Response from eth_estimateGas: ${JSON.stringify(ethEstimatGasResponse.data)}`);
 
-      const ethEstimateGasError = ethEstimateResponse.data.error;
+      const ethEstimateGasError = ethEstimatGasResponse.data.error;
       let totalGas = 0;
 
       if (ethEstimateGasError
@@ -632,14 +632,14 @@ export class BundlerSimulationService {
           BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
         );
       } else if (
-        ethEstimateResponse.data.result && Object.keys(ethEstimateResponse.data).length > 0
+        ethEstimatGasResponse.data.result && Object.keys(ethEstimatGasResponse.data).length > 0
       ) {
-        const { result } = ethEstimateResponse.data;
+        const { result } = ethEstimatGasResponse.data;
         totalGas = Number(result);
       } else {
         return {
           code: STATUSES.INTERNAL_SERVER_ERROR,
-          message: `Error in estimating handleOps gas: ${parseError(ethEstimateResponse.data.error.message)}`,
+          message: `Error in estimating handleOps gas: ${parseError(ethEstimatGasResponse.data.error.message)}`,
           data: {
             totalGas: 0,
             userOpHash: null,
