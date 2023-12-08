@@ -32,7 +32,6 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
 
     const transactionId = generateTransactionId(userOp);
     log.info(`transactionId: ${transactionId} for userOpHash: ${userOpHash} on chainId: ${chainIdInNum} for apiKey: ${dappAPIKey}`);
-
     const walletAddress = userOp.sender.toLowerCase();
 
     transactionDao.save(chainIdInNum, {
