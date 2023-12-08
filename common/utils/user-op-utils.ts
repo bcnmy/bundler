@@ -9,7 +9,7 @@ import { config } from '../../config';
 import { STATUSES } from '../../server/src/middleware';
 import { logger } from '../logger';
 import {
-  GetMetaDataFromUserOpReturnType, Log, StakeInfo, UserOperationEventEvent, UserOperationType,
+  GetMetaDataFromUserOpReturnType, Log, StakeInfo, UserOperationType,
 } from '../types';
 import { axiosPostCall } from './axios-calls';
 import { parseError } from './parse-error';
@@ -192,19 +192,19 @@ export const getPaymasterFromPaymasterAndData = (paymasterAndData: string): stri
   return paymasterAddress;
 };
 
-const filterLogs = (userOpEvent: UserOperationEventEvent, logs: Log[]): Log[] => {
-  const userOpLogs = logs.find((transactionlog: any) => {
-    if (transactionlog.topics.length === userOpEvent.topics.length) {
+const filterLogs = (userOperationEventLogFromReceipt: Log, transactionLogs: Log[]): Log[] => {
+  const userOperationEventFilteredLog = transactionLogs.find((transactionlog: any) => {
+    if (transactionlog.topics.length === userOperationEventLogFromReceipt.topics.length) {
       // Sort the `topics` arrays and compare them element by element
       const sortedTransactionLogTopics = transactionlog.topics.slice().sort();
-      const sortedTopicsArray = userOpEvent.topics.slice().sort();
+      const sortedTopicsArray = userOperationEventLogFromReceipt.topics.slice().sort();
       return sortedTransactionLogTopics.every(
         (topic: string, index: number) => topic === sortedTopicsArray[index],
       );
     }
     return false;
   });
-  return [userOpLogs as Log];
+  return [userOperationEventFilteredLog as Log];
 };
 
 export const getUserOperationReceiptForFailedTransaction = async (
@@ -283,17 +283,17 @@ export const getUserOperationReceiptForSuccessfulTransaction = async (
 ): Promise<any> => {
   try {
     const { logs } = receipt;
-    let userOperationEventLog: ethers.providers.Log | {} = {};
+    let userOperationEventLogFromReceipt: ethers.providers.Log | {} = {};
     for (const eventLog of logs) {
       // TODO get topicId for UserOperationEvent from config
       if (eventLog.topics[0] === '0x49628fd1471006c1482da88028e9ce4dbb080b815c9b0344d39e5a8e6ec1419f' && eventLog.topics[1].toLowerCase() === userOpHash.toLowerCase()) {
-        userOperationEventLog = eventLog;
+        userOperationEventLogFromReceipt = eventLog;
         break;
       }
     }
     const userOperationEvent = entryPointContract.interface.parseLog({
-      topics: (userOperationEventLog as ethers.providers.Log).topics,
-      data: (userOperationEventLog as ethers.providers.Log).data,
+      topics: (userOperationEventLogFromReceipt as ethers.providers.Log).topics,
+      data: (userOperationEventLogFromReceipt as ethers.providers.Log).data,
     });
 
     const actualGasCostInHex = userOperationEvent.args[5];
@@ -306,15 +306,15 @@ export const getUserOperationReceiptForSuccessfulTransaction = async (
     log.info(`actualGasUsedInNumber: ${actualGasUsedInNumber} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
     const success = userOperationEvent.args[4];
     log.info(`success: ${success} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
-    const userOperationLogs = filterLogs(
-      userOperationEvent as any, // TODO fix types
+    const userOperationEventFilteredLogs = filterLogs(
+      userOperationEventLogFromReceipt as Log,
       receipt.logs,
     );
     return {
       actualGasCost: actualGasCostInNumber,
       actualGasUsed: actualGasUsedInNumber,
       success,
-      logs: userOperationLogs,
+      logs: userOperationEventFilteredLogs,
     };
   } catch (error) {
     log.error(`error in getUserOperationReceipt: ${parseError(error)}`);
