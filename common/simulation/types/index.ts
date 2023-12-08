@@ -1,5 +1,5 @@
 import { BigNumber, ethers } from 'ethers';
-import { UserOperationType } from '../../types';
+import { StateOverrideSetType, UserOperationType } from '../../types';
 
 // data response type that external simulation serivcereturns
 export type ExternalSimulationResponseType = {
@@ -36,6 +36,7 @@ export type EstimateUserOperationGasDataType = {
   userOp: UserOperationType;
   entryPointContract: ethers.Contract;
   chainId: number;
+  stateOverrideSet?: StateOverrideSetType
 };
 
 // data response type that simulation service returns

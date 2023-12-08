@@ -62,7 +62,10 @@ export class BundlerSimulationService {
     estimateUserOperationGasData: EstimateUserOperationGasDataType,
   ): Promise<EstimateUserOperationGasReturnType> {
     try {
-      const { userOp, entryPointContract, chainId } = estimateUserOperationGasData;
+      const {
+        userOp, entryPointContract,
+        chainId, stateOverrideSet,
+      } = estimateUserOperationGasData;
 
       const start = performance.now();
       log.info(`userOp received: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
@@ -154,6 +157,14 @@ export class BundlerSimulationService {
           'latest',
         ];
       } else {
+        const stateOverrideSetForEthCall = stateOverrideSet
+        && Object.keys(stateOverrideSet).length > 0
+          ? stateOverrideSet : {
+            [userOp.sender]:
+              {
+                balance: '0xFFFFFFFFFFFFFFFFFFFF',
+              },
+          };
         log.info('Request not on polygon zk evm hence doing state overrides in eth_call');
         ethCallParams = [
           {
@@ -162,25 +173,60 @@ export class BundlerSimulationService {
             data,
           },
           'latest',
-          {
-            [userOp.sender]:
-                {
-                  balance: '0xFFFFFFFFFFFFFFFFFFFF',
-                },
-          },
+          stateOverrideSetForEthCall,
         ];
       }
 
-      const ethCallStart = performance.now();
-      const simulateHandleOpResult = await this.networkService.sendRpcCall(
-        'eth_call',
-        ethCallParams,
-      );
-      const ethCallEnd = performance.now();
-      log.info(`eth_call took: ${ethCallEnd - ethCallStart} milliseconds`);
+      log.info(`ethCallParams: ${JSON.stringify(ethCallParams)} on chainId: ${chainId}`);
 
-      const ethCallData = simulateHandleOpResult.data.error.data;
-      log.info(`ethCallData: ${ethCallData}`);
+      const ethCallStart = performance.now();
+      let ethCallData;
+      try {
+        const simulateHandleOpResult = await this.networkService.sendRpcCall(
+          'eth_call',
+          ethCallParams,
+        );
+
+        const ethCallEnd = performance.now();
+        log.info(`eth_call took: ${ethCallEnd - ethCallStart} milliseconds`);
+
+        log.info(`eth_call response: ${JSON.stringify(simulateHandleOpResult.data)} on chainId: ${chainId}`);
+
+        ethCallData = simulateHandleOpResult.data.error.data;
+        log.info(`ethCallData: ${ethCallData}`);
+
+        if (ethCallData === undefined) {
+          const errorMessage = simulateHandleOpResult.data.error.message
+            ? simulateHandleOpResult.data.error.message : 'eth_call RPC error';
+          return {
+            code: STATUSES.BAD_REQUEST,
+            message: `Error while simulating userOp: ${parseError(errorMessage)}`,
+            data: {
+              preVerificationGas: 0,
+              verificationGasLimit: 0,
+              callGasLimit: 0,
+              validAfter: 0,
+              validUntil: 0,
+              totalGas: 0,
+            },
+          };
+        }
+      } catch (error: any) {
+        const errorMessage = error.response.data.error.message
+          ? error.response.data.error.message : error;
+        return {
+          code: STATUSES.BAD_REQUEST,
+          message: `Error while simulating userOp: ${parseError(errorMessage)}`,
+          data: {
+            preVerificationGas: 0,
+            verificationGasLimit: 0,
+            callGasLimit: 0,
+            validAfter: 0,
+            validUntil: 0,
+            totalGas: 0,
+          },
+        };
+      }
 
       const errorDescription = entryPointContract.interface.parseError(ethCallData);
       const { args } = errorDescription;
@@ -217,7 +263,7 @@ export class BundlerSimulationService {
         let callGasLimit = Math.ceil(totalGas - preOpGas + 30000);
         log.info(`call gas limit: ${callGasLimit} on chainId: ${chainId}`);
 
-        if ([137, 80001, 43113, 43114, 42161, 421613, 1, 8453, 84531].includes(chainId)) {
+        if ([137, 80001, 43113, 43114, 42161, 421613, 1, 8453, 84531, 420].includes(chainId)) {
           const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
           log.info(`baseFeePerGas: ${baseFeePerGas} on chainId: ${chainId}`);
           totalGas = Math.ceil(paid / Math.min(
@@ -511,30 +557,37 @@ export class BundlerSimulationService {
       let gasPrice;
 
       if (typeof gasPriceFromService === 'string') {
-        gasPrice = Number(gasPriceFromService).toString(16);
+        gasPrice = Math.ceil(Number(gasPriceFromService) * 2).toString(16);
       } else {
-        gasPrice = Number(gasPriceFromService.maxFeePerGas).toString(16);
+        gasPrice = Math.ceil((Number(gasPriceFromService.maxFeePerGas) * 2)).toString(16);
       }
 
+      const ethEstimateGasParams = [{
+        from: publicKey,
+        to: entryPointContract.address,
+        data,
+        gasPrice: `0x${gasPrice}`,
+      }];
+
+      log.info(`ethEstimateGasParams: ${JSON.stringify(ethEstimateGasParams)} on chainId: ${chainId}`);
+
       const ethEstimateGasStart = performance.now();
-      const response = await this.networkService.sendRpcCall(
+      const ethEstimatGasResponse = await this.networkService.sendRpcCall(
         'eth_estimateGas',
-        [{
-          from: publicKey,
-          to: entryPointContract.address,
-          data,
-          gasPrice: `0x${gasPrice}`,
-        }],
+        ethEstimateGasParams,
       );
       const ethEstimateGasEnd = performance.now();
       log.info(`eth_estimateGas took: ${ethEstimateGasEnd - ethEstimateGasStart} milliseconds`);
 
-      log.info(`Response from eth_estimateGas: ${JSON.stringify(response.data)}`);
+      log.info(`Response from eth_estimateGas: ${JSON.stringify(ethEstimatGasResponse.data)}`);
 
-      const ethEstimateGasError = response.data.error;
+      const ethEstimateGasError = ethEstimatGasResponse.data.error;
       let totalGas = 0;
 
-      if (ethEstimateGasError && Object.keys(ethEstimateGasError).length > 0) {
+      if (ethEstimateGasError
+        && Object.keys(ethEstimateGasError).length > 0
+        && ethEstimateGasError.data
+      ) {
         const error = entryPointContract.interface.parseError(ethEstimateGasError.data);
         const {
           args,
@@ -578,9 +631,21 @@ export class BundlerSimulationService {
           `Transaction reverted in simulation with reason: ${reason}. Use handleOpsCallData to simulate transaction to check transaction execution steps`,
           BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
         );
-      } else {
-        const { result } = response.data;
+      } else if (
+        ethEstimatGasResponse.data.result && Object.keys(ethEstimatGasResponse.data).length > 0
+      ) {
+        const { result } = ethEstimatGasResponse.data;
         totalGas = Number(result);
+      } else {
+        return {
+          code: STATUSES.INTERNAL_SERVER_ERROR,
+          message: `Error in estimating handleOps gas: ${parseError(ethEstimatGasResponse.data.error.message)}`,
+          data: {
+            totalGas: 0,
+            userOpHash: null,
+            handleOpsCallData,
+          },
+        };
       }
 
       const start = performance.now();
