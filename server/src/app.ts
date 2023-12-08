@@ -31,7 +31,6 @@ app.use(logger({
     if (existingID) return existingID;
     const id = randomUUID();
     res.setHeader('Request-Id', id);
-    req.headers['x-request-id'] = id;
     return id;
   },
 }));
