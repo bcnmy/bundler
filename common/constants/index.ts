@@ -53,6 +53,10 @@ export enum BLOCKCHAINS {
   CHILLIZ_MAINNET = 88888,
   ASTAR_TESTNET = 81,
   CHILLIZ_TESTNET = 88882,
+  CORE_MAINNET = 1116,
+  CORE_TESTNET = 1115,
+  MANTA_TESTNET = 3441005,
+  MANTA_MAINNET = 169,
 }
 
 // Network with base gas diff from 21k and maxPriorityFeePerGas is 0
