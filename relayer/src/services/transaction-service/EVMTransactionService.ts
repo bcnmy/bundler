@@ -178,6 +178,8 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           NONCE_TOO_LOW,
           MAX_PRIORITY_FEE_HIGHER_THAN_MAX_FEE,
           RPC_FAILURE,
+          INTRINSIC_GAS_TOO_LOW,
+          MAX_FEE_PER_GAS_LESS_THAN_BLOCK_BASE_FEE,
         } = config.transaction.rpcResponseErrorMessages;
 
         if (NONCE_TOO_LOW.some((str) => errInString.indexOf(str) > -1)) {
@@ -223,6 +225,24 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           }
           return await retryExecuteTransaction({ rawTransaction, account });
         } else if (RPC_FAILURE.some((str) => errInString.indexOf(str) > -1)) {
+          return await retryExecuteTransaction({ rawTransaction, account });
+        } else if (INTRINSIC_GAS_TOO_LOW.some((str) => errInString.indexOf(str) > -1)) {
+          const bumpedUpGasLimit = await this.handleGasTooLow(rawTransaction);
+
+          log.info(`rawTransaction.gasLimit ${rawTransaction.gasLimit} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId} before bumping up`);
+          rawTransaction.gasLimit = bumpedUpGasLimit;
+          log.info(`increasing gas limit for the resubmit transaction ${rawTransaction.gasPrice} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+          log.info(`rawTransaction.gasLimit ${rawTransaction.gasLimit} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId} after bumping up`);
+          return await retryExecuteTransaction({ rawTransaction, account });
+        } else if (MAX_FEE_PER_GAS_LESS_THAN_BLOCK_BASE_FEE.some((str) => errInString.indexOf(str) > -1)) {
+          const bumpedUpGasPrice = await this.handleReplacementFeeTooLow(rawTransaction);
+
+          if (typeof bumpedUpGasPrice !== 'string') {
+            log.info(`rawTransaction.maxFeePerGas ${rawTransaction.maxFeePerGas} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId} before bumping up`);
+            rawTransaction.maxFeePerGas = bumpedUpGasPrice.maxFeePerGas;
+            log.info(`increasing gas price for the resubmit transaction ${rawTransaction.gasPrice} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+            log.info(`rawTransaction.maxFeePerGas ${rawTransaction.maxFeePerGas} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId} after bumping up`);
+          }
           return await retryExecuteTransaction({ rawTransaction, account });
         } else {
           log.info(`Error: ${errInString} not handled. Transaction not being retried for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
@@ -601,5 +621,10 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       config.transaction.bumpGasPriceMultiplier[this.chainId],
     );
     return bumpedUpGasPrice;
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  private async handleGasTooLow(rawTransaction: EVMRawTransactionType) {
+    return `0x${(Number(rawTransaction.gasLimit) * 2).toString(16)}`;
   }
 }
