@@ -625,6 +625,6 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
 
   // eslint-disable-next-line class-methods-use-this
   private async handleGasTooLow(rawTransaction: EVMRawTransactionType) {
-    return (Number(rawTransaction.gasLimit) * 2).toString();
+    return `0x${(Number(rawTransaction.gasLimit) * 2).toString(16)}`;
   }
 }
