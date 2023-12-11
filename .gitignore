@@ -8,3 +8,4 @@ coverage
 config/config.json
 config.json.enc
 *heapsnapshot
+.vscode
