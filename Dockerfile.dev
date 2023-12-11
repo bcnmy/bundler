@@ -18,13 +18,23 @@ RUN apk add --no-cache tini
 # Static GID/UID is also useful for chown'ing files outside the container where
 # such a user does not exist.
 RUN addgroup --gid 10001 --system nonroot \
- && adduser  --uid 10000 --system --ingroup nonroot --home /home/nonroot nonroot
+  && adduser  --uid 10000 --system --ingroup nonroot --home /home/nonroot nonroot
 EXPOSE 3000
+
+# Install dependencies for node-gyp
+# Install python3 and pip3
+ENV PYTHONUNBUFFERED=1
+RUN apk add --update --no-cache python3 && ln -sf python3 /usr/bin/python
+RUN python3 -m ensurepip
+RUN pip3 install --no-cache --upgrade pip setuptools
+# Install make and g++ for node-gyp
+RUN apk add --no-cache make g++
+
 WORKDIR /home/nonroot/bundler
 COPY package.json yarn.lock  ./
 # install packages
 RUN yarn install
-COPY . . 
+COPY . .
 ENTRYPOINT ["/sbin/tini", "--", "yarn"]
 # Use the non-root user to run our application
 USER nonroot
