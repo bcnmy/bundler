@@ -13,7 +13,7 @@ COPY package.json yarn.lock  ./
 
 # install packages
 RUN yarn install
-COPY . /relayer-node 
+COPY . /relayer-node
 
 RUN yarn run build
 EXPOSE 3000

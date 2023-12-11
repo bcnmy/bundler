@@ -16,6 +16,28 @@ const PBKDF2_ITERATIONS = 310000;
 const AES_PADDING = crypto.pad.Pkcs7;
 const AES_MODE = crypto.mode.CBC;
 
+export function merge(
+  userConfig: Partial<ConfigType>,
+  staticConfig: any
+): ConfigType {
+  // clone so we don't mutate the original config
+  const clone = _.cloneDeep(userConfig);
+
+  // preserve the supported networks from the user config because
+  // we want to override the default from static-config if it's present in the user config
+  const supportedNetworks = _.clone(clone.supportedNetworks);
+
+  // perform the merge
+  const merged = _.merge(clone, staticConfig);
+
+  // restore the supported networks array
+  if (supportedNetworks && supportedNetworks.length) {
+    merged.supportedNetworks = supportedNetworks;
+  }
+
+  return merged;
+}
+
 export class Config implements IConfig {
   config: ConfigType;
 
@@ -71,7 +93,7 @@ export class Config implements IConfig {
         fs.readFileSync(path.resolve('./config/static-config.json'), 'utf8')
       );
 
-      this.config = _.merge(data, staticConfig);
+      this.config = merge(data, staticConfig);
       this.validate();
       log.info('Config loaded successfully');
     } catch (error) {

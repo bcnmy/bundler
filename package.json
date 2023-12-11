@@ -9,7 +9,7 @@
     "views": "cp -r server/src/views server/dist/server/src/views",
     "build": "tsc -p server && npm run views",
     "start": "node --max_old_space_size=6000 server/dist/server/src/index.js",
-    "test": "jest --detectOpenHandles"
+    "test": "jest --setupFiles dotenv/config"
   },
   "dependencies": {
     "@arbitrum/sdk": "^3.1.3",

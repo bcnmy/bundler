@@ -1,20 +1,19 @@
 {
+  "supportedNetworks": [80001],
   "slack": {
     "token": "",
     "channel": ""
   },
   "dataSources": {
-    "mongoUrl": "",
-    "redisUrl": ""
+    "mongoUrl": "mongodb://mongo:27017/relayer-node-service",
+    "redisUrl": "redis://redis:6379"
   },
   "socketService": {
     "token": "",
     "apiKey": ""
   },
-  "relayer": {
-    "nodePathIndex": 0
-  },
-  "queueUrl": "",
+  "relayer": { "nodePathIndex": 0 },
+  "queueUrl": "amqp://guest:guest@rabbitmq:5672?heartbeat=30",
   "simulationData": {
     "tenderlyData": {
       "tenderlyUser": "",
@@ -24,71 +23,21 @@
   },
   "chains": {
     "provider": {
-      "5": "",
-      "137": "",
-      "80001": "",
-      "97": "",
-      "420": "",
-      "421613": "",
-      "43113": ""
+      "80001": ""
     }
   },
-  "relayerManagers": [{
-    "name": "",
-    "relayerSeed": "",
-    "ownerAccountDetails": {
-      "1": {
-        "publicKey": "",
-        "privateKey": ""
-      },
-      "5": {
-        "publicKey": "",
-        "privateKey": ""
-      },
-      "137": {
-        "publicKey": "",
-        "privateKey": ""
-      },
-      "80001": {
-        "publicKey": "",
-        "privateKey": ""
-      },
-      "97": {
-        "publicKey": "",
-        "privateKey": ""
+  "relayerManagers": [
+    {
+      "relayerSeed": "",
+      "ownerAccountDetails": {
+        "80001": {
+          "publicKey": "",
+          "privateKey": ""
+        }
       }
     }
-  },
-  {
-    "name": "",
-    "relayerSeed": "",
-    "ownerAccountDetails": {
-      "1": {
-        "publicKey": "",
-        "privateKey": ""
-      },
-      "5": {
-        "publicKey": "",
-        "privateKey": ""
-      },
-      "137": {
-        "publicKey": "",
-        "privateKey": ""
-      },
-      "80001": {
-        "publicKey": "",
-        "privateKey": ""
-      },
-      "97": {
-        "publicKey": "",
-        "privateKey": ""
-      }
-    }
-  }
-],
-  "tokenPrice": {
-    "coinMarketCapApi": ""
-  },
+  ],
+  "tokenPrice": { "coinMarketCapApi": "" },
   "gasPrice": {
     "137": {
       "updateFrequencyInSeconds": 10,
