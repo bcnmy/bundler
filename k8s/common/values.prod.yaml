@@ -31,4 +31,3 @@ datadog:
     DD_TRACE_STARTUP_LOGS: "false"
     DD_PROFILING_ENABLED: "true"
     DD_LOGS_INJECTION: "false"
-    DD_RUNTIME_METRICS_ENABLED: "true"
