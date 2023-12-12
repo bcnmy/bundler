@@ -300,6 +300,12 @@ export class BundlerSimulationService {
           callGasLimit += 500000;
         }
 
+        // edge case observed on polygon
+        if (callGasLimit > 5000000) {
+          log.info('Bumping callGasLimit by 1.5M for 5M+ transactions');
+          callGasLimit += 1500000;
+        }
+
         // if (chainId === 10 || chainId === 420 || chainId === 8453 || chainId === 84531) {
         //   log.info(`chainId: ${chainId} is OP stack hence increasing callGasLimit by 150K`);
         //   callGasLimit += 150000;
