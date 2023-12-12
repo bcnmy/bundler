@@ -360,7 +360,7 @@ export class GasPrice implements IGasPrice {
               data.result,
               'wei',
             );
-            let maxPriorityFeePerGas = Number(maxFeePerGas) * 0.4;
+            let maxPriorityFeePerGas = Number(maxFeePerGas) * 0.2;
             if (maxPriorityFeePerGas < 30000000000) {
               maxPriorityFeePerGas = 30000000000;
             }
