@@ -7,12 +7,36 @@ import { logger } from '../common/logger';
 
 import { ConfigType, IConfig } from './interface/IConfig';
 
-const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
+const log = logger.child({
+  module: module.filename.split('/').slice(-4).join('/'),
+});
 
 const KEY_SIZE = 32;
 const PBKDF2_ITERATIONS = 310000;
 const AES_PADDING = crypto.pad.Pkcs7;
 const AES_MODE = crypto.mode.CBC;
+
+export function merge(
+  userConfig: Partial<ConfigType>,
+  staticConfig: any
+): ConfigType {
+  // clone so we don't mutate the original config
+  const clone = _.cloneDeep(userConfig);
+
+  // preserve the supported networks from the user config because
+  // we want to override the default from static-config if it's present in the user config
+  const supportedNetworks = _.clone(clone.supportedNetworks);
+
+  // perform the merge
+  const merged = _.merge(clone, staticConfig);
+
+  // restore the supported networks array
+  if (supportedNetworks && supportedNetworks.length) {
+    merged.supportedNetworks = supportedNetworks;
+  }
+
+  return merged;
+}
 
 export class Config implements IConfig {
   config: ConfigType;
@@ -65,9 +89,11 @@ export class Config implements IConfig {
         throw new Error('Error: HMAC does not match');
       }
       const data = JSON.parse(plaintext) as ConfigType;
-      const staticConfig = JSON.parse(fs.readFileSync(path.resolve('./config/static-config.json'), 'utf8'));
+      const staticConfig = JSON.parse(
+        fs.readFileSync(path.resolve('./config/static-config.json'), 'utf8')
+      );
 
-      this.config = _.merge(data, staticConfig);
+      this.config = merge(data, staticConfig);
       this.validate();
       log.info('Config loaded successfully');
     } catch (error) {
@@ -80,7 +106,9 @@ export class Config implements IConfig {
     // check for each supported networks if the config is valid
     for (const chainId of this.config.supportedNetworks) {
       if (!this.config.supportedTransactionType[chainId].length) {
-        throw new Error(`No supported transaction type for chain id ${chainId}`);
+        throw new Error(
+          `No supported transaction type for chain id ${chainId}`
+        );
       }
 
       // check for chains config
@@ -98,11 +126,15 @@ export class Config implements IConfig {
         throw new Error(`Decimals required for chain id ${chainId}`);
       }
       if (!this.config.chains.retryTransactionInterval[chainId]) {
-        throw new Error(`Retry transaction interval required for chain id ${chainId}`);
+        throw new Error(
+          `Retry transaction interval required for chain id ${chainId}`
+        );
       }
 
       if (!this.config.entryPointData[chainId].length) {
-        throw new Error(`Entry point data address required for chain id ${chainId}`);
+        throw new Error(
+          `Entry point data address required for chain id ${chainId}`
+        );
       }
 
       if (!isNumber(this.config.relayer.nodePathIndex)) {
@@ -115,13 +147,19 @@ export class Config implements IConfig {
 
       // check valid gas price config
       if (!this.config.gasPrice[chainId]) {
-        throw new Error(`Gas price configuration required for chain id ${chainId}`);
+        throw new Error(
+          `Gas price configuration required for chain id ${chainId}`
+        );
       }
       if (!this.config.gasPrice[chainId].updateFrequencyInSeconds) {
-        throw new Error(`Gas price update frequency required for chain id ${chainId}`);
+        throw new Error(
+          `Gas price update frequency required for chain id ${chainId}`
+        );
       }
       if (!this.config.gasPrice[chainId].updateFrequencyInSeconds) {
-        throw new Error(`Gas price update frequency required for chain id ${chainId}`);
+        throw new Error(
+          `Gas price update frequency required for chain id ${chainId}`
+        );
       }
       if (!this.config.gasPrice[chainId].maxGasPrice) {
         throw new Error(`Max gas price required for chain id ${chainId}`);
@@ -130,12 +168,16 @@ export class Config implements IConfig {
         throw new Error(`Min gas price required for chain id ${chainId}`);
       }
       if (!this.config.gasPrice[chainId].baseFeeMultiplier) {
-        throw new Error(`Gas price base fee multiplier required for chain id ${chainId}`);
+        throw new Error(
+          `Gas price base fee multiplier required for chain id ${chainId}`
+        );
       }
 
       // check valid fee options config
       if (!this.config.feeOption.supportedFeeTokens[chainId].length) {
-        throw new Error(`Supported fee tokens required for chain id ${chainId}`);
+        throw new Error(
+          `Supported fee tokens required for chain id ${chainId}`
+        );
       }
       if (!this.config.feeOption.similarTokens[chainId].length) {
         throw new Error(`Similar tokens required for chain id ${chainId}`);
@@ -147,7 +189,9 @@ export class Config implements IConfig {
         throw new Error(`Logo url required for chain id ${chainId}`);
       }
       if (!this.config.feeOption.tokenContractAddress[chainId]) {
-        throw new Error(`Token contract address required for chain id ${chainId}`);
+        throw new Error(
+          `Token contract address required for chain id ${chainId}`
+        );
       }
       if (!this.config.feeOption.decimals[chainId]) {
         throw new Error(`Decimals required for chain id ${chainId}`);

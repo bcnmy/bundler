@@ -1,4 +1,4 @@
-version: "3.1"
+version: '3.1'
 
 volumes:
   redis-data:
@@ -6,13 +6,12 @@ volumes:
   rabbitmq_log:
   rabbitmq_data:
 
-
 services:
   server:
     container_name: api-service
     env_file: .env
     ports:
-      - "0.0.0.0:3000:3000"
+      - '0.0.0.0:3000:3000'
     depends_on:
       mongo:
         condition: service_started
@@ -25,24 +24,24 @@ services:
       centrifugo:
         condition: service_healthy
         restart: true
-
     build:
       context: .
       dockerfile: Dockerfile.dev
     restart: always
     volumes:
-      - .:/usr/app
+      - .:/home/nonroot/bundler
+
   redis:
     image: redis:6.0
     container_name: redis
-    command: [ "redis-server", "--appendonly", "yes" ]
+    command: ['redis-server', '--appendonly', 'yes']
     ports:
-      - "0.0.0.0:6379:6379"
+      - '0.0.0.0:6379:6379'
     volumes:
       - redis-data:/data
     restart: always
     healthcheck:
-      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      test: ['CMD', 'redis-cli', '--raw', 'incr', 'ping']
       interval: 5s
       timeout: 20s
       retries: 5
@@ -51,16 +50,10 @@ services:
     container_name: centrifugo
     image: centrifugo/centrifugo:v3.2.2
     volumes:
-      - ./centrifugo_config.json:/centrifugo/config.json:ro
+      - ./centrifugo_config.json:/centrifugo/config.json
     command: centrifugo -c config.json
     healthcheck:
-      test:
-        [
-          "CMD",
-          "sh",
-          "-c",
-          "wget -nv -O - http://localhost:8000"
-        ]
+      test: ['CMD', 'sh', '-c', 'wget -nv -O - http://localhost:8000']
       interval: 3s
       timeout: 3s
       retries: 3
@@ -70,14 +63,14 @@ services:
         soft: 65535
         hard: 65535
     ports:
-      - "0.0.0.0:8000:8000"
+      - '0.0.0.0:8000:8000'
 
   mongo:
     image: mongo:latest
     container_name: mongo
     restart: always
     ports:
-      - "0.0.0.0:27017:27017"
+      - '0.0.0.0:27017:27017'
     volumes:
       - mongo-data:/data/db
 
@@ -90,8 +83,8 @@ services:
       timeout: 20s
       retries: 5
     ports:
-      - "0.0.0.0:5672:5672"
-      - "0.0.0.0:15672:15672"
+      - '0.0.0.0:5672:5672'
+      - '0.0.0.0:15672:15672'
     volumes:
       - rabbitmq_log:/var/log/rabbitmq
       - rabbitmq_data:/var/lib/rabbitmq

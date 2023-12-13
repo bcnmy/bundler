@@ -31,7 +31,9 @@
       ],
       "import/no-dynamic-require": 0,
       "no-underscore-dangle": "off",
-      "no-restricted-syntax": "off"
+      "no-restricted-syntax": "off",
+      "comma-dangle": "off",
+      "@typescript-eslint/comma-dangle": "off"
   },
   "ignorePatterns": ["**/*.hbs"]
 }
