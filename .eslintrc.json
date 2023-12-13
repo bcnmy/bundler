@@ -5,18 +5,19 @@
       "node": true
   },
   "extends": [
-      "airbnb-base",
-      "airbnb-typescript/base"
+    "airbnb-base",
+    "airbnb-typescript/base",
+    "prettier"
   ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
       "project" : "./tsconfig.json"
   },
   "plugins": [
-      "@typescript-eslint"
+      "@typescript-eslint",
+      "prettier"
   ],
   "rules": {
-      "@typescript-eslint/indent": ["error"],
       "import/prefer-default-export": "off",
       "semi": ["error", "always"],
       "import/extensions": [
