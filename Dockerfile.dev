@@ -1,14 +1,15 @@
-FROM node:16.10.0-alpine
+FROM node:18.17.1-bookworm
 
-# install dependencies
-RUN apk update
+# update apt packages
+RUN apt-get update
 
 # arguments
 ARG PORT=3000
 
 # Tini allows us to avoid several Docker edge cases, see https://github.com/krallin/tini.
 # NOTE: See https://github.com/hexops/dockerfile#is-tini-still-required-in-2020-i-thought-docker-added-it-natively
-RUN apk add --no-cache tini
+RUN apt-get install tini
+
 # Non-root user for security purposes.
 #
 # UIDs below 10,000 are a security risk, as a container breakout could result
@@ -21,21 +22,14 @@ RUN addgroup --gid 10001 --system nonroot \
   && adduser  --uid 10000 --system --ingroup nonroot --home /home/nonroot nonroot
 EXPOSE 3000
 
-# Install dependencies for node-gyp
-# Install python3 and pip3
-ENV PYTHONUNBUFFERED=1
-RUN apk add --update --no-cache python3 && ln -sf python3 /usr/bin/python
-RUN python3 -m ensurepip
-RUN pip3 install --no-cache --upgrade pip setuptools
-# Install make and g++ for node-gyp
-RUN apk add --no-cache make g++
-
 WORKDIR /home/nonroot/bundler
 COPY package.json yarn.lock  ./
+
 # install packages
 RUN yarn install
 COPY . .
-ENTRYPOINT ["/sbin/tini", "--", "yarn"]
+ENTRYPOINT ["/usr/bin/tini", "--", "yarn"]
+
 # Use the non-root user to run our application
 USER nonroot
 # Default arguments for your app (remove if you have none):
