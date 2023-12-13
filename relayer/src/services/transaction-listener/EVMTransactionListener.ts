@@ -706,12 +706,13 @@ ITransactionPublisher<TransactionQueueMessageType> {
       } catch (dataSavingError) {
         log.error(`Error in updating transaction and userOp data for transactionId: ${transactionId} with error: ${parseError(dataSavingError)}`);
       }
-      await this.publishToTransactionQueue({
-        transactionId,
-        relayerManagerName,
-        error,
-        event: SocketEventType.onTransactionError,
-      });
+      log.info(`error in transaction: ${parseError(error)} for transactionId: ${transactionId}`);
+      // await this.publishToTransactionQueue({
+      //   transactionId,
+      //   relayerManagerName,
+      //   error,
+      //   event: SocketEventType.onTransactionError,
+      // });
       log.error(`transactionExecutionResponse is null for transactionId: ${transactionId} for bundler: ${relayerAddress}`);
       return {
         isTransactionRelayed: false,
@@ -721,6 +722,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
 
     if (!previousTransactionHash) {
     // Save initial transaction data to database
+      log.info(`Saving initial transaction data for transactionHash: ${transactionExecutionResponse.hash} for transactionId: ${transactionId}`);
       this.updateTransactionDataToDatabase({
         transactionHash: transactionExecutionResponse.hash,
         rawTransaction: transactionExecutionResponse,
@@ -729,12 +731,16 @@ ITransactionPublisher<TransactionQueueMessageType> {
         status: TransactionStatus.PENDING,
         updationTime: Date.now(),
       }, transactionId);
+      log.info(`Saved initial transaction data for transactionHash: ${transactionExecutionResponse.hash} for transactionId: ${transactionId}`);
     } else {
+      log.info(`Updating DROPPED transaction data for previousTransactionHash: ${previousTransactionHash} for transactionId: ${transactionId}`);
       this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
         resubmitted: true,
         status: TransactionStatus.DROPPED,
         updationTime: Date.now(),
       }, transactionId, previousTransactionHash);
+      log.info(`Updated DROPPED transaction data for previousTransactionHash: ${previousTransactionHash} for transactionId: ${transactionId}`);
+      log.info(`Saving new transaction data for transactionHash: ${transactionExecutionResponse.hash} with previousTransactionHash: ${previousTransactionHash} for transactionId: ${transactionId}`);
       this.saveNewTransactionDataToDatabase({
         transactionId,
         transactionType,
@@ -751,17 +757,18 @@ ITransactionPublisher<TransactionQueueMessageType> {
         creationTime: Date.now(),
         updationTime: Date.now(),
       });
+      log.info(`Saved new transaction data for transactionHash: ${transactionExecutionResponse.hash} with previousTransactionHash: ${previousTransactionHash} for transactionId: ${transactionId}`);
     }
 
     // transaction queue is being listened by socket service to notify the client about the hash
-    await this.publishToTransactionQueue({
-      transactionId,
-      relayerManagerName,
-      transactionHash: transactionExecutionResponse?.hash,
-      receipt: undefined,
-      event: previousTransactionHash
-        ? SocketEventType.onTransactionHashChanged : SocketEventType.onTransactionHashGenerated,
-    });
+    // await this.publishToTransactionQueue({
+    //   transactionId,
+    //   relayerManagerName,
+    //   transactionHash: transactionExecutionResponse?.hash,
+    //   receipt: undefined,
+    //   event: previousTransactionHash
+    //     ? SocketEventType.onTransactionHashChanged : SocketEventType.onTransactionHashGenerated,
+    // });
     // retry txn service will check for receipt
     log.info(`Publishing transaction data of transactionId: ${transactionId} to retry transaction queue on chainId ${this.chainId}`);
     await this.publishToRetryTransactionQueue({
