@@ -119,6 +119,21 @@ export class BundlerSimulationService {
         }
       }
 
+      if (OptimismNetworks.includes(chainId)) {
+        const gasPrice = await this.gasPriceService.getGasPrice();
+        if (typeof gasPrice === 'string') {
+          userOp.maxFeePerGas = Number(gasPrice);
+          userOp.maxPriorityFeePerGas = Number(gasPrice);
+        } else {
+          const {
+            maxFeePerGas,
+            maxPriorityFeePerGas,
+          } = gasPrice;
+          userOp.maxFeePerGas = Number(maxFeePerGas);
+          userOp.maxPriorityFeePerGas = Number(maxPriorityFeePerGas);
+        }
+      }
+
       const end = performance.now();
       log.info(`Preparing the userOp took: ${end - start} milliseconds`);
 
