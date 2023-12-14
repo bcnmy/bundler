@@ -57,6 +57,9 @@ export enum BLOCKCHAINS {
   CORE_TESTNET = 1115,
   MANTA_TESTNET = 3441005,
   MANTA_MAINNET = 169,
+  CAPX_CHAIN = 7116,
+  COMBO_TESTNET = 91715,
+  COMBO_MAINNET = 9980,
 }
 
 // Network with base gas diff from 21k and maxPriorityFeePerGas is 0

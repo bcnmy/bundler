@@ -147,7 +147,7 @@ export class BundlerSimulationService {
 
       // polygon zk evm nodes don't support state overrides
       if (PolygonZKEvmNetworks.includes(chainId) || AstarNetworks.includes(chainId)
-      || [169, 3441005].includes(chainId)) {
+      || [169, 3441005, 91715, 7116, 9980].includes(chainId)) {
         log.info(`Request on RPC that does not support state overrides on chainId: ${chainId}`);
         ethCallParams = [
           {
