@@ -36,6 +36,9 @@ import { CoreMainnetGasPrice } from './networks/CoreMainnetGasPrice';
 import { CoreTestnetGasPrice } from './networks/CoreTestnetGasPrice';
 import { MantaMainnetGasPrice } from './networks/MantaMainnetGasPrice';
 import { MantaTestnetGasPrice } from './networks/MantaTestnetGasPrice';
+import { ComboTestnetGasPrice } from './networks/ComboTestnetGasPrice';
+import { ComboMainnetGasPrice } from './networks/ComboMainnetGasPrice';
+import { CapXChainGasPrice } from './networks/CapXChainGasPrice';
 
 export type GasPriceServiceType =
   | MaticGasPrice
@@ -279,6 +282,24 @@ export class GasPriceManager implements IGasPriceManager<GasPriceServiceType> {
         );
       case 1115:
         return new CoreTestnetGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
+      case 91715:
+        return new ComboTestnetGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
+      case 9980:
+        return new ComboMainnetGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
+      case 7116:
+        return new CapXChainGasPrice(
           this.cacheService,
           this.networkService,
           this.options,
