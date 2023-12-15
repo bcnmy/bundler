@@ -360,7 +360,7 @@ export class GasPrice implements IGasPrice {
               data.result,
               'wei',
             );
-            let maxPriorityFeePerGas = Math.ceil(Number(maxFeePerGas) * 0.4);
+            let maxPriorityFeePerGas = Math.ceil(Number(maxFeePerGas) * 0.2);
             if (maxPriorityFeePerGas < 30000000000) {
               maxPriorityFeePerGas = 30000000000;
             }
@@ -370,7 +370,7 @@ export class GasPrice implements IGasPrice {
             );
             await this.setMaxFeeGasPrice(
               GasPriceType.DEFAULT,
-              (Number(maxFeePerGas) * 1.5).toString(),
+              (Number(maxFeePerGas) * 1.2).toString(),
             );
           } else if ([80001].includes(this.chainId)) {
             const {
