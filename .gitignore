@@ -10,7 +10,7 @@ refundAddresses.ts
 *.enc
 # Ignore all JSON files
 *.json
-
+*json.enc
 # But not these specific files
 !static-config.json
 !config-example.json
@@ -19,4 +19,7 @@ refundAddresses.ts
 # If index.ts is not a .json file, you don't need to explicitly exclude it.
 # However, if it's actually index.json, include it like so:
 #!index.json
+
+*.cfg
+!example.cfg
 
