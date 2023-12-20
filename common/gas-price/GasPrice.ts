@@ -352,6 +352,29 @@ export class GasPrice implements IGasPrice {
                 '250000000',
               );
             }
+          } else if ([1].includes(this.chainId)) {
+            const {
+              data,
+            } = await this.networkService.sendRpcCall('eth_gasPrice', []);
+            const maxFeePerGas = ethers.utils.formatUnits(
+              data.result,
+              'wei',
+            );
+            const maxPriorityFeePerGasFromNetwork = (await this.networkService
+              .getEIP1559GasPrice())
+              .maxPriorityFeePerGas;
+            const maxPriorityFeePerGas = ethers.utils.formatUnits(
+              maxPriorityFeePerGasFromNetwork,
+              'wei',
+            );
+            await this.setMaxPriorityFeeGasPrice(
+              GasPriceType.DEFAULT,
+              maxPriorityFeePerGas,
+            );
+            await this.setMaxFeeGasPrice(
+              GasPriceType.DEFAULT,
+              (maxFeePerGas).toString(),
+            );
           } else if ([137].includes(this.chainId)) {
             const {
               data,
@@ -360,7 +383,7 @@ export class GasPrice implements IGasPrice {
               data.result,
               'wei',
             );
-            let maxPriorityFeePerGas = Math.ceil(Number(maxFeePerGas) * 0.4);
+            let maxPriorityFeePerGas = Math.ceil(Number(maxFeePerGas) * 0.2);
             if (maxPriorityFeePerGas < 30000000000) {
               maxPriorityFeePerGas = 30000000000;
             }
@@ -370,7 +393,7 @@ export class GasPrice implements IGasPrice {
             );
             await this.setMaxFeeGasPrice(
               GasPriceType.DEFAULT,
-              (Number(maxFeePerGas) * 1.5).toString(),
+              (Number(maxFeePerGas) * 1.2).toString(),
             );
           } else if ([80001].includes(this.chainId)) {
             const {
@@ -412,10 +435,8 @@ export class GasPrice implements IGasPrice {
               );
             }
           }
-          if (OptimismNetworks.includes(this.chainId) || [137, 80001]) {
-            const baseFeePerGas = await this.networkService.getBaseFeePerGas();
-            await this.setBaseFeePerGas(baseFeePerGas);
-          }
+          const baseFeePerGas = await this.networkService.getBaseFeePerGas();
+          await this.setBaseFeePerGas(baseFeePerGas);
         }
         await this.setGasPrice(GasPriceType.DEFAULT, gasPrice);
       }

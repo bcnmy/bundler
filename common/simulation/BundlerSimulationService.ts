@@ -147,7 +147,7 @@ export class BundlerSimulationService {
 
       // polygon zk evm nodes don't support state overrides
       if (PolygonZKEvmNetworks.includes(chainId) || AstarNetworks.includes(chainId)
-      || [169, 3441005].includes(chainId)) {
+      || [169, 3441005, 91715, 7116, 9980].includes(chainId)) {
         log.info(`Request on RPC that does not support state overrides on chainId: ${chainId}`);
         ethCallParams = [
           {
@@ -302,8 +302,8 @@ export class BundlerSimulationService {
 
         // edge case observed on polygon
         if (callGasLimit > 5000000) {
-          log.info('Bumping callGasLimit by 1.5M for 5M+ transactions');
-          callGasLimit += 1500000;
+          log.info('Bumping callGasLimit by 500K for 5M+ transactions');
+          callGasLimit += 500000;
         }
 
         // if (chainId === 10 || chainId === 420 || chainId === 8453 || chainId === 84531) {
