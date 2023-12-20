@@ -1,7 +1,6 @@
 /* eslint-disable import/no-import-module-exports */
 /* eslint-disable no-else-return */
 /* eslint-disable max-len */
-import { ethers } from 'ethers';
 import { Mutex } from 'async-mutex';
 import { ICacheService } from '../../../../common/cache';
 import { IGasPrice } from '../../../../common/gas-price';
@@ -110,7 +109,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       nonce,
     };
     const gasPrice = await this.gasPriceService.getGasPrice(speed);
-    if (typeof gasPrice !== 'string') {
+    if (typeof gasPrice !== 'bigint') {
       log.info(`Gas price being used to send transaction by relayer: ${relayerAddress} is: ${JSON.stringify(gasPrice)} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
       const {
         maxPriorityFeePerGas,
@@ -118,13 +117,13 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       } = gasPrice;
       return {
         ...response,
-        type: 2,
-        maxFeePerGas: ethers.utils.hexlify(Number(maxFeePerGas)),
-        maxPriorityFeePerGas: ethers.utils.hexlify(Number(maxPriorityFeePerGas)),
+        type: '2',
+        maxFeePerGas: BigInt(maxFeePerGas),
+        maxPriorityFeePerGas: BigInt(maxPriorityFeePerGas),
       };
     }
     log.info(`Gas price being used to send transaction by relayer: ${relayerAddress} is: ${gasPrice} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-    return { ...response, gasPrice: ethers.utils.hexlify(Number(gasPrice)) };
+    return { ...response, type: '0', gasPrice: BigInt(gasPrice) };
   }
 
   async executeTransaction(
@@ -192,7 +191,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           log.info(`Replacement transaction underpriced or transaction underpriced error for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
           const bumpedUpGasPrice = await this.handleReplacementFeeTooLow(rawTransaction);
 
-          if (typeof bumpedUpGasPrice !== 'string') {
+          if (typeof bumpedUpGasPrice !== 'bigint') {
             log.info(`rawTransaction.maxFeePerGas ${rawTransaction.maxFeePerGas} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId} before bumping up`);
             log.info(`rawTransaction.maxPriorityFeePerGas ${rawTransaction.maxPriorityFeePerGas} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId} before bumping up`);
             rawTransaction.maxFeePerGas = bumpedUpGasPrice.maxFeePerGas;
@@ -217,7 +216,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         } else if (MAX_PRIORITY_FEE_HIGHER_THAN_MAX_FEE.some((str) => errInString.indexOf(str) > -1)) {
           const bumpedUpGasPrice = await this.handleReplacementFeeTooLow(rawTransaction);
 
-          if (typeof bumpedUpGasPrice !== 'string') {
+          if (typeof bumpedUpGasPrice !== 'bigint') {
             log.info(`rawTransaction.maxFeePerGas ${rawTransaction.maxFeePerGas} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId} before bumping up`);
             rawTransaction.maxFeePerGas = bumpedUpGasPrice.maxFeePerGas;
             log.info(`increasing gas price for the resubmit transaction ${rawTransaction.gasPrice} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
@@ -504,11 +503,11 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     } = retryTransactionData;
     try {
       await this.cacheService.increment(getRetryTransactionCountKey(transactionId, this.chainId));
-      let pastGasPrice: NetworkBasedGasPriceType = rawTransaction.gasPrice as string;
+      let pastGasPrice: NetworkBasedGasPriceType = rawTransaction.gasPrice as bigint;
       if (!pastGasPrice) {
         pastGasPrice = {
-          maxFeePerGas: rawTransaction.maxFeePerGas as string,
-          maxPriorityFeePerGas: rawTransaction.maxPriorityFeePerGas as string,
+          maxFeePerGas: rawTransaction.maxFeePerGas as bigint,
+          maxPriorityFeePerGas: rawTransaction.maxPriorityFeePerGas as bigint,
         };
       }
       // Make it general and EIP 1559 specific and get bump up from config
@@ -518,8 +517,8 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
       );
       log.info(`Bumped up gas price for transactionId: ${transactionId} is ${bumpedUpGasPrice} on chainId ${this.chainId}`);
 
-      if (typeof bumpedUpGasPrice === 'string') {
-        rawTransaction.gasPrice = bumpedUpGasPrice as string;
+      if (typeof bumpedUpGasPrice === 'bigint') {
+        rawTransaction.gasPrice = bumpedUpGasPrice as bigint;
         log.info(`Bumped up gas price for transactionId: ${transactionId} is ${bumpedUpGasPrice} on chainId ${this.chainId}`);
       } else if (typeof bumpedUpGasPrice === 'object') {
         rawTransaction.maxFeePerGas = bumpedUpGasPrice.maxFeePerGas;

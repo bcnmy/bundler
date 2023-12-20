@@ -2,10 +2,10 @@
 import { Request, Response } from 'express';
 import { logger } from '../../../../common/logger';
 import {
-  networkServiceMap, routeTransactionToRelayerMap, transactionDao, userOperationDao,
+  routeTransactionToRelayerMap, transactionDao, userOperationDao,
 } from '../../../../common/service-manager';
 import {
-  generateTransactionId, getMetaDataFromUserOp, getPaymasterFromPaymasterAndData, parseError,
+  generateTransactionId, getPaymasterFromPaymasterAndData, parseError,
 } from '../../../../common/utils';
 import {
   isError,
@@ -69,17 +69,17 @@ export const relayAATransaction = async (req: Request, res: Response) => {
     try {
       const { dappAPIKey } = metaData;
       log.info(`dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
-      const {
-        destinationSmartContractAddresses,
-        destinationSmartContractMethods,
-      } = await getMetaDataFromUserOp(
-        userOp,
-        chainId,
-        dappAPIKey,
-        networkServiceMap[chainId].ethersProvider,
-      );
-      metaData.destinationSmartContractAddresses = destinationSmartContractAddresses;
-      metaData.destinationSmartContractMethods = destinationSmartContractMethods;
+      // const {
+      //   destinationSmartContractAddresses,
+      //   destinationSmartContractMethods,
+      // } = await getMetaDataFromUserOp(
+      //   userOp,
+      //   chainId,
+      //   dappAPIKey,
+      //   networkServiceMap[chainId].provider,
+      // );
+      // metaData.destinationSmartContractAddresses = destinationSmartContractAddresses;
+      // metaData.destinationSmartContractMethods = destinationSmartContractMethods;
       log.info(`MetaData to be saved: ${JSON.stringify(metaData)} for dappAPIKey: ${dappAPIKey}`);
 
       const {

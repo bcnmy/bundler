@@ -58,7 +58,7 @@ export class FeeOption {
 
       let gasPrice;
 
-      if (typeof gasPriceInString !== 'string') {
+      if (typeof gasPriceInString !== 'bigint') {
         const {
           maxFeePerGas,
         } = gasPriceInString;

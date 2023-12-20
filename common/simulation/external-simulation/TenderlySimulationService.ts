@@ -1,7 +1,9 @@
 /* eslint-disable import/no-import-module-exports */
 import axios from 'axios';
 import Big from 'big.js';
-import { ethers } from 'ethers';
+import {
+  decodeEventLog, encodeFunctionData,
+} from 'viem';
 import {
   ExternalSimulationResponseType,
   SimulateHandleOpsParamsType,
@@ -15,6 +17,7 @@ import { IExternalSimulation } from '../interface';
 import { getTokenPriceKey, parseError } from '../../utils';
 import { config } from '../../../config';
 import { ICacheService } from '../../cache';
+import { EntryPointContractType } from '../../types';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
@@ -167,9 +170,11 @@ export class TenderlySimulationService implements IExternalSimulation {
       } = config.relayerManagers[0].ownerAccountDetails[chainId];
       log.info(`Simulating with from address: ${publicKey} on chainId: ${chainId}`);
 
-      const {
-        data,
-      } = await entryPointContract.populateTransaction.handleOps([userOp], publicKey);
+      const data = encodeFunctionData({
+        abi: entryPointContract.abi,
+        functionName: 'handleOps',
+        args: [[userOp], publicKey],
+      });
 
       let gas = 9000000;
       if ([43114, 43113].includes(chainId)) {
@@ -337,7 +342,7 @@ export class TenderlySimulationService implements IExternalSimulation {
 
       const gasPriceInString = await this.gasPriceService.getGasPrice(GasPriceType.DEFAULT);
       let gasPrice;
-      if (typeof gasPriceInString !== 'string') {
+      if (typeof gasPriceInString !== 'bigint') {
         const {
           maxFeePerGas,
         } = gasPriceInString;
@@ -347,7 +352,7 @@ export class TenderlySimulationService implements IExternalSimulation {
       }
       log.info(`Current gasPrice: ${gasPrice} on chainId: ${chainId}`);
 
-      const nativeTokenGasPrice = parseInt(gasPrice as string, 10);
+      const nativeTokenGasPrice = parseInt(gasPrice.toString(), 10);
 
       log.info(`Native token gas price: ${nativeTokenGasPrice} for SCW: ${to} with data: ${data}`);
       // ERC 20 token gas price should be in units of native asset
@@ -417,7 +422,7 @@ export class TenderlySimulationService implements IExternalSimulation {
   // eslint-disable-next-line class-methods-use-this
   private checkUserOperationExecution(
     transactionLogs: Array<any>,
-    entryPointContract: ethers.Contract,
+    entryPointContract: EntryPointContractType,
   ) {
     try {
       const userOperationEventLogStart = performance.now();
@@ -438,13 +443,21 @@ export class TenderlySimulationService implements IExternalSimulation {
       } = userOperationEventLog.raw;
 
       const parseLogStart = performance.now();
-      const logDescription = entryPointContract.interface.parseLog({
-        topics, data,
+      const logDescription = decodeEventLog({
+        abi: entryPointContract.abi,
+        topics,
+        data,
       });
       const parseLogEnd = performance.now();
       log.info(`parseLog took: ${parseLogEnd - parseLogStart} milliseconds`);
 
-      const success = logDescription.args[4];
+      if (logDescription.eventName !== 'UserOperationEvent') {
+        log.error('UserOperationEvent not found in logs');
+        return {
+          isExecutionSuccess: false,
+        };
+      }
+      const { success } = logDescription.args;
       if (!success) {
         return {
           reason: 'userOp execution failed',

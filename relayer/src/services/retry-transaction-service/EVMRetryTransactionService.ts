@@ -1,6 +1,5 @@
 /* eslint-disable import/no-import-module-exports */
 import { ConsumeMessage } from 'amqplib';
-import { RawTransactionType } from 'network-sdk/dist/types';
 import { logger } from '../../../../common/logger';
 import { INetworkService } from '../../../../common/network';
 import { IQueue } from '../../../../common/queue';
@@ -19,7 +18,7 @@ import { ICacheService } from '../../../../common/cache';
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 export class EVMRetryTransactionService implements
 IRetryTransactionService<IEVMAccount, EVMRawTransactionType> {
-  transactionService: ITransactionService<IEVMAccount, RawTransactionType>;
+  transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>;
 
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
 

@@ -1,7 +1,7 @@
-import { ethers } from 'ethers';
+import { Transaction } from 'viem';
 import { EVMRawTransactionType, SocketEventType, TransactionType } from '../../types';
 
-export type TransactionMessageType = ethers.providers.TransactionResponse;
+export type TransactionMessageType = Transaction;
 
 export type RetryTransactionQueueData = {
   relayerAddress: string,

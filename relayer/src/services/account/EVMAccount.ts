@@ -1,14 +1,14 @@
-import { ethers } from 'ethers';
+import { PrivateKeyAccount, privateKeyToAccount } from 'viem/accounts';
 import { EVMRawTransactionType } from '../../../../common/types';
 import { IEVMAccount } from './interface/IEVMAccount';
 
 export class EVMAccount implements IEVMAccount {
-  private signer: ethers.Signer;
+  private account: PrivateKeyAccount;
 
   private publicKey: string;
 
   constructor(accountPublicKey: string, accountPrivateKey: string) {
-    this.signer = new ethers.Wallet(accountPrivateKey);
+    this.account = privateKeyToAccount(`0x${accountPrivateKey}`);
     this.publicKey = accountPublicKey;
   }
 
@@ -17,10 +17,10 @@ export class EVMAccount implements IEVMAccount {
   }
 
   signMessage(message: string): Promise<string> {
-    return this.signer.signMessage(message);
+    return this.account.signMessage({ message });
   }
 
   signTransaction(rawTransaction: EVMRawTransactionType): Promise<string> {
-    return this.signer.signTransaction(rawTransaction);
+    return this.account.signTransaction(rawTransaction);
   }
 }

@@ -1,5 +1,4 @@
-import { BigNumber, ethers } from 'ethers';
-import { StateOverrideSetType, UserOperationType } from '../../types';
+import { EntryPointContractType, StateOverrideSetType, UserOperationType } from '../../types';
 
 // data response type that external simulation serivcereturns
 export type ExternalSimulationResponseType = {
@@ -8,7 +7,7 @@ export type ExternalSimulationResponseType = {
   data: {
     refundAmount: number;
     refundAmountInUSD: number;
-    gasLimitFromSimulation: number | BigNumber;
+    gasLimitFromSimulation: number | BigInt;
   };
 };
 
@@ -22,19 +21,19 @@ export type SimulationDataType = {
 
 export type AASimulationDataType = {
   userOp: UserOperationType;
-  entryPointContract: ethers.Contract;
+  entryPointContract: EntryPointContractType;
   chainId: number;
 };
 
 export type BundlerSimulationDataType = {
   userOp: UserOperationType;
-  entryPointContract: ethers.Contract;
+  entryPointContract: EntryPointContractType;
   chainId: number;
 };
 
 export type EstimateUserOperationGasDataType = {
   userOp: UserOperationType;
-  entryPointContract: ethers.Contract;
+  entryPointContract: EntryPointContractType;
   chainId: number;
   stateOverrideSet?: StateOverrideSetType
 };
@@ -46,7 +45,7 @@ export type SimulationResponseType = {
     refundAmount?: number;
     refundAmountInUSD?: number;
     userOpHash?: string;
-    gasLimitFromSimulation: number | BigNumber;
+    gasLimitFromSimulation: number | BigInt;
   };
   message: string;
   code?: number;
@@ -56,13 +55,13 @@ export type EstimateUserOperationGasReturnType = {
   code: number;
   message: string;
   data: {
-    preVerificationGas: number;
-    verificationGasLimit: number;
-    callGasLimit: number;
+    preVerificationGas: bigint;
+    verificationGasLimit: bigint;
+    callGasLimit: bigint;
     validAfter: number;
     validUntil: number;
     userOpHash?: string;
-    totalGas: number
+    totalGas: bigint
   };
 };
 
@@ -78,7 +77,7 @@ export type EstimateUserOpGasFieldsType = {
 
 export type SimulateHandleOpsParamsType = {
   userOp: UserOperationType,
-  entryPointContract: ethers.Contract,
+  entryPointContract: EntryPointContractType,
   chainId: number,
 };
 
@@ -91,7 +90,7 @@ export type SimulateHandleOpsReturnType = {
 
 export type SimulateValidationAndExecutionData = {
   userOp: UserOperationType,
-  entryPointContract: ethers.Contract,
+  entryPointContract: EntryPointContractType,
   chainId: number,
 };
 

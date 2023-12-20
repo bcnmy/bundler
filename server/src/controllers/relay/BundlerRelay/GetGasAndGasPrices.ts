@@ -72,7 +72,7 @@ export const getGasAndGasPrices = async (req: Request, res: Response) => {
 
     const gasPrice = await gasPriceServiceMap[Number(chainId)]?.getGasPrice();
 
-    if (typeof gasPrice !== 'string') {
+    if (typeof gasPrice !== 'bigint') {
       log.info(
         `Gas price for chainId: ${chainId} is: ${JSON.stringify(gasPrice)}`,
       );
@@ -81,8 +81,8 @@ export const getGasAndGasPrices = async (req: Request, res: Response) => {
         jsonrpc: '2.0',
         id: 1,
         result: {
-          maxPriorityFeePerGas: gasPrice?.maxPriorityFeePerGas,
-          maxFeePerGas: gasPrice?.maxFeePerGas,
+          maxPriorityFeePerGas: (gasPrice?.maxPriorityFeePerGas)?.toString(),
+          maxFeePerGas: (gasPrice?.maxFeePerGas)?.toString(),
           gasPrice: null,
           callGasLimit,
           verificationGasLimit,
@@ -97,7 +97,7 @@ export const getGasAndGasPrices = async (req: Request, res: Response) => {
       result: {
         maxPriorityFeePerGas: null,
         maxFeePerGas: null,
-        gasPrice,
+        gasPrice: gasPrice.toString(),
         callGasLimit,
         verificationGasLimit,
         preVerificationGas,

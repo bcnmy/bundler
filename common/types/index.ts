@@ -1,4 +1,5 @@
-import { BigNumber, BigNumberish, ethers } from 'ethers';
+import { GetContractReturnType, TransactionReceipt } from 'viem';
+import { ENTRY_POINT_ABI, OPTIMISM_L1_GAS_PRICE_ORACLE } from '../constants';
 
 export enum TransactionType {
   AA = 'AA',
@@ -21,6 +22,26 @@ export enum EthMethodType {
   CHAIN_ID = 'eth_chainId',
   GAS_AND_GAS_PRICES = 'eth_getUserOpGasFields',
   GET_USER_OPERATIONS_BY_API_KEY = 'eth_getUserOperationsByApiKey',
+  GET_TRANSACTION_COUNT = 'eth_getTransactionCount',
+  GET_BALANCE = 'eth_getBalance',
+  GAS_PRICE = 'eth_gasPrice',
+  FEE_HISTORY = 'eth_feeHistory',
+  MAX_PRIORITY_FEE_PER_GAS = 'eth_maxPriorityFeePerGas',
+  ESTIMATE_GAS = 'eth_estimateGas',
+  ETH_CALL = 'eth_call',
+  SEND_RAW_TRANSACTION = 'eth_sendRawTransaction',
+}
+
+export enum RpcMethod {
+  getTransactionReceipt,
+  waitForTransaction,
+  getTransaction,
+  getLatestBlockNumber,
+  getFeeHistory,
+}
+
+export enum AlchemyMethodType {
+  SIMULATE_EXECUTION = 'alchemy_simulateExecution',
 }
 
 export enum BiconomyMethodType {
@@ -53,7 +74,7 @@ export type TransactionQueueMessageType = {
   relayerManagerName: string,
   transactionHash?: string,
   previousTransactionHash?: string,
-  receipt?: ethers.providers.TransactionReceipt,
+  receipt?: TransactionReceipt,
   error?: string,
 };
 
@@ -71,28 +92,28 @@ export enum RelayerManagerType {
 }
 
 export type AccessListItem = {
-  address: string;
-  storageKeys: string[];
+  address: `0x${string}`;
+  storageKeys: `0x${string}`[];
 };
 
 export type NetworkBasedGasPriceType = {
-  maxPriorityFeePerGas: string;
-  maxFeePerGas: string;
-} | string;
+  maxPriorityFeePerGas: bigint;
+  maxFeePerGas: bigint;
+} | bigint;
 
 export type EVMRawTransactionType = {
   from: string;
-  gasPrice?: string;
-  maxPriorityFeePerGas?: string;
-  maxFeePerGas?: string;
-  gasLimit: string;
-  to: string;
-  value: string;
-  data: string;
+  gasPrice?: bigint;
+  maxPriorityFeePerGas?: bigint;
+  maxFeePerGas?: bigint;
+  gasLimit: `0x${string}`;
+  to: `0x${string}`;
+  value: bigint;
+  data: `0x${string}`;
   chainId: number;
   nonce: number;
   accessList?: AccessListItem[];
-  type?: number;
+  type: string;
 };
 
 export type AATransactionMessageType = {
@@ -150,17 +171,17 @@ export function isError<T>(
 }
 
 export type UserOperationType = {
-  sender: string;
-  nonce: number;
-  initCode: string;
-  callData: string;
-  callGasLimit: number;
-  verificationGasLimit: number;
-  preVerificationGas: number;
-  maxFeePerGas: number;
-  maxPriorityFeePerGas: number;
-  paymasterAndData: string;
-  signature: string;
+  sender: `0x${string}`;
+  nonce: bigint;
+  initCode: `0x${string}`;
+  callData: `0x${string}`;
+  callGasLimit: bigint;
+  verificationGasLimit: bigint;
+  preVerificationGas: bigint;
+  maxFeePerGas: bigint;
+  maxPriorityFeePerGas: bigint;
+  paymasterAndData: `0x${string}`;
+  signature: `0x${string}`;
 };
 
 export type SymbolMapByChainIdType = {
@@ -172,13 +193,8 @@ export type SymbolMapByChainIdType = {
 export type EntryPointMapType = {
   [chainId: number]: Array<{
     address: string,
-    entryPointContract: ethers.Contract
+    entryPointContract: EntryPointContractType
   }>
-};
-
-export type GetMetaDataFromUserOpReturnType = {
-  destinationSmartContractAddresses: Array<string>
-  destinationSmartContractMethods: Array<{ name: string, address: string }>
 };
 
 export type FeeSupportedToken = {
@@ -196,15 +212,15 @@ export interface TypedEvent<
 }
 
 export type UserOperationEventEvent = TypedEvent<
-[string, string, string, BigNumber, boolean, BigNumber, BigNumber],
+[string, string, string, BigInt, boolean, BigInt, BigInt],
 {
   userOpHash: string;
   sender: string;
   paymaster: string;
-  nonce: BigNumber;
+  nonce: BigInt;
   success: boolean;
-  actualGasCost: BigNumber;
-  actualGasUsed: BigNumber;
+  actualGasCost: BigInt;
+  actualGasUsed: BigInt;
 }
 >;
 
@@ -244,8 +260,8 @@ export type DefaultGasOverheadType = {
 
 export type StakeInfo = {
   addr: string;
-  stake: BigNumberish;
-  unstakeDelaySec: BigNumberish;
+  stake: BigInt;
+  unstakeDelaySec: BigInt;
 };
 
 export type UpdateRequestDataType = {
@@ -256,6 +272,10 @@ export type UpdateRequestDataType = {
   rawResponse: object,
   httpResponseCode: number,
 };
+
+export type EntryPointContractType = GetContractReturnType<typeof ENTRY_POINT_ABI>;
+export type OptimismL1GasPriceOracleContractType =
+GetContractReturnType<typeof OPTIMISM_L1_GAS_PRICE_ORACLE>;
 
 export type StateOverrideSetType = {
   [key: string]: {

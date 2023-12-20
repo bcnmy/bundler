@@ -1,5 +1,6 @@
 /* eslint-disable import/no-import-module-exports */
 /* eslint-disable no-continue */
+import { decodeErrorResult, encodeFunctionData } from 'viem';
 import { EVMAccount } from '../../../relayer/src/services/account';
 import { INetworkService } from '../../network';
 import { EVMRawTransactionType } from '../../types';
@@ -28,13 +29,17 @@ export class AlchemySimulationService {
     } = config.relayerManagers[0].ownerAccountDetails[chainId];
     log.info(`Simulating with from address: ${publicKey} on chainId: ${chainId}`);
 
-    const {
-      data,
-    } = await entryPointContract.populateTransaction.handleOps([userOp], publicKey);
+    const data = encodeFunctionData({
+      abi: entryPointContract.abi,
+      functionName: 'handleOps',
+      args: [[userOp], publicKey],
+    });
 
     const simulateExecutionStart = performance.now();
-    const response = await this.networkService.sendRpcCall(
-      'alchemy_simulateExecution',
+    const {
+      calls,
+      logs,
+    } = await this.networkService.runAlchemySimulation(
       [
         {
           from: publicKey,
@@ -46,10 +51,6 @@ export class AlchemySimulationService {
     );
     const simulateExecutionEnd = performance.now();
     log.info(`Network call to alchemy_simulateExecution took: ${simulateExecutionEnd - simulateExecutionStart} milliseconds`);
-    const {
-      calls,
-      logs,
-    } = response.data.result;
     let totalGas;
 
     if (logs.length !== 0) {
@@ -58,14 +59,17 @@ export class AlchemySimulationService {
       if (!userOperationEvent) {
         log.info('UserOperationEvent not found, checking simulation calls for transaction revert reason');
         const transactionCall = calls.find((call: any) => call.error === 'execution reverted');
-        const error = entryPointContract.interface.parseError(transactionCall.output);
+        const error = decodeErrorResult({
+          abi: entryPointContract.abi,
+          data: transactionCall.output,
+        });
         const {
           args,
         } = error;
         const end = performance.now();
         log.info(`Checking transaction execution revert took: ${end - start} milliseconds`);
         return {
-          reason: args.reason,
+          reason: args[0],
           totalGas: 0,
           data,
         };
@@ -88,14 +92,15 @@ export class AlchemySimulationService {
     } else {
       const start = performance.now();
       const transactionCall = calls.find((call: any) => call.error === 'execution reverted');
-      const error = entryPointContract.interface.parseError(transactionCall.output);
-      const {
-        args,
-      } = error;
+      const errorDescription = decodeErrorResult({
+        abi: entryPointContract.abi,
+        data: transactionCall.output,
+      });
+      const { args } = errorDescription;
       const end = performance.now();
       log.info(`Checking transaction execution revert took: ${end - start} milliseconds`);
       return {
-        reason: args.reason,
+        reason: args[0],
         totalGas: 0,
         data,
       };

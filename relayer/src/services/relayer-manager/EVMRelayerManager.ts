@@ -6,8 +6,8 @@ import {
   publicToAddress,
   toChecksumAddress,
 } from 'ethereumjs-util';
-import { ethers } from 'ethers';
 import hdkey from 'hdkey';
+import { parseEther, toHex } from 'viem';
 import { ICacheService } from '../../../../common/cache';
 import { IGasPrice } from '../../../../common/gas-price';
 import { logger } from '../../../../common/logger';
@@ -64,7 +64,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
 
   newRelayerInstanceCount: number;
 
-  fundingBalanceThreshold: ethers.BigNumber;
+  fundingBalanceThreshold: BigInt;
 
   fundingRelayerAmount: number;
 
@@ -168,7 +168,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
    * @param relayerAddress
    */
   async postTransactionMined(relayerAddress: string): Promise<void> {
-    const address = relayerAddress.toLowerCase();
+    const address = toHex(relayerAddress.toLowerCase());
     log.info(`postTransactionMined called for relayer: ${address} for Relayer Manager: ${this.name} on chainId: ${this.chainId}`);
     let relayerData = this.relayerQueue
       .list()
@@ -198,7 +198,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
       );
       this.relayerQueue.set(relayerData);
       // if balance is less than threshold, fund the relayer
-      if (balance.lt(this.fundingBalanceThreshold)) {
+      if (balance <= this.fundingBalanceThreshold) {
         log.info(`Balance of relayer ${address} is less than threshold ${this.fundingBalanceThreshold} on chainId: ${this.chainId}`);
         try {
           await this.fundRelayers([address]);
@@ -310,13 +310,13 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
    */
   async createRelayers(
     numberOfRelayers: number = this.minRelayerCount,
-  ): Promise<string[]> {
+  ): Promise<`0x${string}`[]> {
     log.info(`Waiting for lock to create relayers on chainId: ${this.chainId}`);
     const release = await createRelayerMutex.acquire();
     log.info(`Received lock to create relayers on chainId ${this.chainId}`);
     const relayersMasterSeed = this.relayerSeed;
     const relayers: IEVMAccount[] = [];
-    const relayersAddressList: string[] = [];
+    const relayersAddressList: `0x${string}`[] = [];
     try {
       const index = this.getRelayersCount();
       for (
@@ -342,7 +342,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
       }
 
       for (const relayer of relayers) {
-        const relayerAddress = relayer.getPublicKey().toLowerCase();
+        const relayerAddress = toHex(relayer.getPublicKey().toLowerCase());
         try {
           log.info(
             `Creating relayer ${relayerAddress} on chainId: ${this.chainId}`,
@@ -396,7 +396,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
       log.info(
         `Relayer ${address} balance is ${relayerBalance} on chainId: ${this.chainId}`,
       );
-      if (relayerBalance.lte(this.fundingBalanceThreshold)) {
+      if (relayerBalance <= this.fundingBalanceThreshold) {
         log.info(
           `Relayer ${address} balance ${relayerBalance} is below threshold of ${this.fundingBalanceThreshold} on chainId: ${this.chainId}`,
         );
@@ -414,12 +414,12 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
    * Method funds the relayers basis on config values
    * @param addressList List of relayers to fund
    */
-  async fundRelayers(addressList: string[]): Promise<any> {
+  async fundRelayers(addressList: `0x${string}`[]): Promise<any> {
     log.info(
       `Starting to fund relayers on chainId: ${this.chainId} with addresses: ${addressList}`,
     );
     for (const relayerAddress of addressList) {
-      const address = relayerAddress.toLowerCase();
+      const address = relayerAddress.toLowerCase() as `0x${string}`;
       const lock = this.cacheService.getRedLock();
       if (!this.hasBalanceBelowThreshold(address)) {
         log.info(
@@ -450,12 +450,10 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
 
           const rawTx = {
             from: this.ownerAccountDetails.getPublicKey(),
-            data: '0x',
-            gasLimit: ethers.BigNumber.from(gasLimit.toString()).toHexString(),
+            data: toHex('0x'),
+            gasLimit: toHex(BigInt(gasLimit.toString())),
             to: address,
-            value: ethers.utils
-              .parseEther(fundingAmount.toString())
-              .toHexString(),
+            value: parseEther(fundingAmount.toString()),
             chainId: this.chainId,
           };
           const transactionId = generateTransactionId(JSON.stringify(rawTx));
@@ -472,7 +470,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
             {
               ...rawTx,
               transactionId,
-              walletAddress: '', // TODO: review to get the wallet address
+              walletAddress: '',
             },
             this.ownerAccountDetails,
             TransactionType.FUNDING,
@@ -520,7 +518,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
    * Method funds and adds relayer to active queue
    * @param address of relayer
    */
-  async fundAndAddRelayerToActiveQueue(address: string): Promise<void> {
+  async fundAndAddRelayerToActiveQueue(address: `0x${string}`): Promise<void> {
     try {
       log.info(`Funding relayer: ${address} on chainId: ${this.chainId}`);
       await this.fundRelayers([address]);

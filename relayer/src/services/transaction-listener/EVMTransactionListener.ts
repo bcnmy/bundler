@@ -1,6 +1,6 @@
 /* eslint-disable import/no-import-module-exports */
 /* eslint-disable no-await-in-loop */
-import { BigNumber, ethers } from 'ethers';
+import { TransactionReceipt, decodeErrorResult, toHex } from 'viem';
 import { ICacheService } from '../../../../common/cache';
 import {
   ITransactionDAO, IUserOperationDAO, IUserOperationStateDAO,
@@ -10,6 +10,7 @@ import { logger } from '../../../../common/logger';
 import { INetworkService } from '../../../../common/network';
 import { RetryTransactionQueueData } from '../../../../common/queue/types';
 import {
+  EntryPointContractType,
   EntryPointMapType,
   EVMRawTransactionType,
   SocketEventType,
@@ -222,9 +223,9 @@ ITransactionPublisher<TransactionQueueMessageType> {
         if (!transactionReceipt.gasUsed && !transactionReceipt.effectiveGasPrice) {
           log.info(`gasUsed or effectiveGasPrice field not found in ${JSON.stringify(transactionExecutionResponse)}`);
         } else {
-          transactionFee = Number(transactionReceipt.gasUsed.mul(
-            transactionReceipt.effectiveGasPrice,
-          ));
+          transactionFee = Number(
+            transactionReceipt.gasUsed * (transactionReceipt.effectiveGasPrice),
+          );
           transactionFeeCurrency = config.chains.currency[this.chainId];
           const coinsRateObj = await this.cacheService.get(getTokenPriceKey());
           if (!coinsRateObj) {
@@ -299,9 +300,9 @@ ITransactionPublisher<TransactionQueueMessageType> {
             if (entryPointContract) {
               const latestBlock = await this.networkService.getLatesBlockNumber();
               log.info(`latestBlock: ${latestBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-              let fromBlock = latestBlock - 1000;
+              let fromBlock = latestBlock - BigInt(1000);
               if (AstarNetworks.includes(this.chainId)) {
-                fromBlock += 501;
+                fromBlock += BigInt(501);
               }
               log.info(`fromBlock: ${fromBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
               const userOpReceipt = await getUserOperationReceiptForFailedTransaction(
@@ -310,7 +311,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
                 transactionReceipt,
                 entryPointContract,
                 fromBlock,
-                this.networkService.ethersProvider,
+                this.networkService.provider,
               );
               log.info(`userOpReceipt: ${JSON.stringify(userOpReceipt)} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
 
@@ -363,7 +364,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
                     transactionId,
                     state: UserOperationStateEnum.FAILED,
                     message: await this.getTransactionFailureMessage(
-                      transactionExecutionResponse?.hash,
+                      transactionReceipt,
                       entryPointContract,
                     ),
                   });
@@ -385,7 +386,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
                 transactionId,
                 relayerManagerName,
                 transactionHash: (
-                  frontRunnedTransactionReceipt as ethers.providers.TransactionReceipt
+                  frontRunnedTransactionReceipt as TransactionReceipt
                 ).transactionHash,
                 receipt: transactionReceipt,
                 event: SocketEventType.onTransactionMined,
@@ -395,13 +396,13 @@ ITransactionPublisher<TransactionQueueMessageType> {
               log.info(`Updating userOp data: ${JSON.stringify({
                 receipt: frontRunnedTransactionReceipt,
                 transactionHash: (
-                  frontRunnedTransactionReceipt as ethers.providers.TransactionReceipt
+                  frontRunnedTransactionReceipt as TransactionReceipt
                 ).transactionHash,
                 blockNumber: (
-                  frontRunnedTransactionReceipt as ethers.providers.TransactionReceipt
+                  frontRunnedTransactionReceipt as TransactionReceipt
                 ).blockNumber,
                 blockHash: (
-                  frontRunnedTransactionReceipt as ethers.providers.TransactionReceipt
+                  frontRunnedTransactionReceipt as TransactionReceipt
                 ).blockHash,
                 status: TransactionStatus.SUCCESS,
                 success,
@@ -418,13 +419,13 @@ ITransactionPublisher<TransactionQueueMessageType> {
                 {
                   receipt: frontRunnedTransactionReceipt,
                   transactionHash: (
-                    frontRunnedTransactionReceipt as ethers.providers.TransactionReceipt
+                    frontRunnedTransactionReceipt as TransactionReceipt
                   ).transactionHash,
                   blockNumber: (
-                    frontRunnedTransactionReceipt as ethers.providers.TransactionReceipt
+                    frontRunnedTransactionReceipt as TransactionReceipt
                   ).blockNumber,
                   blockHash: (
-                    frontRunnedTransactionReceipt as ethers.providers.TransactionReceipt
+                    frontRunnedTransactionReceipt as TransactionReceipt
                   ).blockHash,
                   status: TransactionStatus.SUCCESS,
                   success,
@@ -494,9 +495,8 @@ ITransactionPublisher<TransactionQueueMessageType> {
         if (!transactionReceipt.gasUsed && !transactionReceipt.effectiveGasPrice) {
           log.info(`gasUsed or effectiveGasPrice field not found in ${JSON.stringify(transactionExecutionResponse)}`);
         } else {
-          transactionFee = Number(transactionReceipt.gasUsed.mul(
-            transactionReceipt.effectiveGasPrice,
-          ));
+          transactionFee = Number(transactionReceipt.gasUsed
+            * transactionReceipt.effectiveGasPrice);
           transactionFeeCurrency = config.chains.currency[this.chainId];
           const coinsRateObj = await this.cacheService.get(getTokenPriceKey());
           if (!coinsRateObj) {
@@ -600,7 +600,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
         {
           transactionHash: undefined,
           receipt: {},
-          blockNumber: 0,
+          blockNumber: BigInt(0),
           blockHash: 'null',
           status: TransactionStatus.DROPPED,
           success: 'false',
@@ -648,7 +648,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
 
     await this.cacheService.set(getTransactionMinedKey(transactionId), '1');
 
-    if (transactionReceipt.status === 1) {
+    if (transactionReceipt.status === 'success') {
       log.info(`Transaction is a success for transactionId: ${transactionId} on chainId ${this.chainId}`);
       this.onTransactionSuccess({
         transactionExecutionResponse,
@@ -662,7 +662,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
         relayerManagerName,
       });
     }
-    if (transactionReceipt.status === 0) {
+    if (transactionReceipt.status === 'reverted') {
       log.info(`Transaction is a failure for transactionId: ${transactionId} on chainId ${this.chainId}`);
       this.onTransactionFailure({
         transactionExecutionResponse,
@@ -797,38 +797,42 @@ ITransactionPublisher<TransactionQueueMessageType> {
   }
 
   async getTransactionFailureMessage(
-    transactionHash: string,
-    entryPointContract: ethers.Contract,
+    receipt: TransactionReceipt,
+    entryPointContract: EntryPointContractType,
   ): Promise<string> {
     try {
-      const getTransactionResponse = await this.networkService.getTransaction(transactionHash);
+      const getTransactionResponse = await this.networkService.getTransaction(
+        receipt.transactionHash,
+      );
 
       const {
-        from, to, data, gasLimit, gasPrice,
+        from, to, input, gasPrice,
       } = getTransactionResponse;
 
-      const gasInHex = BigNumber.from(gasLimit).toHexString().substring(2).replace(/^0+/, '');
-      const gasPriceInHex = BigNumber.from(gasPrice).toHexString().substring(2).replace(/^0+/, '');
+      const gasInHex = toHex(receipt.gasUsed).substring(2).replace(/^0+/, '');
+      const gasPriceInHex = toHex(gasPrice as bigint).substring(2).replace(/^0+/, '');
 
-      const handleOpResult = await this.networkService.sendRpcCall(
-        'eth_call',
+      const handleOpResult = await this.networkService.ethCall(
         [{
           from,
           to,
-          data,
-          gas: `0x${gasInHex}`,
-          gasPrice: `0x${gasPriceInHex}`,
+          data: input,
+          gas: gasInHex,
+          gasPrice: gasPriceInHex,
         }],
       );
 
       const ethCallData = handleOpResult.data.error.data;
       log.info(`ethCallData: ${ethCallData}`);
 
-      const errorDescription = entryPointContract.interface.parseError(ethCallData);
+      const errorDescription = decodeErrorResult({
+        abi: entryPointContract.abi,
+        data: ethCallData,
+      });
       const { args } = errorDescription;
 
-      if (errorDescription.name === 'FailedOp') {
-        const revertReason = args[1];
+      if (errorDescription.errorName === 'FailedOp') {
+        const revertReason = args[0];
         return `Transaction failed on chain with reason: ${revertReason}`;
       }
       return 'Unable to parse transaction failure reason, please check transaction hash on explorer';

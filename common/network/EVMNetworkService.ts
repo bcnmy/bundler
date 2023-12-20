@@ -1,54 +1,36 @@
 /* eslint-disable import/no-import-module-exports */
-/* eslint-disable no-await-in-loop */
+/* eslint-disable @typescript-eslint/return-await */
+/* eslint-disable new-cap */
 import axios from 'axios';
-import { BigNumber, ethers } from 'ethers';
+import {
+  PublicClient, Transaction, TransactionReceipt, createPublicClient, http,
+} from 'viem';
 import { IEVMAccount } from '../../relayer/src/services/account';
-import { ERC20_ABI, L2Networks } from '../constants';
-import { logger } from '../logger';
-import { EVMRawTransactionType } from '../types';
-import { IERC20NetworkService, INetworkService, RpcMethod } from './interface';
+import {
+  AlchemyMethodType,
+  EVMRawTransactionType, EthMethodType, RpcMethod,
+} from '../types';
+import { INetworkService } from './interface';
 import { Type0TransactionGasPriceType, Type2TransactionGasPriceType } from './types';
+import { logger } from '../logger';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
-// TODO: Network Service to be checked with new provider/contract instances
-export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTransactionType>,
- IERC20NetworkService {
+
+export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTransactionType> {
   chainId: number;
 
   rpcUrl: string;
 
-  ethersProvider: ethers.providers.JsonRpcProvider;
+  provider: PublicClient;
 
-  fallbackRpcUrls: string[];
-
-  constructor(options: { chainId: number; rpcUrl: string; fallbackRpcUrls: string[] }) {
+  constructor(options: { chainId: number; rpcUrl: string }) {
     this.chainId = options.chainId;
     this.rpcUrl = options.rpcUrl;
-    this.fallbackRpcUrls = options.fallbackRpcUrls;
-    this.ethersProvider = new ethers.providers.JsonRpcProvider({
-      url: options.rpcUrl,
-      timeout: 10000,
+    this.provider = createPublicClient({
+      transport: http(this.rpcUrl),
     });
   }
 
-  getActiveRpcUrl(): string {
-    return this.rpcUrl;
-  }
-
-  setActiveRpcUrl(rpcUrl: string): void {
-    this.rpcUrl = rpcUrl;
-  }
-
-  getFallbackRpcUrls(): string[] {
-    return this.fallbackRpcUrls;
-  }
-
-  setFallbackRpcUrls(fallbackRpcUrls: string[]): void {
-    this.fallbackRpcUrls = fallbackRpcUrls;
-  }
-
-  // REVIEW
-  // change any to some defined type
   /**
    * method to handle various rpc methods
    * and fallback to other rpc urls if the current rpc url fails
@@ -57,149 +39,70 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
    * @returns based on the rpc method
    */
   useProvider = async (tag: RpcMethod, params?: any): Promise<any> => {
-    let rpcUrlIndex = 0;
-    // eslint-disable-next-line consistent-return
-    const withFallbackRetry = async () => {
-      try {
-        // TODO Add null checks on params
-        switch (tag) {
-          case RpcMethod.getGasPrice:
-            return await this.ethersProvider.getGasPrice();
-          case RpcMethod.getEIP1159GasPrice:
-            return await this.ethersProvider.getFeeData();
-          case RpcMethod.getBalance:
-            return await this.ethersProvider.getBalance(params.address);
-          case RpcMethod.estimateGas:
-            return await this.ethersProvider.estimateGas(params);
-          case RpcMethod.getTransactionReceipt:
-            return await this.ethersProvider.getTransactionReceipt(params);
-          case RpcMethod.getTransactionCount:
-            if (params.pendingNonce === true) {
-              return await this.ethersProvider.getTransactionCount(params.address, 'pending');
-            }
-            return await this.ethersProvider.getTransactionCount(params.address);
-          case RpcMethod.sendTransaction:
-            return await this.ethersProvider.sendTransaction(params.tx);
-          case RpcMethod.waitForTransaction:
-            return await this.ethersProvider.waitForTransaction(
-              params.transactionHash,
-              params.confirmations,
-              params.timeout,
-            );
-          case RpcMethod.getLatestBlockNumber:
-            return await this.ethersProvider.getBlockNumber();
-          case RpcMethod.getTransaction:
-            return await this.ethersProvider.getTransaction(params.transactionHash);
-          default:
-            return null;
-        }
-      } catch (error: any) {
-        log.error(`Error in network service ${error}`);
-        if (error.toString().toLowerCase().includes() === 'timeout error') {
-          for (; rpcUrlIndex < this.fallbackRpcUrls.length; rpcUrlIndex += 1) {
-            this.ethersProvider = new ethers.providers.JsonRpcProvider(
-              this.fallbackRpcUrls[rpcUrlIndex],
-            );
-            withFallbackRetry();
-          }
-        }
-        return error;
-      }
-    };
-    return withFallbackRetry();
+    switch (tag) {
+      case RpcMethod.getTransactionReceipt:
+        return await this.provider.getTransactionReceipt(params);
+      case RpcMethod.waitForTransaction:
+        return await this.provider.waitForTransactionReceipt({
+          hash: params.transactionHash,
+          confirmations: params.confirmations,
+          timeout: params.timeout,
+        });
+      case RpcMethod.getTransaction:
+        return await this.provider.getTransaction(params.transactionHash);
+      case RpcMethod.getLatestBlockNumber:
+        return await this.provider.getBlockNumber();
+      default:
+        return null;
+    }
   };
 
-  async getEIP1559GasPrice(): Promise<Type2TransactionGasPriceType> {
-    const feeData = await this.useProvider(RpcMethod.getEIP1159GasPrice);
-    const maxFeePerGas = L2Networks.includes(this.chainId)
-      ? ethers.utils.hexValue(feeData.lastBaseFeePerGas)
-      : ethers.utils.hexValue(feeData.maxFeePerGas);
-    // Ethers' getFeeData function hardcodes 1.5 gwei as the minimum tip, which
-    // turns out to be too large for some L2s like Arbitrum.
-    // TODO: Can use this logic in future if we want to set a minimum tip.
-    // const minimumTip = BigNumber.from('1500000000');
-    // if (!maxPriorityFeePerGas || maxPriorityFeePerGas.lt(0)
-    //      || maxPriorityFeePerGas.gt(minimumTip)) {
-    //   maxPriorityFeePerGas = minimumTip;
-    // }
-    const maxPriorityFeePerGas = L2Networks.includes(this.chainId) ? '0x00' : ethers.utils.hexValue(feeData.maxPriorityFeePerGas);
+  async sendRpcCall(method: string, params: Array<any>): Promise<any> {
+    const requestData = {
+      method,
+      params,
+      jsonrpc: '2.0',
+      id: Date.now(),
+    };
+    const response = await axios.post(this.rpcUrl, requestData);
+    const {
+      data,
+    } = response;
+    if (!data) {
+      log.error(`RPC Call failed without data on chainId: ${this.chainId}`);
+      return null;
+    }
+    return data.result;
+  }
+
+  async getBaseFeePerGas(): Promise<number> {
+    const feeData = await this.useProvider(RpcMethod.getFeeHistory);
+    return Number(feeData.lastBaseFeePerGas);
+  }
+
+  async getLegacyGasPrice(): Promise<Type0TransactionGasPriceType> {
+    return await this.sendRpcCall(EthMethodType.GAS_PRICE, []);
+  }
+
+  async getEIP1559FeesPerGas(): Promise<Type2TransactionGasPriceType> {
+    const maxFeePerGasPromise = this.getLegacyGasPrice();
+    const maxPriorityFeePerGasPromise = this.sendRpcCall(
+      EthMethodType.MAX_PRIORITY_FEE_PER_GAS,
+      [],
+    );
+    const [maxFeePerGas, maxPriorityFeePerGas] = await Promise.all(
+      [maxFeePerGasPromise, maxPriorityFeePerGasPromise],
+    );
+
     return {
       maxFeePerGas,
       maxPriorityFeePerGas,
     };
   }
 
-  async getBaseFeePerGas(): Promise<number> {
-    const feeData = await this.useProvider(RpcMethod.getEIP1159GasPrice);
-    return Number(feeData.lastBaseFeePerGas);
-  }
-
-  async getGasPrice(): Promise<Type0TransactionGasPriceType> {
-    const gasPrice = (await this.useProvider(RpcMethod.getGasPrice)).toHexString();
-    return {
-      gasPrice,
-    };
-  }
-
-  async getBalance(address: string): Promise<BigNumber> {
-    const balance = await this.useProvider(RpcMethod.getBalance, {
-      address,
-    });
-    return BigNumber.from(balance);
-  }
-
-  // TODO: Avoid creating new contract instance Every time. Save & get from cache
-  getContract(_abi: string, contractAddress: string): ethers.Contract {
-    const abi = new ethers.utils.Interface(_abi);
-    const contract = new ethers.Contract(contractAddress, abi, this.ethersProvider);
-    return contract;
-  }
-
-  /**
-   *
-   * @param userAddress address of the user
-   * @param tokenAddress address of an ERC20 token
-   * @returns balance of the user having the token
-   */
-  async getTokenBalance(userAddress: string, tokenAddress: string): Promise<BigNumber> {
-    const erc20Contract = this.getContract(JSON.stringify(ERC20_ABI), tokenAddress);
-    const tokenBalance = await erc20Contract.balanceOf(userAddress);
-    return tokenBalance;
-  }
-
-  /**
-   * check if the user is allowed to spend the token
-   * based on the allowance set by the owner address for that spender address
-   * @param tokenAddress token contract adddress
-   * @param ownerAddress owner address whose funds are being spent
-   * @param spenderAddress spender address who is spending the funds
-   * @param value value in wei
-   * @returns if the user is allowed to spend the token
-   */
-  async checkAllowance(
-    tokenAddress: string,
-    ownerAddress: string,
-    spenderAddress: string,
-    value: BigNumber,
-  ): Promise<boolean> {
-    const erc20Contract = this.getContract(JSON.stringify(ERC20_ABI), tokenAddress);
-    let isSpenderAllowed = false;
-    const tokensLeftToSpend = await erc20Contract.allowance(ownerAddress, spenderAddress);
-    if (tokensLeftToSpend.sub(value) > 0) {
-      isSpenderAllowed = true;
-    }
-    return isSpenderAllowed;
-  }
-
-  async executeReadMethod(
-    abi: string,
-    address: string,
-    methodName: string,
-    params: any,
-  ): Promise<object> {
-    const contract = this.getContract(abi, address);
-    const contractReadMethodValue = await contract[methodName].apply(null, params);
-    return contractReadMethodValue;
+  async getBalance(address: string): Promise<BigInt> {
+    const balance = await this.sendRpcCall(EthMethodType.GET_BALANCE, [address]);
+    return BigInt(balance);
   }
 
   /**
@@ -212,43 +115,22 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
    */
 
   async estimateGas(
-    contract: ethers.Contract,
-    methodName: string,
-    params: any,
-    from: string,
-  ): Promise<BigNumber> {
-    const contractInterface = contract.interface;
-    const functionSignature = contractInterface.encodeFunctionData(methodName, params);
-    const estimatedGas = await this.useProvider(RpcMethod.estimateGas, {
-      from,
-      to: contract.address,
-      data: functionSignature,
-    });
-    return estimatedGas;
+    params: any, // TODO type define params
+  ): Promise<any> {
+    return await this.sendRpcCall(EthMethodType.ESTIMATE_GAS, params);
   }
 
-  // same as above but accepts different parameters, will combine in a future release
-  async estimateCallGas(
-    from: string,
-    to: string,
-    data: string,
-  ): Promise<BigNumber> {
-    const estimatedGas = await this.useProvider(RpcMethod.estimateGas, {
-      from,
-      to,
-      data,
-    });
-    return estimatedGas;
+  async ethCall(params: any): Promise<any> {
+    return await this.sendRpcCall(EthMethodType.ETH_CALL, params);
   }
 
   async getTransactionReceipt(
     transactionHash: string,
-  ): Promise<ethers.providers.TransactionReceipt> {
-    const transactionReceipt = await this.useProvider(
+  ): Promise<TransactionReceipt> {
+    return await this.useProvider(
       RpcMethod.getTransactionReceipt,
       transactionHash,
     );
-    return transactionReceipt;
   }
 
   /**
@@ -259,25 +141,21 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
    * if pendingNonce is set to false, returns the nonce of the mined transaction
    */
   async getNonce(address: string, pendingNonce = true): Promise<number> {
-    const nonce = await this.useProvider(RpcMethod.getTransactionCount, {
-      pendingNonce,
-      address,
-    });
-    return nonce;
+    const params = pendingNonce ? [address, 'pending'] : [address];
+    return await this.sendRpcCall(
+      EthMethodType.GET_TRANSACTION_COUNT,
+      params,
+    );
   }
 
   async sendTransaction(
     rawTransactionData: EVMRawTransactionType,
     account: IEVMAccount,
-  ): Promise<ethers.providers.TransactionResponse> {
+  ): Promise<Transaction> {
     const rawTx: EVMRawTransactionType = rawTransactionData;
     rawTx.from = account.getPublicKey();
     const tx = await account.signTransaction(rawTx);
-    const receipt = await this.useProvider(RpcMethod.sendTransaction, {
-      tx,
-      rawTx,
-    });
-    return receipt;
+    return await this.sendRpcCall(EthMethodType.SEND_RAW_TRANSACTION, [tx]);
   }
 
   /**
@@ -288,52 +166,29 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
     transactionHash: string,
     confirmations?: number,
     timeout?: number,
-  ): Promise<ethers.providers.TransactionReceipt> {
-    const transactionReceipt = await this.useProvider(RpcMethod.waitForTransaction, {
+  ): Promise<TransactionReceipt> {
+    return await this.useProvider(RpcMethod.waitForTransaction, {
       transactionHash,
       confirmations,
       timeout,
     });
-    return transactionReceipt;
   }
 
   /**
    * @param transactionHash transaction hash
    * @returns transaction once mined, else waits for the transaction to be mined
   */
-  async getTransaction(transactionHash: string): Promise<ethers.providers.TransactionResponse> {
-    const transaction = await this.useProvider(RpcMethod.getTransaction, {
+  async getTransaction(transactionHash: string): Promise<Transaction> {
+    return await this.useProvider(RpcMethod.getTransaction, {
       transactionHash,
     });
-    return transaction;
   }
 
-  async getDecimal(tokenAddress: string): Promise<number> {
-    const erc20Contract = this.getContract(JSON.stringify(ERC20_ABI), tokenAddress);
-    const decimal = await erc20Contract.decimal;
-    return decimal;
+  async getLatesBlockNumber(): Promise<bigint> {
+    return await this.useProvider(RpcMethod.getLatestBlockNumber);
   }
 
-  async getLatesBlockNumber(): Promise<number> {
-    const blockNumber = await this.useProvider(RpcMethod.getLatestBlockNumber);
-    return blockNumber;
-  }
-
-  async sendRpcCall(method: string, params: Array<object>): Promise<any> {
-    const data = {
-      method,
-      params,
-      jsonrpc: '2.0',
-      id: 1,
-    };
-    const response = await axios.post(this.rpcUrl, data);
-    return response;
-  }
-
-  static createFilter(contractAddress: string, topic: string) {
-    return {
-      address: contractAddress,
-      topics: [topic],
-    };
+  async runAlchemySimulation(params: any): Promise<any> {
+    return await this.sendRpcCall(AlchemyMethodType.SIMULATE_EXECUTION, params);
   }
 }

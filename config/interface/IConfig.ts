@@ -26,7 +26,7 @@ type ChainIdAndTokenWithStringValueType = {
 
 type OwnerAccountDetailsType = {
   [key: number]: {
-    publicKey: string,
+    publicKey: `0x${string}`,
     privateKey: string,
   }
 };
@@ -145,7 +145,7 @@ type ChainIdSupportedTransactionType = {
 type EntryPointDataConfigType = {
   [key: number]: Array<{
     abi: Array<any>,
-    address: string,
+    address: `0x${string}`,
   }>
 };
 
@@ -192,7 +192,7 @@ export type ConfigType = {
   feeOption: FeeOptionConfigType,
   tokenPrice: TokenPriceConfigType,
   entryPointData: EntryPointDataConfigType,
-  zeroAddress: string,
+  zeroAddress: `0x${string}`,
   aaDashboardBackend: {
     url: string
   }

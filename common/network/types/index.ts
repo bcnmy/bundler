@@ -1,11 +1,9 @@
 export type Type2TransactionGasPriceType = {
-  maxPriorityFeePerGas: string;
-  maxFeePerGas: string
+  maxPriorityFeePerGas: bigint;
+  maxFeePerGas: bigint
 };
 
-export type Type0TransactionGasPriceType = {
-  gasPrice: string
-};
+export type Type0TransactionGasPriceType = bigint;
 
 export type ContractEventFilterType = {
   address: string,

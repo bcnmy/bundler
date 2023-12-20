@@ -1,8 +1,6 @@
 /* eslint-disable import/no-import-module-exports */
-/* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable no-await-in-loop */
-import { ethers } from 'ethers';
-// import heapdump from 'heapdump';
+import { getContract, parseEther } from 'viem';
 import { config } from '../../config';
 import { EVMAccount, IEVMAccount } from '../../relayer/src/services/account';
 import {
@@ -46,9 +44,7 @@ import {
   BundlerRelayService,
 } from '../relay-service';
 import {
-  AASimulationService,
   BundlerSimulationService,
-  BundlerGasEstimationService,
   SCWSimulationService,
 } from '../simulation';
 import { AlchemySimulationService, TenderlySimulationService } from '../simulation/external-simulation';
@@ -63,6 +59,7 @@ import {
   TransactionType,
 } from '../types';
 import { UserOperationStateDAO } from '../db/dao/UserOperationStateDAO';
+import { ENTRY_POINT_ABI } from '../constants';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
@@ -88,16 +85,8 @@ const gasPriceServiceMap: {
   undefined;
 } = {};
 
-const aaSimulatonServiceMap: {
-  [chainId: number]: AASimulationService;
-} = {};
-
 const bundlerSimulatonServiceMap: {
   [chainId: number]: BundlerSimulationService
-} = {};
-
-const bundlerGasEstimationServiceMap: {
-  [chainId: number]: BundlerGasEstimationService
 } = {};
 
 const scwSimulationServiceMap: {
@@ -168,7 +157,6 @@ let statusService: IStatusService;
     const networkService = new EVMNetworkService({
       chainId,
       rpcUrl: config.chains.provider[chainId],
-      fallbackRpcUrls: config.chains.fallbackUrls[chainId] || [],
     });
     log.info(`Network service setup complete for chainId: ${chainId}`);
     networkServiceMap[chainId] = networkService;
@@ -283,8 +271,9 @@ let statusService: IStatusService;
           pendingTransactionCountThreshold:
             relayerManager.pendingTransactionCountThreshold[chainId],
           newRelayerInstanceCount: relayerManager.newRelayerInstanceCount[chainId],
-          fundingBalanceThreshold: ethers.utils
-            .parseEther(relayerManager.fundingBalanceThreshold[chainId].toString()),
+          fundingBalanceThreshold: parseEther(
+            relayerManager.fundingBalanceThreshold[chainId].toString(),
+          ),
           fundingRelayerAmount: relayerManager.fundingRelayerAmount[chainId],
           ownerAccountDetails: new EVMAccount(
             relayerManager.ownerAccountDetails[chainId].publicKey,
@@ -342,6 +331,20 @@ let statusService: IStatusService;
     feeOptionMap[chainId] = feeOptionService;
     log.info(`Fee option service setup complete for chainId: ${chainId}`);
 
+    const tenderlySimulationService = new TenderlySimulationService(
+      gasPriceService,
+      cacheService,
+      {
+        tenderlyUser: config.simulationData.tenderlyData.tenderlyUser,
+        tenderlyProject: config.simulationData.tenderlyData.tenderlyProject,
+        tenderlyAccessKey: config.simulationData.tenderlyData.tenderlyAccessKey,
+      },
+    );
+
+    const alchemySimulationService = new AlchemySimulationService(
+      networkService,
+    );
+
     // for each network get transaction type
     for (const type of supportedTransactionType[chainId]) {
       if (type === TransactionType.AA) {
@@ -369,10 +372,11 @@ let statusService: IStatusService;
 
           entryPointMap[chainId].push({
             address: entryPoint.address,
-            entryPointContract: networkService.getContract(
-              JSON.stringify(entryPoint.abi),
-              entryPoint.address,
-            ),
+            entryPointContract: getContract({
+              abi: ENTRY_POINT_ABI,
+              address: entryPoint.address,
+              publicClient: networkService.provider,
+            }),
           });
         }
 
@@ -393,7 +397,13 @@ let statusService: IStatusService;
         const aaRelayService = new AARelayService(aaQueue);
         routeTransactionToRelayerMap[chainId][type] = aaRelayService;
 
-        aaSimulatonServiceMap[chainId] = new AASimulationService(networkService);
+        // eslint-disable-next-line max-len
+        bundlerSimulatonServiceMap[chainId] = new BundlerSimulationService(
+          networkService,
+          tenderlySimulationService,
+          alchemySimulationService,
+          gasPriceService,
+        );
         log.info(`AA consumer, relay service & simulation service setup complete for chainId: ${chainId}`);
       } else if (type === TransactionType.SCW) {
         // queue for scw
@@ -425,16 +435,6 @@ let statusService: IStatusService;
         const scwRelayService = new SCWRelayService(scwQueue);
         routeTransactionToRelayerMap[chainId][type] = scwRelayService;
 
-        const tenderlySimulationService = new TenderlySimulationService(
-          gasPriceService,
-          cacheService,
-
-          {
-            tenderlyUser: config.simulationData.tenderlyData.tenderlyUser,
-            tenderlyProject: config.simulationData.tenderlyData.tenderlyProject,
-            tenderlyAccessKey: config.simulationData.tenderlyData.tenderlyAccessKey,
-          },
-        );
         scwSimulationServiceMap[chainId] = new SCWSimulationService(
           networkService,
           tenderlySimulationService,
@@ -465,10 +465,11 @@ let statusService: IStatusService;
 
           entryPointMap[chainId].push({
             address: entryPoint.address,
-            entryPointContract: networkService.getContract(
-              JSON.stringify(entryPoint.abi),
-              entryPoint.address,
-            ),
+            entryPointContract: getContract({
+              abi: ENTRY_POINT_ABI,
+              address: entryPoint.address,
+              publicClient: networkService.provider,
+            }),
           });
         }
 
@@ -489,31 +490,12 @@ let statusService: IStatusService;
         const bundlerRelayService = new BundlerRelayService(bundlerQueue);
         routeTransactionToRelayerMap[chainId][type] = bundlerRelayService;
 
-        const tenderlySimulationService = new TenderlySimulationService(
-          gasPriceService,
-          cacheService,
-          {
-            tenderlyUser: config.simulationData.tenderlyData.tenderlyUser,
-            tenderlyProject: config.simulationData.tenderlyData.tenderlyProject,
-            tenderlyAccessKey: config.simulationData.tenderlyData.tenderlyAccessKey,
-          },
-        );
-
-        const alchemySimulationService = new AlchemySimulationService(
-          networkService,
-        );
-
         // eslint-disable-next-line max-len
         bundlerSimulatonServiceMap[chainId] = new BundlerSimulationService(
           networkService,
           tenderlySimulationService,
           alchemySimulationService,
           gasPriceService,
-        );
-
-        // eslint-disable-next-line max-len
-        bundlerGasEstimationServiceMap[chainId] = new BundlerGasEstimationService(
-          networkService,
         );
         log.info(`Bundler consumer, relay service, simulation and validation service setup complete for chainId: ${chainId}`);
       }
@@ -532,9 +514,7 @@ let statusService: IStatusService;
 export {
   routeTransactionToRelayerMap,
   feeOptionMap,
-  aaSimulatonServiceMap,
   bundlerSimulatonServiceMap,
-  bundlerGasEstimationServiceMap,
   scwSimulationServiceMap,
   entryPointMap,
   EVMRelayerManagerMap,

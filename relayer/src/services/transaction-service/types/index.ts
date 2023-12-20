@@ -1,4 +1,4 @@
-import { ethers } from 'ethers';
+import { Transaction } from 'viem';
 import { ICacheService } from '../../../../../common/cache';
 import { ITransactionDAO, IUserOperationStateDAO } from '../../../../../common/db';
 import { IGasPrice } from '../../../../../common/gas-price';
@@ -34,10 +34,10 @@ export type TransactionResponseType = {
 };
 
 export type TransactionDataType = {
-  to: string;
-  value: string;
-  data: string;
-  gasLimit: string; // value will be in hex
+  to: `0x${string}`;
+  value: bigint;
+  data: `0x${string}`;
+  gasLimit: `0x${string}`;
   speed?: GasPriceType;
   walletAddress: string,
   transactionId: string;
@@ -61,10 +61,10 @@ export type SuccessTransactionResponseType = TransactionListenerNotifyReturnType
 
 export type CreateRawTransactionParamsType = {
   from: string,
-  to: string;
-  value: string;
-  data: string;
-  gasLimit: string;
+  to: `0x${string}`;
+  value: bigint;
+  data: `0x${string}`;
+  gasLimit: `0x${string}`;
   speed?: GasPriceType;
   account: IEVMAccount;
   transactionId: string
@@ -79,7 +79,7 @@ export type ExecuteTransactionParamsType = {
 
 export type ExecuteTransactionResponseType = {
   success: true;
-  transactionResponse: ethers.providers.TransactionResponse,
+  transactionResponse: Transaction,
 } | {
   success: false;
   error: string;

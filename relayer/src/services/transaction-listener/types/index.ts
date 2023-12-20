@@ -1,4 +1,4 @@
-import { BigNumber, ethers } from 'ethers';
+import { Transaction, TransactionReceipt } from 'viem';
 import { ICacheService } from '../../../../../common/cache';
 import {
   ITransactionDAO, IUserOperationDAO, IUserOperationStateDAO,
@@ -27,9 +27,9 @@ export type EVMTransactionListenerParamsType = {
 };
 
 export type NotifyTransactionListenerParamsType = {
-  transactionExecutionResponse?: ethers.providers.TransactionResponse,
+  transactionExecutionResponse?: Transaction,
   transactionId: string,
-  transactionReceipt?: ethers.providers.TransactionReceipt,
+  transactionReceipt?: TransactionReceipt,
   relayerAddress: string,
   transactionType: TransactionType,
   previousTransactionHash?: string,
@@ -42,7 +42,7 @@ export type NotifyTransactionListenerParamsType = {
 
 export type TransactionListenerNotifyReturnType = {
   isTransactionRelayed: boolean,
-  transactionExecutionResponse: null | ethers.providers.TransactionResponse
+  transactionExecutionResponse: null | Transaction
 };
 
 export type OnTransactionSuccessParamsType = NotifyTransactionListenerParamsType;
@@ -55,8 +55,8 @@ export type TransactionDataToBeUpdatedInDatabaseType = {
   transactionFee?: number;
   transactionFeeInUSD?: number;
   transactionFeeCurrency?: string;
-  rawTransaction?: ethers.providers.TransactionResponse;
-  gasPrice?: BigNumber;
+  rawTransaction?: Transaction;
+  gasPrice?: BigInt;
   receipt?: object;
   resubmitted?: boolean;
   relayerAddress?: string;
@@ -73,9 +73,9 @@ export type NewTransactionDataToBeSavedInDatabaseType = {
   transactionHash: string,
   previousTransactionHash?: string,
   status: TransactionStatus,
-  rawTransaction: ethers.providers.TransactionResponse,
+  rawTransaction: Transaction,
   chainId: number,
-  gasPrice?: BigNumber,
+  gasPrice?: BigInt,
   relayerAddress: string,
   walletAddress: string,
   metaData: any,
@@ -91,8 +91,8 @@ export type FrontRunnedTransactionDataToBeUpdatedInDatabaseType = {
   transactionFee?: number;
   transactionFeeInUSD?: number;
   transactionFeeCurrency?: string;
-  rawTransaction?: ethers.providers.TransactionResponse;
-  gasPrice?: BigNumber;
+  rawTransaction?: Transaction;
+  gasPrice?: BigInt;
   receipt?: object;
   resubmitted?: boolean;
   relayerAddress?: string;
