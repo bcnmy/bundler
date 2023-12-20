@@ -32,6 +32,15 @@ import { ChillizMainnetGasPrice } from './networks/ChillizMainnetGasPrice';
 import { AstarMainnetGasPrice } from './networks/AstarMainnetGasPrice';
 import { ChillizTestnetGasPrice } from './networks/ChillizTestnetGasPrice';
 import { AstarTestnetGasPrice } from './networks/AstarTestnetGasPrice';
+import { CoreMainnetGasPrice } from './networks/CoreMainnetGasPrice';
+import { CoreTestnetGasPrice } from './networks/CoreTestnetGasPrice';
+import { MantaMainnetGasPrice } from './networks/MantaMainnetGasPrice';
+import { MantaTestnetGasPrice } from './networks/MantaTestnetGasPrice';
+import { ComboTestnetGasPrice } from './networks/ComboTestnetGasPrice';
+import { ComboMainnetGasPrice } from './networks/ComboMainnetGasPrice';
+import { CapXChainGasPrice } from './networks/CapXChainGasPrice';
+import { ArbitrumSepoliaGasPrice } from './networks/ArbitrumSepoliaGasPrice';
+import { SepoliaGasPrice } from './networks/SepoliaGasPrice';
 
 export type GasPriceServiceType =
   | MaticGasPrice
@@ -251,6 +260,60 @@ export class GasPriceManager implements IGasPriceManager<GasPriceServiceType> {
         );
       case 81:
         return new AstarTestnetGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
+      case 169:
+        return new MantaMainnetGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
+      case 3441005:
+        return new MantaTestnetGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
+      case 1116:
+        return new CoreMainnetGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
+      case 1115:
+        return new CoreTestnetGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
+      case 91715:
+        return new ComboTestnetGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
+      case 9980:
+        return new ComboMainnetGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
+      case 7116:
+        return new CapXChainGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
+      case 421614:
+        return new ArbitrumSepoliaGasPrice(
+          this.cacheService,
+          this.networkService,
+          this.options,
+        );
+      case 11155111:
+        return new SepoliaGasPrice(
           this.cacheService,
           this.networkService,
           this.options,

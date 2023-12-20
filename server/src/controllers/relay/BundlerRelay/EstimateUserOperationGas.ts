@@ -17,6 +17,7 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
 
     const userOp = req.body.params[0];
     const entryPointAddress = req.body.params[1];
+    const stateOverrideSet = req.body.params[2];
 
     const entryPointContracts = entryPointMap[parseInt(chainId, 10)];
 
@@ -44,6 +45,7 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
         userOp,
         entryPointContract,
         chainId: parseInt(chainId, 10),
+        stateOverrideSet,
       },
     );
 

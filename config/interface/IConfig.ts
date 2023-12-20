@@ -101,7 +101,9 @@ type TransactionConfigType = {
     'NONCE_TOO_LOW': string[],
     'GAS_LIMIT_REACHED': string[],
     'MAX_PRIORITY_FEE_HIGHER_THAN_MAX_FEE': string[],
-    'RPC_FAILURE': string[]
+    'RPC_FAILURE': string[],
+    'INTRINSIC_GAS_TOO_LOW': string[],
+    'MAX_FEE_PER_GAS_LESS_THAN_BLOCK_BASE_FEE': string[]
   },
   retryCount: {
     [key: string]: {

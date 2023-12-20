@@ -404,7 +404,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
                 blockHash: (
                   frontRunnedTransactionReceipt as TransactionReceipt
                 ).blockHash,
-                status: TransactionStatus.FAILED,
+                status: TransactionStatus.SUCCESS,
                 success,
                 actualGasCost,
                 actualGasUsed,
@@ -427,7 +427,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
                   blockHash: (
                     frontRunnedTransactionReceipt as TransactionReceipt
                   ).blockHash,
-                  status: TransactionStatus.FAILED,
+                  status: TransactionStatus.SUCCESS,
                   success,
                   actualGasCost,
                   actualGasUsed,
@@ -464,6 +464,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
                 frontRunnedTransactionFee,
                 frontRunnedTransactionFeeInUSD,
                 frontRunnedTransactionFeeCurrency,
+                status: TransactionStatus.FAILED,
                 updationTime: Date.now(),
               }, transactionId, transactionExecutionResponse?.hash);
 

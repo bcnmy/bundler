@@ -1,4 +1,4 @@
-import { EntryPointContractType, UserOperationType } from '../../types';
+import { EntryPointContractType, StateOverrideSetType, UserOperationType } from '../../types';
 
 // data response type that external simulation serivcereturns
 export type ExternalSimulationResponseType = {
@@ -35,6 +35,7 @@ export type EstimateUserOperationGasDataType = {
   userOp: UserOperationType;
   entryPointContract: EntryPointContractType;
   chainId: number;
+  stateOverrideSet?: StateOverrideSetType
 };
 
 // data response type that simulation service returns

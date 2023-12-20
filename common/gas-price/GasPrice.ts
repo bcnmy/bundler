@@ -337,8 +337,18 @@ export class GasPrice implements IGasPrice {
                 '250000000',
               );
             }
+          } else if ([1].includes(this.chainId)) {
+            maxPriorityFeePerGas = BigInt(toHex(maxFeePerGas));
+            await this.setMaxPriorityFeeGasPrice(
+              GasPriceType.DEFAULT,
+              maxPriorityFeePerGas.toString(),
+            );
+            await this.setMaxFeeGasPrice(
+              GasPriceType.DEFAULT,
+              formatUnits(maxFeePerGas, 9).toString(),
+            );
           } else if ([137].includes(this.chainId)) {
-            maxPriorityFeePerGas = BigInt(Number(toHex(maxFeePerGas)) * 0.4);
+            maxPriorityFeePerGas = BigInt(Number(toHex(maxFeePerGas)) * 0.2);
             if (maxPriorityFeePerGas < BigInt(30000000000)) {
               maxPriorityFeePerGas = BigInt(30000000000);
             }
@@ -348,7 +358,7 @@ export class GasPrice implements IGasPrice {
             );
             await this.setMaxFeeGasPrice(
               GasPriceType.DEFAULT,
-              (Number(formatUnits(maxFeePerGas, 9)) * 1.5).toString(),
+              (Number(formatUnits(maxFeePerGas, 9)) * 1.2).toString(),
             );
           } else {
             await this.setMaxFeeGasPrice(GasPriceType.DEFAULT, formatUnits(maxFeePerGas, 9));

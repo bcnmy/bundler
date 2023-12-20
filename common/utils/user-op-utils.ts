@@ -27,22 +27,19 @@ export const getPaymasterFromPaymasterAndData = (paymasterAndData: string): stri
   return paymasterAddress;
 };
 
-const filterLogs = (
-  userOpEvent: any,
-  logs: Log<bigint, number, false>[],
-): Log[] => {
-  const userOpLogs = logs.find((transactionlog: any) => {
-    if (transactionlog.topics.length === userOpEvent.topics.length) {
+const filterLogs = (userOperationEventLogFromReceipt: Log, transactionLogs: Log[]): Log[] => {
+  const userOperationEventFilteredLog = transactionLogs.find((transactionlog: any) => {
+    if (transactionlog.topics.length === userOperationEventLogFromReceipt.topics.length) {
       // Sort the `topics` arrays and compare them element by element
       const sortedTransactionLogTopics = transactionlog.topics.slice().sort();
-      const sortedTopicsArray = userOpEvent.topics.slice().sort();
+      const sortedTopicsArray = userOperationEventLogFromReceipt.topics.slice().sort();
       return sortedTransactionLogTopics.every(
         (topic: string, index: number) => topic === sortedTopicsArray[index],
       );
     }
     return false;
   });
-  return [userOpLogs as Log];
+  return [userOperationEventFilteredLog as Log];
 };
 
 export const getUserOperationReceiptForFailedTransaction = async (

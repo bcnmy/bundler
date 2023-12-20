@@ -276,3 +276,13 @@ export type UpdateRequestDataType = {
 export type EntryPointContractType = GetContractReturnType<typeof ENTRY_POINT_ABI>;
 export type OptimismL1GasPriceOracleContractType =
 GetContractReturnType<typeof OPTIMISM_L1_GAS_PRICE_ORACLE>;
+
+export type StateOverrideSetType = {
+  [key: string]: {
+    balance?: string,
+    nonce?: string,
+    code?: string,
+    state?: object,
+    stateDiff?: object
+  }
+};
