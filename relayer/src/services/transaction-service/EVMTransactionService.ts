@@ -2,6 +2,7 @@
 /* eslint-disable no-else-return */
 /* eslint-disable max-len */
 import { Mutex } from 'async-mutex';
+import { toHex } from 'viem';
 import { ICacheService } from '../../../../common/cache';
 import { IGasPrice } from '../../../../common/gas-price';
 import { logger } from '../../../../common/logger';
@@ -34,7 +35,6 @@ import {
   TransactionDataType,
 } from './types';
 import { IUserOperationStateDAO } from '../../../../common/db';
-import { toHex } from 'viem';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
