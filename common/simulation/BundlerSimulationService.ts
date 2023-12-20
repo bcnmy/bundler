@@ -616,10 +616,12 @@ export class BundlerSimulationService {
         && Object.keys(ethEstimateGasError).length > 0
         && ethEstimateGasError.data
       ) {
-        const error = entryPointContract.interface.parseError(ethEstimateGasError.data);
-        const {
-          args,
-        } = error;
+        const errorDescription = decodeErrorResult({
+          abi: entryPointContract.abi,
+          data: ethEstimateGasError.data,
+        });
+        const { args } = errorDescription;
+
         const reason = args[0].toString();
         log.info(`Transaction failed with reason: ${reason} on chainId: ${chainId}`);
         if (reason.includes('AA1') || reason.includes('AA2')) {

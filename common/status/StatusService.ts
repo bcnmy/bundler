@@ -90,7 +90,7 @@ export class StatusService implements IStatusService {
             // eslint-disable-next-line no-await-in-loop
             relayerManagerStatus[relayerManagerNameKey][chainId].push({
               address: relayerAddress,
-              balance: parseInt(relayerDetails.balance?._hex, 16),
+              balance: relayerDetails.balance,
               nonce: relayerDetails.nonce,
               status: 'active',
               lastUpdated: new Date().toISOString(),
@@ -100,8 +100,8 @@ export class StatusService implements IStatusService {
             relayerManagerStatus[relayerManagerNameKey][chainId].push({
               address: relayerAddress,
               // convert hex to decimal
-              balance: parseInt(relayerManager
-                .transactionProcessingRelayerMap[relayerAddress].balance?._hex, 16),
+              balance: relayerManager
+                .transactionProcessingRelayerMap[relayerAddress].balance,
               nonce: relayerManager.transactionProcessingRelayerMap[relayerAddress].nonce,
               status: 'processing',
               lastUpdated: new Date().toISOString(),

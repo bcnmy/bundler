@@ -2,7 +2,7 @@
 import { Request, Response } from 'express';
 import { logger } from '../../../../../common/logger';
 import {
-  bundlerGasEstimationServiceMap,
+  bundlerSimulatonServiceMap,
   entryPointMap,
   gasPriceServiceMap,
 } from '../../../../../common/service-manager';
@@ -51,7 +51,7 @@ export const getGasAndGasPrices = async (req: Request, res: Response) => {
     }
 
     // use this file to estimate L2 fee
-    const estimatedUserOpGas = await bundlerGasEstimationServiceMap[
+    const estimatedUserOpGas = await bundlerSimulatonServiceMap[
       parseInt(chainId, 10)
     ].estimateUserOperationGas({
       userOp,

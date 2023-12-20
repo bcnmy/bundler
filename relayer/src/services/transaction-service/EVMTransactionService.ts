@@ -34,6 +34,7 @@ import {
   TransactionDataType,
 } from './types';
 import { IUserOperationStateDAO } from '../../../../common/db';
+import { toHex } from 'viem';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
@@ -236,7 +237,7 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
         } else if (MAX_FEE_PER_GAS_LESS_THAN_BLOCK_BASE_FEE.some((str) => errInString.indexOf(str) > -1)) {
           const bumpedUpGasPrice = await this.handleReplacementFeeTooLow(rawTransaction);
 
-          if (typeof bumpedUpGasPrice !== 'string') {
+          if (typeof bumpedUpGasPrice !== 'bigint') {
             log.info(`rawTransaction.maxFeePerGas ${rawTransaction.maxFeePerGas} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId} before bumping up`);
             rawTransaction.maxFeePerGas = bumpedUpGasPrice.maxFeePerGas;
             log.info(`increasing gas price for the resubmit transaction ${rawTransaction.gasPrice} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
@@ -624,6 +625,6 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
 
   // eslint-disable-next-line class-methods-use-this
   private async handleGasTooLow(rawTransaction: EVMRawTransactionType) {
-    return `0x${(Number(rawTransaction.gasLimit) * 2).toString(16)}`;
+    return toHex(Number(rawTransaction.gasLimit) * 2);
   }
 }

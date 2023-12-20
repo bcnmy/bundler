@@ -7,7 +7,7 @@
     "prepare": "husky install",
     "dev": "npx nodemon server/src/index.ts ",
     "views": "cp -r server/src/views server/dist/server/src/views",
-    "build": "tsc -p server && tsc -p relayer && tsc -p common && npm run views",
+    "build": "tsc -p server && npm run views",
     "start": "node --max_old_space_size=6000 server/dist/server/src/index.js",
     "test": "jest --setupFiles dotenv/config"
   },
@@ -52,7 +52,7 @@
     "redlock": "^5.0.0-beta.2",
     "rest-api-errors": "^1.2.5",
     "serialize-error": "8.1.0",
-    "typescript": "^4.7.4",
+    "typescript": "^5.2.0",
     "viem": "^1.19.9"
   },
   "devDependencies": {

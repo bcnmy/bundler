@@ -1,9 +1,9 @@
 /* eslint-disable import/no-import-module-exports */
 import { Request } from 'express';
 import { logger } from '../../../../common/logger';
-import { aaSimulatonServiceMap, entryPointMap } from '../../../../common/service-manager';
+import { bundlerSimulatonServiceMap, entryPointMap } from '../../../../common/service-manager';
 import { parseError } from '../../../../common/utils';
-import { STATUSES } from '../../middleware';
+import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../../middleware';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
@@ -33,19 +33,29 @@ export const simulateAATransaction = async (req: Request) => {
       };
     }
 
-    const aaSimulationResponse = await aaSimulatonServiceMap[chainId]
-      .simulate({ userOp, entryPointContract, chainId });
+    const aaSimulationResponse = await bundlerSimulatonServiceMap[chainId]
+      .simulateValidation({ userOp, entryPointContract, chainId });
 
     log.info(`AA simulation response: ${JSON.stringify(aaSimulationResponse)}`);
 
-    if (!aaSimulationResponse.isSimulationSuccessful) {
-      const { message } = aaSimulationResponse;
+    const {
+      code,
+      message,
+    } = aaSimulationResponse;
+
+    if (code !== STATUSES.SUCCESS) {
+      if (code === BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED) {
+        return {
+          code,
+          message,
+        };
+      }
       return {
-        code: STATUSES.BAD_REQUEST,
+        code,
         message,
       };
     }
-    req.body.params[4] = aaSimulationResponse.data.gasLimitFromSimulation;
+    req.body.params[4] = aaSimulationResponse.data.totalGas;
     req.body.params[5] = aaSimulationResponse.data.userOpHash;
 
     log.info(`Transaction successfully simulated for userOp: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
