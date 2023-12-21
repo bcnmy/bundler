@@ -29,7 +29,7 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
     } else {
       gasLimitFromSimulation = req.body.params[1] ? `0x${(req.body.params[1] + 200000).toString(16)}` : `0x${(200000).toString(16)}`;
     }
-    const transactionId = generateTransactionId(data);
+    const transactionId = generateTransactionId(Date.now().toString());
     log.info(`Sending transaction to relayer with transactionId: ${transactionId} for SCW: ${to} on chainId: ${chainId}`);
     if (!routeTransactionToRelayerMap[chainId][TransactionType.AA]) {
       return res.status(STATUSES.BAD_REQUEST).json({

@@ -9,7 +9,7 @@ export interface IGasPrice {
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
   cacheService: ICacheService;
 
-  setGasPrice(gasType: GasPriceType, price: NetworkBasedGasPriceType): Promise<void>
+  setGasPrice(gasType: GasPriceType, price: string): Promise<void>
   getGasPrice(gasType?: GasPriceType): Promise<NetworkBasedGasPriceType>
   getGasPriceForSimulation(gasType?: GasPriceType): Promise<bigint>
 
@@ -24,6 +24,6 @@ export interface IGasPrice {
     bumpingPercentage: number
   ): NetworkBasedGasPriceType
 
-  setBaseFeePerGas(baseFeePerGas: number): Promise<void>
+  setBaseFeePerGas(baseFeePerGas: string): Promise<void>
   getBaseFeePerGas(): Promise<bigint>
 }

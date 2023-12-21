@@ -5,6 +5,7 @@ import {
   routeTransactionToRelayerMap, transactionDao, userOperationDao,
 } from '../../../../common/service-manager';
 import {
+  customJSONStringify,
   generateTransactionId, getPaymasterFromPaymasterAndData, parseError,
 } from '../../../../common/utils';
 import {
@@ -30,8 +31,7 @@ export const relayAATransaction = async (req: Request, res: Response) => {
     const gasLimitFromSimulation = req.body.params[4];
     const userOpHash = req.body.params[5];
 
-    const transactionId = generateTransactionId(userOp);
-
+    const transactionId = generateTransactionId(Date.now().toString());
     const walletAddress = userOp.sender.toLowerCase();
 
     await transactionDao.save(chainId, {
@@ -68,7 +68,7 @@ export const relayAATransaction = async (req: Request, res: Response) => {
 
     try {
       const { dappAPIKey } = metaData;
-      log.info(`dappAPIKey: ${dappAPIKey} for userOp: ${JSON.stringify(userOp)}`);
+      log.info(`dappAPIKey: ${dappAPIKey} for userOp: ${customJSONStringify(userOp)}`);
       // const {
       //   destinationSmartContractAddresses,
       //   destinationSmartContractMethods,
@@ -80,7 +80,7 @@ export const relayAATransaction = async (req: Request, res: Response) => {
       // );
       // metaData.destinationSmartContractAddresses = destinationSmartContractAddresses;
       // metaData.destinationSmartContractMethods = destinationSmartContractMethods;
-      log.info(`MetaData to be saved: ${JSON.stringify(metaData)} for dappAPIKey: ${dappAPIKey}`);
+      log.info(`MetaData to be saved: ${customJSONStringify(metaData)} for dappAPIKey: ${dappAPIKey}`);
 
       const {
         sender,
@@ -119,7 +119,7 @@ export const relayAATransaction = async (req: Request, res: Response) => {
         creationTime: Date.now(),
       });
     } catch (error) {
-      log.error(`Error in getting meta data from userOp: ${JSON.stringify(userOp)}`);
+      log.error(`Error in getting meta data from userOp: ${customJSONStringify(userOp)}`);
       log.error(`Error: ${error}`);
     }
 

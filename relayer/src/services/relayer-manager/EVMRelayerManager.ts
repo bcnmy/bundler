@@ -18,7 +18,9 @@ import {
   EVMRawTransactionType,
   TransactionType,
 } from '../../../../common/types';
-import { generateTransactionId, getFailedTransactionRetryCountKey, parseError } from '../../../../common/utils';
+import {
+  customJSONStringify, generateTransactionId, getFailedTransactionRetryCountKey, parseError
+} from '../../../../common/utils';
 import { config } from '../../../../config';
 import { EVMAccount, IEVMAccount } from '../account';
 import { INonceManager } from '../nonce-manager';
@@ -64,7 +66,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
 
   newRelayerInstanceCount: number;
 
-  fundingBalanceThreshold: BigInt;
+  fundingBalanceThreshold: bigint;
 
   fundingRelayerAmount: number;
 
@@ -168,20 +170,20 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
    * @param relayerAddress
    */
   async postTransactionMined(relayerAddress: string): Promise<void> {
-    const address = toHex(relayerAddress.toLowerCase());
+    const address = relayerAddress.toLowerCase() as `0x${string}`;
     log.info(`postTransactionMined called for relayer: ${address} for Relayer Manager: ${this.name} on chainId: ${this.chainId}`);
     let relayerData = this.relayerQueue
       .list()
       .find((relayer) => relayer.address === address);
 
-    log.info(`relayerQueue consists: ${JSON.stringify(this.relayerQueue.list())}`);
-    log.info(`Relayer: ${address} for Relayer Manager: ${this.name} on chainId: ${this.chainId} with data: ${JSON.stringify(relayerData)} from relayerQueue`);
+    log.info(`relayerQueue consists: ${customJSONStringify(this.relayerQueue.list())}`);
+    log.info(`Relayer: ${address} for Relayer Manager: ${this.name} on chainId: ${this.chainId} with data: ${customJSONStringify(relayerData)} from relayerQueue`);
 
     if (!relayerData) {
       // if relayer is performing transaction then it would not be available in relayer queue
-      log.info(`transactionProcessingRelayerMap consists: ${JSON.stringify(this.transactionProcessingRelayerMap)}`);
+      log.info(`transactionProcessingRelayerMap consists: ${customJSONStringify(this.transactionProcessingRelayerMap)}`);
       relayerData = this.transactionProcessingRelayerMap[address];
-      log.info(`Relayer: ${address} for Relayer Manager: ${this.name} on chainId: ${this.chainId} with data: ${JSON.stringify(relayerData)} from transactionProcessingRelayerMap`);
+      log.info(`Relayer: ${address} for Relayer Manager: ${this.name} on chainId: ${this.chainId} with data: ${customJSONStringify(relayerData)} from transactionProcessingRelayerMap`);
     }
     if (relayerData) {
       log.info(`Reducing pending count for relayer: ${address} for Relayer Manager: ${this.name} on chainId: ${this.chainId}`);
@@ -192,7 +194,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
         `Pending count of relayer ${address} is ${relayerData.pendingCount} on chainId: ${this.chainId}`,
       );
       const balance = await this.networkService.getBalance(address);
-      relayerData.balance = balance;
+      relayerData.balance = Number(balance);
       log.info(
         `Balance of relayer ${address} is ${balance} on chainId: ${this.chainId}`,
       );
@@ -204,7 +206,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
           await this.fundRelayers([address]);
         } catch (error) {
           log.error(
-            `Error while funding relayer ${address}:- ${error} on chainId: ${this.chainId}`,
+            `Error while funding relayer ${address} on chainId: ${this.chainId}: ${parseError(error)}`,
           );
         }
       }
@@ -342,12 +344,12 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
       }
 
       for (const relayer of relayers) {
-        const relayerAddress = toHex(relayer.getPublicKey().toLowerCase());
+        const relayerAddress = relayer.getPublicKey().toLowerCase() as `0x${string}`;
         try {
           log.info(
             `Creating relayer ${relayerAddress} on chainId: ${this.chainId}`,
           );
-          const balance = await this.networkService.getBalance(relayerAddress);
+          const balance = Number(toHex(await this.networkService.getBalance(relayerAddress)));
           const nonce = await this.nonceManager.getNonce(relayerAddress);
           log.info(
             `Balance of relayer ${relayerAddress} is ${balance} and nonce is ${nonce} on chainId: ${this.chainId} with threshold ${this.fundingBalanceThreshold}`,
@@ -368,7 +370,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
       }
     } catch (error) {
       log.error(
-        `failed to create relayers ${JSON.stringify(error)} on chainId: ${
+        `failed to create relayers ${customJSONStringify(error)} on chainId: ${
           this.chainId
         }`,
       );
@@ -392,7 +394,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
       .list()
       .find((relayer) => relayer.address === address);
     if (relayerData) {
-      const relayerBalance = relayerData.balance;
+      const relayerBalance = BigInt(relayerData.balance);
       log.info(
         `Relayer ${address} balance is ${relayerBalance} on chainId: ${this.chainId}`,
       );
@@ -450,17 +452,18 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
 
           const rawTx = {
             from: this.ownerAccountDetails.getPublicKey(),
-            data: toHex('0x'),
-            gasLimit: toHex(BigInt(gasLimit.toString())),
+            data: '0x' as `0x${string}`,
+            gasLimit: toHex(gasLimit),
             to: address,
             value: parseEther(fundingAmount.toString()),
             chainId: this.chainId,
           };
-          const transactionId = generateTransactionId(JSON.stringify(rawTx));
+
+          const transactionId = generateTransactionId(Date.now().toString());
           log.info(
             `Funding relayer ${address} on chainId: ${
               this.chainId
-            } with raw tx ${JSON.stringify(rawTx)}`,
+            } with raw tx ${customJSONStringify(rawTx)} with transactionId: ${transactionId}`,
           );
           await this.cacheService.set(getFailedTransactionRetryCountKey(
             transactionId,
@@ -503,7 +506,7 @@ implements IRelayerManager<IEVMAccount, EVMRawTransactionType> {
           log.error(
             `Error while funding relayer ${address} on chainId: ${
               this.chainId
-            } with error: ${JSON.stringify(error)}`,
+            } with error: ${parseError(error)}`,
           );
         }
       } else {

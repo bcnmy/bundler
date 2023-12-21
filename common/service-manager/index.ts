@@ -60,6 +60,7 @@ import {
 } from '../types';
 import { UserOperationStateDAO } from '../db/dao/UserOperationStateDAO';
 import { ENTRY_POINT_ABI } from '../constants';
+import { customJSONStringify } from '../utils';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
@@ -143,7 +144,7 @@ let statusService: IStatusService;
     tokenService.schedule();
   }
 
-  log.info(`Setting up instances for following chainIds: ${JSON.stringify(supportedNetworks)}`);
+  log.info(`Setting up instances for following chainIds: ${customJSONStringify(supportedNetworks)}`);
   for (const chainId of supportedNetworks) {
     log.info(`Setup of services started for chainId: ${chainId}`);
     routeTransactionToRelayerMap[chainId] = {};
@@ -286,7 +287,7 @@ let statusService: IStatusService;
 
       const addressList = await relayerMangerInstance.createRelayers();
       log.info(
-        `Relayer address list length: ${addressList.length} and minRelayerCount: ${JSON.stringify(relayerManager.minRelayerCount)} for relayerManager: ${relayerManager.name}`,
+        `Relayer address list length: ${addressList.length} and minRelayerCount: ${customJSONStringify(relayerManager.minRelayerCount)} for relayerManager: ${relayerManager.name}`,
       );
       await relayerMangerInstance.fundRelayers(addressList);
       log.info(`Relayer manager setup complete for chainId: ${chainId} for relayerManager: ${relayerManager.name}`);

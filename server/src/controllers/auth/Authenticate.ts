@@ -1,7 +1,7 @@
 /* eslint-disable import/no-import-module-exports */
 import { Request } from 'express';
 import { logger } from '../../../../common/logger';
-import { axiosPostCall, parseError } from '../../../../common/utils';
+import { axiosPostCall, customJSONStringify, parseError } from '../../../../common/utils';
 import { config } from '../../../../config';
 import { STATUSES } from '../../middleware';
 
@@ -15,7 +15,7 @@ export const authenticate = async (req: Request) => {
     log.info(`apiKey from request params: ${apiKey}`);
     log.info(`method from request body: ${method}`);
     log.info(`id from request body: ${id}`);
-    log.info(`params from request body: ${JSON.stringify(params)}`);
+    log.info(`params from request body: ${customJSONStringify(params)}`);
 
     const aaDashboardBackendBaseUrl = config.aaDashboardBackend.url;
 
@@ -32,7 +32,7 @@ export const authenticate = async (req: Request) => {
       bundlerRequestId,
     } = response.data;
 
-    log.info(`Response from AA Dashboard Backend: ${JSON.stringify(response)}`);
+    log.info(`Response from AA Dashboard Backend: ${customJSONStringify(response)}`);
 
     if (!isAuthenticated) {
       return {

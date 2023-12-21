@@ -1,17 +1,18 @@
 import { serializeError } from 'serialize-error';
+import { customJSONStringify } from './custom-json-stringifier';
 
 export const parseError = (error: any): string => {
   let errorMessage: string = '';
   if (error instanceof Error) {
     try {
-      errorMessage = serializeError(error)?.message || JSON.stringify(error);
+      errorMessage = serializeError(error)?.message || customJSONStringify(error);
     } catch (err) {
       // ignore
-      errorMessage = JSON.stringify(error);
+      errorMessage = customJSONStringify(error);
     }
   } else {
     try {
-      errorMessage = JSON.stringify(error);
+      errorMessage = customJSONStringify(error);
     } catch (err) {
       // ignore
       errorMessage = error;

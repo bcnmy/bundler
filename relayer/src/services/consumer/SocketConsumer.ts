@@ -9,6 +9,7 @@ import { IEVMAccount } from '../account';
 import { IRelayerManager } from '../relayer-manager';
 import { ISocketConsumer } from './interface/ISocketConsumer';
 import { SocketConsumerParamsType } from './types';
+import { customJSONStringify } from '../../../../common/utils';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 export class SocketConsumer implements ISocketConsumer {
@@ -47,7 +48,7 @@ export class SocketConsumer implements ISocketConsumer {
       const transactionDataReceivedFromQueue: TransactionQueueMessageType = JSON.parse(
         msg.content.toString(),
       );
-      log.info(`Message received from transction queue in socket service on chain Id ${this.chainId}: ${JSON.stringify(transactionDataReceivedFromQueue)}`);
+      log.info(`Message received from transction queue in socket service on chain Id ${this.chainId}: ${customJSONStringify(transactionDataReceivedFromQueue)}`);
       this.queue.ack(msg);
       try {
         if (transactionDataReceivedFromQueue.event === SocketEventType.onTransactionMined
@@ -67,7 +68,7 @@ export class SocketConsumer implements ISocketConsumer {
           },
         });
       } catch (error) {
-        log.error(`Failed to send to client on socket server with error: ${JSON.stringify(error)}`);
+        log.error(`Failed to send to client on socket server with error: ${customJSONStringify(error)}`);
       }
     } else {
       log.info(`No msg received from queue in socket service on chainId: ${this.chainId}`);

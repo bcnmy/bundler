@@ -2,5 +2,5 @@ export type EVMRelayerMetaDataType = {
   address: string;
   nonce: number;
   pendingCount: number;
-  balance: BigInt;
+  balance: number;
 };

@@ -1,6 +1,6 @@
 /* eslint-disable import/no-import-module-exports */
 import { UpdateRequestDataType } from '../../../../common/types';
-import { axiosPatchCall, parseError } from '../../../../common/utils';
+import { axiosPatchCall, customJSONStringify, parseError } from '../../../../common/utils';
 import { config } from '../../../../config';
 import { logger } from '../../../../common/logger';
 
@@ -27,7 +27,7 @@ export const updateRequest = async (
       httpResponseCode,
     });
 
-    log.info(`Response from AA Dashboard Backend for updating request: ${JSON.stringify(response)}`);
+    log.info(`Response from AA Dashboard Backend for updating request: ${customJSONStringify(response)}`);
   } catch (error) {
     log.error(`Error in updating bundler request with error: ${parseError(error)}`);
   }

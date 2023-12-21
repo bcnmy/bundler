@@ -16,7 +16,9 @@ import { INotificationManager } from '../../../../common/notification/interface'
 import {
   EVMRawTransactionType, NetworkBasedGasPriceType, TransactionType, UserOperationStateEnum,
 } from '../../../../common/types';
-import { getRetryTransactionCountKey, getFailedTransactionRetryCountKey, parseError } from '../../../../common/utils';
+import {
+  getRetryTransactionCountKey, getFailedTransactionRetryCountKey, parseError, customJSONStringify
+} from '../../../../common/utils';
 import { config } from '../../../../config';
 import { STATUSES } from '../../../../server/src/middleware';
 import { IEVMAccount } from '../account';
@@ -82,6 +84,168 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     return this.addressMutex[address];
   }
 
+  async sendTransaction(
+    transactionData: TransactionDataType,
+    account: IEVMAccount,
+    transactionType: TransactionType,
+    relayerManagerName: string,
+  ): Promise<SuccessTransactionResponseType | ErrorTransactionResponseType> {
+    const relayerAddress = account.getPublicKey();
+
+    const {
+      to, value, data, gasLimit,
+      speed, transactionId, walletAddress, metaData,
+    } = transactionData;
+
+    const retryTransactionCount = parseInt(await this.cacheService.get(getRetryTransactionCountKey(transactionId, this.chainId)), 10);
+
+    const maxRetryCount = config.transaction.retryCount[transactionType][this.chainId];
+
+    if (retryTransactionCount > maxRetryCount) {
+      try {
+      // send slack notification
+        await this.sendMaxRetryCountExceededSlackNotification(
+          transactionData.transactionId,
+          account,
+          transactionType,
+          this.chainId,
+        );
+      } catch (error) {
+        log.error(`Error in sending slack notification: ${parseError(error)}`);
+      }
+      return {
+        state: 'failed',
+        code: STATUSES.NOT_FOUND,
+        error: 'Max retry count exceeded. Use end point to get transaction status', // todo add end point
+        transactionId,
+        ...{
+          isTransactionRelayed: false,
+          transactionExecutionResponse: null,
+        },
+      };
+    }
+
+    log.info(`Transaction request received for transactionId: ${transactionId} on chainId ${this.chainId}`);
+
+    const addressMutex = this.getMutex(account.getPublicKey());
+    log.info(`Taking lock on address: ${account.getPublicKey()} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+    const release = await addressMutex.acquire();
+    log.info(`Lock taken on address: ${account.getPublicKey()} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+
+    try {
+      // create transaction
+      const rawTransaction = await this.createTransaction({
+        from: relayerAddress,
+        to,
+        value,
+        data,
+        gasLimit,
+        speed,
+        account,
+        transactionId,
+      });
+      log.info(`Raw transaction for transactionId: ${transactionId} is ${customJSONStringify(rawTransaction)} on chainId ${this.chainId}`);
+
+      const transactionExecutionResponse = await this.executeTransaction({
+        rawTransaction,
+        account,
+      }, transactionId);
+
+      log.info(`Transaction execution response for transactionId ${transactionData.transactionId}: ${customJSONStringify(transactionExecutionResponse)} on chainId ${this.chainId}`);
+
+      if (transactionType === TransactionType.BUNDLER) {
+        log.info(`Setting: ${UserOperationStateEnum.SUBMITTED} for transactionId: ${transactionId} on chainId ${this.chainId}`);
+        this.userOperationStateDao.updateState(
+          this.chainId,
+          {
+            transactionId,
+            transactionHash: transactionExecutionResponse.hash,
+            state: UserOperationStateEnum.SUBMITTED,
+          },
+        );
+      }
+
+      log.info(`Incrementing nonce for account: ${relayerAddress} for transactionId: ${transactionId} on chainId ${this.chainId}`);
+      await this.nonceManager.incrementNonce(relayerAddress);
+      log.info(`Incremented nonce for account: ${relayerAddress} for transactionId: ${transactionId} on chainId ${this.chainId}`);
+
+      // release lock once transaction is sent and nonce is incremented
+      log.info(`Releasing lock on address: ${account.getPublicKey()} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+      release();
+      log.info(`Lock released on address: ${account.getPublicKey()} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+
+      log.info(`Notifying transaction listener for transactionId: ${transactionId} on chainId ${this.chainId}`);
+      const transactionListenerNotifyResponse = await this.transactionListener.notify({
+        transactionHash: transactionExecutionResponse.hash,
+        transactionId: transactionId as string,
+        relayerAddress,
+        transactionType,
+        previousTransactionHash: undefined,
+        rawTransaction,
+        walletAddress,
+        metaData,
+        relayerManagerName,
+      });
+
+      if (transactionType === TransactionType.FUNDING) {
+        await this.sendRelayerFundingSlackNotification(relayerAddress, this.chainId, transactionExecutionResponse.hash);
+      }
+
+      if (transactionListenerNotifyResponse) {
+        return {
+          state: 'success',
+          code: STATUSES.SUCCESS,
+          transactionId,
+        };
+      } else {
+        return {
+          state: 'failed',
+          code: STATUSES.ETHERS_WAIT_FOR_TRANSACTION_TIMEOUT,
+          error: 'waitForTransaction ethers timeout error',
+          transactionId,
+        };
+      }
+    } catch (error: any) {
+      log.info(`Releasing lock on address: ${account.getPublicKey()} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+      release();
+      log.info(`Lock released on address: ${account.getPublicKey()} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+      if (error.message && error.message === 'Bundler balance too low. Send bundler for funding') {
+        return {
+          state: 'failed',
+          code: STATUSES.FUND_BUNDLER,
+          error: parseError(error),
+          transactionId,
+          ...{
+            isTransactionRelayed: false,
+            transactionExecutionResponse: null,
+          },
+        };
+      }
+      if (transactionType === TransactionType.BUNDLER) {
+        log.info(`Setting: ${UserOperationStateEnum.DROPPED_FROM_BUNDLER_MEMPOOL} for transactionId: ${transactionId} on chainId ${this.chainId}`);
+        this.userOperationStateDao.updateState(
+          this.chainId,
+          {
+            transactionId,
+            state: UserOperationStateEnum.DROPPED_FROM_BUNDLER_MEMPOOL,
+          },
+        );
+      }
+      log.info(`Error while sending transaction: ${error} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+      await this.sendTransactionFailedSlackNotification(transactionId, this.chainId, parseError(error));
+      return {
+        state: 'failed',
+        code: STATUSES.INTERNAL_SERVER_ERROR,
+        error: parseError(error),
+        transactionId,
+        ...{
+          isTransactionRelayed: false,
+          transactionExecutionResponse: null,
+        },
+      };
+    }
+  }
+
   private async createTransaction(
     createTransactionParams: CreateRawTransactionParamsType,
   ): Promise<CreateRawTransactionReturnType> {
@@ -111,20 +275,20 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     };
     const gasPrice = await this.gasPriceService.getGasPrice(speed);
     if (typeof gasPrice !== 'bigint') {
-      log.info(`Gas price being used to send transaction by relayer: ${relayerAddress} is: ${JSON.stringify(gasPrice)} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+      log.info(`Gas price being used to send transaction by relayer: ${relayerAddress} is: ${customJSONStringify(gasPrice)} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
       const {
         maxPriorityFeePerGas,
         maxFeePerGas,
       } = gasPrice;
       return {
         ...response,
-        type: '2',
+        type: 'eip1559',
         maxFeePerGas: BigInt(maxFeePerGas),
         maxPriorityFeePerGas: BigInt(maxPriorityFeePerGas),
       };
     }
     log.info(`Gas price being used to send transaction by relayer: ${relayerAddress} is: ${gasPrice} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-    return { ...response, type: '0', gasPrice: BigInt(gasPrice) };
+    return { ...response, type: 'legacy', gasPrice: BigInt(gasPrice) };
   }
 
   async executeTransaction(
@@ -141,30 +305,27 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           const maxFailedTransactionCount = config.transaction.failedTransactionRetryCount[this.chainId];
 
           if (failedTransactionRetryCount > maxFailedTransactionCount) {
-            return {
-              success: false,
-              error: `Failed transaction retry limit reached for transactionId: ${transactionId}`,
-            };
+            throw new Error(`Failed transaction retry limit reached for transactionId: ${transactionId}`);
           }
         } catch (error) {
           // just loggin error here, don't want to block the transaction if in some case code does not work the intended way
           log.error(`Error in getting max failed retry transaction count: ${parseError(error)} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
         }
 
-        log.info(`Sending transaction to network: ${JSON.stringify(rawTransaction)} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-        const transactionExecutionResponse = await this.networkService.sendTransaction(
+        log.info(`Sending transaction to network: ${customJSONStringify(rawTransaction)} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+        const sendTransactionResponse = await this.networkService.sendTransaction(
           rawTransaction,
           account,
         );
-        log.info(`Transaction execution response: ${JSON.stringify(transactionExecutionResponse)} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-        if (transactionExecutionResponse instanceof Error) {
+        log.info(`Send transaction response: ${customJSONStringify(sendTransactionResponse)} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+        if (sendTransactionResponse instanceof Error) {
           log.info(`Transaction execution failed and checking for retry for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-          throw transactionExecutionResponse;
+          throw sendTransactionResponse;
         }
         this.nonceManager.markUsed(account.getPublicKey(), rawTransaction.nonce);
         return {
-          success: true,
-          transactionResponse: transactionExecutionResponse,
+          ...rawTransaction,
+          hash: sendTransactionResponse
         };
       } catch (error: any) {
         await this.cacheService.increment(getFailedTransactionRetryCountKey(transactionId, this.chainId), 1);
@@ -246,20 +407,135 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
           return await retryExecuteTransaction({ rawTransaction, account });
         } else {
           log.info(`Error: ${errInString} not handled. Transaction not being retried for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-          return {
-            success: false,
-            error: errInString,
-          };
+          throw new Error(errInString);
         }
-        return {
-          success: false,
-          error: errInString,
-        };
+        throw new Error(errInString);
       }
     };
 
     const response = await retryExecuteTransaction(executeTransactionParams);
     return response;
+  }
+
+  async retryTransaction(
+    retryTransactionData: RetryTransactionDataType,
+    account: IEVMAccount,
+    transactionType: TransactionType,
+  ): Promise<SuccessTransactionResponseType | ErrorTransactionResponseType> {
+    const {
+      transactionHash,
+      transactionId,
+      rawTransaction,
+      walletAddress,
+      metaData,
+      relayerManagerName,
+    } = retryTransactionData;
+    try {
+      await this.cacheService.increment(getRetryTransactionCountKey(transactionId, this.chainId));
+      let pastGasPrice: NetworkBasedGasPriceType = rawTransaction.gasPrice as bigint;
+      if (!pastGasPrice) {
+        pastGasPrice = {
+          maxFeePerGas: rawTransaction.maxFeePerGas as bigint,
+          maxPriorityFeePerGas: rawTransaction.maxPriorityFeePerGas as bigint,
+        };
+      }
+      // Make it general and EIP 1559 specific and get bump up from config
+      const bumpedUpGasPrice = this.gasPriceService.getBumpedUpGasPrice(
+        pastGasPrice,
+        config.transaction.bumpGasPriceMultiplier[this.chainId],
+      );
+      log.info(`Bumped up gas price for transactionId: ${transactionId} is ${bumpedUpGasPrice} on chainId ${this.chainId}`);
+
+      if (typeof bumpedUpGasPrice === 'bigint') {
+        rawTransaction.gasPrice = bumpedUpGasPrice as bigint;
+        log.info(`Bumped up gas price for transactionId: ${transactionId} is ${bumpedUpGasPrice} on chainId ${this.chainId}`);
+      } else if (typeof bumpedUpGasPrice === 'object') {
+        rawTransaction.maxFeePerGas = bumpedUpGasPrice.maxFeePerGas;
+        rawTransaction.maxPriorityFeePerGas = bumpedUpGasPrice.maxPriorityFeePerGas;
+        log.info(`Bumped up gas price for transactionId: ${transactionId} is ${customJSONStringify(bumpedUpGasPrice)} on chainId ${this.chainId}`);
+      }
+
+      log.info(`Executing retry transaction for transactionId: ${transactionId}`);
+      log.info(`Raw transaction for retrying transactionId: ${transactionId} is ${customJSONStringify(rawTransaction)} on chainId ${this.chainId}`);
+
+      const retryTransactionExecutionResponse = await this.executeTransaction({
+        rawTransaction,
+        account,
+      }, transactionId);
+      if (transactionType === TransactionType.BUNDLER) {
+        log.info(`Setting: ${UserOperationStateEnum.SUBMITTED} for transactionId: ${transactionId} for resubmitted transaction on chainId ${this.chainId}`);
+        this.userOperationStateDao.updateState(
+          this.chainId,
+          {
+            transactionId,
+            transactionHash: retryTransactionExecutionResponse.hash,
+            state: UserOperationStateEnum.SUBMITTED,
+          },
+        );
+      }
+
+      log.info(`Notifying transaction listener for transactionId: ${transactionId} on chainId ${this.chainId}`);
+      await this.transactionListener.notify({
+        transactionHash: retryTransactionExecutionResponse.hash,
+        transactionId: transactionId as string,
+        relayerAddress: account.getPublicKey(),
+        rawTransaction,
+        transactionType,
+        previousTransactionHash: transactionHash,
+        walletAddress,
+        metaData,
+        relayerManagerName,
+      });
+
+      return {
+        state: 'success',
+        code: STATUSES.SUCCESS,
+        transactionId,
+      };
+    } catch (error) {
+      log.error(`Error while retrying transaction: ${parseError(error)} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+      log.info(`Setting: ${UserOperationStateEnum.DROPPED_FROM_BUNDLER_MEMPOOL} for transactionId: ${transactionId} for resubmitted transaction on chainId ${this.chainId}`);
+      this.userOperationStateDao.updateState(
+        this.chainId,
+        {
+          transactionId,
+          state: UserOperationStateEnum.DROPPED_FROM_BUNDLER_MEMPOOL,
+        },
+      );
+      await this.sendTransactionFailedSlackNotification(transactionId, this.chainId, parseError(error));
+      return {
+        state: 'failed',
+        code: STATUSES.INTERNAL_SERVER_ERROR,
+        error: parseError(error),
+        transactionId,
+        ...{
+          isTransactionRelayed: false,
+          transactionExecutionResponse: null,
+        },
+      };
+    }
+  }
+
+  private async handleNonceTooLow(rawTransaction: EVMRawTransactionType) {
+    const correctNonce = await this.nonceManager.getAndSetNonceFromNetwork(rawTransaction.from, true);
+    return correctNonce;
+  }
+
+  private async handleReplacementFeeTooLow(rawTransaction: EVMRawTransactionType) {
+    const pastGasPrice = rawTransaction.gasPrice ? rawTransaction.gasPrice : {
+      maxFeePerGas: rawTransaction.maxFeePerGas,
+      maxPriorityFeePerGas: rawTransaction.maxPriorityFeePerGas,
+    };
+    const bumpedUpGasPrice = this.gasPriceService.getBumpedUpGasPrice(
+      pastGasPrice as NetworkBasedGasPriceType,
+      config.transaction.bumpGasPriceMultiplier[this.chainId],
+    );
+    return bumpedUpGasPrice;
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  private async handleGasTooLow(rawTransaction: EVMRawTransactionType) {
+    return toHex(Number(rawTransaction.gasLimit) * 2);
   }
 
   private async sendMaxRetryCountExceededSlackNotification(
@@ -304,327 +580,5 @@ ITransactionService<IEVMAccount, EVMRawTransactionType> {
     } catch (errorInSlack) {
       log.error(`Error in sending slack notification: ${parseError(errorInSlack)}`);
     }
-  }
-
-  async sendTransaction(
-    transactionData: TransactionDataType,
-    account: IEVMAccount,
-    transactionType: TransactionType,
-    relayerManagerName: string,
-  ): Promise<SuccessTransactionResponseType | ErrorTransactionResponseType> {
-    const relayerAddress = account.getPublicKey();
-
-    const {
-      to, value, data, gasLimit,
-      speed, transactionId, walletAddress, metaData,
-    } = transactionData;
-
-    const retryTransactionCount = parseInt(await this.cacheService.get(getRetryTransactionCountKey(transactionId, this.chainId)), 10);
-
-    const maxRetryCount = config.transaction.retryCount[transactionType][this.chainId];
-
-    if (retryTransactionCount > maxRetryCount) {
-      try {
-      // send slack notification
-        await this.sendMaxRetryCountExceededSlackNotification(
-          transactionData.transactionId,
-          account,
-          transactionType,
-          this.chainId,
-        );
-      } catch (error) {
-        log.error(`Error in sending slack notification: ${parseError(error)}`);
-      }
-      // Should we send this response if we are manaully resubmitting transaction?
-      // TODO: send a noOp transaction to the blockchain and notify on slack.
-      return {
-        state: 'failed',
-        code: STATUSES.NOT_FOUND,
-        error: 'Max retry count exceeded. Use end point to get transaction status', // todo add end point
-        transactionId,
-        ...{
-          isTransactionRelayed: false,
-          transactionExecutionResponse: null,
-        },
-      };
-    }
-
-    log.info(`Transaction request received for transactionId: ${transactionId} on chainId ${this.chainId}`);
-
-    const addressMutex = this.getMutex(account.getPublicKey());
-    log.info(`Taking lock on address: ${account.getPublicKey()} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-    const release = await addressMutex.acquire();
-    log.info(`Lock taken on address: ${account.getPublicKey()} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-
-    try {
-      // create transaction
-      const rawTransaction = await this.createTransaction({
-        from: relayerAddress,
-        to,
-        value,
-        data,
-        gasLimit,
-        speed,
-        account,
-        transactionId,
-      });
-      log.info(`Raw transaction for transactionId: ${transactionId} is ${JSON.stringify(rawTransaction)} on chainId ${this.chainId}`);
-
-      const transactionExecutionResponse = await this.executeTransaction({
-        rawTransaction,
-        account,
-      }, transactionId);
-      if (!transactionExecutionResponse.success) {
-        if (transactionType === TransactionType.BUNDLER) {
-          log.info(`Setting: ${UserOperationStateEnum.DROPPED_FROM_BUNDLER_MEMPOOL} for transactionId: ${transactionId} on chainId ${this.chainId}`);
-          this.userOperationStateDao.updateState(
-            this.chainId,
-            {
-              transactionId,
-              state: UserOperationStateEnum.DROPPED_FROM_BUNDLER_MEMPOOL,
-            },
-          );
-        }
-        await this.transactionListener.notify({
-          transactionId: transactionId as string,
-          relayerAddress,
-          transactionType,
-          previousTransactionHash: undefined,
-          rawTransaction,
-          walletAddress,
-          metaData,
-          relayerManagerName,
-          error: transactionExecutionResponse.error,
-        });
-        throw new Error(transactionExecutionResponse.error);
-      }
-
-      if (transactionType === TransactionType.BUNDLER) {
-        log.info(`Setting: ${UserOperationStateEnum.SUBMITTED} for transactionId: ${transactionId} on chainId ${this.chainId}`);
-        this.userOperationStateDao.updateState(
-          this.chainId,
-          {
-            transactionId,
-            transactionHash: transactionExecutionResponse.transactionResponse.hash,
-            state: UserOperationStateEnum.SUBMITTED,
-          },
-        );
-      }
-
-      log.info(`Transaction execution response for transactionId ${transactionData.transactionId}: ${JSON.stringify(transactionExecutionResponse)} on chainId ${this.chainId}`);
-
-      log.info(`Incrementing nonce for account: ${relayerAddress} for transactionId: ${transactionId} on chainId ${this.chainId}`);
-      await this.nonceManager.incrementNonce(relayerAddress);
-      log.info(`Incremented nonce for account: ${relayerAddress} for transactionId: ${transactionId} on chainId ${this.chainId}`);
-
-      // release lock once transaction is sent and nonce is incremented
-      log.info(`Releasing lock on address: ${account.getPublicKey()} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-      release();
-      log.info(`Lock released on address: ${account.getPublicKey()} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-
-      log.info(`Notifying transaction listener for transactionId: ${transactionId} on chainId ${this.chainId}`);
-      const transactionListenerNotifyResponse = await this.transactionListener.notify({
-        transactionExecutionResponse: transactionExecutionResponse.transactionResponse,
-        transactionId: transactionId as string,
-        relayerAddress,
-        transactionType,
-        previousTransactionHash: undefined,
-        rawTransaction,
-        walletAddress,
-        metaData,
-        relayerManagerName,
-      });
-
-      if (transactionType === TransactionType.FUNDING) {
-        await this.sendRelayerFundingSlackNotification(relayerAddress, this.chainId, transactionExecutionResponse.transactionResponse.hash);
-      }
-
-      if (transactionListenerNotifyResponse.isTransactionRelayed) {
-        return {
-          state: 'success',
-          code: STATUSES.SUCCESS,
-          transactionId,
-          ...transactionListenerNotifyResponse,
-        };
-      } else {
-        return {
-          state: 'failed',
-          code: STATUSES.ETHERS_WAIT_FOR_TRANSACTION_TIMEOUT,
-          error: 'waitForTransaction ethers timeout error',
-          transactionId,
-          ...{
-            isTransactionRelayed: false,
-            transactionExecutionResponse: null,
-          },
-        };
-      }
-    } catch (error: any) {
-      log.info(`Releasing lock on address: ${account.getPublicKey()} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-      release();
-      log.info(`Lock released on address: ${account.getPublicKey()} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-      if (error.message && error.message === 'Bundler balance too low. Send bundler for funding') {
-        return {
-          state: 'failed',
-          code: STATUSES.FUND_BUNDLER,
-          error: parseError(error),
-          transactionId,
-          ...{
-            isTransactionRelayed: false,
-            transactionExecutionResponse: null,
-          },
-        };
-      }
-      log.info(`Error while sending transaction: ${error} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-      await this.sendTransactionFailedSlackNotification(transactionId, this.chainId, parseError(error));
-      return {
-        state: 'failed',
-        code: STATUSES.INTERNAL_SERVER_ERROR,
-        error: parseError(error),
-        transactionId,
-        ...{
-          isTransactionRelayed: false,
-          transactionExecutionResponse: null,
-        },
-      };
-    }
-  }
-
-  async retryTransaction(
-    retryTransactionData: RetryTransactionDataType,
-    account: IEVMAccount,
-    transactionType: TransactionType,
-  ): Promise<SuccessTransactionResponseType | ErrorTransactionResponseType> {
-    const {
-      transactionHash,
-      transactionId,
-      rawTransaction,
-      walletAddress,
-      metaData,
-      relayerManagerName,
-    } = retryTransactionData;
-    try {
-      await this.cacheService.increment(getRetryTransactionCountKey(transactionId, this.chainId));
-      let pastGasPrice: NetworkBasedGasPriceType = rawTransaction.gasPrice as bigint;
-      if (!pastGasPrice) {
-        pastGasPrice = {
-          maxFeePerGas: rawTransaction.maxFeePerGas as bigint,
-          maxPriorityFeePerGas: rawTransaction.maxPriorityFeePerGas as bigint,
-        };
-      }
-      // Make it general and EIP 1559 specific and get bump up from config
-      const bumpedUpGasPrice = this.gasPriceService.getBumpedUpGasPrice(
-        pastGasPrice,
-        config.transaction.bumpGasPriceMultiplier[this.chainId],
-      );
-      log.info(`Bumped up gas price for transactionId: ${transactionId} is ${bumpedUpGasPrice} on chainId ${this.chainId}`);
-
-      if (typeof bumpedUpGasPrice === 'bigint') {
-        rawTransaction.gasPrice = bumpedUpGasPrice as bigint;
-        log.info(`Bumped up gas price for transactionId: ${transactionId} is ${bumpedUpGasPrice} on chainId ${this.chainId}`);
-      } else if (typeof bumpedUpGasPrice === 'object') {
-        rawTransaction.maxFeePerGas = bumpedUpGasPrice.maxFeePerGas;
-        rawTransaction.maxPriorityFeePerGas = bumpedUpGasPrice.maxPriorityFeePerGas;
-        log.info(`Bumped up gas price for transactionId: ${transactionId} is ${JSON.stringify(bumpedUpGasPrice)} on chainId ${this.chainId}`);
-      }
-
-      log.info(`Executing retry transaction for transactionId: ${transactionId}`);
-      log.info(`Raw transaction for retrying transactionId: ${transactionId} is ${JSON.stringify(rawTransaction)} on chainId ${this.chainId}`);
-
-      const retryTransactionExecutionResponse = await this.executeTransaction({
-        rawTransaction,
-        account,
-      }, transactionId);
-      let transactionExecutionResponse;
-      if (retryTransactionExecutionResponse.success) {
-        transactionExecutionResponse = retryTransactionExecutionResponse.transactionResponse;
-        if (transactionType === TransactionType.BUNDLER) {
-          log.info(`Setting: ${UserOperationStateEnum.SUBMITTED} for transactionId: ${transactionId} for resubmitted transaction on chainId ${this.chainId}`);
-          this.userOperationStateDao.updateState(
-            this.chainId,
-            {
-              transactionId,
-              transactionHash: transactionExecutionResponse.hash,
-              state: UserOperationStateEnum.SUBMITTED,
-            },
-          );
-        }
-      } else {
-        if (transactionType === TransactionType.BUNDLER) {
-          log.info(`Setting: ${UserOperationStateEnum.DROPPED_FROM_BUNDLER_MEMPOOL} for transactionId: ${transactionId} for resubmitted transaction on chainId ${this.chainId}`);
-          this.userOperationStateDao.updateState(
-            this.chainId,
-            {
-              transactionId,
-              state: UserOperationStateEnum.DROPPED_FROM_BUNDLER_MEMPOOL,
-            },
-          );
-        }
-        await this.sendTransactionFailedSlackNotification(transactionId, this.chainId, retryTransactionExecutionResponse.error);
-        return {
-          state: 'failed',
-          code: STATUSES.INTERNAL_SERVER_ERROR,
-          error: JSON.stringify(retryTransactionExecutionResponse.error),
-          transactionId,
-          ...{
-            isTransactionRelayed: false,
-            transactionExecutionResponse: null,
-          },
-        };
-      }
-
-      log.info(`Notifying transaction listener for transactionId: ${transactionId} on chainId ${this.chainId}`);
-      const transactionListenerNotifyResponse = await this.transactionListener.notify({
-        transactionExecutionResponse,
-        transactionId: transactionId as string,
-        relayerAddress: account.getPublicKey(),
-        rawTransaction,
-        transactionType,
-        previousTransactionHash: transactionHash,
-        walletAddress,
-        metaData,
-        relayerManagerName,
-      });
-
-      return {
-        state: 'success',
-        code: STATUSES.SUCCESS,
-        transactionId,
-        ...transactionListenerNotifyResponse,
-      };
-    } catch (error) {
-      log.error(`Error while retrying transaction: ${error} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-      return {
-        state: 'failed',
-        code: STATUSES.INTERNAL_SERVER_ERROR,
-        error: JSON.stringify(error),
-        transactionId,
-        ...{
-          isTransactionRelayed: false,
-          transactionExecutionResponse: null,
-        },
-      };
-    }
-  }
-
-  private async handleNonceTooLow(rawTransaction: EVMRawTransactionType) {
-    const correctNonce = await this.nonceManager.getAndSetNonceFromNetwork(rawTransaction.from, true);
-    return correctNonce;
-  }
-
-  private async handleReplacementFeeTooLow(rawTransaction: EVMRawTransactionType) {
-    const pastGasPrice = rawTransaction.gasPrice ? rawTransaction.gasPrice : {
-      maxFeePerGas: rawTransaction.maxFeePerGas,
-      maxPriorityFeePerGas: rawTransaction.maxPriorityFeePerGas,
-    };
-    const bumpedUpGasPrice = this.gasPriceService.getBumpedUpGasPrice(
-      pastGasPrice as NetworkBasedGasPriceType,
-      config.transaction.bumpGasPriceMultiplier[this.chainId],
-    );
-    return bumpedUpGasPrice;
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  private async handleGasTooLow(rawTransaction: EVMRawTransactionType) {
-    return toHex(Number(rawTransaction.gasLimit) * 2);
   }
 }

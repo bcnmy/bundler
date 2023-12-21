@@ -32,14 +32,6 @@ export enum EthMethodType {
   SEND_RAW_TRANSACTION = 'eth_sendRawTransaction',
 }
 
-export enum RpcMethod {
-  getTransactionReceipt,
-  waitForTransaction,
-  getTransaction,
-  getLatestBlockNumber,
-  getFeeHistory,
-}
-
 export enum AlchemyMethodType {
   SIMULATE_EXECUTION = 'alchemy_simulateExecution',
 }
@@ -212,15 +204,15 @@ export interface TypedEvent<
 }
 
 export type UserOperationEventEvent = TypedEvent<
-[string, string, string, BigInt, boolean, BigInt, BigInt],
+[string, string, string, bigint, boolean, bigint, bigint],
 {
   userOpHash: string;
   sender: string;
   paymaster: string;
-  nonce: BigInt;
+  nonce: bigint;
   success: boolean;
-  actualGasCost: BigInt;
-  actualGasUsed: BigInt;
+  actualGasCost: bigint;
+  actualGasUsed: bigint;
 }
 >;
 
@@ -260,8 +252,8 @@ export type DefaultGasOverheadType = {
 
 export type StakeInfo = {
   addr: string;
-  stake: BigInt;
-  unstakeDelaySec: BigInt;
+  stake: bigint;
+  unstakeDelaySec: bigint;
 };
 
 export type UpdateRequestDataType = {

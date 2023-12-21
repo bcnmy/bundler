@@ -25,7 +25,7 @@ export type EVMRelayerManagerServiceParamsType = {
     inactiveRelayerCountThreshold: number;
     pendingTransactionCountThreshold: number;
     newRelayerInstanceCount: number;
-    fundingBalanceThreshold: BigInt;
+    fundingBalanceThreshold: bigint;
     fundingRelayerAmount: number,
     gasLimitMap: {
       [key: number]: number

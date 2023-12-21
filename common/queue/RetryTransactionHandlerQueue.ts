@@ -4,7 +4,7 @@ import { config } from '../../config';
 import { logger } from '../logger';
 import { IQueue } from './interface/IQueue';
 import { RetryTransactionQueueData } from './types';
-import { parseError } from '../utils';
+import { customJSONStringify, parseError } from '../utils';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
@@ -54,7 +54,7 @@ export class RetryTransactionHandlerQueue implements IQueue<RetryTransactionQueu
     const key = `retry_chainid.${this.chainId}_${this.nodePathIndex}`;
     log.info(`Publishing data to retry queue on chainId: ${this.chainId} with interval ${config.chains.retryTransactionInterval[this.chainId]} and key ${key}`);
     if (this.channel) {
-      this.channel.publish(this.exchangeName, key, Buffer.from(JSON.stringify(data)), {
+      this.channel.publish(this.exchangeName, key, Buffer.from(customJSONStringify(data)), {
         persistent: true,
         headers: { 'x-delay': config.chains.retryTransactionInterval[this.chainId] },
       });

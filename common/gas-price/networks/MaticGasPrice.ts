@@ -11,6 +11,7 @@ import { EVMRawTransactionType } from '../../types';
 import { axiosGetCall } from '../../utils/axios-calls';
 import { GasPrice } from '../GasPrice';
 import { GasPriceType } from '../types';
+import { customJSONStringify } from '../../utils';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
@@ -95,7 +96,7 @@ export class MaticGasPrice extends GasPrice implements IScheduler {
         estimatedBaseFee: 100,
       };
     }
-    log.info(`Response from matic gas station for EIP-1559 is ${JSON.stringify(response)}`);
+    log.info(`Response from matic gas station for EIP-1559 is ${customJSONStringify(response)}`);
 
     const safeEIP1559Prices = response.safeLow;
     const mediumEIP1559Prices = response.standard;

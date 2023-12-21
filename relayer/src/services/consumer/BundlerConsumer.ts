@@ -8,7 +8,9 @@ import { IQueue } from '../../../../common/queue';
 import {
   BundlerTransactionMessageType, EntryPointMapType, EVMRawTransactionType, TransactionType,
 } from '../../../../common/types';
-import { getFailedTransactionRetryCountKey, getRetryTransactionCountKey, parseError } from '../../../../common/utils';
+import {
+  customJSONStringify, getFailedTransactionRetryCountKey, getRetryTransactionCountKey, parseError
+} from '../../../../common/utils';
 import { IEVMAccount } from '../account';
 import { IRelayerManager } from '../relayer-manager';
 import { ITransactionService } from '../transaction-service';
@@ -53,7 +55,7 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
   ): Promise<void> => {
     if (msg) {
       const transactionDataReceivedFromQueue = JSON.parse(msg.content.toString());
-      log.info(`onMessage received in ${this.transactionType}: ${JSON.stringify(transactionDataReceivedFromQueue)} for transactionId: ${transactionDataReceivedFromQueue.transactionId} on chainId: ${this.chainId}`);
+      log.info(`onMessage received in ${this.transactionType}: ${customJSONStringify(transactionDataReceivedFromQueue)} for transactionId: ${transactionDataReceivedFromQueue.transactionId} on chainId: ${this.chainId}`);
       this.queue.ack(msg);
 
       // eslint-disable-next-line consistent-return
@@ -78,7 +80,7 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
             }
           }
 
-          log.info(`Setting active relayer: ${activeRelayer?.getPublicKey()} as beneficiary for userOp: ${JSON.stringify(userOp)} for transactionId: ${transactionDataReceivedFromQueue.transactionId} on chainId: ${this.chainId}`);
+          log.info(`Setting active relayer: ${activeRelayer?.getPublicKey()} as beneficiary for userOp: ${customJSONStringify(userOp)} for transactionId: ${transactionDataReceivedFromQueue.transactionId} on chainId: ${this.chainId}`);
 
           const data = encodeFunctionData({
             abi: (entryPointContract?.abi as Abi),
@@ -106,7 +108,7 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
               this.transactionType,
               this.relayerManager.name,
             );
-            log.info(`Response from transaction service for transactionId: ${transactionDataReceivedFromQueue.transactionId} for ${this.transactionType} after sending transaction on chainId: ${this.chainId}: ${JSON.stringify(transactionServiceResponse)}`);
+            log.info(`Response from transaction service for transactionId: ${transactionDataReceivedFromQueue.transactionId} for ${this.transactionType} after sending transaction on chainId: ${this.chainId}: ${customJSONStringify(transactionServiceResponse)}`);
             if (transactionServiceResponse.state === 'failed' && transactionServiceResponse.code === STATUSES.FUND_BUNDLER) {
               log.info(`Bundler: ${activeRelayer.getPublicKey()} could not execute transaction due to low fund for transactionId: ${transactionDataReceivedFromQueue.transactionId} on chainId: ${this.chainId}. Sending bundler for funding`);
               this.relayerManager.fundAndAddRelayerToActiveQueue(activeRelayer.getPublicKey());
@@ -125,7 +127,7 @@ ITransactionConsumer<IEVMAccount, EVMRawTransactionType> {
               this.chainId,
             ));
           } catch (error: any) {
-            log.error(`Error in transaction service for transactionId: ${transactionDataReceivedFromQueue.transactionId} for transactionType: ${this.transactionType} on chainId: ${this.chainId} with error: ${JSON.stringify(parseError(error))}`);
+            log.error(`Error in transaction service for transactionId: ${transactionDataReceivedFromQueue.transactionId} for transactionType: ${this.transactionType} on chainId: ${this.chainId} with error: ${customJSONStringify(parseError(error))}`);
             log.info(`Adding relayer: ${activeRelayer.getPublicKey()} back to active relayer queue for transactionId: ${transactionDataReceivedFromQueue.transactionId} for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);
             this.relayerManager.addActiveRelayer(activeRelayer.getPublicKey());
             log.info(`Added relayer: ${activeRelayer.getPublicKey()} back to active relayer queue for transactionId: ${transactionDataReceivedFromQueue.transactionId} for transactionType: ${this.transactionType} on chainId: ${this.chainId}`);

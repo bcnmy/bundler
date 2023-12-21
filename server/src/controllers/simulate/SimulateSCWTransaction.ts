@@ -3,6 +3,7 @@ import { Request } from 'express';
 import { logger } from '../../../../common/logger';
 import { scwSimulationServiceMap } from '../../../../common/service-manager';
 import { STATUSES } from '../../middleware';
+import { customJSONStringify } from '../../../../common/utils';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
@@ -38,10 +39,10 @@ export const simulateSCWTransaction = async (req: Request) => {
       message: 'Transaction successfully simulated',
     };
   } catch (error) {
-    log.error(`Error in SCW transaction simulation ${JSON.stringify(error)}`);
+    log.error(`Error in SCW transaction simulation ${customJSONStringify(error)}`);
     return {
       code: STATUSES.INTERNAL_SERVER_ERROR,
-      error: `Error in SCW transaction simulation ${JSON.stringify(error)}`,
+      error: `Error in SCW transaction simulation ${customJSONStringify(error)}`,
     };
   }
 };

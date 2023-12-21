@@ -8,6 +8,7 @@ import {
 } from '../../../../../common/service-manager';
 import { config } from '../../../../../config';
 import { STATUSES } from '../../../middleware';
+import { customJSONStringify } from '../../../../../common/utils';
 
 const { supportedNetworks } = config;
 
@@ -74,7 +75,7 @@ export const getGasAndGasPrices = async (req: Request, res: Response) => {
 
     if (typeof gasPrice !== 'bigint') {
       log.info(
-        `Gas price for chainId: ${chainId} is: ${JSON.stringify(gasPrice)}`,
+        `Gas price for chainId: ${chainId} is: ${customJSONStringify(gasPrice)}`,
       );
 
       return res.status(STATUSES.SUCCESS).json({
@@ -107,7 +108,7 @@ export const getGasAndGasPrices = async (req: Request, res: Response) => {
     log.error(`Error in get gas and gas prices ${error}`);
     return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
       code: STATUSES.INTERNAL_SERVER_ERROR,
-      error: JSON.stringify(error),
+      error: customJSONStringify(error),
     });
   }
 };

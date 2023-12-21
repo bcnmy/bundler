@@ -4,7 +4,7 @@ import { IQueue } from '../../../../../common/interface';
 import { INetworkService } from '../../../../../common/network';
 import { RetryTransactionQueueData } from '../../../../../common/queue/types';
 import { TransactionQueueMessageType } from '../../../../../common/types';
-import { NotifyTransactionListenerParamsType, TransactionListenerNotifyReturnType } from '../types';
+import { NotifyTransactionListenerParamsType } from '../types';
 
 export interface ITransactionListener<AccountType, RawTransactionType> {
   chainId: number;
@@ -15,5 +15,5 @@ export interface ITransactionListener<AccountType, RawTransactionType> {
   cacheService: ICacheService;
 
   notify(notifyTransactionListenerParams: NotifyTransactionListenerParamsType):
-  Promise<TransactionListenerNotifyReturnType>
+  Promise<boolean>
 }

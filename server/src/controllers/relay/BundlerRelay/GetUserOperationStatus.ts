@@ -3,7 +3,7 @@
 import { Request, Response } from 'express';
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../../../middleware';
 import { logger } from '../../../../../common/logger';
-import { parseError } from '../../../../../common/utils';
+import { customJSONStringify, parseError } from '../../../../../common/utils';
 import { userOperationDao, userOperationStateDao } from '../../../../../common/service-manager';
 import { UserOperationStateEnum } from '../../../../../common/types';
 // import { updateRequest } from '../../auth/UpdateRequest';
@@ -16,7 +16,7 @@ const getUserOperationStateData = async (chainId: number, userOpHash: string): P
 }> => {
   log.info(`Getting userOp state for userOpHash: ${userOpHash} on chainId: ${chainId}`);
   const userOperationStateData = await userOperationStateDao.get(chainId, userOpHash);
-  log.info(`userOperationStateData: ${JSON.stringify(userOperationStateData)} for userOpHash: ${userOpHash} on chainId: ${chainId}`);
+  log.info(`userOperationStateData: ${customJSONStringify(userOperationStateData)} for userOpHash: ${userOpHash} on chainId: ${chainId}`);
 
   if (userOperationStateData == null) {
     log.info(`userOpHash: ${userOpHash} not found for chainId: ${chainId}`);
@@ -79,7 +79,7 @@ const getUserOperationStateData = async (chainId: number, userOpHash: string): P
       chainId,
       userOpHash,
     );
-    log.info(`userOperationData: ${JSON.stringify(userOperationData)} for userOpHash: ${userOpHash} on chainId: ${chainId}`);
+    log.info(`userOperationData: ${customJSONStringify(userOperationData)} for userOpHash: ${userOpHash} on chainId: ${chainId}`);
 
     if (userOperationData === null) {
       log.info(`userOpHash: ${userOpHash} not found for chainId: ${chainId}`);

@@ -1,4 +1,4 @@
-import { Transaction, TransactionReceipt } from 'viem';
+import { TransactionReceipt } from 'viem';
 import { ICacheService } from '../../../../../common/cache';
 import {
   ITransactionDAO, IUserOperationDAO, IUserOperationStateDAO,
@@ -27,22 +27,17 @@ export type EVMTransactionListenerParamsType = {
 };
 
 export type NotifyTransactionListenerParamsType = {
-  transactionExecutionResponse?: Transaction,
+  transactionHash?: string,
   transactionId: string,
   transactionReceipt?: TransactionReceipt,
   relayerAddress: string,
   transactionType: TransactionType,
   previousTransactionHash?: string,
-  rawTransaction?: EVMRawTransactionType,
+  rawTransaction: EVMRawTransactionType,
   walletAddress: string,
   metaData?: any,
   relayerManagerName: string,
   error?: string,
-};
-
-export type TransactionListenerNotifyReturnType = {
-  isTransactionRelayed: boolean,
-  transactionExecutionResponse: null | Transaction
 };
 
 export type OnTransactionSuccessParamsType = NotifyTransactionListenerParamsType;
@@ -55,8 +50,8 @@ export type TransactionDataToBeUpdatedInDatabaseType = {
   transactionFee?: number;
   transactionFeeInUSD?: number;
   transactionFeeCurrency?: string;
-  rawTransaction?: Transaction;
-  gasPrice?: BigInt;
+  rawTransaction?: EVMRawTransactionType;
+  gasPrice?: bigint;
   receipt?: object;
   resubmitted?: boolean;
   relayerAddress?: string;
@@ -73,9 +68,9 @@ export type NewTransactionDataToBeSavedInDatabaseType = {
   transactionHash: string,
   previousTransactionHash?: string,
   status: TransactionStatus,
-  rawTransaction: Transaction,
+  rawTransaction: EVMRawTransactionType,
   chainId: number,
-  gasPrice?: BigInt,
+  gasPrice?: bigint,
   relayerAddress: string,
   walletAddress: string,
   metaData: any,
@@ -91,8 +86,8 @@ export type FrontRunnedTransactionDataToBeUpdatedInDatabaseType = {
   transactionFee?: number;
   transactionFeeInUSD?: number;
   transactionFeeCurrency?: string;
-  rawTransaction?: Transaction;
-  gasPrice?: BigInt;
+  rawTransaction?: EVMRawTransactionType;
+  gasPrice?: bigint;
   receipt?: object;
   resubmitted?: boolean;
   relayerAddress?: string;

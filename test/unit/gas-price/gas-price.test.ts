@@ -84,7 +84,7 @@ describe('broken test suite', () => {
 //         const gasPrice = await gasPriceServiceMap[mumbai]?.getGasPrice(GasPriceType.DEFAULT);
 //         expect(gasPrice).not.toBeUndefined();
 //         expect(typeof gasPrice).toBe('object');
-//         expect(JSON.stringify(gasPrice)).toBe(JSON.stringify(expectedOutput));
+//         expect(customJSONStringify(gasPrice)).toBe(customJSONStringify(expectedOutput));
 //     });
 
 //     it(`should get gas price from Network for chainId: ${goerli}`, async () => {
@@ -107,7 +107,7 @@ describe('broken test suite', () => {
 //         const gasPrice = await gasPriceServiceMap[mumbai]?.getGasPrice(GasPriceType.DEFAULT);
 //         expect(gasPrice).not.toBeUndefined();
 //         expect(typeof gasPrice).toBe('object');
-//         expect(JSON.stringify(gasPrice)).toBe(JSON.stringify(expectedOutput));
+//         expect(customJSONStringify(gasPrice)).toBe(customJSONStringify(expectedOutput));
 //     });
 
 //     it(`should get GasPrice from CACHE while calling getGasPriceForSimulation for chainId: ${goerli}`, async () => {
@@ -197,7 +197,7 @@ describe('broken test suite', () => {
 
 //         expect(gasPrice).not.toBeUndefined();
 //         expect(typeof gasPrice).toBe('object');
-//         expect(JSON.stringify(gasPrice)).toBe(JSON.stringify(expectedGasPrice));
+//         expect(customJSONStringify(gasPrice)).toBe(customJSONStringify(expectedGasPrice));
 //     });
 
 //     it(`should call getBumpedUpGasPrice for eip1559 transaction with bumpup % < 1.1 for chainId: ${goerli}`, async () => {
@@ -222,7 +222,7 @@ describe('broken test suite', () => {
 
 //         expect(gasPrice).not.toBeUndefined();
 //         expect(typeof gasPrice).toBe('object');
-//         expect(JSON.stringify(gasPrice)).toBe(JSON.stringify(expectedGasPrice));
+//         expect(customJSONStringify(gasPrice)).toBe(customJSONStringify(expectedGasPrice));
 //     });
 
 //     it(`should set setMaxFeeGasPrice price in redis for chainId: ${goerli}, if type is STRING`, async () => {

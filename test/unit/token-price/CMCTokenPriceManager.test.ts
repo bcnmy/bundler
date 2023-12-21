@@ -39,7 +39,7 @@ describe('CMCTokenPriceManager', () => {
 
   it('should call getTokenPrice and fetch the data from cache', async () => {
     const expectedTokenPrice = '1200';
-    jest.spyOn(cacheService, 'get').mockReturnValueOnce(Promise.resolve(JSON.stringify({ [symbol]: expectedTokenPrice })));
+    jest.spyOn(cacheService, 'get').mockReturnValueOnce(Promise.resolve(customJSONStringify({ [symbol]: expectedTokenPrice })));
     const tokenPrice = await cmcTokenPriceManager.getTokenPrice(symbol);
     expect(tokenPrice).toEqual(expectedTokenPrice);
   });
@@ -77,7 +77,7 @@ describe('CMCTokenPriceManager', () => {
     };
     axios.get.mockReturnValue(mockFakeTodoItem);
 
-    jest.spyOn(cacheService, 'get').mockReturnValueOnce(Promise.resolve(JSON.stringify({ [symbol]: expectedTokenPrice })));
+    jest.spyOn(cacheService, 'get').mockReturnValueOnce(Promise.resolve(customJSONStringify({ [symbol]: expectedTokenPrice })));
     const tokenPrice = await cmcTokenPriceManager.getTokenPrice(symbol);
     expect(tokenPrice).toEqual(expectedTokenPrice);
   });

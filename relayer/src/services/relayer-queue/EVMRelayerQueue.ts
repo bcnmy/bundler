@@ -4,6 +4,7 @@ import { IRelayerQueue } from './interface/IRelayerQueue';
 // import { SortEVMRelayerByBalance } from './strategy';
 import { EVMRelayerMetaDataType } from './types';
 import { logger } from '../../../../common/logger';
+import { customJSONStringify } from '../../../../common/utils';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
@@ -62,7 +63,7 @@ export class EVMRelayerQueue implements IRelayerQueue<EVMRelayerMetaDataType> {
       // this.items = SortEVMRelayerByBalance.performAlgorithm(
       //   this.items,
       // );
-      log.info(`Relayer queue after push: ${JSON.stringify(this.items)}`);
+      log.info(`Relayer queue after push: ${customJSONStringify(this.items)}`);
     });
   }
 

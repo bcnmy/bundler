@@ -4,6 +4,7 @@ import Redis from 'ioredis';
 import { config } from '../../../config';
 import { logger } from '../../logger';
 import { ICacheService } from '../interface';
+import { parseError } from '../../utils';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
@@ -54,7 +55,7 @@ export class RedisCacheService implements ICacheService {
         log.error('Redlock not initialized');
       }
     } catch (error) {
-      log.error(`Error in unlocking redis lock ${JSON.stringify(error)}`);
+      log.error(`Error in unlocking redis lock ${parseError(error)}`);
     }
   }
 
@@ -121,7 +122,7 @@ export class RedisCacheService implements ICacheService {
       await this.redisClient.decrby(key, decrementBy);
       return true;
     } catch (error) {
-      log.error(`Error in decrement value ${JSON.stringify(error)}`);
+      log.error(`Error in decrement value ${parseError(error)}`);
     }
     return false;
   }
@@ -132,13 +133,13 @@ export class RedisCacheService implements ICacheService {
    * @returns true or false basis on success or failure
    */
   async delete(key: string): Promise<boolean> {
-    log.info(`Deleting cahce value => Key: ${key}`);
+    log.info(`Deleting cache value => Key: ${key}`);
     try {
       const result = await this.redisClient.del(key);
       if (result) return true;
       return false;
     } catch (error) {
-      log.error(`Error in deleting key ${key} - ${JSON.stringify(error)}`);
+      log.error(`Error in deleting key ${key} - ${parseError(error)}`);
       return false;
     }
   }
@@ -156,7 +157,7 @@ export class RedisCacheService implements ICacheService {
       if (result) return true;
       return false;
     } catch (error) {
-      log.error(JSON.stringify(error));
+      log.error(parseError(error));
       return false;
     }
   }
@@ -172,7 +173,7 @@ export class RedisCacheService implements ICacheService {
       const result = await this.redisClient.get(key) || '';
       return result;
     } catch (error) {
-      log.error(`Error getting value for key ${key} - ${JSON.stringify(error)}`);
+      log.error(`Error getting value for key ${key} - ${parseError(error)}`);
     }
     return '';
   }
@@ -200,7 +201,7 @@ export class RedisCacheService implements ICacheService {
       }
       return false;
     } catch (error) {
-      log.error(`Error in increment value - ${JSON.stringify(error)}`);
+      log.error(`Error in increment value - ${parseError(error)}`);
       return false;
     }
   }
@@ -223,7 +224,7 @@ export class RedisCacheService implements ICacheService {
       log.info(`Cache value set in logs for key: ${key}`);
       return true;
     } catch (error) {
-      log.error(`Error setting value ${value} for key ${key} - ${JSON.stringify(error)}`);
+      log.error(`Error setting value ${value} for key ${key} - ${parseError(error)}`);
       return false;
     }
   }

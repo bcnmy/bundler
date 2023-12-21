@@ -1,4 +1,3 @@
-import { Transaction } from 'viem';
 import { ICacheService } from '../../../../../common/cache';
 import { ITransactionDAO, IUserOperationStateDAO } from '../../../../../common/db';
 import { IGasPrice } from '../../../../../common/gas-price';
@@ -6,11 +5,10 @@ import { GasPriceType } from '../../../../../common/gas-price/types';
 import { INetworkService } from '../../../../../common/network';
 import { RetryTransactionQueueData } from '../../../../../common/queue/types';
 import { INotificationManager } from '../../../../../common/notification/interface';
-import { EVMRawTransactionType } from '../../../../../common/types';
+import { AccessListItem, EVMRawTransactionType } from '../../../../../common/types';
 import { IEVMAccount } from '../../account';
 import { INonceManager } from '../../nonce-manager';
 import { ITransactionListener } from '../../transaction-listener';
-import { TransactionListenerNotifyReturnType } from '../../transaction-listener/types';
 
 export type EVMTransactionServiceParamsType = {
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
@@ -46,14 +44,14 @@ export type TransactionDataType = {
   }
 };
 
-export type ErrorTransactionResponseType = TransactionListenerNotifyReturnType & {
+export type ErrorTransactionResponseType = {
   state: 'failed';
   code: number;
   error: string;
   transactionId: string;
 };
 
-export type SuccessTransactionResponseType = TransactionListenerNotifyReturnType & {
+export type SuccessTransactionResponseType = {
   state: 'success';
   code: number;
   transactionId: string
@@ -78,11 +76,19 @@ export type ExecuteTransactionParamsType = {
 };
 
 export type ExecuteTransactionResponseType = {
-  success: true;
-  transactionResponse: Transaction,
-} | {
-  success: false;
-  error: string;
+  hash: string,
+  from: string;
+  gasPrice?: bigint;
+  maxPriorityFeePerGas?: bigint;
+  maxFeePerGas?: bigint;
+  gasLimit: `0x${string}`;
+  to: `0x${string}`;
+  value: bigint;
+  data: `0x${string}`;
+  chainId: number;
+  nonce: number;
+  accessList?: AccessListItem[];
+  type: string;
 };
 
 export type EVMTransactionResponseType = TransactionResponseType;
