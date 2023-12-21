@@ -14,7 +14,7 @@ import { logger } from '../../logger';
 import { IGasPrice } from '../../gas-price';
 import { GasPriceType } from '../../gas-price/types';
 import { IExternalSimulation } from '../interface';
-import { getTokenPriceKey, parseError } from '../../utils';
+import { customJSONStringify, getTokenPriceKey, parseError } from '../../utils';
 import { config } from '../../../config';
 import { ICacheService } from '../../cache';
 import { EntryPointContractType } from '../../types';
@@ -74,7 +74,7 @@ export class TenderlySimulationService implements IExternalSimulation {
     try {
       response = await tAxios.post(SIMULATE_URL, body);
     } catch (error) {
-      log.error(`Error in Tenderly Simulation: ${JSON.stringify(error)}`);
+      log.error(`Error in Tenderly Simulation: ${customJSONStringify(error)}`);
       return {
         isSimulationSuccessful: false,
         message: `Error in Tenderly Simulation: ${parseError(error)}`,
@@ -85,7 +85,7 @@ export class TenderlySimulationService implements IExternalSimulation {
         },
       };
     }
-    log.info(`Response from Tenderly: ${JSON.stringify(response?.data?.transaction)}`);
+    log.info(`Response from Tenderly: ${customJSONStringify(response?.data?.transaction)}`);
     if (!response?.data?.transaction?.status) {
       return {
         isSimulationSuccessful: false,
@@ -203,7 +203,7 @@ export class TenderlySimulationService implements IExternalSimulation {
         const end = performance.now();
         log.info(`Tenderly simulation call took: ${end - start} milliseconds`);
       } catch (error) {
-        log.error(`Error in Tenderly Simulation: ${JSON.stringify(error)}`);
+        log.error(`Error in Tenderly Simulation: ${customJSONStringify(error)}`);
         return {
           totalGas: 0,
         };
@@ -313,7 +313,7 @@ export class TenderlySimulationService implements IExternalSimulation {
     data: string,
   ) {
     try {
-      log.info(`Refund info received: ${JSON.stringify(refundInfo)}`);
+      log.info(`Refund info received: ${customJSONStringify(refundInfo)}`);
       log.info(`gasUsedInSimulation: ${gasUsedInSimulation} for destination address: ${to} with data: ${data}`);
       log.info(`Checking if simulation is successful for destination address: ${to} with data: ${data}`);
       const walletHandlePaymentLog = transactionLogs.find((transactionLog: any) => transactionLog.name === 'WalletHandlePayment');
@@ -436,7 +436,7 @@ export class TenderlySimulationService implements IExternalSimulation {
           isExecutionSuccess: false,
         };
       }
-      log.info(`UserOperationEvent found in logs: ${JSON.stringify(userOperationEventLog)}`);
+      log.info(`UserOperationEvent found in logs: ${customJSONStringify(userOperationEventLog)}`);
 
       const {
         topics, data,

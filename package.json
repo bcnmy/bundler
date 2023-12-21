@@ -40,6 +40,7 @@
     "ioredis": "^5.2.4",
     "joi": "^17.6.3",
     "lodash": "^4.17.21",
+    "mongodb": "^6.3.0",
     "mongoose": "^6.6.5",
     "node-cache": "^5.1.2",
     "node-cron": "^3.0.2",

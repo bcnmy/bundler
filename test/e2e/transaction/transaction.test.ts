@@ -103,7 +103,7 @@ describe('broken test suite', () => {
 // }];
 // const setQuoteAddress = '0xe31b0bcbda693bff2529f4a1d9f7e8f6d924c6ab';
 
-// const setQuoteContract = networkService.getContract(JSON.stringify(setQuoteAbi), setQuoteAddress);
+// const setQuoteContract = networkService.getContract(customJSONStringify(setQuoteAbi), setQuoteAddress);
 
 // describe('Transaction Service: Sending Transaction on chainId: 5', () => {
 //   let nonceBeforeTransaction: number;

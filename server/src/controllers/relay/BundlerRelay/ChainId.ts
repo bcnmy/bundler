@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../../../middleware';
 import { logger } from '../../../../../common/logger';
 // import { updateRequest } from '../../auth/UpdateRequest';
-import { parseError } from '../../../../../common/utils';
+import { customJSONStringify, parseError } from '../../../../../common/utils';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
@@ -37,7 +37,7 @@ export const getChainId = async (req: Request, res: Response) => {
       result: chainIdInHex,
     });
   } catch (error) {
-    log.error(`Error in getChainId handler ${JSON.stringify(error)}`);
+    log.error(`Error in getChainId handler ${customJSONStringify(error)}`);
     const { id } = req.body;
     // updateRequest({
     //   chainId: parseInt(chainId, 10),

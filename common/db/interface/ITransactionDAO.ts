@@ -10,13 +10,6 @@ export interface ITransactionDAO {
     hash: string,
     data: object,
   ): Promise<void>
-  updateMetaDataAndRelayerDestinationContractDataByTransactionId(
-    chainId: number,
-    id: string,
-    metaData: any,
-    relayerDestinationContractAddress: string,
-    relayerDestinationContractName: string,
-  ): Promise<void>
   updateByTransactionIdAndTransactionHashForFrontRunnedTransaction(
     chainId: number,
     id: string,

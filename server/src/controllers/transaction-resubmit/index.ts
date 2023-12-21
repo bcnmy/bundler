@@ -1,11 +1,10 @@
 /* eslint-disable import/no-import-module-exports */
 import { Request, Response } from 'express';
-import { toHex } from 'viem';
 import { logger } from '../../../../common/logger';
 import { relayerManagerTransactionTypeNameMap } from '../../../../common/maps';
 import { EVMRelayerManagerMap, transactionDao, transactionSerivceMap } from '../../../../common/service-manager';
 import { TransactionType } from '../../../../common/types';
-import { parseError } from '../../../../common/utils';
+import { customJSONStringify, parseError } from '../../../../common/utils';
 import { STATUSES } from '../../middleware';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
@@ -38,31 +37,23 @@ export const transactionResubmitApi = async (req: Request, res: Response) => {
       const rawTransaction = {
         from: relayer.getPublicKey(),
         gasPrice: gasPriceInHex,
-        gasLimit: toHex(transaction.rawTransaction.gasLimit._hex),
-        to: toHex(transaction.rawTransaction.to),
+        gasLimit: transaction.rawTransaction.gasLimit._hex as `0x${string}`,
+        to: transaction.rawTransaction.to as `0x${string}`,
         value: BigInt(transaction.rawTransaction.value._hex),
-        data: toHex(transaction.rawTransaction.data),
+        data: transaction.rawTransaction.data as `0x${string}`,
         chainId,
         type: '0',
         nonce: transaction.rawTransaction.nonce,
       };
-      log.info(`Resubmitting transaction ${transactionId} with gasPrice ${gasPrice} on chainId ${chainId} and raw transaction data ${JSON.stringify(rawTransaction)}`);
-      const result = await transactionSerivceMap[chainId].executeTransaction({
+      log.info(`Resubmitting transaction ${transactionId} with gasPrice ${gasPrice} on chainId ${chainId} and raw transaction data ${customJSONStringify(rawTransaction)}`);
+      const transactionExecutionResponse = await transactionSerivceMap[chainId].executeTransaction({
         rawTransaction,
         account: relayer,
       }, transactionId);
-      log.info(`Resubmitted transaction ${transactionId} on chainId ${chainId} and result ${JSON.stringify(result)}`);
-      if (result.success) {
-        return res.json({
-          code: STATUSES.SUCCESS,
-          data: {
-            transactionResponse: result.transactionResponse,
-          },
-        });
-      }
-      return res.status(STATUSES.BAD_REQUEST).json({
-        code: STATUSES.BAD_REQUEST,
-        error: result.error,
+
+      return res.json({
+        code: STATUSES.SUCCESS,
+        data: transactionExecutionResponse,
       });
     }
 

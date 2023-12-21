@@ -30,7 +30,7 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
 
     const chainIdInNum = parseInt(chainId, 10);
 
-    const transactionId = generateTransactionId(userOp);
+    const transactionId = generateTransactionId(Date.now().toString());
     log.info(`transactionId: ${transactionId} for userOpHash: ${userOpHash} on chainId: ${chainIdInNum} for apiKey: ${dappAPIKey}`);
     const walletAddress = userOp.sender.toLowerCase();
 

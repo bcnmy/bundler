@@ -1,5 +1,6 @@
 import { IEVMAccount } from '../../relayer/src/services/account';
 import { TransactionType } from '../types';
+import { parseError } from '../utils';
 
 // enum for notification levels
 enum NotificationLevel {
@@ -32,7 +33,7 @@ export const getTransactionErrorNotificationMessage = (
 ) => {
   const message = 'Transaction Error';
   // check if error is string or object
-  const errorString = typeof error === 'string' ? error : JSON.stringify(error);
+  const errorString = typeof error === 'string' ? error : parseError(error);
   const details = `TransactionId: ${transactionId}\nChain Id: ${chainId}\nError: ${errorString}`;
   const action = undefined;
   return getMessage(NotificationLevel.ERROR, message, details, action);

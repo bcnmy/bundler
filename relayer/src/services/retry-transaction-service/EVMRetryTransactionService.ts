@@ -12,7 +12,7 @@ import { IRetryTransactionService } from './interface/IRetryTransactionService';
 import { EVMRetryTransactionServiceParamsType } from './types';
 import { INotificationManager } from '../../../../common/notification/interface';
 import { getAccountUndefinedNotificationMessage } from '../../../../common/notification';
-import { getTransactionMinedKey } from '../../../../common/utils';
+import { customJSONStringify, getTransactionMinedKey } from '../../../../common/utils';
 import { ICacheService } from '../../../../common/cache';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
@@ -54,7 +54,7 @@ IRetryTransactionService<IEVMAccount, EVMRawTransactionType> {
     msg?: ConsumeMessage,
   ) => {
     if (msg) {
-      log.info(`Message received from retry transaction queue on chainId: ${this.chainId}: ${JSON.stringify(msg.content.toString())}`);
+      log.info(`Message received from retry transaction queue on chainId: ${this.chainId}: ${customJSONStringify(msg.content.toString())}`);
       this.queue.ack(msg);
       const transactionDataReceivedFromRetryQueue = JSON.parse(msg.content.toString());
 
@@ -84,7 +84,7 @@ IRetryTransactionService<IEVMAccount, EVMRawTransactionType> {
 
       log.info(`Checking transaction status of transactionHash: ${transactionHash} with transactionId: ${transactionId} on chainId: ${this.chainId}`);
       const transactionReceipt = await this.networkService.getTransactionReceipt(transactionHash);
-      log.info(`Transaction receipt for transactionHash: ${transactionHash} with transactionId: ${transactionId} on chainId: ${this.chainId} is ${JSON.stringify(transactionReceipt)}`);
+      log.info(`Transaction receipt for transactionHash: ${transactionHash} with transactionId: ${transactionId} on chainId: ${this.chainId} is ${customJSONStringify(transactionReceipt)}`);
 
       if (transactionReceipt) {
         log.info(`Transaction receipt receivied for transactionHash: ${transactionHash} and transactionId: ${transactionId} on chainId: ${this.chainId}. Hence not retrying the transaction.`);

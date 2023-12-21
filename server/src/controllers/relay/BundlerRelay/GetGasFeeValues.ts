@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../../../middleware';
 import { logger } from '../../../../../common/logger';
 import { gasPriceServiceMap } from '../../../../../common/service-manager';
-import { parseError } from '../../../../../common/utils';
+import { customJSONStringify, parseError } from '../../../../../common/utils';
 // import { updateRequest } from '../../auth/UpdateRequest';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
@@ -19,7 +19,7 @@ export const getGasFeeValues = async (req: Request, res: Response) => {
 
     if (typeof gasPrice !== 'bigint') {
       log.info(
-        `Gas price for chainId: ${chainId} is: ${JSON.stringify(gasPrice)}`,
+        `Gas price for chainId: ${chainId} is: ${customJSONStringify(gasPrice)}`,
       );
 
       // updateRequest({

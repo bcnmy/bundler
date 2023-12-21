@@ -5,7 +5,7 @@ import { ICacheService } from '../cache';
 import { logger } from '../logger';
 import { IScheduler } from '../scheduler';
 import { SymbolMapByChainIdType } from '../types';
-import { getTokenPriceKey, parseError } from '../utils';
+import { customJSONStringify, getTokenPriceKey, parseError } from '../utils';
 import { ITokenPrice } from './interface/ITokenPrice';
 import { CoinsRateObjType, NetworkSymbolCategoriesType } from './types';
 
@@ -67,7 +67,7 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
             }
           });
           log.info('Network price data updated in cache');
-          await this.cacheService.set(getTokenPriceKey(), JSON.stringify(coinsRateObj));
+          await this.cacheService.set(getTokenPriceKey(), customJSONStringify(coinsRateObj));
         } else {
           log.error('Network keys is not defined while fetching the network prices');
         }

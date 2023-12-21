@@ -4,7 +4,7 @@ import { config } from '../../config';
 import { logger } from '../logger';
 import { TransactionQueueMessageType } from '../types';
 import { IQueue } from './interface/IQueue';
-import { parseError } from '../utils';
+import { customJSONStringify, parseError } from '../utils';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
@@ -44,7 +44,7 @@ export class TransactionHandlerQueue implements IQueue<TransactionQueueMessageTy
   async publish(data: TransactionQueueMessageType) {
     const key = `chainid.${this.chainId}`;
     log.info(`Publishing data to transaction queue on chain id ${this.chainId} and key ${key}`);
-    this.channel.publish(this.exchangeName, key, Buffer.from(JSON.stringify(data)), {
+    this.channel.publish(this.exchangeName, key, Buffer.from(customJSONStringify(data)), {
       persistent: true,
     });
     return true;

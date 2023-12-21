@@ -3,6 +3,7 @@ import { EthMethodType, TransactionMethodType } from '../../../../common/types';
 import { STATUSES } from '../../middleware';
 import { simulateAATransaction } from './SimulateAATransaction';
 import { simulateSCWTransaction } from './SimulateSCWTransaction';
+import { parseError } from '../../../../common/utils';
 
 export const simulateTransaction = () => async (
   req: Request,
@@ -35,7 +36,7 @@ export const simulateTransaction = () => async (
   } catch (error) {
     return res.status(STATUSES.INTERNAL_SERVER_ERROR).send({
       code: STATUSES.INTERNAL_SERVER_ERROR,
-      error: `Internal server error: ${JSON.stringify(error)}`,
+      error: `Internal server error: ${parseError(error)}`,
     });
   }
 };

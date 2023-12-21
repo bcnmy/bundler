@@ -2,7 +2,7 @@
 import { Request } from 'express';
 import { logger } from '../../../../common/logger';
 import { bundlerSimulatonServiceMap, entryPointMap } from '../../../../common/service-manager';
-import { parseError } from '../../../../common/utils';
+import { customJSONStringify, parseError } from '../../../../common/utils';
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../../middleware';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
@@ -36,7 +36,7 @@ export const simulateAATransaction = async (req: Request) => {
     const aaSimulationResponse = await bundlerSimulatonServiceMap[chainId]
       .simulateValidation({ userOp, entryPointContract, chainId });
 
-    log.info(`AA simulation response: ${JSON.stringify(aaSimulationResponse)}`);
+    log.info(`AA simulation response: ${customJSONStringify(aaSimulationResponse)}`);
 
     const {
       code,
@@ -58,7 +58,7 @@ export const simulateAATransaction = async (req: Request) => {
     req.body.params[4] = aaSimulationResponse.data.totalGas;
     req.body.params[5] = aaSimulationResponse.data.userOpHash;
 
-    log.info(`Transaction successfully simulated for userOp: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
+    log.info(`Transaction successfully simulated for userOp: ${customJSONStringify(userOp)} on chainId: ${chainId}`);
     return {
       code: STATUSES.SUCCESS,
       message: 'AA transaction successfully simulated',

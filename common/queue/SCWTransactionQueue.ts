@@ -4,7 +4,7 @@ import { config } from '../../config';
 import { logger } from '../logger';
 import { SCWTransactionMessageType, TransactionType } from '../types';
 import { IQueue } from './interface/IQueue';
-import { parseError } from '../utils';
+import { customJSONStringify, parseError } from '../utils';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
@@ -43,7 +43,7 @@ export class SCWTransactionQueue implements IQueue<SCWTransactionMessageType> {
   async publish(data: SCWTransactionMessageType) {
     const key = `chainid.${this.chainId}.type.${this.transactionType}`;
     log.info(`Publishing data to retry queue on chainId: ${this.chainId} and key ${key}`);
-    this.channel.publish(this.exchangeName, key, Buffer.from(JSON.stringify(data)), {
+    this.channel.publish(this.exchangeName, key, Buffer.from(customJSONStringify(data)), {
       persistent: true,
     });
     return true;

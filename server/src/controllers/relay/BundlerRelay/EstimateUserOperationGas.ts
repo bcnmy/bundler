@@ -1,9 +1,10 @@
 /* eslint-disable import/no-import-module-exports */
 import { Request, Response } from 'express';
+import { toHex } from 'viem';
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../../../middleware';
 import { logger } from '../../../../../common/logger';
 import { bundlerSimulatonServiceMap, entryPointMap, gasPriceServiceMap } from '../../../../../common/service-manager';
-import { parseError } from '../../../../../common/utils';
+import { customJSONStringify, parseError } from '../../../../../common/utils';
 // import { updateRequest } from '../../auth/UpdateRequest';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
@@ -93,7 +94,7 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
 
     if (typeof gasPrice !== 'bigint') {
       log.info(
-        `Gas price for chainId: ${chainId} is: ${JSON.stringify(gasPrice)}`,
+        `Gas price for chainId: ${chainId} is: ${customJSONStringify(gasPrice)}`,
       );
 
       // updateRequest({
@@ -120,11 +121,11 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
         jsonrpc: '2.0',
         id: id || 1,
         result: {
-          callGasLimit,
-          verificationGasLimit,
-          preVerificationGas,
-          validUntil,
-          validAfter,
+          callGasLimit: Number(callGasLimit),
+          verificationGasLimit: Number(verificationGasLimit),
+          preVerificationGas: Number(preVerificationGas),
+          validUntil: toHex(validUntil),
+          validAfter: toHex(validAfter),
           maxPriorityFeePerGas: (gasPrice?.maxPriorityFeePerGas)?.toString() as string,
           maxFeePerGas: (gasPrice?.maxFeePerGas)?.toString() as string,
         },
@@ -160,8 +161,8 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
         preVerificationGas,
         validUntil,
         validAfter,
-        maxPriorityFeePerGas: gasPrice,
-        maxFeePerGas: gasPrice,
+        maxPriorityFeePerGas: gasPrice.toString(),
+        maxFeePerGas: gasPrice.toString(),
       },
     });
   } catch (error) {

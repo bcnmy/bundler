@@ -8,11 +8,12 @@ import {
 import { IEVMAccount } from '../../relayer/src/services/account';
 import {
   AlchemyMethodType,
-  EVMRawTransactionType, EthMethodType, RpcMethod,
+  EVMRawTransactionType, EthMethodType,
 } from '../types';
 import { INetworkService } from './interface';
 import { Type0TransactionGasPriceType, Type2TransactionGasPriceType } from './types';
 import { logger } from '../logger';
+import { customJSONStringify } from '../utils';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
@@ -31,32 +32,6 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
     });
   }
 
-  /**
-   * method to handle various rpc methods
-   * and fallback to other rpc urls if the current rpc url fails
-   * @param tag RpcMethod enum
-   * @param params parameters required for the rpc method
-   * @returns based on the rpc method
-   */
-  useProvider = async (tag: RpcMethod, params?: any): Promise<any> => {
-    switch (tag) {
-      case RpcMethod.getTransactionReceipt:
-        return await this.provider.getTransactionReceipt(params);
-      case RpcMethod.waitForTransaction:
-        return await this.provider.waitForTransactionReceipt({
-          hash: params.transactionHash,
-          confirmations: params.confirmations,
-          timeout: params.timeout,
-        });
-      case RpcMethod.getTransaction:
-        return await this.provider.getTransaction(params.transactionHash);
-      case RpcMethod.getLatestBlockNumber:
-        return await this.provider.getBlockNumber();
-      default:
-        return null;
-    }
-  };
-
   async sendRpcCall(method: string, params: Array<any>): Promise<any> {
     const requestData = {
       method,
@@ -68,20 +43,33 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
     const {
       data,
     } = response;
+    log.info(`data from RPC call: ${customJSONStringify(data)} received on JSON RPC Method: ${method}`);
     if (!data) {
       log.error(`RPC Call failed without data on chainId: ${this.chainId}`);
       return null;
     }
+    if (data.error) {
+      log.error(`RPC called returned error on chainId: ${this.chainId} with code: ${data.error.code} and message: ${data.error.message}`);
+      if (method === EthMethodType.ETH_CALL || method === EthMethodType.ESTIMATE_GAS) {
+        return data;
+      }
+      throw new Error(data.error.message);
+    }
     return data.result;
   }
 
-  async getBaseFeePerGas(): Promise<number> {
-    const feeData = await this.useProvider(RpcMethod.getFeeHistory);
-    return Number(feeData.lastBaseFeePerGas);
+  async getBaseFeePerGas(): Promise<bigint> {
+    const block = await this.provider.getBlock({
+      blockTag: 'latest'
+    });
+    if (typeof block.baseFeePerGas !== 'bigint') {
+      return BigInt(0);
+    }
+    return block.baseFeePerGas;
   }
 
   async getLegacyGasPrice(): Promise<Type0TransactionGasPriceType> {
-    return await this.sendRpcCall(EthMethodType.GAS_PRICE, []);
+    return BigInt(await this.sendRpcCall(EthMethodType.GAS_PRICE, []));
   }
 
   async getEIP1559FeesPerGas(): Promise<Type2TransactionGasPriceType> {
@@ -95,12 +83,12 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
     );
 
     return {
-      maxFeePerGas,
-      maxPriorityFeePerGas,
+      maxFeePerGas: BigInt(maxFeePerGas),
+      maxPriorityFeePerGas: BigInt(maxPriorityFeePerGas),
     };
   }
 
-  async getBalance(address: string): Promise<BigInt> {
+  async getBalance(address: string): Promise<bigint> {
     const balance = await this.sendRpcCall(EthMethodType.GET_BALANCE, [address]);
     return BigInt(balance);
   }
@@ -127,10 +115,9 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
   async getTransactionReceipt(
     transactionHash: string,
   ): Promise<TransactionReceipt> {
-    return await this.useProvider(
-      RpcMethod.getTransactionReceipt,
-      transactionHash,
-    );
+    return await this.provider.getTransactionReceipt({
+      hash: transactionHash as `0x${string}`,
+    });
   }
 
   /**
@@ -151,11 +138,11 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
   async sendTransaction(
     rawTransactionData: EVMRawTransactionType,
     account: IEVMAccount,
-  ): Promise<Transaction> {
-    const rawTx: EVMRawTransactionType = rawTransactionData;
-    rawTx.from = account.getPublicKey();
-    const tx = await account.signTransaction(rawTx);
-    return await this.sendRpcCall(EthMethodType.SEND_RAW_TRANSACTION, [tx]);
+  ): Promise<string | Error> {
+    const rawTransaction: EVMRawTransactionType = rawTransactionData;
+    rawTransaction.from = account.getPublicKey();
+    const serialisedTransaction = await account.signTransaction(rawTransaction);
+    return await this.sendRpcCall(EthMethodType.SEND_RAW_TRANSACTION, [serialisedTransaction]);
   }
 
   /**
@@ -167,8 +154,8 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
     confirmations?: number,
     timeout?: number,
   ): Promise<TransactionReceipt> {
-    return await this.useProvider(RpcMethod.waitForTransaction, {
-      transactionHash,
+    return await this.provider.waitForTransactionReceipt({
+      hash: transactionHash as `0x${string}`,
       confirmations,
       timeout,
     });
@@ -179,13 +166,16 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
    * @returns transaction once mined, else waits for the transaction to be mined
   */
   async getTransaction(transactionHash: string): Promise<Transaction> {
-    return await this.useProvider(RpcMethod.getTransaction, {
-      transactionHash,
+    return await this.provider.getTransaction({
+      hash: transactionHash as `0x${string}`,
     });
   }
 
   async getLatesBlockNumber(): Promise<bigint> {
-    return await this.useProvider(RpcMethod.getLatestBlockNumber);
+    const block = await this.provider.getBlock({
+      blockTag: 'latest'
+    });
+    return block.number;
   }
 
   async runAlchemySimulation(params: any): Promise<any> {

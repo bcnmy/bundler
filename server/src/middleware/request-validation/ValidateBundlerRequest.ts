@@ -16,6 +16,7 @@ import {
   getUserOperationStatusSchema,
 } from '../../routes/bundler/bundler.schema';
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../RequestHelpers';
+import { parseError } from '../../../../common/utils';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
@@ -66,7 +67,7 @@ export const validateBundlerRequest = () => async (
           jsonrpc: '2.0',
           id: id || 1,
           error: {
-            code: STATUSES.BAD_REQUEST,
+            code: BUNDLER_VALIDATION_STATUSES.METHOD_NOT_FOUND,
             message: 'Wrong transaction type sent in validate BUNDLER request',
           },
         });
@@ -78,7 +79,7 @@ export const validateBundlerRequest = () => async (
       log.info(`validateBundlerRequest took ${end - start} milliseconds`);
       return next();
     }
-    log.info(`error from validation: ${JSON.stringify(error)} for method: ${method}`);
+    log.info(`error from validation: ${parseError(error)} for method: ${method}`);
     const { details } = error;
     let message;
     if (details) {
@@ -104,7 +105,7 @@ export const validateBundlerRequest = () => async (
       id: id || 1,
       error: {
         code: STATUSES.INTERNAL_SERVER_ERROR,
-        message: JSON.stringify(e),
+        message: parseError(e),
       },
     });
   }

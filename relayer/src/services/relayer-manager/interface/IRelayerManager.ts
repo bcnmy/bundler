@@ -10,7 +10,7 @@ export interface IRelayerManager<AccountType, RawTransactionType> {
   chainId: number;
   transactionService: ITransactionService<AccountType, RawTransactionType>;
   newRelayerInstanceCount: number;
-  fundingBalanceThreshold: BigInt;
+  fundingBalanceThreshold: bigint;
   fundingRelayerAmount: number;
   relayerSeed: string;
   ownerAccountDetails: AccountType;

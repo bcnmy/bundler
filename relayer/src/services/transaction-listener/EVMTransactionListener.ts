@@ -26,6 +26,8 @@ import {
   parseError,
   getUserOperationReceiptForFailedTransaction,
   getUserOperationReceiptForSuccessfulTransaction,
+  customJSONStringify,
+  bigIntToDecimal128,
 } from '../../../../common/utils';
 import { IEVMAccount } from '../account';
 import { ITransactionPublisher } from '../transaction-publisher';
@@ -38,7 +40,6 @@ import {
   OnTransactionFailureParamsType,
   OnTransactionSuccessParamsType,
   TransactionDataToBeUpdatedInDatabaseType,
-  TransactionListenerNotifyReturnType,
 } from './types';
 import { config } from '../../../../config';
 import { AstarNetworks } from '../../../../common/constants';
@@ -102,7 +103,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
 
   private async onTransactionSuccess(onTransactionSuccessParams: OnTransactionSuccessParamsType) {
     const {
-      transactionExecutionResponse,
+      transactionHash,
       transactionReceipt,
       transactionId,
       relayerManagerName,
@@ -118,12 +119,12 @@ ITransactionPublisher<TransactionQueueMessageType> {
       await this.publishToTransactionQueue({
         transactionId,
         relayerManagerName,
-        transactionHash: transactionExecutionResponse?.hash,
+        transactionHash,
         receipt: transactionReceipt,
         event: SocketEventType.onTransactionMined,
       });
     }
-    if (transactionExecutionResponse) {
+    if (transactionHash) {
       try {
         log.info(`transactionType: ${transactionType} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
         if (transactionType === TransactionType.BUNDLER || transactionType === TransactionType.AA) {
@@ -132,7 +133,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
             this.chainId,
             transactionId,
           );
-          log.info(`userOps: ${JSON.stringify(userOps)} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+          log.info(`userOps: ${customJSONStringify(userOps)} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
           if (!userOps.length) {
             log.info(`No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`);
             return;
@@ -153,7 +154,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
                 transactionReceipt,
                 entryPointContract,
               );
-              log.info(`userOpReceipt: ${JSON.stringify(userOpReceipt)} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+              log.info(`userOpReceipt: ${customJSONStringify(userOpReceipt)} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
               if (!userOpReceipt) {
                 log.info(`userOpReceipt not fetched for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
                 return;
@@ -166,8 +167,8 @@ ITransactionPublisher<TransactionQueueMessageType> {
                 logs,
               } = userOpReceipt;
 
-              log.info(`Updating userOp data: ${JSON.stringify({
-                transactionHash: transactionExecutionResponse?.hash,
+              log.info(`Updating userOp data: ${customJSONStringify({
+                transactionHash,
                 receipt: transactionReceipt,
                 blockNumber: transactionReceipt.blockNumber,
                 blockHash: transactionReceipt.blockHash,
@@ -183,9 +184,9 @@ ITransactionPublisher<TransactionQueueMessageType> {
                 transactionId,
                 userOpHash,
                 {
-                  transactionHash: transactionExecutionResponse?.hash,
+                  transactionHash,
                   receipt: transactionReceipt,
-                  blockNumber: transactionReceipt.blockNumber,
+                  blockNumber: Number(transactionReceipt.blockNumber),
                   blockHash: transactionReceipt.blockHash,
                   status: TransactionStatus.SUCCESS,
                   success,
@@ -221,7 +222,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
         let transactionFeeInUSD = 0;
         let transactionFeeCurrency = '';
         if (!transactionReceipt.gasUsed && !transactionReceipt.effectiveGasPrice) {
-          log.info(`gasUsed or effectiveGasPrice field not found in ${JSON.stringify(transactionExecutionResponse)}`);
+          log.info(`gasUsed or effectiveGasPrice field not found in ${customJSONStringify(transactionReceipt)}`);
         } else {
           transactionFee = Number(
             transactionReceipt.gasUsed * (transactionReceipt.effectiveGasPrice),
@@ -241,7 +242,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
           transactionFeeCurrency,
           status: TransactionStatus.SUCCESS,
           updationTime: Date.now(),
-        }, transactionId, transactionExecutionResponse?.hash);
+        }, transactionId, transactionHash);
       } catch (error) {
         log.error(`Error in saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId} with error: ${parseError(error)}`);
       }
@@ -252,7 +253,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
 
   private async onTransactionFailure(onTransactionFailureParams: OnTransactionFailureParamsType) {
     const {
-      transactionExecutionResponse,
+      transactionHash,
       transactionId,
       transactionReceipt,
       relayerManagerName,
@@ -267,13 +268,13 @@ ITransactionPublisher<TransactionQueueMessageType> {
       await this.publishToTransactionQueue({
         transactionId,
         relayerManagerName,
-        transactionHash: transactionExecutionResponse?.hash,
+        transactionHash,
         receipt: transactionReceipt,
         event: SocketEventType.onTransactionMined,
       });
     }
 
-    if (transactionExecutionResponse) {
+    if (transactionHash) {
       try {
         log.info(`transactionType: ${transactionType} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
         if (transactionType === TransactionType.BUNDLER || transactionType === TransactionType.AA) {
@@ -283,7 +284,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
             this.chainId,
             transactionId,
           );
-          log.info(`userOps: ${JSON.stringify(userOps)} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+          log.info(`userOps: ${customJSONStringify(userOps)} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
           if (!userOps.length) {
             log.info(`No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`);
             return;
@@ -313,21 +314,21 @@ ITransactionPublisher<TransactionQueueMessageType> {
                 fromBlock,
                 this.networkService.provider,
               );
-              log.info(`userOpReceipt: ${JSON.stringify(userOpReceipt)} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+              log.info(`userOpReceipt: ${customJSONStringify(userOpReceipt)} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
 
               if (!userOpReceipt) {
                 log.info(`Publishing to transaction queue on failure for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`);
                 await this.publishToTransactionQueue({
                   transactionId,
                   relayerManagerName,
-                  transactionHash: transactionExecutionResponse?.hash,
+                  transactionHash,
                   receipt: transactionReceipt,
                   event: SocketEventType.onTransactionMined,
                 });
 
                 log.info(`userOpReceipt not fetched for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-                log.info(`Updating userOp data: ${JSON.stringify({
-                  transactionHash: transactionExecutionResponse?.hash,
+                log.info(`Updating userOp data: ${customJSONStringify({
+                  transactionHash,
                   receipt: transactionReceipt,
                   blockNumber: transactionReceipt.blockNumber,
                   blockHash: transactionReceipt.blockHash,
@@ -344,9 +345,9 @@ ITransactionPublisher<TransactionQueueMessageType> {
                   transactionId,
                   userOpHash,
                   {
-                    transactionHash: transactionExecutionResponse?.hash,
+                    transactionHash,
                     receipt: transactionReceipt,
-                    blockNumber: transactionReceipt.blockNumber,
+                    blockNumber: Number(transactionReceipt.blockNumber),
                     blockHash: transactionReceipt.blockHash,
                     status: TransactionStatus.FAILED,
                     success: 'false',
@@ -393,7 +394,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
               });
 
               log.info(`Updating transaction data for a front runned transaction for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
-              log.info(`Updating userOp data: ${JSON.stringify({
+              log.info(`Updating userOp data: ${customJSONStringify({
                 receipt: frontRunnedTransactionReceipt,
                 transactionHash: (
                   frontRunnedTransactionReceipt as TransactionReceipt
@@ -421,9 +422,9 @@ ITransactionPublisher<TransactionQueueMessageType> {
                   transactionHash: (
                     frontRunnedTransactionReceipt as TransactionReceipt
                   ).transactionHash,
-                  blockNumber: (
+                  blockNumber: Number((
                     frontRunnedTransactionReceipt as TransactionReceipt
-                  ).blockNumber,
+                  ).blockNumber),
                   blockHash: (
                     frontRunnedTransactionReceipt as TransactionReceipt
                   ).blockHash,
@@ -443,7 +444,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
               if (
                 !frontRunnedTransactionReceipt.gasUsed
                 && !frontRunnedTransactionReceipt.effectiveGasPrice) {
-                log.info(`gasUsed or effectiveGasPrice field not found in ${JSON.stringify(frontRunnedTransactionReceipt)}`);
+                log.info(`gasUsed or effectiveGasPrice field not found in ${customJSONStringify(frontRunnedTransactionReceipt)}`);
               } else {
                 frontRunnedTransactionFee = Number(frontRunnedTransactionReceipt.gasUsed.mul(
                   frontRunnedTransactionReceipt.effectiveGasPrice,
@@ -466,7 +467,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
                 frontRunnedTransactionFeeCurrency,
                 status: TransactionStatus.FAILED,
                 updationTime: Date.now(),
-              }, transactionId, transactionExecutionResponse?.hash);
+              }, transactionId, transactionHash);
 
               if (transactionType === TransactionType.BUNDLER) {
                 log.info(`updating state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId} for a front runned transaction`);
@@ -493,7 +494,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
         let transactionFeeInUSD = 0;
         let transactionFeeCurrency = '';
         if (!transactionReceipt.gasUsed && !transactionReceipt.effectiveGasPrice) {
-          log.info(`gasUsed or effectiveGasPrice field not found in ${JSON.stringify(transactionExecutionResponse)}`);
+          log.info(`gasUsed or effectiveGasPrice field not found in ${customJSONStringify(transactionReceipt)}`);
         } else {
           transactionFee = Number(transactionReceipt.gasUsed
             * transactionReceipt.effectiveGasPrice);
@@ -512,7 +513,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
           transactionFeeCurrency,
           status: TransactionStatus.FAILED,
           updationTime: Date.now(),
-        }, transactionId, transactionExecutionResponse?.hash);
+        }, transactionId, transactionHash);
       } catch (error) {
         log.error(`Error in saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId} with error: ${parseError(error)}`);
       }
@@ -528,7 +529,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
     await this.transactionDao.updateByTransactionId(
       this.chainId,
       transactionId,
-      transactionDataToBeUpdatedInDatabase,
+      bigIntToDecimal128(transactionDataToBeUpdatedInDatabase),
     );
   }
 
@@ -537,7 +538,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
   ): Promise<void> {
     await this.transactionDao.save(
       this.chainId,
-      newTransactionDataToBeSavedInDatabase,
+      bigIntToDecimal128(newTransactionDataToBeSavedInDatabase),
     );
   }
 
@@ -550,7 +551,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       this.chainId,
       transactionId,
       transactionHash,
-      transactionDataToBeUpdatedInDatabase,
+      bigIntToDecimal128(transactionDataToBeUpdatedInDatabase),
     );
   }
 
@@ -564,7 +565,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       this.chainId,
       transactionId,
       transactionHash,
-      frontRunnedTransactionDataToBeUpdatedInDatabase,
+      bigIntToDecimal128(frontRunnedTransactionDataToBeUpdatedInDatabase),
     );
   }
 
@@ -585,7 +586,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       this.chainId,
       transactionId,
     );
-    log.info(`userOps: ${JSON.stringify(userOps)} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+    log.info(`userOps: ${customJSONStringify(userOps)} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
     if (!userOps.length) {
       log.info(`No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`);
       return;
@@ -600,7 +601,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
         {
           transactionHash: undefined,
           receipt: {},
-          blockNumber: BigInt(0),
+          blockNumber: 0,
           blockHash: 'null',
           status: TransactionStatus.DROPPED,
           success: 'false',
@@ -617,8 +618,9 @@ ITransactionPublisher<TransactionQueueMessageType> {
     notifyTransactionListenerParams: NotifyTransactionListenerParamsType,
   ) {
     const {
-      transactionExecutionResponse,
+      transactionHash,
       transactionId,
+      rawTransaction,
       relayerAddress,
       previousTransactionHash,
       walletAddress,
@@ -626,11 +628,9 @@ ITransactionPublisher<TransactionQueueMessageType> {
       transactionType,
       relayerManagerName,
     } = notifyTransactionListenerParams;
-    if (!transactionExecutionResponse) {
+    if (!transactionHash) {
       return;
     }
-    // TODO : add error check
-    const transactionHash = transactionExecutionResponse.hash;
     log.info(`Transaction hash is: ${transactionHash} for transactionId: ${transactionId} on chainId ${this.chainId}`);
 
     const transactionReceipt = await this.networkService.waitForTransaction(
@@ -641,7 +641,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
       Number(1.5 * config.chains.retryTransactionInterval[this.chainId]),
     );
 
-    log.info(`Transaction receipt is: ${JSON.stringify(transactionReceipt)} for transactionId: ${transactionId} on chainId ${this.chainId}`);
+    log.info(`Transaction receipt is: ${customJSONStringify(transactionReceipt)} for transactionId: ${transactionId} on chainId ${this.chainId}`);
 
     // TODO: reduce pending count of relayer via RelayerManager
     await this.cacheService.delete(getRetryTransactionCountKey(transactionId, this.chainId));
@@ -651,7 +651,8 @@ ITransactionPublisher<TransactionQueueMessageType> {
     if (transactionReceipt.status === 'success') {
       log.info(`Transaction is a success for transactionId: ${transactionId} on chainId ${this.chainId}`);
       this.onTransactionSuccess({
-        transactionExecutionResponse,
+        transactionHash,
+        rawTransaction,
         transactionId,
         transactionReceipt,
         relayerAddress,
@@ -665,7 +666,8 @@ ITransactionPublisher<TransactionQueueMessageType> {
     if (transactionReceipt.status === 'reverted') {
       log.info(`Transaction is a failure for transactionId: ${transactionId} on chainId ${this.chainId}`);
       this.onTransactionFailure({
-        transactionExecutionResponse,
+        transactionHash,
+        rawTransaction,
         transactionId,
         transactionReceipt,
         relayerAddress,
@@ -680,9 +682,9 @@ ITransactionPublisher<TransactionQueueMessageType> {
 
   async notify(
     notifyTransactionListenerParams: NotifyTransactionListenerParamsType,
-  ): Promise<TransactionListenerNotifyReturnType> {
+  ): Promise<boolean> {
     const {
-      transactionExecutionResponse,
+      transactionHash,
       transactionId,
       rawTransaction,
       relayerAddress,
@@ -696,7 +698,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
 
     // if no transactionExecutionResponse then it means transactions was not published onc hain
     // update transaction and user op collection
-    if (!transactionExecutionResponse || Object.keys(transactionExecutionResponse).length === 0) {
+    if (!transactionHash) {
       log.error(`transactionExecutionResponse is null for transactionId: ${transactionId} for bundler: ${relayerAddress} hence 
       updating transaction and userOp data`);
       try {
@@ -714,19 +716,16 @@ ITransactionPublisher<TransactionQueueMessageType> {
         event: SocketEventType.onTransactionError,
       });
       log.error(`transactionExecutionResponse is null for transactionId: ${transactionId} for bundler: ${relayerAddress}`);
-      return {
-        isTransactionRelayed: false,
-        transactionExecutionResponse: null,
-      };
+      return false;
     }
 
     if (!previousTransactionHash) {
     // Save initial transaction data to database
       this.updateTransactionDataToDatabase({
-        transactionHash: transactionExecutionResponse.hash,
-        rawTransaction: transactionExecutionResponse,
+        transactionHash,
+        rawTransaction,
         relayerAddress,
-        gasPrice: transactionExecutionResponse.gasPrice,
+        gasPrice: rawTransaction.gasPrice,
         status: TransactionStatus.PENDING,
         updationTime: Date.now(),
       }, transactionId);
@@ -739,12 +738,12 @@ ITransactionPublisher<TransactionQueueMessageType> {
       this.saveNewTransactionDataToDatabase({
         transactionId,
         transactionType,
-        transactionHash: transactionExecutionResponse.hash,
+        transactionHash,
         previousTransactionHash,
         status: TransactionStatus.PENDING,
-        rawTransaction: transactionExecutionResponse,
+        rawTransaction,
         chainId: this.chainId,
-        gasPrice: transactionExecutionResponse.gasPrice,
+        gasPrice: rawTransaction.gasPrice,
         relayerAddress,
         walletAddress,
         metaData,
@@ -758,7 +757,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
     await this.publishToTransactionQueue({
       transactionId,
       relayerManagerName,
-      transactionHash: transactionExecutionResponse?.hash,
+      transactionHash,
       receipt: undefined,
       event: previousTransactionHash
         ? SocketEventType.onTransactionHashChanged : SocketEventType.onTransactionHashGenerated,
@@ -768,7 +767,7 @@ ITransactionPublisher<TransactionQueueMessageType> {
     await this.publishToRetryTransactionQueue({
       relayerAddress,
       transactionType,
-      transactionHash: transactionExecutionResponse.hash,
+      transactionHash,
       transactionId,
       rawTransaction: rawTransaction as EVMRawTransactionType,
       walletAddress,
@@ -783,17 +782,11 @@ ITransactionPublisher<TransactionQueueMessageType> {
     } catch (waitForTransactionError) {
       // timeout error
       // do nothing for now just log
-      log.error(`Error: ${parseError(waitForTransactionError)} Timeout hit for waiting on hash: ${transactionExecutionResponse.hash} for transactionId: ${transactionId} on chainId ${this.chainId}`);
-      return {
-        isTransactionRelayed: false,
-        transactionExecutionResponse,
-      };
+      log.error(`Error: ${parseError(waitForTransactionError)} Timeout hit for waiting on hash: ${transactionHash} for transactionId: ${transactionId} on chainId ${this.chainId}`);
+      return false;
     }
 
-    return {
-      isTransactionRelayed: true,
-      transactionExecutionResponse,
-    };
+    return true;
   }
 
   async getTransactionFailureMessage(

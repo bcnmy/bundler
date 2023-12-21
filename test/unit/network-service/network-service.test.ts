@@ -197,7 +197,7 @@ describe('broken test suite', () => {
 //   });
 
 //   it('should return a contract instance', async () => {
-//     const contract = await evmNetworkServiceGoerli.getContract(JSON.stringify(ERC20_ABI), dummyContractAddress);
+//     const contract = await evmNetworkServiceGoerli.getContract(customJSONStringify(ERC20_ABI), dummyContractAddress);
 //     expect(contract).toBeInstanceOf(ethers.Contract);
 //     expect(contract.address).toEqual(dummyContractAddress);
 //   });
@@ -206,7 +206,7 @@ describe('broken test suite', () => {
 //     const expectedGas = ethers.BigNumber.from('1000000000');
 //     const methodName = 'approve';
 //     const params = [{ param1: 'param1' }, { param2: 'param2' }];
-//     const contract = await evmNetworkServiceGoerli.getContract(JSON.stringify(ERC20_ABI), dummyContractAddress);
+//     const contract = await evmNetworkServiceGoerli.getContract(customJSONStringify(ERC20_ABI), dummyContractAddress);
 //     jest.spyOn(contract.interface, 'encodeFunctionData').mockReturnValueOnce('dummyFunctionSignature');
 //     jest.spyOn(evmNetworkServiceGoerli, 'useProvider').mockReturnValueOnce(Promise.resolve(expectedGas));
 //     const result = await evmNetworkServiceGoerli.estimateGas(contract, methodName, params, dummyAddress);

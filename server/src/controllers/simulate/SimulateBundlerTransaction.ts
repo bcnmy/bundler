@@ -2,7 +2,7 @@
 import { Request } from 'express';
 import { logger } from '../../../../common/logger';
 import { bundlerSimulatonServiceMap, entryPointMap } from '../../../../common/service-manager';
-import { parseError } from '../../../../common/utils';
+import { customJSONStringify, parseError } from '../../../../common/utils';
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from '../../middleware';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
@@ -69,7 +69,7 @@ export const validateBundlerTransaction = async (req: Request) => {
       log.info(`simulateValidationAndExecution of bundlerSimulatonServiceMap took ${end - start} milliseconds`);
     }
 
-    log.info(`Bundler simulation and validation response: ${JSON.stringify(bundlerSimulationAndValidationResponse)}`);
+    log.info(`Bundler simulation and validation response: ${customJSONStringify(bundlerSimulationAndValidationResponse)}`);
 
     const {
       code,
@@ -92,7 +92,7 @@ export const validateBundlerTransaction = async (req: Request) => {
     }
     req.body.params[2] = bundlerSimulationAndValidationResponse.data.totalGas;
     req.body.params[3] = bundlerSimulationAndValidationResponse.data.userOpHash;
-    log.info(`Transaction successfully simulated and validated for userOp: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
+    log.info(`Transaction successfully simulated and validated for userOp: ${customJSONStringify(userOp)} on chainId: ${chainId}`);
     return {
       code: STATUSES.SUCCESS,
       message: 'User op successfully simulated and validated',

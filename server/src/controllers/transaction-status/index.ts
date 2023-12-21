@@ -2,7 +2,7 @@
 import { Request, Response } from 'express';
 import { logger } from '../../../../common/logger';
 import { transactionDao } from '../../../../common/service-manager';
-import { parseError } from '../../../../common/utils';
+import { customJSONStringify, parseError } from '../../../../common/utils';
 import { STATUSES } from '../../middleware';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
@@ -12,7 +12,7 @@ export const transactionStatusApi = async (req: Request, res: Response) => {
   const chainId = parseInt(chainIdInStr, 10);
   const transactionId = req.query.transactionId as string;
   const response = await transactionDao.getByTransactionId(chainId, transactionId);
-  log.info(`Transaction status for transactionId ${transactionId} on chainId ${chainId} is ${JSON.stringify(response)}`);
+  log.info(`Transaction status for transactionId ${transactionId} on chainId ${chainId} is ${customJSONStringify(response)}`);
   try {
     if (!response) {
       log.info(`Transaction status for transactionId ${transactionId} on chainId ${chainId} is not found`);
@@ -21,7 +21,7 @@ export const transactionStatusApi = async (req: Request, res: Response) => {
         error: 'Transaction not found',
       });
     }
-    log.info(`Transaction status for transactionId ${transactionId} on chainId ${chainId} is ${JSON.stringify(response)}`);
+    log.info(`Transaction status for transactionId ${transactionId} on chainId ${chainId} is ${customJSONStringify(response)}`);
     if (response.length) {
       return res.json({
         code: STATUSES.SUCCESS,

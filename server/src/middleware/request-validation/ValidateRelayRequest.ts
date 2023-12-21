@@ -8,6 +8,7 @@ import {
   scwRequestSchema,
 } from '../../routes/relay/relay.schema';
 import { STATUSES } from '../RequestHelpers';
+import { parseError } from '../../../../common/utils';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
@@ -55,7 +56,7 @@ export const validateRelayRequest = () => async (
     log.error(e);
     return res.status(STATUSES.BAD_REQUEST).send({
       code: STATUSES.BAD_REQUEST,
-      error: JSON.stringify(e),
+      error: parseError(e),
     });
   }
 };

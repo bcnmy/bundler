@@ -27,7 +27,9 @@ import {
   OptimismL1GasPriceOracleContractType,
   UserOperationType,
 } from '../types';
-import { packUserOp, packUserOpForUserOpHash, parseError } from '../utils';
+import {
+  customJSONStringify, packUserOp, packUserOpForUserOpHash, parseError
+} from '../utils';
 import RpcError from '../utils/rpc-error';
 import {
   EstimateUserOperationGasDataType,
@@ -91,7 +93,7 @@ export class BundlerSimulationService {
       } = estimateUserOperationGasData;
 
       const start = performance.now();
-      log.info(`userOp received: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
+      log.info(`userOp received: ${customJSONStringify(userOp)} on chainId: ${chainId}`);
 
       // creating fullUserOp in case of estimation
       userOp.callGasLimit = BigInt(5000000);
@@ -158,7 +160,7 @@ export class BundlerSimulationService {
       const preVerificationGasEnd = performance.now();
       log.info(`calcPreVerificationGas took: ${preVerificationGasEnd - preVerificationGasStart} milliseconds`);
 
-      log.info(`userOp to used to simulate in eth_call: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
+      log.info(`userOp to used to simulate in eth_call: ${customJSONStringify(userOp)} on chainId: ${chainId}`);
 
       const data = encodeFunctionData({
         abi: entryPointContract.abi,
@@ -201,7 +203,7 @@ export class BundlerSimulationService {
         ];
       }
 
-      log.info(`ethCallParams: ${JSON.stringify(ethCallParams)} on chainId: ${chainId}`);
+      log.info(`ethCallParams: ${customJSONStringify(ethCallParams)} on chainId: ${chainId}`);
 
       let ethCallData;
       try {
@@ -211,14 +213,14 @@ export class BundlerSimulationService {
         const ethCallEnd = performance.now();
         log.info(`eth_call took: ${ethCallEnd - ethCallStart} milliseconds`);
 
-        log.info(`eth_call response: ${JSON.stringify(simulateHandleOpResult)} on chainId: ${chainId}`);
+        log.info(`eth_call response: ${customJSONStringify(simulateHandleOpResult)} on chainId: ${chainId}`);
 
         ethCallData = simulateHandleOpResult.error.data;
         log.info(`ethCallData: ${ethCallData}`);
 
         if (ethCallData === undefined) {
-          const errorMessage = simulateHandleOpResult.data.error.message
-            ? simulateHandleOpResult.data.error.message : 'eth_call RPC error';
+          const errorMessage = simulateHandleOpResult.error.message
+            ? simulateHandleOpResult.data.message : 'eth_call RPC error';
           return {
             code: STATUSES.BAD_REQUEST,
             message: `Error while simulating userOp: ${parseError(errorMessage)}`,
@@ -236,7 +238,7 @@ export class BundlerSimulationService {
         const errorMessage = error.response.data.error.message
           ? error.response.data.error.message : error;
         return {
-          code: STATUSES.BAD_REQUEST,
+          code: error.response.data.error.code || STATUSES.BAD_REQUEST,
           message: `Error while simulating userOp: ${parseError(errorMessage)}`,
           data: {
             preVerificationGas: BigInt(0),
@@ -327,7 +329,7 @@ export class BundlerSimulationService {
         //   log.info(`chainId: ${chainId} is OP stack hence increasing callGasLimit by 150K`);
         //   callGasLimit += 150000;
         // }
-        log.info(`call gas limit after checking for optimism: ${callGasLimit} on chainId: ${chainId}`);
+        log.info(`callGasLimit after checking for optimism: ${callGasLimit} on chainId: ${chainId}`);
 
         if (LineaNetworks.includes(chainId)) {
           preVerificationGas += BigInt(
@@ -340,7 +342,7 @@ export class BundlerSimulationService {
 
         return {
           code: STATUSES.SUCCESS,
-          message: `Gas successfully estimated for userOp: ${JSON.stringify(
+          message: `Gas successfully estimated for userOp: ${customJSONStringify(
             userOp,
           )} on chainId: ${chainId}`,
           data: {
@@ -388,7 +390,7 @@ export class BundlerSimulationService {
           );
         } else {
           return {
-            code: STATUSES.NOT_FOUND,
+            code: BUNDLER_VALIDATION_STATUSES.INTERNAL_SERVER_ERROR,
             message: 'Revert reason not matching known cases',
             data: {
               preVerificationGas: BigInt(0),
@@ -438,7 +440,7 @@ export class BundlerSimulationService {
     try {
       const { userOp, entryPointContract, chainId } = simulateValidationAndExecutionData;
 
-      log.info(`userOp received: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
+      log.info(`userOp received: ${customJSONStringify(userOp)} on chainId: ${chainId}`);
 
       let reason: string | undefined;
       let totalGas: number;
@@ -569,7 +571,7 @@ export class BundlerSimulationService {
     try {
       const { userOp, entryPointContract, chainId } = simulateValidationData;
 
-      log.info(`userOp received: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
+      log.info(`userOp received: ${customJSONStringify(userOp)} on chainId: ${chainId}`);
 
       const data = encodeFunctionData({
         abi: entryPointContract.abi,
@@ -598,7 +600,7 @@ export class BundlerSimulationService {
         gasPrice: `0x${gasPrice}`,
       }];
 
-      log.info(`ethEstimateGasParams: ${JSON.stringify(ethEstimateGasParams)} on chainId: ${chainId}`);
+      log.info(`ethEstimateGasParams: ${customJSONStringify(ethEstimateGasParams)} on chainId: ${chainId}`);
 
       const ethEstimateGasStart = performance.now();
       const ethEstimatGasResponse = await this.networkService.estimateGas(
@@ -607,7 +609,7 @@ export class BundlerSimulationService {
       const ethEstimateGasEnd = performance.now();
       log.info(`eth_estimateGas took: ${ethEstimateGasEnd - ethEstimateGasStart} milliseconds`);
 
-      log.info(`Response from eth_estimateGas: ${JSON.stringify(ethEstimatGasResponse)}`);
+      log.info(`Response from eth_estimateGas: ${customJSONStringify(ethEstimatGasResponse)}`);
 
       const ethEstimateGasError = ethEstimatGasResponse.error;
       let totalGas = 0;
@@ -620,52 +622,65 @@ export class BundlerSimulationService {
           abi: entryPointContract.abi,
           data: ethEstimateGasError.data,
         });
-        const { args } = errorDescription;
 
-        const reason = args[0].toString();
-        log.info(`Transaction failed with reason: ${reason} on chainId: ${chainId}`);
-        if (reason.includes('AA1') || reason.includes('AA2')) {
-          log.info(`error in account on chainId: ${chainId}`);
+        if (errorDescription.errorName === 'FailedOp') {
+          const { args } = errorDescription;
+
+          const reason = args[1];
+          log.info(`Transaction failed with reason: ${reason} on chainId: ${chainId}`);
+          if (reason.includes('AA1') || reason.includes('AA2')) {
+            log.info(`error in account on chainId: ${chainId}`);
+            const message = this.removeSpecialCharacters(reason);
+            log.info(`message after removing special characters: ${message}`);
+            throw new RpcError(
+              message,
+              BUNDLER_VALIDATION_STATUSES.SIMULATE_VALIDATION_FAILED,
+            );
+          } else if (reason.includes('AA3')) {
+            log.info(`error in paymaster on chainId: ${chainId}`);
+            const message = this.removeSpecialCharacters(reason);
+            log.info(`message after removing special characters: ${message}`);
+            throw new RpcError(
+              message,
+              BUNDLER_VALIDATION_STATUSES.SIMULATE_PAYMASTER_VALIDATION_FAILED,
+            );
+          } else if (reason.includes('AA9')) {
+            log.info(`error in inner handle op on chainId: ${chainId}`);
+            const message = this.removeSpecialCharacters(reason);
+            log.info(`message after removing special characters: ${message}`);
+            throw new RpcError(
+              message,
+              BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
+            );
+          } else if (reason.includes('AA4')) {
+            log.info('error in verificationGasLimit being incorrect');
+            const message = this.removeSpecialCharacters(reason);
+            log.info(`message after removing special characters: ${message}`);
+            throw new RpcError(
+              message,
+              BUNDLER_VALIDATION_STATUSES.SIMULATE_VALIDATION_FAILED,
+            );
+          }
           const message = this.removeSpecialCharacters(reason);
-          log.info(`message after removing special characters: ${message}`);
-          throw new RpcError(
-            message,
-            BUNDLER_VALIDATION_STATUSES.SIMULATE_VALIDATION_FAILED,
-          );
-        } else if (reason.includes('AA3')) {
-          log.info(`error in paymaster on chainId: ${chainId}`);
-          const message = this.removeSpecialCharacters(reason);
-          log.info(`message after removing special characters: ${message}`);
-          throw new RpcError(
-            message,
-            BUNDLER_VALIDATION_STATUSES.SIMULATE_PAYMASTER_VALIDATION_FAILED,
-          );
-        } else if (reason.includes('AA9')) {
-          log.info(`error in inner handle op on chainId: ${chainId}`);
-          const message = this.removeSpecialCharacters(reason);
-          log.info(`message after removing special characters: ${message}`);
           throw new RpcError(
             message,
             BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
           );
-        } else if (reason.includes('AA4')) {
-          log.info('error in verificationGasLimit being incorrect');
+        } else {
+          const { args } = errorDescription;
+
+          const reason = args[1] ? args[1].toString() : errorDescription.errorName;
           const message = this.removeSpecialCharacters(reason);
-          log.info(`message after removing special characters: ${message}`);
           throw new RpcError(
             message,
-            BUNDLER_VALIDATION_STATUSES.SIMULATE_VALIDATION_FAILED,
+            BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
           );
         }
-        throw new RpcError(
-          `Transaction reverted in simulation with reason: ${reason}. Use handleOpsCallData to simulate transaction to check transaction execution steps`,
-          BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
-        );
       } else if (
-        ethEstimatGasResponse.data.result && Object.keys(ethEstimatGasResponse.data).length > 0
+        typeof ethEstimatGasResponse === 'string'
       ) {
-        const { result } = ethEstimatGasResponse.data;
-        totalGas = Number(result);
+        totalGas = Number(ethEstimatGasResponse);
+        log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
       } else {
         return {
           code: STATUSES.INTERNAL_SERVER_ERROR,
@@ -744,7 +759,7 @@ export class BundlerSimulationService {
       log.info(`simulateHandleOpResult.errorArgs: ${simulateHandleOpResult.errorArgs}`);
       if (!simulateHandleOpResult.errorArgs) {
         throw new RpcError(
-          `Error: ${JSON.stringify(
+          `Error: ${customJSONStringify(
             simulateHandleOpResult,
           )}`,
           BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
@@ -760,7 +775,7 @@ export class BundlerSimulationService {
 
       if (paymaster == null) {
         log.info(
-          `account validation failed: ${msg} for userOp: ${JSON.stringify(
+          `account validation failed: ${msg} for userOp: ${customJSONStringify(
             userOp,
           )}`,
         );
@@ -770,7 +785,7 @@ export class BundlerSimulationService {
         );
       } else {
         log.info(
-          `paymaster validation failed: ${msg} for userOp: ${JSON.stringify(
+          `paymaster validation failed: ${msg} for userOp: ${customJSONStringify(
             userOp,
           )}`,
         );
@@ -881,7 +896,7 @@ export class BundlerSimulationService {
     chainId: number,
   ) {
     const userOpHash = keccak256(packUserOpForUserOpHash(userOp, true));
-    const enc = encodeAbiParameters(parseAbiParameters("bytes32', address, uint256"), [userOpHash, entryPointAddress, BigInt(chainId)]);
+    const enc = encodeAbiParameters(parseAbiParameters('bytes32, address, uint256'), [userOpHash, entryPointAddress, BigInt(chainId)]);
     return keccak256(enc);
   }
 }

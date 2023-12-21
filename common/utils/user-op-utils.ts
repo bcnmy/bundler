@@ -18,6 +18,7 @@ import {
   StakeInfo, UserOperationType,
 } from '../types';
 import { parseError } from './parse-error';
+import { customJSONStringify } from './custom-json-stringifier';
 
 const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
 
@@ -83,10 +84,10 @@ export const getUserOperationReceiptForFailedTransaction = async (
         args,
       } = providerFilterLogs[0];
 
-      log.info(`filter: ${JSON.stringify(filter)} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
+      log.info(`filter: ${customJSONStringify(filter)} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
       if (args) {
         const userOperationEventArgs = args;
-        log.info(`userOperationEventArgs: ${JSON.stringify(userOperationEventArgs)}`);
+        log.info(`userOperationEventArgs: ${customJSONStringify(userOperationEventArgs)}`);
         const actualGasCostInHex = toHex(args.actualGasCost as bigint);
         log.info(`actualGasCostInHex: ${actualGasCostInHex} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
         const actualGasCostInNumber = Number((actualGasCostInHex));
@@ -104,7 +105,7 @@ export const getUserOperationReceiptForFailedTransaction = async (
             hash: transactionHash,
           }) as TransactionReceipt;
           logs = filterLogs(providerFilterLogs[0], frontRunnedTransactionReceipt.logs);
-          log.info(`logs: ${JSON.stringify(logs)} for userOpHash: ${userOpHash} on chainId: ${chainId}`);
+          log.info(`logs: ${customJSONStringify(logs)} for userOpHash: ${userOpHash} on chainId: ${chainId}`);
           return {
             actualGasCost: actualGasCostInNumber,
             actualGasUsed: actualGasUsedInNumber,
@@ -114,7 +115,7 @@ export const getUserOperationReceiptForFailedTransaction = async (
           };
         }
         logs = filterLogs(providerFilterLogs[0], receipt.logs);
-        log.info(`logs: ${JSON.stringify(logs)} for userOpHash: ${userOpHash} on chainId: ${chainId}`);
+        log.info(`logs: ${customJSONStringify(logs)} for userOpHash: ${userOpHash} on chainId: ${chainId}`);
         return {
           actualGasCost: actualGasCostInNumber,
           actualGasUsed: actualGasUsedInNumber,
@@ -325,36 +326,36 @@ export function packUserOpForUserOpHash(
 
   if (forSignature) {
     return encodeAbiParameters(
-      parseAbiParameters("'address', 'uint256', 'bytes32', 'bytes32', 'uint256', 'uint256', 'uint256', 'uint256', 'uint256', 'bytes32'"),
+      parseAbiParameters('address, uint256, bytes32, bytes32, uint256, uint256, uint256, uint256, uint256, bytes32'),
       [
-        op.sender,
-        op.nonce,
+        op.sender as `0x${string}`,
+        op.nonce as bigint,
         keccak256(op.initCode),
         keccak256(op.callData),
-        op.callGasLimit,
-        op.verificationGasLimit,
-        op.preVerificationGas,
-        op.maxFeePerGas,
-        op.maxPriorityFeePerGas,
+        op.callGasLimit as bigint,
+        op.verificationGasLimit as bigint,
+        op.preVerificationGas as bigint,
+        op.maxFeePerGas as bigint,
+        op.maxPriorityFeePerGas as bigint,
         keccak256(op.paymasterAndData),
       ],
     );
   }
   // for the purpose of calculating gas cost encode also signature (and no keccak of bytes)
   return encodeAbiParameters(
-    parseAbiParameters("'address', 'uint256', 'bytes', 'bytes', 'uint256', 'uint256', 'uint256', 'uint256', 'uint256', 'bytes', 'bytes"),
+    parseAbiParameters('address, uint256, bytes, bytes, uint256, uint256, uint256, uint256, uint256, bytes, bytes'),
     [
-      op.sender,
-      op.nonce,
+      op.sender as `0x${string}`,
+      op.nonce as bigint,
       op.initCode,
       op.callData,
-      op.callGasLimit,
-      op.verificationGasLimit,
-      op.preVerificationGas,
-      op.maxFeePerGas,
-      op.maxPriorityFeePerGas,
+      op.callGasLimit as bigint,
+      op.verificationGasLimit as bigint,
+      op.preVerificationGas as bigint,
+      op.maxFeePerGas as bigint,
+      op.maxPriorityFeePerGas as bigint,
       op.paymasterAndData,
-      op.signature,
+      op.signature as `0x${string}`,
     ],
   );
 }
