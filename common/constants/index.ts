@@ -71,6 +71,6 @@ export const OptimismNetworks = [420, 10, 84531, 8453, 204, 5611, 9980, 91715];
 export const LineaNetworks = [59140, 59144];
 export const ArbitrumNetworks = [42170, 421613, 42161, 421614];
 export const AlchemySimulateExecutionSupportedNetworks = [
-  1, 5, 137, 80001, 10, 420, 42161, 421613, 8453, 84531, 592,
+  1, 5, 11155111, 137, 80001, 10, 420, 42161, 421613, 421614, 8453, 84531, 592,
 ];
 export const AstarNetworks = [81, 592];
