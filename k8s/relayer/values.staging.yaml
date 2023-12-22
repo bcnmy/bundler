@@ -48,5 +48,5 @@ datadog:
     DD_PROFILING_ENABLED: "true"
     DD_LOGS_INJECTION: "false"
     DD_RUNTIME_METRICS_ENABLED: "true"
-    DD_CONTAINER_EXCLUDE: ".*"
+    DD_CONTAINER_EXCLUDE: "kube_namespace:.*"
     DD_CONTAINER_INCLUDE: "kube_namespace:^sdk-staging$ kube_namespace:^gasless-staging$"
