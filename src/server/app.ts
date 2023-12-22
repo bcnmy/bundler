@@ -36,7 +36,6 @@ app.use(logger({
 
 app.engine('hbs', cons.handlebars);
 app.set('view engine', 'hbs');
-app.set('views', `${__dirname}/views`);
 
 // Add headers
 app.use((

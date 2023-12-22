@@ -4,8 +4,7 @@
     "format": "eslint 'src' --ext .ts --fix",
     "prepare": "husky install",
     "dev": "nodemon",
-    "views": "cp -r src/server/views dist/server/src/views",
-    "build": "tsc -p . && npm run views",
+    "build": "tsc -p .",
     "start": "node --max_old_space_size=6000 dist/server/index.js",
     "test": "jest --setupFiles dotenv/config"
   },
