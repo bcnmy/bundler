@@ -682,7 +682,7 @@ export class EVMTransactionService
       log.info(
         `Notifying transaction listener for transactionId: ${transactionId} on chainId ${this.chainId}`,
       );
-      await this.transactionListener.notify({
+      const transactionListenerNotifyResponse = await this.transactionListener.notify({
         transactionHash: retryTransactionExecutionResponse.hash,
         transactionId: transactionId as string,
         relayerAddress: account.getPublicKey(),
@@ -694,11 +694,28 @@ export class EVMTransactionService
         relayerManagerName,
       });
 
-      return {
-        state: "success",
-        code: STATUSES.SUCCESS,
-        transactionId,
-      };
+      if (transactionType === TransactionType.FUNDING) {
+        await this.sendRelayerFundingSlackNotification(
+          account.getPublicKey(),
+          this.chainId,
+          transactionHash as string,
+        );
+      }
+
+      if (transactionListenerNotifyResponse) {
+        return {
+          state: "success",
+          code: STATUSES.SUCCESS,
+          transactionId,
+        };
+      } else {
+        return {
+          state: "failed",
+          code: STATUSES.ETHERS_WAIT_FOR_TRANSACTION_TIMEOUT,
+          error: "waitForTransaction ethers timeout error",
+          transactionId,
+        };
+      }
     } catch (error) {
       log.error(
         `Error while retrying transaction: ${parseError(
