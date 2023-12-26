@@ -29,7 +29,7 @@ import {
   getUserOperationReceiptForFailedTransaction,
   getUserOperationReceiptForSuccessfulTransaction,
   customJSONStringify,
-  bigIntToDecimal128,
+  bigIntToString,
 } from "../../common/utils";
 import { IEVMAccount } from "../account";
 import { ITransactionPublisher } from "../transaction-publisher";
@@ -222,7 +222,7 @@ export class EVMTransactionListener
                 userOpHash,
                 {
                   transactionHash,
-                  receipt: bigIntToDecimal128(transactionReceipt),
+                  receipt: bigIntToString(transactionReceipt),
                   blockNumber: Number(transactionReceipt.blockNumber),
                   blockHash: transactionReceipt.blockHash,
                   status: TransactionStatus.SUCCESS,
@@ -298,7 +298,7 @@ export class EVMTransactionListener
           transactionId,
           transactionHash,
           {
-            receipt: bigIntToDecimal128(transactionReceipt),
+            receipt: bigIntToString(transactionReceipt),
             transactionFee,
             transactionFeeInUSD,
             transactionFeeCurrency,
@@ -464,7 +464,7 @@ export class EVMTransactionListener
                   userOpHash,
                   {
                     transactionHash,
-                    receipt: bigIntToDecimal128(transactionReceipt),
+                    receipt: bigIntToString(transactionReceipt),
                     blockNumber: Number(transactionReceipt.blockNumber),
                     blockHash: transactionReceipt.blockHash,
                     status: TransactionStatus.FAILED,
@@ -550,7 +550,7 @@ export class EVMTransactionListener
                 transactionId,
                 userOpHash,
                 {
-                  receipt: bigIntToDecimal128(frontRunnedTransactionReceipt),
+                  receipt: bigIntToString(frontRunnedTransactionReceipt),
                   transactionHash: (
                     frontRunnedTransactionReceipt as TransactionReceipt
                   ).transactionHash,
@@ -610,7 +610,7 @@ export class EVMTransactionListener
                 {
                   frontRunnedTransactionHash:
                     frontRunnedTransactionReceipt.hash,
-                  frontRunnedReceipt: bigIntToDecimal128(
+                  frontRunnedReceipt: bigIntToString(
                     frontRunnedTransactionReceipt,
                   ),
                   frontRunnedTransactionFee,
@@ -684,7 +684,7 @@ export class EVMTransactionListener
           transactionId,
           transactionHash,
           {
-            receipt: bigIntToDecimal128(transactionReceipt),
+            receipt: bigIntToString(transactionReceipt),
             transactionFee,
             transactionFeeInUSD,
             transactionFeeCurrency,
@@ -889,7 +889,7 @@ export class EVMTransactionListener
       log.info(
         `Data: ${customJSONStringify({
           transactionHash,
-          rawTransaction: bigIntToDecimal128(rawTransaction),
+          rawTransaction: bigIntToString(rawTransaction),
           relayerAddress,
           gasPrice: Number(toHex(rawTransaction.gasPrice as bigint)),
           status: TransactionStatus.PENDING,
@@ -901,7 +901,7 @@ export class EVMTransactionListener
         transactionId,
         {
           transactionHash,
-          rawTransaction: bigIntToDecimal128(rawTransaction),
+          rawTransaction: bigIntToString(rawTransaction),
           relayerAddress,
           gasPrice: Number(toHex(rawTransaction.gasPrice as bigint)),
           status: TransactionStatus.PENDING,
@@ -937,7 +937,7 @@ export class EVMTransactionListener
         transactionHash,
         previousTransactionHash,
         status: TransactionStatus.PENDING,
-        rawTransaction: bigIntToDecimal128(rawTransaction),
+        rawTransaction: bigIntToString(rawTransaction),
         chainId: this.chainId,
         gasPrice: Number(toHex(rawTransaction.gasPrice as bigint)),
         relayerAddress,
