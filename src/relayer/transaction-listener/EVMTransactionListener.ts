@@ -886,6 +886,16 @@ export class EVMTransactionListener
       log.info(
         `Not a replacement transaction, updating data for transactionId: ${transactionId} on chainId: ${this.chainId}`,
       );
+      log.info(
+        `Data: ${customJSONStringify({
+          transactionHash,
+          rawTransaction: bigIntToDecimal128(rawTransaction),
+          relayerAddress,
+          gasPrice: Number(toHex(rawTransaction.gasPrice as bigint)),
+          status: TransactionStatus.PENDING,
+          updationTime: Date.now(),
+        })}`,
+      );
       await this.transactionDao.updateByTransactionId(
         this.chainId,
         transactionId,
