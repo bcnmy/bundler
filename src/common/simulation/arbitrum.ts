@@ -5,6 +5,7 @@ import {
   TransactionSerializable,
 } from "viem";
 import zlib from "zlib";
+import { prefix0x } from "./utils";
 
 // The following constants are copied from the Arbitrum Nitro implementation:
 // https://github.com/OffchainLabs/nitro/blob/e815395d2e91fb17f4634cad72198f6de79c6e61/nodeInterface/NodeInterface.go#L444
@@ -19,11 +20,6 @@ const ESTIMATION_PADDING_UNITS = BigInt(16) * TX_DATA_NON_ZERO_GAS_EIP2028;
 const SECP_256K1_N = BigInt(
   "0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141",
 );
-
-// viem Hex type expects all hex strings to be prefixed with 0x to comply with type `0x${string}`
-function prefix0x(hex: string): `0x${string}` {
-  return hex.startsWith("0x") ? (hex as `0x${string}`) : `0x${hex}`;
-}
 
 // Craft the mock transaction for estimation purposes.
 // The general idea  is to create a transaction with highest allowed values for every mock parameter, but the reference implementation in the Node does it differently.
