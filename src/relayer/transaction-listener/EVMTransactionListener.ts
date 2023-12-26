@@ -29,6 +29,7 @@ import {
   getUserOperationReceiptForFailedTransaction,
   getUserOperationReceiptForSuccessfulTransaction,
   customJSONStringify,
+  bigIntToDecimal128,
 } from "../../common/utils";
 import { IEVMAccount } from "../account";
 import { ITransactionPublisher } from "../transaction-publisher";
@@ -221,7 +222,7 @@ export class EVMTransactionListener
                 userOpHash,
                 {
                   transactionHash,
-                  receipt: transactionReceipt,
+                  receipt: bigIntToDecimal128(transactionReceipt),
                   blockNumber: Number(transactionReceipt.blockNumber),
                   blockHash: transactionReceipt.blockHash,
                   status: TransactionStatus.SUCCESS,
@@ -297,7 +298,7 @@ export class EVMTransactionListener
           transactionId,
           transactionHash,
           {
-            receipt: transactionReceipt,
+            receipt: bigIntToDecimal128(transactionReceipt),
             transactionFee,
             transactionFeeInUSD,
             transactionFeeCurrency,
@@ -463,7 +464,7 @@ export class EVMTransactionListener
                   userOpHash,
                   {
                     transactionHash,
-                    receipt: transactionReceipt,
+                    receipt: bigIntToDecimal128(transactionReceipt),
                     blockNumber: Number(transactionReceipt.blockNumber),
                     blockHash: transactionReceipt.blockHash,
                     status: TransactionStatus.FAILED,
@@ -549,7 +550,7 @@ export class EVMTransactionListener
                 transactionId,
                 userOpHash,
                 {
-                  receipt: frontRunnedTransactionReceipt,
+                  receipt: bigIntToDecimal128(frontRunnedTransactionReceipt),
                   transactionHash: (
                     frontRunnedTransactionReceipt as TransactionReceipt
                   ).transactionHash,
@@ -609,7 +610,7 @@ export class EVMTransactionListener
                 {
                   frontRunnedTransactionHash:
                     frontRunnedTransactionReceipt.hash,
-                  frontRunnedReceipt: frontRunnedTransactionReceipt,
+                  frontRunnedReceipt: bigIntToDecimal128(frontRunnedTransactionReceipt),
                   frontRunnedTransactionFee,
                   frontRunnedTransactionFeeInUSD,
                   frontRunnedTransactionFeeCurrency,
@@ -681,7 +682,7 @@ export class EVMTransactionListener
           transactionId,
           transactionHash,
           {
-            receipt: transactionReceipt,
+            receipt: bigIntToDecimal128(transactionReceipt),
             transactionFee,
             transactionFeeInUSD,
             transactionFeeCurrency,
@@ -885,9 +886,9 @@ export class EVMTransactionListener
         transactionId,
         {
           transactionHash,
-          rawTransaction,
+          rawTransaction: bigIntToDecimal128(rawTransaction),
           relayerAddress,
-          gasPrice: rawTransaction.gasPrice,
+          gasPrice: Number(toHex(rawTransaction.gasPrice as bigint)),
           status: TransactionStatus.PENDING,
           updationTime: Date.now(),
         },
@@ -911,9 +912,9 @@ export class EVMTransactionListener
           transactionHash,
           previousTransactionHash,
           status: TransactionStatus.PENDING,
-          rawTransaction,
+          rawTransaction: bigIntToDecimal128(rawTransaction),
           chainId: this.chainId,
-          gasPrice: rawTransaction.gasPrice,
+          gasPrice: Number(toHex(rawTransaction.gasPrice as bigint)),
           relayerAddress,
           walletAddress,
           metaData,
