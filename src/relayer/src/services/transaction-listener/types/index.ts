@@ -43,42 +43,6 @@ export type NotifyTransactionListenerParamsType = {
 export type OnTransactionSuccessParamsType = NotifyTransactionListenerParamsType;
 export type OnTransactionFailureParamsType = NotifyTransactionListenerParamsType;
 
-export type TransactionDataToBeUpdatedInDatabaseType = {
-  transactionHash?: string;
-  previousTransactionHash?: string;
-  status?: TransactionStatus;
-  transactionFee?: number;
-  transactionFeeInUSD?: number;
-  transactionFeeCurrency?: string;
-  rawTransaction?: EVMRawTransactionType;
-  gasPrice?: bigint;
-  receipt?: object;
-  resubmitted?: boolean;
-  relayerAddress?: string;
-  updationTime?: number;
-  frontRunnedReceipt?: object,
-  frontRunnedTransactionFee?: number,
-  frontRunnedTransactionFeeInUSD?: number,
-  frontRunnedTransactionFeeCurrency? : string,
-};
-
-export type NewTransactionDataToBeSavedInDatabaseType = {
-  transactionId: string,
-  transactionType: TransactionType,
-  transactionHash: string,
-  previousTransactionHash?: string,
-  status: TransactionStatus,
-  rawTransaction: EVMRawTransactionType,
-  chainId: number,
-  gasPrice?: bigint,
-  relayerAddress: string,
-  walletAddress: string,
-  metaData: any,
-  resubmitted: boolean,
-  creationTime: number,
-  updationTime: number,
-};
-
 export type FrontRunnedTransactionDataToBeUpdatedInDatabaseType = {
   transactionHash?: string;
   previousTransactionHash?: string;

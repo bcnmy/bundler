@@ -1,7 +1,7 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { Decimal128 } from 'mongodb';
 
-export const bigIntToDecimal128 = (object: any): object => {
+export const bigIntToDecimal128 = (object: any): any => {
   const result: any = {};
 
   for (const [key, value] of Object.entries(object)) {

@@ -35,11 +35,9 @@ import { ITransactionListener } from './interface/ITransactionListener';
 import {
   EVMTransactionListenerParamsType,
   FrontRunnedTransactionDataToBeUpdatedInDatabaseType,
-  NewTransactionDataToBeSavedInDatabaseType,
   NotifyTransactionListenerParamsType,
   OnTransactionFailureParamsType,
   OnTransactionSuccessParamsType,
-  TransactionDataToBeUpdatedInDatabaseType,
 } from './types';
 import { config } from '../../../../config';
 import { AstarNetworks } from '../../../../common/constants';
@@ -235,19 +233,24 @@ ITransactionPublisher<TransactionQueueMessageType> {
             transactionFeeInUSD = JSON.parse(coinsRateObj)[this.chainId];
           }
         }
-        await this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
-          receipt: transactionReceipt,
-          transactionFee,
-          transactionFeeInUSD,
-          transactionFeeCurrency,
-          status: TransactionStatus.SUCCESS,
-          updationTime: Date.now(),
-        }, transactionId, transactionHash);
+        await this.transactionDao.updateByTransactionIdAndTransactionHash(
+          this.chainId,
+          transactionId,
+          transactionHash,
+          {
+            receipt: transactionReceipt,
+            transactionFee,
+            transactionFeeInUSD,
+            transactionFeeCurrency,
+            status: TransactionStatus.SUCCESS,
+            updationTime: Date.now(),
+          },
+        );
       } catch (error) {
         log.error(`Error in saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId} with error: ${parseError(error)}`);
       }
     } else {
-      log.error(`No transactionExecutionResponse found for transactionId: ${transactionId} on chainId ${this.chainId}`);
+      log.error(`No transactionHash found for transactionId: ${transactionId} on chainId ${this.chainId}`);
     }
   }
 
@@ -506,53 +509,25 @@ ITransactionPublisher<TransactionQueueMessageType> {
             transactionFeeInUSD = JSON.parse(coinsRateObj)[this.chainId];
           }
         }
-        await this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
-          receipt: transactionReceipt,
-          transactionFee,
-          transactionFeeInUSD,
-          transactionFeeCurrency,
-          status: TransactionStatus.FAILED,
-          updationTime: Date.now(),
-        }, transactionId, transactionHash);
+        await this.transactionDao.updateByTransactionIdAndTransactionHash(
+          this.chainId,
+          transactionId,
+          transactionHash,
+          {
+            receipt: transactionReceipt,
+            transactionFee,
+            transactionFeeInUSD,
+            transactionFeeCurrency,
+            status: TransactionStatus.FAILED,
+            updationTime: Date.now(),
+          },
+        );
       } catch (error) {
         log.error(`Error in saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId} with error: ${parseError(error)}`);
       }
     } else {
       log.info(`No transactionExecutionResponse found for transactionId: ${transactionId} on chainId ${this.chainId}`);
     }
-  }
-
-  private async updateTransactionDataToDatabase(
-    transactionDataToBeUpdatedInDatabase: TransactionDataToBeUpdatedInDatabaseType,
-    transactionId: string,
-  ): Promise<void> {
-    await this.transactionDao.updateByTransactionId(
-      this.chainId,
-      transactionId,
-      bigIntToDecimal128(transactionDataToBeUpdatedInDatabase),
-    );
-  }
-
-  private async saveNewTransactionDataToDatabase(
-    newTransactionDataToBeSavedInDatabase: NewTransactionDataToBeSavedInDatabaseType,
-  ): Promise<void> {
-    await this.transactionDao.save(
-      this.chainId,
-      bigIntToDecimal128(newTransactionDataToBeSavedInDatabase),
-    );
-  }
-
-  private async updateTransactionDataToDatabaseByTransactionIdAndTransactionHash(
-    transactionDataToBeUpdatedInDatabase: TransactionDataToBeUpdatedInDatabaseType,
-    transactionId: string,
-    transactionHash: string,
-  ): Promise<void> {
-    await this.transactionDao.updateByTransactionIdAndTransactionHash(
-      this.chainId,
-      transactionId,
-      transactionHash,
-      bigIntToDecimal128(transactionDataToBeUpdatedInDatabase),
-    );
   }
 
   private async updateFrontRunnedTransactionDataToDatabaseByTransactionIdAndTransactionHash(
@@ -567,16 +542,6 @@ ITransactionPublisher<TransactionQueueMessageType> {
       transactionHash,
       bigIntToDecimal128(frontRunnedTransactionDataToBeUpdatedInDatabase),
     );
-  }
-
-  private async updateTransactionDataForFailureInTransactionExecution(
-    transactionId: string,
-  ): Promise<void> {
-    this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
-      resubmitted: false,
-      status: TransactionStatus.DROPPED,
-      updationTime: Date.now(),
-    }, transactionId, TransactionStatus.DROPPED);
   }
 
   private async updateUserOpDataForFailureInTransactionExecution(
@@ -703,7 +668,16 @@ ITransactionPublisher<TransactionQueueMessageType> {
       updating transaction and userOp data`);
       try {
         if (transactionType === TransactionType.BUNDLER || transactionType === TransactionType.AA) {
-          this.updateTransactionDataForFailureInTransactionExecution(transactionId);
+          await this.transactionDao.updateByTransactionId(
+            this.chainId,
+            transactionId,
+            {
+              resubmitted: false,
+              status: TransactionStatus.DROPPED,
+              updationTime: Date.now(),
+              transactionHash: null
+            },
+          );
           this.updateUserOpDataForFailureInTransactionExecution(transactionId);
         }
       } catch (dataSavingError) {
@@ -720,37 +694,49 @@ ITransactionPublisher<TransactionQueueMessageType> {
     }
 
     if (!previousTransactionHash) {
-    // Save initial transaction data to database
-      this.updateTransactionDataToDatabase({
-        transactionHash,
-        rawTransaction,
-        relayerAddress,
-        gasPrice: rawTransaction.gasPrice,
-        status: TransactionStatus.PENDING,
-        updationTime: Date.now(),
-      }, transactionId);
-    } else {
-      this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash({
-        resubmitted: true,
-        status: TransactionStatus.DROPPED,
-        updationTime: Date.now(),
-      }, transactionId, previousTransactionHash);
-      this.saveNewTransactionDataToDatabase({
+      await this.transactionDao.updateByTransactionId(
+        this.chainId,
         transactionId,
-        transactionType,
+        {
+          transactionHash,
+          rawTransaction,
+          relayerAddress,
+          gasPrice: rawTransaction.gasPrice,
+          status: TransactionStatus.PENDING,
+          updationTime: Date.now(),
+        },
+      );
+    } else {
+      await this.transactionDao.updateByTransactionIdAndTransactionHash(
+        this.chainId,
+        transactionId,
         transactionHash,
-        previousTransactionHash,
-        status: TransactionStatus.PENDING,
-        rawTransaction,
-        chainId: this.chainId,
-        gasPrice: rawTransaction.gasPrice,
-        relayerAddress,
-        walletAddress,
-        metaData,
-        resubmitted: false,
-        creationTime: Date.now(),
-        updationTime: Date.now(),
-      });
+        {
+          resubmitted: true,
+          status: TransactionStatus.DROPPED,
+          previousTransactionHash,
+          updationTime: Date.now(),
+        },
+      );
+      await this.transactionDao.save(
+        this.chainId,
+        {
+          transactionId,
+          transactionType,
+          transactionHash,
+          previousTransactionHash,
+          status: TransactionStatus.PENDING,
+          rawTransaction,
+          chainId: this.chainId,
+          gasPrice: rawTransaction.gasPrice,
+          relayerAddress,
+          walletAddress,
+          metaData,
+          resubmitted: false,
+          creationTime: Date.now(),
+          updationTime: Date.now(),
+        },
+      );
     }
 
     // transaction queue is being listened by socket service to notify the client about the hash
