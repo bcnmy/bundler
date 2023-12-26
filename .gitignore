@@ -5,7 +5,7 @@ centrifugo_config.json
 relayer/dist
 server/dist
 coverage
-config/config.json
+config.json
 config.json.enc
 *heapsnapshot
 .vscode

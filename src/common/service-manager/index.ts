@@ -2,22 +2,22 @@
 /* eslint-disable no-await-in-loop */
 import { getContract, parseEther } from "viem";
 import { config } from "../../config";
-import { EVMAccount, IEVMAccount } from "../../relayer/src/services/account";
+import { EVMAccount, IEVMAccount } from "../../relayer/account";
 import {
   AAConsumer,
   SCWConsumer,
   SocketConsumer,
   BundlerConsumer,
-} from "../../relayer/src/services/consumer";
-import { EVMNonceManager } from "../../relayer/src/services/nonce-manager";
+} from "../../relayer/consumer";
+import { EVMNonceManager } from "../../relayer/nonce-manager";
 import {
   EVMRelayerManager,
   IRelayerManager,
-} from "../../relayer/src/services/relayer-manager";
-import { EVMRelayerQueue } from "../../relayer/src/services/relayer-queue";
-import { EVMRetryTransactionService } from "../../relayer/src/services/retry-transaction-service";
-import { EVMTransactionListener } from "../../relayer/src/services/transaction-listener";
-import { EVMTransactionService } from "../../relayer/src/services/transaction-service";
+} from "../../relayer/relayer-manager";
+import { EVMRelayerQueue } from "../../relayer/relayer-queue";
+import { EVMRetryTransactionService } from "../../relayer/retry-transaction-service";
+import { EVMTransactionListener } from "../../relayer/transaction-listener";
+import { EVMTransactionService } from "../../relayer/transaction-service";
 import { FeeOption } from "../../server/services";
 import { RedisCacheService } from "../cache";
 import { Mongo, TransactionDAO } from "../db";

@@ -1,23 +1,35 @@
 /* eslint-disable import/no-import-module-exports */
 /* eslint-disable @typescript-eslint/return-await */
 /* eslint-disable new-cap */
-import axios from 'axios';
+import axios from "axios";
 import {
-  PublicClient, Transaction, TransactionReceipt, createPublicClient, http,
-} from 'viem';
-import { IEVMAccount } from '../../relayer/src/services/account';
+  PublicClient,
+  Transaction,
+  TransactionReceipt,
+  createPublicClient,
+  http,
+} from "viem";
+import { IEVMAccount } from "../../relayer/account";
 import {
   AlchemyMethodType,
-  EVMRawTransactionType, EthMethodType,
-} from '../types';
-import { INetworkService } from './interface';
-import { Type0TransactionGasPriceType, Type2TransactionGasPriceType } from './types';
-import { logger } from '../logger';
-import { customJSONStringify } from '../utils';
+  EVMRawTransactionType,
+  EthMethodType,
+} from "../types";
+import { INetworkService } from "./interface";
+import {
+  Type0TransactionGasPriceType,
+  Type2TransactionGasPriceType,
+} from "./types";
+import { logger } from "../logger";
+import { customJSONStringify } from "../utils";
 
-const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
+const log = logger.child({
+  module: module.filename.split("/").slice(-4).join("/"),
+});
 
-export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTransactionType> {
+export class EVMNetworkService
+  implements INetworkService<IEVMAccount, EVMRawTransactionType>
+{
   chainId: number;
 
   rpcUrl: string;
@@ -36,21 +48,28 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
     const requestData = {
       method,
       params,
-      jsonrpc: '2.0',
+      jsonrpc: "2.0",
       id: Date.now(),
     };
     const response = await axios.post(this.rpcUrl, requestData);
-    const {
-      data,
-    } = response;
-    log.info(`data from RPC call: ${customJSONStringify(data)} received on JSON RPC Method: ${method}`);
+    const { data } = response;
+    log.info(
+      `data from RPC call: ${customJSONStringify(
+        data,
+      )} received on JSON RPC Method: ${method}`,
+    );
     if (!data) {
       log.error(`RPC Call failed without data on chainId: ${this.chainId}`);
       return null;
     }
     if (data.error) {
-      log.error(`RPC called returned error on chainId: ${this.chainId} with code: ${data.error.code} and message: ${data.error.message}`);
-      if (method === EthMethodType.ETH_CALL || method === EthMethodType.ESTIMATE_GAS) {
+      log.error(
+        `RPC called returned error on chainId: ${this.chainId} with code: ${data.error.code} and message: ${data.error.message}`,
+      );
+      if (
+        method === EthMethodType.ETH_CALL ||
+        method === EthMethodType.ESTIMATE_GAS
+      ) {
         return data;
       }
       throw new Error(data.error.message);
@@ -60,9 +79,9 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
 
   async getBaseFeePerGas(): Promise<bigint> {
     const block = await this.provider.getBlock({
-      blockTag: 'latest'
+      blockTag: "latest",
     });
-    if (typeof block.baseFeePerGas !== 'bigint') {
+    if (typeof block.baseFeePerGas !== "bigint") {
       return BigInt(0);
     }
     return block.baseFeePerGas;
@@ -78,9 +97,10 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
       EthMethodType.MAX_PRIORITY_FEE_PER_GAS,
       [],
     );
-    const [maxFeePerGas, maxPriorityFeePerGas] = await Promise.all(
-      [maxFeePerGasPromise, maxPriorityFeePerGasPromise],
-    );
+    const [maxFeePerGas, maxPriorityFeePerGas] = await Promise.all([
+      maxFeePerGasPromise,
+      maxPriorityFeePerGasPromise,
+    ]);
 
     return {
       maxFeePerGas: BigInt(maxFeePerGas),
@@ -89,7 +109,9 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
   }
 
   async getBalance(address: string): Promise<bigint> {
-    const balance = await this.sendRpcCall(EthMethodType.GET_BALANCE, [address]);
+    const balance = await this.sendRpcCall(EthMethodType.GET_BALANCE, [
+      address,
+    ]);
     return BigInt(balance);
   }
 
@@ -128,11 +150,8 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
    * if pendingNonce is set to false, returns the nonce of the mined transaction
    */
   async getNonce(address: string, pendingNonce = true): Promise<number> {
-    const params = pendingNonce ? [address, 'pending'] : [address];
-    return await this.sendRpcCall(
-      EthMethodType.GET_TRANSACTION_COUNT,
-      params,
-    );
+    const params = pendingNonce ? [address, "pending"] : [address];
+    return await this.sendRpcCall(EthMethodType.GET_TRANSACTION_COUNT, params);
   }
 
   async sendTransaction(
@@ -142,7 +161,9 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
     const rawTransaction: EVMRawTransactionType = rawTransactionData;
     rawTransaction.from = account.getPublicKey();
     const serialisedTransaction = await account.signTransaction(rawTransaction);
-    return await this.sendRpcCall(EthMethodType.SEND_RAW_TRANSACTION, [serialisedTransaction]);
+    return await this.sendRpcCall(EthMethodType.SEND_RAW_TRANSACTION, [
+      serialisedTransaction,
+    ]);
   }
 
   /**
@@ -164,7 +185,7 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
   /**
    * @param transactionHash transaction hash
    * @returns transaction once mined, else waits for the transaction to be mined
-  */
+   */
   async getTransaction(transactionHash: string): Promise<Transaction> {
     return await this.provider.getTransaction({
       hash: transactionHash as `0x${string}`,
@@ -173,7 +194,7 @@ export class EVMNetworkService implements INetworkService<IEVMAccount, EVMRawTra
 
   async getLatesBlockNumber(): Promise<bigint> {
     const block = await this.provider.getBlock({
-      blockTag: 'latest'
+      blockTag: "latest",
     });
     return block.number;
   }
