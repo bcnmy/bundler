@@ -1,8 +1,8 @@
-import { IEVMAccount } from '../../relayer/src/services/account';
-import { INetworkService } from '../network';
-import { EVMRawTransactionType } from '../types';
-import { TenderlySimulationService } from './external-simulation';
-import { SimulationDataType, SimulationResponseType } from './types';
+import { IEVMAccount } from "../../relayer/account";
+import { INetworkService } from "../network";
+import { EVMRawTransactionType } from "../types";
+import { TenderlySimulationService } from "./external-simulation";
+import { SimulationDataType, SimulationResponseType } from "./types";
 
 export class SCWSimulationService {
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
@@ -17,10 +17,11 @@ export class SCWSimulationService {
     this.tenderlySimulationService = tenderlySimulationService;
   }
 
-  async simulate(simulationData: SimulationDataType): Promise<SimulationResponseType> {
-    const tenderlySimulationResponse = await this.tenderlySimulationService.simulate(
-      simulationData,
-    );
+  async simulate(
+    simulationData: SimulationDataType,
+  ): Promise<SimulationResponseType> {
+    const tenderlySimulationResponse =
+      await this.tenderlySimulationService.simulate(simulationData);
     return tenderlySimulationResponse;
   }
 }

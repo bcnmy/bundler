@@ -13,7 +13,7 @@ import {
 import { NODE_INTERFACE_ADDRESS } from "@arbitrum/sdk/dist/lib/dataEntities/constants";
 import { NodeInterface__factory } from "@arbitrum/sdk/dist/lib/abi/factories/NodeInterface__factory";
 import { config } from "../../config";
-import { IEVMAccount } from "../../relayer/src/services/account";
+import { IEVMAccount } from "../../relayer/account";
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from "../../server/middleware";
 import { logger } from "../logger";
 import { INetworkService } from "../network";
