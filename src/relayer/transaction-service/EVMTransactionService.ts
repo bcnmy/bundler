@@ -682,17 +682,18 @@ export class EVMTransactionService
       log.info(
         `Notifying transaction listener for transactionId: ${transactionId} on chainId ${this.chainId}`,
       );
-      const transactionListenerNotifyResponse = await this.transactionListener.notify({
-        transactionHash: retryTransactionExecutionResponse.hash,
-        transactionId: transactionId as string,
-        relayerAddress: account.getPublicKey(),
-        rawTransaction,
-        transactionType,
-        previousTransactionHash: transactionHash,
-        walletAddress,
-        metaData,
-        relayerManagerName,
-      });
+      const transactionListenerNotifyResponse =
+        await this.transactionListener.notify({
+          transactionHash: retryTransactionExecutionResponse.hash,
+          transactionId: transactionId as string,
+          relayerAddress: account.getPublicKey(),
+          rawTransaction,
+          transactionType,
+          previousTransactionHash: transactionHash,
+          walletAddress,
+          metaData,
+          relayerManagerName,
+        });
 
       if (transactionType === TransactionType.FUNDING) {
         await this.sendRelayerFundingSlackNotification(

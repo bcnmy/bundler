@@ -610,7 +610,9 @@ export class EVMTransactionListener
                 {
                   frontRunnedTransactionHash:
                     frontRunnedTransactionReceipt.hash,
-                  frontRunnedReceipt: bigIntToDecimal128(frontRunnedTransactionReceipt),
+                  frontRunnedReceipt: bigIntToDecimal128(
+                    frontRunnedTransactionReceipt,
+                  ),
                   frontRunnedTransactionFee,
                   frontRunnedTransactionFeeInUSD,
                   frontRunnedTransactionFeeCurrency,
@@ -852,12 +854,12 @@ export class EVMTransactionListener
           await this.transactionDao.updateByTransactionIdAndTransactionHash(
             this.chainId,
             transactionId,
-            'null',
+            "null",
             {
               resubmitted: true,
               status: TransactionStatus.DROPPED,
               updationTime: Date.now(),
-            }
+            },
           );
           this.updateUserOpDataForFailureInTransactionExecution(transactionId);
         }
@@ -881,6 +883,9 @@ export class EVMTransactionListener
     }
 
     if (!previousTransactionHash) {
+      log.info(
+        `Not a replacement transaction, updating data for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+      );
       await this.transactionDao.updateByTransactionId(
         this.chainId,
         transactionId,
@@ -893,7 +898,13 @@ export class EVMTransactionListener
           updationTime: Date.now(),
         },
       );
+      log.info(
+        `Data updated for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+      );
     } else {
+      log.info(
+        `A replacement transaction, updating data for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+      );
       await this.transactionDao.updateByTransactionIdAndTransactionHash(
         this.chainId,
         transactionId,
@@ -902,26 +913,32 @@ export class EVMTransactionListener
           resubmitted: true,
           status: TransactionStatus.DROPPED,
           updationTime: Date.now(),
-        }
-      );
-      await this.transactionDao.save(
-        this.chainId,
-        {
-          transactionId,
-          transactionType,
-          transactionHash,
-          previousTransactionHash,
-          status: TransactionStatus.PENDING,
-          rawTransaction: bigIntToDecimal128(rawTransaction),
-          chainId: this.chainId,
-          gasPrice: Number(toHex(rawTransaction.gasPrice as bigint)),
-          relayerAddress,
-          walletAddress,
-          metaData,
-          resubmitted: false,
-          creationTime: Date.now(),
-          updationTime: Date.now(),
         },
+      );
+      log.info(
+        `Replacement transaction data updated for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+      );
+      log.info(
+        `A replacement transaction encountered, saving new transaction data for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+      );
+      await this.transactionDao.save(this.chainId, {
+        transactionId,
+        transactionType,
+        transactionHash,
+        previousTransactionHash,
+        status: TransactionStatus.PENDING,
+        rawTransaction: bigIntToDecimal128(rawTransaction),
+        chainId: this.chainId,
+        gasPrice: Number(toHex(rawTransaction.gasPrice as bigint)),
+        relayerAddress,
+        walletAddress,
+        metaData,
+        resubmitted: false,
+        creationTime: Date.now(),
+        updationTime: Date.now(),
+      });
+      log.info(
+        `Saved new data for the replaced transaction with transactionId: ${transactionId} on chainId: ${this.chainId} with new transactionHash: ${transactionHash}`,
       );
     }
 
