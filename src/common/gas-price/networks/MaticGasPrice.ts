@@ -1,19 +1,21 @@
 /* eslint-disable import/no-import-module-exports */
 /* eslint-disable max-len */
-import { schedule } from 'node-cron';
-import { config } from '../../../config';
-import { IEVMAccount } from '../../../relayer/src/services/account';
-import { ICacheService } from '../../cache';
-import { logger } from '../../logger';
-import { INetworkService } from '../../network';
-import { IScheduler } from '../../scheduler';
-import { EVMRawTransactionType } from '../../types';
-import { axiosGetCall } from '../../utils/axios-calls';
-import { GasPrice } from '../GasPrice';
-import { GasPriceType } from '../types';
-import { customJSONStringify } from '../../utils';
+import { schedule } from "node-cron";
+import { config } from "../../../config";
+import { IEVMAccount } from "../../../relayer/account";
+import { ICacheService } from "../../cache";
+import { logger } from "../../logger";
+import { INetworkService } from "../../network";
+import { IScheduler } from "../../scheduler";
+import { EVMRawTransactionType } from "../../types";
+import { axiosGetCall } from "../../utils/axios-calls";
+import { GasPrice } from "../GasPrice";
+import { GasPriceType } from "../types";
+import { customJSONStringify } from "../../utils";
 
-const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
+const log = logger.child({
+  module: module.filename.split("/").slice(-4).join("/"),
+});
 
 export class MaticGasPrice extends GasPrice implements IScheduler {
   updateFrequencyInSeconds: number;
@@ -22,21 +24,22 @@ export class MaticGasPrice extends GasPrice implements IScheduler {
     cacheService: ICacheService,
     networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
     options: {
-      chainId: number,
-      EIP1559SupportedNetworks: Array<number>
+      chainId: number;
+      EIP1559SupportedNetworks: Array<number>;
     },
   ) {
     super(cacheService, networkService, options);
-    this.updateFrequencyInSeconds = config.gasPrice[this.chainId].updateFrequencyInSeconds || 60;
+    this.updateFrequencyInSeconds =
+      config.gasPrice[this.chainId].updateFrequencyInSeconds || 60;
   }
 
   async polygonGasStation() {
     const url = config.gasPrice[this.chainId].gasOracle.polygonscanUrl;
-    if (!url) throw new Error('Polygon scan gas station url not provided.');
+    if (!url) throw new Error("Polygon scan gas station url not provided.");
 
     const { status, result: response } = await axiosGetCall(url);
 
-    if (status !== '1') throw new Error('invalid response from polygon scan');
+    if (status !== "1") throw new Error("invalid response from polygon scan");
 
     const mediumGasPrice = response.SafeGasPrice;
     const mediumGasPriceInWei = mediumGasPrice * 1e9;
@@ -51,8 +54,9 @@ export class MaticGasPrice extends GasPrice implements IScheduler {
   }
 
   async maticGasStation() {
-    const url = config.gasPrice[this.chainId].gasOracle.maticGasStationUrl || '';
-    if (!url) throw new Error('Matic gas station url not provided.');
+    const url =
+      config.gasPrice[this.chainId].gasOracle.maticGasStationUrl || "";
+    if (!url) throw new Error("Matic gas station url not provided.");
 
     const response = await axiosGetCall(url);
 
@@ -65,21 +69,32 @@ export class MaticGasPrice extends GasPrice implements IScheduler {
     const fastestGasPrice = response.fastest;
     const fastestGasPriceInWei = fastestGasPrice * 1e9;
 
-    log.info(`Medium GasPrice for Polygon from matic gas station is ${mediumGasPrice} gwei`);
-    log.info(`Fast GasPrice for Polygon from matic gas station is ${fastGasPrice} gwei`);
-    log.info(`Fastest GasPrice for Polygon from matic gas station is ${fastestGasPrice} gwei`);
+    log.info(
+      `Medium GasPrice for Polygon from matic gas station is ${mediumGasPrice} gwei`,
+    );
+    log.info(
+      `Fast GasPrice for Polygon from matic gas station is ${fastGasPrice} gwei`,
+    );
+    log.info(
+      `Fastest GasPrice for Polygon from matic gas station is ${fastestGasPrice} gwei`,
+    );
     return { mediumGasPriceInWei, fastGasPriceInWei, fastestGasPriceInWei };
   }
 
   async maticGasStationForEIP1559() {
-    const url = config.gasPrice[this.chainId].gasOracle.maticGasStationUrlForEIP1559 || '';
-    if (!url) throw new Error('Matic gas station url for EIP-1559 not provided.');
+    const url =
+      config.gasPrice[this.chainId].gasOracle.maticGasStationUrlForEIP1559 ||
+      "";
+    if (!url)
+      throw new Error("Matic gas station url for EIP-1559 not provided.");
 
     let response;
     try {
       response = await axiosGetCall(url);
     } catch (error) {
-      log.error('Error in getting gas prices rom matic gas station for EIP-1559');
+      log.error(
+        "Error in getting gas prices rom matic gas station for EIP-1559",
+      );
       response = {
         safeLow: {
           maxPriorityFee: 30,
@@ -96,7 +111,11 @@ export class MaticGasPrice extends GasPrice implements IScheduler {
         estimatedBaseFee: 100,
       };
     }
-    log.info(`Response from matic gas station for EIP-1559 is ${customJSONStringify(response)}`);
+    log.info(
+      `Response from matic gas station for EIP-1559 is ${customJSONStringify(
+        response,
+      )}`,
+    );
 
     const safeEIP1559Prices = response.safeLow;
     const mediumEIP1559Prices = response.standard;
@@ -118,25 +137,42 @@ export class MaticGasPrice extends GasPrice implements IScheduler {
     const fastMaxFeeInWei = fastMaxFee * 1e9;
     const estimatedBaseFeeInWei = estimatedBaseFee * 1e9;
 
-    log.info(`Safe Max Priority Fee for Polygon from matic gas station is ${safeMaxPriorityFee} gwei`);
-    log.info(`Safe Max Fee for Polygon from matic gas station is ${safeMaxFee} gwei`);
-    log.info(`Medium Max Priority Fee for Polygon from matic gas station is ${mediumMaxPriorityFee} gwei`);
-    log.info(`Medium Max Fee for Polygon from matic gas station is ${mediumMaxFee} gwei`);
-    log.info(`Fast Max Priority Fee for Polygon from matic gas station is ${fastMaxPriorityFee} gwei`);
-    log.info(`Fast Max Fee for Polygon from matic gas station is ${fastMaxFee} gwei`);
+    log.info(
+      `Safe Max Priority Fee for Polygon from matic gas station is ${safeMaxPriorityFee} gwei`,
+    );
+    log.info(
+      `Safe Max Fee for Polygon from matic gas station is ${safeMaxFee} gwei`,
+    );
+    log.info(
+      `Medium Max Priority Fee for Polygon from matic gas station is ${mediumMaxPriorityFee} gwei`,
+    );
+    log.info(
+      `Medium Max Fee for Polygon from matic gas station is ${mediumMaxFee} gwei`,
+    );
+    log.info(
+      `Fast Max Priority Fee for Polygon from matic gas station is ${fastMaxPriorityFee} gwei`,
+    );
+    log.info(
+      `Fast Max Fee for Polygon from matic gas station is ${fastMaxFee} gwei`,
+    );
 
-    log.info(`Estimated Base Fee for Polygon from matic gas station is ${estimatedBaseFee} gwei`);
+    log.info(
+      `Estimated Base Fee for Polygon from matic gas station is ${estimatedBaseFee} gwei`,
+    );
 
     const multiplier = config.gasPrice[this.chainId].baseFeeMultiplier
-      ? config.gasPrice[this.chainId].baseFeeMultiplier : 1;
+      ? config.gasPrice[this.chainId].baseFeeMultiplier
+      : 1;
 
-    if (safeMaxPriorityFeeInWei
-      && safeMaxFeeInWei
-      && mediumMaxPriorityFeeInWei
-      && mediumMaxFeeInWei
-      && fastMaxPriorityFeeInWei
-      && fastMaxFeeInWei
-      && estimatedBaseFeeInWei) {
+    if (
+      safeMaxPriorityFeeInWei &&
+      safeMaxFeeInWei &&
+      mediumMaxPriorityFeeInWei &&
+      mediumMaxFeeInWei &&
+      fastMaxPriorityFeeInWei &&
+      fastMaxFeeInWei &&
+      estimatedBaseFeeInWei
+    ) {
       await this.setMaxFeeGasPrice(
         GasPriceType.DEFAULT,
         (safeMaxFeeInWei * multiplier).toString(),
@@ -162,38 +198,64 @@ export class MaticGasPrice extends GasPrice implements IScheduler {
 
       log.info(`Polygon mainnet multiplier is ${multiplier}`);
       log.info(`Polygon mainnet maxFeeMedium is ${maxFeeMedium}`);
-      log.info(`Polygon mainnet maxPriorityFeeMedium is ${maxPriorityFeeMedium}`);
+      log.info(
+        `Polygon mainnet maxPriorityFeeMedium is ${maxPriorityFeeMedium}`,
+      );
       await this.setMaxFeeGasPrice(GasPriceType.MEDIUM, maxFeeMedium);
 
-      await this.setMaxPriorityFeeGasPrice(GasPriceType.MEDIUM, maxPriorityFeeMedium.toString());
+      await this.setMaxPriorityFeeGasPrice(
+        GasPriceType.MEDIUM,
+        maxPriorityFeeMedium.toString(),
+      );
 
-      await this.setMaxFeeGasPrice(GasPriceType.FAST, (fastMaxFeeInWei * multiplier).toString());
+      await this.setMaxFeeGasPrice(
+        GasPriceType.FAST,
+        (fastMaxFeeInWei * multiplier).toString(),
+      );
 
-      await this.setMaxPriorityFeeGasPrice(GasPriceType.FAST, fastMaxPriorityFeeInWei.toString());
+      await this.setMaxPriorityFeeGasPrice(
+        GasPriceType.FAST,
+        fastMaxPriorityFeeInWei.toString(),
+      );
 
-      const safeMaxFeeGasFromCache = await this.getMaxFeeGasPrice(GasPriceType.DEFAULT);
-      log.info(`Polygon Mainnet Safe Max Fee Per Gas From Cache: ${safeMaxFeeGasFromCache}`);
-
-      const mediumMaxFeeGasFromCache = await this.getMaxFeeGasPrice(GasPriceType.MEDIUM);
-      log.info(`Polygon Mainnet Medium Max Fee Per Gas From Cache: ${mediumMaxFeeGasFromCache}`);
-
-      const fastMaxFeeGasFromCache = await this.getMaxFeeGasPrice(GasPriceType.FAST);
-      log.info(`Polygon Mainnet Fast Max Fee Per Gas From Cache: ${fastMaxFeeGasFromCache}`);
-
-      const safeMaxPriorityFeeGasFromCache = await this.getMaxPriorityFeeGasPrice(
+      const safeMaxFeeGasFromCache = await this.getMaxFeeGasPrice(
         GasPriceType.DEFAULT,
       );
-      log.info(`Polygon Mainnet Safe Max Priority Fee Per Gas From Cache: ${safeMaxPriorityFeeGasFromCache}`);
+      log.info(
+        `Polygon Mainnet Safe Max Fee Per Gas From Cache: ${safeMaxFeeGasFromCache}`,
+      );
 
-      const mediumMaxPriorityFeeGasFromCache = await this.getMaxPriorityFeeGasPrice(
+      const mediumMaxFeeGasFromCache = await this.getMaxFeeGasPrice(
         GasPriceType.MEDIUM,
       );
-      log.info(`Polygon Mainnet Medium Max Priority Fee Per Gas From Cache: ${mediumMaxPriorityFeeGasFromCache}`);
+      log.info(
+        `Polygon Mainnet Medium Max Fee Per Gas From Cache: ${mediumMaxFeeGasFromCache}`,
+      );
 
-      const fastMaxPriorityFeeGasFromCache = await this.getMaxPriorityFeeGasPrice(
+      const fastMaxFeeGasFromCache = await this.getMaxFeeGasPrice(
         GasPriceType.FAST,
       );
-      log.info(`Polygon Mainnet Fast Max Priority Fee Per Gas From Cache: ${fastMaxPriorityFeeGasFromCache}`);
+      log.info(
+        `Polygon Mainnet Fast Max Fee Per Gas From Cache: ${fastMaxFeeGasFromCache}`,
+      );
+
+      const safeMaxPriorityFeeGasFromCache =
+        await this.getMaxPriorityFeeGasPrice(GasPriceType.DEFAULT);
+      log.info(
+        `Polygon Mainnet Safe Max Priority Fee Per Gas From Cache: ${safeMaxPriorityFeeGasFromCache}`,
+      );
+
+      const mediumMaxPriorityFeeGasFromCache =
+        await this.getMaxPriorityFeeGasPrice(GasPriceType.MEDIUM);
+      log.info(
+        `Polygon Mainnet Medium Max Priority Fee Per Gas From Cache: ${mediumMaxPriorityFeeGasFromCache}`,
+      );
+
+      const fastMaxPriorityFeeGasFromCache =
+        await this.getMaxPriorityFeeGasPrice(GasPriceType.FAST);
+      log.info(
+        `Polygon Mainnet Fast Max Priority Fee Per Gas From Cache: ${fastMaxPriorityFeeGasFromCache}`,
+      );
     }
   }
 

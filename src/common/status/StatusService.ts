@@ -1,19 +1,19 @@
-import { config } from '../../config';
-import { IEVMAccount } from '../../relayer/src/services/account';
-import { IRelayerManager } from '../../relayer/src/services/relayer-manager';
-import { ICacheService } from '../cache';
-import { IDBService } from '../db';
-import { EVMNetworkService } from '../network';
-import { EVMRawTransactionType } from '../types';
-import { getTokenPriceKey } from '../utils';
-import { IStatusService } from './interface/IStatusService';
+import { config } from "../../config";
+import { IEVMAccount } from "../../relayer/account";
+import { IRelayerManager } from "../../relayer/relayer-manager";
+import { ICacheService } from "../cache";
+import { IDBService } from "../db";
+import { EVMNetworkService } from "../network";
+import { EVMRawTransactionType } from "../types";
+import { getTokenPriceKey } from "../utils";
+import { IStatusService } from "./interface/IStatusService";
 import {
   MongoStatusResponseType,
   NetworkServiceStatusResponseType,
   RedisStatusResponseType,
   StatusServiceParamsType,
   TokenPriceStatusResponseType,
-} from './types';
+} from "./types";
 
 export class StatusService implements IStatusService {
   cacheService: ICacheService;
@@ -30,7 +30,10 @@ export class StatusService implements IStatusService {
 
   constructor(params: StatusServiceParamsType) {
     const {
-      cacheService, networkServiceMap, evmRelayerManagerMap, dbInstance,
+      cacheService,
+      networkServiceMap,
+      evmRelayerManagerMap,
+      dbInstance,
     } = params;
     this.cacheService = cacheService;
     this.networkServiceMap = networkServiceMap;
@@ -40,10 +43,10 @@ export class StatusService implements IStatusService {
 
   async checkRedis(): Promise<RedisStatusResponseType> {
     try {
-      await this.cacheService.set('health', 'ok');
-      const result = await this.cacheService.get('health');
+      await this.cacheService.set("health", "ok");
+      const result = await this.cacheService.get("health");
       return {
-        active: result === 'ok',
+        active: result === "ok",
         lastUpdated: new Date().toISOString(),
       };
     } catch (error) {
@@ -73,37 +76,48 @@ export class StatusService implements IStatusService {
     // for each key, check if the relayer manager is active by making a call to the network
     // return the result
     const relayerManagerStatus: any = {};
-    const relayerManagerNameKeys: string[] = Object.keys(this.evmRelayerManagerMap);
+    const relayerManagerNameKeys: string[] = Object.keys(
+      this.evmRelayerManagerMap,
+    );
     for (const relayerManagerNameKey of relayerManagerNameKeys) {
       relayerManagerStatus[relayerManagerNameKey] = {};
-      const chainIdKeys: string[] = Object.keys(this.evmRelayerManagerMap[relayerManagerNameKey]);
+      const chainIdKeys: string[] = Object.keys(
+        this.evmRelayerManagerMap[relayerManagerNameKey],
+      );
       for (const chainIdKey of chainIdKeys) {
         const chainId = parseInt(chainIdKey, 10);
         relayerManagerStatus[relayerManagerNameKey][chainId] = [];
-        const relayerManager = this.evmRelayerManagerMap[relayerManagerNameKey][chainId];
+        const relayerManager =
+          this.evmRelayerManagerMap[relayerManagerNameKey][chainId];
         // get list of relayers from relayer manager
         const relayerAddresses = Object.keys(relayerManager.relayerMap);
         // iterate over the list of relayers
         for (const relayerAddress of relayerAddresses) {
-          const relayerDetails = relayerManager.relayerQueue.get(relayerAddress);
+          const relayerDetails =
+            relayerManager.relayerQueue.get(relayerAddress);
           if (relayerDetails) {
             // eslint-disable-next-line no-await-in-loop
             relayerManagerStatus[relayerManagerNameKey][chainId].push({
               address: relayerAddress,
               balance: relayerDetails.balance,
               nonce: relayerDetails.nonce,
-              status: 'active',
+              status: "active",
               lastUpdated: new Date().toISOString(),
             });
-          } else if (relayerManager.transactionProcessingRelayerMap[relayerAddress]) {
+          } else if (
+            relayerManager.transactionProcessingRelayerMap[relayerAddress]
+          ) {
             // eslint-disable-next-line no-await-in-loop
             relayerManagerStatus[relayerManagerNameKey][chainId].push({
               address: relayerAddress,
               // convert hex to decimal
-              balance: relayerManager
-                .transactionProcessingRelayerMap[relayerAddress].balance,
-              nonce: relayerManager.transactionProcessingRelayerMap[relayerAddress].nonce,
-              status: 'processing',
+              balance:
+                relayerManager.transactionProcessingRelayerMap[relayerAddress]
+                  .balance,
+              nonce:
+                relayerManager.transactionProcessingRelayerMap[relayerAddress]
+                  .nonce,
+              status: "processing",
               lastUpdated: new Date().toISOString(),
             });
           }
