@@ -881,6 +881,7 @@ export class EVMTransactionListener
     }
 
     if (!previousTransactionHash) {
+      log.info(`Not a replacement transaction, updating data for transactionId: ${transactionId} on chainId: ${this.chainId}`);
       await this.transactionDao.updateByTransactionId(
         this.chainId,
         transactionId,
@@ -893,7 +894,9 @@ export class EVMTransactionListener
           updationTime: Date.now(),
         },
       );
+      log.info(`Data updated for transactionId: ${transactionId} on chainId: ${this.chainId}`);
     } else {
+      log.info(`A replacement transaction, updating data for transactionId: ${transactionId} on chainId: ${this.chainId}`);
       await this.transactionDao.updateByTransactionIdAndTransactionHash(
         this.chainId,
         transactionId,
@@ -904,6 +907,8 @@ export class EVMTransactionListener
           updationTime: Date.now(),
         }
       );
+      log.info(`Replacement transaction data updated for transactionId: ${transactionId} on chainId: ${this.chainId}`);
+      log.info(`A replacement transaction encountered, saving new transaction data for transactionId: ${transactionId} on chainId: ${this.chainId}`);
       await this.transactionDao.save(
         this.chainId,
         {
@@ -923,6 +928,7 @@ export class EVMTransactionListener
           updationTime: Date.now(),
         },
       );
+      log.info(`Saved new data for the replaced transaction with transactionId: ${transactionId} on chainId: ${this.chainId} with new transactionHash: ${transactionHash}`);
     }
 
     // transaction queue is being listened by socket service to notify the client about the hash
