@@ -29,19 +29,15 @@ import {
   getUserOperationReceiptForFailedTransaction,
   getUserOperationReceiptForSuccessfulTransaction,
   customJSONStringify,
-  bigIntToDecimal128,
 } from "../../common/utils";
 import { IEVMAccount } from "../account";
 import { ITransactionPublisher } from "../transaction-publisher";
 import { ITransactionListener } from "./interface/ITransactionListener";
 import {
   EVMTransactionListenerParamsType,
-  FrontRunnedTransactionDataToBeUpdatedInDatabaseType,
-  NewTransactionDataToBeSavedInDatabaseType,
   NotifyTransactionListenerParamsType,
   OnTransactionFailureParamsType,
   OnTransactionSuccessParamsType,
-  TransactionDataToBeUpdatedInDatabaseType,
 } from "./types";
 import { config } from "../../config";
 import { AstarNetworks } from "../../common/constants";
@@ -296,7 +292,10 @@ export class EVMTransactionListener
             transactionFeeInUSD = JSON.parse(coinsRateObj)[this.chainId];
           }
         }
-        await this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash(
+        await this.transactionDao.updateByTransactionIdAndTransactionHash(
+          this.chainId,
+          transactionId,
+          transactionHash,
           {
             receipt: transactionReceipt,
             transactionFee,
@@ -305,8 +304,6 @@ export class EVMTransactionListener
             status: TransactionStatus.SUCCESS,
             updationTime: Date.now(),
           },
-          transactionId,
-          transactionHash,
         );
       } catch (error) {
         log.error(
@@ -605,8 +602,10 @@ export class EVMTransactionListener
                 }
               }
 
-              // eslint-disable-next-line max-len
-              await this.updateFrontRunnedTransactionDataToDatabaseByTransactionIdAndTransactionHash(
+              await this.transactionDao.updateByTransactionIdAndTransactionHashForFrontRunnedTransaction(
+                this.chainId,
+                transactionId,
+                transactionHash,
                 {
                   frontRunnedTransactionHash:
                     frontRunnedTransactionReceipt.hash,
@@ -617,8 +616,6 @@ export class EVMTransactionListener
                   status: TransactionStatus.FAILED,
                   updationTime: Date.now(),
                 },
-                transactionId,
-                transactionHash,
               );
 
               if (transactionType === TransactionType.BUNDLER) {
@@ -679,7 +676,10 @@ export class EVMTransactionListener
             transactionFeeInUSD = JSON.parse(coinsRateObj)[this.chainId];
           }
         }
-        await this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash(
+        await this.transactionDao.updateByTransactionIdAndTransactionHash(
+          this.chainId,
+          transactionId,
+          transactionHash,
           {
             receipt: transactionReceipt,
             transactionFee,
@@ -688,8 +688,6 @@ export class EVMTransactionListener
             status: TransactionStatus.FAILED,
             updationTime: Date.now(),
           },
-          transactionId,
-          transactionHash,
         );
       } catch (error) {
         log.error(
@@ -703,67 +701,6 @@ export class EVMTransactionListener
         `No transactionExecutionResponse found for transactionId: ${transactionId} on chainId ${this.chainId}`,
       );
     }
-  }
-
-  private async updateTransactionDataToDatabase(
-    transactionDataToBeUpdatedInDatabase: TransactionDataToBeUpdatedInDatabaseType,
-    transactionId: string,
-  ): Promise<void> {
-    await this.transactionDao.updateByTransactionId(
-      this.chainId,
-      transactionId,
-      bigIntToDecimal128(transactionDataToBeUpdatedInDatabase),
-    );
-  }
-
-  private async saveNewTransactionDataToDatabase(
-    newTransactionDataToBeSavedInDatabase: NewTransactionDataToBeSavedInDatabaseType,
-  ): Promise<void> {
-    await this.transactionDao.save(
-      this.chainId,
-      bigIntToDecimal128(newTransactionDataToBeSavedInDatabase),
-    );
-  }
-
-  private async updateTransactionDataToDatabaseByTransactionIdAndTransactionHash(
-    transactionDataToBeUpdatedInDatabase: TransactionDataToBeUpdatedInDatabaseType,
-    transactionId: string,
-    transactionHash: string,
-  ): Promise<void> {
-    await this.transactionDao.updateByTransactionIdAndTransactionHash(
-      this.chainId,
-      transactionId,
-      transactionHash,
-      bigIntToDecimal128(transactionDataToBeUpdatedInDatabase),
-    );
-  }
-
-  private async updateFrontRunnedTransactionDataToDatabaseByTransactionIdAndTransactionHash(
-    // eslint-disable-next-line max-len
-    frontRunnedTransactionDataToBeUpdatedInDatabase: FrontRunnedTransactionDataToBeUpdatedInDatabaseType,
-    transactionId: string,
-    transactionHash: string,
-  ): Promise<void> {
-    await this.transactionDao.updateByTransactionIdAndTransactionHashForFrontRunnedTransaction(
-      this.chainId,
-      transactionId,
-      transactionHash,
-      bigIntToDecimal128(frontRunnedTransactionDataToBeUpdatedInDatabase),
-    );
-  }
-
-  private async updateTransactionDataForFailureInTransactionExecution(
-    transactionId: string,
-  ): Promise<void> {
-    this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash(
-      {
-        resubmitted: false,
-        status: TransactionStatus.DROPPED,
-        updationTime: Date.now(),
-      },
-      transactionId,
-      TransactionStatus.DROPPED,
-    );
   }
 
   private async updateUserOpDataForFailureInTransactionExecution(
@@ -911,8 +848,15 @@ export class EVMTransactionListener
           transactionType === TransactionType.BUNDLER ||
           transactionType === TransactionType.AA
         ) {
-          this.updateTransactionDataForFailureInTransactionExecution(
+          await this.transactionDao.updateByTransactionIdAndTransactionHash(
+            this.chainId,
             transactionId,
+            'null',
+            {
+              resubmitted: true,
+              status: TransactionStatus.DROPPED,
+              updationTime: Date.now(),
+            }
           );
           this.updateUserOpDataForFailureInTransactionExecution(transactionId);
         }
@@ -936,8 +880,9 @@ export class EVMTransactionListener
     }
 
     if (!previousTransactionHash) {
-      // Save initial transaction data to database
-      this.updateTransactionDataToDatabase(
+      await this.transactionDao.updateByTransactionId(
+        this.chainId,
+        transactionId,
         {
           transactionHash,
           rawTransaction,
@@ -946,34 +891,37 @@ export class EVMTransactionListener
           status: TransactionStatus.PENDING,
           updationTime: Date.now(),
         },
-        transactionId,
       );
     } else {
-      this.updateTransactionDataToDatabaseByTransactionIdAndTransactionHash(
+      await this.transactionDao.updateByTransactionIdAndTransactionHash(
+        this.chainId,
+        transactionId,
+        transactionHash,
         {
           resubmitted: true,
           status: TransactionStatus.DROPPED,
           updationTime: Date.now(),
-        },
-        transactionId,
-        previousTransactionHash,
+        }
       );
-      this.saveNewTransactionDataToDatabase({
-        transactionId,
-        transactionType,
-        transactionHash,
-        previousTransactionHash,
-        status: TransactionStatus.PENDING,
-        rawTransaction,
-        chainId: this.chainId,
-        gasPrice: rawTransaction.gasPrice,
-        relayerAddress,
-        walletAddress,
-        metaData,
-        resubmitted: false,
-        creationTime: Date.now(),
-        updationTime: Date.now(),
-      });
+      await this.transactionDao.save(
+        this.chainId,
+        {
+          transactionId,
+          transactionType,
+          transactionHash,
+          previousTransactionHash,
+          status: TransactionStatus.PENDING,
+          rawTransaction,
+          chainId: this.chainId,
+          gasPrice: rawTransaction.gasPrice,
+          relayerAddress,
+          walletAddress,
+          metaData,
+          resubmitted: false,
+          creationTime: Date.now(),
+          updationTime: Date.now(),
+        },
+      );
     }
 
     // transaction queue is being listened by socket service to notify the client about the hash
