@@ -1,12 +1,6 @@
-/* eslint-disable import/no-import-module-exports */
-import { logger } from '../../logger';
-import { customJSONStringify } from '../../utils';
 import { ITransactionDAO } from '../interface';
 import { Mongo, IBlockchainTransaction } from '../mongo';
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
 export class TransactionDAO implements ITransactionDAO {
   private _db: Mongo;
 
@@ -34,11 +28,9 @@ export class TransactionDAO implements ITransactionDAO {
     id: string,
     data: IBlockchainTransaction,
   ): Promise<void> {
-    log.info(`Updating data by transactionId: ${id} and data: ${customJSONStringify(data)}`);
     await this._db.getBlockchainTransaction(chainId).updateOne({
       transactionId: id,
     }, data);
-    log.info(`Updated data`);
   }
 
   /**

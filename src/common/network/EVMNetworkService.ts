@@ -157,13 +157,14 @@ export class EVMNetworkService
   async sendTransaction(
     rawTransactionData: EVMRawTransactionType,
     account: IEVMAccount,
-  ): Promise<string | Error> {
+  ): Promise<string> {
     const rawTransaction: EVMRawTransactionType = rawTransactionData;
     rawTransaction.from = account.getPublicKey();
-    const serialisedTransaction = await account.signTransaction(rawTransaction);
-    return await this.sendRpcCall(EthMethodType.SEND_RAW_TRANSACTION, [
-      serialisedTransaction,
-    ]);
+    const signature = await account.signTransaction(rawTransaction);
+    const hash = await this.provider.sendRawTransaction({
+      serializedTransaction: signature as `0x${string}`,
+    });
+    return hash as string;
   }
 
   /**

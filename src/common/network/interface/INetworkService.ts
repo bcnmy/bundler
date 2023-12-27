@@ -20,7 +20,7 @@ export interface INetworkService<AccountType, RawTransactionType> {
   sendTransaction(
     rawTransactionData: RawTransactionType,
     account: AccountType,
-  ): Promise<string | Error>;
+  ): Promise<string>;
   getTransactionReceipt(transactionHash: string): Promise<TransactionReceipt>;
   waitForTransaction(
     transactionHash: string,
