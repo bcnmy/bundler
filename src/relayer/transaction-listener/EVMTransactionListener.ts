@@ -903,7 +903,7 @@ export class EVMTransactionListener
           transactionHash,
           rawTransaction: bigIntToString(rawTransaction),
           relayerAddress,
-          gasPrice: Number(toHex(rawTransaction.gasPrice as bigint)),
+          gasPrice: rawTransaction.gasPrice?.toString(),
           status: TransactionStatus.PENDING,
           updationTime: Date.now(),
         },
