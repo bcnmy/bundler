@@ -154,10 +154,10 @@ export class EVMNetworkService
     return await this.sendRpcCall(EthMethodType.GET_TRANSACTION_COUNT, params);
   }
 
-  async sendTransaction(
+  async sendRawTransaction(
     rawTransactionData: EVMRawTransactionType,
     account: IEVMAccount,
-  ): Promise<string> {
+  ): Promise<string | Error> {
     const rawTransaction: EVMRawTransactionType = rawTransactionData;
     rawTransaction.from = account.getPublicKey();
     const signature = await account.signTransaction(rawTransaction);

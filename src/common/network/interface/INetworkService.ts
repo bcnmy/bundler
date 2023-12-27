@@ -17,10 +17,10 @@ export interface INetworkService<AccountType, RawTransactionType> {
   estimateGas(
     params: any,
   ): Promise<any>
-  sendTransaction(
+  sendRawTransaction(
     rawTransactionData: RawTransactionType,
     account: AccountType,
-  ): Promise<string>;
+  ): Promise<string | Error>;
   getTransactionReceipt(transactionHash: string): Promise<TransactionReceipt>;
   waitForTransaction(
     transactionHash: string,

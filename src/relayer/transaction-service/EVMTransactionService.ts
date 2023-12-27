@@ -419,20 +419,20 @@ export class EVMTransactionService
             rawTransaction.from
           } for transactionId: ${transactionId} on chainId: ${this.chainId}`,
         );
-        const sendTransactionResponse =
-          await this.networkService.sendTransaction(rawTransaction, account);
+        const sendRawTransactionResponse =
+          await this.networkService.sendRawTransaction(rawTransaction, account);
         log.info(
-          `Send transaction response: ${customJSONStringify(
-            sendTransactionResponse,
+          `Send raw transaction response: ${customJSONStringify(
+            sendRawTransactionResponse,
           )} for bundler address: ${
             rawTransaction.from
           } for transactionId: ${transactionId} on chainId: ${this.chainId}`,
         );
-        if (sendTransactionResponse instanceof Error) {
+        if (sendRawTransactionResponse instanceof Error) {
           log.info(
             `Transaction execution failed and checking for retry for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
           );
-          throw sendTransactionResponse;
+          throw sendRawTransactionResponse;
         }
         this.nonceManager.markUsed(
           account.getPublicKey(),
@@ -440,7 +440,7 @@ export class EVMTransactionService
         );
         return {
           ...rawTransaction,
-          hash: sendTransactionResponse,
+          hash: sendRawTransactionResponse,
         };
       } catch (error: any) {
         await this.cacheService.increment(
