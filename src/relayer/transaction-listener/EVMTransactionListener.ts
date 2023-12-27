@@ -886,52 +886,6 @@ export class EVMTransactionListener
       log.info(
         `Not a replacement transaction, updating data for transactionId: ${transactionId} on chainId: ${this.chainId}`,
       );
-      log.info(
-        `Data: ${customJSONStringify({
-          transactionHash,
-        })}`,
-      );
-      log.info(
-        `Data: ${customJSONStringify({
-          transactionHash,
-          rawTransaction: bigIntToString(rawTransaction),
-        })}`,
-      );
-      log.info(
-        `Data: ${customJSONStringify({
-          transactionHash,
-          rawTransaction: bigIntToString(rawTransaction),
-          relayerAddress,
-        })}`,
-      );
-      log.info(
-        `Data: ${customJSONStringify({
-          transactionHash,
-          rawTransaction: bigIntToString(rawTransaction),
-          relayerAddress,
-          gasPrice: rawTransaction.gasPrice?.toString(),
-        })}`,
-      );
-      log.info(
-        `Data: ${customJSONStringify({
-          transactionHash,
-          rawTransaction: bigIntToString(rawTransaction),
-          relayerAddress,
-          gasPrice: rawTransaction.gasPrice?.toString(),
-          status: TransactionStatus.PENDING,
-        })}`,
-      );
-      log.info(
-        `Data: ${customJSONStringify({
-          transactionHash,
-          rawTransaction: bigIntToString(rawTransaction),
-          relayerAddress,
-          gasPrice: rawTransaction.gasPrice?.toString(),
-          status: TransactionStatus.PENDING,
-          updationTime: Date.now(),
-        })}`,
-      );
-      
       
       await this.transactionDao.updateByTransactionId(
         this.chainId,
@@ -976,7 +930,7 @@ export class EVMTransactionListener
         status: TransactionStatus.PENDING,
         rawTransaction: bigIntToString(rawTransaction),
         chainId: this.chainId,
-        gasPrice: Number(toHex(rawTransaction.gasPrice as bigint)),
+        gasPrice: rawTransaction.gasPrice?.toString(),
         relayerAddress,
         walletAddress,
         metaData,
