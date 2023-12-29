@@ -265,7 +265,7 @@ export class BundlerSimulationService {
         log.info(`call gas limit: ${callGasLimit} on chainId: ${chainId}`);
 
         if ([137, 80001, 43113, 43114, 42161, 421613, 421614, 1,
-          11155111, 8453, 84531, 420].includes(chainId)) {
+          11155111, 8453, 84531, 420, 204, 5611].includes(chainId)) {
           const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
           log.info(`baseFeePerGas: ${baseFeePerGas} on chainId: ${chainId}`);
           totalGas = Math.ceil(paid / Math.min(
