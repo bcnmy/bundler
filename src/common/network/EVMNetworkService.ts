@@ -154,16 +154,13 @@ export class EVMNetworkService
     return await this.sendRpcCall(EthMethodType.GET_TRANSACTION_COUNT, params);
   }
 
-  async sendRawTransaction(
+  // eslint-disable-next-line class-methods-use-this
+  async sendTransaction(
     rawTransactionData: EVMRawTransactionType,
     account: IEVMAccount,
   ): Promise<string | Error> {
     const rawTransaction: EVMRawTransactionType = rawTransactionData;
-    rawTransaction.from = account.getPublicKey();
-    const signature = await account.signTransaction(rawTransaction);
-    const hash = await this.provider.sendRawTransaction({
-      serializedTransaction: signature as `0x${string}`,
-    });
+    const hash = await account.sendTransaction(rawTransaction);
     return hash as string;
   }
 
