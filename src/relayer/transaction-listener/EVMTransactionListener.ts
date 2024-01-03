@@ -767,61 +767,71 @@ export class EVMTransactionListener
     log.info(
       `Transaction hash is: ${transactionHash} for transactionId: ${transactionId} on chainId ${this.chainId}`,
     );
-
-    const transactionReceipt = await this.networkService.waitForTransaction(
-      transactionHash,
-      undefined,
-      // timeout is set to 1.5 times because it ensures that transaction would
-      // have resubmitted and no need to keep polling it
-      Number(1.5 * config.chains.retryTransactionInterval[this.chainId]),
-    );
-
-    log.info(
-      `Transaction receipt is: ${customJSONStringify(
-        transactionReceipt,
-      )} for transactionId: ${transactionId} on chainId ${this.chainId}`,
-    );
-
-    // TODO: reduce pending count of relayer via RelayerManager
-    await this.cacheService.delete(
-      getRetryTransactionCountKey(transactionId, this.chainId),
-    );
-
-    await this.cacheService.set(getTransactionMinedKey(transactionId), "1");
-
-    if (transactionReceipt.status === "success") {
-      log.info(
-        `Transaction is a success for transactionId: ${transactionId} on chainId ${this.chainId}`,
-      );
-      this.onTransactionSuccess({
+    
+    try {
+      const transactionReceipt = await this.networkService.waitForTransaction(
         transactionHash,
-        rawTransaction,
-        transactionId,
-        transactionReceipt,
-        relayerAddress,
-        transactionType,
-        previousTransactionHash,
-        walletAddress,
-        metaData,
-        relayerManagerName,
-      });
-    }
-    if (transactionReceipt.status === "reverted") {
-      log.info(
-        `Transaction is a failure for transactionId: ${transactionId} on chainId ${this.chainId}`,
+        undefined,
+        // timeout is set to 1.5 times because it ensures that transaction would
+        // have resubmitted and no need to keep polling it
+        Number(1.5 * config.chains.retryTransactionInterval[this.chainId]),
       );
-      this.onTransactionFailure({
-        transactionHash,
-        rawTransaction,
-        transactionId,
-        transactionReceipt,
-        relayerAddress,
-        transactionType,
-        previousTransactionHash,
-        walletAddress,
-        metaData,
-        relayerManagerName,
-      });
+  
+      log.info(
+        `Transaction receipt is: ${customJSONStringify(
+          transactionReceipt,
+        )} for transactionId: ${transactionId} on chainId ${this.chainId}`,
+      );
+  
+      // TODO: reduce pending count of relayer via RelayerManager
+      await this.cacheService.delete(
+        getRetryTransactionCountKey(transactionId, this.chainId),
+      );
+  
+      await this.cacheService.set(getTransactionMinedKey(transactionId), "1");
+  
+      if (transactionReceipt.status === "success") {
+        log.info(
+          `Transaction is a success for transactionId: ${transactionId} on chainId ${this.chainId}`,
+        );
+        this.onTransactionSuccess({
+          transactionHash,
+          rawTransaction,
+          transactionId,
+          transactionReceipt,
+          relayerAddress,
+          transactionType,
+          previousTransactionHash,
+          walletAddress,
+          metaData,
+          relayerManagerName,
+        });
+      }
+      if (transactionReceipt.status === "reverted") {
+        log.info(
+          `Transaction is a failure for transactionId: ${transactionId} on chainId ${this.chainId}`,
+        );
+        this.onTransactionFailure({
+          transactionHash,
+          rawTransaction,
+          transactionId,
+          transactionReceipt,
+          relayerAddress,
+          transactionType,
+          previousTransactionHash,
+          walletAddress,
+          metaData,
+          relayerManagerName,
+        });
+      }
+    } catch (error) {
+      log.error(
+        `Error: ${parseError(
+          error,
+        )} Timeout hit for waiting on hash: ${transactionHash} for transactionId: ${transactionId} on chainId ${
+          this.chainId
+        }`,
+      );
     }
   }
 
@@ -971,7 +981,7 @@ export class EVMTransactionListener
 
     // wait for transaction
     try {
-      this.waitForTransaction(notifyTransactionListenerParams);
+      await this.waitForTransaction(notifyTransactionListenerParams);
     } catch (waitForTransactionError) {
       // timeout error
       // do nothing for now just log
