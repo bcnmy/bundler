@@ -382,33 +382,22 @@ export class EVMTransactionService
     ): Promise<ExecuteTransactionResponseType> => {
       const { rawTransaction, account } = retryExecuteTransactionParams;
       try {
-        try {
-          log.info(
-            `Getting failed transaction retry count for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-          );
-          const failedTransactionRetryCount = parseInt(
-            await this.cacheService.get(
-              getFailedTransactionRetryCountKey(transactionId, this.chainId),
-            ),
-            10,
-          );
+        log.info(
+          `Getting failed transaction retry count for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+        );
+        const failedTransactionRetryCount = parseInt(
+          await this.cacheService.get(
+            getFailedTransactionRetryCountKey(transactionId, this.chainId),
+          ),
+          10,
+        );
 
-          const maxFailedTransactionCount =
-            config.transaction.failedTransactionRetryCount[this.chainId];
+        const maxFailedTransactionCount =
+          config.transaction.failedTransactionRetryCount[this.chainId];
 
-          if (failedTransactionRetryCount > maxFailedTransactionCount) {
-            throw new Error(
-              `Failed transaction retry limit reached for transactionId: ${transactionId}`,
-            );
-          }
-        } catch (error) {
-          // just loggin error here, don't want to block the transaction if in some case code does not work the intended way
-          log.error(
-            `Error in getting max failed retry transaction count: ${parseError(
-              error,
-            )} for bundler address: ${
-              rawTransaction.from
-            } for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+        if (failedTransactionRetryCount > maxFailedTransactionCount) {
+          throw new Error(
+            `Failed transaction retry limit reached for transactionId: ${transactionId}`,
           );
         }
 
