@@ -35,7 +35,7 @@ export class EVMAccount implements IEVMAccount {
 
   async sendTransaction(rawTransaction: EVMRawTransactionType): Promise<string> {
     let sendTransactionParameters;
-    if(rawTransaction.type === '2') {
+    if(rawTransaction.type === 'eip1559') {
       const transactionType = 'eip1559';
       sendTransactionParameters = {
         account: this.account,
