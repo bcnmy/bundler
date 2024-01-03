@@ -321,7 +321,6 @@ export class BundlerSimulationService {
           `verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId} after 1.2 multiplier on ${preOpGas} and ${preVerificationGas}`,
         );
 
-
         const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
         log.info(`baseFeePerGas: ${baseFeePerGas} on chainId: ${chainId}`);
         let totalGas = BigInt(
@@ -337,14 +336,11 @@ export class BundlerSimulationService {
           `totalGas after calculating for polygon networks: ${totalGas}`,
         );
         let callGasLimit = BigInt(
-          Math.ceil(
-            Number(toHex(totalGas)) - Number(toHex(preOpGas)) + 30000,
-          ),
+          Math.ceil(Number(toHex(totalGas)) - Number(toHex(preOpGas)) + 30000),
         );
         log.info(
           `callGasLimit after calculating for polygon networks: ${callGasLimit}`,
         );
-      
 
         if (totalGas < 500000) {
           preVerificationGas += BigInt(20000);

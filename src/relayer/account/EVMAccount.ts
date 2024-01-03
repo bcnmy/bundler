@@ -12,11 +12,15 @@ export class EVMAccount implements IEVMAccount {
 
   private walletClient: WalletClient;
 
-  constructor(accountPublicKey: string, accountPrivateKey: string, rpcUrl: string) {
+  constructor(
+    accountPublicKey: string,
+    accountPrivateKey: string,
+    rpcUrl: string,
+  ) {
     this.account = privateKeyToAccount(`0x${accountPrivateKey}`);
     this.walletClient = createWalletClient({
       transport: http(rpcUrl),
-      account: privateKeyToAccount(`0x${accountPrivateKey}`)
+      account: privateKeyToAccount(`0x${accountPrivateKey}`),
     });
     this.publicKey = accountPublicKey;
   }
@@ -33,10 +37,12 @@ export class EVMAccount implements IEVMAccount {
     return this.account.signTransaction(rawTransaction);
   }
 
-  async sendTransaction(rawTransaction: EVMRawTransactionType): Promise<string> {
+  async sendTransaction(
+    rawTransaction: EVMRawTransactionType,
+  ): Promise<string> {
     let sendTransactionParameters;
-    if(rawTransaction.type === 'eip1559') {
-      const transactionType = 'eip1559';
+    if (rawTransaction.type === "eip1559") {
+      const transactionType = "eip1559";
       sendTransactionParameters = {
         account: this.account,
         to: rawTransaction.to as `0x${string}`,
@@ -44,13 +50,17 @@ export class EVMAccount implements IEVMAccount {
         data: rawTransaction.data as `0x${string}`,
         nonce: Number(rawTransaction.nonce),
         chain: null,
-        type: transactionType as unknown as 'eip1559',
+        type: transactionType as unknown as "eip1559",
         gas: BigInt(rawTransaction.gasLimit),
-        maxFeePerGas: BigInt(rawTransaction.maxFeePerGas ? rawTransaction.maxFeePerGas : 0),
-        maxPriorityFeePerGas: BigInt(rawTransaction.maxFeePerGas ? rawTransaction.maxFeePerGas : 0),
+        maxFeePerGas: BigInt(
+          rawTransaction.maxFeePerGas ? rawTransaction.maxFeePerGas : 0,
+        ),
+        maxPriorityFeePerGas: BigInt(
+          rawTransaction.maxFeePerGas ? rawTransaction.maxFeePerGas : 0,
+        ),
       };
     } else {
-      const transactionType = 'legacy';
+      const transactionType = "legacy";
       sendTransactionParameters = {
         account: this.account,
         to: rawTransaction.to as `0x${string}`,
@@ -58,7 +68,7 @@ export class EVMAccount implements IEVMAccount {
         data: rawTransaction.data as `0x${string}`,
         nonce: Number(rawTransaction.nonce),
         chain: null,
-        type: transactionType as unknown as 'legacy',
+        type: transactionType as unknown as "legacy",
         gas: BigInt(rawTransaction.gasLimit),
         gasPrice: BigInt(rawTransaction.gasPrice ? rawTransaction.gasPrice : 0),
       };
