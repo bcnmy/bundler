@@ -201,18 +201,20 @@ export class EVMTransactionListener
                 userOpReceipt;
 
               log.info(
-                `Updating userOp data: ${customJSONStringify(bigIntToNumber({
-                  transactionHash,
-                  receipt: bigIntToNumber(transactionReceipt),
-                  blockNumber: Number(transactionReceipt.blockNumber),
-                  blockHash: transactionReceipt.blockHash,
-                  status: TransactionStatus.SUCCESS,
-                  success: success.toString(),
-                  actualGasCost,
-                  actualGasUsed,
-                  reason,
-                  logs: bigIntToNumber(logs),
-                }))} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${
+                `Updating userOp data: ${customJSONStringify(
+                  bigIntToNumber({
+                    transactionHash,
+                    receipt: bigIntToNumber(transactionReceipt),
+                    blockNumber: Number(transactionReceipt.blockNumber),
+                    blockHash: transactionReceipt.blockHash,
+                    status: TransactionStatus.SUCCESS,
+                    success: success.toString(),
+                    actualGasCost,
+                    actualGasUsed,
+                    reason,
+                    logs: bigIntToNumber(logs),
+                  }),
+                )} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${
                   this.chainId
                 }`,
               );
@@ -442,18 +444,20 @@ export class EVMTransactionListener
                   `userOpReceipt not fetched for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
                 );
                 log.info(
-                  `Updating userOp data: ${customJSONStringify(bigIntToNumber({
-                    transactionHash,
-                    receipt: bigIntToNumber(transactionReceipt),
-                    blockNumber: Number(transactionReceipt.blockNumber),
-                    blockHash: transactionReceipt.blockHash,
-                    status: TransactionStatus.FAILED,
-                    success: "false",
-                    actualGasCost: 0,
-                    actualGasUsed: 0,
-                    reason: null,
-                    logs: null,
-                  }))} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${
+                  `Updating userOp data: ${customJSONStringify(
+                    bigIntToNumber({
+                      transactionHash,
+                      receipt: bigIntToNumber(transactionReceipt),
+                      blockNumber: Number(transactionReceipt.blockNumber),
+                      blockHash: transactionReceipt.blockHash,
+                      status: TransactionStatus.FAILED,
+                      success: "false",
+                      actualGasCost: 0,
+                      actualGasUsed: 0,
+                      reason: null,
+                      logs: null,
+                    }),
+                  )} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${
                     this.chainId
                   }`,
                 );
@@ -523,25 +527,27 @@ export class EVMTransactionListener
                 `Updating transaction data for a front runned transaction for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
               );
               log.info(
-                `Updating userOp data: ${customJSONStringify(bigIntToNumber({
-                  receipt: bigIntToNumber(frontRunnedTransactionReceipt),
-                  transactionHash: (
-                    frontRunnedTransactionReceipt as TransactionReceipt
-                  ).transactionHash,
-                  blockNumber: Number(
-                    (frontRunnedTransactionReceipt as TransactionReceipt)
-                      .blockNumber,
-                  ),
-                  blockHash: (
-                    frontRunnedTransactionReceipt as TransactionReceipt
-                  ).blockHash,
-                  status: TransactionStatus.SUCCESS,
-                  success,
-                  actualGasCost,
-                  actualGasUsed,
-                  reason,
-                  logs: bigIntToNumber(logs),
-                }))} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${
+                `Updating userOp data: ${customJSONStringify(
+                  bigIntToNumber({
+                    receipt: bigIntToNumber(frontRunnedTransactionReceipt),
+                    transactionHash: (
+                      frontRunnedTransactionReceipt as TransactionReceipt
+                    ).transactionHash,
+                    blockNumber: Number(
+                      (frontRunnedTransactionReceipt as TransactionReceipt)
+                        .blockNumber,
+                    ),
+                    blockHash: (
+                      frontRunnedTransactionReceipt as TransactionReceipt
+                    ).blockHash,
+                    status: TransactionStatus.SUCCESS,
+                    success,
+                    actualGasCost,
+                    actualGasUsed,
+                    reason,
+                    logs: bigIntToNumber(logs),
+                  }),
+                )} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${
                   this.chainId
                 }`,
               );
@@ -768,7 +774,7 @@ export class EVMTransactionListener
     log.info(
       `Transaction hash is: ${transactionHash} for transactionId: ${transactionId} on chainId ${this.chainId}`,
     );
-    
+
     try {
       const transactionReceipt = await this.networkService.waitForTransaction(
         transactionHash,
@@ -777,20 +783,20 @@ export class EVMTransactionListener
         // have resubmitted and no need to keep polling it
         Number(1.5 * config.chains.retryTransactionInterval[this.chainId]),
       );
-  
+
       log.info(
         `Transaction receipt is: ${customJSONStringify(
           transactionReceipt,
         )} for transactionId: ${transactionId} on chainId ${this.chainId}`,
       );
-  
+
       // TODO: reduce pending count of relayer via RelayerManager
       await this.cacheService.delete(
         getRetryTransactionCountKey(transactionId, this.chainId),
       );
-  
+
       await this.cacheService.set(getTransactionMinedKey(transactionId), "1");
-  
+
       if (transactionReceipt.status === "success") {
         log.info(
           `Transaction is a success for transactionId: ${transactionId} on chainId ${this.chainId}`,
@@ -897,7 +903,7 @@ export class EVMTransactionListener
       log.info(
         `Not a replacement transaction, updating data for transactionId: ${transactionId} on chainId: ${this.chainId}`,
       );
-      
+
       await this.transactionDao.updateByTransactionId(
         this.chainId,
         transactionId,
