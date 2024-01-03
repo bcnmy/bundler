@@ -172,7 +172,7 @@ export const getUserOperationReceiptForSuccessfulTransaction = async (
         const { success } = args;
         log.info(`success: ${success} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
         const userOperationLogs = filterLogs(
-          userOperationEvent as any, // TODO fix types
+          eventLog,
           receipt.logs,
         );
         return {
