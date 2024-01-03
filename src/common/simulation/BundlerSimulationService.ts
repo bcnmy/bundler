@@ -10,8 +10,8 @@ import {
   toBytes,
   toHex,
 } from "viem";
-import { NODE_INTERFACE_ADDRESS } from "@arbitrum/sdk/dist/lib/dataEntities/constants";
-import { NodeInterface__factory } from "@arbitrum/sdk/dist/lib/abi/factories/NodeInterface__factory";
+// import { NODE_INTERFACE_ADDRESS } from "@arbitrum/sdk/dist/lib/dataEntities/constants";
+// import { NodeInterface__factory } from "@arbitrum/sdk/dist/lib/abi/factories/NodeInterface__factory";
 import { config } from "../../config";
 import { IEVMAccount } from "../../relayer/account";
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from "../../server/middleware";
@@ -51,13 +51,15 @@ import {
   TenderlySimulationService,
 } from "./external-simulation";
 import { IGasPrice } from "../gas-price";
+import { estimateFeeOffchain } from "./optimism";
+import { gasEstimateL1ComponentOffchain } from "./arbitrum";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
 });
 
 export class BundlerSimulationService {
-  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
+  networkService: SimulatorNetworkService;
 
   tenderlySimulationService: TenderlySimulationService;
 
@@ -972,14 +974,32 @@ export class BundlerSimulationService {
         args: [[userOp], userOp.sender],
       });
 
-      const gasEstimateForL1 = await this.networkService.provider.readContract({
-        address: NODE_INTERFACE_ADDRESS,
-        abi: NodeInterface__factory as any,
-        functionName: "gasEstimateL1Component",
-        args: [handleOpsData],
-      });
+      const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
+      if (!baseFeePerGas) {
+        throw new RpcError(
+          `baseFeePerGas not available for chainId: ${chainId}`,
+          BUNDLER_VALIDATION_STATUSES.SIMULATE_PAYMASTER_VALIDATION_FAILED,
+        );
+      }
 
-      ret += (gasEstimateForL1 as any).toNumber();
+      // const gasEstimateForL1 = await this.networkService.provider.readContract({
+      //   address: NODE_INTERFACE_ADDRESS,
+      //   abi: NodeInterface__factory as any,
+      //   functionName: "gasEstimateL1Component",
+      //   args: [handleOpsData],
+      // });
+
+      const gasEstimateForL1 = gasEstimateL1ComponentOffchain(
+        BigInt(0), // ?? do we use 0 for value
+        entryPointContract.address,
+        handleOpsData,
+        BigInt(0), // TODO: use L1 base fee
+        baseFeePerGas, // ?? is this the correct L2 fee?
+        chainId,
+      );
+
+      // ret += (gasEstimateForL1 as any).toNumber();
+      ret += Number(gasEstimateForL1);
     } else if (OptimismNetworks.includes(chainId)) {
       const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
       if (!baseFeePerGas) {
@@ -994,13 +1014,8 @@ export class BundlerSimulationService {
         args: [[userOp], userOp.sender],
       });
 
-      const l1Fee = await this.networkService.provider.readContract({
-        address:
-          this.optimismL1GasPriceOracleMap[this.networkService.chainId].address,
-        abi: this.optimismL1GasPriceOracleMap[this.networkService.chainId].abi,
-        functionName: "getL1Fee",
-        args: [handleOpsData],
-      });
+      const l1Fee = estimateFeeOffchain(handleOpsData, baseFeePerGas);
+
       // extraPvg = l1Cost / l2Price
       const l2MaxFee = userOp.maxFeePerGas;
       const l2PriorityFee = baseFeePerGas + userOp.maxPriorityFeePerGas;
@@ -1026,3 +1041,8 @@ export class BundlerSimulationService {
     return keccak256(enc);
   }
 }
+
+type SimulatorNetworkService = Pick<
+  INetworkService<IEVMAccount, EVMRawTransactionType>,
+  "chainId" | "ethCall" | "estimateGas" | "provider"
+>;
