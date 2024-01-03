@@ -323,14 +323,9 @@ export class GasPrice implements IGasPrice {
           formatUnits(maxPriorityFeePerGas, 0),
         );
 
-        if (
-          [
-            137, 80001, 43113, 43114, 42161, 421613, 1, 8453, 84531, 420,
-          ].includes(this.chainId)
-        ) {
-          const baseFeePerGas = await this.networkService.getBaseFeePerGas();
-          await this.setBaseFeePerGas(formatUnits(baseFeePerGas, 0));
-        }
+ 
+        const baseFeePerGas = await this.networkService.getBaseFeePerGas();
+        await this.setBaseFeePerGas(formatUnits(baseFeePerGas, 0));
       } else {
         const gasPrice = await this.networkService.getLegacyGasPrice();
         await this.setGasPrice(GasPriceType.DEFAULT, formatUnits(gasPrice, 0));
