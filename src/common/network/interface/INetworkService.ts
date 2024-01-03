@@ -28,7 +28,7 @@ export interface INetworkService<AccountType, RawTransactionType> {
     timeout?: number,
   ): Promise<TransactionReceipt>
   getLatesBlockNumber(): Promise<bigint>
-  getTransaction(transactionHash: string): Promise<Transaction>
+  getTransaction(transactionHash: string): Promise<Transaction | null>
   runAlchemySimulation(params: any): Promise<any>
   ethCall(params: any): Promise<any>
 }

@@ -997,6 +997,10 @@ export class EVMTransactionListener
         receipt.transactionHash,
       );
 
+      if (!getTransactionResponse) {
+        return "Unable to parse transaction failure reason, please check transaction hash on explorer";
+      }
+
       const { from, to, input, gasPrice } = getTransactionResponse;
 
       const gasInHex = toHex(receipt.gasUsed).substring(2).replace(/^0+/, "");

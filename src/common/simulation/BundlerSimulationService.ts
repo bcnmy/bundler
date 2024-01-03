@@ -321,44 +321,30 @@ export class BundlerSimulationService {
           `verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId} after 1.2 multiplier on ${preOpGas} and ${preVerificationGas}`,
         );
 
+
+        const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
+        log.info(`baseFeePerGas: ${baseFeePerGas} on chainId: ${chainId}`);
         let totalGas = BigInt(
-          Math.ceil(Number(toHex(paid)) / Number(toHex(userOp.maxFeePerGas))),
+          Math.ceil(
+            Number(toHex(paid)) /
+              Math.min(
+                Number(toHex(baseFeePerGas + userOp.maxPriorityFeePerGas)),
+                Number(toHex(userOp.maxFeePerGas)),
+              ),
+          ),
         );
-        log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
-
+        log.info(
+          `totalGas after calculating for polygon networks: ${totalGas}`,
+        );
         let callGasLimit = BigInt(
-          Math.ceil(Number(toHex(totalGas)) - Number(toHex(preOpGas)) + 30000),
+          Math.ceil(
+            Number(toHex(totalGas)) - Number(toHex(preOpGas)) + 30000,
+          ),
         );
-        log.info(`call gas limit: ${callGasLimit} on chainId: ${chainId}`);
-
-        if (
-          [
-            137, 80001, 43113, 43114, 42161, 421613, 1, 8453, 84531, 420,
-          ].includes(chainId)
-        ) {
-          const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
-          log.info(`baseFeePerGas: ${baseFeePerGas} on chainId: ${chainId}`);
-          totalGas = BigInt(
-            Math.ceil(
-              Number(toHex(paid)) /
-                Math.min(
-                  Number(toHex(baseFeePerGas + userOp.maxPriorityFeePerGas)),
-                  Number(toHex(userOp.maxFeePerGas)),
-                ),
-            ),
-          );
-          log.info(
-            `totalGas after calculating for polygon networks: ${totalGas}`,
-          );
-          callGasLimit = BigInt(
-            Math.ceil(
-              Number(toHex(totalGas)) - Number(toHex(preOpGas)) + 30000,
-            ),
-          );
-          log.info(
-            `callGasLimit after calculating for polygon networks: ${callGasLimit}`,
-          );
-        }
+        log.info(
+          `callGasLimit after calculating for polygon networks: ${callGasLimit}`,
+        );
+      
 
         if (totalGas < 500000) {
           preVerificationGas += BigInt(20000);

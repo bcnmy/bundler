@@ -188,10 +188,14 @@ export class EVMNetworkService
    * @param transactionHash transaction hash
    * @returns transaction once mined, else waits for the transaction to be mined
    */
-  async getTransaction(transactionHash: string): Promise<Transaction> {
-    return await this.provider.getTransaction({
-      hash: transactionHash as `0x${string}`,
-    });
+  async getTransaction(transactionHash: string): Promise<Transaction | null> {
+    try {
+      return await this.provider.getTransaction({
+        hash: transactionHash as `0x${string}`,
+      });
+    } catch (error) {
+      return null;
+    }
   }
 
   async getLatesBlockNumber(): Promise<bigint> {
