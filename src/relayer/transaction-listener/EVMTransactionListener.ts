@@ -29,7 +29,7 @@ import {
   getUserOperationReceiptForFailedTransaction,
   getUserOperationReceiptForSuccessfulTransaction,
   customJSONStringify,
-  bigIntToNumber,
+  bigIntToString,
 } from "../../common/utils";
 import { IEVMAccount } from "../account";
 import { ITransactionPublisher } from "../transaction-publisher";
@@ -202,9 +202,9 @@ export class EVMTransactionListener
 
               log.info(
                 `Updating userOp data: ${customJSONStringify(
-                  bigIntToNumber({
+                  bigIntToString({
                     transactionHash,
-                    receipt: bigIntToNumber(transactionReceipt),
+                    receipt: bigIntToString(transactionReceipt),
                     blockNumber: Number(transactionReceipt.blockNumber),
                     blockHash: transactionReceipt.blockHash,
                     status: TransactionStatus.SUCCESS,
@@ -212,7 +212,7 @@ export class EVMTransactionListener
                     actualGasCost,
                     actualGasUsed,
                     reason,
-                    logs: bigIntToNumber(logs),
+                    logs: bigIntToString(logs),
                   }),
                 )} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${
                   this.chainId
@@ -222,9 +222,9 @@ export class EVMTransactionListener
                 this.chainId,
                 transactionId,
                 userOpHash,
-                bigIntToNumber({
+                bigIntToString({
                   transactionHash,
-                  receipt: bigIntToNumber(transactionReceipt),
+                  receipt: bigIntToString(transactionReceipt),
                   blockNumber: Number(transactionReceipt.blockNumber),
                   blockHash: transactionReceipt.blockHash,
                   status: TransactionStatus.SUCCESS,
@@ -232,7 +232,7 @@ export class EVMTransactionListener
                   actualGasCost,
                   actualGasUsed,
                   reason,
-                  logs: bigIntToNumber(logs),
+                  logs: bigIntToString(logs),
                 }),
               );
               log.info(
@@ -300,7 +300,7 @@ export class EVMTransactionListener
           transactionId,
           transactionHash,
           {
-            receipt: bigIntToNumber(transactionReceipt),
+            receipt: bigIntToString(transactionReceipt),
             transactionFee,
             transactionFeeInUSD,
             transactionFeeCurrency,
@@ -445,9 +445,9 @@ export class EVMTransactionListener
                 );
                 log.info(
                   `Updating userOp data: ${customJSONStringify(
-                    bigIntToNumber({
+                    bigIntToString({
                       transactionHash,
-                      receipt: bigIntToNumber(transactionReceipt),
+                      receipt: bigIntToString(transactionReceipt),
                       blockNumber: Number(transactionReceipt.blockNumber),
                       blockHash: transactionReceipt.blockHash,
                       status: TransactionStatus.FAILED,
@@ -466,9 +466,9 @@ export class EVMTransactionListener
                   this.chainId,
                   transactionId,
                   userOpHash,
-                  bigIntToNumber({
+                  bigIntToString({
                     transactionHash,
-                    receipt: bigIntToNumber(transactionReceipt),
+                    receipt: bigIntToString(transactionReceipt),
                     blockNumber: Number(transactionReceipt.blockNumber),
                     blockHash: transactionReceipt.blockHash,
                     status: TransactionStatus.FAILED,
@@ -528,8 +528,8 @@ export class EVMTransactionListener
               );
               log.info(
                 `Updating userOp data: ${customJSONStringify(
-                  bigIntToNumber({
-                    receipt: bigIntToNumber(frontRunnedTransactionReceipt),
+                  bigIntToString({
+                    receipt: bigIntToString(frontRunnedTransactionReceipt),
                     transactionHash: (
                       frontRunnedTransactionReceipt as TransactionReceipt
                     ).transactionHash,
@@ -545,7 +545,7 @@ export class EVMTransactionListener
                     actualGasCost,
                     actualGasUsed,
                     reason,
-                    logs: bigIntToNumber(logs),
+                    logs: bigIntToString(logs),
                   }),
                 )} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${
                   this.chainId
@@ -556,8 +556,8 @@ export class EVMTransactionListener
                 this.chainId,
                 transactionId,
                 userOpHash,
-                bigIntToNumber({
-                  receipt: bigIntToNumber(frontRunnedTransactionReceipt),
+                bigIntToString({
+                  receipt: bigIntToString(frontRunnedTransactionReceipt),
                   transactionHash: (
                     frontRunnedTransactionReceipt as TransactionReceipt
                   ).transactionHash,
@@ -573,7 +573,7 @@ export class EVMTransactionListener
                   actualGasCost,
                   actualGasUsed,
                   reason,
-                  logs: bigIntToNumber(logs),
+                  logs: bigIntToString(logs),
                 }),
               );
 
@@ -617,7 +617,7 @@ export class EVMTransactionListener
                 {
                   frontRunnedTransactionHash:
                     frontRunnedTransactionReceipt.hash,
-                  frontRunnedReceipt: bigIntToNumber(
+                  frontRunnedReceipt: bigIntToString(
                     frontRunnedTransactionReceipt,
                   ),
                   frontRunnedTransactionFee,
@@ -691,7 +691,7 @@ export class EVMTransactionListener
           transactionId,
           transactionHash,
           {
-            receipt: bigIntToNumber(transactionReceipt),
+            receipt: bigIntToString(transactionReceipt),
             transactionFee,
             transactionFeeInUSD,
             transactionFeeCurrency,
@@ -909,7 +909,7 @@ export class EVMTransactionListener
         transactionId,
         {
           transactionHash,
-          rawTransaction: bigIntToNumber(rawTransaction),
+          rawTransaction: bigIntToString(rawTransaction),
           relayerAddress,
           gasPrice: rawTransaction.gasPrice?.toString(),
           status: TransactionStatus.PENDING,
@@ -945,7 +945,7 @@ export class EVMTransactionListener
         transactionHash,
         previousTransactionHash,
         status: TransactionStatus.PENDING,
-        rawTransaction: bigIntToNumber(rawTransaction),
+        rawTransaction: bigIntToString(rawTransaction),
         chainId: this.chainId,
         gasPrice: rawTransaction.gasPrice?.toString(),
         relayerAddress,
