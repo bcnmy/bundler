@@ -142,7 +142,13 @@ export const getUserOperationReceiptForSuccessfulTransaction = async (
   receipt: TransactionReceipt,
   entryPointContract: EntryPointContractType,
 // eslint-disable-next-line consistent-return
-): Promise<any> => {
+): Promise<{
+  actualGasCost: number,
+  actualGasUsed: number,
+  success: boolean,
+  reason: string,
+  logs: Log[],
+} | null> => {
   try {
     const { logs } = receipt;
     for (const eventLog of logs) {
@@ -180,10 +186,11 @@ export const getUserOperationReceiptForSuccessfulTransaction = async (
           actualGasUsed: actualGasUsedInNumber,
           success,
           logs: userOperationLogs,
+          reason: '',
         };
-        break;
       }
     }
+    return null;
   } catch (error) {
     log.error(`error in getUserOperationReceipt: ${parseError(error)}`);
     return null;

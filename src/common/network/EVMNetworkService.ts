@@ -56,7 +56,9 @@ export class EVMNetworkService
     log.info(
       `data from RPC call: ${customJSONStringify(
         data,
-      )} received on JSON RPC Method: ${method} with params: ${customJSONStringify(params)} on chainId: ${this.chainId}`,
+      )} received on JSON RPC Method: ${method} with params: ${customJSONStringify(
+        params,
+      )} on chainId: ${this.chainId}`,
     );
     if (!data) {
       log.error(`RPC Call failed without data on chainId: ${this.chainId}`);
