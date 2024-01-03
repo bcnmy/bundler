@@ -155,7 +155,7 @@ export class EVMNetworkService
   }
 
   // eslint-disable-next-line class-methods-use-this
-  async sendRawTransaction(
+  async sendTransaction(
     rawTransactionData: EVMRawTransactionType,
     account: IEVMAccount,
   ): Promise<string | Error> {

@@ -17,7 +17,7 @@ export interface INetworkService<AccountType, RawTransactionType> {
   estimateGas(
     params: any,
   ): Promise<any>
-  sendRawTransaction(
+  sendTransaction(
     rawTransactionData: RawTransactionType,
     account: AccountType,
   ): Promise<string | Error>;
