@@ -136,10 +136,14 @@ export class EVMNetworkService
 
   async getTransactionReceipt(
     transactionHash: string,
-  ): Promise<TransactionReceipt> {
-    return await this.provider.getTransactionReceipt({
-      hash: transactionHash as `0x${string}`,
-    });
+  ): Promise<TransactionReceipt | null> {
+    try {
+      return await this.provider.getTransactionReceipt({
+        hash: transactionHash as `0x${string}`,
+      });
+    } catch (error) {
+      return null;
+    }
   }
 
   /**

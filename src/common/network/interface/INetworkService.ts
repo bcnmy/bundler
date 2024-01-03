@@ -21,7 +21,7 @@ export interface INetworkService<AccountType, RawTransactionType> {
     rawTransactionData: RawTransactionType,
     account: AccountType,
   ): Promise<string | Error>;
-  getTransactionReceipt(transactionHash: string): Promise<TransactionReceipt>;
+  getTransactionReceipt(transactionHash: string): Promise<TransactionReceipt | null>;
   waitForTransaction(
     transactionHash: string,
     confirmations?: number,
