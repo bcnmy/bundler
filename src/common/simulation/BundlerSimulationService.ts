@@ -53,6 +53,7 @@ import {
 import { IGasPrice } from "../gas-price";
 import { estimateFeeOffchain } from "./optimism";
 import { gasEstimateL1ComponentOffchain } from "./arbitrum";
+import { ICacheService } from "../cache";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -71,16 +72,20 @@ export class BundlerSimulationService {
     [chainId: number]: OptimismL1GasPriceOracleContractType;
   } = {};
 
+  cacheService: ICacheService;
+
   constructor(
     networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
     tenderlySimulationService: TenderlySimulationService,
     alchemySimulationService: AlchemySimulationService,
     gasPriceService: IGasPrice,
+    cacheService: ICacheService,
   ) {
     this.networkService = networkService;
     this.tenderlySimulationService = tenderlySimulationService;
     this.alchemySimulationService = alchemySimulationService;
     this.gasPriceService = gasPriceService;
+    this.cacheService = cacheService;
 
     if (OptimismNetworks.includes(this.networkService.chainId)) {
       // setting up optimism gas oracle
@@ -323,7 +328,6 @@ export class BundlerSimulationService {
           `verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId} after 1.2 multiplier on ${preOpGas} and ${preVerificationGas}`,
         );
 
-
         const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
         log.info(`baseFeePerGas: ${baseFeePerGas} on chainId: ${chainId}`);
         let totalGas = BigInt(
@@ -339,14 +343,11 @@ export class BundlerSimulationService {
           `totalGas after calculating for polygon networks: ${totalGas}`,
         );
         let callGasLimit = BigInt(
-          Math.ceil(
-            Number(toHex(totalGas)) - Number(toHex(preOpGas)) + 30000,
-          ),
+          Math.ceil(Number(toHex(totalGas)) - Number(toHex(preOpGas)) + 30000),
         );
         log.info(
           `callGasLimit after calculating for polygon networks: ${callGasLimit}`,
         );
-      
 
         if (totalGas < 500000) {
           preVerificationGas += BigInt(20000);
@@ -960,31 +961,32 @@ export class BundlerSimulationService {
         args: [[userOp], userOp.sender],
       });
 
-      const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
-      if (!baseFeePerGas) {
+      const l2BaseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
+      if (!l2BaseFeePerGas) {
         throw new RpcError(
           `baseFeePerGas not available for chainId: ${chainId}`,
           BUNDLER_VALIDATION_STATUSES.SIMULATE_PAYMASTER_VALIDATION_FAILED,
         );
       }
 
-      // const gasEstimateForL1 = await this.networkService.provider.readContract({
-      //   address: NODE_INTERFACE_ADDRESS,
-      //   abi: NodeInterface__factory as any,
-      //   functionName: "gasEstimateL1Component",
-      //   args: [handleOpsData],
-      // });
+      // get the Ethereum base fee also, because it's used in the Arbitrum calculation
+      const l1BaseFeePerGas = await this.cacheService.get(`BaseFeePerGas_1`);
+      if (!l1BaseFeePerGas) {
+        throw new RpcError(
+          `baseFeePerGas not available for chainId: 1`,
+          BUNDLER_VALIDATION_STATUSES.SIMULATE_PAYMASTER_VALIDATION_FAILED,
+        );
+      }
 
       const gasEstimateForL1 = gasEstimateL1ComponentOffchain(
-        BigInt(0), // ?? do we use 0 for value
+        BigInt(0),
         entryPointContract.address,
         handleOpsData,
-        BigInt(0), // TODO: use L1 base fee
-        baseFeePerGas, // ?? is this the correct L2 fee?
+        BigInt(l1BaseFeePerGas),
+        l2BaseFeePerGas,
         chainId,
       );
 
-      // ret += (gasEstimateForL1 as any).toNumber();
       ret += Number(gasEstimateForL1);
     } else if (OptimismNetworks.includes(chainId)) {
       const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
@@ -994,6 +996,7 @@ export class BundlerSimulationService {
           BUNDLER_VALIDATION_STATUSES.SIMULATE_PAYMASTER_VALIDATION_FAILED,
         );
       }
+
       const handleOpsData = encodeFunctionData({
         abi: entryPointContract.abi,
         functionName: "handleOps",
