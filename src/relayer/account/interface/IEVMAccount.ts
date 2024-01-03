@@ -5,4 +5,5 @@ export interface IEVMAccount extends IAccount {
   getPublicKey(): string;
   signMessage(message: string): Promise<string>;
   signTransaction(rawTransaction: EVMRawTransactionType): Promise<string>;
+  sendTransaction(rawTransaction: EVMRawTransactionType): Promise<string>;
 }

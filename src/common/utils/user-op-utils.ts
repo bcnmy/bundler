@@ -146,8 +146,7 @@ export const getUserOperationReceiptForSuccessfulTransaction = async (
   try {
     const { logs } = receipt;
     for (const eventLog of logs) {
-      // TODO get topicId for UserOperationEvent from config
-      if (eventLog.topics[0] === '0x49628fd1471006c1482da88028e9ce4dbb080b815c9b0344d39e5a8e6ec1419f' && eventLog.topics[0].toLowerCase() === userOpHash.toLowerCase()) {
+      if (eventLog.topics[0] === '0x49628fd1471006c1482da88028e9ce4dbb080b815c9b0344d39e5a8e6ec1419f') {
         const userOperationEventLog = eventLog;
         const userOperationEvent = decodeEventLog({
           abi: entryPointContract.abi,
@@ -173,7 +172,7 @@ export const getUserOperationReceiptForSuccessfulTransaction = async (
         const { success } = args;
         log.info(`success: ${success} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
         const userOperationLogs = filterLogs(
-          userOperationEvent as any, // TODO fix types
+          eventLog,
           receipt.logs,
         );
         return {

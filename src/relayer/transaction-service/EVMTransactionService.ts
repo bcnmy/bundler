@@ -382,33 +382,22 @@ export class EVMTransactionService
     ): Promise<ExecuteTransactionResponseType> => {
       const { rawTransaction, account } = retryExecuteTransactionParams;
       try {
-        try {
-          log.info(
-            `Getting failed transaction retry count for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-          );
-          const failedTransactionRetryCount = parseInt(
-            await this.cacheService.get(
-              getFailedTransactionRetryCountKey(transactionId, this.chainId),
-            ),
-            10,
-          );
+        log.info(
+          `Getting failed transaction retry count for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+        );
+        const failedTransactionRetryCount = parseInt(
+          await this.cacheService.get(
+            getFailedTransactionRetryCountKey(transactionId, this.chainId),
+          ),
+          10,
+        );
 
-          const maxFailedTransactionCount =
-            config.transaction.failedTransactionRetryCount[this.chainId];
+        const maxFailedTransactionCount =
+          config.transaction.failedTransactionRetryCount[this.chainId];
 
-          if (failedTransactionRetryCount > maxFailedTransactionCount) {
-            throw new Error(
-              `Failed transaction retry limit reached for transactionId: ${transactionId}`,
-            );
-          }
-        } catch (error) {
-          // just loggin error here, don't want to block the transaction if in some case code does not work the intended way
-          log.error(
-            `Error in getting max failed retry transaction count: ${parseError(
-              error,
-            )} for bundler address: ${
-              rawTransaction.from
-            } for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+        if (failedTransactionRetryCount > maxFailedTransactionCount) {
+          throw new Error(
+            `Failed transaction retry limit reached for transactionId: ${transactionId}`,
           );
         }
 
@@ -496,9 +485,6 @@ export class EVMTransactionService
             rawTransaction.maxPriorityFeePerGas =
               bumpedUpGasPrice.maxPriorityFeePerGas;
             log.info(
-              `increasing gas price for the resubmit transaction ${rawTransaction.gasPrice} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-            );
-            log.info(
               `rawTransaction.maxFeePerGas ${rawTransaction.maxFeePerGas} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId} after bumping up`,
             );
             log.info(
@@ -541,9 +527,6 @@ export class EVMTransactionService
               `rawTransaction.maxFeePerGas ${rawTransaction.maxFeePerGas} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId} before bumping up`,
             );
             rawTransaction.maxFeePerGas = bumpedUpGasPrice.maxFeePerGas;
-            log.info(
-              `increasing gas price for the resubmit transaction ${rawTransaction.gasPrice} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-            );
             log.info(
               `rawTransaction.maxFeePerGas ${rawTransaction.maxFeePerGas} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId} after bumping up`,
             );
@@ -682,23 +665,41 @@ export class EVMTransactionService
       log.info(
         `Notifying transaction listener for transactionId: ${transactionId} on chainId ${this.chainId}`,
       );
-      await this.transactionListener.notify({
-        transactionHash: retryTransactionExecutionResponse.hash,
-        transactionId: transactionId as string,
-        relayerAddress: account.getPublicKey(),
-        rawTransaction,
-        transactionType,
-        previousTransactionHash: transactionHash,
-        walletAddress,
-        metaData,
-        relayerManagerName,
-      });
+      const transactionListenerNotifyResponse =
+        await this.transactionListener.notify({
+          transactionHash: retryTransactionExecutionResponse.hash,
+          transactionId: transactionId as string,
+          relayerAddress: account.getPublicKey(),
+          rawTransaction,
+          transactionType,
+          previousTransactionHash: transactionHash,
+          walletAddress,
+          metaData,
+          relayerManagerName,
+        });
 
-      return {
-        state: "success",
-        code: STATUSES.SUCCESS,
-        transactionId,
-      };
+      if (transactionType === TransactionType.FUNDING) {
+        await this.sendRelayerFundingSlackNotification(
+          account.getPublicKey(),
+          this.chainId,
+          transactionHash as string,
+        );
+      }
+
+      if (transactionListenerNotifyResponse) {
+        return {
+          state: "success",
+          code: STATUSES.SUCCESS,
+          transactionId,
+        };
+      } else {
+        return {
+          state: "failed",
+          code: STATUSES.ETHERS_WAIT_FOR_TRANSACTION_TIMEOUT,
+          error: "waitForTransaction ethers timeout error",
+          transactionId,
+        };
+      }
     } catch (error) {
       log.error(
         `Error while retrying transaction: ${parseError(

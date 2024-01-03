@@ -56,7 +56,7 @@ export class EVMNetworkService
     log.info(
       `data from RPC call: ${customJSONStringify(
         data,
-      )} received on JSON RPC Method: ${method}`,
+      )} received on JSON RPC Method: ${method} with params: ${customJSONStringify(params)} on chainId: ${this.chainId}`,
     );
     if (!data) {
       log.error(`RPC Call failed without data on chainId: ${this.chainId}`);
@@ -136,10 +136,14 @@ export class EVMNetworkService
 
   async getTransactionReceipt(
     transactionHash: string,
-  ): Promise<TransactionReceipt> {
-    return await this.provider.getTransactionReceipt({
-      hash: transactionHash as `0x${string}`,
-    });
+  ): Promise<TransactionReceipt | null> {
+    try {
+      return await this.provider.getTransactionReceipt({
+        hash: transactionHash as `0x${string}`,
+      });
+    } catch (error) {
+      return null;
+    }
   }
 
   /**
@@ -154,16 +158,14 @@ export class EVMNetworkService
     return await this.sendRpcCall(EthMethodType.GET_TRANSACTION_COUNT, params);
   }
 
+  // eslint-disable-next-line class-methods-use-this
   async sendTransaction(
     rawTransactionData: EVMRawTransactionType,
     account: IEVMAccount,
   ): Promise<string | Error> {
     const rawTransaction: EVMRawTransactionType = rawTransactionData;
-    rawTransaction.from = account.getPublicKey();
-    const serialisedTransaction = await account.signTransaction(rawTransaction);
-    return await this.sendRpcCall(EthMethodType.SEND_RAW_TRANSACTION, [
-      serialisedTransaction,
-    ]);
+    const hash = await account.sendTransaction(rawTransaction);
+    return hash as string;
   }
 
   /**
@@ -186,10 +188,14 @@ export class EVMNetworkService
    * @param transactionHash transaction hash
    * @returns transaction once mined, else waits for the transaction to be mined
    */
-  async getTransaction(transactionHash: string): Promise<Transaction> {
-    return await this.provider.getTransaction({
-      hash: transactionHash as `0x${string}`,
-    });
+  async getTransaction(transactionHash: string): Promise<Transaction | null> {
+    try {
+      return await this.provider.getTransaction({
+        hash: transactionHash as `0x${string}`,
+      });
+    } catch (error) {
+      return null;
+    }
   }
 
   async getLatesBlockNumber(): Promise<bigint> {

@@ -21,14 +21,14 @@ export interface INetworkService<AccountType, RawTransactionType> {
     rawTransactionData: RawTransactionType,
     account: AccountType,
   ): Promise<string | Error>;
-  getTransactionReceipt(transactionHash: string): Promise<TransactionReceipt>;
+  getTransactionReceipt(transactionHash: string): Promise<TransactionReceipt | null>;
   waitForTransaction(
     transactionHash: string,
     confirmations?: number,
     timeout?: number,
   ): Promise<TransactionReceipt>
   getLatesBlockNumber(): Promise<bigint>
-  getTransaction(transactionHash: string): Promise<Transaction>
+  getTransaction(transactionHash: string): Promise<Transaction | null>
   runAlchemySimulation(params: any): Promise<any>
   ethCall(params: any): Promise<any>
 }
