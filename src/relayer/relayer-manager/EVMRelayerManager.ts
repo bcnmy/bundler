@@ -373,7 +373,7 @@ export class EVMRelayerManager
         const ethAddr = publicToAddress(ethPubkey).toString("hex");
         const ethAddress = toChecksumAddress(`0x${ethAddr}`);
         const address = ethAddress.toLowerCase();
-        const relayer = new EVMAccount(address, privateKey);
+        const relayer = new EVMAccount(address, privateKey, this.networkService.rpcUrl);
         this.relayerMap[address] = relayer;
         relayers.push(relayer);
       }
