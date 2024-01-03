@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const */
 /* eslint-disable import/no-import-module-exports */
 import { formatUnits, toHex } from "viem";
 import { IEVMAccount } from "../../relayer/account";
@@ -299,11 +300,19 @@ export class GasPrice implements IGasPrice {
     try {
       // check if the network supports EIP 1559
       if (this.EIP1559SupportedNetworks.includes(this.chainId)) {
-        const {
-          // eslint-disable-next-line prefer-const
+        let {
           maxFeePerGas,
           maxPriorityFeePerGas,
         } = await this.networkService.getEIP1559FeesPerGas();
+
+        if([137].includes(this.chainId) && maxPriorityFeePerGas < 30000000000n) {
+          maxPriorityFeePerGas = 30000000000n;
+        }
+
+        if (maxPriorityFeePerGas > maxFeePerGas) {
+          const baseFeePerGas = await this.networkService.getBaseFeePerGas();
+          maxFeePerGas = BigInt(2) * (baseFeePerGas + maxPriorityFeePerGas);
+        }
 
         await this.setMaxFeeGasPrice(
           GasPriceType.DEFAULT,
