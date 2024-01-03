@@ -201,7 +201,7 @@ export class EVMTransactionListener
                 userOpReceipt;
 
               log.info(
-                `Updating userOp data: ${customJSONStringify(                {
+                `Updating userOp data: ${customJSONStringify(bigIntToNumber({
                   transactionHash,
                   receipt: bigIntToNumber(transactionReceipt),
                   blockNumber: Number(transactionReceipt.blockNumber),
@@ -212,7 +212,7 @@ export class EVMTransactionListener
                   actualGasUsed,
                   reason,
                   logs: bigIntToNumber(logs),
-                })} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${
+                }))} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${
                   this.chainId
                 }`,
               );
@@ -220,7 +220,7 @@ export class EVMTransactionListener
                 this.chainId,
                 transactionId,
                 userOpHash,
-                {
+                bigIntToNumber({
                   transactionHash,
                   receipt: bigIntToNumber(transactionReceipt),
                   blockNumber: Number(transactionReceipt.blockNumber),
@@ -231,7 +231,7 @@ export class EVMTransactionListener
                   actualGasUsed,
                   reason,
                   logs: bigIntToNumber(logs),
-                },
+                }),
               );
               log.info(
                 `userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
@@ -442,7 +442,7 @@ export class EVMTransactionListener
                   `userOpReceipt not fetched for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
                 );
                 log.info(
-                  `Updating userOp data: ${customJSONStringify({
+                  `Updating userOp data: ${customJSONStringify(bigIntToNumber({
                     transactionHash,
                     receipt: bigIntToNumber(transactionReceipt),
                     blockNumber: Number(transactionReceipt.blockNumber),
@@ -453,7 +453,7 @@ export class EVMTransactionListener
                     actualGasUsed: 0,
                     reason: null,
                     logs: null,
-                  })} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${
+                  }))} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${
                     this.chainId
                   }`,
                 );
@@ -462,7 +462,7 @@ export class EVMTransactionListener
                   this.chainId,
                   transactionId,
                   userOpHash,
-                  {
+                  bigIntToNumber({
                     transactionHash,
                     receipt: bigIntToNumber(transactionReceipt),
                     blockNumber: Number(transactionReceipt.blockNumber),
@@ -473,7 +473,7 @@ export class EVMTransactionListener
                     actualGasUsed: 0,
                     reason: "null",
                     logs: null,
-                  },
+                  }),
                 );
                 log.info(
                   `userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
@@ -523,7 +523,7 @@ export class EVMTransactionListener
                 `Updating transaction data for a front runned transaction for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
               );
               log.info(
-                `Updating userOp data: ${customJSONStringify(                {
+                `Updating userOp data: ${customJSONStringify(bigIntToNumber({
                   receipt: bigIntToNumber(frontRunnedTransactionReceipt),
                   transactionHash: (
                     frontRunnedTransactionReceipt as TransactionReceipt
@@ -541,7 +541,7 @@ export class EVMTransactionListener
                   actualGasUsed,
                   reason,
                   logs: bigIntToNumber(logs),
-                })} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${
+                }))} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${
                   this.chainId
                 }`,
               );
@@ -550,7 +550,7 @@ export class EVMTransactionListener
                 this.chainId,
                 transactionId,
                 userOpHash,
-                {
+                bigIntToNumber({
                   receipt: bigIntToNumber(frontRunnedTransactionReceipt),
                   transactionHash: (
                     frontRunnedTransactionReceipt as TransactionReceipt
@@ -568,7 +568,7 @@ export class EVMTransactionListener
                   actualGasUsed,
                   reason,
                   logs: bigIntToNumber(logs),
-                },
+                }),
               );
 
               log.info(

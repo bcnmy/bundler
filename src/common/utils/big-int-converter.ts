@@ -12,17 +12,19 @@ export const bigIntToNumber = (args: any): any => {
     }
     return result;
   } 
-    const result: any = [];
+  const result: any = [];
 
-    for (const element of args) {
-      if (typeof element === 'bigint') {
-        // Convert BigInt to string
-        result.push(Number(element));
-      } else {
-        result.push(element);
-      }
+  for (const element of args) {
+    if (typeof element === 'bigint') {
+      // Convert BigInt to string
+      result.push(Number(element));
+    } else if (typeof element === "object") {
+      result.push(bigIntToNumber(element));
+    } else {
+      result.push(element);
     }
-    return result;
+  }
+  return result;
 };
 
 
