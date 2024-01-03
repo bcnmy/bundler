@@ -496,9 +496,6 @@ export class EVMTransactionService
             rawTransaction.maxPriorityFeePerGas =
               bumpedUpGasPrice.maxPriorityFeePerGas;
             log.info(
-              `increasing gas price for the resubmit transaction ${rawTransaction.gasPrice} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-            );
-            log.info(
               `rawTransaction.maxFeePerGas ${rawTransaction.maxFeePerGas} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId} after bumping up`,
             );
             log.info(
@@ -541,9 +538,6 @@ export class EVMTransactionService
               `rawTransaction.maxFeePerGas ${rawTransaction.maxFeePerGas} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId} before bumping up`,
             );
             rawTransaction.maxFeePerGas = bumpedUpGasPrice.maxFeePerGas;
-            log.info(
-              `increasing gas price for the resubmit transaction ${rawTransaction.gasPrice} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-            );
             log.info(
               `rawTransaction.maxFeePerGas ${rawTransaction.maxFeePerGas} for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId} after bumping up`,
             );
