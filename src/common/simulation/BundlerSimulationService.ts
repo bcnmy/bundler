@@ -332,15 +332,14 @@ export class BundlerSimulationService {
               ),
           ),
         );
-        log.info(
-          `totalGas after calculating for polygon networks: ${totalGas}`,
-        );
+        log.info(`totalGas ${totalGas} on chainId: ${chainId}`);
+
         let callGasLimit = BigInt(
-          Math.ceil(Number(toHex(totalGas)) - Number(toHex(preOpGas)) + 30000),
+          Math.ceil(
+            (Number(toHex(totalGas)) - Number(toHex(preOpGas)) + 30000) * 1.2,
+          ),
         );
-        log.info(
-          `callGasLimit after calculating for polygon networks: ${callGasLimit}`,
-        );
+        log.info(`callGasLimit: ${callGasLimit} on chainId: ${chainId}`);
 
         if (totalGas < 500000) {
           preVerificationGas += BigInt(20000);
@@ -361,30 +360,6 @@ export class BundlerSimulationService {
             `preVerificationGas: ${preVerificationGas} on chainId: ${chainId}`,
           );
         }
-
-        if (callGasLimit > 500000) {
-          log.info("Bumping callGasLimit by 100K for 500K+ transactions");
-          callGasLimit += BigInt(100000);
-        }
-
-        if (callGasLimit > 2000000) {
-          log.info("Bumping callGasLimit by 500K for 2M+ transactions");
-          callGasLimit += BigInt(500000);
-        }
-
-        // edge case observed on polygon
-        if (callGasLimit > 5000000) {
-          log.info("Bumping callGasLimit by 500K for 5M+ transactions");
-          callGasLimit += BigInt(500000);
-        }
-
-        // if (chainId === 10 || chainId === 420 || chainId === 8453 || chainId === 84531) {
-        //   log.info(`chainId: ${chainId} is OP stack hence increasing callGasLimit by 150K`);
-        //   callGasLimit += 150000;
-        // }
-        log.info(
-          `callGasLimit after checking for optimism: ${callGasLimit} on chainId: ${chainId}`,
-        );
 
         if (LineaNetworks.includes(chainId)) {
           preVerificationGas += BigInt(
