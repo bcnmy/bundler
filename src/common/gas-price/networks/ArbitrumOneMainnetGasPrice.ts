@@ -1,5 +1,4 @@
 import { schedule } from "node-cron";
-import { config } from "../../../config";
 import { IEVMAccount } from "../../../relayer/account";
 import { ICacheService } from "../../cache";
 import { INetworkService } from "../../network";
@@ -7,7 +6,7 @@ import { IScheduler } from "../../scheduler";
 import { EVMRawTransactionType } from "../../types";
 import { GasPrice } from "../GasPrice";
 
-export class ArbitrumGoerliGasPrice extends GasPrice implements IScheduler {
+export class ArbitrumOneMainnetGasPrice extends GasPrice implements IScheduler {
   updateFrequencyInSeconds: number;
 
   constructor(
@@ -16,11 +15,11 @@ export class ArbitrumGoerliGasPrice extends GasPrice implements IScheduler {
     options: {
       chainId: number;
       EIP1559SupportedNetworks: Array<number>;
+      updateFrequencyInSeconds: number;
     },
   ) {
     super(cacheService, networkService, options);
-    this.updateFrequencyInSeconds =
-      config.gasPrice[this.chainId].updateFrequencyInSeconds || 60;
+    this.updateFrequencyInSeconds = options.updateFrequencyInSeconds;
   }
 
   schedule() {

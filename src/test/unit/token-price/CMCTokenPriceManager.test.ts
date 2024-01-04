@@ -21,7 +21,7 @@ describe("CMCTokenPriceManager", () => {
     cmcTokenPriceManager = new CMCTokenPriceManager(cacheService, {
       apiKey: "dummy-api-key",
       networkSymbolCategories: config.tokenPrice.networkSymbols,
-      updateFrequencyInSeconds: config.tokenPrice.updateFrequencyInSeconds,
+      updateFrequencyInSeconds: 90,
       symbolMapByChainId: {
         1: {
           [tokenAddress]: "ETH",

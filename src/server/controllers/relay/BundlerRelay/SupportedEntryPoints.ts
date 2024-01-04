@@ -24,13 +24,10 @@ export const getSupportedEntryPoints = async (req: Request, res: Response) => {
 
     const supportedEntryPoints = [];
 
-    for (
-      let entryPointIndex = 0;
-      entryPointIndex < entryPointData[chainIdInInt].length;
-      entryPointIndex += 1
-    ) {
-      const entryPoint = entryPointData[chainIdInInt][entryPointIndex];
-      supportedEntryPoints.push(entryPoint.address);
+    for (const [entryPointAddress, chainIds] of Object.entries(entryPointData)) {
+      if(chainIds.supportedChainIds.includes(chainIdInInt)) {
+        supportedEntryPoints.push(entryPointAddress);
+      }
     }
 
     // updateRequest({

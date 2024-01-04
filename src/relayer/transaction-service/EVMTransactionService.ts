@@ -125,8 +125,7 @@ export class EVMTransactionService
       10,
     );
 
-    const maxRetryCount =
-      config.transaction.retryCount[transactionType][this.chainId];
+    const maxRetryCount = 5;
 
     if (retryTransactionCount > maxRetryCount) {
       try {
@@ -392,8 +391,7 @@ export class EVMTransactionService
           10,
         );
 
-        const maxFailedTransactionCount =
-          config.transaction.failedTransactionRetryCount[this.chainId];
+        const maxFailedTransactionCount = 5;
 
         if (failedTransactionRetryCount > maxFailedTransactionCount) {
           throw new Error(
@@ -613,7 +611,7 @@ export class EVMTransactionService
       // Make it general and EIP 1559 specific and get bump up from config
       const bumpedUpGasPrice = this.gasPriceService.getBumpedUpGasPrice(
         pastGasPrice,
-        config.transaction.bumpGasPriceMultiplier[this.chainId],
+        50,
       );
       log.info(
         `Bumped up gas price for transactionId: ${transactionId} is ${bumpedUpGasPrice} on chainId ${this.chainId}`,
@@ -750,7 +748,7 @@ export class EVMTransactionService
         };
     const bumpedUpGasPrice = this.gasPriceService.getBumpedUpGasPrice(
       pastGasPrice as NetworkBasedGasPriceType,
-      config.transaction.bumpGasPriceMultiplier[this.chainId],
+      50,
     );
     return bumpedUpGasPrice;
   }

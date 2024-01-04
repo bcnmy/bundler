@@ -38,18 +38,6 @@ type SocketServiceConfigType = {
   apiKey: string,
 };
 
-type GasPriceConfigType = {
-  [key: number]: {
-    updateFrequencyInSeconds: number,
-    minGasPrice: number,
-    maxGasPrice: number,
-    baseFeeMultiplier: number,
-    gasOracle: {
-      [key: string]: string,
-    },
-  }
-};
-
 type NetworkSymbolMapType = {
   [key: string]: Array<number>
 };
@@ -68,13 +56,11 @@ type FeeOptionConfigType = {
   decimals: ChainIdAndTokenWithNumberValueType,
   feeTokenTransferGas: ChainIdAndTokenWithNumberValueType,
   refundReceiver: ChainIdWithStringValueType,
-  commission: ChainIdWithNumberValueType,
 };
 
 type TokenPriceConfigType = {
   coinMarketCapApi: string,
   networkSymbols: NetworkSymbolMapType,
-  updateFrequencyInSeconds: number,
   symbolMapByChainId: SymbolMapByChainIdType,
 };
 
@@ -105,28 +91,13 @@ type TransactionConfigType = {
     'INTRINSIC_GAS_TOO_LOW': string[],
     'MAX_FEE_PER_GAS_LESS_THAN_BLOCK_BASE_FEE': string[]
   },
-  retryCount: {
-    [key: string]: {
-      [key: number]: number
-    }
-  },
-  failedTransactionRetryCount: {
-    [key: number]: number
-  },
-  bumpGasPriceMultiplier: ChainIdWithNumberValueType,
 };
 
 type ChainsConfigType = {
-  premium: ChainIdWithNumberValueType,
   currency: ChainIdWithStringValueType,
   decimal: ChainIdWithNumberValueType,
-  nonceExpiryTTL: ChainIdWithNumberValueType,
   provider: ChainIdWithStringValueType,
-  fallbackUrls: ChainIdWithArrayStringValueType,
   retryTransactionInterval: ChainIdWithNumberValueType,
-  multiSendAddress: ChainIdWithStringValueType,
-  multiSendCallOnlyAddress: ChainIdWithStringValueType,
-  walletFactoryAddress: ChainIdWithStringValueType
 };
 
 type RelayerConfigType = {
@@ -143,10 +114,9 @@ type ChainIdSupportedTransactionType = {
 };
 
 type EntryPointDataConfigType = {
-  [key: number]: Array<{
-    abi: Array<any>,
-    address: `0x${string}`,
-  }>
+  [address: string]: {
+    supportedChainIds: Array<number>,
+  }
 };
 
 type DataSourcesConfigType = {
@@ -161,13 +131,6 @@ type SimulationDataConfigType = {
 
 type CacheServiceConfigType = {
   lockTTL: number,
-};
-
-type AbiConfigType = {
-  entryPointAbi: Array<any>,
-  smartWalletAbi: Array<any>,
-  multiSendAbi: Array<any>,
-  multiSendCallOnlyAbi: Array<any>
 };
 
 type PaymasterDashboardBackendConfigType = {
@@ -188,7 +151,6 @@ export type ConfigType = {
   relayer: RelayerConfigType,
   relayerManagers: RelayerManagerConfigType,
   transaction: TransactionConfigType,
-  gasPrice: GasPriceConfigType,
   feeOption: FeeOptionConfigType,
   tokenPrice: TokenPriceConfigType,
   entryPointData: EntryPointDataConfigType,
@@ -197,7 +159,6 @@ export type ConfigType = {
     url: string
   }
   simulationData: SimulationDataConfigType,
-  abi: AbiConfigType,
   defaultGasOverheads: DefaultGasOverheadType
 };
 

@@ -23,11 +23,6 @@ import { RedisCacheService } from "../cache";
 import { Mongo, TransactionDAO } from "../db";
 import { UserOperationDAO } from "../db/dao/UserOperationDAO";
 import { GasPriceManager } from "../gas-price";
-import { BSCTestnetGasPrice } from "../gas-price/networks/BSCTestnetGasPrice";
-import { EthGasPrice } from "../gas-price/networks/EthGasPrice";
-import { GoerliGasPrice } from "../gas-price/networks/GoerliGasPrice";
-import { MaticGasPrice } from "../gas-price/networks/MaticGasPrice";
-import { MumbaiGasPrice } from "../gas-price/networks/MumbaiGasPrice";
 import { IQueue } from "../interface";
 import { logger } from "../logger";
 import { relayerManagerTransactionTypeNameMap } from "../maps";
@@ -64,6 +59,7 @@ import {
 import { UserOperationStateDAO } from "../db/dao/UserOperationStateDAO";
 import { ENTRY_POINT_ABI } from "../constants";
 import { customJSONStringify } from "../utils";
+import { GasPrice } from "../gas-price/GasPrice";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -84,12 +80,7 @@ const feeOptionMap: {
 
 const gasPriceServiceMap: {
   [chainId: number]:
-    | MaticGasPrice
-    | GoerliGasPrice
-    | MumbaiGasPrice
-    | EthGasPrice
-    | BSCTestnetGasPrice
-    | undefined;
+    GasPrice
 } = {};
 
 const bundlerSimulatonServiceMap: {
@@ -143,7 +134,7 @@ let statusService: IStatusService;
   const tokenService = new CMCTokenPriceManager(cacheService, {
     apiKey: config.tokenPrice.coinMarketCapApi,
     networkSymbolCategories: config.tokenPrice.networkSymbols,
-    updateFrequencyInSeconds: config.tokenPrice.updateFrequencyInSeconds,
+    updateFrequencyInSeconds: 90,
     symbolMapByChainId: config.tokenPrice.symbolMapByChainId,
   });
   // added check for relayer node path in order to run on only one server
@@ -209,7 +200,7 @@ let statusService: IStatusService;
     log.info(`Retry transaction queue setup complete for chainId: ${chainId}`);
 
     log.info(`Setting up nonce manager for chainId: ${chainId}`);
-    const nonceExpiryTTL = config.chains.nonceExpiryTTL[chainId];
+    const nonceExpiryTTL = 3600;
     const nonceManager = new EVMNonceManager({
       options: {
         chainId,
@@ -375,6 +366,21 @@ let statusService: IStatusService;
       networkService,
     );
 
+    const { entryPointData } = config;
+
+    for (const [entryPointAddress, entryPointSupportedChainIdsAndAbi] of Object.entries(entryPointData)) {
+      if(entryPointSupportedChainIdsAndAbi.supportedChainIds.includes(chainId)) {
+        entryPointMap[chainId].push({
+          address: entryPointAddress,
+          entryPointContract: getContract({
+            abi: ENTRY_POINT_ABI,
+            address: entryPointAddress as `0x${string}`,
+            publicClient: networkService.provider,
+          }),
+        });
+      }
+    }
+
     // for each network get transaction type
     for (const type of supportedTransactionType[chainId]) {
       if (type === TransactionType.AA) {
@@ -393,25 +399,6 @@ let statusService: IStatusService;
 
         await aaQueue.connect();
         log.info(`AA transaction queue setup complete for chainId: ${chainId}`);
-
-        const { entryPointData } = config;
-
-        for (
-          let entryPointIndex = 0;
-          entryPointIndex < entryPointData[chainId].length;
-          entryPointIndex += 1
-        ) {
-          const entryPoint = entryPointData[chainId][entryPointIndex];
-
-          entryPointMap[chainId].push({
-            address: entryPoint.address,
-            entryPointContract: getContract({
-              abi: ENTRY_POINT_ABI,
-              address: entryPoint.address,
-              publicClient: networkService.provider,
-            }),
-          });
-        }
 
         log.info(
           `Setting up AA consumer, relay service & simulation service for chainId: ${chainId}`,
@@ -506,25 +493,6 @@ let statusService: IStatusService;
         log.info(
           `Bundler transaction queue setup complete for chainId: ${chainId}`,
         );
-
-        const { entryPointData } = config;
-
-        for (
-          let entryPointIndex = 0;
-          entryPointIndex < entryPointData[chainId].length;
-          entryPointIndex += 1
-        ) {
-          const entryPoint = entryPointData[chainId][entryPointIndex];
-
-          entryPointMap[chainId].push({
-            address: entryPoint.address,
-            entryPointContract: getContract({
-              abi: ENTRY_POINT_ABI,
-              address: entryPoint.address,
-              publicClient: networkService.provider,
-            }),
-          });
-        }
 
         log.info(
           `Setting up Bundler consumer, relay service, simulation & validation service for chainId: ${chainId}`,
