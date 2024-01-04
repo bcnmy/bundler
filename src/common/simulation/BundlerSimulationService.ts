@@ -11,7 +11,6 @@ import {
   toHex,
 } from "viem";
 import { NODE_INTERFACE_ADDRESS } from "@arbitrum/sdk/dist/lib/dataEntities/constants";
-import { NodeInterface__factory } from "@arbitrum/sdk/dist/lib/abi/factories/NodeInterface__factory";
 import { config } from "../../config";
 import { IEVMAccount } from "../../relayer/account";
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from "../../server/middleware";
@@ -45,6 +44,7 @@ import {
   AlchemySimulateExecutionSupportedNetworks,
   AstarNetworks,
   OPTIMISM_L1_GAS_PRICE_ORACLE,
+  ARBITRUM_L1_FEE,
 } from "../constants";
 import {
   AlchemySimulationService,
@@ -279,11 +279,11 @@ export class BundlerSimulationService {
           };
         }
       } catch (error: any) {
-        const errorMessage = error.response.data.error.message
-          ? error.response.data.error.message
+        const errorMessage = error.response.error.message
+          ? error.response.error.message
           : error;
         return {
-          code: error.response.data.error.code || STATUSES.BAD_REQUEST,
+          code: error.response.error.code || STATUSES.BAD_REQUEST,
           message: `Error while simulating userOp: ${parseError(errorMessage)}`,
           data: {
             preVerificationGas: BigInt(0),
@@ -788,7 +788,7 @@ export class BundlerSimulationService {
         return {
           code: STATUSES.INTERNAL_SERVER_ERROR,
           message: `Error in estimating handleOps gas: ${parseError(
-            ethEstimatGasResponse.data.error.message,
+            ethEstimatGasResponse.error.message,
           )}`,
           data: {
             totalGas: 0,
@@ -953,15 +953,13 @@ export class BundlerSimulationService {
         functionName: "handleOps",
         args: [[userOp], userOp.sender],
       });
-
       const gasEstimateForL1 = await this.networkService.provider.readContract({
         address: NODE_INTERFACE_ADDRESS,
-        abi: NodeInterface__factory as any,
-        functionName: "gasEstimateL1Component",
-        args: [handleOpsData],
+        abi: ARBITRUM_L1_FEE,
+        functionName: "gasEstimateL1Component" as never,
+        args: [entryPointContract.address, false, handleOpsData],
       });
-
-      ret += (gasEstimateForL1 as any).toNumber();
+      ret += Number((gasEstimateForL1 as any)[0].toString());
     } else if (OptimismNetworks.includes(chainId)) {
       const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
       if (!baseFeePerGas) {

@@ -529,7 +529,9 @@ export class EVMTransactionListener
               log.info(
                 `Updating userOp data: ${customJSONStringify(
                   convertBigIntToString({
-                    receipt: convertBigIntToString(frontRunnedTransactionReceipt),
+                    receipt: convertBigIntToString(
+                      frontRunnedTransactionReceipt,
+                    ),
                     transactionHash: (
                       frontRunnedTransactionReceipt as TransactionReceipt
                     ).transactionHash,
@@ -1035,7 +1037,7 @@ export class EVMTransactionListener
         },
       ]);
 
-      const ethCallData = handleOpResult.data.error.data;
+      const ethCallData = handleOpResult.error.data;
       log.info(`ethCallData: ${ethCallData}`);
 
       const errorDescription = decodeErrorResult({
