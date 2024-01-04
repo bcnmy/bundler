@@ -164,13 +164,13 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
       jsonrpc: "2.0",
       id: id || 1,
       result: {
-        callGasLimit,
-        verificationGasLimit,
-        preVerificationGas,
-        validUntil,
-        validAfter,
-        maxPriorityFeePerGas: gasPrice.toString(),
-        maxFeePerGas: gasPrice.toString(),
+        callGasLimit: Number(callGasLimit),
+        verificationGasLimit: Number(verificationGasLimit),
+        preVerificationGas: Number(preVerificationGas),
+        validUntil: toHex(validUntil),
+        validAfter: toHex(validAfter),
+        maxPriorityFeePerGas: gasPrice?.toString() as string,
+        maxFeePerGas: gasPrice?.toString() as string,
       },
     });
   } catch (error) {
