@@ -41,7 +41,7 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
     log.info(
       `Sending transaction to relayer with transactionId: ${transactionId} for SCW: ${to} on chainId: ${chainId}`,
     );
-    if (!routeTransactionToRelayerMap[chainId][TransactionType.AA]) {
+    if (!routeTransactionToRelayerMap[chainId][TransactionType.SCW]) {
       return res.status(STATUSES.BAD_REQUEST).json({
         code: STATUSES.BAD_REQUEST,
         error: `${TransactionMethodType.SCW} method not supported for chainId: ${chainId}`,
@@ -56,7 +56,7 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
       data,
       gasLimit: gasLimit || gasLimitFromSimulation,
       chainId,
-      value,
+      value: value || '0x0',
       walletAddress: walletInfo.address.toLowerCase(),
       transactionId,
     });
