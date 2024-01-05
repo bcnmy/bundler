@@ -90,9 +90,9 @@ export const getGasAndGasPrices = async (req: Request, res: Response) => {
           maxPriorityFeePerGas: gasPrice?.maxPriorityFeePerGas?.toString(),
           maxFeePerGas: gasPrice?.maxFeePerGas?.toString(),
           gasPrice: null,
-          callGasLimit,
-          verificationGasLimit,
-          preVerificationGas,
+          callGasLimit: Number(callGasLimit),
+          verificationGasLimit: Number(verificationGasLimit),
+          preVerificationGas: Number(preVerificationGas),
         },
       });
     }
@@ -104,9 +104,9 @@ export const getGasAndGasPrices = async (req: Request, res: Response) => {
         maxPriorityFeePerGas: null,
         maxFeePerGas: null,
         gasPrice: gasPrice.toString(),
-        callGasLimit,
-        verificationGasLimit,
-        preVerificationGas,
+        callGasLimit: Number(callGasLimit),
+        verificationGasLimit: Number(verificationGasLimit),
+        preVerificationGas: Number(preVerificationGas),
       },
     });
   } catch (error) {
