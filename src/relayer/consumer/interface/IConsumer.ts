@@ -1,4 +1,4 @@
-import { ConsumeMessage } from 'amqplib';
+import { ConsumeMessage } from "amqplib";
 
 export interface IConsumer {
   chainId: number;

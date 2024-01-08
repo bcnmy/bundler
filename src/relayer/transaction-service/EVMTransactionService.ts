@@ -268,8 +268,8 @@ export class EVMTransactionService
       } else {
         return {
           state: "failed",
-          code: STATUSES.ETHERS_WAIT_FOR_TRANSACTION_TIMEOUT,
-          error: "waitForTransaction ethers timeout error",
+          code: STATUSES.WAIT_FOR_TRANSACTION_TIMEOUT,
+          error: "waitForTransaction timeout error",
           transactionId,
         };
       }
@@ -693,8 +693,8 @@ export class EVMTransactionService
       } else {
         return {
           state: "failed",
-          code: STATUSES.ETHERS_WAIT_FOR_TRANSACTION_TIMEOUT,
-          error: "waitForTransaction ethers timeout error",
+          code: STATUSES.WAIT_FOR_TRANSACTION_TIMEOUT,
+          error: "waitForTransaction timeout error",
           transactionId,
         };
       }

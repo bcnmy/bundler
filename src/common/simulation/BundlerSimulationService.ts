@@ -341,14 +341,6 @@ export class BundlerSimulationService {
         );
         log.info(`callGasLimit: ${callGasLimit} on chainId: ${chainId}`);
 
-        if (totalGas < 500000) {
-          preVerificationGas += BigInt(20000);
-        } else if (totalGas > 500000 && totalGas < 1000000) {
-          preVerificationGas += BigInt(35000);
-        } else {
-          preVerificationGas += BigInt(50000);
-        }
-
         if (
           OptimismNetworks.includes(chainId) ||
           ArbitrumNetworks.includes(chainId)
@@ -356,10 +348,15 @@ export class BundlerSimulationService {
           preVerificationGas += BigInt(
             Math.ceil(Number(toHex(totalGas)) * 0.25),
           );
-          log.info(
-            `preVerificationGas: ${preVerificationGas} on chainId: ${chainId}`,
+        } else {
+          preVerificationGas += BigInt(
+            Math.ceil(Number(toHex(totalGas)) * 0.1),
           );
         }
+
+        log.info(
+          `preVerificationGas: ${preVerificationGas} on chainId: ${chainId}`,
+        );
 
         if (LineaNetworks.includes(chainId)) {
           preVerificationGas += BigInt(

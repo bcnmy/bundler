@@ -1,1 +1,1 @@
-export * from './interface/ITransactionPublisher';
+export * from "./interface/ITransactionPublisher";

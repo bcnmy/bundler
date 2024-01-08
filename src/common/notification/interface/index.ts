@@ -1,2 +1,2 @@
-export * from './INotificationManager';
-export * from './ISlackNotificationService';
+export * from "./INotificationManager";
+export * from "./ISlackNotificationService";

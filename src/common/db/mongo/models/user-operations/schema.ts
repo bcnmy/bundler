@@ -1,5 +1,5 @@
-import mongoose from 'mongoose';
-import { IUserOperation } from '../../interface/IUserOperation';
+import mongoose from "mongoose";
+import { IUserOperation } from "../../interface/IUserOperation";
 
 const { Schema } = mongoose;
 

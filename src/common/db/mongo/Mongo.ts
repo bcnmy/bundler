@@ -1,8 +1,8 @@
 /* eslint-disable import/no-import-module-exports */
-import mongoose, { Mongoose } from 'mongoose';
-import { config } from '../../../config';
-import { logger } from '../../logger';
-import { IDBService } from '../interface/IDBService';
+import mongoose, { Mongoose } from "mongoose";
+import { config } from "../../../config";
+import { logger } from "../../logger";
+import { IDBService } from "../interface/IDBService";
 import {
   BlockchainTransactionsMap,
   BlockchainTransactionsMapType,
@@ -10,9 +10,11 @@ import {
   UserOperationsMapType,
   UserOperationsStateMap,
   UserOperationsStateMapType,
-} from './models';
+} from "./models";
 
-const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
+const log = logger.child({
+  module: module.filename.split("/").slice(-4).join("/"),
+});
 
 export class Mongo implements IDBService {
   private static instance: Mongo;
@@ -38,19 +40,19 @@ export class Mongo implements IDBService {
    * Method connects to a mongo instance
    */
   connect = async () => {
-    const dbUrl = config.dataSources.mongoUrl || '';
+    const dbUrl = config.dataSources.mongoUrl || "";
     if (!dbUrl) {
-      throw new Error('Database url not provided');
+      throw new Error("Database url not provided");
     }
     try {
       if (!this.client) {
         this.client = await mongoose.connect(dbUrl, {
-          dbName: 'relayer-node-service',
+          dbName: "relayer-node-service",
         });
       }
-      log.info('Connected to db');
+      log.info("Connected to db");
     } catch (error) {
-      log.error('error while connecting to mongo db');
+      log.error("error while connecting to mongo db");
       log.error(error);
     }
   };
@@ -60,12 +62,15 @@ export class Mongo implements IDBService {
    * @param networkId
    * @returns blockchain transactions model for a given chain id
    */
-  getBlockchainTransaction(networkId: number): BlockchainTransactionsMapType[number] {
+  getBlockchainTransaction(
+    networkId: number,
+  ): BlockchainTransactionsMapType[number] {
     if (!this.client) {
-      throw new Error('Not connected to db');
+      throw new Error("Not connected to db");
     }
     const supportedNetworks: number[] = config.supportedNetworks || [];
-    if (!supportedNetworks.includes(networkId)) throw new Error(`Network Id ${networkId} is not supported`);
+    if (!supportedNetworks.includes(networkId))
+      throw new Error(`Network Id ${networkId} is not supported`);
     return BlockchainTransactionsMap[networkId];
   }
 
@@ -76,10 +81,11 @@ export class Mongo implements IDBService {
    */
   getUserOperation(networkId: number): UserOperationsMapType[number] {
     if (!this.client) {
-      throw new Error('Not connected to db');
+      throw new Error("Not connected to db");
     }
     const supportedNetworks: number[] = config.supportedNetworks || [];
-    if (!supportedNetworks.includes(networkId)) throw new Error(`Network Id ${networkId} is not supported`);
+    if (!supportedNetworks.includes(networkId))
+      throw new Error(`Network Id ${networkId} is not supported`);
     return UserOperationsMap[networkId];
   }
 
@@ -90,10 +96,11 @@ export class Mongo implements IDBService {
    */
   getUserOperationState(networkId: number): UserOperationsStateMapType[number] {
     if (!this.client) {
-      throw new Error('Not connected to db');
+      throw new Error("Not connected to db");
     }
     const supportedNetworks: number[] = config.supportedNetworks || [];
-    if (!supportedNetworks.includes(networkId)) throw new Error(`Network Id ${networkId} is not supported`);
+    if (!supportedNetworks.includes(networkId))
+      throw new Error(`Network Id ${networkId} is not supported`);
     return UserOperationsStateMap[networkId];
   }
 
@@ -106,7 +113,7 @@ export class Mongo implements IDBService {
 
   close() {
     if (!this.client) {
-      throw new Error('Not connected to db');
+      throw new Error("Not connected to db");
     }
     return this.client.disconnect();
   }

@@ -1,7 +1,9 @@
-import { EVMRelayerMetaDataType } from '../types';
+import { EVMRelayerMetaDataType } from "../types";
 
 export class SortEVMRelayerByLeastPendingCount {
-  static performAlgorithm(relayerMapData: EVMRelayerMetaDataType[]): EVMRelayerMetaDataType[] {
+  static performAlgorithm(
+    relayerMapData: EVMRelayerMetaDataType[],
+  ): EVMRelayerMetaDataType[] {
     return relayerMapData.sort((a, b) => a.pendingCount - b.pendingCount);
   }
 }

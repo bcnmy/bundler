@@ -16,16 +16,16 @@ export interface IUserOperation {
   userOpHash: string;
   receipt: object;
   chainId: number;
-  status: string,
-  success: string,
-  blockNumber: number,
-  blockHash: string,
-  paymaster: string,
-  actualGasCost: number,
-  actualGasUsed: number,
-  reason: string,
-  logs: object,
+  status: string;
+  success: string;
+  blockNumber: number;
+  blockHash: string;
+  paymaster: string;
+  actualGasCost: number;
+  actualGasUsed: number;
+  reason: string;
+  logs: object;
   creationTime: number;
   metaData: object;
-  dappAPIKey: string,
+  dappAPIKey: string;
 }

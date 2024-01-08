@@ -373,7 +373,11 @@ export class EVMRelayerManager
         const ethAddr = publicToAddress(ethPubkey).toString("hex");
         const ethAddress = toChecksumAddress(`0x${ethAddr}`);
         const address = ethAddress.toLowerCase();
-        const relayer = new EVMAccount(address, privateKey, this.networkService.rpcUrl);
+        const relayer = new EVMAccount(
+          address,
+          privateKey,
+          this.networkService.rpcUrl,
+        );
         this.relayerMap[address] = relayer;
         relayers.push(relayer);
       }
@@ -473,10 +477,7 @@ export class EVMRelayerManager
         log.info(
           `Waiting for lock to fund relayers on key ${key} for relayer ${relayerAddress} for duration of ${config.cacheService.lockTTL}ms`,
         );
-        const acquiredLock = await lock.acquire(
-          [`locks:${key}`],
-          10000,
-        );
+        const acquiredLock = await lock.acquire([`locks:${key}`], 10000);
         log.info(
           `Lock acquired on key ${key} to fund relayer ${relayerAddress} on chainId: ${this.chainId}`,
         );

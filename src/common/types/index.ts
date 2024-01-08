@@ -1,81 +1,81 @@
-import { GetContractReturnType, TransactionReceipt } from 'viem';
-import { ENTRY_POINT_ABI, OPTIMISM_L1_GAS_PRICE_ORACLE } from '../constants';
+import { GetContractReturnType, TransactionReceipt } from "viem";
+import { ENTRY_POINT_ABI, OPTIMISM_L1_GAS_PRICE_ORACLE } from "../constants";
 
 export enum TransactionType {
-  AA = 'AA',
-  SCW = 'SCW',
-  FUNDING = 'FUNDING',
-  BUNDLER = 'BUNDLER',
+  AA = "AA",
+  SCW = "SCW",
+  FUNDING = "FUNDING",
+  BUNDLER = "BUNDLER",
 }
 
 export enum TransactionMethodType {
-  SCW = 'eth_sendSmartContractWalletTransaction',
-  AA = 'eth_sendUserOperation',
-  BUNDLER = 'eth_sendUserOperation',
+  SCW = "eth_sendSmartContractWalletTransaction",
+  AA = "eth_sendUserOperation",
+  BUNDLER = "eth_sendUserOperation",
 }
 
 export enum EthMethodType {
-  ESTIMATE_USER_OPERATION_GAS = 'eth_estimateUserOperationGas',
-  GET_USER_OPERATION_BY_HASH = 'eth_getUserOperationByHash',
-  GET_USER_OPERATION_RECEIPT = 'eth_getUserOperationReceipt',
-  SUPPORTED_ENTRY_POINTS = 'eth_supportedEntryPoints',
-  CHAIN_ID = 'eth_chainId',
-  GAS_AND_GAS_PRICES = 'eth_getUserOpGasFields',
-  GET_USER_OPERATIONS_BY_API_KEY = 'eth_getUserOperationsByApiKey',
-  GET_TRANSACTION_COUNT = 'eth_getTransactionCount',
-  GET_BALANCE = 'eth_getBalance',
-  GAS_PRICE = 'eth_gasPrice',
-  FEE_HISTORY = 'eth_feeHistory',
-  MAX_PRIORITY_FEE_PER_GAS = 'eth_maxPriorityFeePerGas',
-  ESTIMATE_GAS = 'eth_estimateGas',
-  ETH_CALL = 'eth_call',
-  SEND_RAW_TRANSACTION = 'eth_sendRawTransaction',
+  ESTIMATE_USER_OPERATION_GAS = "eth_estimateUserOperationGas",
+  GET_USER_OPERATION_BY_HASH = "eth_getUserOperationByHash",
+  GET_USER_OPERATION_RECEIPT = "eth_getUserOperationReceipt",
+  SUPPORTED_ENTRY_POINTS = "eth_supportedEntryPoints",
+  CHAIN_ID = "eth_chainId",
+  GAS_AND_GAS_PRICES = "eth_getUserOpGasFields",
+  GET_USER_OPERATIONS_BY_API_KEY = "eth_getUserOperationsByApiKey",
+  GET_TRANSACTION_COUNT = "eth_getTransactionCount",
+  GET_BALANCE = "eth_getBalance",
+  GAS_PRICE = "eth_gasPrice",
+  FEE_HISTORY = "eth_feeHistory",
+  MAX_PRIORITY_FEE_PER_GAS = "eth_maxPriorityFeePerGas",
+  ESTIMATE_GAS = "eth_estimateGas",
+  ETH_CALL = "eth_call",
+  SEND_RAW_TRANSACTION = "eth_sendRawTransaction",
 }
 
 export enum AlchemyMethodType {
-  SIMULATE_EXECUTION = 'alchemy_simulateExecution',
+  SIMULATE_EXECUTION = "alchemy_simulateExecution",
 }
 
 export enum BiconomyMethodType {
-  GET_GAS_FEE_VALUES = 'biconomy_getGasFeeValues',
-  GET_USER_OPERATION_STATUS = 'biconomy_getUserOperationStatus',
+  GET_GAS_FEE_VALUES = "biconomy_getGasFeeValues",
+  GET_USER_OPERATION_STATUS = "biconomy_getUserOperationStatus",
 }
 
 export enum UserOperationStateEnum {
-  BUNDLER_MEMPOOL = 'BUNDLER_MEMPOOL',
-  SUBMITTED = 'SUBMITTED',
-  CONFIRMED = 'CONFIRMED',
-  FAILED = 'FAILED',
-  DROPPED_FROM_BUNDLER_MEMPOOL = 'DROPPED_FROM_BUNDLER_MEMPOOL',
+  BUNDLER_MEMPOOL = "BUNDLER_MEMPOOL",
+  SUBMITTED = "SUBMITTED",
+  CONFIRMED = "CONFIRMED",
+  FAILED = "FAILED",
+  DROPPED_FROM_BUNDLER_MEMPOOL = "DROPPED_FROM_BUNDLER_MEMPOOL",
 }
 
 export enum RelayerDestinationSmartContractName {
-  ENTRY_POINT = 'Entry Point',
+  ENTRY_POINT = "Entry Point",
 }
 
 export enum SocketEventType {
-  onTransactionHashGenerated = 'transactionHashGenerated',
-  onTransactionHashChanged = 'transactionHashChanged',
-  onTransactionMined = 'transactionMined',
-  onTransactionError = 'error',
+  onTransactionHashGenerated = "transactionHashGenerated",
+  onTransactionHashChanged = "transactionHashChanged",
+  onTransactionMined = "transactionMined",
+  onTransactionError = "error",
 }
 
 export type TransactionQueueMessageType = {
-  transactionId: string,
-  event: SocketEventType,
-  relayerManagerName: string,
-  transactionHash?: string,
-  previousTransactionHash?: string,
-  receipt?: TransactionReceipt,
-  error?: string,
+  transactionId: string;
+  event: SocketEventType;
+  relayerManagerName: string;
+  transactionHash?: string;
+  previousTransactionHash?: string;
+  receipt?: TransactionReceipt;
+  error?: string;
 };
 
 export enum TransactionStatus {
-  IN_PROCESS = 'IN_PROCESS',
-  PENDING = 'PENDING',
-  SUCCESS = 'SUCCESS',
-  FAILED = 'FAILED',
-  DROPPED = 'DROPPED',
+  IN_PROCESS = "IN_PROCESS",
+  PENDING = "PENDING",
+  SUCCESS = "SUCCESS",
+  FAILED = "FAILED",
+  DROPPED = "DROPPED",
 }
 
 export enum RelayerManagerType {
@@ -88,10 +88,12 @@ export type AccessListItem = {
   storageKeys: `0x${string}`[];
 };
 
-export type NetworkBasedGasPriceType = {
-  maxPriorityFeePerGas: bigint;
-  maxFeePerGas: bigint;
-} | bigint;
+export type NetworkBasedGasPriceType =
+  | {
+      maxPriorityFeePerGas: bigint;
+      maxFeePerGas: bigint;
+    }
+  | bigint;
 
 export type EVMRawTransactionType = {
   from: string;
@@ -118,8 +120,8 @@ export type AATransactionMessageType = {
   transactionId: string;
   userOp?: UserOperationType;
   metaData?: {
-    dappAPIKey: string
-  }
+    dappAPIKey: string;
+  };
 };
 
 export type BundlerTransactionMessageType = {
@@ -156,9 +158,7 @@ type ErrorType = {
 
 export type RelayServiceResponseType = ResponseType | ErrorType;
 
-export function isError<T>(
-  response: T | ErrorType,
-): response is ErrorType {
+export function isError<T>(response: T | ErrorType): response is ErrorType {
   return (response as ErrorType).error !== undefined;
 }
 
@@ -178,21 +178,21 @@ export type UserOperationType = {
 
 export type SymbolMapByChainIdType = {
   [key: number]: {
-    [key: string]: string,
-  }
+    [key: string]: string;
+  };
 };
 
 export type EntryPointMapType = {
   [chainId: number]: Array<{
-    address: string,
-    entryPointContract: EntryPointContractType
-  }>
+    address: string;
+    entryPointContract: EntryPointContractType;
+  }>;
 };
 
 export type FeeSupportedToken = {
-  address: string,
-  symbol: string,
-  decimal: number,
+  address: string;
+  symbol: string;
+  decimal: number;
 };
 
 export interface TypedEvent<
@@ -204,24 +204,24 @@ export interface TypedEvent<
 }
 
 export type UserOperationEventEvent = TypedEvent<
-[string, string, string, bigint, boolean, bigint, bigint],
-{
-  userOpHash: string;
-  sender: string;
-  paymaster: string;
-  nonce: bigint;
-  success: boolean;
-  actualGasCost: bigint;
-  actualGasUsed: bigint;
-}
+  [string, string, string, bigint, boolean, bigint, bigint],
+  {
+    userOpHash: string;
+    sender: string;
+    paymaster: string;
+    nonce: bigint;
+    success: boolean;
+    actualGasCost: bigint;
+    actualGasUsed: bigint;
+  }
 >;
 
 export type GetUserOperationReceiptReturnType = {
-  success: string,
-  actualGasCost: number,
-  actualGasUsed: number,
-  reason: string,
-  logs: any,
+  success: string;
+  actualGasCost: number;
+  actualGasUsed: number;
+  reason: string;
+  logs: any;
 };
 
 export type Log = {
@@ -241,13 +241,13 @@ export type Log = {
 };
 
 export type DefaultGasOverheadType = {
-  fixed: number,
-  perUserOp: number,
-  perUserOpWord: number,
-  zeroByte: number,
-  nonZeroByte: number,
-  bundleSize: number,
-  sigSize: number,
+  fixed: number;
+  perUserOp: number;
+  perUserOpWord: number;
+  zeroByte: number;
+  nonZeroByte: number;
+  bundleSize: number;
+  sigSize: number;
 };
 
 export type StakeInfo = {
@@ -257,24 +257,27 @@ export type StakeInfo = {
 };
 
 export type UpdateRequestDataType = {
-  chainId: number,
-  apiKey: string,
-  bundlerRequestId: string,
-  transactionId?: string,
-  rawResponse: object,
-  httpResponseCode: number,
+  chainId: number;
+  apiKey: string;
+  bundlerRequestId: string;
+  transactionId?: string;
+  rawResponse: object;
+  httpResponseCode: number;
 };
 
-export type EntryPointContractType = GetContractReturnType<typeof ENTRY_POINT_ABI>;
-export type OptimismL1GasPriceOracleContractType =
-GetContractReturnType<typeof OPTIMISM_L1_GAS_PRICE_ORACLE>;
+export type EntryPointContractType = GetContractReturnType<
+  typeof ENTRY_POINT_ABI
+>;
+export type OptimismL1GasPriceOracleContractType = GetContractReturnType<
+  typeof OPTIMISM_L1_GAS_PRICE_ORACLE
+>;
 
 export type StateOverrideSetType = {
   [key: string]: {
-    balance?: string,
-    nonce?: string,
-    code?: string,
-    state?: object,
-    stateDiff?: object
-  }
+    balance?: string;
+    nonce?: string;
+    code?: string;
+    state?: object;
+    stateDiff?: object;
+  };
 };

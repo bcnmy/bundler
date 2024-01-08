@@ -1,5 +1,5 @@
-import { curry } from 'lodash';
-import { NotFoundError } from 'rest-api-errors';
+import { curry } from "lodash";
+import { NotFoundError } from "rest-api-errors";
 
 export const STATUSES = {
   SUCCESS: 200,
@@ -32,7 +32,7 @@ export const STATUSES = {
   TOO_MANY_REQUESTS: 429,
   UNSUPPORTED_NETWORK: 507,
   FUND_BUNDLER: 156,
-  ETHERS_WAIT_FOR_TRANSACTION_TIMEOUT: 157,
+  WAIT_FOR_TRANSACTION_TIMEOUT: 157,
 };
 
 export const BUNDLER_VALIDATION_STATUSES = {
@@ -51,18 +51,19 @@ export const BUNDLER_VALIDATION_STATUSES = {
   BAD_REQUEST: -32003,
   USER_OP_HASH_NOT_FOUND: -32004,
   UNABLE_TO_PROCESS_USER_OP: -32005,
-  METHOD_NOT_FOUND: -32601
+  METHOD_NOT_FOUND: -32601,
 };
 
 export const DB_ERRORS = {
   DUPLICATE_ENTRY: 11000,
 };
 
-export const sendResponse = (res: any, data: {} | null, status = STATUSES.SUCCESS) => {
-  res
-    .status(status)
-    .json(data)
-    .end();
+export const sendResponse = (
+  res: any,
+  data: {} | null,
+  status = STATUSES.SUCCESS,
+) => {
+  res.status(status).json(data).end();
 };
 
 export const sendOne = curry((res: any, entity: any) => {
@@ -72,11 +73,15 @@ export const sendOne = curry((res: any, entity: any) => {
   return sendResponse(res, entity);
 });
 
-export const createResponseBody = (message: string, code: number, data?: string | undefined) => {
+export const createResponseBody = (
+  message: string,
+  code: number,
+  data?: string | undefined,
+) => {
   const response: any = {};
   response.log = message;
   response.flag = code;
-  response.message = data || '';
+  response.message = data || "";
   return response;
 };
 
@@ -87,7 +92,10 @@ export const sendUnsupportedAPIVersonResponse = (
 ) => {
   sendResponse(
     res,
-    createResponseBody(`Version ${unsupportedVersion} is not supported. Please switch to version ${newSupportedVersion}`, STATUSES.MOVED_PERMANENTLY),
+    createResponseBody(
+      `Version ${unsupportedVersion} is not supported. Please switch to version ${newSupportedVersion}`,
+      STATUSES.MOVED_PERMANENTLY,
+    ),
     STATUSES.MOVED_PERMANENTLY,
   );
 };

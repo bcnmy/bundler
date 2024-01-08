@@ -1,5 +1,5 @@
-import { ITransactionDAO } from '../interface';
-import { Mongo, IBlockchainTransaction } from '../mongo';
+import { ITransactionDAO } from "../interface";
+import { Mongo, IBlockchainTransaction } from "../mongo";
 
 export class TransactionDAO implements ITransactionDAO {
   private _db: Mongo;
@@ -14,7 +14,9 @@ export class TransactionDAO implements ITransactionDAO {
    * @param transactionData
    */
   async save(chainId: number, transactionData: object): Promise<void> {
-    await this._db.getBlockchainTransaction(chainId).insertMany([transactionData]);
+    await this._db
+      .getBlockchainTransaction(chainId)
+      .insertMany([transactionData]);
   }
 
   /**
@@ -28,9 +30,12 @@ export class TransactionDAO implements ITransactionDAO {
     id: string,
     data: IBlockchainTransaction,
   ): Promise<void> {
-    await this._db.getBlockchainTransaction(chainId).updateOne({
-      transactionId: id,
-    }, data);
+    await this._db.getBlockchainTransaction(chainId).updateOne(
+      {
+        transactionId: id,
+      },
+      data,
+    );
   }
 
   /**
@@ -39,10 +44,17 @@ export class TransactionDAO implements ITransactionDAO {
    * @param id is transactionId
    * @returns
    */
-  async getByTransactionId(chainId: number, id: string): Promise<IBlockchainTransaction[] | null> {
-    const data = await this._db.getBlockchainTransaction(chainId).find({
-      transactionId: id,
-    }).sort({ _id: -1 }).lean();
+  async getByTransactionId(
+    chainId: number,
+    id: string,
+  ): Promise<IBlockchainTransaction[] | null> {
+    const data = await this._db
+      .getBlockchainTransaction(chainId)
+      .find({
+        transactionId: id,
+      })
+      .sort({ _id: -1 })
+      .lean();
     if (data) {
       return data;
     }
@@ -55,10 +67,13 @@ export class TransactionDAO implements ITransactionDAO {
     hash: string,
     data: object,
   ): Promise<void> {
-    await this._db.getBlockchainTransaction(chainId).updateOne({
-      transactionId: id,
-      transactionHash: hash,
-    }, data);
+    await this._db.getBlockchainTransaction(chainId).updateOne(
+      {
+        transactionId: id,
+        transactionHash: hash,
+      },
+      data,
+    );
   }
 
   async updateMetaDataAndRelayerDestinationContractDataByTransactionId(
@@ -68,13 +83,16 @@ export class TransactionDAO implements ITransactionDAO {
     relayerDestinationContractAddress: string,
     relayerDestinationContractName: string,
   ): Promise<void> {
-    await this._db.getBlockchainTransaction(chainId).updateOne({
-      transactionId: id,
-    }, {
-      metaData,
-      relayerDestinationContractAddress,
-      relayerDestinationContractName,
-    });
+    await this._db.getBlockchainTransaction(chainId).updateOne(
+      {
+        transactionId: id,
+      },
+      {
+        metaData,
+        relayerDestinationContractAddress,
+        relayerDestinationContractName,
+      },
+    );
   }
 
   async updateByTransactionIdAndTransactionHashForFrontRunnedTransaction(
@@ -83,8 +101,11 @@ export class TransactionDAO implements ITransactionDAO {
     hash: string,
     data: object,
   ): Promise<void> {
-    await this._db.getBlockchainTransaction(chainId).updateOne({
-      transactionId: id,
-    }, data);
+    await this._db.getBlockchainTransaction(chainId).updateOne(
+      {
+        transactionId: id,
+      },
+      data,
+    );
   }
 }

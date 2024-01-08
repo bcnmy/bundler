@@ -79,8 +79,7 @@ const feeOptionMap: {
 } = {};
 
 const gasPriceServiceMap: {
-  [chainId: number]:
-    GasPrice
+  [chainId: number]: GasPrice;
 } = {};
 
 const bundlerSimulatonServiceMap: {
@@ -289,7 +288,7 @@ let statusService: IStatusService;
           ownerAccountDetails: new EVMAccount(
             relayerManager.ownerAccountDetails[chainId].publicKey,
             relayerManager.ownerAccountDetails[chainId].privateKey,
-            networkService.rpcUrl
+            networkService.rpcUrl,
           ),
           gasLimitMap: relayerManager.gasLimitMap,
         },
@@ -366,10 +365,23 @@ let statusService: IStatusService;
       networkService,
     );
 
+    // eslint-disable-next-line max-len
+    bundlerSimulatonServiceMap[chainId] = new BundlerSimulationService(
+      networkService,
+      tenderlySimulationService,
+      alchemySimulationService,
+      gasPriceService,
+    );
+
     const { entryPointData } = config;
 
-    for (const [entryPointAddress, entryPointSupportedChainIdsAndAbi] of Object.entries(entryPointData)) {
-      if(entryPointSupportedChainIdsAndAbi.supportedChainIds.includes(chainId)) {
+    for (const [
+      entryPointAddress,
+      entryPointSupportedChainIdsAndAbi,
+    ] of Object.entries(entryPointData)) {
+      if (
+        entryPointSupportedChainIdsAndAbi.supportedChainIds.includes(chainId)
+      ) {
         entryPointMap[chainId].push({
           address: entryPointAddress,
           entryPointContract: getContract({
@@ -419,13 +431,6 @@ let statusService: IStatusService;
         const aaRelayService = new AARelayService(aaQueue);
         routeTransactionToRelayerMap[chainId][type] = aaRelayService;
 
-        // eslint-disable-next-line max-len
-        bundlerSimulatonServiceMap[chainId] = new BundlerSimulationService(
-          networkService,
-          tenderlySimulationService,
-          alchemySimulationService,
-          gasPriceService,
-        );
         log.info(
           `AA consumer, relay service & simulation service setup complete for chainId: ${chainId}`,
         );
@@ -513,13 +518,6 @@ let statusService: IStatusService;
         const bundlerRelayService = new BundlerRelayService(bundlerQueue);
         routeTransactionToRelayerMap[chainId][type] = bundlerRelayService;
 
-        // eslint-disable-next-line max-len
-        bundlerSimulatonServiceMap[chainId] = new BundlerSimulationService(
-          networkService,
-          tenderlySimulationService,
-          alchemySimulationService,
-          gasPriceService,
-        );
         log.info(
           `Bundler consumer, relay service, simulation and validation service setup complete for chainId: ${chainId}`,
         );

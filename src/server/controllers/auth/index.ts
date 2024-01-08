@@ -1,1 +1,1 @@
-export * from './RequestAuthenticationHandler';
+export * from "./RequestAuthenticationHandler";

@@ -1,7 +1,7 @@
 /* eslint-disable import/no-import-module-exports */
 /* eslint-disable @typescript-eslint/return-await */
 import { ConsumeMessage } from "amqplib";
-import { encodeFunctionData, Abi } from "viem";
+import { encodeFunctionData } from "viem";
 import { ICacheService } from "../../common/cache";
 import { logger } from "../../common/logger";
 import { IQueue } from "../../common/queue";
@@ -23,6 +23,7 @@ import { ITransactionService } from "../transaction-service";
 import { ITransactionConsumer } from "./interface/ITransactionConsumer";
 import { BundlerConsumerParamsType } from "./types";
 import { STATUSES } from "../../server/middleware";
+import { ENTRY_POINT_ABI } from "../../common/constants";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -85,26 +86,7 @@ export class BundlerConsumer
         );
 
         if (activeRelayer) {
-          const { userOp, to } = transactionDataReceivedFromQueue;
-          const entryPointContracts = this.entryPointMap[this.chainId];
-
-          // TODO Test this via making it a function
-          let entryPointContract;
-          for (
-            let entryPointContractIndex = 0;
-            entryPointContractIndex < entryPointContracts.length;
-            entryPointContractIndex += 1
-          ) {
-            if (
-              entryPointContracts[
-                entryPointContractIndex
-              ].address.toLowerCase() === to.toLowerCase()
-            ) {
-              entryPointContract =
-                entryPointContracts[entryPointContractIndex].entryPointContract;
-              break;
-            }
-          }
+          const { userOp } = transactionDataReceivedFromQueue;
 
           log.info(
             `Setting active relayer: ${activeRelayer?.getPublicKey()} as beneficiary for userOp: ${customJSONStringify(
@@ -115,9 +97,9 @@ export class BundlerConsumer
           );
 
           const data = encodeFunctionData({
-            abi: entryPointContract?.abi as Abi,
+            abi: ENTRY_POINT_ABI,
             functionName: "handleOps",
-            args: [[userOp], activeRelayer.getPublicKey()],
+            args: [[userOp], activeRelayer.getPublicKey() as `0x${string}`],
           });
           transactionDataReceivedFromQueue.data = data;
 

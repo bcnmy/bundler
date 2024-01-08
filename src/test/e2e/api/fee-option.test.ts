@@ -1,5 +1,5 @@
-describe('broken test suite', () => {
-  it('should be fixed', () => {});
+describe("broken test suite", () => {
+  it("should be fixed", () => {});
 });
 // import { RedisCacheService } from '../../../common/cache';
 // import { GasPriceManager } from '../../../common/gas-price';

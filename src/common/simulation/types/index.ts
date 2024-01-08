@@ -1,4 +1,8 @@
-import { EntryPointContractType, StateOverrideSetType, UserOperationType } from '../../types';
+import {
+  EntryPointContractType,
+  StateOverrideSetType,
+  UserOperationType,
+} from "../../types";
 
 // data response type that external simulation serivcereturns
 export type ExternalSimulationResponseType = {
@@ -35,7 +39,7 @@ export type EstimateUserOperationGasDataType = {
   userOp: UserOperationType;
   entryPointContract: EntryPointContractType;
   chainId: number;
-  stateOverrideSet?: StateOverrideSetType
+  stateOverrideSet?: StateOverrideSetType;
 };
 
 // data response type that simulation service returns
@@ -61,7 +65,7 @@ export type EstimateUserOperationGasReturnType = {
     validAfter: number;
     validUntil: number;
     userOpHash?: string;
-    totalGas: bigint
+    totalGas: bigint;
   };
 };
 
@@ -76,22 +80,22 @@ export type EstimateUserOpGasFieldsType = {
 };
 
 export type SimulateHandleOpsParamsType = {
-  userOp: UserOperationType,
-  entryPointContract: EntryPointContractType,
-  chainId: number,
+  userOp: UserOperationType;
+  entryPointContract: EntryPointContractType;
+  chainId: number;
 };
 
 export type SimulateHandleOpsReturnType = {
-  reason?: string,
-  totalGas: number,
-  data?: string,
-  isExecutionSuccess?: boolean
+  reason?: string;
+  totalGas: number;
+  data?: string;
+  isExecutionSuccess?: boolean;
 };
 
 export type SimulateValidationAndExecutionData = {
-  userOp: UserOperationType,
-  entryPointContract: EntryPointContractType,
-  chainId: number,
+  userOp: UserOperationType;
+  entryPointContract: EntryPointContractType;
+  chainId: number;
 };
 
 export type SimulateValidationData = SimulateValidationAndExecutionData;

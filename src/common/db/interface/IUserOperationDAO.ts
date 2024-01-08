@@ -1,4 +1,4 @@
-import { IUserOperation } from '../mongo/interface';
+import { IUserOperation } from "../mongo/interface";
 
 export type InitialUserOperationDataType = {
   transactionId: string;
@@ -17,41 +17,44 @@ export type InitialUserOperationDataType = {
   signature: string;
   userOpHash: string;
   chainId: number;
-  status: string,
-  paymaster: string,
-  creationTime: number,
-  metaData?: object,
+  status: string;
+  paymaster: string;
+  creationTime: number;
+  metaData?: object;
 };
 
 export type FinalUserOperationDataType = {
   transactionHash?: string;
   receipt: object;
-  status: string,
-  success: string,
-  blockNumber: number,
-  blockHash: string,
-  actualGasCost: number,
-  actualGasUsed: number,
-  reason: string,
-  logs: any,
+  status: string;
+  success: string;
+  blockNumber: number;
+  blockHash: string;
+  actualGasCost: number;
+  actualGasUsed: number;
+  reason: string;
+  logs: any;
 };
 
 export interface IUserOperationDAO {
-  save(chainId: number, initialUserOperationData: InitialUserOperationDataType): Promise<void>
+  save(
+    chainId: number,
+    initialUserOperationData: InitialUserOperationDataType,
+  ): Promise<void>;
   getUserOperationDataByUserOpHash(
     chainId: number,
-    userOpHash: string
-  ): Promise<IUserOperation | null>
+    userOpHash: string,
+  ): Promise<IUserOperation | null>;
   updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
     chainId: number,
     userOpHash: string,
     transactionId: string,
-    initialUserOperationData: FinalUserOperationDataType
-  ): Promise<void>
+    initialUserOperationData: FinalUserOperationDataType,
+  ): Promise<void>;
   getUserOpsByTransactionId(
     chainId: number,
-    transactionId: string
-  ): Promise<IUserOperation[]>
+    transactionId: string,
+  ): Promise<IUserOperation[]>;
   getUserOperationsDataByApiKey(
     chainId: number,
     bundlerApiKey: string,
@@ -59,11 +62,11 @@ export interface IUserOperationDAO {
     endTime: number,
     limit: number,
     offSet: number,
-  ): Promise<Array<IUserOperation>>
+  ): Promise<Array<IUserOperation>>;
   getUserOperationsCountByApiKey(
     chainId: number,
     bundlerApiKey: string,
     startTime: number,
     endTime: number,
-  ): Promise<number>
+  ): Promise<number>;
 }

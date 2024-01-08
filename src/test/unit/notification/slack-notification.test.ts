@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import { SlackNotificationService } from '../../../common/notification/slack/SlackNotificationService';
+import { SlackNotificationService } from "../../../common/notification/slack/SlackNotificationService";
 
-const dummySlackChannel = 'C04AQ36PJM_';
-const dummySlackToken = 'xoxp-1234567890-1234567890-1234567890-abcdef';
+const dummySlackChannel = "C04AQ36PJM_";
+const dummySlackToken = "xoxp-1234567890-1234567890-1234567890-abcdef";
 
-describe('SlackNotificationService', () => {
+describe("SlackNotificationService", () => {
   let slackNotificationService: SlackNotificationService;
   let mockPostMessage: jest.Mock<any, any>;
 
@@ -21,26 +21,28 @@ describe('SlackNotificationService', () => {
     jest.clearAllMocks();
   });
 
-  it('constructor initializes web client with correct token and channel', () => {
-    const slackChannel = '#test-channel';
+  it("constructor initializes web client with correct token and channel", () => {
+    const slackChannel = "#test-channel";
 
     // Create an instance of the class with the slack token and channel
     let classInstance;
     try {
-      classInstance = new SlackNotificationService('', slackChannel);
+      classInstance = new SlackNotificationService("", slackChannel);
     } catch (error) {
       expect(classInstance).toThrowError;
     }
   });
 
-  it('should call postMessage with the correct arguments', async () => {
+  it("should call postMessage with the correct arguments", async () => {
     // Define the mock parameters for the Slack message
     const postSlackMessageParams = {
-      channel: '#test-channel',
-      text: 'test message',
+      channel: "#test-channel",
+      text: "test message",
     };
 
-    jest.spyOn(slackNotificationService.web.chat, 'postMessage').mockReturnThis();
+    jest
+      .spyOn(slackNotificationService.web.chat, "postMessage")
+      .mockReturnThis();
 
     // Call the postMessage method on the mock class instance
     await slackNotificationService.postMessage(postSlackMessageParams);
@@ -49,19 +51,19 @@ describe('SlackNotificationService', () => {
     expect(slackNotificationService.postMessage).resolves;
   });
 
-  it('should call notify with the correct arguments', async () => {
+  it("should call notify with the correct arguments", async () => {
     mockPostMessage = jest.fn();
     slackNotificationService.postMessage = mockPostMessage;
-    const input = { data: { text: 'unit test case' } };
+    const input = { data: { text: "unit test case" } };
     await slackNotificationService.notify(input);
     expect(mockPostMessage).toHaveBeenCalledWith({
-      text: 'unit test case',
+      text: "unit test case",
       channel: dummySlackChannel,
     });
   });
 
-  it('should call getNotifyObject with the correct arguments', async () => {
-    const text = 'unit test case';
+  it("should call getNotifyObject with the correct arguments", async () => {
+    const text = "unit test case";
 
     // Call the getNotifyObject method on the mock class instance
     const result = await slackNotificationService.getNotifyObject(text);

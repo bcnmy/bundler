@@ -1,5 +1,8 @@
-import { INotificationManager, ISlackNotificationService } from './interface';
-import { SlackNotificationDataType, SlackNotificationObjectType } from './types';
+import { INotificationManager, ISlackNotificationService } from "./interface";
+import {
+  SlackNotificationDataType,
+  SlackNotificationObjectType,
+} from "./types";
 
 export class NotificationManager implements INotificationManager {
   slackNotificationService: ISlackNotificationService;
@@ -8,7 +11,9 @@ export class NotificationManager implements INotificationManager {
     this.slackNotificationService = slackNotificationService;
   }
 
-  async sendSlackNotification(slackNotificationData: SlackNotificationDataType) {
+  async sendSlackNotification(
+    slackNotificationData: SlackNotificationDataType,
+  ) {
     await this.slackNotificationService.notify({
       data: slackNotificationData.data,
     });
