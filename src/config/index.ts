@@ -117,11 +117,6 @@ export class Config implements IConfig {
         );
       }
 
-      // check for chains config
-      if (!this.config.chains.premium[chainId]) {
-        throw new Error(`Premium value required for chain id ${chainId}`);
-      }
-
       if (!this.config.chains.currency[chainId]) {
         throw new Error(`Currency required for chain id ${chainId}`);
       }
@@ -131,17 +126,6 @@ export class Config implements IConfig {
       if (!this.config.chains.decimal[chainId]) {
         throw new Error(`Decimals required for chain id ${chainId}`);
       }
-      if (!this.config.chains.retryTransactionInterval[chainId]) {
-        throw new Error(
-          `Retry transaction interval required for chain id ${chainId}`,
-        );
-      }
-
-      if (!this.config.entryPointData[chainId].length) {
-        throw new Error(
-          `Entry point data address required for chain id ${chainId}`,
-        );
-      }
 
       if (!isNumber(this.config.relayer.nodePathIndex)) {
         throw new Error("Relayer node path index required");
@@ -149,77 +133,6 @@ export class Config implements IConfig {
 
       if (!this.config.relayerManagers.length) {
         throw new Error(`Relayer manager required for chain id ${chainId}`);
-      }
-
-      // check valid gas price config
-      if (!this.config.gasPrice[chainId]) {
-        throw new Error(
-          `Gas price configuration required for chain id ${chainId}`,
-        );
-      }
-      if (!this.config.gasPrice[chainId].updateFrequencyInSeconds) {
-        throw new Error(
-          `Gas price update frequency required for chain id ${chainId}`,
-        );
-      }
-      if (!this.config.gasPrice[chainId].updateFrequencyInSeconds) {
-        throw new Error(
-          `Gas price update frequency required for chain id ${chainId}`,
-        );
-      }
-      if (!this.config.gasPrice[chainId].maxGasPrice) {
-        throw new Error(`Max gas price required for chain id ${chainId}`);
-      }
-      if (!this.config.gasPrice[chainId].minGasPrice) {
-        throw new Error(`Min gas price required for chain id ${chainId}`);
-      }
-      if (!this.config.gasPrice[chainId].baseFeeMultiplier) {
-        throw new Error(
-          `Gas price base fee multiplier required for chain id ${chainId}`,
-        );
-      }
-
-      // check valid fee options config
-      if (!this.config.feeOption.supportedFeeTokens[chainId].length) {
-        throw new Error(
-          `Supported fee tokens required for chain id ${chainId}`,
-        );
-      }
-      if (!this.config.feeOption.similarTokens[chainId].length) {
-        throw new Error(`Similar tokens required for chain id ${chainId}`);
-      }
-      if (!this.config.feeOption.offset[chainId]) {
-        throw new Error(`Offset required for chain id ${chainId}`);
-      }
-      if (!this.config.feeOption.logoUrl[chainId]) {
-        throw new Error(`Logo url required for chain id ${chainId}`);
-      }
-      if (!this.config.feeOption.tokenContractAddress[chainId]) {
-        throw new Error(
-          `Token contract address required for chain id ${chainId}`,
-        );
-      }
-      if (!this.config.feeOption.decimals[chainId]) {
-        throw new Error(`Decimals required for chain id ${chainId}`);
-      }
-      if (!this.config.feeOption.feeTokenTransferGas[chainId]) {
-        throw new Error(`Decimals required for chain id ${chainId}`);
-      }
-      if (!this.config.feeOption.refundReceiver[chainId]) {
-        throw new Error(`Refund receiver required for chain id ${chainId}`);
-      }
-
-      if (!this.config.tokenPrice.coinMarketCapApi) {
-        throw new Error("Coin market cap API required");
-      }
-      if (!this.config.tokenPrice.networkSymbols) {
-        throw new Error("Network symbols required");
-      }
-      if (!this.config.tokenPrice.updateFrequencyInSeconds) {
-        throw new Error("Token price update frequency required");
-      }
-      if (!this.config.tokenPrice.symbolMapByChainId[chainId]) {
-        throw new Error(`Symbol map required for chain id ${chainId}`);
       }
     }
     return true;

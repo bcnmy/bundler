@@ -10,8 +10,6 @@ import {
   toBytes,
   toHex,
 } from "viem";
-// import { NODE_INTERFACE_ADDRESS } from "@arbitrum/sdk/dist/lib/dataEntities/constants";
-// import { NodeInterface__factory } from "@arbitrum/sdk/dist/lib/abi/factories/NodeInterface__factory";
 import { config } from "../../config";
 import { IEVMAccount } from "../../relayer/account";
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from "../../server/middleware";
@@ -286,11 +284,11 @@ export class BundlerSimulationService {
           };
         }
       } catch (error: any) {
-        const errorMessage = error.response.data.error.message
-          ? error.response.data.error.message
+        const errorMessage = error.response.error.message
+          ? error.response.error.message
           : error;
         return {
-          code: error.response.data.error.code || STATUSES.BAD_REQUEST,
+          code: error.response.error.code || STATUSES.BAD_REQUEST,
           message: `Error while simulating userOp: ${parseError(errorMessage)}`,
           data: {
             preVerificationGas: BigInt(0),
@@ -339,15 +337,14 @@ export class BundlerSimulationService {
               ),
           ),
         );
-        log.info(
-          `totalGas after calculating for polygon networks: ${totalGas}`,
-        );
+        log.info(`totalGas ${totalGas} on chainId: ${chainId}`);
+
         let callGasLimit = BigInt(
-          Math.ceil(Number(toHex(totalGas)) - Number(toHex(preOpGas)) + 30000),
+          Math.ceil(
+            (Number(toHex(totalGas)) - Number(toHex(preOpGas)) + 30000) * 1.2,
+          ),
         );
-        log.info(
-          `callGasLimit after calculating for polygon networks: ${callGasLimit}`,
-        );
+        log.info(`callGasLimit: ${callGasLimit} on chainId: ${chainId}`);
 
         if (totalGas < 500000) {
           preVerificationGas += BigInt(20000);
@@ -368,30 +365,6 @@ export class BundlerSimulationService {
             `preVerificationGas: ${preVerificationGas} on chainId: ${chainId}`,
           );
         }
-
-        if (callGasLimit > 500000) {
-          log.info("Bumping callGasLimit by 100K for 500K+ transactions");
-          callGasLimit += BigInt(100000);
-        }
-
-        if (callGasLimit > 2000000) {
-          log.info("Bumping callGasLimit by 500K for 2M+ transactions");
-          callGasLimit += BigInt(500000);
-        }
-
-        // edge case observed on polygon
-        if (callGasLimit > 5000000) {
-          log.info("Bumping callGasLimit by 500K for 5M+ transactions");
-          callGasLimit += BigInt(500000);
-        }
-
-        // if (chainId === 10 || chainId === 420 || chainId === 8453 || chainId === 84531) {
-        //   log.info(`chainId: ${chainId} is OP stack hence increasing callGasLimit by 150K`);
-        //   callGasLimit += 150000;
-        // }
-        log.info(
-          `callGasLimit after checking for optimism: ${callGasLimit} on chainId: ${chainId}`,
-        );
 
         if (LineaNetworks.includes(chainId)) {
           preVerificationGas += BigInt(
@@ -795,7 +768,7 @@ export class BundlerSimulationService {
         return {
           code: STATUSES.INTERNAL_SERVER_ERROR,
           message: `Error in estimating handleOps gas: ${parseError(
-            ethEstimatGasResponse.data.error.message,
+            ethEstimatGasResponse.error.message,
           )}`,
           data: {
             totalGas: 0,

@@ -113,6 +113,7 @@ export class EVMNetworkService
   async getBalance(address: string): Promise<bigint> {
     const balance = await this.sendRpcCall(EthMethodType.GET_BALANCE, [
       address,
+      'latest'
     ]);
     return BigInt(balance);
   }

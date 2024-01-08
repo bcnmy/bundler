@@ -1,5 +1,4 @@
 import { schedule } from "node-cron";
-import { config } from "../../../config";
 import { IEVMAccount } from "../../../relayer/account";
 import { ICacheService } from "../../cache";
 import { INetworkService } from "../../network";
@@ -19,11 +18,11 @@ export class PolygonZKEvmMainnetGasPrice
     options: {
       chainId: number;
       EIP1559SupportedNetworks: Array<number>;
+      updateFrequencyInSeconds: number;
     },
   ) {
     super(cacheService, networkService, options);
-    this.updateFrequencyInSeconds =
-      config.gasPrice[this.chainId].updateFrequencyInSeconds || 60;
+    this.updateFrequencyInSeconds = options.updateFrequencyInSeconds;
   }
 
   schedule() {

@@ -475,7 +475,7 @@ export class EVMRelayerManager
         );
         const acquiredLock = await lock.acquire(
           [`locks:${key}`],
-          config.cacheService.lockTTL,
+          10000,
         );
         log.info(
           `Lock acquired on key ${key} to fund relayer ${relayerAddress} on chainId: ${this.chainId}`,

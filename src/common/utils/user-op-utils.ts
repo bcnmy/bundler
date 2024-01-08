@@ -10,36 +10,48 @@ import {
   keccak256,
   parseAbiParameters,
   toHex,
-} from 'viem';
-import { config } from '../../config';
-import { logger } from '../logger';
-import {
-  EntryPointContractType,
-  StakeInfo, UserOperationType,
-} from '../types';
-import { parseError } from './parse-error';
-import { customJSONStringify } from './custom-json-stringifier';
+} from "viem";
+import { logger } from "../logger";
+import { EntryPointContractType, StakeInfo, UserOperationType } from "../types";
+import { parseError } from "./parse-error";
+import { customJSONStringify } from "./custom-json-stringifier";
 
-const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
+const log = logger.child({
+  module: module.filename.split("/").slice(-4).join("/"),
+});
 
-export const getPaymasterFromPaymasterAndData = (paymasterAndData: string): string => {
+export const getPaymasterFromPaymasterAndData = (
+  paymasterAndData: string,
+): string => {
   const paymasterAddress = `${paymasterAndData.substring(0, 42)}`;
-  log.info(`paymasterAddress: ${paymasterAddress} for paymasterAndData: ${paymasterAndData}`);
+  log.info(
+    `paymasterAddress: ${paymasterAddress} for paymasterAndData: ${paymasterAndData}`,
+  );
   return paymasterAddress;
 };
 
-const filterLogs = (userOperationEventLogFromReceipt: Log, transactionLogs: Log[]): Log[] => {
-  const userOperationEventFilteredLog = transactionLogs.find((transactionlog: any) => {
-    if (transactionlog.topics.length === userOperationEventLogFromReceipt.topics.length) {
-      // Sort the `topics` arrays and compare them element by element
-      const sortedTransactionLogTopics = transactionlog.topics.slice().sort();
-      const sortedTopicsArray = userOperationEventLogFromReceipt.topics.slice().sort();
-      return sortedTransactionLogTopics.every(
-        (topic: string, index: number) => topic === sortedTopicsArray[index],
-      );
-    }
-    return false;
-  });
+const filterLogs = (
+  userOperationEventLogFromReceipt: Log,
+  transactionLogs: Log[],
+): Log[] => {
+  const userOperationEventFilteredLog = transactionLogs.find(
+    (transactionlog: any) => {
+      if (
+        transactionlog.topics.length ===
+        userOperationEventLogFromReceipt.topics.length
+      ) {
+        // Sort the `topics` arrays and compare them element by element
+        const sortedTransactionLogTopics = transactionlog.topics.slice().sort();
+        const sortedTopicsArray = userOperationEventLogFromReceipt.topics
+          .slice()
+          .sort();
+        return sortedTransactionLogTopics.every(
+          (topic: string, index: number) => topic === sortedTopicsArray[index],
+        );
+      }
+      return false;
+    },
+  );
   return [userOperationEventFilteredLog as Log];
 };
 
@@ -56,23 +68,45 @@ export const getUserOperationReceiptForFailedTransaction = async (
       const filter = await provider.createEventFilter({
         address: entryPointContract.address,
         event: {
-          name: 'UserOperationEvent',
-          type: 'event',
-          inputs: [{
-            indexed: true, name: 'userOpHash', type: 'bytes32',
-          }, {
-            indexed: true, name: 'sender', type: 'address',
-          }, {
-            indexed: true, name: 'paymaster', type: 'address',
-          }, {
-            indexed: false, name: 'nonce', type: 'uint256',
-          }, {
-            indexed: false, name: 'success', type: 'bool',
-          }, {
-            indexed: false, name: 'actualGasCost', type: 'uint256',
-          }, {
-            indexed: false, name: 'actualGasUsed', type: 'uint256',
-          }],
+          name: "UserOperationEvent",
+          type: "event",
+          inputs: [
+            {
+              indexed: true,
+              name: "userOpHash",
+              type: "bytes32",
+            },
+            {
+              indexed: true,
+              name: "sender",
+              type: "address",
+            },
+            {
+              indexed: true,
+              name: "paymaster",
+              type: "address",
+            },
+            {
+              indexed: false,
+              name: "nonce",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              name: "success",
+              type: "bool",
+            },
+            {
+              indexed: false,
+              name: "actualGasCost",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              name: "actualGasUsed",
+              type: "uint256",
+            },
+          ],
         },
         fromBlock,
         toBlock: receipt.blockNumber,
@@ -80,32 +114,61 @@ export const getUserOperationReceiptForFailedTransaction = async (
 
       const providerFilterLogs = await provider.getFilterLogs({ filter });
 
-      const {
-        args,
-      } = providerFilterLogs[0];
+      const { args } = providerFilterLogs[0];
 
-      log.info(`filter: ${customJSONStringify(filter)} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
+      log.info(
+        `filter: ${customJSONStringify(
+          filter,
+        )} for userOpHash: ${userOpHash} and chainId: ${chainId}`,
+      );
       if (args) {
         const userOperationEventArgs = args;
-        log.info(`userOperationEventArgs: ${customJSONStringify(userOperationEventArgs)}`);
+        log.info(
+          `userOperationEventArgs: ${customJSONStringify(
+            userOperationEventArgs,
+          )}`,
+        );
         const actualGasCostInHex = toHex(args.actualGasCost as bigint);
-        log.info(`actualGasCostInHex: ${actualGasCostInHex} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
-        const actualGasCostInNumber = Number((actualGasCostInHex));
-        log.info(`actualGasCostInNumber: ${actualGasCostInNumber} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
+        log.info(
+          `actualGasCostInHex: ${actualGasCostInHex} for userOpHash: ${userOpHash} and chainId: ${chainId}`,
+        );
+        const actualGasCostInNumber = Number(actualGasCostInHex);
+        log.info(
+          `actualGasCostInNumber: ${actualGasCostInNumber} for userOpHash: ${userOpHash} and chainId: ${chainId}`,
+        );
         const actualGasUsedInHex = toHex(args.actualGasUsed as bigint);
-        log.info(`actualGasUsedInHex: ${actualGasUsedInHex} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
+        log.info(
+          `actualGasUsedInHex: ${actualGasUsedInHex} for userOpHash: ${userOpHash} and chainId: ${chainId}`,
+        );
         const actualGasUsedInNumber = Number(actualGasUsedInHex);
-        log.info(`actualGasUsedInNumber: ${actualGasUsedInNumber} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
+        log.info(
+          `actualGasUsedInNumber: ${actualGasUsedInNumber} for userOpHash: ${userOpHash} and chainId: ${chainId}`,
+        );
 
         const { transactionHash } = providerFilterLogs[0];
         let logs;
-        if (!(transactionHash.toLowerCase() === receipt.transactionHash.toLowerCase())) {
-          log.info(`Transaction for userOpHash: ${userOpHash} on chainId: ${chainId} was front runned`);
-          const frontRunnedTransactionReceipt = await provider.getTransactionReceipt({
-            hash: transactionHash,
-          }) as TransactionReceipt;
-          logs = filterLogs(providerFilterLogs[0], frontRunnedTransactionReceipt.logs);
-          log.info(`logs: ${customJSONStringify(logs)} for userOpHash: ${userOpHash} on chainId: ${chainId}`);
+        if (
+          !(
+            transactionHash.toLowerCase() ===
+            receipt.transactionHash.toLowerCase()
+          )
+        ) {
+          log.info(
+            `Transaction for userOpHash: ${userOpHash} on chainId: ${chainId} was front runned`,
+          );
+          const frontRunnedTransactionReceipt =
+            (await provider.getTransactionReceipt({
+              hash: transactionHash,
+            })) as TransactionReceipt;
+          logs = filterLogs(
+            providerFilterLogs[0],
+            frontRunnedTransactionReceipt.logs,
+          );
+          log.info(
+            `logs: ${customJSONStringify(
+              logs,
+            )} for userOpHash: ${userOpHash} on chainId: ${chainId}`,
+          );
           return {
             actualGasCost: actualGasCostInNumber,
             actualGasUsed: actualGasUsedInNumber,
@@ -115,7 +178,11 @@ export const getUserOperationReceiptForFailedTransaction = async (
           };
         }
         logs = filterLogs(providerFilterLogs[0], receipt.logs);
-        log.info(`logs: ${customJSONStringify(logs)} for userOpHash: ${userOpHash} on chainId: ${chainId}`);
+        log.info(
+          `logs: ${customJSONStringify(
+            logs,
+          )} for userOpHash: ${userOpHash} on chainId: ${chainId}`,
+        );
         return {
           actualGasCost: actualGasCostInNumber,
           actualGasUsed: actualGasUsedInNumber,
@@ -124,10 +191,14 @@ export const getUserOperationReceiptForFailedTransaction = async (
           frontRunnedTransactionReceipt: null,
         };
       }
-      log.info('No event found');
+      log.info("No event found");
       return null;
     } catch (error) {
-      log.error(`Missing/invalid userOpHash for userOpHash: ${userOpHash} on chainId: ${chainId} with erro: ${parseError(error)}`);
+      log.error(
+        `Missing/invalid userOpHash for userOpHash: ${userOpHash} on chainId: ${chainId} with erro: ${parseError(
+          error,
+        )}`,
+      );
       return null;
     }
   } catch (error) {
@@ -141,18 +212,21 @@ export const getUserOperationReceiptForSuccessfulTransaction = async (
   userOpHash: string,
   receipt: TransactionReceipt,
   entryPointContract: EntryPointContractType,
-// eslint-disable-next-line consistent-return
+  // eslint-disable-next-line consistent-return
 ): Promise<{
-  actualGasCost: number,
-  actualGasUsed: number,
-  success: boolean,
-  reason: string,
-  logs: Log[],
+  actualGasCost: number;
+  actualGasUsed: number;
+  success: boolean;
+  reason: string;
+  logs: Log[];
 } | null> => {
   try {
     const { logs } = receipt;
     for (const eventLog of logs) {
-      if (eventLog.topics[0] === '0x49628fd1471006c1482da88028e9ce4dbb080b815c9b0344d39e5a8e6ec1419f') {
+      if (
+        eventLog.topics[0] ===
+        "0x49628fd1471006c1482da88028e9ce4dbb080b815c9b0344d39e5a8e6ec1419f"
+      ) {
         const userOperationEventLog = eventLog;
         const userOperationEvent = decodeEventLog({
           abi: entryPointContract.abi,
@@ -160,33 +234,42 @@ export const getUserOperationReceiptForSuccessfulTransaction = async (
           data: userOperationEventLog.data,
         });
 
-        if (userOperationEvent.eventName !== 'UserOperationEvent') {
-          log.error('error in getUserOperationReceipt: UserOperationEvent not found');
+        if (userOperationEvent.eventName !== "UserOperationEvent") {
+          log.error(
+            "error in getUserOperationReceipt: UserOperationEvent not found",
+          );
           return null;
         }
 
         const { args } = userOperationEvent;
 
         const actualGasCostInHex = args.actualGasCost;
-        log.info(`actualGasCostInHex: ${actualGasCostInHex} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
-        const actualGasCostInNumber = Number(actualGasCostInHex.toString());
-        log.info(`actualGasCostInNumber: ${actualGasCostInNumber} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
-        const actualGasUsedInHex = args.actualGasUsed;
-        log.info(`actualGasUsedInHex: ${actualGasUsedInHex} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
-        const actualGasUsedInNumber = Number(actualGasUsedInHex.toString());
-        log.info(`actualGasUsedInNumber: ${actualGasUsedInNumber} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
-        const { success } = args;
-        log.info(`success: ${success} for userOpHash: ${userOpHash} and chainId: ${chainId}`);
-        const userOperationLogs = filterLogs(
-          eventLog,
-          receipt.logs,
+        log.info(
+          `actualGasCostInHex: ${actualGasCostInHex} for userOpHash: ${userOpHash} and chainId: ${chainId}`,
         );
+        const actualGasCostInNumber = Number(actualGasCostInHex.toString());
+        log.info(
+          `actualGasCostInNumber: ${actualGasCostInNumber} for userOpHash: ${userOpHash} and chainId: ${chainId}`,
+        );
+        const actualGasUsedInHex = args.actualGasUsed;
+        log.info(
+          `actualGasUsedInHex: ${actualGasUsedInHex} for userOpHash: ${userOpHash} and chainId: ${chainId}`,
+        );
+        const actualGasUsedInNumber = Number(actualGasUsedInHex.toString());
+        log.info(
+          `actualGasUsedInNumber: ${actualGasUsedInNumber} for userOpHash: ${userOpHash} and chainId: ${chainId}`,
+        );
+        const { success } = args;
+        log.info(
+          `success: ${success} for userOpHash: ${userOpHash} and chainId: ${chainId}`,
+        );
+        const userOperationLogs = filterLogs(eventLog, receipt.logs);
         return {
           actualGasCost: actualGasCostInNumber,
           actualGasUsed: actualGasUsedInNumber,
           success,
           logs: userOperationLogs,
-          reason: '',
+          reason: "",
         };
       }
     }
@@ -201,81 +284,85 @@ function encode(
   typevalues: Array<{ type: string; val: any }>,
   forSignature: boolean,
 ): string {
-  const types = parseAbiParameters(typevalues.map((typevalue) => (typevalue.type === 'bytes' && forSignature ? 'bytes32' : typevalue.type)).toString());
-  const values = typevalues.map((typevalue: any) => (typevalue.type === 'bytes' && forSignature
-    ? keccak256(typevalue.val)
-    : typevalue.val));
+  const types = parseAbiParameters(
+    typevalues
+      .map((typevalue) =>
+        typevalue.type === "bytes" && forSignature ? "bytes32" : typevalue.type,
+      )
+      .toString(),
+  );
+  const values = typevalues.map((typevalue: any) =>
+    typevalue.type === "bytes" && forSignature
+      ? keccak256(typevalue.val)
+      : typevalue.val,
+  );
   return encodeAbiParameters(types, values);
 }
-
-const UserOpType = config.abi.entryPointAbi.find(
-  (entry: any) => entry.name === 'simulateValidation',
-)?.inputs?.[0];
 
 export const packUserOp = (
   userOp: UserOperationType,
   forSignature = true,
 ): string => {
+  const userOpType = {
+    components: [
+      {
+        type: "address",
+        name: "sender",
+      },
+      {
+        type: "uint256",
+        name: "nonce",
+      },
+      {
+        type: "bytes",
+        name: "initCode",
+      },
+      {
+        type: "bytes",
+        name: "callData",
+      },
+      {
+        type: "uint256",
+        name: "callGasLimit",
+      },
+      {
+        type: "uint256",
+        name: "verificationGasLimit",
+      },
+      {
+        type: "uint256",
+        name: "preVerificationGas",
+      },
+      {
+        type: "uint256",
+        name: "maxFeePerGas",
+      },
+      {
+        type: "uint256",
+        name: "maxPriorityFeePerGas",
+      },
+      {
+        type: "bytes",
+        name: "paymasterAndData",
+      },
+      {
+        type: "bytes",
+        name: "signature",
+      },
+    ],
+    name: "userOp",
+    type: "tuple",
+  };
+
   if (forSignature) {
     // lighter signature scheme (must match UserOperation#pack):
     // do encode a zero-length signature, but strip afterwards the appended zero-length value
-    const userOpType = {
-      components: [
-        {
-          type: 'address',
-          name: 'sender',
-        },
-        {
-          type: 'uint256',
-          name: 'nonce',
-        },
-        {
-          type: 'bytes',
-          name: 'initCode',
-        },
-        {
-          type: 'bytes',
-          name: 'callData',
-        },
-        {
-          type: 'uint256',
-          name: 'callGasLimit',
-        },
-        {
-          type: 'uint256',
-          name: 'verificationGasLimit',
-        },
-        {
-          type: 'uint256',
-          name: 'preVerificationGas',
-        },
-        {
-          type: 'uint256',
-          name: 'maxFeePerGas',
-        },
-        {
-          type: 'uint256',
-          name: 'maxPriorityFeePerGas',
-        },
-        {
-          type: 'bytes',
-          name: 'paymasterAndData',
-        },
-        {
-          type: 'bytes',
-          name: 'signature',
-        },
-      ],
-      name: 'userOp',
-      type: 'tuple',
-    };
-
     let encoded = encodeAbiParameters(
       [userOpType as any],
       [
         {
           ...userOp,
-          signature: '0x',
+          signature: "0x",
         },
       ],
     );
@@ -284,7 +371,7 @@ export const packUserOp = (
     return encoded;
   }
 
-  const typevalues = (UserOpType as any).components.map(
+  const typevalues = (userOpType as any).components.map(
     (c: { name: keyof typeof userOp; type: string }) => ({
       type: c.type,
       val: userOp[c.name],
@@ -308,14 +395,17 @@ export const getAddress = (data?: any): string | undefined => {
 // extract address from "data" (first 20 bytes)
 // add it as "addr" member to the "stakeinfo" struct
 // if no address, then return "undefined" instead of struct.
-export const fillEntity = (data: any, info: StakeInfo): StakeInfo | undefined => {
+export const fillEntity = (
+  data: any,
+  info: StakeInfo,
+): StakeInfo | undefined => {
   const addr = getAddress(data);
   return addr == null
     ? undefined
     : {
-      ...info,
-      addr,
-    };
+        ...info,
+        addr,
+      };
 };
 
 /**
@@ -328,11 +418,14 @@ export function packUserOpForUserOpHash(
   op: Partial<UserOperationType>,
   forSignature = true,
 ): `0x${string}` {
-  if (!op.initCode || !op.callData || !op.paymasterAndData) throw new Error('Missing userOp properties');
+  if (!op.initCode || !op.callData || !op.paymasterAndData)
+    throw new Error("Missing userOp properties");
 
   if (forSignature) {
     return encodeAbiParameters(
-      parseAbiParameters('address, uint256, bytes32, bytes32, uint256, uint256, uint256, uint256, uint256, bytes32'),
+      parseAbiParameters(
+        "address, uint256, bytes32, bytes32, uint256, uint256, uint256, uint256, uint256, bytes32",
+      ),
       [
         op.sender as `0x${string}`,
         op.nonce as bigint,
@@ -349,7 +442,9 @@ export function packUserOpForUserOpHash(
   }
   // for the purpose of calculating gas cost encode also signature (and no keccak of bytes)
   return encodeAbiParameters(
-    parseAbiParameters('address, uint256, bytes, bytes, uint256, uint256, uint256, uint256, uint256, bytes, bytes'),
+    parseAbiParameters(
+      "address, uint256, bytes, bytes, uint256, uint256, uint256, uint256, uint256, bytes, bytes",
+    ),
     [
       op.sender as `0x${string}`,
       op.nonce as bigint,
