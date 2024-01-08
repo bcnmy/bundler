@@ -5,7 +5,6 @@ import express, {
   NextFunction,
   Request,
   Response,
-  ErrorRequestHandler,
 } from "express";
 import cons from "consolidate";
 import logger from "pino-http";
