@@ -8,11 +8,9 @@ import {
   gasPriceServiceMap,
 } from "../../../../common/service-manager";
 import { customJSONStringify, parseError } from "../../../../common/utils";
-import {
-  RPCBadRequest,
-  RPCInternalServerError,
-  tryFindEntrypoint,
-} from "./helpers";
+import { RPCBadRequest } from "../rpc/RPCBadRequest";
+import { RPCInternalServerError } from "../rpc/RPCInternalServerError";
+import { tryFindEntrypoint } from "./SupportedEntryPoints";
 // import { updateRequest } from '../../auth/UpdateRequest';
 
 const log = logger.child({

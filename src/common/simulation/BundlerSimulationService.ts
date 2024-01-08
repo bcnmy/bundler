@@ -34,6 +34,7 @@ import {
   EstimateUserOperationGasReturnType,
   SimulateValidationAndExecutionData,
   SimulateValidationData,
+  SimulatorNetworkService,
 } from "./types";
 import {
   OptimismNetworks,
@@ -938,7 +939,7 @@ export class BundlerSimulationService {
       if (!l2BaseFeePerGas) {
         throw new RpcError(
           `baseFeePerGas not available for chainId: ${chainId}`,
-          BUNDLER_VALIDATION_STATUSES.SIMULATE_PAYMASTER_VALIDATION_FAILED,
+          BUNDLER_VALIDATION_STATUSES.INTERNAL_SERVER_ERROR,
         );
       }
 
@@ -947,7 +948,7 @@ export class BundlerSimulationService {
       if (!l1BaseFeePerGas) {
         throw new RpcError(
           `baseFeePerGas not available for chainId: 1`,
-          BUNDLER_VALIDATION_STATUSES.SIMULATE_PAYMASTER_VALIDATION_FAILED,
+          BUNDLER_VALIDATION_STATUSES.INTERNAL_SERVER_ERROR,
         );
       }
 
@@ -966,7 +967,7 @@ export class BundlerSimulationService {
       if (!baseFeePerGas) {
         throw new RpcError(
           `baseFeePerGas not available for chainId: ${chainId}`,
-          BUNDLER_VALIDATION_STATUSES.SIMULATE_PAYMASTER_VALIDATION_FAILED,
+          BUNDLER_VALIDATION_STATUSES.INTERNAL_SERVER_ERROR,
         );
       }
 
@@ -1003,8 +1004,3 @@ export class BundlerSimulationService {
     return keccak256(enc);
   }
 }
-
-type SimulatorNetworkService = Pick<
-  INetworkService<IEVMAccount, EVMRawTransactionType>,
-  "chainId" | "ethCall" | "estimateGas" | "provider"
->;

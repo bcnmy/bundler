@@ -5,12 +5,10 @@ import { STATUSES } from "../../../middleware";
 import { logger } from "../../../../common/logger";
 import { bundlerSimulatonServiceMap } from "../../../../common/service-manager";
 import { parseError } from "../../../../common/utils";
-import {
-  RPCBadRequest,
-  RPCInternalServerError,
-  RPCResponse,
-  tryFindEntrypoint,
-} from "./helpers";
+import { RPCBadRequest } from "../rpc/RPCBadRequest";
+import { RPCInternalServerError } from "../rpc/RPCInternalServerError";
+import { RPCResponse } from "../rpc/RPCResponse";
+import { tryFindEntrypoint } from "./SupportedEntryPoints";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),

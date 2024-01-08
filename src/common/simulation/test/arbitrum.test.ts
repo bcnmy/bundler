@@ -1,5 +1,5 @@
 import { gasEstimateL1ComponentOffchain } from "../arbitrum";
-import { EstimationResult, summarizeResults } from "../utils";
+import { EstimationResult, summarizeResults } from "./utils";
 import transactions from "./arbitrum.json";
 
 describe("ArbitrumPVG off-chain estimation", () => {

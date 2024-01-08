@@ -1,8 +1,3 @@
-// viem Hex type expects all hex strings to be prefixed with 0x to comply with type `0x${string}`
-export function prefix0x(hex: string): `0x${string}` {
-  return hex.startsWith("0x") ? (hex as `0x${string}`) : `0x${hex}`;
-}
-
 export interface EstimationResult {
   txHash: string;
   actual: BigInt;

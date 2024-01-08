@@ -4,8 +4,9 @@ import {
   serializeTransaction,
 } from "viem";
 import transactions from "./optimism.json";
-import { EstimationResult, prefix0x, summarizeResults } from "../utils";
+import { EstimationResult, summarizeResults } from "./utils";
 import { estimateFeeOffchain } from "../optimism";
+import { prefix0x } from "../arbitrum";
 
 describe("OptimismPVG off-chain estimation", () => {
   expect(transactions.length).toBeGreaterThan(0); // sanity check
