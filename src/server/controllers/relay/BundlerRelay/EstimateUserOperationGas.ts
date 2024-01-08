@@ -5,10 +5,14 @@ import { BUNDLER_VALIDATION_STATUSES, STATUSES } from "../../../middleware";
 import { logger } from "../../../../common/logger";
 import {
   bundlerSimulatonServiceMap,
-  entryPointMap,
   gasPriceServiceMap,
 } from "../../../../common/service-manager";
 import { customJSONStringify, parseError } from "../../../../common/utils";
+import {
+  RPCBadRequest,
+  RPCInternalServerError,
+  tryFindEntrypoint,
+} from "./helpers";
 // import { updateRequest } from '../../auth/UpdateRequest';
 
 const log = logger.child({
@@ -17,45 +21,34 @@ const log = logger.child({
 
 export const estimateUserOperationGas = async (req: Request, res: Response) => {
   // const bundlerRequestId = req.body.params[6];
+  const { id } = req.body;
 
   try {
-    const { id } = req.body;
-    const { chainId /* apiKey */ } = req.params;
+    const chainId = parseInt(req.params.chainId, 10);
 
     const userOp = req.body.params[0];
     const entryPointAddress = req.body.params[1];
     const stateOverrideSet = req.body.params[2];
 
-    const entryPointContracts = entryPointMap[parseInt(chainId, 10)];
+    const entryPointContract = tryFindEntrypoint(chainId, entryPointAddress);
 
-    let entryPointContract;
-    for (
-      let entryPointContractIndex = 0;
-      entryPointContractIndex < entryPointContracts.length;
-      entryPointContractIndex += 1
-    ) {
-      if (
-        entryPointContracts[entryPointContractIndex].address.toLowerCase() ===
-        entryPointAddress.toLowerCase()
-      ) {
-        entryPointContract =
-          entryPointContracts[entryPointContractIndex].entryPointContract;
-        break;
-      }
-    }
     if (!entryPointContract) {
-      return {
-        code: STATUSES.BAD_REQUEST,
-        message: "Entry point not supported by Bundler",
-      };
+      return res
+        .status(STATUSES.BAD_REQUEST)
+        .json(
+          new RPCBadRequest(
+            id,
+            `Entry point with address=${entryPointAddress} not supported by Bundler`,
+          ),
+        );
     }
 
     const estimatedUserOpGas = await bundlerSimulatonServiceMap[
-      parseInt(chainId, 10)
+      chainId
     ].estimateUserOperationGas({
       userOp,
       entryPointContract,
-      chainId: parseInt(chainId, 10),
+      chainId,
       stateOverrideSet,
     });
 
@@ -175,8 +168,6 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
     });
   } catch (error) {
     log.error(`Error in estimateUserOperationGas handler ${parseError(error)}`);
-    const { id } = req.body;
-
     // updateRequest({
     //   chainId: parseInt(chainId, 10),
     //   apiKey,
@@ -191,13 +182,8 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
     //   },
     //   httpResponseCode: STATUSES.INTERNAL_SERVER_ERROR,
     // });
-    return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
-      jsonrpc: "2.0",
-      id: id || 1,
-      error: {
-        code: BUNDLER_VALIDATION_STATUSES.INTERNAL_SERVER_ERROR,
-        message: `Internal Server error: ${parseError(error)}`,
-      },
-    });
+    return res
+      .status(STATUSES.INTERNAL_SERVER_ERROR)
+      .json(new RPCInternalServerError(id, error));
   }
 };
