@@ -92,6 +92,169 @@ export class EVMTransactionListener
     this.cacheService = cacheService;
   }
 
+  async notify(
+    notifyTransactionListenerParams: NotifyTransactionListenerParamsType,
+  ): Promise<boolean> {
+    const {
+      transactionHash,
+      transactionId,
+      rawTransaction,
+      relayerAddress,
+      transactionType,
+      walletAddress,
+      metaData,
+      relayerManagerName,
+      previousTransactionHash,
+      error,
+    } = notifyTransactionListenerParams;
+
+    // if no transactionExecutionResponse then it means transactions was not published onc hain
+    // update transaction and user op collection
+    if (!transactionHash) {
+      log.error(`transactionExecutionResponse is null for transactionId: ${transactionId} for bundler: ${relayerAddress} hence
+      updating transaction and userOp data`);
+      try {
+        if (
+          transactionType === TransactionType.BUNDLER ||
+          transactionType === TransactionType.AA
+        ) {
+          await this.transactionDao.updateByTransactionIdAndTransactionHash(
+            this.chainId,
+            transactionId,
+            "null",
+            {
+              resubmitted: true,
+              status: TransactionStatus.DROPPED,
+              updationTime: Date.now(),
+            },
+          );
+          this.updateUserOpDataForFailureInTransactionExecution(transactionId);
+        }
+      } catch (dataSavingError) {
+        log.error(
+          `Error in updating transaction and userOp data for transactionId: ${transactionId} with error: ${parseError(
+            dataSavingError,
+          )}`,
+        );
+      }
+      await this.publishToTransactionQueue({
+        transactionId,
+        relayerManagerName,
+        error,
+        event: SocketEventType.onTransactionError,
+      });
+      log.error(
+        `transactionExecutionResponse is null for transactionId: ${transactionId} for bundler: ${relayerAddress}`,
+      );
+      return false;
+    }
+
+    if (!previousTransactionHash) {
+      log.info(
+        `Not a replacement transaction, updating data for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+      );
+
+      await this.transactionDao.updateByTransactionId(
+        this.chainId,
+        transactionId,
+        {
+          transactionHash,
+          rawTransaction: convertBigIntToString(rawTransaction),
+          relayerAddress,
+          gasPrice: rawTransaction.gasPrice?.toString(),
+          status: TransactionStatus.PENDING,
+          updationTime: Date.now(),
+        },
+      );
+      log.info(
+        `Data updated for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+      );
+    } else {
+      log.info(
+        `A replacement transaction, updating data for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+      );
+      await this.transactionDao.updateByTransactionIdAndTransactionHash(
+        this.chainId,
+        transactionId,
+        transactionHash,
+        {
+          resubmitted: true,
+          status: TransactionStatus.DROPPED,
+          updationTime: Date.now(),
+        },
+      );
+      log.info(
+        `Replacement transaction data updated for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+      );
+      log.info(
+        `A replacement transaction encountered, saving new transaction data for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+      );
+      await this.transactionDao.save(this.chainId, {
+        transactionId,
+        transactionType,
+        transactionHash,
+        previousTransactionHash,
+        status: TransactionStatus.PENDING,
+        rawTransaction: convertBigIntToString(rawTransaction),
+        chainId: this.chainId,
+        gasPrice: rawTransaction.gasPrice?.toString(),
+        relayerAddress,
+        walletAddress,
+        metaData,
+        resubmitted: false,
+        creationTime: Date.now(),
+        updationTime: Date.now(),
+      });
+      log.info(
+        `Saved new data for the replaced transaction with transactionId: ${transactionId} on chainId: ${this.chainId} with new transactionHash: ${transactionHash}`,
+      );
+    }
+
+    // transaction queue is being listened by socket service to notify the client about the hash
+    await this.publishToTransactionQueue({
+      transactionId,
+      relayerManagerName,
+      transactionHash,
+      receipt: undefined,
+      event: previousTransactionHash
+        ? SocketEventType.onTransactionHashChanged
+        : SocketEventType.onTransactionHashGenerated,
+    });
+    // retry txn service will check for receipt
+    log.info(
+      `Publishing transaction data of transactionId: ${transactionId} to retry transaction queue on chainId ${this.chainId}`,
+    );
+    await this.publishToRetryTransactionQueue({
+      relayerAddress,
+      transactionType,
+      transactionHash,
+      transactionId,
+      rawTransaction: rawTransaction as EVMRawTransactionType,
+      walletAddress,
+      metaData,
+      relayerManagerName,
+      event: SocketEventType.onTransactionHashGenerated,
+    });
+
+    // wait for transaction
+    try {
+      await this.waitForTransaction(notifyTransactionListenerParams);
+    } catch (waitForTransactionError) {
+      // timeout error
+      // do nothing for now just log
+      log.error(
+        `Error: ${parseError(
+          waitForTransactionError,
+        )} Timeout hit for waiting on hash: ${transactionHash} for transactionId: ${transactionId} on chainId ${
+          this.chainId
+        }`,
+      );
+      return false;
+    }
+
+    return true;
+  }
+
   async publishToTransactionQueue(
     data: TransactionQueueMessageType,
   ): Promise<boolean> {
@@ -842,169 +1005,6 @@ export class EVMTransactionListener
         }`,
       );
     }
-  }
-
-  async notify(
-    notifyTransactionListenerParams: NotifyTransactionListenerParamsType,
-  ): Promise<boolean> {
-    const {
-      transactionHash,
-      transactionId,
-      rawTransaction,
-      relayerAddress,
-      transactionType,
-      walletAddress,
-      metaData,
-      relayerManagerName,
-      previousTransactionHash,
-      error,
-    } = notifyTransactionListenerParams;
-
-    // if no transactionExecutionResponse then it means transactions was not published onc hain
-    // update transaction and user op collection
-    if (!transactionHash) {
-      log.error(`transactionExecutionResponse is null for transactionId: ${transactionId} for bundler: ${relayerAddress} hence
-      updating transaction and userOp data`);
-      try {
-        if (
-          transactionType === TransactionType.BUNDLER ||
-          transactionType === TransactionType.AA
-        ) {
-          await this.transactionDao.updateByTransactionIdAndTransactionHash(
-            this.chainId,
-            transactionId,
-            "null",
-            {
-              resubmitted: true,
-              status: TransactionStatus.DROPPED,
-              updationTime: Date.now(),
-            },
-          );
-          this.updateUserOpDataForFailureInTransactionExecution(transactionId);
-        }
-      } catch (dataSavingError) {
-        log.error(
-          `Error in updating transaction and userOp data for transactionId: ${transactionId} with error: ${parseError(
-            dataSavingError,
-          )}`,
-        );
-      }
-      await this.publishToTransactionQueue({
-        transactionId,
-        relayerManagerName,
-        error,
-        event: SocketEventType.onTransactionError,
-      });
-      log.error(
-        `transactionExecutionResponse is null for transactionId: ${transactionId} for bundler: ${relayerAddress}`,
-      );
-      return false;
-    }
-
-    if (!previousTransactionHash) {
-      log.info(
-        `Not a replacement transaction, updating data for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-      );
-
-      await this.transactionDao.updateByTransactionId(
-        this.chainId,
-        transactionId,
-        {
-          transactionHash,
-          rawTransaction: convertBigIntToString(rawTransaction),
-          relayerAddress,
-          gasPrice: rawTransaction.gasPrice?.toString(),
-          status: TransactionStatus.PENDING,
-          updationTime: Date.now(),
-        },
-      );
-      log.info(
-        `Data updated for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-      );
-    } else {
-      log.info(
-        `A replacement transaction, updating data for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-      );
-      await this.transactionDao.updateByTransactionIdAndTransactionHash(
-        this.chainId,
-        transactionId,
-        transactionHash,
-        {
-          resubmitted: true,
-          status: TransactionStatus.DROPPED,
-          updationTime: Date.now(),
-        },
-      );
-      log.info(
-        `Replacement transaction data updated for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-      );
-      log.info(
-        `A replacement transaction encountered, saving new transaction data for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-      );
-      await this.transactionDao.save(this.chainId, {
-        transactionId,
-        transactionType,
-        transactionHash,
-        previousTransactionHash,
-        status: TransactionStatus.PENDING,
-        rawTransaction: convertBigIntToString(rawTransaction),
-        chainId: this.chainId,
-        gasPrice: rawTransaction.gasPrice?.toString(),
-        relayerAddress,
-        walletAddress,
-        metaData,
-        resubmitted: false,
-        creationTime: Date.now(),
-        updationTime: Date.now(),
-      });
-      log.info(
-        `Saved new data for the replaced transaction with transactionId: ${transactionId} on chainId: ${this.chainId} with new transactionHash: ${transactionHash}`,
-      );
-    }
-
-    // transaction queue is being listened by socket service to notify the client about the hash
-    await this.publishToTransactionQueue({
-      transactionId,
-      relayerManagerName,
-      transactionHash,
-      receipt: undefined,
-      event: previousTransactionHash
-        ? SocketEventType.onTransactionHashChanged
-        : SocketEventType.onTransactionHashGenerated,
-    });
-    // retry txn service will check for receipt
-    log.info(
-      `Publishing transaction data of transactionId: ${transactionId} to retry transaction queue on chainId ${this.chainId}`,
-    );
-    await this.publishToRetryTransactionQueue({
-      relayerAddress,
-      transactionType,
-      transactionHash,
-      transactionId,
-      rawTransaction: rawTransaction as EVMRawTransactionType,
-      walletAddress,
-      metaData,
-      relayerManagerName,
-      event: SocketEventType.onTransactionHashGenerated,
-    });
-
-    // wait for transaction
-    try {
-      await this.waitForTransaction(notifyTransactionListenerParams);
-    } catch (waitForTransactionError) {
-      // timeout error
-      // do nothing for now just log
-      log.error(
-        `Error: ${parseError(
-          waitForTransactionError,
-        )} Timeout hit for waiting on hash: ${transactionHash} for transactionId: ${transactionId} on chainId ${
-          this.chainId
-        }`,
-      );
-      return false;
-    }
-
-    return true;
   }
 
   async getTransactionFailureMessage(

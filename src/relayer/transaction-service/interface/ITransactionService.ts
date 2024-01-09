@@ -7,8 +7,6 @@ import { INonceManager } from "../../nonce-manager";
 import { ITransactionListener } from "../../transaction-listener";
 import {
   ErrorTransactionResponseType,
-  ExecuteTransactionParamsType,
-  ExecuteTransactionResponseType,
   RetryTransactionDataType,
   SuccessTransactionResponseType,
   TransactionDataType,
@@ -21,11 +19,6 @@ export interface ITransactionService<AccountType, RawTransactionType> {
   nonceManager: INonceManager<AccountType, RawTransactionType>;
   gasPriceService: IGasPrice;
   cacheService: ICacheService;
-
-  executeTransaction(
-    executeTransactionParams: ExecuteTransactionParamsType,
-    transactionId: string,
-  ): Promise<ExecuteTransactionResponseType>;
 
   sendTransaction(
     transaction: TransactionDataType,
