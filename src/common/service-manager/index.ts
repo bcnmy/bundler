@@ -289,7 +289,7 @@ let statusService: IStatusService;
           ownerAccountDetails: new EVMAccount(
             relayerManager.ownerAccountDetails[chainId].publicKey,
             relayerManager.ownerAccountDetails[chainId].privateKey,
-            networkService.rpcUrl
+            networkService.rpcUrl,
           ),
           gasLimitMap: relayerManager.gasLimitMap,
         },
@@ -425,6 +425,7 @@ let statusService: IStatusService;
           tenderlySimulationService,
           alchemySimulationService,
           gasPriceService,
+          cacheService,
         );
         log.info(
           `AA consumer, relay service & simulation service setup complete for chainId: ${chainId}`,
@@ -519,6 +520,7 @@ let statusService: IStatusService;
           tenderlySimulationService,
           alchemySimulationService,
           gasPriceService,
+          cacheService,
         );
         log.info(
           `Bundler consumer, relay service, simulation and validation service setup complete for chainId: ${chainId}`,

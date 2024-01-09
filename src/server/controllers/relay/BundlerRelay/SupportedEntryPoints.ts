@@ -4,6 +4,8 @@ import { BUNDLER_VALIDATION_STATUSES, STATUSES } from "../../../middleware";
 import { logger } from "../../../../common/logger";
 import { config } from "../../../../config";
 import { parseError } from "../../../../common/utils";
+import { EntryPointContractType } from "../../../../common/types";
+import { entryPointMap } from "../../../../common/service-manager";
 // import { updateRequest } from '../../auth/UpdateRequest';
 
 const log = logger.child({
@@ -24,8 +26,10 @@ export const getSupportedEntryPoints = async (req: Request, res: Response) => {
 
     const supportedEntryPoints = [];
 
-    for (const [entryPointAddress, chainIds] of Object.entries(entryPointData)) {
-      if(chainIds.supportedChainIds.includes(chainIdInInt)) {
+    for (const [entryPointAddress, chainIds] of Object.entries(
+      entryPointData,
+    )) {
+      if (chainIds.supportedChainIds.includes(chainIdInInt)) {
         supportedEntryPoints.push(entryPointAddress);
       }
     }
@@ -73,4 +77,32 @@ export const getSupportedEntryPoints = async (req: Request, res: Response) => {
       },
     });
   }
+};
+
+export const tryFindEntrypoint = (
+  chainId: number,
+  entryPointAddress: string,
+): EntryPointContractType | undefined => {
+  const entryPointContracts = entryPointMap[chainId];
+
+  let entryPointContract;
+  for (
+    let entryPointContractIndex = 0;
+    entryPointContractIndex < entryPointContracts.length;
+    entryPointContractIndex += 1
+  ) {
+    if (
+      entryPointContracts[entryPointContractIndex].address.toLowerCase() ===
+      entryPointAddress.toLowerCase()
+    ) {
+      entryPointContract =
+        entryPointContracts[entryPointContractIndex].entryPointContract;
+      break;
+    }
+  }
+  if (!entryPointContract) {
+    return undefined;
+  }
+
+  return entryPointContract;
 };
