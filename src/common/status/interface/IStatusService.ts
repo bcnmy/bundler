@@ -3,7 +3,7 @@ import {
   NetworkServiceStatusResponseType,
   RedisStatusResponseType,
   TokenPriceStatusResponseType,
-} from '../types';
+} from "../types";
 
 export interface IStatusService {
   checkRedis(): Promise<RedisStatusResponseType>;

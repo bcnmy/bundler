@@ -1,23 +1,27 @@
 /* eslint-disable import/no-import-module-exports */
-import amqp, { Channel, ConsumeMessage, Replies } from 'amqplib';
-import { config } from '../../config';
-import { logger } from '../logger';
-import { BundlerTransactionMessageType, TransactionType } from '../types';
-import { IQueue } from './interface/IQueue';
-import { customJSONStringify, parseError } from '../utils';
+import amqp, { Channel, ConsumeMessage, Replies } from "amqplib";
+import { config } from "../../config";
+import { logger } from "../logger";
+import { BundlerTransactionMessageType, TransactionType } from "../types";
+import { IQueue } from "./interface/IQueue";
+import { customJSONStringify, parseError } from "../utils";
 
-const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
+const log = logger.child({
+  module: module.filename.split("/").slice(-4).join("/"),
+});
 
 const { queueUrl } = config;
 
-export class BundlerTransactionQueue implements IQueue<BundlerTransactionMessageType> {
+export class BundlerTransactionQueue
+  implements IQueue<BundlerTransactionMessageType>
+{
   private channel!: Channel;
 
   transactionType: TransactionType = TransactionType.BUNDLER;
 
   private exchangeName = `relayer_queue_exchange_${this.transactionType}`;
 
-  private exchangeType = 'direct';
+  private exchangeType = "direct";
 
   chainId: number;
 
@@ -25,11 +29,7 @@ export class BundlerTransactionQueue implements IQueue<BundlerTransactionMessage
 
   msg!: ConsumeMessage | null;
 
-  constructor(
-    options: {
-      chainId: number,
-    },
-  ) {
+  constructor(options: { chainId: number }) {
     this.chainId = options.chainId;
     this.queueName = `relayer_queue_${this.transactionType}_${this.chainId}`;
   }
@@ -46,30 +46,40 @@ export class BundlerTransactionQueue implements IQueue<BundlerTransactionMessage
 
   async publish(data: BundlerTransactionMessageType) {
     const key = `chainid.${this.chainId}.type.${this.transactionType}`;
-    log.info(`Publishing data to retry queue on chainId: ${this.chainId} and key ${key}`);
-    this.channel.publish(this.exchangeName, key, Buffer.from(customJSONStringify(data)), {
-      persistent: true,
-    });
+    log.info(
+      `Publishing data to retry queue on chainId: ${this.chainId} and key ${key}`,
+    );
+    this.channel.publish(
+      this.exchangeName,
+      key,
+      Buffer.from(customJSONStringify(data)),
+      {
+        persistent: true,
+      },
+    );
     return true;
   }
 
   async consume(onMessageReceived: () => void) {
-    log.info(`[x] Setting up consumer for queue with chainId: ${this.chainId} for transaction type ${this.transactionType}`);
+    log.info(
+      `[x] Setting up consumer for queue with chainId: ${this.chainId} for transaction type ${this.transactionType}`,
+    );
     this.channel.prefetch(1);
     try {
       // setup a consumer
-      const queue: Replies.AssertQueue = await this.channel.assertQueue(`relayer_queue_${this.chainId}_type_${this.transactionType}`);
-      const key = `chainid.${this.chainId}.type.${this.transactionType}`;
-      log.info(`[*] Waiting for transactions on chainId: ${this.chainId} for transaction type ${this.transactionType}`);
-      this.channel.bindQueue(queue.queue, this.exchangeName, key);
-      await this.channel.consume(
-        queue.queue,
-        onMessageReceived,
+      const queue: Replies.AssertQueue = await this.channel.assertQueue(
+        `relayer_queue_${this.chainId}_type_${this.transactionType}`,
       );
+      const key = `chainid.${this.chainId}.type.${this.transactionType}`;
+      log.info(
+        `[*] Waiting for transactions on chainId: ${this.chainId} for transaction type ${this.transactionType}`,
+      );
+      this.channel.bindQueue(queue.queue, this.exchangeName, key);
+      await this.channel.consume(queue.queue, onMessageReceived);
 
       return true;
     } catch (error) {
-      log.error((parseError(error)));
+      log.error(parseError(error));
       return false;
     }
   }

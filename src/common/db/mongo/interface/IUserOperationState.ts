@@ -1,4 +1,4 @@
-import { UserOperationStateEnum } from '../../../types';
+import { UserOperationStateEnum } from "../../../types";
 
 export interface IUserOperationState {
   transactionId: string;

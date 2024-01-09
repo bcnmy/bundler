@@ -1,5 +1,5 @@
-describe('broken test suite', () => {
-  it('should be fixed', () => {});
+describe("broken test suite", () => {
+  it("should be fixed", () => {});
 });
 // import { ethers } from 'ethers';
 // import { RedisCacheService } from '../../../common/cache';

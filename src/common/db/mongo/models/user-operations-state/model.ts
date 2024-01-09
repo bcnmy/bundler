@@ -1,7 +1,7 @@
-import mongoose from 'mongoose';
-import { config } from '../../../../../config';
-import { IUserOperationState } from '../../interface';
-import { UserOperationStateSchema } from './schema';
+import mongoose from "mongoose";
+import { config } from "../../../../../config";
+import { IUserOperationState } from "../../interface";
+import { UserOperationStateSchema } from "./schema";
 
 const { supportedNetworks } = config;
 

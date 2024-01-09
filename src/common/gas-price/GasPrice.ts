@@ -300,12 +300,13 @@ export class GasPrice implements IGasPrice {
     try {
       // check if the network supports EIP 1559
       if (this.EIP1559SupportedNetworks.includes(this.chainId)) {
-        let {
-          maxFeePerGas,
-          maxPriorityFeePerGas,
-        } = await this.networkService.getEIP1559FeesPerGas();
+        let { maxFeePerGas, maxPriorityFeePerGas } =
+          await this.networkService.getEIP1559FeesPerGas();
 
-        if([137].includes(this.chainId) && maxPriorityFeePerGas < 30000000000n) {
+        if (
+          [137].includes(this.chainId) &&
+          maxPriorityFeePerGas < 30000000000n
+        ) {
           maxPriorityFeePerGas = 30000000000n;
         }
 
@@ -323,7 +324,6 @@ export class GasPrice implements IGasPrice {
           formatUnits(maxPriorityFeePerGas, 0),
         );
 
- 
         const baseFeePerGas = await this.networkService.getBaseFeePerGas();
         await this.setBaseFeePerGas(formatUnits(baseFeePerGas, 0));
       } else {

@@ -79,8 +79,7 @@ const feeOptionMap: {
 } = {};
 
 const gasPriceServiceMap: {
-  [chainId: number]:
-    GasPrice
+  [chainId: number]: GasPrice;
 } = {};
 
 const bundlerSimulatonServiceMap: {
@@ -368,8 +367,13 @@ let statusService: IStatusService;
 
     const { entryPointData } = config;
 
-    for (const [entryPointAddress, entryPointSupportedChainIdsAndAbi] of Object.entries(entryPointData)) {
-      if(entryPointSupportedChainIdsAndAbi.supportedChainIds.includes(chainId)) {
+    for (const [
+      entryPointAddress,
+      entryPointSupportedChainIdsAndAbi,
+    ] of Object.entries(entryPointData)) {
+      if (
+        entryPointSupportedChainIdsAndAbi.supportedChainIds.includes(chainId)
+      ) {
         entryPointMap[chainId].push({
           address: entryPointAddress,
           entryPointContract: getContract({

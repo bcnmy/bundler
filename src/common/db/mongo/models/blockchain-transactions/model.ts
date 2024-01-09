@@ -1,7 +1,7 @@
-import mongoose from 'mongoose';
-import { config } from '../../../../../config';
-import { IBlockchainTransaction } from '../../interface/IBlockchainTransaction';
-import { BlockchainTransactionSchema } from './schema';
+import mongoose from "mongoose";
+import { config } from "../../../../../config";
+import { IBlockchainTransaction } from "../../interface/IBlockchainTransaction";
+import { BlockchainTransactionSchema } from "./schema";
 
 const { supportedNetworks } = config;
 

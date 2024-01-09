@@ -1,3 +1,3 @@
 export interface IAccount {
-  getPublicKey(): string
+  getPublicKey(): string;
 }

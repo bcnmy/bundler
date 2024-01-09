@@ -56,7 +56,7 @@ export const relaySCWTransaction = async (req: Request, res: Response) => {
       data,
       gasLimit: gasLimit || gasLimitFromSimulation,
       chainId,
-      value: value || '0x0',
+      value: value || "0x0",
       walletAddress: walletInfo.address.toLowerCase(),
       transactionId,
     });

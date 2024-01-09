@@ -1,11 +1,12 @@
-import { serializeError } from 'serialize-error';
-import { customJSONStringify } from './custom-json-stringifier';
+import { serializeError } from "serialize-error";
+import { customJSONStringify } from "./custom-json-stringifier";
 
 export const parseError = (error: any): string => {
-  let errorMessage: string = '';
+  let errorMessage: string = "";
   if (error instanceof Error) {
     try {
-      errorMessage = serializeError(error)?.message || customJSONStringify(error);
+      errorMessage =
+        serializeError(error)?.message || customJSONStringify(error);
     } catch (err) {
       // ignore
       errorMessage = customJSONStringify(error);
@@ -20,7 +21,9 @@ export const parseError = (error: any): string => {
   }
 
   try {
-    return errorMessage.toString().replace(/\b(https?):\/\/[-\w+&@#/%?=~|!:,.;]*[-\w+&@#/%=~|]/g, 'URL');
+    return errorMessage
+      .toString()
+      .replace(/\b(https?):\/\/[-\w+&@#/%?=~|!:,.;]*[-\w+&@#/%=~|]/g, "URL");
   } catch (err2) {
     // ignore
     errorMessage = error;

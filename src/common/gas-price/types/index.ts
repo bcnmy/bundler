@@ -1,5 +1,5 @@
 export enum GasPriceType {
-  DEFAULT = 'default',
-  MEDIUM = 'medium',
-  FAST = 'fast',
+  DEFAULT = "default",
+  MEDIUM = "medium",
+  FAST = "fast",
 }

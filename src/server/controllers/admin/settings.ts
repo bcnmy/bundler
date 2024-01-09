@@ -1,5 +1,5 @@
-import { Request, Response } from 'express';
+import { Request, Response } from "express";
 
 export const settings = async (req: Request, res: Response) => {
-  res.render('settings');
+  res.render("settings");
 };

@@ -1,1 +1,1 @@
-export * from './IStatusService';
+export * from "./IStatusService";

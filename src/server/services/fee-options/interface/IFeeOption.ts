@@ -1,5 +1,5 @@
-import { FeeOptionResponseType } from '../types';
+import { FeeOptionResponseType } from "../types";
 
 export interface IFeeOption {
-  get: () => Promise<FeeOptionResponseType>
+  get: () => Promise<FeeOptionResponseType>;
 }

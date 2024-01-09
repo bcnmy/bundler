@@ -1,5 +1,9 @@
-import { InitialUserOperationDataType, FinalUserOperationDataType, IUserOperationDAO } from '../interface';
-import { IUserOperation, Mongo } from '../mongo';
+import {
+  InitialUserOperationDataType,
+  FinalUserOperationDataType,
+  IUserOperationDAO,
+} from "../interface";
+import { IUserOperation, Mongo } from "../mongo";
 
 export class UserOperationDAO implements IUserOperationDAO {
   private _db: Mongo;
@@ -8,7 +12,10 @@ export class UserOperationDAO implements IUserOperationDAO {
     this._db = Mongo.getInstance();
   }
 
-  async save(chainId: number, userOperationData: InitialUserOperationDataType): Promise<void> {
+  async save(
+    chainId: number,
+    userOperationData: InitialUserOperationDataType,
+  ): Promise<void> {
     await this._db.getUserOperation(chainId).insertMany([userOperationData]);
   }
 
@@ -20,13 +27,20 @@ export class UserOperationDAO implements IUserOperationDAO {
     limit: number,
     offSet: number,
   ): Promise<Array<IUserOperation>> {
-    const data = await this._db.getUserOperation(chainId).aggregate([
-      {
-        $match: {
-          $and: [{ 'metaData.dappAPIKey': bundlerApiKey }, { creationTime: { $gte: startTime } }, { creationTime: { $lte: endTime } }],
+    const data = await this._db
+      .getUserOperation(chainId)
+      .aggregate([
+        {
+          $match: {
+            $and: [
+              { "metaData.dappAPIKey": bundlerApiKey },
+              { creationTime: { $gte: startTime } },
+              { creationTime: { $lte: endTime } },
+            ],
+          },
         },
-      },
-    ]).skip(offSet)
+      ])
+      .skip(offSet)
       .limit(limit);
     return data;
   }
@@ -35,7 +49,9 @@ export class UserOperationDAO implements IUserOperationDAO {
     chainId: number,
     userOpHash: string,
   ): Promise<IUserOperation | null> {
-    const data = await this._db.getUserOperation(chainId).findOne({ userOpHash });
+    const data = await this._db
+      .getUserOperation(chainId)
+      .findOne({ userOpHash });
     return data;
   }
 
@@ -45,19 +61,26 @@ export class UserOperationDAO implements IUserOperationDAO {
     userOpHash: string,
     userOperationData: FinalUserOperationDataType,
   ): Promise<void> {
-    await this._db.getUserOperation(chainId).updateOne({
-      transactionId,
-      userOpHash,
-    }, userOperationData);
+    await this._db.getUserOperation(chainId).updateOne(
+      {
+        transactionId,
+        userOpHash,
+      },
+      userOperationData,
+    );
   }
 
   async getUserOpsByTransactionId(
     chainId: number,
     transactionId: string,
   ): Promise<IUserOperation[]> {
-    const data = await this._db.getUserOperation(chainId).find({
-      transactionId,
-    }).sort({ _id: -1 }).lean();
+    const data = await this._db
+      .getUserOperation(chainId)
+      .find({
+        transactionId,
+      })
+      .sort({ _id: -1 })
+      .lean();
     return data;
   }
 
@@ -67,9 +90,12 @@ export class UserOperationDAO implements IUserOperationDAO {
     startTime: number,
     endTime: number,
   ): Promise<number> {
-    const data = await this._db.getUserOperation(chainId).count(
-      { 'metaData.dappAPIKey': bundlerApiKey, creationTime: { $gte: startTime, $lte: endTime } },
-    );
+    const data = await this._db
+      .getUserOperation(chainId)
+      .count({
+        "metaData.dappAPIKey": bundlerApiKey,
+        creationTime: { $gte: startTime, $lte: endTime },
+      });
     return data;
   }
 }

@@ -1,5 +1,5 @@
-import mongoose from 'mongoose';
-import { IBlockchainTransaction } from '../../interface/IBlockchainTransaction';
+import mongoose from "mongoose";
+import { IBlockchainTransaction } from "../../interface/IBlockchainTransaction";
 
 const { Schema } = mongoose;
 

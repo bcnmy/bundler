@@ -1,5 +1,5 @@
-import mongoose from 'mongoose';
-import { IUserOperationState } from '../../interface';
+import mongoose from "mongoose";
+import { IUserOperationState } from "../../interface";
 
 const { Schema } = mongoose;
 

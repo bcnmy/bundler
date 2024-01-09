@@ -1,5 +1,7 @@
-import { RelayServiceResponseType } from '../../types';
+import { RelayServiceResponseType } from "../../types";
 
 export interface IRelayService<TransactionMessageType> {
-  sendTransactionToRelayer(data: TransactionMessageType): Promise<RelayServiceResponseType>;
+  sendTransactionToRelayer(
+    data: TransactionMessageType,
+  ): Promise<RelayServiceResponseType>;
 }

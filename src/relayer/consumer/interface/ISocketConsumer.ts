@@ -1,3 +1,3 @@
-import { IConsumer } from './IConsumer';
+import { IConsumer } from "./IConsumer";
 
 export interface ISocketConsumer extends IConsumer {}

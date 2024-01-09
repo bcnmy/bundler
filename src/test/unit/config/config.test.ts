@@ -1,7 +1,7 @@
-import { merge } from '../../../config';
+import { merge } from "../../../config";
 
-describe('merge configs', () => {
-  it('should pick supportedNetworks from user config instead of static-config', () => {
+describe("merge configs", () => {
+  it("should pick supportedNetworks from user config instead of static-config", () => {
     const userConfig = {
       supportedNetworks: [1],
     };
