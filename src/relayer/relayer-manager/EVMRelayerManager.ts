@@ -475,7 +475,7 @@ export class EVMRelayerManager
           this.chainId
         }`;
         log.info(
-          `Waiting for lock to fund relayers on key ${key} for relayer ${relayerAddress} for duration of ${config.cacheService.lockTTL}ms`,
+          `Waiting for lock to fund relayers on key ${key} for relayer ${relayerAddress} for duration of 10000 ms`,
         );
         const acquiredLock = await lock.acquire([`locks:${key}`], 10000);
         log.info(
