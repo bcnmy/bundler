@@ -243,9 +243,9 @@ export class EVMTransactionListener
       // timeout error
       // do nothing for now just log
       log.error(
-        `Error: ${parseError(
+        `Error in waitForTransaction: ${parseError(
           waitForTransactionError,
-        )} Timeout hit for waiting on hash: ${transactionHash} for transactionId: ${transactionId} on chainId ${
+        )} on hash: ${transactionHash} for transactionId: ${transactionId} on chainId ${
           this.chainId
         }`,
       );
