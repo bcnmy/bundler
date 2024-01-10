@@ -517,7 +517,7 @@ export class EVMTransactionService
     return { ...response, type: "legacy", gasPrice: BigInt(gasPrice) };
   }
 
-  private async executeTransaction(
+  async executeTransaction(
     executeTransactionParams: ExecuteTransactionParamsType,
     transactionId: string,
   ): Promise<ExecuteTransactionResponseType> {
