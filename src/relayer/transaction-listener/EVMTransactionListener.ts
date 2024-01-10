@@ -944,9 +944,9 @@ export class EVMTransactionListener
       const transactionReceipt = await this.networkService.waitForTransaction(
         transactionHash,
         undefined,
-        // timeout is set to 1.5 times because it ensures that transaction would
+        // timeout is set to 2 times because it ensures that transaction would
         // have resubmitted and no need to keep polling it
-        Number(1.5 * config.chains.retryTransactionInterval[this.chainId]),
+        Number(2 * config.chains.retryTransactionInterval[this.chainId]),
       );
 
       log.info(
