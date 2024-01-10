@@ -1,4 +1,4 @@
-FROM node:18.17.1-bookworm
+FROM node:20.10-alpine3.18
 
 # install dependencies
 RUN apt update
