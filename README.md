@@ -1,126 +1,30 @@
-# Relayer Node Service
+# Bundler
+Biconomy ERC-4337 bundler-as-a-service implementation.
 
 ## Workflow best practices
 
-### Branching
+This project has two *important* branches:
+- `master`: Production branch. This is code that's currently in production.
+- `staging`: Staging branch. This represents what will be deployed to staging and included in the next release after it's been tested.
 
-This project has two main branches, `main`, and `dev`. Then we do work based on branches off of `dev`.
+To write quality commit messages we (try to) follow the [Conventional Commits Standard](https://www.conventionalcommits.org/en/v1.0.0/).
 
-`main`: Production branch. This is code that's live for the project.  
-`dev`: Staging branch. This represents what will be included in the next release.
+## Local Development Environment
 
-As we work on features, we branch off of the `dev` branch: `git checkout -b feature/new-nav-bar`.
+There are 2 ways to run the service and it's dependencies locally:
+1. **Manually**: follow the instructions in the [Bundler Local Setup](https://www.notion.so/biconomy/Local-setup-858695240f3a4c19b6c96cbb3f235b0a?pvs=4) Notion page.
+2. **Docker (recommended)**: follow the instructions below.
 
-Working branches have the form `<type>/<feature>` where `type` is one of:
+## Using the Docker development environment
+1. Install Docker and Docker compose
+2. Create an `.env` file using the `.env-example` file as a template
+3. Create a `config.json` file inside the `config` directory using `config/config-example.json` as a template.
+4. Run `ts-node encrypt-config.ts` to create the encrypted config. ⚠️ You have to do this every time you change the `config.json` and you have to restart the container for it to pick up changes.
+5. Run `docker compose up` and the server and all of it's dependencies should run in the current terminal session without throwing any errors.
 
-- feat
-- fix
-- hotfix
-- chore
-- refactor
-
-### Commit Messages
-
-#### Basic
-
-`<type>(<scope>):<subject>`
-
-Your basic commit messages should have a **type**, **scope**, and **subject**:
-
-- _Type_ is one of the types listed above
-- _Scope_ is the area of the code that the commit changes
-- _Subject_ is a brief description of the work completed
-
-
-## Local deployment 
-
-### Requirements:
-
-- Rabbitmq: https://www.rabbitmq.com/
-- Centrifugo: https://github.com/centrifugal/centrifugo
-- Redis: https://redis.io
-
-For centrifugo use the following base configuration file
-```
-{
-  "token_hmac_secret_key": "averystrongsecret",
-  "admin_password": "usedIfAdminSetToTrue",
-  "admin_secret": "averystrongsecretforadmin",
-  "api_key": "usedforpostapi",
-  "allowed_origins": ["*"],
-  "debug": true,
-  "admin": true,
-  "log_level": "debug",
-  "client_anonymous": true,
-  "client_channel_limit": 512,
-  "namespaces": [
-    {
-      "name": "relayer",
-      "publish": true,
-      "history_size": 10,
-      "history_ttl": "300s",
-      "recover": true,
-      "anonymous": false
-    },
-    {
-      "name": "transaction",
-      "publish": true,
-      "history_size": 10,
-      "history_ttl": "300s",
-      "recover": true,
-      "anonymous": true
-    }
-  ]
-}
-```
-
-## Steps to run the project
-
-1. Clone the project
-
-```jsx
-git clone https://github.com/bcnmy/relayer-node-service.git
-```
-
-2. Checkout to development branch
-
-```jsx
-git checkout development
-```
-
-3. Install 
-```jsx
-yarn install
-```
-
-4. Check if config.json.enc file exists in the config folder in the root of the repository. If not or if you want to make any changes in the configuration. Create a file config.json in config folder. You can use the template shown below for local deployment or find config-example.json file in the folder.
-
-```jsx
-{
-  "slack": {
-    "token": "",
-    "channel": "1BQKZLQ0Y"
-  },
-  "dataSources": {
-    "mongoUrl": "mongodb://localhost:27017",
-    "redisUrl": "redis://localhost:6379"
-  },
-  "socketService": {
-    "wssUrl": "ws://localhost:9000/connection/websocket",
-    "httpUrl": "http://localhost:9000/api",
-    "token": "9edb7c38-0f55-4627-9bda-4cc050b5f6cb",
-    "apiKey": "a4c3c3df-4294-4719-a6a6-0c3416d68466"
-  },
-  "queueUrl": "amqp://localhost:5672?heartbeat=30",
-}
-```
-
-To update the config.json.enc file run ts-node encrypt-config.ts
-
-5. To update configuration for chain specific parameters (provider url, currency, decimals), relayer manager, fee options, transacactions use static-config.json in the config folder.  
-
-6. Run the following code to start the project. It supports goerli and mumbai
-```jsx
-yarn run dev
-```
-
+Other useful commands:
+- `docker compose down`: stop the containers without deleting their data.
+- `docker compose down -v` tears down the whole environment, killing the containers and deleting any data volumes permanently. ⚠️ This will delete the local DB, do it only if you don't care about the data.
+- `docker compose up -d`: runs the containers in the background without blocking the current terminal sessions.
+- 💡 `docker compose build server`: run this whenever you add a new package to `package.json` or it won't be reflected in the container.
+- `docker compose build --no-cache <service_name>`: build without cache if you suspect caching problems.

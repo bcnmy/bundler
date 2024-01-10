@@ -1,7 +1,11 @@
 FROM node:18.17.1-bookworm
 
 # install dependencies
-# RUN apk update
+RUN apt update
+
+# Tini allows us to avoid several Docker edge cases, see https://github.com/krallin/tini.
+# NOTE: See https://github.com/hexops/dockerfile#is-tini-still-required-in-2020-i-thought-docker-added-it-natively
+RUN apt-get install tini
 
 # arguments
 ARG PORT=3000
@@ -13,9 +17,26 @@ COPY package.json yarn.lock  ./
 
 # install packages
 RUN yarn install
-COPY . /relayer-node 
+COPY . /relayer-node
 
 RUN yarn run build
 EXPOSE 3000
 
-CMD ["yarn", "run", "start"]
+# Non-root user for security purposes.
+#
+# UIDs below 10,000 are a security risk, as a container breakout could result
+# in the container being ran as a more privileged user on the host kernel with
+# the same UID.
+#
+# Static GID/UID is also useful for chown'ing files outside the container where
+# such a user does not exist.
+RUN addgroup --gid 10001 --system nonroot \
+  && adduser  --uid 10000 --system --ingroup nonroot --home /home/nonroot nonroot
+EXPOSE 3000
+
+# Use the non-root user to run our application
+USER nonroot
+
+ENTRYPOINT ["/usr/bin/tini", "--", "yarn"]
+
+CMD ["run", "start"]
