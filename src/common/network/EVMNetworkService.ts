@@ -177,6 +177,7 @@ export class EVMNetworkService
    */
   async waitForTransaction(
     transactionHash: string,
+    transactionId: string,
     // confirmations?: number,
     // timeout?: number,
   ): Promise<TransactionReceipt> {
@@ -185,7 +186,7 @@ export class EVMNetworkService
       // confirmations,
       // timeout,
     });
-    log.info(`waitForTransactionReceipt from provider response: ${customJSONStringify(response)} for transactionHash: ${transactionHash}`);
+    log.info(`waitForTransactionReceipt from provider response: ${customJSONStringify(response)} for transactionHash: ${transactionHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`);
     return response;
   }
 
