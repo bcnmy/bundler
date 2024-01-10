@@ -7,6 +7,8 @@ import { INonceManager } from "../../nonce-manager";
 import { ITransactionListener } from "../../transaction-listener";
 import {
   ErrorTransactionResponseType,
+  ExecuteTransactionParamsType,
+  ExecuteTransactionResponseType,
   RetryTransactionDataType,
   SuccessTransactionResponseType,
   TransactionDataType,
@@ -32,4 +34,8 @@ export interface ITransactionService<AccountType, RawTransactionType> {
     transactionType: TransactionType,
     relayerManagerName: string,
   ): Promise<SuccessTransactionResponseType | ErrorTransactionResponseType>;
+  executeTransaction(
+    executeTransactionParams: ExecuteTransactionParamsType,
+    transactionId: string,
+  ): Promise<ExecuteTransactionResponseType>
 }
