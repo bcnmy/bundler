@@ -37,5 +37,5 @@ export interface ITransactionService<AccountType, RawTransactionType> {
   executeTransaction(
     executeTransactionParams: ExecuteTransactionParamsType,
     transactionId: string,
-  ): Promise<ExecuteTransactionResponseType>
+  ): Promise<ExecuteTransactionResponseType>;
 }
