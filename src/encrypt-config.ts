@@ -9,8 +9,8 @@ const AES_MODE = crypto.mode.CBC;
 
 const encryptConfig = async (
   passphrase: string,
-  envPath = "src/config/config.json",
-  outputPath = "./config.json.enc",
+  envPath = "./config/config.json",
+  outputPath = "../config.json.enc",
 ) => {
   if (!existsSync(envPath)) {
     throw new Error(`Invalid ENV Path: ${envPath}`);
