@@ -25,6 +25,7 @@ export interface INetworkService<AccountType, RawTransactionType> {
   ): Promise<TransactionReceipt | null>;
   waitForTransaction(
     transactionHash: string,
+    transactionId: string,
     confirmations?: number,
     timeout?: number,
   ): Promise<TransactionReceipt>;
