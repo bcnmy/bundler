@@ -155,8 +155,8 @@ export class BundlerSimulationService {
           if (typeof gasPrice === "bigint") {
             userOp.maxPriorityFeePerGas = gasPrice;
           } else {
-            const { maxPriorityFeePerGas } = gasPrice;
-            userOp.maxPriorityFeePerGas = maxPriorityFeePerGas;
+            const { maxFeePerGas } = gasPrice;
+            userOp.maxPriorityFeePerGas = maxFeePerGas;
           }
         }
       }
@@ -339,6 +339,12 @@ export class BundlerSimulationService {
             (Number(toHex(totalGas)) - Number(toHex(preOpGas)) + 30000) * 1.2,
           ),
         );
+        if (OptimismNetworks.includes(chainId)) {
+          totalGas = BigInt(
+            Math.ceil(Number(toHex(paid)) / Number(toHex(userOp.maxFeePerGas))),
+          );
+          callGasLimit = BigInt(totalGas - preOpGas + BigInt(30000));
+        }
         log.info(`callGasLimit: ${callGasLimit} on chainId: ${chainId}`);
 
         if (
