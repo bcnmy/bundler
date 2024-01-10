@@ -181,15 +181,8 @@ export class BundlerSimulationService {
         } milliseconds`,
       );
 
-      if (ArbitrumNetworks.includes(chainId)) {
-        userOp.maxPriorityFeePerGas = BigInt(100000000);
-        userOp.maxFeePerGas = BigInt(100000000);
-      }
-  
-      if (OptimismNetworks.includes(chainId)) {
-        userOp.maxPriorityFeePerGas = BigInt(100000000);
-        userOp.maxFeePerGas = BigInt(100000000);
-      }
+      userOp.maxPriorityFeePerGas = BigInt(100000000);
+      userOp.maxFeePerGas = BigInt(100000000);
 
       log.info(
         `userOp to used to simulate in eth_call: ${customJSONStringify(
