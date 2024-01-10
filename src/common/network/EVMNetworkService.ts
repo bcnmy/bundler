@@ -177,13 +177,13 @@ export class EVMNetworkService
    */
   async waitForTransaction(
     transactionHash: string,
-    confirmations?: number,
-    timeout?: number,
+    // confirmations?: number,
+    // timeout?: number,
   ): Promise<TransactionReceipt> {
     return await this.provider.waitForTransactionReceipt({
       hash: transactionHash as `0x${string}`,
-      confirmations,
-      timeout,
+      // confirmations,
+      // timeout,
     });
   }
 

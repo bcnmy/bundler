@@ -946,7 +946,7 @@ export class EVMTransactionListener
         undefined,
         // timeout is set to 2 times because it ensures that transaction would
         // have resubmitted and no need to keep polling it
-        Number(2 * config.chains.retryTransactionInterval[this.chainId]),
+        // Number(2 * config.chains.retryTransactionInterval[this.chainId]),
       );
 
       log.info(
