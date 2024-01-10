@@ -180,11 +180,13 @@ export class EVMNetworkService
     // confirmations?: number,
     // timeout?: number,
   ): Promise<TransactionReceipt> {
-    return await this.provider.waitForTransactionReceipt({
+    const response = await this.provider.waitForTransactionReceipt({
       hash: transactionHash as `0x${string}`,
       // confirmations,
       // timeout,
     });
+    log.info(`waitForTransactionReceipt from provider response: ${customJSONStringify(response)} for transactionHash: ${transactionHash}`);
+    return response;
   }
 
   /**
