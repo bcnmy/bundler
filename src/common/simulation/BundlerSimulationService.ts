@@ -343,7 +343,9 @@ export class BundlerSimulationService {
           totalGas = BigInt(
             Math.ceil(Number(toHex(paid)) / Number(toHex(userOp.maxFeePerGas))),
           );
-          callGasLimit = BigInt(totalGas - preOpGas + BigInt(30000));
+          callGasLimit = BigInt(
+            Math.ceil(Number(totalGas - preOpGas + BigInt(30000)) * 1.2),
+          );
         }
         log.info(`callGasLimit: ${callGasLimit} on chainId: ${chainId}`);
 
