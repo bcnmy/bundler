@@ -184,9 +184,13 @@ export class EVMNetworkService
     log.info(
       `Starting waitFortransaction polling on transactionHash: ${transactionHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
     );
+    const confirmations = [137, 43114].includes(this.chainId) ? 5 : 1;
+    log.info(
+      `confirmations: ${confirmations} on transactionHash: ${transactionHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+    );
     const response = await this.provider.waitForTransactionReceipt({
       hash: transactionHash as `0x${string}`,
-      // confirmations,
+      confirmations,
       // timeout,
     });
     log.info(
