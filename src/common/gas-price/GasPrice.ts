@@ -315,14 +315,17 @@ export class GasPrice implements IGasPrice {
           maxFeePerGas = BigInt(2) * (baseFeePerGas + maxPriorityFeePerGas);
         }
 
-        if([137].includes(this.chainId)) {
+        if ([137].includes(this.chainId)) {
           await this.setMaxFeeGasPrice(
             GasPriceType.DEFAULT,
             formatUnits(BigInt(Math.ceil(Number(maxFeePerGas) * 1.2)), 0),
           );
           await this.setMaxPriorityFeeGasPrice(
             GasPriceType.DEFAULT,
-            formatUnits(BigInt(Math.ceil(Number(maxPriorityFeePerGas) * 1.2)), 0),
+            formatUnits(
+              BigInt(Math.ceil(Number(maxPriorityFeePerGas) * 1.2)),
+              0,
+            ),
           );
         } else {
           await this.setMaxFeeGasPrice(
