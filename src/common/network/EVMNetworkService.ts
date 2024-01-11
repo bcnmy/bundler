@@ -184,7 +184,7 @@ export class EVMNetworkService
     log.info(
       `Starting waitFortransaction polling on transactionHash: ${transactionHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
     );
-    const confirmations = [137, 43114].includes(this.chainId) ? 5 : 1;
+    const confirmations = [137, 43114, 80001, 43113].includes(this.chainId) ? 10 : 2;
     log.info(
       `confirmations: ${confirmations} on transactionHash: ${transactionHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
     );
