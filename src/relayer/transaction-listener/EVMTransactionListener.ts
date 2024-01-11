@@ -780,7 +780,7 @@ export class EVMTransactionListener
     try {
       const transactionReceipt = await this.networkService.waitForTransaction(
         transactionHash,
-        transactionId
+        transactionId,
       );
 
       log.info(
@@ -796,7 +796,10 @@ export class EVMTransactionListener
 
       await this.cacheService.set(getTransactionMinedKey(transactionId), "1");
 
-      if ((transactionReceipt.status as unknown as number) === 1) {
+      if (
+        (transactionReceipt.status as unknown as number) === 1 ||
+        (transactionReceipt.status as unknown as string) === "0x1"
+      ) {
         log.info(
           `Transaction is a success for transactionId: ${transactionId} on chainId ${this.chainId}`,
         );
@@ -813,7 +816,10 @@ export class EVMTransactionListener
           relayerManagerName,
         });
       }
-      if ((transactionReceipt.status as unknown as number) === 1) {
+      if (
+        (transactionReceipt.status as unknown as number) === 0 ||
+        (transactionReceipt.status as unknown as string) === "0x0"
+      ) {
         log.info(
           `Transaction is a failure for transactionId: ${transactionId} on chainId ${this.chainId}`,
         );

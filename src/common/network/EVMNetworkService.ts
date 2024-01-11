@@ -140,7 +140,10 @@ export class EVMNetworkService
   async getTransactionReceipt(
     transactionHash: string,
   ): Promise<TransactionReceipt | null> {
-    const response = await this.sendRpcCall(EthMethodType.GET_TRANSACTION_RECEIPT, [transactionHash]);
+    const response = await this.sendRpcCall(
+      EthMethodType.GET_TRANSACTION_RECEIPT,
+      [transactionHash],
+    );
     return response;
   }
 
@@ -195,8 +198,10 @@ export class EVMNetworkService
 
         if (
           transactionReceipt &&
-          ((transactionReceipt.status as unknown as number) === 1 ||
-          (transactionReceipt.status as unknown as number) === 0)
+          ((transactionReceipt.status as unknown as string) === "0x1" ||
+            (transactionReceipt.status as unknown as string) === "0x0" ||
+            (transactionReceipt.status as unknown as number) === 1 ||
+            (transactionReceipt.status as unknown as number) === 0)
         ) {
           // Transaction resolved successfully
           log.info(
