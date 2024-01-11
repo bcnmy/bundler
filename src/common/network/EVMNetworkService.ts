@@ -194,6 +194,10 @@ export class EVMNetworkService
     // Set interval to check every 1 second (adjust the interval as needed)
     const intervalId = setInterval(async () => {
       try {
+        log.info(
+          `Polling started to fetch receipt for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${this.chainId}`,
+        );
+        
         transactionReceipt = await this.provider.getTransactionReceipt({
           hash: transactionHash as `0x${string}`,
         });
