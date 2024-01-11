@@ -29,6 +29,7 @@ export enum EthMethodType {
   MAX_PRIORITY_FEE_PER_GAS = "eth_maxPriorityFeePerGas",
   ESTIMATE_GAS = "eth_estimateGas",
   ETH_CALL = "eth_call",
+  GET_TRANSACTION_RECEIPT = 'eth_getTransactionReceipt',
   SEND_RAW_TRANSACTION = "eth_sendRawTransaction",
 }
 
