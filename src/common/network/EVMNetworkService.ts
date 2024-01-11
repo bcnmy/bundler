@@ -140,13 +140,8 @@ export class EVMNetworkService
   async getTransactionReceipt(
     transactionHash: string,
   ): Promise<TransactionReceipt | null> {
-    try {
-      return await this.provider.getTransactionReceipt({
-        hash: transactionHash as `0x${string}`,
-      });
-    } catch (error) {
-      return null;
-    }
+    const response = await this.sendRpcCall(EthMethodType.GET_TRANSACTION_RECEIPT, [transactionHash]);
+    return response;
   }
 
   /**
@@ -189,23 +184,19 @@ export class EVMNetworkService
       `Starting waitFortransaction polling on transactionHash: ${transactionHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
     );
 
-    let transactionReceipt: TransactionReceipt | null =
-      await this.getTransactionReceipt(transactionHash);
+    let transactionReceipt = await this.getTransactionReceipt(transactionHash);
     // Set interval to check every 1 second (adjust the interval as needed)
     const intervalId = setInterval(async () => {
       try {
         log.info(
           `Polling started to fetch receipt for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${this.chainId}`,
         );
-        
-        transactionReceipt = await this.provider.getTransactionReceipt({
-          hash: transactionHash as `0x${string}`,
-        });
+        transactionReceipt = await this.getTransactionReceipt(transactionHash);
 
         if (
           transactionReceipt &&
-          (transactionReceipt.status === "success" ||
-            transactionReceipt.status === "reverted")
+          ((transactionReceipt.status as unknown as number) === 1 ||
+          (transactionReceipt.status as unknown as number) === 0)
         ) {
           // Transaction resolved successfully
           log.info(
