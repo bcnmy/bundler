@@ -236,7 +236,7 @@ export class EVMNetworkService
             }`,
           ));
         }
-      }, 1000);
+      }, 2000);
 
       // Uncomment the line below to stop the interval after a certain number of iterations (optional)
       setTimeout(
@@ -248,8 +248,8 @@ export class EVMNetworkService
             ),
           );
         },
-        5 * 60 * 1000,
-      ); // Stop after 5 minutes if not resolved }); // Stop after 5 minutes
+        4 * 60 * 1000,
+      );
     });
     log.info(
       `waitForTransactionReceipt from provider response: ${customJSONStringify(
