@@ -34,7 +34,9 @@ export const relayAATransaction = async (req: Request, res: Response) => {
     const entryPointAddress = req.body.params[1];
     const chainId = req.body.params[2];
     const metaData = req.body.params[3];
-    const gasLimitFromSimulation = req.body.params[4];
+    const gasLimitFromSimulation = req.body.params[4]
+    ? `0x${(req.body.params[4] + 500000).toString(16)}`
+    : `0x${(1000000).toString(16)}`;
     const userOpHash = req.body.params[5];
 
     const transactionId = generateTransactionId(Date.now().toString());
@@ -65,7 +67,7 @@ export const relayAATransaction = async (req: Request, res: Response) => {
       type: TransactionType.AA,
       to: entryPointAddress,
       data: "0x0",
-      gasLimit: `0x${Number(gasLimitFromSimulation).toString(16)}`,
+      gasLimit: gasLimitFromSimulation,
       chainId,
       value: "0x0",
       userOp,
