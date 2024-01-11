@@ -21,7 +21,7 @@ import {
   Type2TransactionGasPriceType,
 } from "./types";
 import { logger } from "../logger";
-import { customJSONStringify } from "../utils";
+import { customJSONStringify, parseError } from "../utils";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -184,23 +184,65 @@ export class EVMNetworkService
     log.info(
       `Starting waitFortransaction polling on transactionHash: ${transactionHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
     );
-    const confirmations = [137, 43114, 80001, 43113].includes(this.chainId) ? 10 : 2;
-    log.info(
-      `confirmations: ${confirmations} on transactionHash: ${transactionHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-    );
-    const response = await this.provider.waitForTransactionReceipt({
-      hash: transactionHash as `0x${string}`,
-      confirmations,
-      // timeout,
-    });
+
+    let transactionReceipt: TransactionReceipt | null =
+      await this.getTransactionReceipt(transactionHash);
+    // Set interval to check every 10 seconds (adjust the interval as needed)
+    const intervalId = setInterval(async () => {
+      try {
+        transactionReceipt = await this.provider.getTransactionReceipt({
+          hash: transactionHash as `0x${string}`,
+        });
+
+        if (
+          transactionReceipt &&
+          (transactionReceipt.status === "success" ||
+            transactionReceipt.status === "reverted")
+        ) {
+          // Transaction resolved successfully
+          log.info(
+            `Transaction receipt: ${customJSONStringify(
+              transactionReceipt,
+            )} fetched for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${
+              this.chainId
+            }`,
+          );
+          clearInterval(intervalId);
+        } else {
+          // Transaction is still pending
+          log.info(
+            `Transaction is still pending for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${this.chainId}`,
+          );
+        }
+      } catch (error) {
+        transactionReceipt = await this.getTransactionReceipt(transactionHash);
+        log.info(
+          `Error checking transaction receipt: ${parseError(
+            error,
+          )} for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${
+            this.chainId
+          }`,
+        );
+        clearInterval(intervalId);
+      }
+    }, 1000);
+
+    // Uncomment the line below to stop the interval after a certain number of iterations (optional)
+    setTimeout(() => clearInterval(intervalId), 5 * 60 * 1000); // Stop after 5 minutes
+
     log.info(
       `waitForTransactionReceipt from provider response: ${customJSONStringify(
-        response,
+        transactionReceipt,
       )} for transactionHash: ${transactionHash} for transactionId: ${transactionId} on chainId: ${
         this.chainId
       }`,
     );
-    return response;
+    if (transactionReceipt === null) {
+      throw new Error(
+        `Error in fetching transactionReceipt for transactionHash: ${transactionHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+      );
+    }
+    return transactionReceipt;
   }
 
   /**
