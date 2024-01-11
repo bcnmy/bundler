@@ -197,11 +197,12 @@ export class EVMNetworkService
             transactionReceipt =
               await this.getTransactionReceipt(transactionHash);
 
-            if (
+            const isTransactionMined =
               transactionReceipt &&
               ((transactionReceipt.status as unknown as string) === "0x1" ||
-                (transactionReceipt.status as unknown as string) === "0x0")
-            ) {
+                (transactionReceipt.status as unknown as string) === "0x0");
+                
+            if (isTransactionMined) {
               // Transaction resolved successfully
               log.info(
                 `Transaction receipt: ${customJSONStringify(
