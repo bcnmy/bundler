@@ -1,3 +1,4 @@
+/* eslint-disable no-async-promise-executor */
 /* eslint-disable import/no-import-module-exports */
 /* eslint-disable @typescript-eslint/return-await */
 /* eslint-disable new-cap */
@@ -137,18 +138,6 @@ export class EVMNetworkService
     return await this.sendRpcCall(EthMethodType.ETH_CALL, params);
   }
 
-  async getTransactionReceipt(
-    transactionHash: string,
-  ): Promise<TransactionReceipt | null> {
-    try {
-      return await this.provider.getTransactionReceipt({
-        hash: transactionHash as `0x${string}`,
-      });
-    } catch (error) {
-      return null;
-    }
-  }
-
   /**
    * Get the nonce of the user
    * @param address address
@@ -171,6 +160,16 @@ export class EVMNetworkService
     return hash as string;
   }
 
+  async getTransactionReceipt(
+    transactionHash: string,
+  ): Promise<TransactionReceipt | null> {
+    const response = await this.sendRpcCall(
+      EthMethodType.GET_TRANSACTION_RECEIPT,
+      [transactionHash],
+    );
+    return response;
+  }
+
   /**
    * @param transactionHash transaction hash
    * @returns receipt of the transaction once mined, else waits for the transaction to be mined
@@ -185,66 +184,88 @@ export class EVMNetworkService
       `Starting waitFortransaction polling on transactionHash: ${transactionHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
     );
 
-    let transactionReceipt: TransactionReceipt | null =
-      await this.getTransactionReceipt(transactionHash);
-    // Set interval to check every 10 seconds (adjust the interval as needed)
-    const intervalId = setInterval(async () => {
-      try {
-        log.info(
-          `Polling started to fetch receipt for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${this.chainId}`,
+    const response: TransactionReceipt | null = await new Promise(
+      async (resolve, reject) => {
+        let transactionReceipt =
+          await this.getTransactionReceipt(transactionHash);
+        // Set interval to check every 1 second (adjust the interval as needed)
+        const intervalId = setInterval(async () => {
+          try {
+            log.info(
+              `Polling started to fetch receipt for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${this.chainId}`,
+            );
+            transactionReceipt =
+              await this.getTransactionReceipt(transactionHash);
+
+            if (
+              transactionReceipt &&
+              ((transactionReceipt.status as unknown as string) === "0x1" ||
+                (transactionReceipt.status as unknown as string) === "0x0")
+            ) {
+              // Transaction resolved successfully
+              log.info(
+                `Transaction receipt: ${customJSONStringify(
+                  transactionReceipt,
+                )} fetched for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${
+                  this.chainId
+                }`,
+              );
+              clearInterval(intervalId);
+              resolve(transactionReceipt);
+            } else {
+              // Transaction is still pending
+              log.info(
+                `Transaction is still pending for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${this.chainId}`,
+              );
+            }
+          } catch (error) {
+            log.info(
+              `Error checking transaction receipt: ${parseError(
+                error,
+              )} for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${
+                this.chainId
+              }`,
+            );
+            clearInterval(intervalId);
+            reject(
+              new Error(
+                `Error checking transaction receipt: ${parseError(
+                  error,
+                )} for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${
+                  this.chainId
+                }`,
+              ),
+            );
+          }
+        }, 2000);
+
+        // Uncomment the line below to stop the interval after a certain number of iterations (optional)
+        setTimeout(
+          () => {
+            clearInterval(intervalId);
+            reject(
+              new Error(
+                "Timeout: The transaction is taking too long to confirm.",
+              ),
+            );
+          },
+          4 * 60 * 1000,
         );
-        transactionReceipt = await this.provider.getTransactionReceipt({
-          hash: transactionHash as `0x${string}`,
-        });
-
-        if (
-          transactionReceipt &&
-          (transactionReceipt.status === "success" ||
-            transactionReceipt.status === "reverted")
-        ) {
-          // Transaction resolved successfully
-          log.info(
-            `Transaction receipt: ${customJSONStringify(
-              transactionReceipt,
-            )} fetched for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${
-              this.chainId
-            }`,
-          );
-          clearInterval(intervalId);
-        } else {
-          // Transaction is still pending
-          log.info(
-            `Transaction is still pending for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${this.chainId}`,
-          );
-        }
-      } catch (error) {
-        transactionReceipt = await this.getTransactionReceipt(transactionHash);
-        log.info(
-          `Error checking transaction receipt: ${parseError(
-            error,
-          )} for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${
-            this.chainId
-          }`,
-        );
-        clearInterval(intervalId);
-      }
-    }, 1000);
-
-    setTimeout(() => clearInterval(intervalId), 5 * 60 * 1000); // Stop after 5 minutes
-
+      },
+    );
     log.info(
       `waitForTransactionReceipt from provider response: ${customJSONStringify(
-        transactionReceipt,
+        response,
       )} for transactionHash: ${transactionHash} for transactionId: ${transactionId} on chainId: ${
         this.chainId
       }`,
     );
-    if (transactionReceipt === null) {
+    if (response === null) {
       throw new Error(
         `Error in fetching transactionReceipt for transactionHash: ${transactionHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
       );
     }
-    return transactionReceipt;
+    return response;
   }
 
   /**
