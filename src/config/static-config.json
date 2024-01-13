@@ -20,10 +20,10 @@
     "1442": ["AA", "BUNDLER"],
     "1101": ["AA", "BUNDLER"],
     "421613": ["AA", "BUNDLER"],
-    "42161": ["AA", "BUNDLER"],
+    "42161": ["AA", "SCW", "BUNDLER"],
     "42170": ["AA", "BUNDLER"],
     "97": ["AA", "BUNDLER"],
-    "56": ["AA", "BUNDLER"],
+    "56": ["AA", "SCW", "BUNDLER"],
     "10": ["AA", "BUNDLER"],
     "420": ["AA", "BUNDLER"],
     "43113": ["AA", "BUNDLER"],
@@ -483,43 +483,57 @@
         "5": 3,
         "137": 5,
         "1": 2,
-        "80001": 5
+        "80001": 5,
+        "56": 2,
+        "42161": 2
       },
       "maxRelayerCount": {
         "5": 10,
         "137": 15,
         "1": 2,
-        "80001": 15
+        "80001": 15,
+        "56": 7,
+        "42161": 10
       },
       "inactiveRelayerCountThreshold": {
         "5": 5,
         "137": 5,
         "80001": 5,
-        "1": 2
+        "1": 2,
+        "56": 5,
+        "42161": 5
       },
       "pendingTransactionCountThreshold": {
         "5": 15,
         "137": 15,
         "80001": 15,
-        "1": 15
+        "1": 15,
+        "56": 15,
+        "42161": 15
       },
       "fundingRelayerAmount": {
         "5": 0.001,
         "137": 10,
         "80001": 0.1,
-        "1": 1
+        "1": 1,
+        "56": 0.2,
+        "42161": 0.2
       },
       "fundingBalanceThreshold": {
         "5": 0.03,
         "137": 3,
         "80001": 0.01,
-        "1": 0.5
+        "1": 0.5,
+        "56": 0.05,
+        "42161": 0.01
       },
       "newRelayerInstanceCount": {
         "5": 3,
         "137": 5,
         "80001": 5,
-        "1": 1
+        "1": 1,
+        "56": 1,
+        "42161": 2
       }
     }
   ],
@@ -557,7 +571,9 @@
   "feeOption": {
     "supportedFeeTokens": {
       "137": ["MATIC", "USDC", "USDT", "DAI", "WETH"],
-      "1": ["ETH", "USDC", "USDT", "DAI", "WETH"]
+      "1": ["ETH", "USDC", "USDT", "DAI", "WETH"],
+      "56": ["BNB"],
+      "42161": ["ETH"]
     },
     "offset": {
       "137": {
@@ -575,11 +591,25 @@
         "DAI": 1,
         "MATIC": 1,
         "BICO": 1
+      },
+      "42161": {
+        "USDC": 1000000,
+        "USDT": 1000000,
+        "WETH": 1,
+        "DAI": 1,
+        "MATIC": 1,
+        "BICO": 1
+      },
+      "56": {
+        "BND": 1,
+        "USDT": 1
       }
     },
     "similarTokens": {
       "1": ["ETH", "WETH"],
-      "137": ["MATIC", "WMATIC"]
+      "137": ["MATIC", "WMATIC"],
+      "56": ["BNB", "WBNB"],
+      "42161": ["ETH", "WETH"]
     },
     "nativeChainIds": {
       "WETH": 1,
@@ -604,6 +634,19 @@
         "USDT": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png",
         "DAI": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/dai.png",
         "BICO": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/bico.png"
+      },
+      "56": {
+        "BNB": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/bnb.png",
+        "USDT": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png"
+      },
+      "42161": {
+        "ETH": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png",
+        "WETH": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png",
+        "MATIC": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png",
+        "WMATIC": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png",
+        "USDC": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdc.png",
+        "USDT": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png",
+        "XDAI": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xdai.png"
       }
     },
     "tokenContractAddress": {
@@ -621,6 +664,17 @@
         "WETH": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
         "DAI": "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063",
         "BICO": "0x91c89A94567980f0e9723b487b0beD586eE96aa7"
+      },
+      "56": {
+        "BNB": "0x0000000000000000000000000000000000000000",
+        "USDT": "0xbf22b04E250A5921ab4dC0d4ceD6E391459e92D4"
+      },
+      "42161": {
+        "ETH": "0x0000000000000000000000000000000000000000",
+        "USDC": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        "USDT": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+        "WETH": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+        "DAI": "0x6B175474E89094C44Da98b954EedeAC495271d0F"
       }
     },
     "decimals": {
@@ -638,6 +692,17 @@
         "WETH": 18,
         "DAI": 18,
         "BICO": 18
+      },
+      "56": {
+        "BNB": 18,
+        "USDT": 18
+      },
+      "42161": {
+        "ETH": 18,
+        "USDC": 6,
+        "USDT": 6,
+        "WETH": 18,
+        "DAI": 18
       }
     },
     "feeTokenTransferGas": {
@@ -655,11 +720,24 @@
         "WETH": 22975,
         "DAI": 22975,
         "BICO": 22975
+      },
+      "56": {
+        "BNB": 7300,
+        "USDT": 22975
+      },
+      "42161": {
+        "ETH": 7300,
+        "USDC": 22975,
+        "USDT": 22975,
+        "WETH": 22975,
+        "DAI": 22975
       }
     },
     "refundReceiver": {
       "137": "0xfC614d949CcdC9EC2Ffc2b17eA0824c5A3beC69e",
-      "1": "0xfC614d949CcdC9EC2Ffc2b17eA0824c5A3beC69e"
+      "1": "0xfC614d949CcdC9EC2Ffc2b17eA0824c5A3beC69e",
+      "56": "0xfC614d949CcdC9EC2Ffc2b17eA0824c5A3beC69e",
+      "42161": "0xfC614d949CcdC9EC2Ffc2b17eA0824c5A3beC69e"
     }
   },
   "tokenPrice": {
@@ -668,6 +746,7 @@
         1, 3, 4, 42, 5, 421613, 42161, 10, 1442, 1101, 420, 10, 84531, 8453,
         59140, 59144, 5000, 5001, 5611, 204
       ],
+      "BNB": [97, 56],
       "MATIC": [8995, 80001, 15001, 16110, 137]
     },
     "symbolMapByChainId": {
@@ -675,6 +754,12 @@
         "0x6B175474E89094C44Da98b954EedeAC495271d0F": "DAI"
       },
       "137": {
+        "0x6B175474E89094C44Da98b954EedeAC495271d0F": "DAI"
+      },
+      "56": {
+        "0x6B175474E89094C44Da98b954EedeAC495271d0F": "DAI"
+      },
+      "42161": {
         "0x6B175474E89094C44Da98b954EedeAC495271d0F": "DAI"
       }
     }
