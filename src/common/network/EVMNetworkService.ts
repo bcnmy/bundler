@@ -201,7 +201,7 @@ export class EVMNetworkService
               transactionReceipt &&
               ((transactionReceipt.status as unknown as string) === "0x1" ||
                 (transactionReceipt.status as unknown as string) === "0x0");
-                
+
             if (isTransactionMined) {
               // Transaction resolved successfully
               log.info(

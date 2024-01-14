@@ -1,6 +1,6 @@
 import { ICacheService } from "../../../common/cache";
 import { ITransactionDAO, IUserOperationStateDAO } from "../../../common/db";
-import { IGasPrice } from "../../../common/gas-price";
+import { IGasPriceService } from "../../../common/gas-price";
 import { GasPriceType } from "../../../common/gas-price/types";
 import { INetworkService } from "../../../common/network";
 import { RetryTransactionQueueData } from "../../../common/queue/types";
@@ -14,7 +14,7 @@ export type EVMTransactionServiceParamsType = {
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
   transactionListener: ITransactionListener<IEVMAccount, EVMRawTransactionType>;
   nonceManager: INonceManager<IEVMAccount, EVMRawTransactionType>;
-  gasPriceService: IGasPrice;
+  gasPriceService: IGasPriceService;
   transactionDao: ITransactionDAO;
   cacheService: ICacheService;
   notificationManager: INotificationManager;

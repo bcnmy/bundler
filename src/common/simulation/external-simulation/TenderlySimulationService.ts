@@ -9,7 +9,7 @@ import {
   SimulationDataType,
 } from "../types";
 import { logger } from "../../logger";
-import { IGasPrice } from "../../gas-price";
+import { IGasPriceService } from "../../gas-price";
 import { GasPriceType } from "../../gas-price/types";
 import { IExternalSimulation } from "../interface";
 import { customJSONStringify, getTokenPriceKey, parseError } from "../../utils";
@@ -23,7 +23,7 @@ const log = logger.child({
 
 // TODO Remove hard coded values from this class
 export class TenderlySimulationService implements IExternalSimulation {
-  gasPriceService: IGasPrice;
+  gasPriceService: IGasPriceService;
 
   cacheService: ICacheService;
 
@@ -34,7 +34,7 @@ export class TenderlySimulationService implements IExternalSimulation {
   private tenderlyAccessKey: string;
 
   constructor(
-    gasPriceService: IGasPrice,
+    gasPriceService: IGasPriceService,
     cacheService: ICacheService,
     options: {
       tenderlyUser: string;
@@ -277,23 +277,7 @@ export class TenderlySimulationService implements IExternalSimulation {
     log.info(
       `Getting refund amount in usd for native token with payment value: ${payment} on chainId: ${chainId}`,
     );
-    let networkPriceData;
-    if (!networkPriceDataInString) {
-      log.error("Network price data not found");
-      // TODO remove this hardcoded value. Think better solution
-      networkPriceData = {
-        1: "1278.43",
-        5: "1278.43",
-        137: "0.80",
-        80001: "0.80",
-        97: "289.87",
-        420: "1278.43",
-        421613: "1278.43",
-        43113: "13.17",
-      };
-    } else {
-      networkPriceData = JSON.parse(networkPriceDataInString);
-    }
+    const networkPriceData = JSON.parse(networkPriceDataInString);
     const decimal = config.chains.decimal[chainId] || 18;
     log.info(`Decimal for native token: ${decimal} on chainId: ${chainId}`);
     const chainPriceDataInUSD = networkPriceData[chainId];

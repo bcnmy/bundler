@@ -149,6 +149,8 @@ export type ConfigType = {
   socketService: SocketServiceConfigType;
   cacheService: CacheServiceConfigType;
   supportedNetworks: Array<number>;
+  testnetNetworks: Array<number>;
+  nonRM2SupportedNetworks: Array<number>;
   EIP1559SupportedNetworks: Array<number>;
   supportedTransactionType: ChainIdSupportedTransactionType;
   chains: ChainsConfigType;

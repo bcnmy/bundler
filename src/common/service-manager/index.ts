@@ -1,5 +1,6 @@
 /* eslint-disable import/no-import-module-exports */
 /* eslint-disable no-await-in-loop */
+import { schedule } from "node-cron";
 import { getContract, parseEther } from "viem";
 import { config } from "../../config";
 import { EVMAccount, IEVMAccount } from "../../relayer/account";
@@ -22,7 +23,6 @@ import { FeeOption } from "../../server/services";
 import { RedisCacheService } from "../cache";
 import { Mongo, TransactionDAO } from "../db";
 import { UserOperationDAO } from "../db/dao/UserOperationDAO";
-import { GasPriceManager } from "../gas-price";
 import { IQueue } from "../interface";
 import { logger } from "../logger";
 import { relayerManagerTransactionTypeNameMap } from "../maps";
@@ -59,7 +59,7 @@ import {
 import { UserOperationStateDAO } from "../db/dao/UserOperationStateDAO";
 import { ENTRY_POINT_ABI } from "../constants";
 import { customJSONStringify } from "../utils";
-import { GasPrice } from "../gas-price/GasPrice";
+import { GasPriceService } from "../gas-price";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -79,7 +79,7 @@ const feeOptionMap: {
 } = {};
 
 const gasPriceServiceMap: {
-  [chainId: number]: GasPrice;
+  [chainId: number]: GasPriceService;
 } = {};
 
 const bundlerSimulatonServiceMap: {
@@ -164,17 +164,17 @@ let statusService: IStatusService;
     networkServiceMap[chainId] = networkService;
 
     log.info(`Setting up gas price manager for chainId: ${chainId}`);
-    const gasPriceManager = new GasPriceManager(cacheService, networkService, {
+    const gasPriceService = new GasPriceService(cacheService, networkService, {
       chainId,
       EIP1559SupportedNetworks: config.EIP1559SupportedNetworks,
     });
-    log.info(`Gas price manager setup complete for chainId: ${chainId}`);
+    log.info(`Gas price service setup complete for chainId: ${chainId}`);
 
-    log.info(`Setting up gas price service for chainId: ${chainId}`);
-    const gasPriceService = gasPriceManager.setup();
     // added check for relayer node path in order to run on only one server
     if (gasPriceService && config.relayer.nodePathIndex === 0) {
-      gasPriceService.schedule();
+      schedule(`*/${10} * * * * *`, () => {
+        gasPriceService.setup();
+      });
     }
     if (!gasPriceService) {
       throw new Error(`Gasprice service is not setup for chainId ${chainId}`);
@@ -248,11 +248,7 @@ let statusService: IStatusService;
     for (const relayerManager of config.relayerManagers) {
       if (
         relayerManager.name === "RM2" &&
-        [
-          97, 1442, 1101, 42170, 420, 10, 43113, 43114, 84531, 8453,
-          59140, 59144, 5000, 5001, 204, 5611, 88888, 592, 88882, 81, 1115,
-          1116, 169, 3441005, 91715, 7116, 9980, 421614, 11155111,
-        ].includes(chainId)
+        config.nonRM2SupportedNetworks.includes(chainId)
       ) {
         log.info(`chainId: ${chainId} not supported on relayer manager RM2`);
         // eslint-disable-next-line no-continue
