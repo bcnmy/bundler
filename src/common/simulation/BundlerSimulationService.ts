@@ -965,9 +965,8 @@ export class BundlerSimulationService {
         args: [handleOpsData],
       });
       // extraPvg = l1Cost / l2Price
-      const l2MaxFee = userOp.maxFeePerGas;
-      const l2PriorityFee = baseFeePerGas + userOp.maxPriorityFeePerGas;
-
+      const l2MaxFee = BigInt(userOp.maxFeePerGas);
+      const l2PriorityFee = baseFeePerGas + BigInt(userOp.maxPriorityFeePerGas);
       const l2Price = l2MaxFee < l2PriorityFee ? l2MaxFee : l2PriorityFee;
       const extraPvg = l1Fee / l2Price;
       ret += Number(toHex(extraPvg));
