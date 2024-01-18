@@ -26,7 +26,7 @@ import { MoonbaseAlphaTestnetGasPrice } from './networks/MoonbaseAlphaTestnetGas
 import { MoonbeamMainnetGasPrice } from './networks/MoonbeamMainnetGasPrice';
 import { MantleMainnetGasPrice } from './networks/MantleMainnetGasPrice';
 import { MantleTestnetGasPrice } from './networks/MantleTestnetGasPrice';
-import { OpBNBMainnetGasPrice } from './networks/opBNBMainnetGasPrice';
+import { OpBNBMainnetGasPrice } from './networks/OpBNBMainnetGasPrice';
 import { OpBNBTestnetGasPrice } from './networks/OpBNBTestnetGasPrice';
 import { ChillizMainnetGasPrice } from './networks/ChillizMainnetGasPrice';
 import { AstarMainnetGasPrice } from './networks/AstarMainnetGasPrice';
