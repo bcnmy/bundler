@@ -124,3 +124,17 @@ To update the config.json.enc file run ts-node encrypt-config.ts
 yarn run dev
 ```
 
+## CI/CD with Github Actions
+
+To create the GCP workload identity service account 
+  - go to https://github.com/bcnmy/devops/tree/master/gcp/github-actions
+  - create new sh file `configure_bcnmy_<github_repo_name>`;
+    e.g. `configure_bcnmy_bundler.sh`
+  - run the new script
+  - get value of service account
+    e.g. `sa-bundler@prj-workload-identity-001.iam.gserviceaccount.com`
+
+
+
+
+

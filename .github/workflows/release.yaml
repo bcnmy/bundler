@@ -1,0 +1,122 @@
+---
+# This workflow will build a docker image and deploy it to trustwallet stating \
+# and production environments
+
+# yamllint disable rule:line-length
+name: Version_Release
+on:
+  push:
+    tags:
+      - v0.**
+jobs:
+  js_build_test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x]
+        # node-version: [14.x, 16.x, 18.x, 20.x]
+        # See supported Node.js release schedule at
+        # https://nodejs.org/en/about/releases/
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Yarn install, build and test
+        run: echo "In the steps below we will build and run first set of tests for all components"
+      - run: echo yarn install
+      - run: echo yarn lint
+      - run: echo yarn build
+      - run: echo yarn test
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+      - name: Dump GITHUB_REF
+        run: echo "${GITHUB_REF}"
+          
+  container_img_build_push_gar:
+    needs: [js_build_test]
+    # Allow the job to fetch a GitHub ID token
+    permissions:
+      id-token: write
+      contents: read
+    # The plan is to build and push each docker image in parallel.
+    strategy:
+      matrix:
+        image:
+          - us-docker.pkg.dev/biconomy-prod/paymaster/tw-01-paymaster
+          # LOCATION-docker.pkg.dev/PROJECT-ID/REPOSITORY/IMAGE
+          # {owner}/{repo}/.github/workflows/{filename}@{ref}
+    uses: bcnmy/devops/.github/workflows/container_img_build_push_gar.yaml@master
+    with:
+      image: ${{ matrix.image }}
+      dockerfile: Dockerfile.helm
+      # GCP project where the identity provider is
+      # gcloud projects describe prj-workload-identity-001
+      gcp_project_number: '766873424314'
+      gcp_pool_id: 'pool-id-github-actions'
+      # gcp_provider_id: 'ga-GITHUB_REPO_NAME'
+      gcp_provider_id: 'ga-paymaster-service'
+      # LOCATION-docker.pkg.dev/PROJECT-ID/REPOSITORY/IMAGE
+      gcp_registry: 'us-docker.pkg.dev/biconomy-prod/paymaster/tw-01-paymaster'
+      gcp_service_account: 'sa-paymaster-service@prj-workload-identity-001.iam.gserviceaccount.com'
+
+  deploy_tw_staging:
+    needs: [container_img_build_push_gar]
+    # Allow the job to fetch a GitHub ID token
+    # runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    uses: bcnmy/devops/.github/workflows/deploy_to_gke.yaml@master
+    with:
+      # GCP project where the identity provider is
+      # gcloud projects describe prj-workload-identity-001
+      gcp_project_number: '766873424314'
+      gcp_project_id: 'biconomy-prod'
+      gcp_bastion: 'bastion02'
+      gcp_bastion_zone: 'us-east1-b'
+      gcp_pool_id: 'pool-id-github-actions'
+      # created by devops/gcp/github-actions/configure_workload_identity_federation_with_github_actions_pipelines.sh
+      # gcp_provider_id: 'ga-GITHUB_REPO_NAME'
+      gcp_provider_id: 'ga-paymaster-service'
+      # SERVICE_ACCOUNT_EMAIL="${SERVICE_ACCOUNT}@${PROJECT}.iam.gserviceaccount.com"
+      gcp_service_account: 'sa-paymaster-service@prj-workload-identity-001.iam.gserviceaccount.com'
+      gcp_cluster_name: 'dedicated-bundler'
+      gcp_cluster_location: 'us-east1'
+      use_internal_ip: true
+      # https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables
+      deploy_command: './install-paymaster/paymaster-update-setup.sh biconomy-stage-dedicated-bundler.cfg ${GITHUB_REF:10}'
+      # deploy_command: 'echo IMG_VERSION is ${GITHUB_REF:10}' # for example extracts v0.0.5 from "refs/tags/v0.0.5"  
+
+  deploy_tw_prod:
+    needs: [deploy_tw_staging]
+    # environment: tw-prod
+    # Allow the job to fetch a GitHub ID token
+    # runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    uses: bcnmy/devops/.github/workflows/deploy_to_gke.yaml@master
+    with:
+      environment: 'tw-prod'
+      # GCP project where the identity provider is
+      # gcloud projects describe prj-workload-identity-001
+      gcp_project_number: '766873424314'
+      gcp_project_id: 'biconomy-prod'
+      gcp_bastion: 'bastion02'
+      gcp_bastion_zone: 'us-east1-b'
+      gcp_pool_id: 'pool-id-github-actions'
+      # created by devops/gcp/github-actions/configure_workload_identity_federation_with_github_actions_pipelines.sh
+      # gcp_provider_id: 'ga-GITHUB_REPO_NAME'
+      gcp_provider_id: 'ga-paymaster-service'
+      # SERVICE_ACCOUNT_EMAIL="${SERVICE_ACCOUNT}@${PROJECT}.iam.gserviceaccount.com"
+      gcp_service_account: 'sa-paymaster-service@prj-workload-identity-001.iam.gserviceaccount.com'
+      gcp_cluster_name: 'tw-01-paymaster'
+      gcp_cluster_location: 'us-east1'
+      use_internal_ip: true
+      deploy_command: './install-paymaster/paymaster-update-setup.sh biconomy-prod-tw-01-paymaster.cfg ${GITHUB_REF:10}'
+      # deploy_command: 'helm ls --all-namespaces'
