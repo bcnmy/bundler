@@ -172,9 +172,12 @@ let statusService: IStatusService;
 
     // added check for relayer node path in order to run on only one server
     if (gasPriceService && config.relayer.nodePathIndex === 0) {
-      schedule(`*/${10} * * * * *`, () => {
-        gasPriceService.setup();
-      });
+      schedule(
+        `*/${config.chains.updateFrequencyInSeconds[chainId]} * * * * *`,
+        () => {
+          gasPriceService.setup();
+        },
+      );
     }
     if (!gasPriceService) {
       throw new Error(`Gasprice service is not setup for chainId ${chainId}`);

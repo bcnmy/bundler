@@ -102,6 +102,7 @@ type ChainsConfigType = {
   decimal: ChainIdWithNumberValueType;
   provider: ChainIdWithStringValueType;
   retryTransactionInterval: ChainIdWithNumberValueType;
+  updateFrequencyInSeconds: ChainIdWithNumberValueType;
 };
 
 type RelayerConfigType = {

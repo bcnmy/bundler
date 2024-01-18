@@ -21,7 +21,6 @@ const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
 });
 
-// TODO Remove hard coded values from this class
 export class TenderlySimulationService implements IExternalSimulation {
   gasPriceService: IGasPriceService;
 
