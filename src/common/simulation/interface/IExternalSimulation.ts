@@ -1,8 +1,8 @@
 import { ICacheService } from "../../cache";
-import { IGasPrice } from "../../gas-price";
+import { IGasPriceService } from "../../gas-price";
 
 export interface IExternalSimulation {
-  gasPriceService: IGasPrice;
+  gasPriceService: IGasPriceService;
   cacheService: ICacheService;
 
   simulate(simulationData: any): Promise<any>;

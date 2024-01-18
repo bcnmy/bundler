@@ -3,7 +3,7 @@
 import { Mutex } from "async-mutex";
 import { toHex } from "viem";
 import { ICacheService } from "../../common/cache";
-import { IGasPrice } from "../../common/gas-price";
+import { IGasPriceService } from "../../common/gas-price";
 import { logger } from "../../common/logger";
 import { INetworkService } from "../../common/network";
 import {
@@ -58,7 +58,7 @@ export class EVMTransactionService
 
   nonceManager: INonceManager<IEVMAccount, EVMRawTransactionType>;
 
-  gasPriceService: IGasPrice;
+  gasPriceService: IGasPriceService;
 
   cacheService: ICacheService;
 

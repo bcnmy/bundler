@@ -1,5 +1,5 @@
 import { ICacheService } from "../../../common/cache";
-import { IGasPrice } from "../../../common/gas-price";
+import { IGasPriceService } from "../../../common/gas-price";
 import { INetworkService } from "../../../common/network";
 import { INotificationManager } from "../../../common/notification/interface";
 import { EVMRawTransactionType } from "../../../common/types";
@@ -10,7 +10,7 @@ import { ITransactionService } from "../../transaction-service";
 
 export type EVMRelayerManagerServiceParamsType = {
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
-  gasPriceService: IGasPrice;
+  gasPriceService: IGasPriceService;
   cacheService: ICacheService;
   transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>;
   nonceManager: INonceManager<IEVMAccount, EVMRawTransactionType>;

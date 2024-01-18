@@ -7,6 +7,7 @@ import {
 } from "../../../common/service-manager";
 import { parseError } from "../../../common/utils";
 import { logger } from "../../../common/logger";
+import { config } from "../../../config";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -23,12 +24,7 @@ export const validateBundlerTransaction = async (req: Request) => {
     log.info(`dappAPIKey from request params: ${dappAPIKey}`);
 
     if (dappAPIKey === "nJPK7B3ru.dd7f7861-190d-41bd-af80-6877f74b8f44") {
-      if (
-        ![
-          5, 80001, 97, 1442, 421613, 420, 43113, 84531, 59140, 5001, 5611, 81,
-          88882, 59144, 421614, 11155111, 7116, 1115, 3441005,
-        ].includes(parseInt(chainId, 10))
-      ) {
+      if (!config.testnetNetworks.includes(parseInt(chainId, 10))) {
         return {
           code: -32400,
           message:

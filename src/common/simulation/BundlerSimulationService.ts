@@ -50,7 +50,7 @@ import {
   AlchemySimulationService,
   TenderlySimulationService,
 } from "./external-simulation";
-import { IGasPrice } from "../gas-price";
+import { IGasPriceService } from "../gas-price";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -61,7 +61,7 @@ export class BundlerSimulationService {
 
   tenderlySimulationService: TenderlySimulationService;
 
-  gasPriceService: IGasPrice;
+  gasPriceService: IGasPriceService;
 
   alchemySimulationService: AlchemySimulationService;
 
@@ -73,7 +73,7 @@ export class BundlerSimulationService {
     networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
     tenderlySimulationService: TenderlySimulationService,
     alchemySimulationService: AlchemySimulationService,
-    gasPriceService: IGasPrice,
+    gasPriceService: IGasPriceService,
   ) {
     this.networkService = networkService;
     this.tenderlySimulationService = tenderlySimulationService;

@@ -4,7 +4,7 @@ import { INetworkService } from "../../network";
 import { EVMRawTransactionType, NetworkBasedGasPriceType } from "../../types";
 import { GasPriceType } from "../types";
 
-export interface IGasPrice {
+export interface IGasPriceService {
   chainId: number;
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
   cacheService: ICacheService;

@@ -6,14 +6,14 @@ import { ICacheService } from "../cache";
 import { logger } from "../logger";
 import { INetworkService } from "../network";
 import { EVMRawTransactionType, NetworkBasedGasPriceType } from "../types";
-import { IGasPrice } from "./interface/IGasPrice";
 import { GasPriceType } from "./types";
 import { customJSONStringify } from "../utils";
+import { IGasPriceService } from "./interface/IGasPriceService";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
 });
-export class GasPrice implements IGasPrice {
+export class GasPriceService implements IGasPriceService {
   chainId: number;
 
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;

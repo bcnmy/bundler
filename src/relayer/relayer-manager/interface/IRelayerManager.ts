@@ -1,5 +1,5 @@
 import { ICacheService } from "../../../common/cache";
-import { IGasPrice } from "../../../common/gas-price";
+import { IGasPriceService } from "../../../common/gas-price";
 import { INetworkService } from "../../../common/network";
 import { INonceManager } from "../../nonce-manager";
 import { EVMRelayerMetaDataType, IRelayerQueue } from "../../relayer-queue";
@@ -22,7 +22,7 @@ export interface IRelayerManager<AccountType, RawTransactionType> {
   transactionProcessingRelayerMap: Record<string, EVMRelayerMetaDataType>;
   nonceManager: INonceManager<AccountType, RawTransactionType>;
   networkService: INetworkService<AccountType, RawTransactionType>;
-  gasPriceService: IGasPrice;
+  gasPriceService: IGasPriceService;
   cacheService: ICacheService;
   createRelayers(numberOfRelayers?: number): Promise<string[]>;
   fundRelayers(accountAddress: string[]): Promise<boolean>;

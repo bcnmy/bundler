@@ -1,5 +1,5 @@
 import { ICacheService } from "../../../common/cache";
-import { IGasPrice } from "../../../common/gas-price";
+import { IGasPriceService } from "../../../common/gas-price";
 import { INetworkService } from "../../../common/network";
 import { TransactionType } from "../../../common/types";
 import { IEVMAccount } from "../../account";
@@ -19,7 +19,7 @@ export interface ITransactionService<AccountType, RawTransactionType> {
   networkService: INetworkService<AccountType, RawTransactionType>;
   transactionListener: ITransactionListener<AccountType, RawTransactionType>;
   nonceManager: INonceManager<AccountType, RawTransactionType>;
-  gasPriceService: IGasPrice;
+  gasPriceService: IGasPriceService;
   cacheService: ICacheService;
 
   sendTransaction(
