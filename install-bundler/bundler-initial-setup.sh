@@ -104,22 +104,22 @@ source "setup-scripts/create-variables.sh" "$DIR/$CONFIG_FILE"
 # for bundler the configMap name will be bundler-common-configMap
 
 
-# bash setup-scripts/create-encrypted-config-secret.sh "$ENCRYPTED_CONFIG_SECRET"
-# bash setup-scripts/create-secret.sh "$SECRET_NAME"
-# bash setup-scripts/create-gcp-role.sh "$PROJECT_ID" "$GCP_IAM_ROLE" "$ENCRYPTED_CONFIG_SECRET" "$SECRET_NAME"
-# bash setup-scripts/gcp-role-binding.sh "$NAMESPACE" "$PROJECT_ID" "$GCP_IAM_ROLE" "$KUBE_SERVICE_ACCOUNT"
+bash setup-scripts/create-encrypted-config-secret.sh "$ENCRYPTED_CONFIG_SECRET"
+bash setup-scripts/create-secret.sh "$SECRET_NAME"
+bash setup-scripts/create-gcp-role.sh "$PROJECT_ID" "$GCP_IAM_ROLE" "$ENCRYPTED_CONFIG_SECRET" "$SECRET_NAME"
+bash setup-scripts/gcp-role-binding.sh "$NAMESPACE" "$PROJECT_ID" "$GCP_IAM_ROLE" "$KUBE_SERVICE_ACCOUNT"
 
-# REDIS_MASTER_REPLICA=1
-# REDIS_READ_REPLICA=2
-# sh install-redis/install.sh $ENV $NAMESPACE $REDIS_MASTER_REPLICA $REDIS_READ_REPLICA
+REDIS_MASTER_REPLICA=1
+REDIS_READ_REPLICA=2
+sh install-redis/install.sh $ENV $NAMESPACE $REDIS_MASTER_REPLICA $REDIS_READ_REPLICA
 
-# RABBITMQ_REPLICA_COUNT=3
-# sh install-rabbitmq/install.sh $ENV $NAMESPACE $RABBITMQ_REPLICA_COUNT
+RABBITMQ_REPLICA_COUNT=3
+sh install-rabbitmq/install.sh $ENV $NAMESPACE $RABBITMQ_REPLICA_COUNT
 
-# sh install-mongo/install.sh $ENV $NAMESPACE
+sh install-mongo/install.sh $ENV $NAMESPACE
 
-# CENTRIFUGO_REPLICA_COUNT=3
-# sh install-centrifugo/install.sh $ENV $NAMESPACE $CENTRIFUGO_REPLICA_COUNT
+CENTRIFUGO_REPLICA_COUNT=3
+sh install-centrifugo/install.sh $ENV $NAMESPACE $CENTRIFUGO_REPLICA_COUNT
 
 # sh install-prometheus/install.sh
 # bash install-prometheus-adapter/install.sh $ENV $NAMESPACE "$CHAINS_CFG_FILENAME"

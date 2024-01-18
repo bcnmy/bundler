@@ -60,4 +60,4 @@ jobs:
       # LOCATION-docker.pkg.dev/PROJECT-ID/REPOSITORY/IMAGE
       gcp_registry: 'us-docker.pkg.dev/biconomy-prod/bundler/trustwallet'
       gcp_service_account: 'sa-bundler@prj-workload-identity-001.iam.gserviceaccount.com'
-
+      #
