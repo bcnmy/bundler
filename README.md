@@ -399,6 +399,14 @@ TEST SUITE: None
 ```
 </details>
 
+- Deploy the bundler 
+
+Dependency: `configs/bundler-tw-staging.cfg` based on `configs/example.cfg`
+
+```bash
+./bundler-update-release.sh configs/bundler-tw-staging.cfg
+```
+
 ## CI/CD with Github Actions
 
 To create the GCP workload identity service account 

@@ -50,7 +50,7 @@ jobs:
     uses: bcnmy/devops/.github/workflows/container_img_build_push_gar.yaml@master
     with:
       image: ${{ matrix.image }}
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile.helm
       # GCP project where the identity provider is
       # gcloud projects describe prj-workload-identity-001
       gcp_project_number: '766873424314'
