@@ -171,7 +171,6 @@ export class Config implements IConfig {
         mode: AES_MODE,
       });
       plaintext = encryptedBytes.toString(crypto.enc.Utf8);
-			log.info("radu added 1 please rm")
     } catch (e) {
       log.error('Incorrect password for decryption');
       process.exit();
@@ -184,8 +183,6 @@ export class Config implements IConfig {
     if (decryptedHmacInBase64 !== hashInBase64) {
       throw new Error('Error: HMAC does not match');
     }
-		log.info("radu added 2 please rm");
-		log.info(plaintext);
     return plaintext;
   }
 
@@ -196,7 +193,6 @@ export class Config implements IConfig {
       const plaintext = this.decryptConfig();
 			
       const data = JSON.parse(plaintext) as ConfigType;
-			log.info("radu added 3 please rm")
       const staticConfig = JSON.parse(fs.readFileSync(path.resolve('./config/static-config.json'), 'utf8'));
 
       this.config = _.merge(data, staticConfig);
