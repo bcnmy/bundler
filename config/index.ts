@@ -191,7 +191,6 @@ export class Config implements IConfig {
     try {
       // decrypt the config and load it
       const plaintext = this.decryptConfig();
-			
       const data = JSON.parse(plaintext) as ConfigType;
       const staticConfig = JSON.parse(fs.readFileSync(path.resolve('./config/static-config.json'), 'utf8'));
 
