@@ -16,5 +16,5 @@ export CONFIG_PASSPHRASE=$(cat /gcpsecrets/config-passphrase)
 # Start Node.js application
 
 # Command to run the application
-sleep 3600
-# yarn run start
+# sleep 3600
+yarn run start
