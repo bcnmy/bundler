@@ -6,16 +6,6 @@ Expand the name of the chart.
 {{- end }}
 
 
-{{- define "selectServer" -}}
-{{- if eq .Values.env "prod" -}}
-https://acme-v02.api.letsencrypt.org/directory
-{{- else -}}
-https://acme-staging-v02.api.letsencrypt.org/directory
-{{- end -}}
-{{- end -}}
-
-
-
 {{/*
 Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).

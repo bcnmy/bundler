@@ -5,15 +5,14 @@ NC='\033[0m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 
-ENV=$1
-NAMESPACE=$2
-REDIS_MASTER_REPLICA=$3
-REDIS_READ_REPLICA=$4
+NAMESPACE=$1
+REDIS_MASTER_REPLICA=$2
+REDIS_READ_REPLICA=$3
 HELM_RELEASE="redis"
 REDIS_ROOT_PASSWORD=IAMredis985834
 
-if [ "$#" -ne 4 ]; then
-    echo "Usage: $0 <ENV> <NAMESPACE> for Redis"
+if [ "$#" -ne 3 ]; then
+    echo "Usage: $0 <NAMESPACE> <REDIS_MASTER_REPLICA <REDIS_READ_REPLICA> for Redis"
     exit 1
 fi
 printf "\n${YELLOW}------ Deploying %s to %s -----${NC}\n" "$HELM_RELEASE" "$NAMESPACE"

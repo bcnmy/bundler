@@ -1,7 +1,6 @@
 set -e
 
 
-RED='\033[0;31m'
 NC='\033[0m'
 GREEN='\033[0;32m'
 
@@ -30,7 +29,7 @@ source "./$CONFIG_FILE"
 
 ##This creates all the variables names based on the the env and the namespace.
 ## The variables that will be laoded from this create-variables.sh are 
-## $KUBE_SERVICE_ACCOUNT, ENCRYPTED_CONFIG_SECRET, SECRET_NAME
+## $KUBE_SERVICE_ACCOUNT, GCP_ENCRYPTED_CONFIG_SECRET, SECRET_NAME
 print_green "Loading ./setup-scripts/create-variables.sh ..."
 source "./setup-scripts/create-variables.sh" "./$CONFIG_FILE"
 
@@ -47,11 +46,11 @@ print_green "Chains Config Filename: $CHAINS_CFG_FILENAME"
 # print_green "TO_BE_UPDATED_CHAINS: ${TO_BE_UPDATED_CHAINS[*]}"
 
 print_green "Kube Service Account: $KUBE_SERVICE_ACCOUNT"
-print_green "Encrypted Config Secret: $ENCRYPTED_CONFIG_SECRET"
+print_green "Encrypted Config Secret: $GCP_ENCRYPTED_CONFIG_SECRET"
 print_green "Secret Name: $SECRET_NAME"
 
 
-# ENCRYPTED_CONFIG_SECRET="$NAMESPACE-$ENV-bundler-config"
+# GCP_ENCRYPTED_CONFIG_SECRET="$NAMESPACE-$ENV-bundler-config"
 # SECRET_NAME="bundler-$NAMESPACE-PASSPHRASE"
 
 # echo -e "Does the role ${GREEN} $GCP_IAM_ROLE  ${NC} exist in GCP IAM? (yes/no)"
@@ -215,7 +214,7 @@ for array_name in $array_names; do
         --set-string hpa.maxReplicas="$MAX_REPLICA" \
         --set-string projectId="$PROJECT_ID" \
         --set-string secretName="$SECRET_NAME" \
-        --set-string configSecretName="$ENCRYPTED_CONFIG_SECRET" \
+        --set-string configSecretName="$GCP_ENCRYPTED_CONFIG_SECRET" \
         --set-string serviceAccount="$KUBE_SERVICE_ACCOUNT" \
         --set datadog.enable=true \
         --set-string datadog.env="bundler-$NAMESPACE" \
