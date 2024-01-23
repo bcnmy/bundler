@@ -1114,13 +1114,14 @@ export enum BLOCKCHAINS {
   ARBITRUM_SEPOLIA_TESTNET = 421614,
   SEPOLIA_TESTNET = 11155111,
   BLAST_TESTNET = 168587773,
+  BASE_SEPOLIA_TESTNET = 84532,
 }
 
 // Network with base gas diff from 21k and maxPriorityFeePerGas is 0
 export const L2Networks = [421613, 42161, 42170];
 export const PolygonZKEvmNetworks = [1101, 1442];
 export const OptimismNetworks = [
-  420, 10, 84531, 8453, 204, 5611, 9980, 91715, 168587773,
+  420, 10, 84531, 8453, 204, 5611, 9980, 91715, 168587773, 84532,
 ];
 export const LineaNetworks = [59140, 59144];
 export const ArbitrumNetworks = [42170, 421613, 42161, 421614];
