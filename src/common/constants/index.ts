@@ -1113,6 +1113,7 @@ export enum BLOCKCHAINS {
   COMBO_MAINNET = 9980,
   ARBITRUM_SEPOLIA_TESTNET = 421614,
   SEPOLIA_TESTNET = 11155111,
+  BERACHAIN_TESTNET = 80085,
 }
 
 // Network with base gas diff from 21k and maxPriorityFeePerGas is 0
