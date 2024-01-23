@@ -44,15 +44,15 @@ export class SocketConsumer implements ISocketConsumer {
 
   onMessageReceived = async (msg?: ConsumeMessage) => {
     if (msg) {
-      const transactionDataReceivedFromQueue: TransactionQueueMessageType =
-        JSON.parse(msg.content.toString());
-      log.info(
-        `Message received from transction queue in socket service on chain Id ${
-          this.chainId
-        }: ${customJSONStringify(transactionDataReceivedFromQueue)}`,
-      );
-      this.queue.ack(msg);
       try {
+        const transactionDataReceivedFromQueue: TransactionQueueMessageType =
+          JSON.parse(msg.content.toString());
+        log.info(
+          `Message received from transction queue in socket service on chain Id ${
+            this.chainId
+          }: ${customJSONStringify(transactionDataReceivedFromQueue)}`,
+        );
+        this.queue.ack(msg);
         if (
           transactionDataReceivedFromQueue.event ===
             SocketEventType.onTransactionMined &&
