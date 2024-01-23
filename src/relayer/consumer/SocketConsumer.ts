@@ -21,7 +21,7 @@ const log = logger.child({
 export class SocketConsumer implements ISocketConsumer {
   chainId: number;
 
-  socketClient: CentClient | null = null;
+  socketClient: CentClient | null;
 
   private queue: IQueue<TransactionQueueMessageType>;
 
@@ -39,6 +39,7 @@ export class SocketConsumer implements ISocketConsumer {
         token: config.socketService.apiKey,
       });
     } catch (error) {
+      this.socketClient = null;
       log.error(`Error in setting up cent client`);
     }
     this.chainId = options.chainId;
