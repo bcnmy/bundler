@@ -137,12 +137,22 @@ export class EVMTransactionListener
           )}`,
         );
       }
-      await this.publishToTransactionQueue({
-        transactionId,
-        relayerManagerName,
-        error,
-        event: SocketEventType.onTransactionError,
-      });
+      try {
+        await this.publishToTransactionQueue({
+          transactionId,
+          relayerManagerName,
+          error,
+          event: SocketEventType.onTransactionError,
+        });
+      } catch (publishToTransactionQueueError) {
+        log.error(
+          `publishToTransactionQueueError: ${parseError(
+            publishToTransactionQueueError,
+          )} while publishing to transaction queue for transactionId: ${transactionId} on chainId: ${
+            this.chainId
+          }`,
+        );
+      }
       log.error(
         `transactionExecutionResponse is null for transactionId: ${transactionId} for bundler: ${relayerAddress}`,
       );
@@ -210,31 +220,51 @@ export class EVMTransactionListener
       );
     }
 
-    // transaction queue is being listened by socket service to notify the client about the hash
-    await this.publishToTransactionQueue({
-      transactionId,
-      relayerManagerName,
-      transactionHash,
-      receipt: undefined,
-      event: previousTransactionHash
-        ? SocketEventType.onTransactionHashChanged
-        : SocketEventType.onTransactionHashGenerated,
-    });
+    try {
+      // transaction queue is being listened by socket service to notify the client about the hash
+      await this.publishToTransactionQueue({
+        transactionId,
+        relayerManagerName,
+        transactionHash,
+        receipt: undefined,
+        event: previousTransactionHash
+          ? SocketEventType.onTransactionHashChanged
+          : SocketEventType.onTransactionHashGenerated,
+      });
+    } catch (publishToTransactionQueueError) {
+      log.error(
+        `publishToTransactionQueueError: ${parseError(
+          publishToTransactionQueueError,
+        )} while publishing to transaction queue for transactionId: ${transactionId} on chainId: ${
+          this.chainId
+        }`,
+      );
+    }
     // retry txn service will check for receipt
     log.info(
       `Publishing transaction data of transactionId: ${transactionId} to retry transaction queue on chainId ${this.chainId}`,
     );
-    await this.publishToRetryTransactionQueue({
-      relayerAddress,
-      transactionType,
-      transactionHash,
-      transactionId,
-      rawTransaction: rawTransaction as EVMRawTransactionType,
-      walletAddress,
-      metaData,
-      relayerManagerName,
-      event: SocketEventType.onTransactionHashGenerated,
-    });
+    try {
+      await this.publishToRetryTransactionQueue({
+        relayerAddress,
+        transactionType,
+        transactionHash,
+        transactionId,
+        rawTransaction: rawTransaction as EVMRawTransactionType,
+        walletAddress,
+        metaData,
+        relayerManagerName,
+        event: SocketEventType.onTransactionHashGenerated,
+      });
+    } catch (publishToTransactionQueueError) {
+      log.error(
+        `publishToTransactionQueueError: ${parseError(
+          publishToTransactionQueueError,
+        )} while publishing to transaction queue for transactionId: ${transactionId} on chainId: ${
+          this.chainId
+        }`,
+      );
+    }
 
     // wait for transaction
     try {
@@ -290,13 +320,23 @@ export class EVMTransactionListener
       `Publishing to transaction queue on success for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`,
     );
     if (!(transactionType === TransactionType.BUNDLER)) {
-      await this.publishToTransactionQueue({
-        transactionId,
-        relayerManagerName,
-        transactionHash,
-        receipt: transactionReceipt,
-        event: SocketEventType.onTransactionMined,
-      });
+      try {
+        await this.publishToTransactionQueue({
+          transactionId,
+          relayerManagerName,
+          transactionHash,
+          receipt: transactionReceipt,
+          event: SocketEventType.onTransactionMined,
+        });
+      } catch (error) {
+        log.error(
+          `error: ${parseError(
+            error,
+          )} while publishing to transaction queue for transactionId: ${transactionId} on chainId: ${
+            this.chainId
+          }`,
+        );
+      }
     }
     if (transactionHash) {
       try {
@@ -510,13 +550,23 @@ export class EVMTransactionListener
       log.info(
         `Publishing to transaction queue on failure for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`,
       );
-      await this.publishToTransactionQueue({
-        transactionId,
-        relayerManagerName,
-        transactionHash,
-        receipt: transactionReceipt,
-        event: SocketEventType.onTransactionMined,
-      });
+      try {
+        await this.publishToTransactionQueue({
+          transactionId,
+          relayerManagerName,
+          transactionHash,
+          receipt: transactionReceipt,
+          event: SocketEventType.onTransactionMined,
+        });
+      } catch (error) {
+        log.error(
+          `error: ${parseError(
+            error,
+          )} while publishing to transaction queue for transactionId: ${transactionId} on chainId: ${
+            this.chainId
+          }`,
+        );
+      }
     }
 
     if (transactionHash) {
@@ -595,13 +645,23 @@ export class EVMTransactionListener
                 log.info(
                   `Publishing to transaction queue on failure for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`,
                 );
-                await this.publishToTransactionQueue({
-                  transactionId,
-                  relayerManagerName,
-                  transactionHash,
-                  receipt: transactionReceipt,
-                  event: SocketEventType.onTransactionMined,
-                });
+                try {
+                  await this.publishToTransactionQueue({
+                    transactionId,
+                    relayerManagerName,
+                    transactionHash,
+                    receipt: transactionReceipt,
+                    event: SocketEventType.onTransactionMined,
+                  });
+                } catch (publishToTransactionQueueError) {
+                  log.error(
+                    `publishToTransactionQueueError: ${parseError(
+                      publishToTransactionQueueError,
+                    )} while publishing to transaction queue for transactionId: ${transactionId} on chainId: ${
+                      this.chainId
+                    }`,
+                  );
+                }
 
                 log.info(
                   `userOpReceipt not fetched for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
@@ -676,15 +736,26 @@ export class EVMTransactionListener
               log.info(
                 `Transaction got front runned. Publishing to transaction queue on failure for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`,
               );
-              await this.publishToTransactionQueue({
-                transactionId,
-                relayerManagerName,
-                transactionHash: (
-                  frontRunnedTransactionReceipt as TransactionReceipt
-                ).transactionHash,
-                receipt: transactionReceipt,
-                event: SocketEventType.onTransactionMined,
-              });
+
+              try {
+                await this.publishToTransactionQueue({
+                  transactionId,
+                  relayerManagerName,
+                  transactionHash: (
+                    frontRunnedTransactionReceipt as TransactionReceipt
+                  ).transactionHash,
+                  receipt: transactionReceipt,
+                  event: SocketEventType.onTransactionMined,
+                });
+              } catch (publishToTransactionQueueError) {
+                log.error(
+                  `publishToTransactionQueueError: ${parseError(
+                    publishToTransactionQueueError,
+                  )} while publishing to transaction queue for transactionId: ${transactionId} on chainId: ${
+                    this.chainId
+                  }`,
+                );
+              }
 
               log.info(
                 `Updating transaction data for a front runned transaction for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
