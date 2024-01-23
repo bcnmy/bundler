@@ -21,7 +21,7 @@ const log = logger.child({
 export class SocketConsumer implements ISocketConsumer {
   chainId: number;
 
-  socketClient: CentClient;
+  socketClient: CentClient | null;
 
   private queue: IQueue<TransactionQueueMessageType>;
 
@@ -33,10 +33,15 @@ export class SocketConsumer implements ISocketConsumer {
 
   constructor(socketConsumerParams: SocketConsumerParamsType) {
     const { options, queue } = socketConsumerParams;
-    this.socketClient = new CentClient({
-      url: config.socketService.httpUrl,
-      token: config.socketService.apiKey,
-    });
+    try {
+      this.socketClient = new CentClient({
+        url: config.socketService.httpUrl,
+        token: config.socketService.apiKey,
+      });
+    } catch (error) {
+      this.socketClient = null;
+      log.error(`Error in setting up cent client`);
+    }
     this.chainId = options.chainId;
     this.queue = queue;
     this.EVMRelayerManagerMap = options.EVMRelayerManagerMap;
@@ -44,15 +49,15 @@ export class SocketConsumer implements ISocketConsumer {
 
   onMessageReceived = async (msg?: ConsumeMessage) => {
     if (msg) {
-      const transactionDataReceivedFromQueue: TransactionQueueMessageType =
-        JSON.parse(msg.content.toString());
-      log.info(
-        `Message received from transction queue in socket service on chain Id ${
-          this.chainId
-        }: ${customJSONStringify(transactionDataReceivedFromQueue)}`,
-      );
-      this.queue.ack(msg);
       try {
+        const transactionDataReceivedFromQueue: TransactionQueueMessageType =
+          JSON.parse(msg.content.toString());
+        log.info(
+          `Message received from transction queue in socket service on chain Id ${
+            this.chainId
+          }: ${customJSONStringify(transactionDataReceivedFromQueue)}`,
+        );
+        this.queue.ack(msg);
         if (
           transactionDataReceivedFromQueue.event ===
             SocketEventType.onTransactionMined &&
@@ -66,6 +71,9 @@ export class SocketConsumer implements ISocketConsumer {
           ][this.chainId].postTransactionMined(
             transactionDataReceivedFromQueue.receipt?.from,
           );
+        }
+        if (this.socketClient === null) {
+          throw new Error(`socketClient instance is null`);
         }
         this.socketClient.publish({
           channel: `transaction:${transactionDataReceivedFromQueue.transactionId}`,
