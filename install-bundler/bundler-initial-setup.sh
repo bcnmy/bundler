@@ -98,32 +98,45 @@ printf "${GREEN} Make sure you have added an A record against ${DNS_NAME} with $
 
 if ! kubectl get namespace "$NAMESPACE"; then
   # shellcheck disable=SC2059
-  printf "${NAMESPACE} doesnt exists, creating it now."
+  printf "NAMESPACE ${NAMESPACE} doesnt exists, creating it now."
   kubectl create ns "${NAMESPACE}"
 else
   # shellcheck disable=SC2059
-  printf "${GREEN} SUCCESS: $NAMESPACE exists ${NC}"
+  printf "${GREEN} SUCCESS: NAMESPACE $NAMESPACE exists ${NC}"
 fi
 
 
 # shellcheck disable=SC1091
 source "setup-scripts/create-variables.sh" "$DIR/$CONFIG_FILE"
-# Created variables:
-# CURRENT_CONTEXT
-# CLUSTER_NAME
-# TRIMMED_CLUSTER_NAME
-# TRIMMED_NAMESPACE
-# GCP_IAM_ROLE
-# GCP_ENCRYPTED_CONFIG_SECRET
-# SECRET_NAME
-# KUBE_SERVICE_ACCOUNT
+echo ""
+echo "Created variables:"
+echo "CURRENT_CONTEXT=${CURRENT_CONTEXT}"
+echo "CLUSTER_NAME=${CLUSTER_NAME}"
+echo "TRIMMED_CLUSTER_NAME=${TRIMMED_CLUSTER_NAME}"
+echo "TRIMMED_NAMESPACE=${TRIMMED_NAMESPACE}"
+echo "GCP_IAM_ROLE=${GCP_IAM_ROLE}"
+echo "GCP_ENCRYPTED_CONFIG_SECRET=${GCP_ENCRYPTED_CONFIG_SECRET}"
+echo "GCP_PLAINTEXT_CONFIG_SECRET=${GCP_PLAINTEXT_CONFIG_SECRET}"
+echo "SECRET_NAME=${SECRET_NAME}"
+echo "KUBE_SERVICE_ACCOUNT=${KUBE_SERVICE_ACCOUNT}"
 
+
+if gcloud secrets describe "${GCP_PLAINTEXT_CONFIG_SECRET}" &> /dev/null; then
+  echo "Secret ${GCP_PLAINTEXT_CONFIG_SECRET} already exists."
+else
+  echo "GCP Secret ${GCP_PLAINTEXT_CONFIG_SECRET} does not exist."
+  if gcloud secrets create "${GCP_PLAINTEXT_CONFIG_SECRET}" \
+            --replication-policy="automatic" ;  then
+    echo "Secret ${GCP_PLAINTEXT_CONFIG_SECRET} created successfully."
+  else
+    echo "Failed to create secret ${GCP_PLAINTEXT_CONFIG_SECRET}."
+  fi
+fi
 
 ##This will create a configMap from the config.json.enc and that will be mounted on 
 ## all the pods in a namespace. The assumption is that a single namespace will only
 ## have two deployments paymaster and bundler thats why 
 # for bundler the configMap name will be bundler-common-configMap
-
 
 bash setup-scripts/create-encrypted-config-secret.sh "$GCP_ENCRYPTED_CONFIG_SECRET"
 bash setup-scripts/create-secret.sh "$SECRET_NAME"
