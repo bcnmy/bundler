@@ -89,8 +89,11 @@ echo ""
 
 echo ""
 echo "Getting config values from GCP secret ${GCP_PLAINTEXT_CONFIG_SECRET}"
+# when gcloud commands are run in githubaction always specify --project because 
+# it has the highest level of precedence
 GCP_SECRET_CONFIG_VALUE=$(gcloud secrets versions access latest \
-                                 --secret="${GCP_PLAINTEXT_CONFIG_SECRET}")
+                                 --secret="${GCP_PLAINTEXT_CONFIG_SECRET}"\
+                                 --project="${PROJECT_ID}")
 
 if [[ -z "${GCP_SECRET_CONFIG_VALUE}" ]] ; then 
   msj=""
