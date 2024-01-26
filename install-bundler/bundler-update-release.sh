@@ -12,6 +12,10 @@ echo "Running script $0"
 GIT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 echo "GIT_ROOT is ${GIT_ROOT}"
 CONFIG_FILE_PATH="${GIT_ROOT}/install-bundler/configs/${CONFIG_FILE}"
+echo "CONFIG_FILE_PATH is ${CONFIG_FILE_PATH}"
+echo ls -l "${GIT_ROOT}"/install-bundler/configs/
+ls -l "${GIT_ROOT}"/install-bundler/configs/
+git branch
 
 # Check if the required arguments are passed
 # Example:  sh install-release-cloud.sh configs/testing.cfg

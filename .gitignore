@@ -20,6 +20,5 @@ refundAddresses.ts
 # However, if it's actually index.json, include it like so:
 #!index.json
 
-*.cfg
 !example.cfg
 
