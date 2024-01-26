@@ -90,7 +90,7 @@ jobs:
       gcp_cluster_location: 'us-east1'
       use_internal_ip: true
       # https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables
-      deploy_command: './install-bundler/bundler-update-release.sh bundler-tw-staging.cfg ${GITHUB_REF:10}'
+      # deploy_command: './install-bundler/bundler-update-release.sh bundler-tw-staging.cfg ${GITHUB_REF:10}'
       deploy_command: 'helm ls --all-namespaces'
       # deploy_command: 'echo IMG_VERSION is ${GITHUB_REF:10}' # for example extracts v0.0.5 from "refs/tags/v0.0.5"  
 
