@@ -194,8 +194,8 @@ for array_name in $array_names; do
     echo ""
     echo "Deploying HELM chart for $NAME $CHAIN_ID"
 
-    # helm upgrade --install "${HELM_RELEASE}-${CHAIN_ID}" "$DIR/."  \
-    helm template "${HELM_RELEASE}-${CHAIN_ID}" "$DIR/."  \
+    # helm template "${HELM_RELEASE}-${CHAIN_ID}" "$DIR/."  \
+    helm upgrade --install "${HELM_RELEASE}-${CHAIN_ID}" "$DIR/."  \
         --wait \
         --timeout 2200s \
         --values "$DIR/values.yaml" \
