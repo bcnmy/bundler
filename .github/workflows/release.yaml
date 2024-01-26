@@ -48,6 +48,7 @@ jobs:
       matrix:
         image:
           - us-docker.pkg.dev/biconomy-prod/bundler/trustwallet
+          - us-docker.pkg.dev/prj-biconomy-prod-001/bundler/bundler
           # LOCATION-docker.pkg.dev/PROJECT-ID/REPOSITORY/IMAGE
           # {owner}/{repo}/.github/workflows/{filename}@{ref}
     uses: bcnmy/devops/.github/workflows/container_img_build_push_gar.yaml@master
@@ -90,9 +91,9 @@ jobs:
       use_internal_ip: true
       # https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables
       deploy_command: './install-bundler/bundler-update-release.sh bundler-tw-staging.cfg ${GITHUB_REF:10}'
+      deploy_command: 'helm ls --all-namespaces'
       # deploy_command: 'echo IMG_VERSION is ${GITHUB_REF:10}' # for example extracts v0.0.5 from "refs/tags/v0.0.5"  
 
-      # TODO: update bundler prod image to include gcp project
   deploy_tw_prod:
     needs: [deploy_tw_staging]
     # environment: tw-prod
