@@ -159,20 +159,27 @@ array_names=$(declare -p | grep -Eo 'chain_[a-zA-Z0-9_]+')
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 for array_name in $array_names; do
-
+    # shellcheck disable=SC1087
     eval "NAME=\${$array_name[name]}"
     # Using indirect referencing to get the "network" value of the current array
+    # shellcheck disable=SC1087
     eval "CHAIN_ID=\${$array_name[chainId]}"
+    # shellcheck disable=SC1087
     eval "AUTOSCALING_THRESHHOLD_HTTP_REQUESTS_PER_MINUTE=\${$array_name[autoScalingThreshholdHTTPRequestsPerMinute]}"
+    # shellcheck disable=SC1087
     eval "AUTOSCALING_THRESHHOLD_CPU=\${$array_name[autoScalingThreshholdCPU]}"
+    # shellcheck disable=SC1087
     eval "MIN_REPLICA=\${$array_name[minReplica]}"
+    # shellcheck disable=SC1087
     eval "MAX_REPLICA=\${$array_name[maxReplica]}"
-
+    # shellcheck disable=SC1087
     eval "MIN_RELAYER_COUNT=\${$array_name[minRelayerCount]}"
+    # shellcheck disable=SC1087
     eval "MAX_RELAYER_COUNT=\${$array_name[maxRelayerCount]}"
+    # shellcheck disable=SC1087
     eval "FUNDING_BALANCE_THRESHOLD=\${$array_name[fundingBalanceThreshold]}"
+    # shellcheck disable=SC1087
     eval "FUNDING_RELAYER_AMOUNT=\${$array_name[fundingRelayerAmount]}"
-
 
     ADJ_AUTOSCALING_THRESHHOLD_HTTP_REQUESTS=$(bc -l <<< "$AUTOSCALING_THRESHHOLD_HTTP_REQUESTS_PER_MINUTE/60*1000" | cut -d'.' -f1)m
 
