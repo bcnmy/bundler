@@ -177,7 +177,11 @@ let statusService: IStatusService;
           `*/${config.chains.updateFrequencyInSeconds[chainId]} * * * * *`,
           async () => {
             try {
+              log.info(`start gasPriceService.setup() for chainId: ${chainId}`);
               await gasPriceService.setup();
+              log.info(
+                `finish gasPriceService.setup() for chainId: ${chainId}`,
+              );
             } catch (err: any) {
               log.error(
                 `error in setting up gas price scheduled job: ${parseError(
