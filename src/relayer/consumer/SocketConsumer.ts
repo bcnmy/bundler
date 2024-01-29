@@ -75,7 +75,7 @@ export class SocketConsumer implements ISocketConsumer {
         if (this.socketClient === null) {
           throw new Error(`socketClient instance is null`);
         }
-        this.socketClient.publish({
+        await this.socketClient.publish({
           channel: `transaction:${transactionDataReceivedFromQueue.transactionId}`,
           data: {
             transactionId: transactionDataReceivedFromQueue.transactionId,
