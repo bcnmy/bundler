@@ -37,6 +37,6 @@ export class CachePricesJob extends CronJob {
 
   // Get pretty name for logging
   public get pretty(): string {
-    return `CachePricesJob(schedule='${this.schedule}', tokens=[${this.priceManager.tokens}])`;
+    return `CachePricesJob(schedule: '${this.schedule}', tokens: [${this.priceManager.tokens}])`;
   }
 }

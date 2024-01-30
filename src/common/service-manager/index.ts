@@ -185,7 +185,7 @@ let statusService: IStatusService;
     if (gasPriceService && config.relayer.nodePathIndex === 0) {
       const gasPriceSchedule = `*/${config.chains.updateFrequencyInSeconds[chainId]} * * * * *`;
       log.info(
-        `Scheduling CacheFeesJob for chainId=${chainId} with schedule='${gasPriceSchedule}'`,
+        `Scheduling CacheFeesJob for chainId: ${chainId} with schedule: '${gasPriceSchedule}'`,
       );
       try {
         const cacheFeesJob = new CacheFeesJob(
@@ -195,7 +195,7 @@ let statusService: IStatusService;
         cacheFeesJob.start();
       } catch (err) {
         log.error(
-          `Error in scheduling gas price job for chainId=${chain} and gasPriceSchedule=${gasPriceSchedule}: ${parseError(
+          `Error in scheduling gas price job for chainId: ${chain} and schedule: ${gasPriceSchedule}: ${parseError(
             err,
           )}`,
         );

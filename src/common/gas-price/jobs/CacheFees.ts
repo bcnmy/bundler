@@ -37,6 +37,6 @@ export class CacheFeesJob extends CronJob {
 
   // Get pretty name for logging
   public get pretty(): string {
-    return `CacheFeesJob(chainID=${this.gasPriceService.chainId}, schedule='${this.schedule}')`;
+    return `CacheFeesJob(chainID: ${this.gasPriceService.chainId}, schedule: '${this.schedule}')`;
   }
 }
