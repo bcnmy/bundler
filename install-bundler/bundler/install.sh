@@ -207,7 +207,7 @@ for array_name in $array_names; do
     # helm template "${HELM_RELEASE}-${CHAIN_ID}" "$DIR/."  \
     helm upgrade --install "${HELM_RELEASE}-${CHAIN_ID}" "$DIR/."  \
         --wait \
-        --timeout 2200s \
+        --timeout 600s \
         --values "$DIR/values.yaml" \
         --namespace "$NAMESPACE" \
         --set nameOverride="$NAME" \
