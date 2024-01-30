@@ -85,16 +85,34 @@ export class GasPriceService implements IGasPriceService {
     let gasPrice: NetworkBasedGasPriceType;
     if (this.EIP1559SupportedNetworks.includes(this.chainId)) {
       const maxFeePerGas = BigInt(await this.getMaxFeeGasPrice(gasType));
+      log.info(
+        `maxFeePerGas: ${maxFeePerGas} from cache on chainId: ${this.chainId}`,
+      );
+
       const maxPriorityFeePerGas = BigInt(
         await this.getMaxPriorityFeeGasPrice(gasType),
       );
+      log.info(
+        `maxPriorityFeePerGas: ${maxPriorityFeePerGas} from cache on chainId: ${this.chainId}`,
+      );
+
       if (!maxFeePerGas || !maxPriorityFeePerGas) {
         gasPrice = await this.networkService.getEIP1559FeesPerGas();
+        log.info(
+          `gasPrice: ${customJSONStringify(
+            gasPrice,
+          )} from network on chainId: ${this.chainId}`,
+        );
       } else {
         gasPrice = {
           maxFeePerGas,
           maxPriorityFeePerGas,
         };
+        log.info(
+          `gasPrice: ${customJSONStringify(
+            gasPrice,
+          )} found in cache on chainId: ${this.chainId}`,
+        );
       }
       if (
         [137].includes(this.chainId) &&
@@ -110,10 +128,22 @@ export class GasPriceService implements IGasPriceService {
       gasPrice = BigInt(
         await this.cacheService.get(this.getGasFeeKey(gasType)),
       );
+      log.info(
+        `!EIP1559 gasPrice: ${customJSONStringify(
+          gasPrice,
+        )} from cache on chainId: ${this.chainId}`,
+      );
+
       if (!gasPrice) {
         gasPrice = BigInt(await this.networkService.getLegacyGasPrice());
       }
     }
+    log.info(
+      `Final gasPrice: ${customJSONStringify(gasPrice)} on chainId: ${
+        this.chainId
+      }`,
+    );
+
     return gasPrice;
   }
 
@@ -302,6 +332,12 @@ export class GasPriceService implements IGasPriceService {
       if (this.EIP1559SupportedNetworks.includes(this.chainId)) {
         let { maxFeePerGas, maxPriorityFeePerGas } =
           await this.networkService.getEIP1559FeesPerGas();
+        log.info(
+          `setup maxFeePerGas: ${maxFeePerGas} from network on chainId: ${this.chainId}`,
+        );
+        log.info(
+          `setup maxPriorityFeePerGas: ${maxPriorityFeePerGas} from network on chainId: ${this.chainId}`,
+        );
 
         if (
           [137].includes(this.chainId) &&
@@ -339,9 +375,18 @@ export class GasPriceService implements IGasPriceService {
         }
 
         const baseFeePerGas = await this.networkService.getBaseFeePerGas();
+        log.info(
+          `setup baseFeePerGas: ${baseFeePerGas} from network on chainId: ${this.chainId}`,
+        );
+
         await this.setBaseFeePerGas(formatUnits(baseFeePerGas, 0));
       } else {
         const gasPrice = await this.networkService.getLegacyGasPrice();
+        log.info(
+          `setup legacy gasPrice: ${customJSONStringify(
+            gasPrice,
+          )} from network on chainId: ${this.chainId}`,
+        );
         await this.setGasPrice(GasPriceType.DEFAULT, formatUnits(gasPrice, 0));
       }
     } catch (error) {
