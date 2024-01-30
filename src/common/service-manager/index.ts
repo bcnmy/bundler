@@ -1,7 +1,7 @@
 /* eslint-disable import/no-import-module-exports */
 /* eslint-disable no-await-in-loop */
-import { schedule } from "node-cron";
 import { getContract, parseEther } from "viem";
+import { chain } from "lodash";
 import { config } from "../../config";
 import { EVMAccount, IEVMAccount } from "../../relayer/account";
 import {
@@ -60,6 +60,8 @@ import { UserOperationStateDAO } from "../db/dao/UserOperationStateDAO";
 import { ENTRY_POINT_ABI } from "../constants";
 import { customJSONStringify, parseError } from "../utils";
 import { GasPriceService } from "../gas-price";
+import { CacheFeesJob } from "../gas-price/jobs/CacheFees";
+import { CachePricesJob } from "../token-price/jobs/CachePrices";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -138,7 +140,16 @@ let statusService: IStatusService;
   });
   // added check for relayer node path in order to run on only one server
   if (config.relayer.nodePathIndex === 0) {
-    tokenService.schedule();
+    const priceJobIntervalSeconds = 90;
+    const priceJobSchedule = `*/${priceJobIntervalSeconds} * * * * *`;
+
+    log.info(`Scheduling CachePricesJob with schedule='${priceJobSchedule}'`);
+    try {
+      const priceJob = new CachePricesJob(priceJobSchedule, tokenService);
+      priceJob.start();
+    } catch (err) {
+      log.error(`Error in scheduling CachePricesJob: ${parseError(err)}`);
+    }
   }
 
   log.info(
@@ -172,32 +183,21 @@ let statusService: IStatusService;
 
     // added check for relayer node path in order to run on only one server
     if (gasPriceService && config.relayer.nodePathIndex === 0) {
+      const gasPriceSchedule = `*/${config.chains.updateFrequencyInSeconds[chainId]} * * * * *`;
+      log.info(
+        `Scheduling CacheFeesJob for chainId=${chainId} with schedule='${gasPriceSchedule}'`,
+      );
       try {
-        schedule(
-          `*/${config.chains.updateFrequencyInSeconds[chainId]} * * * * *`,
-          async () => {
-            try {
-              log.info(`start gasPriceService.setup() for chainId: ${chainId}`);
-              await gasPriceService.setup();
-              log.info(
-                `finish gasPriceService.setup() for chainId: ${chainId}`,
-              );
-            } catch (err: any) {
-              log.error(
-                `error in setting up gas price scheduled job: ${parseError(
-                  err,
-                )}`,
-              );
-            }
-          },
+        const cacheFeesJob = new CacheFeesJob(
+          gasPriceSchedule,
+          gasPriceService,
         );
+        cacheFeesJob.start();
       } catch (err) {
         log.error(
-          `error in scheduling gas price job: ${parseError(
+          `Error in scheduling gas price job for chainId=${chain} and gasPriceSchedule=${gasPriceSchedule}: ${parseError(
             err,
-          )} with frequency: ${
-            config.chains.updateFrequencyInSeconds[chainId]
-          }`,
+          )}`,
         );
       }
     }
