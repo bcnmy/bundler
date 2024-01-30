@@ -1,4 +1,4 @@
-import { GetContractReturnType, TransactionReceipt } from "viem";
+import { GetContractReturnType, Hex, TransactionReceipt } from "viem";
 import { ENTRY_POINT_ABI, OPTIMISM_L1_GAS_PRICE_ORACLE } from "../constants";
 
 export enum TransactionType {
@@ -275,9 +275,9 @@ export type OptimismL1GasPriceOracleContractType = GetContractReturnType<
 
 export type StateOverrideSetType = {
   [key: string]: {
-    balance?: string;
-    nonce?: string;
-    code?: string;
+    balance?: Hex;
+    nonce?: Hex;
+    code?: Hex;
     state?: object;
     stateDiff?: object;
   };
