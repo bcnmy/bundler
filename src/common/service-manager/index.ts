@@ -58,7 +58,7 @@ import {
 } from "../types";
 import { UserOperationStateDAO } from "../db/dao/UserOperationStateDAO";
 import { ENTRY_POINT_ABI } from "../constants";
-import { customJSONStringify } from "../utils";
+import { customJSONStringify, parseError } from "../utils";
 import { GasPriceService } from "../gas-price";
 
 const log = logger.child({
@@ -172,12 +172,34 @@ let statusService: IStatusService;
 
     // added check for relayer node path in order to run on only one server
     if (gasPriceService && config.relayer.nodePathIndex === 0) {
-      schedule(
-        `*/${config.chains.updateFrequencyInSeconds[chainId]} * * * * *`,
-        () => {
-          gasPriceService.setup();
-        },
-      );
+      try {
+        schedule(
+          `*/${config.chains.updateFrequencyInSeconds[chainId]} * * * * *`,
+          async () => {
+            try {
+              log.info(`start gasPriceService.setup() for chainId: ${chainId}`);
+              await gasPriceService.setup();
+              log.info(
+                `finish gasPriceService.setup() for chainId: ${chainId}`,
+              );
+            } catch (err: any) {
+              log.error(
+                `error in setting up gas price scheduled job: ${parseError(
+                  err,
+                )}`,
+              );
+            }
+          },
+        );
+      } catch (err) {
+        log.error(
+          `error in scheduling gas price job: ${parseError(
+            err,
+          )} with frequency: ${
+            config.chains.updateFrequencyInSeconds[chainId]
+          }`,
+        );
+      }
     }
     if (!gasPriceService) {
       throw new Error(`Gasprice service is not setup for chainId ${chainId}`);
