@@ -142,7 +142,7 @@ bash setup-scripts/create-encrypted-config-secret.sh "$GCP_ENCRYPTED_CONFIG_SECR
 bash setup-scripts/create-secret.sh "$SECRET_NAME"
 bash setup-scripts/create-gcp-role.sh "$PROJECT_ID" "$GCP_IAM_ROLE" "$GCP_ENCRYPTED_CONFIG_SECRET" "$SECRET_NAME"
 bash setup-scripts/gcp-role-binding.sh "$NAMESPACE" "$PROJECT_ID" "$GCP_IAM_ROLE" "$KUBE_SERVICE_ACCOUNT"
-
+exit
 REDIS_MASTER_REPLICA=1
 REDIS_READ_REPLICA=2
 sh install-redis/install.sh "${NAMESPACE}" "${REDIS_MASTER_REPLICA}" "${REDIS_READ_REPLICA}"
