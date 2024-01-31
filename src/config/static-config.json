@@ -634,7 +634,8 @@
       "RPC_FAILURE": [
         "error sending relay",
         "unable to complete request at this time",
-        "timeout"
+        "timeout",
+        "we can't execute this request"
       ],
       "INTRINSIC_GAS_TOO_LOW": ["intrinsic gas too low"],
       "MAX_FEE_PER_GAS_LESS_THAN_BLOCK_BASE_FEE": [
