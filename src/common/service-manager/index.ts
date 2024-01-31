@@ -140,8 +140,11 @@ let statusService: IStatusService;
   });
   // added check for relayer node path in order to run on only one server
   if (config.relayer.nodePathIndex === 0) {
-    const priceJobIntervalSeconds = 90;
-    const priceJobSchedule = `*/${priceJobIntervalSeconds} * * * * *`;
+    const DEFAULT_PRICE_JOB_INTERVAL_SECONDS = 90;
+    const priceJobSchedule = `*/${
+      config.tokenPrice.refreshIntervalSeconds ||
+      DEFAULT_PRICE_JOB_INTERVAL_SECONDS
+    } * * * * *`;
 
     log.info(`Scheduling CachePricesJob with schedule='${priceJobSchedule}'`);
     try {
@@ -157,6 +160,8 @@ let statusService: IStatusService;
       supportedNetworks,
     )}`,
   );
+
+  log.info(`Supported networks are: ${supportedNetworks}`);
   for (const chainId of supportedNetworks) {
     log.info(`Setup of services started for chainId: ${chainId}`);
     routeTransactionToRelayerMap[chainId] = {};
