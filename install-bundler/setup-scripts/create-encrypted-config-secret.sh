@@ -1,13 +1,14 @@
-ENCRYPTED_CONFIG_SECRET=$1
+#!/usr/bin/env bash
+GCP_ENCRYPTED_CONFIG_SECRET=$1
 
 # Check if the secret already exists
-if gcloud secrets describe "$ENCRYPTED_CONFIG_SECRET" &>/dev/null; then
-    echo "Secret $ENCRYPTED_CONFIG_SECRET already exists."
-    read -p "Do you want to overwrite? (yes/no): " RESPONSE
+if gcloud secrets describe "$GCP_ENCRYPTED_CONFIG_SECRET" &>/dev/null; then
+    echo "Secret $GCP_ENCRYPTED_CONFIG_SECRET already exists."
+    read -p -r "Do you want to overwrite? (yes/no): " RESPONSE
     case $RESPONSE in
         [yY] | [yY][eE][sS])
             # Ask the user for the file path
-            read -p "Enter the file path for overwriting the secret: " FILEPATH
+            read -p -r "Enter the file path for overwriting the secret: " FILEPATH
 
             # Check if the provided file path is valid
             if [[ ! -f $FILEPATH ]]; then
@@ -16,8 +17,8 @@ if gcloud secrets describe "$ENCRYPTED_CONFIG_SECRET" &>/dev/null; then
             fi
 
             # Update the existing secret
-            gcloud secrets versions add "$ENCRYPTED_CONFIG_SECRET" --data-file="$FILEPATH"
-            echo "Secret $ENCRYPTED_CONFIG_SECRET has been updated."
+            gcloud secrets versions add "$GCP_ENCRYPTED_CONFIG_SECRET" --data-file="$FILEPATH"
+            echo "Secret $GCP_ENCRYPTED_CONFIG_SECRET has been updated."
             ;;
         *)
             echo "User chose not to overwrite. Continuing without updating the secret."
@@ -25,19 +26,20 @@ if gcloud secrets describe "$ENCRYPTED_CONFIG_SECRET" &>/dev/null; then
     esac
 
 else
-    echo "Secret $ENCRYPTED_CONFIG_SECRET doesn't exist."
-    # Ask the user for the file path since the secret needs to be created
-    read -p "Enter the file path to create the secret: " FILEPATH
+    GIT_ROOT=$(git rev-parse --show-toplevel)
+    FILEPATH="${GIT_ROOT}/config.json.enc"
+    echo "GCP Secret $GCP_ENCRYPTED_CONFIG_SECRET doesn't exist."
+    echo "Creating it now from ${FILEPATH}"
 
     # Check if the provided file path is valid
     if [[ ! -f $FILEPATH ]]; then
-        echo "Error: Invalid file path."
+        echo "Error: Invalid file path ${FILEPATH}"
         exit 1
     fi
 
     # Create a new secret
-    gcloud secrets create "$ENCRYPTED_CONFIG_SECRET" --data-file="$FILEPATH"
-    echo "Secret $ENCRYPTED_CONFIG_SECRET has been created."
+    gcloud secrets create "${GCP_ENCRYPTED_CONFIG_SECRET}" --data-file="${FILEPATH}"
+    echo "Secret ${GCP_ENCRYPTED_CONFIG_SECRET} has been created."
 fi
 
-echo "ENCRYPTED_CONFIG_SECRET $ENCRYPTED_CONFIG_SECRET process completed."
+echo "GCP_ENCRYPTED_CONFIG_SECRET $GCP_ENCRYPTED_CONFIG_SECRET process completed."

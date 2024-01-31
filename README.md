@@ -123,4 +123,127 @@ To update the config.json.enc file run ts-node encrypt-config.ts
 ```jsx
 yarn run dev
 ```
+## Install bundler for the first time in a new k8s cluster
+Long story short is that you need to run 
+`bundler/install-bundler/bundler-initial-setup.sh`
+
+### 1. Manual step - create `config/config.json` ;
+
+content should look like
+```
+{
+  "relayerManagers": [
+    {
+      "relayerSeed": "******",
+      "ownerPublicKey": "0x******",
+      "ownerPrivateKey": "0x0e1*****",
+      "ownerAccountDetails": {
+        "137": {
+          "publicKey": "0x*****",
+          "privateKey": "0x*******"
+        }
+      }
+    }
+  ]
+}
+```
+
+### 2. Manual step - create `config.json.enc` at the root of the repo;<br>
+this is done by running `encrypt-config.ts`; <br>
+example:<br>
+install `ts-node`
+```bash
+npm install --location=global ts-node typescript
+```
+create a test file in `config` dir
+
+```bash
+cat config/radu-test-config.json
+'{"a": "b"}'
+```
+set the passphares
+```bash
+export CONFIG_PASSPHRASE=secret 
+```
+finally run `encrypt-config.ts`
+```
+ts-node encrypt-config.ts radu-test-config.json
+```
+
+to decrypt:
+```bash
+cat radu-test-config.json.enc
+xPJ9gyGx7U5q+NAoKswoGM28dDYEICBRUWcczvgI7aE=422142eae514c31c05e345669e56b4e9141649c92d60f3b83ab02c22b072cf76dSsomU6+8Fb6EgIFBoSAIQ==
+
+ts-node decrypt-config.ts radu-test-config.json.enc
+'{"a": "b"}'
+```
+
+- save the password that was used `config.json.enc` ; the script will ask 
+for it ;
+
+### 3. create a config file that can be saved in this repo `install-bundler/configs`
+e.g. `install-bundler/configs/bundler-tw-staging.cfg`
+```
+NAMESPACE="bundler-tw-staging"
+PROJECT_ID="biconomy-prod"
+IMAGE="us-docker.pkg.dev/biconomy-prod/bundler/trustwallet"
+IMAGE_TAG="7064007"
+DNS_NAME="bundler-tw-staging.biconomy.io"
+IP_NAME="bundler-tw-staging"
+CHAINS_CFG_FILENAME="staging-trust-wallet-chains.sh"
+CONTEXT="gke_biconomy-prod_us-east1_dedicated-bundler"
+```
+
+### 4. Run `bundler-initial-setup.sh`
+This will install all dependency apps required to run the bundler.
+It will also create secrets in GCP Secret Manager.
+```bash
+./bundler-initial-setup.sh configs/bundler-tw-staging.cfg
+```
+Output saved in `doc/bundler-tw-staging.md`
+
+### 5. Update GCP secret containing required configuration secret values.
+By running the script in previous step you have created a secret that contains
+configuration information based on this pattern. <br>
+```bash
+TRIMMED_CLUSTER_NAME=$(echo "$CLUSTER_NAME" | cut -c 1-8)
+TRIMMED_NAMESPACE=$(echo "$NAMESPACE" | cut -c 1-10)
+GCP_PLAINTEXT_CONFIG_SECRET="$TRIMMED_CLUSTER_NAME-$TRIMMED_NAMESPACE-cfg-plain"
+```
+
+Use console.cloud.google.com UI to update the values of the secret.
+Content of the secret should look like:
+```bash
+SIMULATION_DATA_JSON=<value>
+TOKEN_PRICE_JSON=<value>
+SLACK_JSON=<value>
+PROVIDER_JSON=<value>
+DATASOURCES_JSON=<value>
+SOCKET_SERVICE_JSON=<value>
+QUEUE_URL=<value>
+```
+
+### 6. Add DNS record in cloudflare
+The script will tell you what DNS record you need to add in cloudflare and
+for which IP.
+
+### 7. Deploy the bundler.
+
+Dependency: `configs/bundler-tw-staging.cfg` based on `configs/example.cfg`
+
+```bash
+./bundler-update-release.sh configs/bundler-tw-staging.cfg
+```
+
+## CI/CD with Github Actions
+
+To create the GCP workload identity service account 
+  - go to https://github.com/bcnmy/devops/tree/master/gcp/github-actions
+  - create new sh file `configure_bcnmy_<github_repo_name>`;
+    e.g. `configure_bcnmy_bundler.sh`
+  - run the new script
+  - get value of service account
+    e.g. `sa-bundler@prj-workload-identity-001.iam.gserviceaccount.com`
+
 

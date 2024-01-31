@@ -1,193 +1,215 @@
-set -e
+#!/usr/bin/env bash
 
-
-RED='\033[0;31m'
-NC='\033[0m'
-GREEN='\033[0;32m'
-
-# ENV=$1
-# NAMESPACE=$2
-# PROVIDER=$3
-# IMAGE=$4
-# IMAGE_TAG=$5
-# PROJECT_ID=$6
-# CHAINS_CFG_FILENAME=$7
-# KUBE_SERVICE_ACCOUNT=$8
 CONFIG_FILE=$1
+GIT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../.." && pwd )"
+CONFIG_FILE_PATH="${GIT_ROOT}/install-bundler/configs/${CONFIG_FILE}"
 
-
+echo "$0 Working with CONFIG_FILE_PATH ${CONFIG_FILE_PATH}"
 # Function to print in green
 print_green() {
     echo -e "\033[0;32m$1\033[0m"
 }
 
+if [ ! -f "${CONFIG_FILE_PATH}" ]; then
+    echo "Error: Configuration file ${CONFIG_FILE_PATH} not found. Choose from configs present in configs"
+    exit 1
+fi
 
-# DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-# PARENT_DIR="$(dirname "$DIR")"
-print_green "Loading ./$CONFIG_FILE ..."
-source "./$CONFIG_FILE"
+# shellcheck disable=SC1091
+print_green "Loading ${CONFIG_FILE_PATH}"
+# shellcheck disable=SC1090
+source "${CONFIG_FILE_PATH}"
+echo "Sourced variables from config file:"
+echo "NAMESPACE=${NAMESPACE}"
+echo "PROJECT_ID=${PROJECT_ID}"
+echo "IMAGE=${IMAGE}"
+echo "IMAGE_TAG=${IMAGE_TAG}"
+echo "DNS_NAME=${DNS_NAME}"
+echo "IP_NAME=${IP_NAME}"
+echo "CHAINS_CFG_FILENAME=${CHAINS_CFG_FILENAME}"
+echo "CONTEXT=${CONTEXT}"
+echo ""
+
+if [[ -z "${NAMESPACE}" ]] ; then
+  echo "Required configuration variable NAMESPACE was not specified"
+  exit 1
+elif [[ -z "${PROJECT_ID}" ]] ; then
+  echo "Required configuration variable PROJECT_ID was not specified"
+  exit 1
+elif [[ -z "${IMAGE}" ]] ; then
+  echo "Required configuration variable IMAGE was not specified"
+  exit 1
+elif [[ -z "${IMAGE_TAG}" ]] ; then
+  echo "Required configuration variable IMAGE_TAG was not specified"
+  exit 1
+elif [[ -z "${DNS_NAME}" ]] ; then
+  echo "Required configuration variable DNS_NAME was not specified"
+  exit 1
+elif [[ -z "${IP_NAME}" ]] ; then
+  echo "Required configuration variable IP_NAME was not specified"
+  exit 1
+elif [[ -z "${CHAINS_CFG_FILENAME}" ]] ; then
+  echo "Required configuration variable CHAINS_CFG_FILENAME was not specified"
+  exit 1
+elif [[ -z "${CONTEXT}" ]] ; then
+  echo "Required configuration variable CONTEXT was not specified"
+  exit 1
+else
+  echo "All required config variables were specified"
+  echo ""
+fi
+
+echo ""
+echo "Setting default project to ${PROJECT_ID}"
+gcloud config set project "${PROJECT_ID}"
+
+CURRENT_CONTEXT=$(kubectl config current-context)
+if [[ "${CURRENT_CONTEXT}" != "${CONTEXT}" ]] ; then
+  echo "Setting kubectl context to ${CONTEXT}"
+  kubectl config use-context "${CONTEXT}"
+else
+  echo "Kubectl context is ${CONTEXT}"
+fi
+
+print_green "Loading ${GIT_ROOT}/install-bundler/setup-scripts/create-variables.sh"
+# shellcheck disable=SC1091
+source "${GIT_ROOT}/install-bundler/setup-scripts/create-variables.sh" "${CONFIG_FILE_PATH}"
+echo "Created variables:"
+echo "CURRENT_CONTEXT=${CURRENT_CONTEXT}"
+echo "CLUSTER_NAME=${CLUSTER_NAME}"
+echo "TRIMMED_CLUSTER_NAME=${TRIMMED_CLUSTER_NAME}"
+echo "TRIMMED_NAMESPACE=${TRIMMED_NAMESPACE}"
+echo "GCP_IAM_ROLE=${GCP_IAM_ROLE}"
+echo "GCP_ENCRYPTED_CONFIG_SECRET=${GCP_ENCRYPTED_CONFIG_SECRET}"
+echo "GCP_PLAINTEXT_CONFIG_SECRET=${GCP_PLAINTEXT_CONFIG_SECRET}"
+echo "SECRET_NAME=${SECRET_NAME}"
+echo "KUBE_SERVICE_ACCOUNT=${KUBE_SERVICE_ACCOUNT}"
+echo ""
 
 
-##This creates all the variables names based on the the env and the namespace.
-## The variables that will be laoded from this create-variables.sh are 
-## $KUBE_SERVICE_ACCOUNT, ENCRYPTED_CONFIG_SECRET, SECRET_NAME
-print_green "Loading ./setup-scripts/create-variables.sh ..."
-source "./setup-scripts/create-variables.sh" "./$CONFIG_FILE"
+echo ""
+echo "Getting config values from GCP secret ${GCP_PLAINTEXT_CONFIG_SECRET}"
+# when gcloud commands are run in githubaction always specify --project because 
+# it has the highest level of precedence
+GCP_SECRET_CONFIG_VALUE=$(gcloud secrets versions access latest \
+                                 --secret="${GCP_PLAINTEXT_CONFIG_SECRET}"\
+                                 --project="${PROJECT_ID}")
 
+if [[ -z "${GCP_SECRET_CONFIG_VALUE}" ]] ; then 
+  msj=""
+  msj="GCP_SECRET_CONFIG_VALUE can't be empty string."
+  msj="${msj} Please make sure that secret named ${GCP_PLAINTEXT_CONFIG_SECRET} has data"
+  echo "${msj}"
+  exit 1
+fi
 
-# Print each variable in green
-print_green "Environment: $ENV"
-print_green "Namespace: $NAMESPACE"
-print_green "Provider: $PROVIDER"
-print_green "Image: $IMAGE"
-print_green "Image Tag: $IMAGE_TAG"
-print_green "Project ID: $PROJECT_ID"
-print_green "Chains Config Filename: $CHAINS_CFG_FILENAME"
+echo ""
+echo "Getting secret config data stored in ${GCP_PLAINTEXT_CONFIG_SECRET}"
+SIMULATION_DATA_JSON=$(grep SIMULATION_DATA_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" \
+                         | sed 's/SIMULATION_DATA_JSON=//g')
+TOKEN_PRICE_JSON=$(grep TOKEN_PRICE_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" \
+                         | sed 's/TOKEN_PRICE_JSON=//g')
+SLACK_JSON=$(grep SLACK_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" \
+                         | sed 's/SLACK_JSON=//g')
+PROVIDER_JSON=$(grep PROVIDER_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" \
+                         | sed 's/PROVIDER_JSON=//g')
+DATASOURCES_JSON=$(grep DATASOURCES_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" \
+                         | sed 's/DATASOURCES_JSON=//g')
+SOCKET_SERVICE_JSON=$(grep SOCKET_SERVICE_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" \
+                         | sed 's/SOCKET_SERVICE_JSON=//g')
+QUEUE_URL=$(grep QUEUE_URL <<< "${GCP_SECRET_CONFIG_VALUE}" \
+                         | sed 's/QUEUE_URL=//g')
 
-# print_green "TO_BE_UPDATED_CHAINS: ${TO_BE_UPDATED_CHAINS[*]}"
+if ! kubectl get namespace "${NAMESPACE}"; then
+  echo "Error: ${NAMESPACE} doesnt exists, creating it now"
+  kubectl create ns "${NAMESPACE}"
+else
+  # shellcheck disable=SC2059
+  printf "${GREEN} SUCCESS: ${NAMESPACE} exists ${NC}\n"
+fi
 
-print_green "Kube Service Account: $KUBE_SERVICE_ACCOUNT"
-print_green "Encrypted Config Secret: $ENCRYPTED_CONFIG_SECRET"
-print_green "Secret Name: $SECRET_NAME"
-
-
-# ENCRYPTED_CONFIG_SECRET="$NAMESPACE-$ENV-bundler-config"
-# SECRET_NAME="bundler-$NAMESPACE-PASSPHRASE"
-
-# echo -e "Does the role ${GREEN} $GCP_IAM_ROLE  ${NC} exist in GCP IAM? (yes/no)"
-# read answer
-
-# if [ "$answer" == "yes" ]; then
-#     echo "User confirmed the role exists."
-#     # You can add any logic here if required.
-# else
-#     echo "User said the role does not exist."
-#     echo "refer here https://cloud.google.com/kubernetes-engine/docs/tutorials/workload-identity-secrets#whats-next"
-#     # You can add any logic here if required.
-#     exit 1 
-# fi
-
-
-
-
-# Prompt to confirm the image
-# echo -e "Confirm the image: $IMAGE and tag: $IMAGE_TAG and PROVIDER=$PROVIDER  (yes/no): "
-# read response
-
-# case "$response" in
-#     [yY] | [yY][eE][sS] | "")
-#         echo "Continuing with the process..."
-#         ;;
-#     *)
-#         # If the answer is not "yes", assume it's "no" and exit.
-#         echo "User did not confirm for image. Exiting."
-#         exit 1
-#         ;;
-# esac
+# TODO: Add 2 more variables in chains.sh: memory and CPU, and pass those to helm 
+# TODO: rm printing of passwords to stdout
 
 HELM_RELEASE="bundler";
-
 SECONDS=0  # reset the SECONDS counter
-
-# printf "\n${GREEN} ####### Deploying bundlers $HELM_RELEASE to $NAMESPACE ${NC} ####### \n"
-# if [ "$PROVIDER"=="local" ]; then
-#   printf "\n${GREEN} Setting minikube env to docker so that it can use local image for relayer ${NC}\n"
-#   eval $(minikube docker-env)
-# fi
-
-# if [ "$ENV" == "test" ]; then
-#     echo "Enter the config passphrase: "
-#     read -s CONFIG_PASSPHRASE
-#     echo  # This adds a newline after the hidden input
-
-#     # Check if the passphrase is empty
-#     if [ -z "$CONFIG_PASSPHRASE" ]; then
-#         echo "Error: Config passphrase cannot be empty."
-#         exit 1
-#     fi
-# fi
-
 
 echo "Starting helm deployment"
 
-
 ##Reading the relevant*-chains.sh under thechains folder in which all the chians are defined.
-print_green "Loading ./configs/chains/$CHAINS_CFG_FILENAME for all the individual chain configs ..."
-source "./configs/chains/$CHAINS_CFG_FILENAME"
+print_green "Loading ${GIT_ROOT}/install-bundler/configs/chains/$CHAINS_CFG_FILENAME"
+# old source "./configs/chains/$CHAINS_CFG_FILENAME"
+# shellcheck disable=SC1090
+source "${GIT_ROOT}/install-bundler/configs/chains/$CHAINS_CFG_FILENAME"
+# example of sourced variables
+# declare -A chain_mumbai=(
+#   [name]='chain-80001'
+#   [chainId]="80001"
+#   [autoScalingThreshholdHTTPRequestsPerMinute]=10000
+#   [autoScalingThreshholdCPU]=2500m
+#   [minRelayerCount]="200"
+#   [maxRelayerCount]="220"
+#   [fundingBalanceThreshold]="1"
+#   [fundingRelayerAmount]="2"
+#   [minReplica]=8
+#   [maxReplica]=8
+#   )
 
 array_names=$(declare -p | grep -Eo 'chain_[a-zA-Z0-9_]+')
-
-
-# print_green "CHAINS TO BE UPDATED ${TO_BE_UPDATED_CHAINS[*]}"
-print_green "All Chains ${array_names[*]}"
-
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 for array_name in $array_names; do
-
+    # shellcheck disable=SC1087
     eval "NAME=\${$array_name[name]}"
     # Using indirect referencing to get the "network" value of the current array
+    # shellcheck disable=SC1087
     eval "CHAIN_ID=\${$array_name[chainId]}"
+    # shellcheck disable=SC1087
     eval "AUTOSCALING_THRESHHOLD_HTTP_REQUESTS_PER_MINUTE=\${$array_name[autoScalingThreshholdHTTPRequestsPerMinute]}"
+    # shellcheck disable=SC1087
     eval "AUTOSCALING_THRESHHOLD_CPU=\${$array_name[autoScalingThreshholdCPU]}"
+    # shellcheck disable=SC1087
     eval "MIN_REPLICA=\${$array_name[minReplica]}"
+    # shellcheck disable=SC1087
     eval "MAX_REPLICA=\${$array_name[maxReplica]}"
-
+    # shellcheck disable=SC1087
     eval "MIN_RELAYER_COUNT=\${$array_name[minRelayerCount]}"
+    # shellcheck disable=SC1087
     eval "MAX_RELAYER_COUNT=\${$array_name[maxRelayerCount]}"
+    # shellcheck disable=SC1087
     eval "FUNDING_BALANCE_THRESHOLD=\${$array_name[fundingBalanceThreshold]}"
+    # shellcheck disable=SC1087
     eval "FUNDING_RELAYER_AMOUNT=\${$array_name[fundingRelayerAmount]}"
 
-
-    echo -e "${GREEN}"
-    echo -e "${GREEN}Name: ${NC} $NAME"
-    echo -e "${GREEN}CHAIN_ID: ${NC} $CHAIN_ID"
-    echo -e "${GREEN}AUTOSCALING_THRESHHOLD_CPU: ${NC} $AUTOSCALING_THRESHHOLD_CPU"
-    echo -e "${GREEN}MIN_REPLICA: ${NC} $MIN_REPLICA"
-    echo -e "${GREEN}MAX_REPLICA: ${NC} $MAX_REPLICA"
-    echo -e "${GREEN}MIN_RELAYER_COUNT: ${NC} $MIN_RELAYER_COUNT"
-    echo -e "${GREEN}MAX_RELAYER_COUNT: ${NC} $MAX_RELAYER_COUNT"
-    echo -e "${GREEN}FUNDING_BALANCE_THRESHOLD: ${NC} $FUNDING_BALANCE_THRESHOLD"
-    echo -e "${GREEN}FUNDING_RELAYER_AMOUNT: ${NC} $FUNDING_RELAYER_AMOUNT"
     ADJ_AUTOSCALING_THRESHHOLD_HTTP_REQUESTS=$(bc -l <<< "$AUTOSCALING_THRESHHOLD_HTTP_REQUESTS_PER_MINUTE/60*1000" | cut -d'.' -f1)m
-    echo -e "${GREEN}ADJ_AUTOSCALING_THRESHHOLD_HTTP_REQUESTS: ${NC} ${ADJ_AUTOSCALING_THRESHHOLD_HTTP_REQUESTS}"
-    echo -e "${GREEN}QUEUE_URL: ${NC} $QUEUE_URL"
+
+    echo ""
+    print_green "Name=$NAME"
+    print_green "CHAIN_ID=$CHAIN_ID"
+    print_green "AUTOSCALING_THRESHHOLD_CPU=$AUTOSCALING_THRESHHOLD_CPU"
+    print_green "MIN_REPLICA=$MIN_REPLICA"
+    print_green "MAX_REPLICA=$MAX_REPLICA"
+    print_green "MIN_RELAYER_COUNT=$MIN_RELAYER_COUNT"
+    print_green "MAX_RELAYER_COUNT=$MAX_RELAYER_COUNT"
+    print_green "FUNDING_BALANCE_THRESHOLD=$FUNDING_BALANCE_THRESHOLD"
+    print_green "FUNDING_RELAYER_AMOUNT=$FUNDING_RELAYER_AMOUNT"
+    print_green "ADJ_AUTOSCALING_THRESHHOLD_HTTP_REQUESTS=${ADJ_AUTOSCALING_THRESHHOLD_HTTP_REQUESTS}"
 
     ENCODED_SIMULATION_DATA_JSON=$(echo -n "$SIMULATION_DATA_JSON" | base64)
-    echo -e "${GREEN}SIMULATION_DATA_JSON: ${NC} $SIMULATION_DATA_JSON"
-    echo -e "${GREEN}ENCODED_SIMULATION_DATA_JSON: ${NC} $ENCODED_SIMULATION_DATA_JSON"
-
-
     ENCODED_TOKEN_PRICE_JSON=$(echo -n "$TOKEN_PRICE_JSON" | base64)
-    echo -e "${GREEN}TOKEN_PRICE_JSON: ${NC} $TOKEN_PRICE_JSON"
-    echo -e "${GREEN}ENCODED_TOKEN_PRICE_JSON: ${NC} $ENCODED_TOKEN_PRICE_JSON"
-
     ENCODED_SLACK_JSON=$(echo -n "$SLACK_JSON" | base64)
-    echo -e "${GREEN}SLACK_JSON: ${NC} $SLACK_JSON"
-    echo -e "${GREEN}ENCODED_SLACK_JSON: ${NC} $ENCODED_SLACK_JSON"
-
     ENCODED_PROVIDER_JSON=$(echo -n "$PROVIDER_JSON" | base64)
-    echo -e "${GREEN}PROVIDER_JSON: ${NC} $PROVIDER_JSON"
-    echo -e "${GREEN}ENCODED_PROVIDER_JSON: ${NC} $ENCODED_PROVIDER_JSON"
-
-
-    
     ENCODED_DATASOURCES_JSON=$(echo -n "$DATASOURCES_JSON" | base64)
-    echo -e "${GREEN}DATASOURCES_JSON: ${NC} $DATASOURCES_JSON"
-    echo -e "${GREEN}ENCODED_DATASOURCES_JSON: ${NC} $ENCODED_DATASOURCES_JSON"
-
-
     ENCODED_SOCKET_SERVICE_JSON=$(echo -n "$SOCKET_SERVICE_JSON" | base64)
-    echo -e "${GREEN}SOCKET_SERVICE_JSON: ${NC} $SOCKET_SERVICE_JSON"
-    echo -e "${GREEN}ENCODED_SOCKET_SERVICE_JSON: ${NC} $ENCODED_SOCKET_SERVICE_JSON"
+    echo ""
+    echo "Deploying HELM chart for $NAME $CHAIN_ID"
 
-    echo -e "${NC}"
-    echo " Deploying HELM chart for $NAME $CHAIN_ID"
-
-
-    helm upgrade --install --wait --timeout 2200s "${HELM_RELEASE}-${CHAIN_ID}" "$DIR/."  \
-        -f "$DIR/values.yaml" \
-        -n "$NAMESPACE" \
+    # helm template "${HELM_RELEASE}-${CHAIN_ID}" "$DIR/."  \
+    helm upgrade --install "${HELM_RELEASE}-${CHAIN_ID}" "$DIR/."  \
+        --wait \
+        --timeout 600s \
+        --values "$DIR/values.yaml" \
+        --namespace "$NAMESPACE" \
         --set nameOverride="$NAME" \
         --set env="$ENV" \
         --set-string namespace="$NAMESPACE" \
@@ -215,7 +237,7 @@ for array_name in $array_names; do
         --set-string hpa.maxReplicas="$MAX_REPLICA" \
         --set-string projectId="$PROJECT_ID" \
         --set-string secretName="$SECRET_NAME" \
-        --set-string configSecretName="$ENCRYPTED_CONFIG_SECRET" \
+        --set-string configSecretName="$GCP_ENCRYPTED_CONFIG_SECRET" \
         --set-string serviceAccount="$KUBE_SERVICE_ACCOUNT" \
         --set datadog.enable=true \
         --set-string datadog.env="bundler-$NAMESPACE" \

@@ -1,10 +1,9 @@
 set -e
 
-ENV=$1
-NAMESPACE=$2
-DNS_NAME=$3
-IP_NAME=$4
-CHAINS_CFG_FILENAME=$5
+NAMESPACE=$1
+DNS_NAME=$2
+IP_NAME=$3
+CHAINS_CFG_FILENAME=$4
 # shift 5
 # CHAINS=("$@")
 
@@ -38,7 +37,6 @@ echo "$CHAINS_STR"
 echo "IP_NAME that will be attached to Ingress is ${IP_NAME}"
 helm upgrade --install --wait --timeout 720s $HELM_RELEASE "$DIR/."  \
     -f "$DIR/values.yaml" \
-    --set env="$ENV" \
     --set provider="$PROVIDER" \
     --set prometheus.enabled=true \
     -n "$NAMESPACE" \

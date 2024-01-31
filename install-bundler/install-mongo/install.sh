@@ -3,8 +3,7 @@ set -e
 NC='\033[0m'
 YELLOW='\033[0;33m'
 
-ENV=$1
-NAMESPACE=$2
+NAMESPACE=$1
 HELM_RELEASE="mongo"
 PAYMASTER_DBNAME=paymaster-dashboard
 PAYMASTER_DBUSER=usertwo
@@ -14,8 +13,8 @@ RELAYERNODE_DBUSER=userone
 RELAYERNODE_DBPASWORD=useronepassword
 
 # Check if the required arguments are passed
-if [ "$#" -ne 2 ]; then
-    echo "Usage: $0 <ENV> <NAMESPACE> for Mongo"
+if [ "$#" -ne 1 ]; then
+    echo "Usage: $0 <NAMESPACE> for Mongo"
     exit 1
 fi
 

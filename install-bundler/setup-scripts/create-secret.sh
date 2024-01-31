@@ -1,7 +1,6 @@
+#!/bin/bash
 
 SECRET_NAME=$1
-
-#!/bin/bash
 
 # Check if the secret already exists
 if gcloud secrets describe "$SECRET_NAME" &> /dev/null; then

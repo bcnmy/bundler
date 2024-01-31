@@ -1,25 +1,25 @@
 #!/bin/bash
 set -e
 
-ENV=$1;
-NAMESPACE=$2;
-REPLICA_COUNT=$3
+NAMESPACE=$1
+REPLICA_COUNT=$2
 # Check if the required arguments are passed
-if [ "$#" -ne 3 ]; then
-    echo "Usage: $0 <ENV> <NAMESPACE> <REPLICA_COUNT> for centrifugo"
+if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 <NAMESPACE> <REPLICA_COUNT> for centrifugo"
     exit 1
 fi
 
 HELM_RELEASE="centrifugo";
 
+# shellcheck disable=SC2059
 printf "\n${GREEN}####### Deploying $HELM_RELEASE to $NAMESPACE ${NC} ####### \n";
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 helm upgrade --install  --wait --timeout 720s $HELM_RELEASE "$DIR/centrifugo/." \
-  -f "$DIR/centrifugo/values.yaml"  \
-  -n $NAMESPACE \
-  --set nameOverride=$HELM_RELEASE \
-  --set replicaCount=$REPLICA_COUNT \
+  --values "${DIR}/centrifugo/values.yaml"  \
+  --namespace "${NAMESPACE}" \
+  --set nameOverride="${HELM_RELEASE}" \
+  --set replicaCount="${REPLICA_COUNT}" \
   --set secrets.tokenHmacSecretKey=averystrongsecret \
   --set secrets.adminPassword=usedIfAdminSetToTrue \
   --set secrets.adminSecret=averystrongsecretforadmin \
@@ -43,4 +43,5 @@ helm upgrade --install  --wait --timeout 720s $HELM_RELEASE "$DIR/centrifugo/." 
   --set config.namespaces[1].anonymous=true \
   --set metrics.enabled=true
 
+# shellcheck disable=SC2028
 echo "\n\n ####### Deployed $HELM_RELEASE to $NAMESPACE ####### \n";

@@ -1,34 +1,46 @@
-
-#!/opt/homebrew/bin/bash
-
+#!/usr/bin/env bash
 set -e
+
 RED='\033[0;31m'
 NC='\033[0m'
-GREEN='\033[0;32m'
-
 
 CONFIG_FILE=$1
+CONTAINER_IMAGE_TAG=$2
+
+echo "Running script $0"
+
+GIT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+echo "GIT_ROOT is ${GIT_ROOT}"
+CONFIG_FILE_PATH="${GIT_ROOT}/install-bundler/configs/${CONFIG_FILE}"
+echo "CONFIG_FILE_PATH is ${CONFIG_FILE_PATH}"
+echo ls -l "${GIT_ROOT}"/install-bundler/configs/
+ls -l "${GIT_ROOT}"/install-bundler/configs/
+git branch
 
 # Check if the required arguments are passed
 # Example:  sh install-release-cloud.sh configs/testing.cfg
-if [ "$#" -ne 1 ]; then
-    echo " ${RED} Usage: $0 <CONFIG FILE RELATIVE PATH> for deployment ${NC}"
+if [ "$#" -gt 2 ]; then
+  # shellcheck disable=SC2059
+  printf "${RED} Usage: $0 <CONFIG FILE RELATIVE PATH> <CONTAINER_IMAGE_TAG> for deployment ${NC}\n"
+  echo "$#"
+  exit 1
+fi
+
+
+if [ ! -f "${CONFIG_FILE_PATH}" ]; then
+    echo "Error: Configuration file ${CONFIG_FILE_PATH} not found. Choose from configs present in configs"
     exit 1
 fi
 
-echo "I came here $CONFIG_FILE"
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-if [ ! -f "$DIR/$CONFIG_FILE" ]; then
-    echo "Error: Configuration file "$DIR/$CONFIG_FILE" not found. Choose from configs present in configs"
+if [ ! -r "${CONFIG_FILE_PATH}" ]; then
+    echo "Error: Configuration file ${CONFIG_FILE_PATH} not readable."
     exit 1
 fi
 
-if [ ! -r "$DIR/$CONFIG_FILE" ]; then
-    echo "${RED} Error: Configuration file "$DIR/$CONFIG_FILE" not readable. ${NC}"
-    exit 1
+if [[ -n "${CONTAINER_IMAGE_TAG}" ]] ; then
+  echo "Setting IMAGE_TAG to ${CONTAINER_IMAGE_TAG}" 
+  sed -in -E "s/(^IMAGE_TAG=)(.*)/\1${CONTAINER_IMAGE_TAG}/g" "${CONFIG_FILE_PATH}" 
 fi
 
-echo "The config file being used : $DIR/$CONFIG_FILE"
-
-bash bundler/install.sh $CONFIG_FILE
+echo "$0 calling  ${GIT_ROOT}/install-bundler/bundler/install.sh ${CONFIG_FILE}"
+bash "${GIT_ROOT}"/install-bundler/bundler/install.sh "${CONFIG_FILE}"
