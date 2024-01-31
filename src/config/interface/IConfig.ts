@@ -66,6 +66,7 @@ type TokenPriceConfigType = {
   coinMarketCapApi: string;
   networkSymbols: NetworkSymbolMapType;
   symbolMapByChainId: SymbolMapByChainIdType;
+  refreshIntervalSeconds: number;
 };
 
 type RelayerManagerConfigType = Array<{
