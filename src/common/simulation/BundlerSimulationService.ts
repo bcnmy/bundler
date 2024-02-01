@@ -20,6 +20,7 @@ import {
   DefaultGasOverheadType,
   EVMRawTransactionType,
   EntryPointContractType,
+  MantleBVMGasPriceOracleContractType,
   OptimismL1GasPriceOracleContractType,
   UserOperationType,
 } from "../types";
@@ -45,6 +46,8 @@ import {
   AstarNetworks,
   OPTIMISM_L1_GAS_PRICE_ORACLE,
   ARBITRUM_L1_FEE,
+  MantleNetworks,
+  MANTLE_BVM_GAS_PRICE_ORACLE,
 } from "../constants";
 import {
   AlchemySimulationService,
@@ -69,6 +72,10 @@ export class BundlerSimulationService {
     [chainId: number]: OptimismL1GasPriceOracleContractType;
   } = {};
 
+  mantleBVMGasPriceOracle: {
+    [chainId: number]: MantleBVMGasPriceOracleContractType;
+  } = {};
+
   constructor(
     networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
     tenderlySimulationService: TenderlySimulationService,
@@ -88,6 +95,14 @@ export class BundlerSimulationService {
           address: "0x420000000000000000000000000000000000000F",
           publicClient: networkService.provider,
         });
+    }
+
+    if (MantleNetworks.includes(this.networkService.chainId)) {
+      this.mantleBVMGasPriceOracle[this.networkService.chainId] = getContract({
+        abi: MANTLE_BVM_GAS_PRICE_ORACLE,
+        address: "0x420000000000000000000000000000000000000F",
+        publicClient: networkService.provider,
+      });
     }
   }
 
@@ -131,7 +146,10 @@ export class BundlerSimulationService {
       ) {
         // setting a non zero value as division with maxFeePerGas will happen
         userOp.maxFeePerGas = BigInt(1);
-        if (OptimismNetworks.includes(chainId)) {
+        if (
+          OptimismNetworks.includes(chainId) ||
+          MantleNetworks.includes(chainId)
+        ) {
           const gasPrice = await this.gasPriceService.getGasPrice();
           if (typeof gasPrice === "bigint") {
             userOp.maxFeePerGas = gasPrice;
@@ -150,7 +168,10 @@ export class BundlerSimulationService {
       ) {
         // setting a non zero value as division with maxPriorityFeePerGas will happen
         userOp.maxPriorityFeePerGas = BigInt(1);
-        if (OptimismNetworks.includes(chainId)) {
+        if (
+          OptimismNetworks.includes(chainId) ||
+          MantleNetworks.includes(chainId)
+        ) {
           const gasPrice = await this.gasPriceService.getGasPrice();
           if (typeof gasPrice === "bigint") {
             userOp.maxPriorityFeePerGas = gasPrice;
@@ -342,7 +363,10 @@ export class BundlerSimulationService {
             (Number(toHex(totalGas)) - Number(toHex(preOpGas)) + 30000) * 1.2,
           ),
         );
-        if (OptimismNetworks.includes(chainId)) {
+        if (
+          OptimismNetworks.includes(chainId) ||
+          MantleNetworks.includes(chainId)
+        ) {
           totalGas = BigInt(
             Math.ceil(Number(toHex(paid)) / Number(toHex(userOp.maxFeePerGas))),
           );
@@ -948,7 +972,7 @@ export class BundlerSimulationService {
       if (!baseFeePerGas) {
         throw new RpcError(
           `baseFeePerGas not available for chainId: ${chainId}`,
-          BUNDLER_VALIDATION_STATUSES.SIMULATE_PAYMASTER_VALIDATION_FAILED,
+          BUNDLER_VALIDATION_STATUSES.SIMULATE_VALIDATION_FAILED,
         );
       }
       const handleOpsData = encodeFunctionData({
@@ -969,6 +993,56 @@ export class BundlerSimulationService {
       const l2PriorityFee = baseFeePerGas + BigInt(userOp.maxPriorityFeePerGas);
       const l2Price = l2MaxFee < l2PriorityFee ? l2MaxFee : l2PriorityFee;
       const extraPvg = l1Fee / l2Price;
+      ret += Number(toHex(extraPvg));
+    } else if (MantleNetworks.includes(chainId)) {
+      // https://docs.mantle.xyz/network/for-devs/tutorials/estimating-transaction-fees#description
+      const handleOpsData = encodeFunctionData({
+        abi: entryPointContract.abi,
+        functionName: "handleOps",
+        args: [[userOp], userOp.sender],
+      });
+
+      const l1FeePromise = this.networkService.provider.readContract({
+        address:
+          this.mantleBVMGasPriceOracle[this.networkService.chainId].address,
+        abi: this.mantleBVMGasPriceOracle[this.networkService.chainId].abi,
+        functionName: "getL1Fee",
+        args: [handleOpsData],
+      });
+
+      const overheadPromise = this.networkService.provider.readContract({
+        address:
+          this.mantleBVMGasPriceOracle[this.networkService.chainId].address,
+        abi: this.mantleBVMGasPriceOracle[this.networkService.chainId].abi,
+        functionName: "overhead",
+      });
+
+      const scalarPromise = this.networkService.provider.readContract({
+        address:
+          this.mantleBVMGasPriceOracle[this.networkService.chainId].address,
+        abi: this.mantleBVMGasPriceOracle[this.networkService.chainId].abi,
+        functionName: "scalar",
+      });
+
+      const [l1Fee, overhead, scalar] = await Promise.all([
+        l1FeePromise,
+        overheadPromise,
+        scalarPromise,
+      ]);
+      log.info(`l1Fee: ${l1Fee} on chainId: ${chainId}`);
+      log.info(`overhead: ${overhead} on chainId: ${chainId}`);
+      log.info(`scalar: ${scalar} on chainId: ${chainId}`);
+
+      const l1RollupFee =
+        ((l1Fee as bigint) * (overhead as bigint) * (scalar as bigint)) /
+        10000000000n;
+      log.info(`l1RollupFee: ${l1RollupFee} on chainId: ${chainId}`);
+      const l2MaxFee = BigInt(userOp.maxFeePerGas);
+      log.info(`l2MaxFee: ${l2MaxFee} on chainId: ${chainId}`);
+
+      const extraPvg = l1RollupFee / l2MaxFee;
+      log.info(`extraPvg: ${extraPvg} on chainId: ${chainId}`);
+
       ret += Number(toHex(extraPvg));
     }
     return ret;
