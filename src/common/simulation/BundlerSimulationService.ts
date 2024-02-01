@@ -48,6 +48,7 @@ import {
   ARBITRUM_L1_FEE,
   MantleNetworks,
   MANTLE_BVM_GAS_PRICE_ORACLE,
+  MANTLE_L1_ROLL_UP_FEE_DIVISION_FACTOR,
 } from "../constants";
 import {
   AlchemySimulationService,
@@ -1035,7 +1036,7 @@ export class BundlerSimulationService {
 
       const l1RollupFee =
         ((l1Fee as bigint) * (overhead as bigint) * (scalar as bigint)) /
-        10000000000n;
+        MANTLE_L1_ROLL_UP_FEE_DIVISION_FACTOR;
       log.info(`l1RollupFee: ${l1RollupFee} on chainId: ${chainId}`);
       const l2MaxFee = BigInt(userOp.maxFeePerGas);
       log.info(`l2MaxFee: ${l2MaxFee} on chainId: ${chainId}`);

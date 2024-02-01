@@ -1031,6 +1031,7 @@ export const OPTIMISM_L1_GAS_PRICE_ORACLE = [
   },
 ] as const;
 
+// https://explorer.mantle.xyz/address/0x420000000000000000000000000000000000000F
 export const MANTLE_BVM_GAS_PRICE_ORACLE = [
   {
     type: "constructor",
@@ -1368,3 +1369,5 @@ export const AlchemySimulateExecutionSupportedNetworks = [
 ];
 export const AstarNetworks = [81, 592];
 export const MantleNetworks = [5000, 5001];
+
+export const MANTLE_L1_ROLL_UP_FEE_DIVISION_FACTOR = 10000000000n;
