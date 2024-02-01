@@ -10,4 +10,4 @@ config.json.enc
 *heapsnapshot
 .vscode
 dist/
-bundler.code-workspace
+*.code-workspace
