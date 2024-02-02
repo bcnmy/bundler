@@ -60,7 +60,7 @@ export class CMCTokenPriceManager implements ITokenPrice {
             if (coinNetworkIds && coinNetworkIds.length) {
               coinNetworkIds.forEach((networkId: number) => {
                 coinsRateObj[networkId] =
-                  response.data.data[network].quote.USD.price.toFixed(2);
+                  response.data.data[network].quote.USD.price?.toFixed(2);
               });
             }
           });
