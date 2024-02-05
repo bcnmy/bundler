@@ -96,7 +96,7 @@ jobs:
 
   deploy_tw_prod:
     needs: [deploy_tw_staging]
-    # environment: tw-prod
+    environment: tw-prod
     # Allow the job to fetch a GitHub ID token
     # runs-on: ubuntu-latest
     permissions:
