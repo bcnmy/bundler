@@ -149,6 +149,9 @@ export class BundlerSimulationService {
       const preVerificationGasEnd = performance.now();
       log.info(`calcPreVerificationGas took: ${preVerificationGasEnd - preVerificationGasStart} milliseconds`);
 
+      userOp.maxPriorityFeePerGas = 100000000;
+      userOp.maxFeePerGas = 100000000;
+
       log.info(`userOp to used to simulate in eth_call: ${JSON.stringify(userOp)} on chainId: ${chainId}`);
 
       const { data } = await entryPointContract.populateTransaction.simulateHandleOp(
