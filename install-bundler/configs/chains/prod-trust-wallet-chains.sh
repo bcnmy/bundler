@@ -77,18 +77,18 @@ declare -A chain_opBNB=(
   [maxReplica]=3
 )
 
-# declare -A chain_base=(
-#   [name]='chain-8453'
-#   [chainId]="8453"
-#   [autoScalingThreshholdHTTPRequestsPerMinute]=1000
-#   [autoScalingThreshholdCPU]=800m
-#   [minRelayerCount]="200"
-#   [maxRelayerCount]="220"
-#   [fundingBalanceThreshold]="0.006"
-#   [fundingRelayerAmount]="0.015"
-#   [minReplica]=3
-#   [maxReplica]=3
-# )
+declare -A chain_base=(
+  [name]='chain-8453'
+  [chainId]="8453"
+  [autoScalingThreshholdHTTPRequestsPerMinute]=1000
+  [autoScalingThreshholdCPU]=800m
+  [minRelayerCount]="200"
+  [maxRelayerCount]="220"
+  [fundingBalanceThreshold]="0.006"
+  [fundingRelayerAmount]="0.015"
+  [minReplica]=3
+  [maxReplica]=3
+)
 
 declare -A chain_optimism=(
   [name]='chain-10'
