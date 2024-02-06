@@ -1,0 +1,41 @@
+{
+  "supportedNetworks": [80001],
+  "slack": {
+    "token": "",
+    "channel": ""
+  },
+  "dataSources": {
+    "mongoUrl": "mongodb://mongo:27017/relayer-node-service",
+    "redisUrl": "redis://redis:6379"
+  },
+  "socketService": {
+    "token": "",
+    "apiKey": ""
+  },
+  "relayer": { "nodePathIndex": 0 },
+  "queueUrl": "amqp://guest:guest@rabbitmq:5672?heartbeat=30",
+  "simulationData": {
+    "tenderlyData": {
+      "tenderlyUser": "",
+      "tenderlyProject": "",
+      "tenderlyAccessKey": ""
+    }
+  },
+  "chains": {
+    "provider": {
+      "80001": ""
+    }
+  },
+  "relayerManagers": [
+    {
+      "relayerSeed": "",
+      "ownerAccountDetails": {
+        "80001": {
+          "publicKey": "",
+          "privateKey": ""
+        }
+      }
+    }
+  ],
+  "tokenPrice": { "coinMarketCapApi": "" }
+}

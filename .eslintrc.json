@@ -5,18 +5,19 @@
       "node": true
   },
   "extends": [
-      "airbnb-base",
-      "airbnb-typescript/base"
+    "airbnb-base",
+    "airbnb-typescript/base",
+    "prettier"
   ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
       "project" : "./tsconfig.json"
   },
   "plugins": [
-      "@typescript-eslint"
+      "@typescript-eslint",
+      "prettier"
   ],
   "rules": {
-      "@typescript-eslint/indent": ["error"],
       "import/prefer-default-export": "off",
       "semi": ["error", "always"],
       "import/extensions": [
@@ -31,7 +32,10 @@
       ],
       "import/no-dynamic-require": 0,
       "no-underscore-dangle": "off",
-      "no-restricted-syntax": "off"
+      "no-restricted-syntax": "off",
+      "comma-dangle": "off",
+      "@typescript-eslint/comma-dangle": "off",
+      "import/no-extraneous-dependencies": ["error", {"devDependencies": false, "optionalDependencies": false, "peerDependencies": false}]
   },
   "ignorePatterns": ["**/*.hbs"]
 }
