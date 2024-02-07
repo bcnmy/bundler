@@ -1361,7 +1361,7 @@ export enum BLOCKCHAINS {
 export const L2Networks = [421613, 42161, 42170];
 export const PolygonZKEvmNetworks = [1101, 1442];
 export const OptimismNetworks = [
-  420, 10, 84531, 8453, 204, 5611, 9980, 91715, 168587773, 84532,
+  420, 10, 84531, 8453, 204, 5611, 9980, 91715, 84532,
 ];
 export const LineaNetworks = [59140, 59144];
 export const ArbitrumNetworks = [42170, 421613, 42161, 421614];
@@ -1371,6 +1371,7 @@ export const AlchemySimulateExecutionSupportedNetworks = [
 export const AstarNetworks = [81, 592];
 export const MantleNetworks = [5000, 5001];
 
+export const BLAST_PVG_VALUE = 100000000;
 export const MANTLE_L1_ROLL_UP_FEE_DIVISION_FACTOR = 10000000000n;
 export const MANTLE_PUBLIC_RPC_URL_1 = "https://rpc.mantle.xyz";
 export const MANTLE_PUBLIC_RPC_URL_2 = "https://rpc.ankr.com/mantle";
@@ -1378,3 +1379,5 @@ export const MANTLE_PUBLIC_RPC_URL_3 = "https://1rpc.io/mantle";
 export const MANTLE_PRIVATE_RPC_URL_1 = "https://rpc.ankr.com/mantle/07101210d8974c619d563526229a15fdc1675bb1e862ed04a6b8c4e90fa45fab";
 export const MANTLE_PRIVATE_RPC_URL_2 = "https://rpc.ankr.com/mantle/0f2ac70eb2e86d935951e9d3874deeb44525123a1ce2a7cf609cf1f0a098d2d6";
 export const MANTLE_PRIVATE_RPC_URL_3 = "https://rpc.ankr.com/mantle/6ce34fc32c05d52c87f836fc1f994fd056b78c1d75ba9573a1ffbfcd8094287e";
+export const BLAST_SEPOLIA_PUBLIC_RPC_URL = "https://sepolia.blast.io";
+export const BLAST_SEPOLIA_PRIVATE_RPC_URL = "https://rpc.ankr.com/blast_testnet_sepolia/0f2ac70eb2e86d935951e9d3874deeb44525123a1ce2a7cf609cf1f0a098d2d6";
