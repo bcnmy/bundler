@@ -236,7 +236,7 @@
       "11155111": 60,
       "80085": 60,
       "84532": 60,
-      "168587773": 60
+      "168587773": 3600
     }
   },
   "defaultGasOverheads": {
@@ -648,7 +648,8 @@
         "unable to complete request at this time",
         "timeout",
         "we can't execute this request",
-        "rate limit exceeded"
+        "rate limit exceeded",
+        "sender is over rate limit"
       ],
       "INTRINSIC_GAS_TOO_LOW": ["intrinsic gas too low"],
       "MAX_FEE_PER_GAS_LESS_THAN_BLOCK_BASE_FEE": [
