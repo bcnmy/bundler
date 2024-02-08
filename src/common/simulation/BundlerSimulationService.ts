@@ -124,7 +124,7 @@ export class BundlerSimulationService {
       );
 
       // creating fullUserOp in case of estimation
-      userOp.callGasLimit = BigInt(5000000);
+      userOp.callGasLimit = BigInt(20000000);
       userOp.verificationGasLimit = BigInt(5000000);
       userOp.preVerificationGas = BigInt(1000000);
 
