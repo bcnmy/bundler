@@ -1,0 +1,21 @@
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  {{ include "chart.staticconfigmap.metadata" . | nindent 2 }}
+data:
+  MIN_RELAYER_COUNT:  "{{ .Values.minRelayerCount }}"
+  MAX_RELAYER_COUNT: "{{ .Values.maxRelayerCount }}"
+  FUNDING_BALANCE_THRESHOLD: "{{ .Values.fundingBalanceThreshold}}"
+  FUNDING_RELAYER_AMOUNT: "{{ .Values.fundingRelayerAmount }}"
+  QUEUE_URL: {{.Values.queueUrl}}
+  SIMULATION_DATA_JSON:  {{ .Values.encodedSimulationDataJson | b64dec }}
+  TOKEN_PRICE_JSON: {{ .Values.encodedTokenPriceJson | b64dec }}
+  SLACK_JSON: {{ .Values.encodedSlackJson | b64dec }}
+  PROVIDER_JSON:  {{ .Values.encodedProviderJson | b64dec }}
+  DATASOURCES_JSON:  {{ .Values.encodedDatasourcesJson | b64dec }}
+  SOCKET_SERVICE_JSON:  {{ .Values.encodedSocketServiceJson | b64dec }}
+  DD_PROFILING_ENABLED: "false"
+  DD_ENV: "bundler-tw-staging"
+  DD_SERVICE: {{.Values.datadog.service}}
+  DD_VERSION: "1.0.3"

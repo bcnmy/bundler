@@ -10,7 +10,7 @@ const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
 });
 
-const { queueUrl } = config;
+const queueUrl = process.env.QUEUE_URL || config.queueUrl;
 
 export class AATransactionQueue implements IQueue<AATransactionMessageType> {
   private channel!: Channel;

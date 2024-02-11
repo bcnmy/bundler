@@ -364,7 +364,8 @@ export class EVMRelayerManager
         const seedInBuffer = Buffer.from(relayersMasterSeed, "utf-8");
         const ethRoot = hdkey.fromMasterSeed(seedInBuffer);
 
-        const { nodePathIndex } = config.relayer;
+        const nodePathIndex =
+          process.env.NODE_PATH_INDEX || config.relayer.nodePathIndex;
         const nodePath = `${nodePathRoot + nodePathIndex}/`;
         const ethNodePath: any = ethRoot.derive(nodePath + relayerIndex);
         const privateKey = ethNodePath._privateKey.toString("hex");

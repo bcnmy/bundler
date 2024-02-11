@@ -1,0 +1,35 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+{{ include "chart.ingress.metadata" . | nindent 2 }}
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: {{.Values.STATIC_IP_NAME}}
+    networking.gke.io/managed-certificates: {{ include "chart.certificate.name" .}}
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.allow-http: "false"
+    cloud.google.com/health-check-path: "/health"
+
+spec:
+
+  rules:
+    - http:
+        paths:
+{{- range $chain := .Values.CHAINS }}
+        - backend:
+            service:
+              name: chain-{{$chain}}-service
+              port:
+                number: 3000
+          path: /api/v2/{{$chain}}/
+          pathType: Prefix
+{{- end }}
+
+{{- range $chain := .Values.CHAINS }}
+        - backend:
+            service:
+              name: chain-{{$chain}}-service
+              port:
+                number: 3000
+          path: /{{$chain}}/health
+          pathType: Exact
+{{- end }}

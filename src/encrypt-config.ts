@@ -1,3 +1,4 @@
+/* eslint-disable import/no-import-module-exports */
 /* eslint-disable no-console */
 import crypto from "crypto-js";
 import { promises, existsSync } from "fs";
@@ -17,7 +18,7 @@ const encryptConfig = async (
   }
   const plaintext = await promises.readFile(envPath, "utf8");
 
-  // Derive a Key using the PBKDF2 algorithm from the passsphrase
+  // Derive a Key using the PBKDF2 algorithm from the passphrase
   const salt = crypto.lib.WordArray.random(128 / 8);
   const key = crypto.PBKDF2(passphrase, salt, {
     keySize: KEY_SIZE / 32,

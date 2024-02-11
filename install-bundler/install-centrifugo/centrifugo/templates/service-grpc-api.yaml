@@ -1,0 +1,31 @@
+{{- if .Values.service.useSeparateGrpcService -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "centrifugo.fullname" . }}-grpc-api
+  namespace: {{ include "centrifugo.namespace" . }}
+  labels:
+    {{- include "centrifugo.labels" . | nindent 4 }}
+    {{- with .Values.grpcService.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.grpcService.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.grpcService.type }}
+  ports:
+    - port: {{ .Values.grpcService.port }}
+      targetPort: grpc
+      protocol: TCP
+      {{- if .Values.grpcService.appProtocol }}
+      appProtocol: {{ .Values.grpcService.appProtocol }}
+      {{- end }}
+      name: grpc
+      {{- if (and (eq .Values.grpcService.type "NodePort") (not (empty .Values.grpcService.nodePort))) }}
+      nodePort: {{ .Values.grpcService.nodePort }}
+      {{- end }}
+  selector:
+    {{- include "centrifugo.selectorLabels" . | nindent 4 }}
+{{- end }}
