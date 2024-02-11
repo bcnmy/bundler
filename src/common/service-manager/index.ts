@@ -1,6 +1,7 @@
 /* eslint-disable import/no-import-module-exports */
 /* eslint-disable no-await-in-loop */
 import { getContract, parseEther } from "viem";
+import { chain } from "lodash";
 import { config } from "../../config";
 import { EVMAccount, IEVMAccount } from "../../relayer/account";
 import {
@@ -22,7 +23,6 @@ import { FeeOption } from "../../server/services";
 import { RedisCacheService } from "../cache";
 import { Mongo, TransactionDAO } from "../db";
 import { UserOperationDAO } from "../db/dao/UserOperationDAO";
-import { GasPriceManager } from "../gas-price";
 import { IQueue } from "../interface";
 import { logger } from "../logger";
 import { relayerManagerTransactionTypeNameMap } from "../maps";
@@ -58,8 +58,10 @@ import {
 } from "../types";
 import { UserOperationStateDAO } from "../db/dao/UserOperationStateDAO";
 import { ENTRY_POINT_ABI } from "../constants";
-import { customJSONStringify } from "../utils";
-import { GasPrice } from "../gas-price/GasPrice";
+import { customJSONStringify, parseError } from "../utils";
+import { GasPriceService } from "../gas-price";
+import { CacheFeesJob } from "../gas-price/jobs/CacheFees";
+import { CachePricesJob } from "../token-price/jobs/CachePrices";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -79,7 +81,7 @@ const feeOptionMap: {
 } = {};
 
 const gasPriceServiceMap: {
-  [chainId: number]: GasPrice;
+  [chainId: number]: GasPriceService;
 } = {};
 
 const bundlerSimulatonServiceMap: {
@@ -138,7 +140,19 @@ let statusService: IStatusService;
   });
   // added check for relayer node path in order to run on only one server
   if (config.relayer.nodePathIndex === 0) {
-    tokenService.schedule();
+    const DEFAULT_PRICE_JOB_INTERVAL_SECONDS = 90;
+    const priceJobSchedule = `*/${
+      config.tokenPrice.refreshIntervalSeconds ||
+      DEFAULT_PRICE_JOB_INTERVAL_SECONDS
+    } * * * * *`;
+
+    log.info(`Scheduling CachePricesJob with schedule='${priceJobSchedule}'`);
+    try {
+      const priceJob = new CachePricesJob(priceJobSchedule, tokenService);
+      priceJob.start();
+    } catch (err) {
+      log.error(`Error in scheduling CachePricesJob: ${parseError(err)}`);
+    }
   }
 
   log.info(
@@ -146,6 +160,8 @@ let statusService: IStatusService;
       supportedNetworks,
     )}`,
   );
+
+  log.info(`Supported networks are: ${supportedNetworks}`);
   for (const chainId of supportedNetworks) {
     log.info(`Setup of services started for chainId: ${chainId}`);
     routeTransactionToRelayerMap[chainId] = {};
@@ -164,17 +180,31 @@ let statusService: IStatusService;
     networkServiceMap[chainId] = networkService;
 
     log.info(`Setting up gas price manager for chainId: ${chainId}`);
-    const gasPriceManager = new GasPriceManager(cacheService, networkService, {
+    const gasPriceService = new GasPriceService(cacheService, networkService, {
       chainId,
       EIP1559SupportedNetworks: config.EIP1559SupportedNetworks,
     });
-    log.info(`Gas price manager setup complete for chainId: ${chainId}`);
+    log.info(`Gas price service setup complete for chainId: ${chainId}`);
 
-    log.info(`Setting up gas price service for chainId: ${chainId}`);
-    const gasPriceService = gasPriceManager.setup();
     // added check for relayer node path in order to run on only one server
     if (gasPriceService && config.relayer.nodePathIndex === 0) {
-      gasPriceService.schedule();
+      const gasPriceSchedule = `*/${config.chains.updateFrequencyInSeconds[chainId]} * * * * *`;
+      log.info(
+        `Scheduling CacheFeesJob for chainId: ${chainId} with schedule: '${gasPriceSchedule}'`,
+      );
+      try {
+        const cacheFeesJob = new CacheFeesJob(
+          gasPriceSchedule,
+          gasPriceService,
+        );
+        cacheFeesJob.start();
+      } catch (err) {
+        log.error(
+          `Error in scheduling gas price job for chainId: ${chain} and schedule: ${gasPriceSchedule}: ${parseError(
+            err,
+          )}`,
+        );
+      }
     }
     if (!gasPriceService) {
       throw new Error(`Gasprice service is not setup for chainId ${chainId}`);
@@ -248,10 +278,7 @@ let statusService: IStatusService;
     for (const relayerManager of config.relayerManagers) {
       if (
         relayerManager.name === "RM2" &&
-        [
-          5000, 5001, 204, 5611, 59144, 59140, 592, 88888, 88882, 81, 169,
-          3441005, 1115, 1116, 91715, 7116, 9980, 421614, 11155111,
-        ].includes(chainId)
+        config.nonRM2SupportedNetworks.includes(chainId)
       ) {
         log.info(`chainId: ${chainId} not supported on relayer manager RM2`);
         // eslint-disable-next-line no-continue
@@ -365,6 +392,14 @@ let statusService: IStatusService;
       networkService,
     );
 
+    // eslint-disable-next-line max-len
+    bundlerSimulatonServiceMap[chainId] = new BundlerSimulationService(
+      networkService,
+      tenderlySimulationService,
+      alchemySimulationService,
+      gasPriceService,
+    );
+
     const { entryPointData } = config;
 
     for (const [
@@ -423,14 +458,6 @@ let statusService: IStatusService;
         const aaRelayService = new AARelayService(aaQueue);
         routeTransactionToRelayerMap[chainId][type] = aaRelayService;
 
-        // eslint-disable-next-line max-len
-        bundlerSimulatonServiceMap[chainId] = new BundlerSimulationService(
-          networkService,
-          tenderlySimulationService,
-          alchemySimulationService,
-          gasPriceService,
-          cacheService,
-        );
         log.info(
           `AA consumer, relay service & simulation service setup complete for chainId: ${chainId}`,
         );
@@ -518,14 +545,6 @@ let statusService: IStatusService;
         const bundlerRelayService = new BundlerRelayService(bundlerQueue);
         routeTransactionToRelayerMap[chainId][type] = bundlerRelayService;
 
-        // eslint-disable-next-line max-len
-        bundlerSimulatonServiceMap[chainId] = new BundlerSimulationService(
-          networkService,
-          tenderlySimulationService,
-          alchemySimulationService,
-          gasPriceService,
-          cacheService,
-        );
         log.info(
           `Bundler consumer, relay service, simulation and validation service setup complete for chainId: ${chainId}`,
         );

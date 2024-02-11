@@ -9,7 +9,7 @@ import {
 import hdkey from "hdkey";
 import { parseEther, toHex } from "viem";
 import { ICacheService } from "../../common/cache";
-import { IGasPrice } from "../../common/gas-price";
+import { IGasPriceService } from "../../common/gas-price";
 import { logger } from "../../common/logger";
 import { INetworkService } from "../../common/network";
 import { getPendingTransactionIncreasingMessage } from "../../common/notification";
@@ -91,7 +91,7 @@ export class EVMRelayerManager
 
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
 
-  gasPriceService: IGasPrice;
+  gasPriceService: IGasPriceService;
 
   notificationManager: INotificationManager;
 
@@ -475,7 +475,7 @@ export class EVMRelayerManager
           this.chainId
         }`;
         log.info(
-          `Waiting for lock to fund relayers on key ${key} for relayer ${relayerAddress} for duration of 10000 ms`,
+          `Waiting for lock to fund relayers on key ${key} for relayer ${relayerAddress} for duration of 1000 ms`,
         );
         const acquiredLock = await lock.acquire([`locks:${key}`], 10000);
         log.info(

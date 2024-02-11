@@ -1,7 +1,4 @@
-import { IEVMAccount } from "../../../relayer/account";
-import { INetworkService } from "../../network";
 import {
-  EVMRawTransactionType,
   EntryPointContractType,
   StateOverrideSetType,
   UserOperationType,

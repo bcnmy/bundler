@@ -8,6 +8,7 @@ import {
   Transaction,
   TransactionReceipt,
   createPublicClient,
+  fallback,
   http,
 } from "viem";
 import { IEVMAccount } from "../../relayer/account";
@@ -23,6 +24,18 @@ import {
 } from "./types";
 import { logger } from "../logger";
 import { customJSONStringify, parseError } from "../utils";
+import {
+  MANTLE_PRIVATE_RPC_URL_1,
+  MANTLE_PUBLIC_RPC_URL_1,
+  MANTLE_PUBLIC_RPC_URL_3,
+  MANTLE_PUBLIC_RPC_URL_2,
+  MANTLE_PRIVATE_RPC_URL_2,
+  MANTLE_PRIVATE_RPC_URL_3,
+  MantleNetworks,
+  BLOCKCHAINS,
+  BLAST_SEPOLIA_PUBLIC_RPC_URL,
+  BLAST_SEPOLIA_PRIVATE_RPC_URL,
+} from "../constants";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -40,9 +53,55 @@ export class EVMNetworkService
   constructor(options: { chainId: number; rpcUrl: string }) {
     this.chainId = options.chainId;
     this.rpcUrl = options.rpcUrl;
-    this.provider = createPublicClient({
-      transport: http(this.rpcUrl),
-    });
+    if (MantleNetworks.includes(this.chainId)) {
+      this.provider = createPublicClient({
+        transport: fallback(
+          [
+            http(MANTLE_PRIVATE_RPC_URL_1),
+            http(MANTLE_PUBLIC_RPC_URL_1),
+            http(MANTLE_PUBLIC_RPC_URL_2),
+            http(MANTLE_PRIVATE_RPC_URL_2),
+            http(MANTLE_PUBLIC_RPC_URL_3),
+            http(MANTLE_PRIVATE_RPC_URL_3),
+          ],
+          {
+            rank: {
+              interval: 60_000,
+              sampleCount: 5,
+              timeout: 500,
+              weights: {
+                latency: 0.3,
+                stability: 0.7,
+              },
+            },
+          },
+        ),
+      });
+    } else if (this.chainId === BLOCKCHAINS.BLAST_TESTNET) {
+      this.provider = createPublicClient({
+        transport: fallback(
+          [
+            http(BLAST_SEPOLIA_PRIVATE_RPC_URL),
+            http(BLAST_SEPOLIA_PUBLIC_RPC_URL),
+          ],
+          {
+            rank: {
+              interval: 60_000,
+              sampleCount: 5,
+              timeout: 500,
+              weights: {
+                latency: 0.3,
+                stability: 0.7,
+              },
+            },
+          },
+        ),
+      });
+    } else {
+      this.provider = createPublicClient({
+        transport: http(this.rpcUrl),
+      });
+    }
   }
 
   async sendRpcCall(method: string, params: Array<any>): Promise<any> {
@@ -138,16 +197,6 @@ export class EVMNetworkService
     return await this.sendRpcCall(EthMethodType.ETH_CALL, params);
   }
 
-  async getTransactionReceipt(
-    transactionHash: string,
-  ): Promise<TransactionReceipt | null> {
-    const response = await this.sendRpcCall(
-      EthMethodType.GET_TRANSACTION_RECEIPT,
-      [transactionHash],
-    );
-    return response;
-  }
-
   /**
    * Get the nonce of the user
    * @param address address
@@ -170,6 +219,16 @@ export class EVMNetworkService
     return hash as string;
   }
 
+  async getTransactionReceipt(
+    transactionHash: string,
+  ): Promise<TransactionReceipt | null> {
+    const response = await this.sendRpcCall(
+      EthMethodType.GET_TRANSACTION_RECEIPT,
+      [transactionHash],
+    );
+    return response;
+  }
+
   /**
    * @param transactionHash transaction hash
    * @returns receipt of the transaction once mined, else waits for the transaction to be mined
@@ -184,73 +243,76 @@ export class EVMNetworkService
       `Starting waitFortransaction polling on transactionHash: ${transactionHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
     );
 
-    const response: TransactionReceipt | null = await new Promise(async (resolve, reject) => {
-      let transactionReceipt =
-        await this.getTransactionReceipt(transactionHash);
-      // Set interval to check every 1 second (adjust the interval as needed)
-      const intervalId = setInterval(async () => {
-        try {
-          log.info(
-            `Polling started to fetch receipt for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${this.chainId}`,
-          );
-          transactionReceipt =
-            await this.getTransactionReceipt(transactionHash);
-
-          if (
-            transactionReceipt &&
-            ((transactionReceipt.status as unknown as string) === "0x1" ||
-              (transactionReceipt.status as unknown as string) === "0x0" ||
-              (transactionReceipt.status as unknown as number) === 1 ||
-              (transactionReceipt.status as unknown as number) === 0)
-          ) {
-            // Transaction resolved successfully
+    const response: TransactionReceipt | null = await new Promise(
+      async (resolve, reject) => {
+        let transactionReceipt =
+          await this.getTransactionReceipt(transactionHash);
+        // Set interval to check every 1 second (adjust the interval as needed)
+        const intervalId = setInterval(async () => {
+          try {
             log.info(
-              `Transaction receipt: ${customJSONStringify(
-                transactionReceipt,
-              )} fetched for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${
+              `Polling started to fetch receipt for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${this.chainId}`,
+            );
+            transactionReceipt =
+              await this.getTransactionReceipt(transactionHash);
+
+            const isTransactionMined =
+              transactionReceipt &&
+              ((transactionReceipt.status as unknown as string) === "0x1" ||
+                (transactionReceipt.status as unknown as string) === "0x0");
+
+            if (isTransactionMined) {
+              // Transaction resolved successfully
+              log.info(
+                `Transaction receipt: ${customJSONStringify(
+                  transactionReceipt,
+                )} fetched for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${
+                  this.chainId
+                }`,
+              );
+              clearInterval(intervalId);
+              resolve(transactionReceipt);
+            } else {
+              // Transaction is still pending
+              log.info(
+                `Transaction is still pending for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${this.chainId}`,
+              );
+            }
+          } catch (error) {
+            log.info(
+              `Error checking transaction receipt: ${parseError(
+                error,
+              )} for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${
                 this.chainId
               }`,
             );
             clearInterval(intervalId);
-            resolve(transactionReceipt);
-          } else {
-            // Transaction is still pending
-            log.info(
-              `Transaction is still pending for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${this.chainId}`,
+            reject(
+              new Error(
+                `Error checking transaction receipt: ${parseError(
+                  error,
+                )} for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${
+                  this.chainId
+                }`,
+              ),
             );
           }
-        } catch (error) {
-          log.info(
-            `Error checking transaction receipt: ${parseError(
-              error,
-            )} for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${
-              this.chainId
-            }`,
-          );
-          clearInterval(intervalId);
-          reject(
-            new Error(`Error checking transaction receipt: ${parseError(
-              error,
-            )} for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${
-              this.chainId
-            }`,
-          ));
-        }
-      }, 2000);
+        }, 2000);
 
-      // Uncomment the line below to stop the interval after a certain number of iterations (optional)
-      setTimeout(
-        () => {
-          clearInterval(intervalId);
-          reject(
-            new Error(
-              "Timeout: The transaction is taking too long to confirm.",
-            ),
-          );
-        },
-        4 * 60 * 1000,
-      );
-    });
+        // Uncomment the line below to stop the interval after a certain number of iterations (optional)
+        setTimeout(
+          () => {
+            clearInterval(intervalId);
+            reject(
+              new Error(
+                "Timeout: The transaction is taking too long to confirm.",
+              ),
+            );
+          },
+          4 * 60 * 1000,
+        );
+      },
+    );
     log.info(
       `waitForTransactionReceipt from provider response: ${customJSONStringify(
         response,

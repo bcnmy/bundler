@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { EthMethodType, TransactionMethodType } from "../../../common/types";
-import { STATUSES } from "../../middleware";
+import { BUNDLER_VALIDATION_STATUSES, STATUSES } from "../../middleware";
 import { relayAATransaction } from "./AARelay";
 import { relaySCWTransaction } from "./SCWRelay";
 import { getGasAndGasPrices } from "./BundlerRelay/GetGasAndGasPrices";
@@ -16,8 +16,8 @@ export const requestHandler = async (req: Request, res: Response) => {
     response = await getGasAndGasPrices(req, res);
   } else {
     return res.status(STATUSES.BAD_REQUEST).send({
-      code: STATUSES.BAD_REQUEST,
-      error: "Wrong transaction type sent in request",
+      code: BUNDLER_VALIDATION_STATUSES.METHOD_NOT_FOUND,
+      error: `method: ${method} not supported`,
     });
   }
   return response;

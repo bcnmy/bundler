@@ -3,7 +3,7 @@
 // /* eslint-disable @typescript-eslint/no-unused-vars */
 // import { extend } from 'lodash';
 // import { ICacheService } from '../../../common/cache';
-// import { IGasPrice } from '../../../common/gas-price';
+// import { IGasPriceService } from '../../../common/gas-price';
 // import { GasPriceType } from '../../../common/gas-price/types';
 // import { INetworkService } from '../../../common/network';
 // import { TenderlySimulationService } from '../../../common/simulation/external-simulation';
@@ -13,7 +13,7 @@
 // import { MockCache } from './mockCache';
 // import { MockNetworkService } from './mockNetworkService';
 
-// export class MockGasPrice implements IGasPrice {
+// export class MockGasPrice implements IGasPriceService {
 //   chainId: number = 5;
 
 //   networkService: INetworkService<IEVMAccount, EVMRawTransactionType> = new MockNetworkService({});

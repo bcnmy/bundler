@@ -1,9 +1,7 @@
 /* eslint-disable import/no-import-module-exports */
 import axios from "axios";
-import { schedule } from "node-cron";
 import { ICacheService } from "../cache";
 import { logger } from "../logger";
-import { IScheduler } from "../scheduler";
 import { SymbolMapByChainIdType } from "../types";
 import { customJSONStringify, getTokenPriceKey, parseError } from "../utils";
 import { ITokenPrice } from "./interface/ITokenPrice";
@@ -13,16 +11,16 @@ const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
 });
 
-export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
+export class CMCTokenPriceManager implements ITokenPrice {
   private apiKey: string;
-
-  private updateFrequencyInSeconds: number;
 
   private networkSymbolCategories: NetworkSymbolCategoriesType;
 
   private symbolMapByChainId: SymbolMapByChainIdType;
 
   cacheService: ICacheService;
+
+  public tokens: string[];
 
   constructor(
     cacheService: ICacheService,
@@ -35,27 +33,17 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
   ) {
     this.apiKey = options.apiKey;
     this.networkSymbolCategories = options.networkSymbolCategories;
-    this.updateFrequencyInSeconds = options.updateFrequencyInSeconds;
     this.symbolMapByChainId = options.symbolMapByChainId;
     this.cacheService = cacheService;
+
+    this.tokens = Object.keys(this.networkSymbolCategories);
   }
 
-  schedule() {
-    schedule(`*/${this.updateFrequencyInSeconds} * * * * *`, () => {
-      this.setup();
-    });
-  }
-
-  private async setup() {
+  public async setup() {
     try {
-      const networkSymbolsCategoriesKeys = Object.keys(
-        this.networkSymbolCategories,
-      );
-      log.info(
-        `Fetching token prices for ${networkSymbolsCategoriesKeys.join(", ")}`,
-      );
+      log.info(`Fetching token prices for ${this.tokens.join(", ")}`);
       const response = await axios.get(
-        `https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=${networkSymbolsCategoriesKeys.toString()}`,
+        `https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=${this.tokens.toString()}`,
         {
           headers: {
             "X-CMC_PRO_API_KEY": this.apiKey,
@@ -72,7 +60,7 @@ export class CMCTokenPriceManager implements ITokenPrice, IScheduler {
             if (coinNetworkIds && coinNetworkIds.length) {
               coinNetworkIds.forEach((networkId: number) => {
                 coinsRateObj[networkId] =
-                  response.data.data[network].quote.USD.price.toFixed(2);
+                  response.data.data[network].quote.USD.price?.toFixed(2);
               });
             }
           });

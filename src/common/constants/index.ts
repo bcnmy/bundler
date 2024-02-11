@@ -1031,6 +1031,245 @@ export const OPTIMISM_L1_GAS_PRICE_ORACLE = [
   },
 ] as const;
 
+// https://explorer.mantle.xyz/address/0x420000000000000000000000000000000000000F
+export const MANTLE_BVM_GAS_PRICE_ORACLE = [
+  {
+    type: "constructor",
+    inputs: [{ type: "address", name: "_owner", internalType: "address" }],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    outputs: [{ type: "uint256", name: "", internalType: "uint256" }],
+    name: "IsBurning",
+    inputs: [],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    outputs: [{ type: "uint256", name: "", internalType: "uint256" }],
+    name: "charge",
+    inputs: [],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    outputs: [{ type: "uint256", name: "", internalType: "uint256" }],
+    name: "daGasPrice",
+    inputs: [],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    outputs: [{ type: "uint256", name: "", internalType: "uint256" }],
+    name: "daSwitch",
+    inputs: [],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    outputs: [{ type: "uint256", name: "", internalType: "uint256" }],
+    name: "decimals",
+    inputs: [],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    outputs: [{ type: "uint256", name: "", internalType: "uint256" }],
+    name: "gasPrice",
+    inputs: [],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    outputs: [{ type: "uint256", name: "", internalType: "uint256" }],
+    name: "getL1Fee",
+    inputs: [{ type: "bytes", name: "_data", internalType: "bytes" }],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    outputs: [{ type: "uint256", name: "", internalType: "uint256" }],
+    name: "getL1GasUsed",
+    inputs: [{ type: "bytes", name: "_data", internalType: "bytes" }],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    outputs: [{ type: "uint256", name: "", internalType: "uint256" }],
+    name: "l1BaseFee",
+    inputs: [],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    outputs: [{ type: "uint256", name: "", internalType: "uint256" }],
+    name: "overhead",
+    inputs: [],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    outputs: [{ type: "address", name: "", internalType: "address" }],
+    name: "owner",
+    inputs: [],
+  },
+  {
+    type: "function",
+    stateMutability: "nonpayable",
+    outputs: [],
+    name: "renounceOwnership",
+    inputs: [],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    outputs: [{ type: "uint256", name: "", internalType: "uint256" }],
+    name: "scalar",
+    inputs: [],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    outputs: [{ type: "address", name: "", internalType: "address" }],
+    name: "sccAddress",
+    inputs: [],
+  },
+  {
+    type: "function",
+    stateMutability: "nonpayable",
+    outputs: [],
+    name: "setCharge",
+    inputs: [{ type: "uint256", name: "_charge", internalType: "uint256" }],
+  },
+  {
+    type: "function",
+    stateMutability: "nonpayable",
+    outputs: [],
+    name: "setDAGasPrice",
+    inputs: [{ type: "uint256", name: "_daGasPrice", internalType: "uint256" }],
+  },
+  {
+    type: "function",
+    stateMutability: "nonpayable",
+    outputs: [],
+    name: "setDaSwitch",
+    inputs: [{ type: "uint256", name: "_daSwitch", internalType: "uint256" }],
+  },
+  {
+    type: "function",
+    stateMutability: "nonpayable",
+    outputs: [],
+    name: "setDecimals",
+    inputs: [{ type: "uint256", name: "_decimals", internalType: "uint256" }],
+  },
+  {
+    type: "function",
+    stateMutability: "nonpayable",
+    outputs: [],
+    name: "setGasPrice",
+    inputs: [{ type: "uint256", name: "_gasPrice", internalType: "uint256" }],
+  },
+  {
+    type: "function",
+    stateMutability: "nonpayable",
+    outputs: [],
+    name: "setIsBurning",
+    inputs: [{ type: "uint256", name: "_isBurning", internalType: "uint256" }],
+  },
+  {
+    type: "function",
+    stateMutability: "nonpayable",
+    outputs: [],
+    name: "setL1BaseFee",
+    inputs: [{ type: "uint256", name: "_baseFee", internalType: "uint256" }],
+  },
+  {
+    type: "function",
+    stateMutability: "nonpayable",
+    outputs: [],
+    name: "setOverhead",
+    inputs: [{ type: "uint256", name: "_overhead", internalType: "uint256" }],
+  },
+  {
+    type: "function",
+    stateMutability: "nonpayable",
+    outputs: [],
+    name: "setScalar",
+    inputs: [{ type: "uint256", name: "_scalar", internalType: "uint256" }],
+  },
+  {
+    type: "function",
+    stateMutability: "nonpayable",
+    outputs: [],
+    name: "transferOwnership",
+    inputs: [{ type: "address", name: "newOwner", internalType: "address" }],
+  },
+  {
+    type: "event",
+    name: "ChargeUpdated",
+    inputs: [{ type: "uint256", name: "", indexed: false }],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "DAGasPriceUpdated",
+    inputs: [{ type: "uint256", name: "", indexed: false }],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "DASwitchUpdated",
+    inputs: [{ type: "uint256", name: "", indexed: false }],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "DecimalsUpdated",
+    inputs: [{ type: "uint256", name: "", indexed: false }],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "GasPriceUpdated",
+    inputs: [{ type: "uint256", name: "", indexed: false }],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "IsBurningUpdated",
+    inputs: [{ type: "uint256", name: "", indexed: false }],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "L1BaseFeeUpdated",
+    inputs: [{ type: "uint256", name: "", indexed: false }],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "OverheadUpdated",
+    inputs: [{ type: "uint256", name: "", indexed: false }],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "OwnershipTransferred",
+    inputs: [
+      { type: "address", name: "previousOwner", indexed: true },
+      { type: "address", name: "newOwner", indexed: true },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "ScalarUpdated",
+    inputs: [{ type: "uint256", name: "", indexed: false }],
+    anonymous: false,
+  },
+] as const;
+
 export const ARBITRUM_L1_FEE = [
   {
     inputs: [
@@ -1098,7 +1337,7 @@ export enum BLOCKCHAINS {
   BASE_GOERLI_TESTNET = 84531,
   BASE_MAINNET = 8453,
   LINEA_TESTNET = 59140,
-  LINEA_MAINET = 59144,
+  LINEA_MAINNET = 59144,
   GANACHE = 1337,
   ASTAR_MAINNET = 592,
   CHILLIZ_MAINNET = 88888,
@@ -1113,15 +1352,36 @@ export enum BLOCKCHAINS {
   COMBO_MAINNET = 9980,
   ARBITRUM_SEPOLIA_TESTNET = 421614,
   SEPOLIA_TESTNET = 11155111,
+  BERACHAIN_TESTNET = 80085,
+  BLAST_TESTNET = 168587773,
+  BASE_SEPOLIA_TESTNET = 84532,
 }
 
 // Network with base gas diff from 21k and maxPriorityFeePerGas is 0
 export const L2Networks = [421613, 42161, 42170];
 export const PolygonZKEvmNetworks = [1101, 1442];
-export const OptimismNetworks = [420, 10, 84531, 8453, 204, 5611, 9980, 91715];
+export const OptimismNetworks = [
+  420, 10, 84531, 8453, 204, 5611, 9980, 91715, 84532,
+];
 export const LineaNetworks = [59140, 59144];
 export const ArbitrumNetworks = [42170, 421613, 42161, 421614];
 export const AlchemySimulateExecutionSupportedNetworks = [
-  1, 5, 137, 80001, 10, 420, 42161, 421613, 8453, 84531, 592,
+  1, 5, 11155111, 137, 80001, 10, 420, 42161, 421613, 421614, 8453, 84531, 592,
 ];
 export const AstarNetworks = [81, 592];
+export const MantleNetworks = [5000, 5001];
+
+export const BLAST_PVG_VALUE = 100000000;
+export const MANTLE_L1_ROLL_UP_FEE_DIVISION_FACTOR = 10000000000n;
+export const MANTLE_PUBLIC_RPC_URL_1 = "https://rpc.mantle.xyz";
+export const MANTLE_PUBLIC_RPC_URL_2 = "https://rpc.ankr.com/mantle";
+export const MANTLE_PUBLIC_RPC_URL_3 = "https://1rpc.io/mantle";
+export const MANTLE_PRIVATE_RPC_URL_1 =
+  "https://rpc.ankr.com/mantle/07101210d8974c619d563526229a15fdc1675bb1e862ed04a6b8c4e90fa45fab";
+export const MANTLE_PRIVATE_RPC_URL_2 =
+  "https://rpc.ankr.com/mantle/0f2ac70eb2e86d935951e9d3874deeb44525123a1ce2a7cf609cf1f0a098d2d6";
+export const MANTLE_PRIVATE_RPC_URL_3 =
+  "https://rpc.ankr.com/mantle/6ce34fc32c05d52c87f836fc1f994fd056b78c1d75ba9573a1ffbfcd8094287e";
+export const BLAST_SEPOLIA_PUBLIC_RPC_URL = "https://sepolia.blast.io";
+export const BLAST_SEPOLIA_PRIVATE_RPC_URL =
+  "https://rpc.ankr.com/blast_testnet_sepolia/0f2ac70eb2e86d935951e9d3874deeb44525123a1ce2a7cf609cf1f0a098d2d6";

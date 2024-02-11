@@ -56,7 +56,9 @@ export class EVMAccount implements IEVMAccount {
           rawTransaction.maxFeePerGas ? rawTransaction.maxFeePerGas : 0,
         ),
         maxPriorityFeePerGas: BigInt(
-          rawTransaction.maxFeePerGas ? rawTransaction.maxFeePerGas : 0,
+          rawTransaction.maxPriorityFeePerGas
+            ? rawTransaction.maxPriorityFeePerGas
+            : 0,
         ),
       };
     } else {

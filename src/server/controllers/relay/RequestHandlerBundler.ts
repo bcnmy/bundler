@@ -4,7 +4,7 @@ import {
   EthMethodType,
   TransactionMethodType,
 } from "../../../common/types";
-import { STATUSES } from "../../middleware";
+import { BUNDLER_VALIDATION_STATUSES, STATUSES } from "../../middleware";
 import {
   bundleUserOperation,
   getChainId,
@@ -59,8 +59,8 @@ export const bundlerRequestHandler = async (req: Request, res: Response) => {
       break;
     default:
       return res.status(STATUSES.BAD_REQUEST).send({
-        code: STATUSES.BAD_REQUEST,
-        error: "Wrong transaction type sent in request",
+        code: BUNDLER_VALIDATION_STATUSES.METHOD_NOT_FOUND,
+        error: `method: ${method} not supported`,
       });
   }
 

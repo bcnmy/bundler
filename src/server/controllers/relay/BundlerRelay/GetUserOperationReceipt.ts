@@ -1,5 +1,4 @@
 /* eslint-disable import/no-import-module-exports */
-/* eslint-disable max-len */
 import { Request, Response } from "express";
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from "../../../middleware";
 import { logger } from "../../../../common/logger";

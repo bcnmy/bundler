@@ -1,5 +1,9 @@
 import { GetContractReturnType, TransactionReceipt } from "viem";
-import { ENTRY_POINT_ABI, OPTIMISM_L1_GAS_PRICE_ORACLE } from "../constants";
+import {
+  ENTRY_POINT_ABI,
+  OPTIMISM_L1_GAS_PRICE_ORACLE,
+  MANTLE_BVM_GAS_PRICE_ORACLE,
+} from "../constants";
 
 export enum TransactionType {
   AA = "AA",
@@ -40,7 +44,6 @@ export enum AlchemyMethodType {
 export enum BiconomyMethodType {
   GET_GAS_FEE_VALUES = "biconomy_getGasFeeValues",
   GET_USER_OPERATION_STATUS = "biconomy_getUserOperationStatus",
-  CALCULATE_PVG = "biconomy_calculatePreVerificationGas",
 }
 
 export enum UserOperationStateEnum {
@@ -272,6 +275,10 @@ export type EntryPointContractType = GetContractReturnType<
 >;
 export type OptimismL1GasPriceOracleContractType = GetContractReturnType<
   typeof OPTIMISM_L1_GAS_PRICE_ORACLE
+>;
+
+export type MantleBVMGasPriceOracleContractType = GetContractReturnType<
+  typeof MANTLE_BVM_GAS_PRICE_ORACLE
 >;
 
 export type StateOverrideSetType = {

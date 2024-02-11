@@ -3,7 +3,7 @@
     "wssUrl": "wss://sdk-testing-ws.staging.biconomy.io/connection/websocket",
     "httpUrl": "https://sdk-testing-ws.staging.biconomy.io/api"
   },
-  "supportedNetworks": [137, 80001, 42161, 10],
+  "supportedNetworks": [137, 80001, 42161, 10, 1, 56, 43114, 8543],
   "EIP1559SupportedNetworks": [
     1, 5, 80001, 137, 421613, 42161, 420, 10, 43114, 84531, 8453, 59140, 59144,
     204, 5611

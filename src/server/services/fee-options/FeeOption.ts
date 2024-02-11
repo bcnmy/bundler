@@ -2,7 +2,7 @@
 /* eslint-disable no-await-in-loop */
 import Big from "big.js";
 import { ICacheService } from "../../../common/cache";
-import { IGasPrice } from "../../../common/gas-price";
+import { IGasPriceService } from "../../../common/gas-price";
 import { GasPriceType } from "../../../common/gas-price/types";
 import { logger } from "../../../common/logger";
 import { getTokenPriceKey } from "../../../common/utils";
@@ -36,12 +36,12 @@ const convertGasPriceToUSD = async (
 export class FeeOption {
   chainId: number;
 
-  gasPriceService: IGasPrice;
+  gasPriceService: IGasPriceService;
 
   cacheService: ICacheService;
 
   constructor(
-    gasPriceService: IGasPrice,
+    gasPriceService: IGasPriceService,
     cacheService: ICacheService,
     options: {
       chainId: number;
@@ -71,23 +71,7 @@ export class FeeOption {
 
       const networkPriceDataInString =
         await this.cacheService.get(getTokenPriceKey());
-      let networkPriceData;
-      if (!networkPriceDataInString) {
-        log.error("Network price data not found");
-        // TODO remove this hardcoded value. Think better solution
-        networkPriceData = {
-          1: "1278.43",
-          5: "1278.43",
-          137: "0.80",
-          80001: "0.80",
-          97: "289.87",
-          420: "1278.43",
-          421613: "1278.43",
-          43113: "13.17",
-        };
-      } else {
-        networkPriceData = JSON.parse(networkPriceDataInString);
-      }
+      const networkPriceData = JSON.parse(networkPriceDataInString);
       const chainPriceDataInUSD = networkPriceData[this.chainId];
 
       for (const token of feeTokens) {

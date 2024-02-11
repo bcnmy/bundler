@@ -90,12 +90,10 @@ export class UserOperationDAO implements IUserOperationDAO {
     startTime: number,
     endTime: number,
   ): Promise<number> {
-    const data = await this._db
-      .getUserOperation(chainId)
-      .count({
-        "metaData.dappAPIKey": bundlerApiKey,
-        creationTime: { $gte: startTime, $lte: endTime },
-      });
+    const data = await this._db.getUserOperation(chainId).count({
+      "metaData.dappAPIKey": bundlerApiKey,
+      creationTime: { $gte: startTime, $lte: endTime },
+    });
     return data;
   }
 }

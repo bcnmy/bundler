@@ -113,16 +113,6 @@ export const bundlerEstimateUserOpGasRequestSchema = object.keys({
   id: number.required().error(new Error("id is required")),
 });
 
-export const bundlerCalculatePreVerificationGasRequestSchema = object.keys({
-  method: string.regex(/biconomy_calculatePreVerificationGas/),
-  params: array
-    .items(alternatives.try(userOpEstimateUserOpGas, entryPointAddress))
-    .required()
-    .error(new Error("params are required for PVG calculation")),
-  jsonrpc: string.required().error(new Error("jsonrpc is required")),
-  id: number.required().error(new Error("id is required")),
-});
-
 // eth_getUserOperationByHash
 const userOpHash = string.required().error(new Error("userOpHash is required"));
 
