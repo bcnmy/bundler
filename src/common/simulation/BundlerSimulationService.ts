@@ -96,7 +96,9 @@ export class BundlerSimulationService {
         getContract({
           abi: OPTIMISM_L1_GAS_PRICE_ORACLE,
           address: "0x420000000000000000000000000000000000000F",
-          publicClient: networkService.provider,
+          client: { 
+            public: networkService.provider, 
+          } 
         });
     }
 
@@ -104,7 +106,9 @@ export class BundlerSimulationService {
       this.mantleBVMGasPriceOracle[this.networkService.chainId] = getContract({
         abi: MANTLE_BVM_GAS_PRICE_ORACLE,
         address: "0x420000000000000000000000000000000000000F",
-        publicClient: networkService.provider,
+        client: { 
+          public: networkService.provider, 
+        } 
       });
     }
   }

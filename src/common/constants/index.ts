@@ -1371,6 +1371,18 @@ export const AlchemySimulateExecutionSupportedNetworks = [
 export const AstarNetworks = [81, 592];
 export const MantleNetworks = [5000, 5001];
 
+// can move this to config
+export const TWSupportedNetworks = [137, 80001, 56, 204, 42161, 10, 8453];
+export const TWFallbackRPCMap = {
+  137: ["RPC_1", "RPC_2", "RPC_3", "RPC_4", "RPC_5", "RPC_6", "RPC_7"],
+  80001: ["RPC_1", "RPC_2", "RPC_3", "RPC_4", "RPC_5", "RPC_6", "RPC_7"],
+  56: ["RPC_1", "RPC_2", "RPC_3", "RPC_4", "RPC_5", "RPC_6", "RPC_7"],
+  204: ["RPC_1", "RPC_2", "RPC_3", "RPC_4", "RPC_5", "RPC_6", "RPC_7"],
+  42161: ["RPC_1", "RPC_2", "RPC_3", "RPC_4", "RPC_5", "RPC_6", "RPC_7"],
+  10: ["RPC_1", "RPC_2", "RPC_3", "RPC_4", "RPC_5", "RPC_6", "RPC_7"],
+  8453: ["RPC_1", "RPC_2", "RPC_3", "RPC_4", "RPC_5", "RPC_6", "RPC_7"]
+};
+
 export const BLAST_PVG_VALUE = 100000000;
 export const MANTLE_L1_ROLL_UP_FEE_DIVISION_FACTOR = 10000000000n;
 export const MANTLE_PUBLIC_RPC_URL_1 = "https://rpc.mantle.xyz";
