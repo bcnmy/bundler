@@ -236,7 +236,7 @@
       "11155111": 60,
       "80085": 60,
       "84532": 60,
-      "168587773": 60
+      "168587773": 3600
     }
   },
   "defaultGasOverheads": {
@@ -296,7 +296,7 @@
         "421614": 5,
         "11155111": 5,
         "80085": 2,
-        "168587773": 2,
+        "168587773": 20,
         "84532": 2
       },
       "maxRelayerCount": {
@@ -340,7 +340,7 @@
         "11155111": 20,
         "80085": 7,
         "84532": 7,
-        "168587773": 7
+        "168587773": 30
       },
       "inactiveRelayerCountThreshold": {
         "5": 5,
@@ -382,7 +382,7 @@
         "421614": 15,
         "11155111": 15,
         "80085": 5,
-        "168587773": 5,
+        "168587773": 15,
         "84532": 5
       },
       "pendingTransactionCountThreshold": {
@@ -648,7 +648,8 @@
         "unable to complete request at this time",
         "timeout",
         "we can't execute this request",
-        "rate limit exceeded"
+        "rate limit exceeded",
+        "sender is over rate limit"
       ],
       "INTRINSIC_GAS_TOO_LOW": ["intrinsic gas too low"],
       "MAX_FEE_PER_GAS_LESS_THAN_BLOCK_BASE_FEE": [

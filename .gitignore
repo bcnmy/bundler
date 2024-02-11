@@ -21,4 +21,5 @@ refundAddresses.ts
 #!index.json
 
 !example.cfg
+dist/
 
