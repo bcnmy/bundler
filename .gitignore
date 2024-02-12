@@ -11,3 +11,4 @@ config.json.enc
 .vscode
 dist/
 *.code-workspace
+config/development.json

@@ -1,0 +1,27 @@
+{
+  "enabledNetworks": [80001],
+  "networks": {
+    "ethereum": {
+      "mainnet": {
+        "chainId": 1,
+        "providers": [
+          {
+            "name": "alchemy",
+            "rpcURL": "https://eth-mainnet.g.alchemy.com/v2/va5arROop2td7a66zTUsS9RLz0VHZSGQ"
+          }
+        ]
+      }
+    },
+    "polygon": {
+      "mumbai": {
+        "chainId": 80001,
+        "providers": [
+          {
+            "name": "alchemy",
+            "rpcURL": "https://polygon-mumbai.g.alchemy.com/v2/Cl23ZHZuNdqhmi7Vx4NBy3-DRGzTij0w"
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,3 +1,7 @@
+describe("disabled test", () => {
+  it("should be fixed", () => {});
+});
+
 // import { RedisCacheService } from "../../../common/cache";
 // import {
 //   GasPriceManager,

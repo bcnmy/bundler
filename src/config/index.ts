@@ -100,7 +100,18 @@ export class Config implements IConfig {
       );
 
       this.config = merge(data, staticConfig);
-      this.validate();
+
+      // if (supportsConfigV2(this.config)) {
+      // log.info("Config is using v2");
+
+      // this should load the config from the environment
+      // const config = new ConfigV2()
+
+      // and then apply it to the current config
+      // this.config = config.merge(this.config)
+      // }
+
+      // this.validate();
       log.info("Config loaded successfully");
     } catch (error) {
       log.error("Config loading failed", error);

@@ -1,0 +1,17 @@
+{
+  "enabledNetworks": ["80001"],
+  "networks": {
+    "ethereum": {
+      "mainnet": {
+        "chainId": "1",
+        "providers": []
+      }
+    },
+    "polygon": {
+      "mumbai": {
+        "chainId": "80001",
+        "providers": []
+      }
+    }
+  }
+}

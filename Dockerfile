@@ -39,4 +39,4 @@ USER nonroot
 
 ENTRYPOINT ["/usr/bin/tini", "--", "yarn"]
 
-CMD ["run", "start"]
+CMD ["run", "start:production"]
