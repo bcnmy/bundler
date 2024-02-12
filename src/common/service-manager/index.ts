@@ -410,7 +410,9 @@ let statusService: IStatusService;
           entryPointContract: getContract({
             abi: ENTRY_POINT_ABI,
             address: entryPointAddress as `0x${string}`,
-            publicClient: networkService.provider,
+            client: { 
+              public: networkService.provider, 
+            } 
           }),
         });
       }

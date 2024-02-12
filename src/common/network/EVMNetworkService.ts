@@ -32,6 +32,7 @@ import {
   MANTLE_PRIVATE_RPC_URL_2,
   MANTLE_PRIVATE_RPC_URL_3,
   MantleNetworks,
+  TWSupportedNetworks,
   BLOCKCHAINS,
   BLAST_SEPOLIA_PUBLIC_RPC_URL,
   BLAST_SEPOLIA_PRIVATE_RPC_URL,
@@ -96,6 +97,24 @@ export class EVMNetworkService
             },
           },
         ),
+      });
+    } else if (TWSupportedNetworks.includes(this.chainId)) {
+      // @ts-ignore
+      const fallbackRpcs = TWFallbackRPCMap[this.chainId].map(rpcUrl => http(rpcUrl));
+      this.provider = createPublicClient({
+        transport: fallback(fallbackRpcs,
+        { 
+          rank: {
+            interval: 60_000,
+            sampleCount: 5,
+            timeout: 500,
+            weights: {
+              latency: 0.5,
+              stability: 0.5
+            }
+          }
+        }
+        ), 
       });
     } else {
       this.provider = createPublicClient({
