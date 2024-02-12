@@ -9,6 +9,13 @@ import {
   parseAbiParameters,
   toHex,
 } from "viem";
+import {
+  ArbitrumGasEstimator,
+  GasEstimator,
+  IGasEstimator,
+  OptimismGasEstimator,
+  // @ts-ignore
+} from "gas-estimations";
 import { config } from "../../config";
 import { IEVMAccount } from "../../relayer/account";
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from "../../server/middleware";
@@ -16,6 +23,7 @@ import { logger } from "../logger";
 import { INetworkService } from "../network";
 import {
   EVMRawTransactionType,
+  MantleBVMGasPriceOracleContractType,
   OptimismL1GasPriceOracleContractType,
   UserOperationType,
 } from "../types";
@@ -37,14 +45,9 @@ import {
   AlchemySimulateExecutionSupportedNetworks,
   OPTIMISM_L1_GAS_PRICE_ORACLE,
   NetworksNotSupportingEthCallStateOverrides,
+  MantleNetworks,
+  MANTLE_BVM_GAS_PRICE_ORACLE,
 } from "../constants";
-import {
-  ArbitrumGasEstimator,
-  GasEstimator,
-  IGasEstimator,
-  OptimismGasEstimator,
-  // @ts-ignore
-} from "../../../../4337-gas-estimator/src";
 
 import {
   AlchemySimulationService,
@@ -56,6 +59,7 @@ const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
 });
 
+// TODO: Sync for blast and mantle
 export class BundlerSimulationService {
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
 
@@ -74,6 +78,10 @@ export class BundlerSimulationService {
   optimismGasEstimator: IGasEstimator | null = null;
 
   arbitrumGasEstimator: IGasEstimator | null = null;
+
+  mantleBVMGasPriceOracle: {
+    [chainId: number]: MantleBVMGasPriceOracleContractType;
+  } = {};
 
   constructor(
     networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
@@ -95,7 +103,9 @@ export class BundlerSimulationService {
         getContract({
           abi: OPTIMISM_L1_GAS_PRICE_ORACLE,
           address: "0x420000000000000000000000000000000000000F",
-          publicClient: networkService.provider,
+          client: {
+            public: this.networkService.provider,
+          },
         });
       this.optimismGasEstimator = new OptimismGasEstimator({
         rpcUrl: this.networkService.rpcUrl,
@@ -106,6 +116,15 @@ export class BundlerSimulationService {
       this.arbitrumGasEstimator = new ArbitrumGasEstimator({
         rpcUrl: this.networkService.rpcUrl,
       });
+    if (MantleNetworks.includes(this.networkService.chainId)) {
+      this.mantleBVMGasPriceOracle[this.networkService.chainId] = getContract({
+        abi: MANTLE_BVM_GAS_PRICE_ORACLE,
+        address: "0x420000000000000000000000000000000000000F",
+        client: {
+          public: this.networkService.provider,
+        },
+      });
+    }
   }
 
   async estimateUserOperationGas(
@@ -184,13 +203,9 @@ export class BundlerSimulationService {
         OptimismNetworks.includes(chainId) ||
         ArbitrumNetworks.includes(chainId)
       ) {
-        preVerificationGas += BigInt(
-          Math.ceil(Number(toHex(totalGas)) * 0.25),
-        );
+        preVerificationGas += BigInt(Math.ceil(Number(toHex(totalGas)) * 0.25));
       } else {
-        preVerificationGas += BigInt(
-          Math.ceil(Number(toHex(totalGas)) * 0.1),
-        );
+        preVerificationGas += BigInt(Math.ceil(Number(toHex(totalGas)) * 0.1));
       }
 
       const end = performance.now();
