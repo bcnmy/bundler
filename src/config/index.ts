@@ -82,9 +82,15 @@ export class Config implements IConfig {
   readEnvVariables() {
     log.info("Reading env Variables");
     const slackConfig = getJsonFromEnvVariable("BUNDLER_SLACK_JSON");
-    const simulationDataConfig = getJsonFromEnvVariable("BUNDLER_SIMULATION_DATA_JSON");
-    const dataSourcesConfig = getJsonFromEnvVariable("BUNDLER_DATASOURCES_JSON");
-    const socketServiceConfig = getJsonFromEnvVariable("BUNDLER_SOCKET_SERVICE_JSON");
+    const simulationDataConfig = getJsonFromEnvVariable(
+      "BUNDLER_SIMULATION_DATA_JSON",
+    );
+    const dataSourcesConfig = getJsonFromEnvVariable(
+      "BUNDLER_DATASOURCES_JSON",
+    );
+    const socketServiceConfig = getJsonFromEnvVariable(
+      "BUNDLER_SOCKET_SERVICE_JSON",
+    );
     const providerConfig = getJsonFromEnvVariable("BUNDLER_PROVIDER_JSON");
     const tokenPriceConfig = getJsonFromEnvVariable("BUNDLER_TOKEN_PRICE_JSON");
     const fallbackProviderConfig = getJsonFromEnvVariable(
@@ -100,7 +106,8 @@ export class Config implements IConfig {
     this.config.simulationData = simulationDataConfig;
     this.config.tokenPrice = _.merge(this.config.tokenPrice, tokenPriceConfig);
     this.config.fallbackProviderConfig = fallbackProviderConfig;
-    this.config.isTWSetup = getEnvVariable("BUNDLER_IS_TRUSTWALLET_SETUP") === "true";
+    this.config.isTWSetup =
+      getEnvVariable("BUNDLER_IS_TRUSTWALLET_SETUP") === "true";
 
     // this.config.tokenPrice = tokenPriceConfig;
     const chainId = parseInt(process.env.BUNDLER_CHAIN_ID as string, 10);
@@ -111,7 +118,10 @@ export class Config implements IConfig {
     // log.info(`PROVIDER URL <${this.config.chains.provider[chainId]}>`);
 
     this.config.relayer = {
-      nodePathIndex: parseInt(process.env.BUNDLER_NODE_PATH_INDEX as string, 10),
+      nodePathIndex: parseInt(
+        process.env.BUNDLER_NODE_PATH_INDEX as string,
+        10,
+      ),
     };
 
     // rest of the params in .env file in being read by code directly
