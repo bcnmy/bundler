@@ -28,13 +28,6 @@ type ChainIdAndTokenWithStringValueType = {
   };
 };
 
-type OwnerAccountDetailsType = {
-  [key: number]: {
-    publicKey: `0x${string}`;
-    privateKey: string;
-  };
-};
-
 type SocketServiceConfigType = {
   wssUrl: string;
   httpUrl: string;
@@ -72,8 +65,8 @@ type TokenPriceConfigType = {
 type RelayerManagerConfigType = Array<{
   name: string; // assume it to be an identifier by the consumer
   relayerSeed: string;
-  ownerPublicKey: string;
-  ownerPrivateKey: string;
+  masterAccountPublicKey: `0x${string}`;
+  masterAccountPrivateKey: `0x${string}`;
   gasLimitMap: ChainIdWithNumberValueType;
   minRelayerCount: ChainIdWithNumberValueType;
   maxRelayerCount: ChainIdWithNumberValueType;
@@ -82,7 +75,6 @@ type RelayerManagerConfigType = Array<{
   fundingRelayerAmount: ChainIdWithNumberValueType;
   fundingBalanceThreshold: ChainIdWithNumberValueType;
   newRelayerInstanceCount: ChainIdWithNumberValueType;
-  ownerAccountDetails: OwnerAccountDetailsType;
 }>;
 
 type TransactionConfigType = {
@@ -146,8 +138,8 @@ type PaymasterDashboardBackendConfigType = {
 };
 
 type FallbackProviderConfig = {
-  [chainId: string]: Array<string>
-}
+  [chainId: string]: Array<string>;
+};
 
 export type ConfigType = {
   queueUrl: string;

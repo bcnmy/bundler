@@ -1,13 +1,15 @@
 /* eslint-disable import/no-import-module-exports */
-import crypto from 'crypto-js';
-import fs, { existsSync } from 'fs';
-import _, { isNumber } from 'lodash';
-import path from 'path';
-import { logger } from '../common/logger';
+import crypto from "crypto-js";
+import fs, { existsSync } from "fs";
+import _, { isNumber } from "lodash";
+import path from "path";
+import { logger } from "../common/logger";
 
-import { ConfigType, IConfig } from './interface/IConfig';
+import { ConfigType, IConfig } from "./interface/IConfig";
 
-const log = logger.child({ module: module.filename.split('/').slice(-4).join('/') });
+const log = logger.child({
+  module: module.filename.split("/").slice(-4).join("/"),
+});
 
 const KEY_SIZE = 32;
 const PBKDF2_ITERATIONS = 310000;
@@ -15,29 +17,29 @@ const AES_PADDING = crypto.pad.Pkcs7;
 const AES_MODE = crypto.mode.CBC;
 
 function getEnvMinRelayerCount(): number {
-  if (process.env.MIN_RELAYER_COUNT) {
-    return parseInt(process.env.MIN_RELAYER_COUNT, 10);
+  if (process.env.BUNDLER_MIN_RELAYER_COUNT) {
+    return parseInt(process.env.BUNDLER_MIN_RELAYER_COUNT, 10);
   }
   return 0;
 }
 
 function getEnvMaxRelayerCount(): number {
-  if (process.env.MAX_RELAYER_COUNT) {
-    return parseInt(process.env.MAX_RELAYER_COUNT, 10);
+  if (process.env.BUNDLER_MAX_RELAYER_COUNT) {
+    return parseInt(process.env.BUNDLER_MAX_RELAYER_COUNT, 10);
   }
   return 0;
 }
 
 function getEnvfundingBalanceThreshold(): number {
-  if (process.env.FUNDING_BALANCE_THRESHOLD) {
-    return parseFloat(process.env.FUNDING_BALANCE_THRESHOLD);
+  if (process.env.BUNDLER_FUNDING_BALANCE_THRESHOLD) {
+    return parseFloat(process.env.BUNDLER_FUNDING_BALANCE_THRESHOLD);
   }
   return 0;
 }
 
 function getEnvfundingRelayerAmount(): number {
-  if (process.env.FUNDING_RELAYER_AMOUNT) {
-    return parseFloat(process.env.FUNDING_RELAYER_AMOUNT);
+  if (process.env.BUNDLER_FUNDING_RELAYER_AMOUNT) {
+    return parseFloat(process.env.BUNDLER_FUNDING_RELAYER_AMOUNT);
   }
   return 0;
 }
@@ -46,7 +48,9 @@ function getJsonFromEnvVariable(envVariableName: string): any {
   const jsonString = process.env[envVariableName];
 
   if (!jsonString) {
-    throw new Error(`Environment variable ${envVariableName} is not defined or empty.`);
+    throw new Error(
+      `Environment variable ${envVariableName} is not defined or empty.`,
+    );
   }
 
   try {
@@ -54,7 +58,9 @@ function getJsonFromEnvVariable(envVariableName: string): any {
     log.info(jsonObject);
     return jsonObject;
   } catch (error: any) {
-    throw new Error(`Error parsing JSON from ${envVariableName}: ${error.message}`);
+    throw new Error(
+      `Error parsing JSON from ${envVariableName}: ${error.message}`,
+    );
   }
 }
 
@@ -62,7 +68,9 @@ function getEnvVariable(envVariableName: string): string {
   const value = process.env[envVariableName];
 
   if (!value) {
-    throw new Error(`Environment variable ${envVariableName} is not defined or empty.`);
+    throw new Error(
+      `Environment variable ${envVariableName} is not defined or empty.`,
+    );
   }
 
   return value;
@@ -72,16 +80,18 @@ export class Config implements IConfig {
   config: ConfigType;
 
   readEnvVariables() {
-    log.info('Reading env Variables');
-    const slackConfig = getJsonFromEnvVariable('SLACK_JSON');
-    const simulationDataConfig = getJsonFromEnvVariable('SIMULATION_DATA_JSON');
-    const dataSourcesConfig = getJsonFromEnvVariable('DATASOURCES_JSON');
-    const socketServiceConfig = getJsonFromEnvVariable('SOCKET_SERVICE_JSON');
-    const providerConfig = getJsonFromEnvVariable('PROVIDER_JSON');
-    const tokenPriceConfig = getJsonFromEnvVariable('TOKEN_PRICE_JSON');
-    const fallbackProviderConfig = getJsonFromEnvVariable('FALLBACK_PROVIDER_JSON');
+    log.info("Reading env Variables");
+    const slackConfig = getJsonFromEnvVariable("BUNDLER_SLACK_JSON");
+    const simulationDataConfig = getJsonFromEnvVariable("BUNDLER_SIMULATION_DATA_JSON");
+    const dataSourcesConfig = getJsonFromEnvVariable("BUNDLER_DATASOURCES_JSON");
+    const socketServiceConfig = getJsonFromEnvVariable("BUNDLER_SOCKET_SERVICE_JSON");
+    const providerConfig = getJsonFromEnvVariable("BUNDLER_PROVIDER_JSON");
+    const tokenPriceConfig = getJsonFromEnvVariable("BUNDLER_TOKEN_PRICE_JSON");
+    const fallbackProviderConfig = getJsonFromEnvVariable(
+      "BUNDLER_FALLBACK_PROVIDER_JSON",
+    );
 
-    this.config.queueUrl = getEnvVariable('QUEUE_URL');
+    this.config.queueUrl = getEnvVariable("BUNDLER_QUEUE_URL");
 
     this.config.chains.provider = providerConfig;
     this.config.dataSources = dataSourcesConfig;
@@ -90,17 +100,19 @@ export class Config implements IConfig {
     this.config.simulationData = simulationDataConfig;
     this.config.tokenPrice = _.merge(this.config.tokenPrice, tokenPriceConfig);
     this.config.fallbackProviderConfig = fallbackProviderConfig;
-    this.config.isTWSetup = getEnvVariable('IS_TW_SETUP') === 'true';
+    this.config.isTWSetup = getEnvVariable("BUNDLER_IS_TRUSTWALLET_SETUP") === "true";
 
     // this.config.tokenPrice = tokenPriceConfig;
-    const chainId = parseInt(process.env.CHAIN_ID as string, 10);
-    log.info(`CHAIN ID <${process.env.CHAIN_ID}>`);
+    const chainId = parseInt(process.env.BUNDLER_CHAIN_ID as string, 10);
+    log.info(`CHAIN ID <${process.env.BUNDLER_CHAIN_ID}>`);
 
     const supportedNetworks = [chainId];
     this.config.supportedNetworks = supportedNetworks;
     // log.info(`PROVIDER URL <${this.config.chains.provider[chainId]}>`);
 
-    this.config.relayer = { nodePathIndex: parseInt(process.env.NODE_PATH_INDEX as string, 10) };
+    this.config.relayer = {
+      nodePathIndex: parseInt(process.env.BUNDLER_NODE_PATH_INDEX as string, 10),
+    };
 
     // rest of the params in .env file in being read by code directly
     // not from the config.
@@ -116,38 +128,43 @@ export class Config implements IConfig {
       relayerManager.maxRelayerCount[chainId] = maxRelayerCount;
       relayerManager.fundingBalanceThreshold[chainId] = fundingBalanceThreshold;
       relayerManager.fundingRelayerAmount[chainId] = fundingRelayerAmount;
-      if (!relayerManager.ownerAccountDetails[chainId]) {
-        log.info(`Default ownerAccoutnDetails couldnt be found for ${chainId}`);
-        relayerManager.ownerAccountDetails[chainId] = {
-          privateKey: relayerManager.ownerPrivateKey as `0x${string}`,
-          publicKey: relayerManager.ownerPublicKey as `0x${string}`,
-        };
-      } else {
-        log.info(`Default ownerAccoutnDetails found for ${chainId}`);
-      }
     }
 
     const relayerManager = this.config.relayerManagers[0];
-    log.info(`RelayarManager ${relayerManager.name} publicKey <${relayerManager.ownerAccountDetails[chainId].publicKey}>`);
-    log.info(`RelayarManager ${relayerManager.name} Min relayer count <${relayerManager.minRelayerCount[chainId]}>`);
-    log.info(`RelayarManager ${relayerManager.name} Max relayer count <${relayerManager.maxRelayerCount[chainId]}>`);
-    log.info(`RelayarManager ${relayerManager.name} fundingBalanceThreshold  <${relayerManager.fundingBalanceThreshold[chainId]}>`);
-    log.info(`RelayarManager ${relayerManager.name} fundingRelayerAmount <${relayerManager.fundingRelayerAmount[chainId]}>`);
-    log.info('Reading env Variables completed');
+    log.info(
+      `RelayarManager ${relayerManager.name} publicKey <${relayerManager.masterAccountPublicKey}>`,
+    );
+    log.info(
+      `RelayarManager ${relayerManager.name} privateKey <${relayerManager.masterAccountPrivateKey}>`,
+    );
+
+    log.info(
+      `RelayarManager ${relayerManager.name} Min relayer count <${relayerManager.minRelayerCount[chainId]}>`,
+    );
+    log.info(
+      `RelayarManager ${relayerManager.name} Max relayer count <${relayerManager.maxRelayerCount[chainId]}>`,
+    );
+    log.info(
+      `RelayarManager ${relayerManager.name} fundingBalanceThreshold  <${relayerManager.fundingBalanceThreshold[chainId]}>`,
+    );
+    log.info(
+      `RelayarManager ${relayerManager.name} fundingRelayerAmount <${relayerManager.fundingRelayerAmount[chainId]}>`,
+    );
+    log.info("Reading env Variables completed");
   }
 
   // eslint-disable-next-line class-methods-use-this
   decryptConfig(): string {
-    const encryptedEnvPath = './config.json.enc';
-    const passphrase = process.env.CONFIG_PASSPHRASE;
+    const encryptedEnvPath = "./config.json.enc";
+    const passphrase = process.env.BUNDLER_CONFIG_PASSPHRASE;
     if (!passphrase) {
-      throw new Error('Passphrase for config required in .env file');
+      throw new Error("Passphrase for config required in .env file");
     }
 
     if (!existsSync(encryptedEnvPath)) {
       throw new Error(`Invalid ENV Path: ${encryptedEnvPath}`);
     }
-    const ciphertext = fs.readFileSync(encryptedEnvPath, 'utf8');
+    const ciphertext = fs.readFileSync(encryptedEnvPath, "utf8");
     // First 44 bits are Base64 encodded HMAC
     const hashInBase64 = ciphertext.substr(0, 44);
 
@@ -175,7 +192,7 @@ export class Config implements IConfig {
       });
       plaintext = encryptedBytes.toString(crypto.enc.Utf8);
     } catch (e) {
-      log.error('Incorrect password for decryption');
+      log.error("Incorrect password for decryption");
       process.exit();
     }
 
@@ -184,18 +201,20 @@ export class Config implements IConfig {
     const decryptedHmacInBase64 = crypto.enc.Base64.stringify(decryptedHmac);
 
     if (decryptedHmacInBase64 !== hashInBase64) {
-      throw new Error('Error: HMAC does not match');
+      throw new Error("Error: HMAC does not match");
     }
     return plaintext;
   }
 
   constructor() {
-    log.info('Config loading started');
+    log.info("Config loading started");
     try {
       // decrypt the config and load it
       const plaintext = this.decryptConfig();
       const data = JSON.parse(plaintext) as ConfigType;
-      const staticConfig = JSON.parse(fs.readFileSync(path.resolve('./config/static-config.json'), 'utf8'));
+      const staticConfig = JSON.parse(
+        fs.readFileSync(path.resolve("src/config/static-config.json"), "utf8"),
+      );
 
       this.config = _.merge(data, staticConfig);
       this.readEnvVariables();
@@ -203,7 +222,7 @@ export class Config implements IConfig {
       // Setting up supportTed network from env variable if avaialable
       // this will come from env variable
     } catch (error) {
-      log.error('Config constructor failed', error);
+      log.error("Config constructor failed", error);
       throw error;
     }
   }

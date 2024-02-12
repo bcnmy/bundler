@@ -96,9 +96,9 @@ export class BundlerSimulationService {
         getContract({
           abi: OPTIMISM_L1_GAS_PRICE_ORACLE,
           address: "0x420000000000000000000000000000000000000F",
-          client: { 
-            public: networkService.provider, 
-          } 
+          client: {
+            public: networkService.provider,
+          },
         });
     }
 
@@ -106,9 +106,9 @@ export class BundlerSimulationService {
       this.mantleBVMGasPriceOracle[this.networkService.chainId] = getContract({
         abi: MANTLE_BVM_GAS_PRICE_ORACLE,
         address: "0x420000000000000000000000000000000000000F",
-        client: { 
-          public: networkService.provider, 
-        } 
+        client: {
+          public: networkService.provider,
+        },
       });
     }
   }
@@ -677,10 +677,9 @@ export class BundlerSimulationService {
         args: [[userOp], userOp.sender],
       });
 
-      const { publicKey } =
-        config.relayerManagers[0].ownerAccountDetails[chainId];
+      const { masterAccountPublicKey } = config.relayerManagers[0];
       log.info(
-        `Simulating with from address: ${publicKey} on chainId: ${chainId}`,
+        `Simulating with from address: ${masterAccountPublicKey} on chainId: ${chainId}`,
       );
 
       const gasPriceFromService = await this.gasPriceService.getGasPrice();
@@ -696,7 +695,7 @@ export class BundlerSimulationService {
 
       const ethEstimateGasParams = [
         {
-          from: publicKey,
+          from: masterAccountPublicKey,
           to: entryPointContract.address,
           data,
           gasPrice: `0x${gasPrice}`,

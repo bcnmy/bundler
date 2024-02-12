@@ -24,22 +24,21 @@ export class AlchemySimulationService {
   async simulateHandleOps(simualteHandleOpsData: SimulateHandleOpsParamsType) {
     const { userOp, entryPointContract, chainId } = simualteHandleOpsData;
 
-    const { publicKey } =
-      config.relayerManagers[0].ownerAccountDetails[chainId];
+    const { masterAccountPublicKey } = config.relayerManagers[0];
     log.info(
-      `Simulating with from address: ${publicKey} on chainId: ${chainId}`,
+      `Simulating with from address: ${masterAccountPublicKey} on chainId: ${chainId}`,
     );
 
     const data = encodeFunctionData({
       abi: entryPointContract.abi,
       functionName: "handleOps",
-      args: [[userOp], publicKey],
+      args: [[userOp], masterAccountPublicKey],
     });
 
     const simulateExecutionStart = performance.now();
     const { calls, logs } = await this.networkService.runAlchemySimulation([
       {
-        from: publicKey,
+        from: masterAccountPublicKey,
         to: entryPointContract.address,
         value: "0x0",
         data,

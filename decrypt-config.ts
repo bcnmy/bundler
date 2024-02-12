@@ -1,8 +1,5 @@
 import crypto from 'crypto-js';
 import fs, { existsSync } from 'fs';
-import _ from 'lodash';
-import path from 'path';
-
 
 const KEY_SIZE = 32;
 const PBKDF2_ITERATIONS = 310000;
@@ -12,7 +9,7 @@ const AES_MODE = crypto.mode.CBC;
 function decryptConfig(): string {
     // const encryptedEnvPath = './config.json.enc';
     const encryptedEnvPath =  process.argv[2]; // Taking the second command line argument as configName
-    const passphrase = process.env.CONFIG_PASSPHRASE;
+    const passphrase = process.env.BUNDLER_CONFIG_PASSPHRASE;
     if (!passphrase) {
       throw new Error('Passphrase for config required in .env file');
     }
@@ -63,4 +60,4 @@ function decryptConfig(): string {
     return plaintext;
   }
 
-decryptConfig()
+decryptConfig();

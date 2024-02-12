@@ -120,8 +120,8 @@ let statusService: IStatusService;
   await cacheService.connect();
 
   const slackNotificationService = new SlackNotificationService(
-    process.env.SLACK_TOKEN || config.slack.token,
-    process.env.SLACK_CHANNEL || config.slack.channel,
+    process.env.BUNDLER_SLACK_TOKEN || config.slack.token,
+    process.env.BUNDLER_SLACK_CHANNEL || config.slack.channel,
   );
   const notificationManager = new NotificationManager(slackNotificationService);
 
@@ -309,8 +309,8 @@ let statusService: IStatusService;
           ),
           fundingRelayerAmount: relayerManager.fundingRelayerAmount[chainId],
           ownerAccountDetails: new EVMAccount(
-            relayerManager.ownerAccountDetails[chainId].publicKey,
-            relayerManager.ownerAccountDetails[chainId].privateKey,
+            relayerManager.masterAccountPublicKey,
+            relayerManager.masterAccountPrivateKey,
             networkService.rpcUrl,
           ),
           gasLimitMap: relayerManager.gasLimitMap,
@@ -353,7 +353,7 @@ let statusService: IStatusService;
     );
     log.info(`Retry transaction service setup for chainId: ${chainId}`);
 
-    if(config.isTWSetup) {
+    if (config.isTWSetup) {
       log.info(`Setting up socket complete consumer for chainId: ${chainId}`);
       socketConsumerMap[chainId] = new SocketConsumer({
         queue: transactionQueue,
@@ -414,7 +414,7 @@ let statusService: IStatusService;
             address: entryPointAddress as `0x${string}`,
             client: {
               public: networkService.provider,
-            } 
+            },
           }),
         });
       }

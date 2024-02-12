@@ -37,6 +37,7 @@ import {
   BLAST_SEPOLIA_PUBLIC_RPC_URL,
   BLAST_SEPOLIA_PRIVATE_RPC_URL,
 } from "../constants";
+import { config } from "../../config";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -99,22 +100,21 @@ export class EVMNetworkService
         ),
       });
     } else if (TWSupportedNetworks.includes(this.chainId)) {
-      // @ts-ignore
-      const fallbackRpcs = TWFallbackRPCMap[this.chainId].map(rpcUrl => http(rpcUrl));
+      const fallbackRpcs = config.fallbackProviderConfig[this.chainId].map(
+        (rpcUrl) => http(rpcUrl),
+      );
       this.provider = createPublicClient({
-        transport: fallback(fallbackRpcs,
-        { 
+        transport: fallback(fallbackRpcs, {
           rank: {
             interval: 60_000,
             sampleCount: 5,
             timeout: 500,
             weights: {
               latency: 0.5,
-              stability: 0.5
-            }
-          }
-        }
-        ), 
+              stability: 0.5,
+            },
+          },
+        }),
       });
     } else {
       this.provider = createPublicClient({
