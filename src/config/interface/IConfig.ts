@@ -72,6 +72,8 @@ type TokenPriceConfigType = {
 type RelayerManagerConfigType = Array<{
   name: string; // assume it to be an identifier by the consumer
   relayerSeed: string;
+  ownerPublicKey: string;
+  ownerPrivateKey: string;
   gasLimitMap: ChainIdWithNumberValueType;
   minRelayerCount: ChainIdWithNumberValueType;
   maxRelayerCount: ChainIdWithNumberValueType;
@@ -143,6 +145,10 @@ type PaymasterDashboardBackendConfigType = {
   dappDataUrl: string;
 };
 
+type FallbackProviderConfig = {
+  [chainId: string]: Array<string>
+}
+
 export type ConfigType = {
   queueUrl: string;
   paymasterDashboardBackendConfig: PaymasterDashboardBackendConfigType;
@@ -168,6 +174,8 @@ export type ConfigType = {
   };
   simulationData: SimulationDataConfigType;
   defaultGasOverheads: DefaultGasOverheadType;
+  isTWSetup: boolean;
+  fallbackProviderConfig: FallbackProviderConfig;
 };
 
 export interface IConfig {

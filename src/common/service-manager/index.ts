@@ -353,19 +353,21 @@ let statusService: IStatusService;
     );
     log.info(`Retry transaction service setup for chainId: ${chainId}`);
 
-    log.info(`Setting up socket complete consumer for chainId: ${chainId}`);
-    socketConsumerMap[chainId] = new SocketConsumer({
-      queue: transactionQueue,
-      options: {
-        chainId,
-        wssUrl: config.socketService.wssUrl,
-        EVMRelayerManagerMap,
-      },
-    });
-    transactionQueue.consume(socketConsumerMap[chainId].onMessageReceived);
-    log.info(
-      `Socket consumer setup complete for chainId: ${chainId} and attached to transaction queue`,
-    );
+    if(config.isTWSetup) {
+      log.info(`Setting up socket complete consumer for chainId: ${chainId}`);
+      socketConsumerMap[chainId] = new SocketConsumer({
+        queue: transactionQueue,
+        options: {
+          chainId,
+          wssUrl: config.socketService.wssUrl,
+          EVMRelayerManagerMap,
+        },
+      });
+      transactionQueue.consume(socketConsumerMap[chainId].onMessageReceived);
+      log.info(
+        `Socket consumer setup complete for chainId: ${chainId} and attached to transaction queue`,
+      );
+    }
 
     log.info(`Setting up fee options service for chainId: ${chainId}`);
     const feeOptionService = new FeeOption(gasPriceService, cacheService, {
@@ -410,8 +412,8 @@ let statusService: IStatusService;
           entryPointContract: getContract({
             abi: ENTRY_POINT_ABI,
             address: entryPointAddress as `0x${string}`,
-            client: { 
-              public: networkService.provider, 
+            client: {
+              public: networkService.provider,
             } 
           }),
         });
