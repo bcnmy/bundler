@@ -121,8 +121,8 @@ QUEUE_URL=$(grep QUEUE_URL <<< "${GCP_SECRET_CONFIG_VALUE}" \
                          | sed 's/QUEUE_URL=//g')
 BUNDLER_IS_TRUSTWALLET_SETUP=$(grep BUNDLER_IS_TRUSTWALLET_SETUP <<< "${GCP_SECRET_CONFIG_VALUE}" \
                          | sed 's/BUNDLER_IS_TRUSTWALLET_SETUP=//g')
-BUNDLER_FALLBACK_PROVIDER_JSON=$(grep BUNDLER_FALLBACK_PROVIDER_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" \
-                         | sed 's/BUNDLER_FALLBACK_PROVIDER_JSON=//g')
+BUNDLER_FALLBACK=$(grep BUNDLER_FALLBACK <<< "${GCP_SECRET_CONFIG_VALUE}" \
+                         | sed 's/BUNDLER_FALLBACK=//g')
 
 if ! kubectl get namespace "${NAMESPACE}"; then
   echo "Error: ${NAMESPACE} doesnt exists, creating it now"
@@ -206,7 +206,7 @@ for array_name in $array_names; do
     ENCODED_DATASOURCES_JSON=$(echo -n "$DATASOURCES_JSON" | base64)
     ENCODED_SOCKET_SERVICE_JSON=$(echo -n "$SOCKET_SERVICE_JSON" | base64)
     ENCODED_BUNDLER_IS_TRUSTWALLET_SETUP=$(echo -n "$BUNDLER_IS_TRUSTWALLET_SETUP" | base64)
-    ENCODED_BUNDLER_FALLBACK_PROVIDER_JSON=$(echo -n "$BUNDLER_FALLBACK_PROVIDER_JSON" | base64)
+    ENCODED_BUNDLER_FALLBACK_PROVIDER_JSON=$(echo -n "$BUNDLER_FALLBACK" | base64)
     echo ""
     echo "Deploying HELM chart for $NAME $CHAIN_ID"
 
