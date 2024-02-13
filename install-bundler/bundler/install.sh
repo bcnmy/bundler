@@ -105,24 +105,24 @@ fi
 
 echo ""
 echo "Getting secret config data stored in ${GCP_PLAINTEXT_CONFIG_SECRET}"
-SIMULATION_DATA_JSON=$(grep SIMULATION_DATA_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" \
-                         | sed 's/SIMULATION_DATA_JSON=//g')
-TOKEN_PRICE_JSON=$(grep TOKEN_PRICE_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" \
-                         | sed 's/TOKEN_PRICE_JSON=//g')
-SLACK_JSON=$(grep SLACK_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" \
-                         | sed 's/SLACK_JSON=//g')
-PROVIDER_JSON=$(grep PROVIDER_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" \
-                         | sed 's/PROVIDER_JSON=//g')
-DATASOURCES_JSON=$(grep DATASOURCES_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" \
-                         | sed 's/DATASOURCES_JSON=//g')
-SOCKET_SERVICE_JSON=$(grep SOCKET_SERVICE_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" \
-                         | sed 's/SOCKET_SERVICE_JSON=//g')
-QUEUE_URL=$(grep QUEUE_URL <<< "${GCP_SECRET_CONFIG_VALUE}" \
-                         | sed 's/QUEUE_URL=//g')
+BUNDLER_SIMULATION_DATA_JSON=$(grep BUNDLER_SIMULATION_DATA_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" \
+                         | sed 's/BUNDLER_SIMULATION_DATA_JSON=//g')
+BUNDLER_TOKEN_PRICE_JSON=$(grep BUNDLER_TOKEN_PRICE_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" \
+                         | sed 's/BUNDLER_TOKEN_PRICE_JSON=//g')
+BUNDLER_SLACK_JSON=$(grep BUNDLER_SLACK_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" \
+                         | sed 's/BUNDLER_SLACK_JSON=//g')
+BUNDLER_PROVIDER_JSON=$(grep BUNDLER_PROVIDER_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" \
+                         | sed 's/BUNDLER_PROVIDER_JSON=//g')
+BUNDLER_DATASOURCES_JSON=$(grep BUNDLER_DATASOURCES_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" \
+                         | sed 's/BUNDLER_DATASOURCES_JSON=//g')
+BUNDLER_SOCKET_SERVICE_JSON=$(grep BUNDLER_SOCKET_SERVICE_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" \
+                         | sed 's/BUNDLER_SOCKET_SERVICE_JSON=//g')
+BUNDLER_QUEUE_URL=$(grep BUNDLER_QUEUE_URL <<< "${GCP_SECRET_CONFIG_VALUE}" \
+                         | sed 's/BUNDLER_QUEUE_URL=//g')
 BUNDLER_IS_TRUSTWALLET_SETUP=$(grep BUNDLER_IS_TRUSTWALLET_SETUP <<< "${GCP_SECRET_CONFIG_VALUE}" \
                          | sed 's/BUNDLER_IS_TRUSTWALLET_SETUP=//g')
-BUNDLER_FALLBACK=$(grep BUNDLER_FALLBACK <<< "${GCP_SECRET_CONFIG_VALUE}" \
-                         | sed 's/BUNDLER_FALLBACK=//g')
+BUNDLER_FALLBACK=$(grep BUNDLER_FALLBACK_PROVIDER_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" \
+                         | sed 's/BUNDLER_FALLBACK_PROVIDER_JSON=//g')
 
 if ! kubectl get namespace "${NAMESPACE}"; then
   echo "Error: ${NAMESPACE} doesnt exists, creating it now"
@@ -199,12 +199,12 @@ for array_name in $array_names; do
     print_green "FUNDING_RELAYER_AMOUNT=$FUNDING_RELAYER_AMOUNT"
     print_green "ADJ_AUTOSCALING_THRESHHOLD_HTTP_REQUESTS=${ADJ_AUTOSCALING_THRESHHOLD_HTTP_REQUESTS}"
 
-    ENCODED_SIMULATION_DATA_JSON=$(echo -n "$SIMULATION_DATA_JSON" | base64)
-    ENCODED_TOKEN_PRICE_JSON=$(echo -n "$TOKEN_PRICE_JSON" | base64)
-    ENCODED_SLACK_JSON=$(echo -n "$SLACK_JSON" | base64)
-    ENCODED_PROVIDER_JSON=$(echo -n "$PROVIDER_JSON" | base64)
-    ENCODED_DATASOURCES_JSON=$(echo -n "$DATASOURCES_JSON" | base64)
-    ENCODED_SOCKET_SERVICE_JSON=$(echo -n "$SOCKET_SERVICE_JSON" | base64)
+    ENCODED_BUNDLER_SIMULATION_DATA_JSON=$(echo -n "$BUNDLER_SIMULATION_DATA_JSON" | base64)
+    ENCODED_BUNDLER_TOKEN_PRICE_JSON=$(echo -n "$BUNDLER_TOKEN_PRICE_JSON" | base64)
+    ENCODED_BUNDLER_SLACK_JSON=$(echo -n "$BUNDLER_SLACK_JSON" | base64)
+    ENCODED_BUNDLER_PROVIDER_JSON=$(echo -n "$BUNDLER_PROVIDER_JSON" | base64)
+    ENCODED_BUNDLER_DATASOURCES_JSON=$(echo -n "$BUNDLER_DATASOURCES_JSON" | base64)
+    ENCODED_BUNDLER_SOCKET_SERVICE_JSON=$(echo -n "$BUNDLER_SOCKET_SERVICE_JSON" | base64)
     ENCODED_BUNDLER_IS_TRUSTWALLET_SETUP=$(echo -n "$BUNDLER_IS_TRUSTWALLET_SETUP" | base64)
     ENCODED_BUNDLER_FALLBACK_PROVIDER_JSON=$(echo -n "$BUNDLER_FALLBACK" | base64)
     echo ""
@@ -223,6 +223,7 @@ for array_name in $array_names; do
         --set CHAIN_ID="$CHAIN_ID" \
         --set provider="$PROVIDER" \
         --set prometheus.enabled=true \
+        --set nodePathIndex=0 \
         --set hpa.average_http_requests_hpa="${ADJ_AUTOSCALING_THRESHHOLD_HTTP_REQUESTS}" \
         --set hpa.average_cpu_hpa="$AUTOSCALING_THRESHHOLD_CPU" \
         --set-string image.name="$IMAGE" \
@@ -231,15 +232,15 @@ for array_name in $array_names; do
         --set-string maxRelayerCount="$MAX_RELAYER_COUNT" \
         --set-string fundingBalanceThreshold="$FUNDING_BALANCE_THRESHOLD" \
         --set-string fundingRelayerAmount="$FUNDING_RELAYER_AMOUNT" \
-        --set-string encodedSimulationDataJson="$ENCODED_SIMULATION_DATA_JSON" \
-        --set-string encodedTokenPriceJson="$ENCODED_TOKEN_PRICE_JSON" \
-        --set-string encodedSlackJson="$ENCODED_SLACK_JSON" \
-        --set-string encodedProviderJson="$ENCODED_PROVIDER_JSON" \
-        --set-string encodedDatasourcesJson="$ENCODED_DATASOURCES_JSON" \
-        --set-string encodedSocketServiceJson="$ENCODED_SOCKET_SERVICE_JSON" \
-        --set-string queueUrl="$QUEUE_URL" \
-        --set-string encodedIsTrustWalletSetup="$ENCODED_BUNDLER_IS_TRUSTWALLET_SETUP" \
-        --set-string encodedFallbackProviderJson="$ENCODED_BUNDLER_FALLBACK_PROVIDER_JSON" \
+        --set-string encodedBundlerSimulationDataJson="$ENCODED_BUNDLER_SIMULATION_DATA_JSON" \
+        --set-string encodedBundlerTokenPriceJson="$ENCODED_BUNDLER_TOKEN_PRICE_JSON" \
+        --set-string encodedBundlerSlackJson="$ENCODED_BUNDLER_SLACK_JSON" \
+        --set-string encodedBundlerProviderJson="$ENCODED_BUNDLER_PROVIDER_JSON" \
+        --set-string encodedBundlerDatasourcesJson="$ENCODED_BUNDLER_DATASOURCES_JSON" \
+        --set-string encodedBundlerSocketServiceJson="$ENCODED_BUNDLER_SOCKET_SERVICE_JSON" \
+        --set-string bundlerQueueUrl="$BUNDLER_QUEUE_URL" \
+        --set-string encodedBundlerIsTrustWalletSetup="$ENCODED_BUNDLER_IS_TRUSTWALLET_SETUP" \
+        --set-string encodedBundlerFallbackProviderJson="$ENCODED_BUNDLER_FALLBACK_PROVIDER_JSON" \
         --set-string gcpSecretManagerName="$GCP_SECRETS_MANAGER_NAME" \
         --set-string hpa.minReplicas="$MIN_REPLICA" \
         --set-string hpa.maxReplicas="$MAX_REPLICA" \

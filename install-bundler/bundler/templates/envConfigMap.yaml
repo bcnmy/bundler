@@ -4,19 +4,21 @@ kind: ConfigMap
 metadata:
   {{ include "chart.staticconfigmap.metadata" . | nindent 2 }}
 data:
-  MIN_RELAYER_COUNT:  "{{ .Values.minRelayerCount }}"
-  MAX_RELAYER_COUNT: "{{ .Values.maxRelayerCount }}"
-  FUNDING_BALANCE_THRESHOLD: "{{ .Values.fundingBalanceThreshold}}"
-  FUNDING_RELAYER_AMOUNT: "{{ .Values.fundingRelayerAmount }}"
-  QUEUE_URL: {{.Values.queueUrl}}
-  SIMULATION_DATA_JSON:  {{ .Values.encodedSimulationDataJson | b64dec }}
-  TOKEN_PRICE_JSON: {{ .Values.encodedTokenPriceJson | b64dec }}
-  SLACK_JSON: {{ .Values.encodedSlackJson | b64dec }}
-  PROVIDER_JSON:  {{ .Values.encodedProviderJson | b64dec }}
-  DATASOURCES_JSON:  {{ .Values.encodedDatasourcesJson | b64dec }}
-  SOCKET_SERVICE_JSON:  {{ .Values.encodedSocketServiceJson | b64dec }}
-  BUNDLER_IS_TRUSTWALLET_SETUP:  {{ .Values.encodedIsTrustWalletSetup | b64dec }}
-  BUNDLER_FALLBACK_PROVIDER_JSON:  {{ .Values.encodedFallbackProviderJson | b64dec }}
+  BUNDLER_MIN_RELAYER_COUNT:  "{{ .Values.minRelayerCount }}"
+  BUNDLER_MAX_RELAYER_COUNT: "{{ .Values.maxRelayerCount }}"
+  BUNDLER_FUNDING_BALANCE_THRESHOLD: "{{ .Values.fundingBalanceThreshold}}"
+  BUNDLER_FUNDING_RELAYER_AMOUNT: "{{ .Values.fundingRelayerAmount }}"
+  BUNDLER_QUEUE_URL: {{.Values.bundlerQueueUrl}}
+  BUNDLER_SIMULATION_DATA_JSON:  {{ .Values.encodedBundlerSimulationDataJson | b64dec }}
+  BUNDLER_TOKEN_PRICE_JSON: {{ .Values.encodedBundlerTokenPriceJson | b64dec }}
+  BUNDLER_SLACK_JSON: {{ .Values.encodedBundlerSlackJson | b64dec }}
+  BUNDLER_PROVIDER_JSON:  {{ .Values.encodedBundlerProviderJson | b64dec }}
+  BUNDLER_DATASOURCES_JSON:  {{ .Values.encodedBundlerDatasourcesJson | b64dec }}
+  BUNDLER_SOCKET_SERVICE_JSON:  {{ .Values.encodedBundlerSocketServiceJson | b64dec }}
+  BUNDLER_IS_TRUSTWALLET_SETUP:  {{ .Values.encodedBundlerIsTrustWalletSetup | b64dec }}
+  BUNDLER_FALLBACK_PROVIDER_JSON:  {{ .Values.encodedBundlerFallbackProviderJson | b64dec }}
+  BUNDLER_CHAIN_ID: "{{ .Values.CHAIN_ID }}"
+  BUNDLER_NODE_PATH_INDEX: "{{ .Values.nodePathIndex }}"
   DD_PROFILING_ENABLED: "false"
   DD_ENV: "bundler-tw-staging"
   DD_SERVICE: {{.Values.datadog.service}}
