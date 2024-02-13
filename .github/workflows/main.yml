@@ -25,7 +25,7 @@ jobs:
       - name: Create Pull Request to Staging
         if: env.merge_to_staging == 'true'
         env:
-          GITHUB_TOKEN: ${{ secrets.DEVOPS_USER_PR }}
+          GITHUB_TOKEN: ${{ secrets.DEVOPS_USER_PR_BUNDLER }}
         run: |
           # Create PR using GitHub REST API
           REPO_OWNER=$(echo $GITHUB_REPOSITORY | cut -d'/' -f1)
