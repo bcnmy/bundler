@@ -10,5 +10,4 @@ declare -A chain_mumbai=(
   [fundingRelayerAmount]="2"
   [minReplica]=2
   [maxReplica]=2
-  [isTWSetup]="true"
 )

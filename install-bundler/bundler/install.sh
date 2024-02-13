@@ -119,7 +119,8 @@ SOCKET_SERVICE_JSON=$(grep SOCKET_SERVICE_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" 
                          | sed 's/SOCKET_SERVICE_JSON=//g')
 QUEUE_URL=$(grep QUEUE_URL <<< "${GCP_SECRET_CONFIG_VALUE}" \
                          | sed 's/QUEUE_URL=//g')
-
+BUNDLER_IS_TW_SETUP=$(grep BUNDLER_IS_TW_SETUP <<< "${GCP_SECRET_CONFIG_VALUE}" \
+                         | sed 's/BUNDLER_IS_TW_SETUP=//g')
 BUNDLER_IS_TRUSTWALLET_SETUP=$(grep BUNDLER_IS_TRUSTWALLET_SETUP <<< "${GCP_SECRET_CONFIG_VALUE}" \
                          | sed 's/BUNDLER_IS_TRUSTWALLET_SETUP=//g')
 
@@ -183,8 +184,6 @@ for array_name in $array_names; do
     eval "FUNDING_BALANCE_THRESHOLD=\${$array_name[fundingBalanceThreshold]}"
     # shellcheck disable=SC1087
     eval "FUNDING_RELAYER_AMOUNT=\${$array_name[fundingRelayerAmount]}"
-    # shellcheck disable=SC1087
-    eval "BUNDLER_IS_TW_SETUP=\${$array_name[isTWSetup]}"
 
     ADJ_AUTOSCALING_THRESHHOLD_HTTP_REQUESTS=$(bc -l <<< "$AUTOSCALING_THRESHHOLD_HTTP_REQUESTS_PER_MINUTE/60*1000" | cut -d'.' -f1)m
 
@@ -198,7 +197,6 @@ for array_name in $array_names; do
     print_green "MAX_RELAYER_COUNT=$MAX_RELAYER_COUNT"
     print_green "FUNDING_BALANCE_THRESHOLD=$FUNDING_BALANCE_THRESHOLD"
     print_green "FUNDING_RELAYER_AMOUNT=$FUNDING_RELAYER_AMOUNT"
-    print_green "BUNDLER_IS_TW_SETUP=$BUNDLER_IS_TW_SETUP"
     print_green "ADJ_AUTOSCALING_THRESHHOLD_HTTP_REQUESTS=${ADJ_AUTOSCALING_THRESHHOLD_HTTP_REQUESTS}"
 
     ENCODED_SIMULATION_DATA_JSON=$(echo -n "$SIMULATION_DATA_JSON" | base64)
