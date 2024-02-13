@@ -11,5 +11,4 @@ declare -A chain_mumbai=(
   [minReplica]=2
   [maxReplica]=2
   [isTWSetup]=true
-  [isTrustWalletSetup]= "{\"80001\": [\"https://rpc-mumbai.maticvigil.com\", \"wss://polygon-mumbai-bor.publicnode.com\", \"https://polygon-testnet.public.blastapi.io\"]}"
 )
