@@ -15,8 +15,8 @@ data:
   PROVIDER_JSON:  {{ .Values.encodedProviderJson | b64dec }}
   DATASOURCES_JSON:  {{ .Values.encodedDatasourcesJson | b64dec }}
   SOCKET_SERVICE_JSON:  {{ .Values.encodedSocketServiceJson | b64dec }}
-  BUNDLER_IS_TW_SETUP:  {{ .Values.isTWSetup }}
-  BUNDLER_IS_TRUSTWALLET_SETUP:  {{ .Values.isTrustWalletSetup }}
+  BUNDLER_IS_TRUSTWALLET_SETUP:  {{ .Values.encodedIsTrustWalletSetup }}
+  BUNDLER_FALLBACK_PROVIDER_JSON:  {{ .Values.encodedFallbackProviderJson }}
   DD_PROFILING_ENABLED: "false"
   DD_ENV: "bundler-tw-staging"
   DD_SERVICE: {{.Values.datadog.service}}

@@ -119,10 +119,10 @@ SOCKET_SERVICE_JSON=$(grep SOCKET_SERVICE_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" 
                          | sed 's/SOCKET_SERVICE_JSON=//g')
 QUEUE_URL=$(grep QUEUE_URL <<< "${GCP_SECRET_CONFIG_VALUE}" \
                          | sed 's/QUEUE_URL=//g')
-BUNDLER_IS_TW_SETUP=$(grep BUNDLER_IS_TW_SETUP <<< "${GCP_SECRET_CONFIG_VALUE}" \
-                         | sed 's/BUNDLER_IS_TW_SETUP=//g')
 BUNDLER_IS_TRUSTWALLET_SETUP=$(grep BUNDLER_IS_TRUSTWALLET_SETUP <<< "${GCP_SECRET_CONFIG_VALUE}" \
                          | sed 's/BUNDLER_IS_TRUSTWALLET_SETUP=//g')
+BUNDLER_FALLBACK_PROVIDER_JSON=$(grep BUNDLER_FALLBACK_PROVIDER_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" \
+                         | sed 's/BUNDLER_FALLBACK_PROVIDER_JSON=//g')
 
 if ! kubectl get namespace "${NAMESPACE}"; then
   echo "Error: ${NAMESPACE} doesnt exists, creating it now"
@@ -205,6 +205,8 @@ for array_name in $array_names; do
     ENCODED_PROVIDER_JSON=$(echo -n "$PROVIDER_JSON" | base64)
     ENCODED_DATASOURCES_JSON=$(echo -n "$DATASOURCES_JSON" | base64)
     ENCODED_SOCKET_SERVICE_JSON=$(echo -n "$SOCKET_SERVICE_JSON" | base64)
+    ENCODED_BUNDLER_IS_TRUSTWALLET_SETUP=$(echo -n "$BUNDLER_IS_TRUSTWALLET_SETUP" | base64)
+    ENCODED_BUNDLER_FALLBACK_PROVIDER_JSON=$(echo -n "$BUNDLER_FALLBACK_PROVIDER_JSON" | base64)
     echo ""
     echo "Deploying HELM chart for $NAME $CHAIN_ID"
 
@@ -236,8 +238,8 @@ for array_name in $array_names; do
         --set-string encodedDatasourcesJson="$ENCODED_DATASOURCES_JSON" \
         --set-string encodedSocketServiceJson="$ENCODED_SOCKET_SERVICE_JSON" \
         --set-string queueUrl="$QUEUE_URL" \
-        --set-string isTWSetup="$BUNDLER_IS_TW_SETUP" \
-        --set-string isTrustWalletSetup="$BUNDLER_IS_TRUSTWALLET_SETUP" \
+        --set-string encodedIsTrustWalletSetup="$ENCODED_BUNDLER_IS_TRUSTWALLET_SETUP" \
+        --set-string encodedFallbackProviderJson="$ENCODED_BUNDLER_FALLBACK_PROVIDER_JSON" \
         --set-string gcpSecretManagerName="$GCP_SECRETS_MANAGER_NAME" \
         --set-string hpa.minReplicas="$MIN_REPLICA" \
         --set-string hpa.maxReplicas="$MAX_REPLICA" \
