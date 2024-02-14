@@ -223,7 +223,6 @@ for array_name in $array_names; do
         --set CHAIN_ID="$CHAIN_ID" \
         --set provider="$PROVIDER" \
         --set prometheus.enabled=true \
-        --set nodePathIndex=0 \
         --set hpa.average_http_requests_hpa="${ADJ_AUTOSCALING_THRESHHOLD_HTTP_REQUESTS}" \
         --set hpa.average_cpu_hpa="$AUTOSCALING_THRESHHOLD_CPU" \
         --set-string image.name="$IMAGE" \

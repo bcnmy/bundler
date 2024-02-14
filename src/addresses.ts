@@ -33,8 +33,6 @@
 //   const ethPubkey = privateToPublic(ethNodePath.privateKey);
 //   const ethAddr = publicToAddress(ethPubkey).toString('hex');
 //   // const balanceEther = await getBalance(ethAddr);
-  
-
 
 //   // console.log(`Relayer Index: ${relayerIndex}`);
 //   console.log('Ethereum Address:', ethAddr);
@@ -50,9 +48,8 @@
 //   //   }
 //   }
 //   return addresses;
-  
-// }
 
+// }
 
 // async function getBalance(ethAddr: string): Promise<string> {
 //   let rpcUrl = 'https://polygon-mainnet.g.alchemy.com/v2/xa1frMC-ihYEJcVn9eybSfhc-OtXbixj';
@@ -65,8 +62,6 @@
 
 // }
 
-
-
 // async function sendEther(privateKey: string, amount: string) {
 //     // Connect to the network
 //     let rpcUrl = 'https://polygon-mainnet.g.alchemy.com/v2/xa1frMC-ihYEJcVn9eybSfhc-OtXbixj';
@@ -76,7 +71,6 @@
 //     // Create a wallet from the private key and connect it to the provider
 //     let wallet = new ethers.Wallet(privateKey, provider);
 
-  
 //   // Fetching current gas price from the network
 //   let currentGasPrice = await provider.getGasPrice();
 //   // Setting the gas price 20% higher than the current gas price

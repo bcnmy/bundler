@@ -8,9 +8,7 @@ describe("merge configs", () => {
     // const staticConfig = {
     //   supportedNetworks: [1, 2, 3],
     // };
-
     // const mergedConfig = merge(userConfig, staticConfig);
-
     // expect(mergedConfig).toEqual(userConfig);
   });
 
