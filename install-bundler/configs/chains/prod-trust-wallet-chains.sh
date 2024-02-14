@@ -9,7 +9,8 @@ declare -A chain_mumbai=(
   [fundingBalanceThreshold]="2"
   [fundingRelayerAmount]="5"
   [minReplica]=1
-  [maxReplica]=20)
+  [maxReplica]=20
+  )
 
 # declare -A chain_bnb=(
 #   [name]='chain-56'
