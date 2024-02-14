@@ -1376,8 +1376,12 @@ export const MANTLE_L1_ROLL_UP_FEE_DIVISION_FACTOR = 10000000000n;
 export const MANTLE_PUBLIC_RPC_URL_1 = "https://rpc.mantle.xyz";
 export const MANTLE_PUBLIC_RPC_URL_2 = "https://rpc.ankr.com/mantle";
 export const MANTLE_PUBLIC_RPC_URL_3 = "https://1rpc.io/mantle";
-export const MANTLE_PRIVATE_RPC_URL_1 = "https://rpc.ankr.com/mantle/07101210d8974c619d563526229a15fdc1675bb1e862ed04a6b8c4e90fa45fab";
-export const MANTLE_PRIVATE_RPC_URL_2 = "https://rpc.ankr.com/mantle/0f2ac70eb2e86d935951e9d3874deeb44525123a1ce2a7cf609cf1f0a098d2d6";
-export const MANTLE_PRIVATE_RPC_URL_3 = "https://rpc.ankr.com/mantle/6ce34fc32c05d52c87f836fc1f994fd056b78c1d75ba9573a1ffbfcd8094287e";
+export const MANTLE_PRIVATE_RPC_URL_1 =
+  "https://rpc.ankr.com/mantle/07101210d8974c619d563526229a15fdc1675bb1e862ed04a6b8c4e90fa45fab";
+export const MANTLE_PRIVATE_RPC_URL_2 =
+  "https://rpc.ankr.com/mantle/0f2ac70eb2e86d935951e9d3874deeb44525123a1ce2a7cf609cf1f0a098d2d6";
+export const MANTLE_PRIVATE_RPC_URL_3 =
+  "https://rpc.ankr.com/mantle/6ce34fc32c05d52c87f836fc1f994fd056b78c1d75ba9573a1ffbfcd8094287e";
 export const BLAST_SEPOLIA_PUBLIC_RPC_URL = "https://sepolia.blast.io";
-export const BLAST_SEPOLIA_PRIVATE_RPC_URL = "https://rpc.ankr.com/blast_testnet_sepolia/0f2ac70eb2e86d935951e9d3874deeb44525123a1ce2a7cf609cf1f0a098d2d6";
+export const BLAST_SEPOLIA_PRIVATE_RPC_URL =
+  "https://rpc.ankr.com/blast_testnet_sepolia/0f2ac70eb2e86d935951e9d3874deeb44525123a1ce2a7cf609cf1f0a098d2d6";
