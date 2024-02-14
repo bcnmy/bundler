@@ -76,6 +76,28 @@ function getEnvVariable(envVariableName: string): string {
   return value;
 }
 
+export function merge(
+  userConfig: Partial<ConfigType>,
+  staticConfig: any,
+): ConfigType {
+  // clone so we don't mutate the original config
+  const clone = _.cloneDeep(userConfig);
+
+  // preserve the supported networks from the user config because
+  // we want to override the default from static-config if it's present in the user config
+  const supportedNetworks = _.clone(clone.supportedNetworks);
+
+  // perform the merge
+  const merged = _.merge(clone, staticConfig);
+
+  // restore the supported networks array
+  if (supportedNetworks && supportedNetworks.length) {
+    merged.supportedNetworks = supportedNetworks;
+  }
+
+  return merged;
+}
+
 export class Config implements IConfig {
   config: ConfigType;
 
@@ -226,7 +248,7 @@ export class Config implements IConfig {
         fs.readFileSync(path.resolve("src/config/static-config.json"), "utf8"),
       );
 
-      this.config = _.merge(data, staticConfig);
+      this.config = merge(data, staticConfig);
       this.readEnvVariables();
       this.validate();
       // Setting up supportTed network from env variable if avaialable
@@ -268,7 +290,7 @@ export class Config implements IConfig {
   }
 
   update(data: object): boolean {
-    this.config = _.merge(this.config, data);
+    this.config = merge(this.config, data);
     return true;
   }
 
