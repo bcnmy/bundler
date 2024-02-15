@@ -55,7 +55,6 @@ function getJsonFromEnvVariable(envVariableName: string): any {
 
   try {
     const jsonObject = JSON.parse(jsonString);
-    log.info(jsonObject);
     return jsonObject;
   } catch (error: any) {
     throw new Error(
