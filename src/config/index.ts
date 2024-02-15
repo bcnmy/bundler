@@ -160,20 +160,11 @@ export class Config implements IConfig {
       relayerManager.maxRelayerCount[chainId] = maxRelayerCount;
       relayerManager.fundingBalanceThreshold[chainId] = fundingBalanceThreshold;
       relayerManager.fundingRelayerAmount[chainId] = fundingRelayerAmount;
-      if (!relayerManager.ownerAccountDetails[chainId]) {
-        log.info(`Default ownerAccoutnDetails couldnt be found for ${chainId}`);
-        relayerManager.ownerAccountDetails[chainId] = {
-          privateKey: relayerManager.ownerPrivateKey as `0x${string}`,
-          publicKey: relayerManager.ownerPublicKey as `0x${string}`,
-        };
-      } else {
-        log.info(`Default ownerAccoutnDetails found for ${chainId}`);
-      }
     }
 
     const relayerManager = this.config.relayerManagers[0];
     log.info(
-      `RelayarManager ${relayerManager.name} publicKey <${relayerManager.ownerAccountDetails[chainId].publicKey}>`,
+      `RelayarManager ${relayerManager.name} publicKey <${relayerManager.ownerPublicKey}>`,
     );
 
     log.info(

@@ -309,8 +309,8 @@ let statusService: IStatusService;
           ),
           fundingRelayerAmount: relayerManager.fundingRelayerAmount[chainId],
           ownerAccountDetails: new EVMAccount(
-            relayerManager.ownerAccountDetails[chainId].publicKey,
-            relayerManager.ownerAccountDetails[chainId].privateKey,
+            relayerManager.ownerPublicKey,
+            relayerManager.ownerPrivateKey,
             networkService.rpcUrl,
           ),
           gasLimitMap: relayerManager.gasLimitMap,

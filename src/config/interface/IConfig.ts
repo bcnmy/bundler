@@ -62,18 +62,12 @@ type TokenPriceConfigType = {
   refreshIntervalSeconds: number;
 };
 
-type OwnerAccountDetailsType = {
-  [key: number]: {
-    publicKey: `0x${string}`;
-    privateKey: `0x${string}`;
-  };
-};
 
 type RelayerManagerConfigType = Array<{
   name: string; // assume it to be an identifier by the consumer
   relayerSeed: string;
-  ownerPublicKey: string;
   ownerPrivateKey: string;
+  ownerPublicKey: string;
   gasLimitMap: ChainIdWithNumberValueType;
   minRelayerCount: ChainIdWithNumberValueType;
   maxRelayerCount: ChainIdWithNumberValueType;
@@ -82,7 +76,6 @@ type RelayerManagerConfigType = Array<{
   fundingRelayerAmount: ChainIdWithNumberValueType;
   fundingBalanceThreshold: ChainIdWithNumberValueType;
   newRelayerInstanceCount: ChainIdWithNumberValueType;
-  ownerAccountDetails: OwnerAccountDetailsType;
 }>;
 
 type TransactionConfigType = {
