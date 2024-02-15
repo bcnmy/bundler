@@ -109,9 +109,9 @@ export class EVMRetryTransactionService
       log.info(
         `Checking transaction status of transactionHash: ${transactionHash} with transactionId: ${transactionId} on chainId: ${this.chainId}`,
       );
-      const transactionReceipt = null;
+      let transactionReceipt = null;
       try {
-        await this.networkService.getTransactionReceipt(transactionHash);
+        transactionReceipt = await this.networkService.getTransactionReceipt(transactionHash);
         log.info(
           `Transaction receipt for transactionHash: ${transactionHash} with transactionId: ${transactionId} on chainId: ${
             this.chainId
