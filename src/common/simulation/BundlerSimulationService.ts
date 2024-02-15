@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable import/no-import-module-exports */
 /* eslint-disable prefer-const */
 import {
@@ -10,11 +11,11 @@ import {
   toHex,
 } from "viem";
 import {
-  ArbitrumGasEstimator,
-  GasEstimator,
+  createArbitrumGasEstimator,
+  createGasEstimator,
+  createMantleGasEstimator,
+  createOptimismGasEstimator,
   IGasEstimator,
-  OptimismGasEstimator,
-  // @ts-ignore
 } from "gas-estimations";
 import { config } from "../../config";
 import { IEVMAccount } from "../../relayer/account";
@@ -79,6 +80,8 @@ export class BundlerSimulationService {
 
   arbitrumGasEstimator: IGasEstimator | null = null;
 
+  mantleGasEstimator: IGasEstimator | null = null;
+
   mantleBVMGasPriceOracle: {
     [chainId: number]: MantleBVMGasPriceOracleContractType;
   } = {};
@@ -93,7 +96,7 @@ export class BundlerSimulationService {
     this.tenderlySimulationService = tenderlySimulationService;
     this.alchemySimulationService = alchemySimulationService;
     this.gasPriceService = gasPriceService;
-    this.gasEstimator = new GasEstimator({
+    this.gasEstimator = createGasEstimator({
       rpcUrl: this.networkService.rpcUrl,
     });
 
@@ -103,26 +106,25 @@ export class BundlerSimulationService {
         getContract({
           abi: OPTIMISM_L1_GAS_PRICE_ORACLE,
           address: "0x420000000000000000000000000000000000000F",
-          client: {
-            public: this.networkService.provider,
-          },
+          publicClient: this.networkService.provider,
         });
-      this.optimismGasEstimator = new OptimismGasEstimator({
+      this.optimismGasEstimator = createOptimismGasEstimator({
         rpcUrl: this.networkService.rpcUrl,
       });
     }
 
     if (ArbitrumNetworks.includes(this.networkService.chainId))
-      this.arbitrumGasEstimator = new ArbitrumGasEstimator({
+      this.arbitrumGasEstimator = createArbitrumGasEstimator({
         rpcUrl: this.networkService.rpcUrl,
       });
     if (MantleNetworks.includes(this.networkService.chainId)) {
       this.mantleBVMGasPriceOracle[this.networkService.chainId] = getContract({
         abi: MANTLE_BVM_GAS_PRICE_ORACLE,
         address: "0x420000000000000000000000000000000000000F",
-        client: {
-          public: this.networkService.provider,
-        },
+        publicClient: this.networkService.provider,
+      });
+      this.mantleGasEstimator = createMantleGasEstimator({
+        rpcUrl: this.networkService.rpcUrl,
       });
     }
   }
