@@ -1,4 +1,4 @@
-FROM node:18.17.1-bookworm
+FROM node:21.6.1-bookworm
 
 # install dependencies
 RUN apt update
