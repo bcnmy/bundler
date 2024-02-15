@@ -32,7 +32,7 @@ import {
   MANTLE_PRIVATE_RPC_URL_2,
   MANTLE_PRIVATE_RPC_URL_3,
   MantleNetworks,
-  TWSupportedNetworks,
+  TrustWalletSupportedNetworks,
   BLOCKCHAINS,
   BLAST_SEPOLIA_PUBLIC_RPC_URL,
   BLAST_SEPOLIA_PRIVATE_RPC_URL,
@@ -99,7 +99,7 @@ export class EVMNetworkService
           },
         ),
       });
-    } else if (TWSupportedNetworks.includes(this.chainId)) {
+    } else if (TrustWalletSupportedNetworks.includes(this.chainId)) {
       const fallbackRpcs = config.fallbackProviderConfig[this.chainId].map(
         (rpcUrl) => http(rpcUrl),
       );

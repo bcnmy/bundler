@@ -1372,7 +1372,7 @@ export const AstarNetworks = [81, 592];
 export const MantleNetworks = [5000, 5001];
 
 // can move this to config
-export const TWSupportedNetworks = [137, 80001, 56, 204, 42161, 10, 8453];
+export const TrustWalletSupportedNetworks = [137, 80001, 56, 204, 42161, 10, 8453];
 
 export const BLAST_PVG_VALUE = 100000000;
 export const MANTLE_L1_ROLL_UP_FEE_DIVISION_FACTOR = 10000000000n;
