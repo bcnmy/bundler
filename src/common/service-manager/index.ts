@@ -165,13 +165,12 @@ let statusService: IStatusService;
     }
 
     log.info(`Setting up network service for chainId: ${chainId}`);
-    const rpcUrl = config.chains.provider[chainId];
     const networkService = new EVMNetworkService({
       chainId,
       rpcUrl: config.chains.provider[chainId],
     });
     log.info(
-      `Network service setup complete for chainId: ${chainId} with rpcURL: ${rpcUrl}`,
+      `Network service setup complete for chainId: ${chainId}`,
     );
     networkServiceMap[chainId] = networkService;
 
