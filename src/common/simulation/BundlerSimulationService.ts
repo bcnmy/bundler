@@ -48,6 +48,8 @@ import {
   NetworksNotSupportingEthCallStateOverrides,
   MantleNetworks,
   MANTLE_BVM_GAS_PRICE_ORACLE,
+  BLOCKCHAINS,
+  BLAST_PVG_VALUE,
 } from "../constants";
 
 import {
@@ -60,7 +62,6 @@ const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
 });
 
-// TODO: Sync for blast and mantle
 export class BundlerSimulationService {
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
 
@@ -75,12 +76,6 @@ export class BundlerSimulationService {
   } = {};
 
   gasEstimator: IGasEstimator;
-
-  optimismGasEstimator: IGasEstimator | null = null;
-
-  arbitrumGasEstimator: IGasEstimator | null = null;
-
-  mantleGasEstimator: IGasEstimator | null = null;
 
   mantleBVMGasPriceOracle: {
     [chainId: number]: MantleBVMGasPriceOracleContractType;
@@ -108,13 +103,13 @@ export class BundlerSimulationService {
           address: "0x420000000000000000000000000000000000000F",
           publicClient: this.networkService.provider,
         });
-      this.optimismGasEstimator = createOptimismGasEstimator({
+      this.gasEstimator = createOptimismGasEstimator({
         rpcUrl: this.networkService.rpcUrl,
       });
     }
 
     if (ArbitrumNetworks.includes(this.networkService.chainId))
-      this.arbitrumGasEstimator = createArbitrumGasEstimator({
+      this.gasEstimator = createArbitrumGasEstimator({
         rpcUrl: this.networkService.rpcUrl,
       });
     if (MantleNetworks.includes(this.networkService.chainId)) {
@@ -123,7 +118,7 @@ export class BundlerSimulationService {
         address: "0x420000000000000000000000000000000000000F",
         publicClient: this.networkService.provider,
       });
-      this.mantleGasEstimator = createMantleGasEstimator({
+      this.gasEstimator = createMantleGasEstimator({
         rpcUrl: this.networkService.rpcUrl,
       });
     }
@@ -171,6 +166,31 @@ export class BundlerSimulationService {
         preVerificationGas = response.preVerificationGas;
         validAfter = response.validAfter;
         validUntil = response.validUntil;
+      } else if (
+        // for the following chains it was observed that bytecode ovverrides resulted in RPC
+        // not returning correct responses hence using the default way to estimate gas
+        chainId === BLOCKCHAINS.MAINNET ||
+        chainId === BLOCKCHAINS.LINEA_MAINNET ||
+        chainId === BLOCKCHAINS.LINEA_TESTNET ||
+        chainId === BLOCKCHAINS.BASE_SEPOLIA_TESTNET ||
+        chainId === BLOCKCHAINS.ARBITRUM_SEPOLIA_TESTNET ||
+        chainId === BLOCKCHAINS.BLAST_TESTNET
+      ) {
+        const response = await this.gasEstimator.estimateUserOperationGas({
+          userOperation: userOp,
+          stateOverrideSet,
+          supportsEthCallByteCodeOverride: false
+        });
+
+        callGasLimit = response.callGasLimit;
+        verificationGasLimit = response.verificationGasLimit;
+        preVerificationGas = response.preVerificationGas;
+        validAfter = response.validAfter;
+        validUntil = response.validUntil;
+      
+        if (chainId === BLOCKCHAINS.BLAST_TESTNET) {
+          preVerificationGas += BLAST_PVG_VALUE;
+        }
       } else {
         const response = await this.gasEstimator.estimateUserOperationGas({
           userOperation: userOp,
@@ -183,23 +203,12 @@ export class BundlerSimulationService {
         validUntil = response.validUntil;
       }
 
-      if (OptimismNetworks.includes(chainId) && this.optimismGasEstimator) {
-        const response =
-          await this.optimismGasEstimator.calculatePreVerificationGas({
-            userOperation: userOp,
-          });
-        preVerificationGas = response.preVerificationGas;
-      }
-
-      if (ArbitrumNetworks.includes(chainId) && this.arbitrumGasEstimator) {
-        const response =
-          await this.arbitrumGasEstimator.calculatePreVerificationGas({
-            userOperation: userOp,
-          });
-        preVerificationGas = response.preVerificationGas;
-      }
-
-      const totalGas = callGasLimit + verificationGasLimit + preVerificationGas;
+      const verificationGasLimitMultiplier =
+        userOp.paymasterAndData === "0x" ? 1 : 3;
+      const totalGas =
+        callGasLimit +
+        BigInt(verificationGasLimitMultiplier) * verificationGasLimit +
+        preVerificationGas;
 
       if (
         OptimismNetworks.includes(chainId) ||

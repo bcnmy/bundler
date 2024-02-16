@@ -1374,7 +1374,7 @@ export const NetworksNotSupportingEthCallStateOverrides = [
 ];
 export const MantleNetworks = [5000, 5001];
 
-export const BLAST_PVG_VALUE = 700000000;
+export const BLAST_PVG_VALUE = 700000000n;
 export const MANTLE_L1_ROLL_UP_FEE_DIVISION_FACTOR = 10000000000n;
 export const MANTLE_PUBLIC_RPC_URL_1 = "https://rpc.mantle.xyz";
 export const MANTLE_PUBLIC_RPC_URL_2 = "https://rpc.ankr.com/mantle";

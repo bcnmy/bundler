@@ -4706,10 +4706,10 @@ functions-have-names@^1.2.3:
   resolved "https://registry.yarnpkg.com/functions-have-names/-/functions-have-names-1.2.3.tgz#0404fe4ee2ba2f607f0e0ec3c80bae994133b834"
   integrity sha512-xckBUXyTIqT97tq2x2AMb+g163b5JFysYk0x4qxNFwbfQkmNZoiRHb6sPzI9/QV33WeuvVYBUIiD4NzNIyqaRQ==
 
-gas-estimations@0.0.3:
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/gas-estimations/-/gas-estimations-0.0.3.tgz#e0eae4f7f9486204288f6e90d1cfb1b5c627974d"
-  integrity sha512-Hq8js7E3synh7WuakARGzno796wQj64C+w5G0IjDwtFVCIiCoCbYxR3+onSfNsSZcoGtfvc4j23Papavdrd1mA==
+gas-estimations@0.0.5:
+  version "0.0.5"
+  resolved "https://registry.yarnpkg.com/gas-estimations/-/gas-estimations-0.0.5.tgz#d315d8ae4ae0eb73e105a0cd7c82e825a38835cd"
+  integrity sha512-02iLD2uH3A/unRoPTbEaLV4wUuZMVzCmrz481gbqYQDn+eh/5D4AybLOAChdSgyOnAA3c/tWKr3Fb5+TqMQwaQ==
   dependencies:
     "@types/node" "^20.10.5"
     eslint-plugin-tsdoc "^0.2.17"
