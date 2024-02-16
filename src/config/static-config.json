@@ -468,7 +468,7 @@
         "421614": 0.01,
         "11155111": 0.1,
         "80085": 0.01,
-        "168587773": 0.01,
+        "168587773": 0.5,
         "84532": 0.015
       },
       "fundingBalanceThreshold": {
@@ -511,7 +511,7 @@
         "421614": 0.005,
         "11155111": 0.05,
         "80085": 0.005,
-        "168587773": 0.005,
+        "168587773": 0.2,
         "84532": 0.0075
       },
       "newRelayerInstanceCount": {
@@ -649,7 +649,11 @@
         "timeout",
         "we can't execute this request",
         "rate limit exceeded",
-        "sender is over rate limit"
+        "sender is over rate limit",
+        "the request timed out",
+        "the request took too long to respond",
+        "fetch failed",
+        "http request failed"
       ],
       "INTRINSIC_GAS_TOO_LOW": ["intrinsic gas too low"],
       "MAX_FEE_PER_GAS_LESS_THAN_BLOCK_BASE_FEE": [
