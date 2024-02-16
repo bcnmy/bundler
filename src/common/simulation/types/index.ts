@@ -65,7 +65,6 @@ export type EstimateUserOperationGasReturnType = {
     validAfter: number;
     validUntil: number;
     userOpHash?: string;
-    totalGas: bigint;
   };
 };
 
@@ -99,8 +98,3 @@ export type SimulateValidationAndExecutionData = {
 };
 
 export type SimulateValidationData = SimulateValidationAndExecutionData;
-
-export type SimulatorNetworkService = Pick<
-  INetworkService<IEVMAccount, EVMRawTransactionType>,
-  "chainId" | "ethCall" | "estimateGas" | "provider"
->;

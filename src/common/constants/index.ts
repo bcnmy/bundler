@@ -1369,9 +1369,15 @@ export const AlchemySimulateExecutionSupportedNetworks = [
   1, 5, 11155111, 137, 80001, 10, 420, 42161, 421613, 421614, 8453, 84531, 592,
 ];
 export const AstarNetworks = [81, 592];
+export const NetworksNotSupportingEthCallStateOverrides = [
+  1101, 1442, 81, 592, 169, 3441005, 91715, 7116, 9980,
+];
+export const NetworksNotSupportingEthCallBytecodeStateOverrides = [
+  1, 59140, 59144, 84532, 421614, 168587773,
+];
 export const MantleNetworks = [5000, 5001];
 
-export const BLAST_PVG_VALUE = 100000000;
+export const BLAST_PVG_VALUE = 700000000n;
 export const MANTLE_L1_ROLL_UP_FEE_DIVISION_FACTOR = 10000000000n;
 export const MANTLE_PUBLIC_RPC_URL_1 = "https://rpc.mantle.xyz";
 export const MANTLE_PUBLIC_RPC_URL_2 = "https://rpc.ankr.com/mantle";

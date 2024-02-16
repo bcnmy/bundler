@@ -283,9 +283,9 @@ export type MantleBVMGasPriceOracleContractType = GetContractReturnType<
 
 export type StateOverrideSetType = {
   [key: string]: {
-    balance?: string;
-    nonce?: string;
-    code?: string;
+    balance?: Hex;
+    nonce?: Hex;
+    code?: Hex;
     state?: object;
     stateDiff?: object;
   };

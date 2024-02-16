@@ -15,6 +15,7 @@ import { getAccountUndefinedNotificationMessage } from "../../common/notificatio
 import {
   customJSONStringify,
   getTransactionMinedKey,
+  parseError,
 } from "../../common/utils";
 import { ICacheService } from "../../common/cache";
 
@@ -108,13 +109,22 @@ export class EVMRetryTransactionService
       log.info(
         `Checking transaction status of transactionHash: ${transactionHash} with transactionId: ${transactionId} on chainId: ${this.chainId}`,
       );
-      const transactionReceipt =
-        await this.networkService.getTransactionReceipt(transactionHash);
-      log.info(
-        `Transaction receipt for transactionHash: ${transactionHash} with transactionId: ${transactionId} on chainId: ${
-          this.chainId
-        } is ${customJSONStringify(transactionReceipt)}`,
-      );
+      let transactionReceipt = null;
+      try {
+        transactionReceipt =
+          await this.networkService.getTransactionReceipt(transactionHash);
+        log.info(
+          `Transaction receipt for transactionHash: ${transactionHash} with transactionId: ${transactionId} on chainId: ${
+            this.chainId
+          } is ${customJSONStringify(transactionReceipt)}`,
+        );
+      } catch (error) {
+        log.error(
+          `Error in fetching transaction receipt from network for transactionHash: ${transactionHash} with transactionId: ${transactionId} on chainId: ${
+            this.chainId
+          } is ${parseError(error)}`,
+        );
+      }
 
       if (transactionReceipt) {
         log.info(

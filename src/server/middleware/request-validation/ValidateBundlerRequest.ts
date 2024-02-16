@@ -8,7 +8,6 @@ import {
   TransactionMethodType,
 } from "../../../common/types";
 import {
-  bundlerCalculatePreVerificationGasRequestSchema,
   bundlerChainIdRequestSchema,
   bundlerEstimateUserOpGasRequestSchema,
   bundlerGetUserOpByHashRequestSchema,
@@ -74,10 +73,6 @@ export const validateBundlerRequest =
           break;
         case BiconomyMethodType.GET_USER_OPERATION_STATUS:
           validationResponse = getUserOperationStatusSchema.validate(req.body);
-          break;
-        case BiconomyMethodType.CALCULATE_PVG:
-          validationResponse =
-            bundlerCalculatePreVerificationGasRequestSchema.validate(req.body);
           break;
         default:
           const end = performance.now();
