@@ -25,17 +25,17 @@
 #   [maxReplica]=6
 # )
 
-declare -A chain_polygon=(
-  [name]='chain-137'
-  [chainId]="137"
-  [autoScalingThreshholdHTTPRequestsPerMinute]=1000
-  [autoScalingThreshholdCPU]=800m
-  [minRelayerCount]="200"
-  [maxRelayerCount]="220"
-  [fundingBalanceThreshold]="2"
-  [fundingRelayerAmount]="5"
-  [minReplica]=6
-  [maxReplica]=6)
+# declare -A chain_polygon=(
+#   [name]='chain-137'
+#   [chainId]="137"
+#   [autoScalingThreshholdHTTPRequestsPerMinute]=1000
+#   [autoScalingThreshholdCPU]=800m
+#   [minRelayerCount]="200"
+#   [maxRelayerCount]="220"
+#   [fundingBalanceThreshold]="2"
+#   [fundingRelayerAmount]="5"
+#   [minReplica]=6
+#   [maxReplica]=6)
 
 
 # declare -A chain_arbitrum=(
@@ -91,15 +91,15 @@ declare -A chain_polygon=(
 #   [maxReplica]=3
 # )
 
-# declare -A chain_optimism=(
-#   [name]='chain-10'
-#   [chainId]="10"
-#   [autoScalingThreshholdHTTPRequestsPerMinute]=1000
-#   [autoScalingThreshholdCPU]=800m
-#   [minRelayerCount]="200"
-#   [maxRelayerCount]="220"
-#   [fundingBalanceThreshold]="0.01"
-#   [fundingRelayerAmount]="0.025"
-#   [minReplica]=3
-#   [maxReplica]=3
-# )
+declare -A chain_optimism=(
+  [name]='chain-10'
+  [chainId]="10"
+  [autoScalingThreshholdHTTPRequestsPerMinute]=1000
+  [autoScalingThreshholdCPU]=800m
+  [minRelayerCount]="200"
+  [maxRelayerCount]="220"
+  [fundingBalanceThreshold]="0.01"
+  [fundingRelayerAmount]="0.025"
+  [minReplica]=3
+  [maxReplica]=3
+)
