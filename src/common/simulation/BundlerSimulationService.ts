@@ -50,6 +50,7 @@ import {
   MANTLE_BVM_GAS_PRICE_ORACLE,
   BLOCKCHAINS,
   BLAST_PVG_VALUE,
+  NetworksNotSupportingEthCallBytecodeStateOverrides,
 } from "../constants";
 
 import {
@@ -150,57 +151,30 @@ export class BundlerSimulationService {
           "0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b";
       }
 
-      let callGasLimit: bigint;
-      let verificationGasLimit: bigint;
-      let preVerificationGas: bigint;
-      let validAfter: number;
-      let validUntil: number;
-
+      let supportsEthCallStateOverride = true;
+      let supportsEthCallByteCodeOverride = true;
       if (NetworksNotSupportingEthCallStateOverrides.includes(chainId)) {
-        const response = await this.gasEstimator.estimateUserOperationGas({
-          userOperation: userOp,
-          supportsEthCallStateOverride: false,
-        });
-        callGasLimit = response.callGasLimit;
-        verificationGasLimit = response.verificationGasLimit;
-        preVerificationGas = response.preVerificationGas;
-        validAfter = response.validAfter;
-        validUntil = response.validUntil;
+        supportsEthCallStateOverride = false;
       } else if (
-        // for the following chains it was observed that bytecode ovverrides resulted in RPC
-        // not returning correct responses hence using the default way to estimate gas
-        chainId === BLOCKCHAINS.MAINNET ||
-        chainId === BLOCKCHAINS.LINEA_MAINNET ||
-        chainId === BLOCKCHAINS.LINEA_TESTNET ||
-        chainId === BLOCKCHAINS.BASE_SEPOLIA_TESTNET ||
-        chainId === BLOCKCHAINS.ARBITRUM_SEPOLIA_TESTNET ||
-        chainId === BLOCKCHAINS.BLAST_TESTNET
+        NetworksNotSupportingEthCallBytecodeStateOverrides.includes(chainId)
       ) {
-        const response = await this.gasEstimator.estimateUserOperationGas({
-          userOperation: userOp,
-          stateOverrideSet,
-          supportsEthCallByteCodeOverride: false
-        });
+        supportsEthCallByteCodeOverride = false;
+      }
 
-        callGasLimit = response.callGasLimit;
-        verificationGasLimit = response.verificationGasLimit;
-        preVerificationGas = response.preVerificationGas;
-        validAfter = response.validAfter;
-        validUntil = response.validUntil;
-      
-        if (chainId === BLOCKCHAINS.BLAST_TESTNET) {
-          preVerificationGas += BLAST_PVG_VALUE;
-        }
-      } else {
-        const response = await this.gasEstimator.estimateUserOperationGas({
-          userOperation: userOp,
-          stateOverrideSet,
-        });
-        callGasLimit = response.callGasLimit;
-        verificationGasLimit = response.verificationGasLimit;
-        preVerificationGas = response.preVerificationGas;
-        validAfter = response.validAfter;
-        validUntil = response.validUntil;
+      const response = await this.gasEstimator.estimateUserOperationGas({
+        userOperation: userOp,
+        stateOverrideSet,
+        supportsEthCallByteCodeOverride,
+        supportsEthCallStateOverride,
+      });
+      log.info(`estimation respone from gas estimation package: ${customJSONStringify(response)} on chainId: ${chainId}`);
+
+      const { callGasLimit, verificationGasLimit, validAfter, validUntil } =
+        response;
+      let { preVerificationGas } = response;
+
+      if (chainId === BLOCKCHAINS.BLAST_TESTNET) {
+        preVerificationGas += BLAST_PVG_VALUE;
       }
 
       const verificationGasLimitMultiplier =
@@ -209,6 +183,7 @@ export class BundlerSimulationService {
         callGasLimit +
         BigInt(verificationGasLimitMultiplier) * verificationGasLimit +
         preVerificationGas;
+      log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
 
       if (
         OptimismNetworks.includes(chainId) ||
@@ -218,6 +193,7 @@ export class BundlerSimulationService {
       } else {
         preVerificationGas += BigInt(Math.ceil(Number(toHex(totalGas)) * 0.1));
       }
+      log.info(`preVerificationGas after bumping it up: ${preVerificationGas} on chainId: ${chainId}`);
 
       const end = performance.now();
       log.info(`Estimating the userOp took: ${end - start} milliseconds`);

@@ -1372,6 +1372,9 @@ export const AstarNetworks = [81, 592];
 export const NetworksNotSupportingEthCallStateOverrides = [
   1101, 1442, 81, 592, 169, 3441005, 91715, 7116, 9980,
 ];
+export const NetworksNotSupportingEthCallBytecodeStateOverrides = [
+  1, 59140, 59144, 84532, 421614, 168587773,
+];
 export const MantleNetworks = [5000, 5001];
 
 export const BLAST_PVG_VALUE = 700000000n;
