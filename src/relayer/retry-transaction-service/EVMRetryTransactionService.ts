@@ -111,7 +111,8 @@ export class EVMRetryTransactionService
       );
       let transactionReceipt = null;
       try {
-        transactionReceipt = await this.networkService.getTransactionReceipt(transactionHash);
+        transactionReceipt =
+          await this.networkService.getTransactionReceipt(transactionHash);
         log.info(
           `Transaction receipt for transactionHash: ${transactionHash} with transactionId: ${transactionId} on chainId: ${
             this.chainId

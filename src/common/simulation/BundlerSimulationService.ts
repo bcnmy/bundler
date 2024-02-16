@@ -167,7 +167,11 @@ export class BundlerSimulationService {
         supportsEthCallByteCodeOverride,
         supportsEthCallStateOverride,
       });
-      log.info(`estimation respone from gas estimation package: ${customJSONStringify(response)} on chainId: ${chainId}`);
+      log.info(
+        `estimation respone from gas estimation package: ${customJSONStringify(
+          response,
+        )} on chainId: ${chainId}`,
+      );
 
       const { callGasLimit, verificationGasLimit, validAfter, validUntil } =
         response;
@@ -193,7 +197,9 @@ export class BundlerSimulationService {
       } else {
         preVerificationGas += BigInt(Math.ceil(Number(toHex(totalGas)) * 0.1));
       }
-      log.info(`preVerificationGas after bumping it up: ${preVerificationGas} on chainId: ${chainId}`);
+      log.info(
+        `preVerificationGas after bumping it up: ${preVerificationGas} on chainId: ${chainId}`,
+      );
 
       const end = performance.now();
       log.info(`Estimating the userOp took: ${end - start} milliseconds`);
