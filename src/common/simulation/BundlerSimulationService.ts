@@ -102,7 +102,9 @@ export class BundlerSimulationService {
         getContract({
           abi: OPTIMISM_L1_GAS_PRICE_ORACLE,
           address: "0x420000000000000000000000000000000000000F",
-          publicClient: this.networkService.provider,
+          client: {
+            public: this.networkService.provider,
+          },
         });
       this.gasEstimator = createOptimismGasEstimator({
         rpcUrl: this.networkService.rpcUrl,
@@ -117,7 +119,9 @@ export class BundlerSimulationService {
       this.mantleBVMGasPriceOracle[this.networkService.chainId] = getContract({
         abi: MANTLE_BVM_GAS_PRICE_ORACLE,
         address: "0x420000000000000000000000000000000000000F",
-        publicClient: this.networkService.provider,
+        client: {
+          public: this.networkService.provider,
+        },
       });
       this.gasEstimator = createMantleGasEstimator({
         rpcUrl: this.networkService.rpcUrl,
