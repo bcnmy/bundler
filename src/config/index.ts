@@ -127,8 +127,7 @@ export class Config implements IConfig {
     this.config.simulationData = simulationDataConfig;
     this.config.tokenPrice = _.merge(this.config.tokenPrice, tokenPriceConfig);
     this.config.fallbackProviderConfig = fallbackProviderConfig;
-    log.info(`fallback provider chains: ${Object.keys(this.config.fallbackProviderConfig)}`);
-    log.info(`fallback provider config: ${JSON.stringify(this.config.fallbackProviderConfig)}`);
+
     this.config.isTWSetup =
       getEnvVariable("BUNDLER_IS_TRUSTWALLET_SETUP") === "true";
 
