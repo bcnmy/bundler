@@ -25,17 +25,17 @@
 #   [maxReplica]=6
 # )
 
-# declare -A chain_polygon=(
-#   [name]='chain-137'
-#   [chainId]="137"
-#   [autoScalingThreshholdHTTPRequestsPerMinute]=1000
-#   [autoScalingThreshholdCPU]=800m
-#   [minRelayerCount]="200"
-#   [maxRelayerCount]="220"
-#   [fundingBalanceThreshold]="2"
-#   [fundingRelayerAmount]="5"
-#   [minReplica]=6
-#   [maxReplica]=6)
+declare -A chain_polygon=(
+  [name]='chain-137'
+  [chainId]="137"
+  [autoScalingThreshholdHTTPRequestsPerMinute]=1000
+  [autoScalingThreshholdCPU]=800m
+  [minRelayerCount]="200"
+  [maxRelayerCount]="220"
+  [fundingBalanceThreshold]="2"
+  [fundingRelayerAmount]="5"
+  [minReplica]=6
+  [maxReplica]=6)
 
 
 # declare -A chain_arbitrum=(
