@@ -84,6 +84,9 @@ export class SocketConsumer implements ISocketConsumer {
             receipt: transactionDataReceivedFromQueue?.receipt,
           },
         });
+        log.info(
+          `Socket event: ${transactionDataReceivedFromQueue.event} successfully emitted for transactionId: ${transactionDataReceivedFromQueue.transactionId} on chainId: ${this.chainId}`,
+        );
       } catch (error) {
         log.error(
           `Failed to send to client on socket server with error: ${customJSONStringify(
