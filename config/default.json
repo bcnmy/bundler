@@ -1,17 +1,214 @@
 {
-  "enabledNetworks": ["80001"],
   "networks": {
-    "ethereum": {
-      "mainnet": {
-        "chainId": "1",
-        "providers": []
+    "1": {
+      "name": "Ethereum Mainnet",
+      "enabled": false,
+      "eip1559": true,
+      "testnet": false,
+      "supportedTransactionType": ["AA", "SCW", "BUNDLER"],
+      "currency": {
+        "symbol": "ETH",
+        "decimals": 18
+      },
+      "retryTransactionInterval": 220000,
+      "updateFrequencyInSeconds": 60,
+      "relayers": {
+        "RM1": {
+          "minCount": 2,
+          "maxCount": 2,
+          "inactiveCountThreshold": 2,
+          "pendingTransactionCountThreshold": 15,
+          "fundingAmount": 1,
+          "fundingBalanceThreshold": 0.5,
+          "newInstanceCount": 1
+        },
+        "RM2": {
+          "minCount": 2,
+          "maxCount": 2,
+          "inactiveCountThreshold": 2,
+          "pendingTransactionCountThreshold": 15,
+          "fundingAmount": 1,
+          "fundingBalanceThreshold": 0.5,
+          "newInstanceCount": 1
+        }
+      },
+      "tokens": {
+        "supported": {
+          "ETH": {
+            "tokenContractAddress": "0x0000000000000000000000000000000000000000",
+            "feeTokenTransferGas": 7300
+          },
+          "USDC": {
+            "tokenContractAddress": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+            "offset": 1000000,
+            "feeTokenTransferGas": 22975
+          },
+          "USDT": {
+            "tokenContractAddress": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+            "offset": 1000000,
+            "feeTokenTransferGas": 22975
+          },
+          "WETH": {
+            "tokenContractAddress": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+            "offset": 1,
+            "nativeChainId": 1,
+            "feeTokenTransferGas": 22975
+          },
+          "DAI": {
+            "tokenContractAddress": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+            "offset": 1,
+            "feeTokenTransferGas": 22975
+          },
+          "MATIC": {
+            "offset": 1
+          },
+          "WMATIC": {},
+          "BICO": {}
+        },
+        "similar": ["ETH", "WETH"],
+        "refundReceiver": "0xfC614d949CcdC9EC2Ffc2b17eA0824c5A3beC69e"
+      },
+      "entryPointAddress": "0x5ff137d4b0fdcd49dca30c7cf57e578a026d2789"
+    },
+    "80001": {
+      "name": "Polygon Mumbai",
+      "enabled": false,
+      "eip1559": true,
+      "testnet": true,
+      "supportedTransactionType": ["AA", "SCW", "BUNDLER"],
+      "currency": {
+        "symbol": "MATIC",
+        "decimals": 18
+      },
+      "retryTransactionInterval": 120000,
+      "updateFrequencyInSeconds": 60,
+      "relayers": {
+        "RM1": {
+          "minCount": 20,
+          "maxCount": 40,
+          "inactiveCountThreshold": 15,
+          "pendingTransactionCountThreshold": 15,
+          "fundingAmount": 5,
+          "fundingBalanceThreshold": 3,
+          "newInstanceCount": 5
+        },
+        "RM2": {
+          "minCount": 5,
+          "maxCount": 15,
+          "inactiveCountThreshold": 5,
+          "pendingTransactionCountThreshold": 15,
+          "fundingAmount": 0.1,
+          "fundingBalanceThreshold": 0.01,
+          "newInstanceCount": 5
+        }
+      },
+      "entryPointAddress": "0x5ff137d4b0fdcd49dca30c7cf57e578a026d2789"
+    },
+    "137": {
+      "name": "Polygon Mainnet",
+      "enabled": false,
+      "eip1559": true,
+      "testnet": false,
+      "supportedTransactionType": ["AA", "SCW", "BUNDLER"],
+      "currency": {
+        "symbol": "MATIC",
+        "decimals": 18
+      },
+      "retryTransactionInterval": 150000,
+      "updateFrequencyInSeconds": 10,
+      "relayers": {
+        "manager": "RM2",
+        "minCount": 200,
+        "maxCount": 400,
+        "inactiveCountThreshold": 150,
+        "pendingTransactionCountThreshold": 15,
+        "fundingAmount": 5,
+        "fundingBalanceThreshold": 3,
+        "newInstanceCount": 10
+      },
+      "tokens": {
+        "supported": {
+          "MATIC": {
+            "tokenContractAddress": "0x0000000000000000000000000000000000000000",
+            "offset": 1,
+            "feeTokenTransferGas": 7300
+          },
+          "WMATIC": {
+            "nativeChainId": 137
+          },
+          "USDC": {
+            "tokenContractAddress": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+            "offset": 1000000,
+            "feeTokenTransferGas": 22975
+          },
+          "USDT": {
+            "tokenContractAddress": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+            "offset": 1000000,
+            "feeTokenTransferGas": 22975
+          },
+          "WETH": {
+            "tokenContractAddress": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
+            "offset": 1,
+            "nativeChainId": 1,
+            "feeTokenTransferGas": 22975
+          },
+          "DAI": {
+            "tokenContractAddress": "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063",
+            "offset": 1,
+            "feeTokenTransferGas": 22975
+          },
+          "BICO": {
+            "tokenContractAddress": "0x91c89A94567980f0e9723b487b0beD586eE96aa7",
+            "feeTokenTransferGas": 22975
+          }
+        },
+        "similar": ["MATIC", "WMATIC"],
+        "refundReceiver": "0xfC614d949CcdC9EC2Ffc2b17eA0824c5A3beC69e"
+      },
+      "entryPointAddress": "0x5ff137d4b0fdcd49dca30c7cf57e578a026d2789"
+    }
+  },
+  "gas": {
+    "overheads": {
+      "fixed": 21000,
+      "perUserOp": 18300,
+      "perUserOpWord": 4,
+      "zeroByte": 4,
+      "nonZeroByte": 16,
+      "bundleSize": 1,
+      "sigSize": 65
+    }
+  },
+  "relayerManagers": {
+    "RM1": {
+      "gasLimitMap": {
+        "0": 21000,
+        "1": 710000,
+        "2": 1700000
       }
     },
-    "polygon": {
-      "mumbai": {
-        "chainId": "80001",
-        "providers": []
+    "RM2": {
+      "gasLimitMap": {
+        "0": 21000,
+        "1": 710000,
+        "2": 1700000
       }
     }
-  }
+  },
+  "tokenLogoUrl": {
+    "ETH": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png",
+    "WETH": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png",
+    "MATIC": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png",
+    "WMATIC": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png",
+    "USDC": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdc.png",
+    "USDT": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png",
+    "DAI": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/dai.png",
+    "XDAI": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xdai.png",
+    "BICO": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/bico.png",
+    "BNB": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/bnb.png"
+  },
+  "aaDashboardBackend": {
+    "url": "https://paymaster-dashboard-backend-v2.staging.biconomy.io/api/v2/bundlers/auth"
+  },
+  "zeroAddress": "0x0000000000000000000000000000000000000000"
 }

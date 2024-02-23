@@ -3,6 +3,7 @@ import crypto from "crypto-js";
 import fs, { existsSync } from "fs";
 import _, { isNumber } from "lodash";
 import path from "path";
+import nodeconfig from "config";
 import { logger } from "../common/logger";
 
 import { ConfigType, IConfig } from "./interface/IConfig";
@@ -34,6 +35,88 @@ export function merge(
   if (supportedNetworks && supportedNetworks.length) {
     merged.supportedNetworks = supportedNetworks;
   }
+
+  if (nodeconfig.has("networks")) {
+    const networks: any = nodeconfig.get("networks");
+
+    const enabledNetworks: string[] = [];
+    for (const chainId of Object.keys(networks)) {
+      if (nodeconfig.has(`networks.${chainId}.enabled`)) {
+        const enabled = nodeconfig.get(`networks.${chainId}.enabled`);
+        if (enabled) {
+          enabledNetworks.push(chainId);
+        }
+      }
+
+      if (nodeconfig.has(`networks.${chainId}.relayers`)) {
+        const relayers: any = nodeconfig.get(`networks.${chainId}.relayers`);
+        console.log(`Relayers for chainId: ${chainId}`);
+        console.log(relayers);
+
+        for (let i = 0; i < relayers.length; i += 1) {
+          // TODO: Use get() and check if relayers.minCount exists
+          merged.relayerManagers[i].minRelayerCount[chainId] = nodeconfig.get(
+            `networks.${chainId}.relayers.RM${i + 1}.minCount`,
+          );
+
+          merged.relayerManagers[i].maxRelayerCount[chainId] = nodeconfig.get(
+            `networks.${chainId}.relayers.RM${i + 1}.maxCount`,
+          );
+
+          merged.relayerManagers[i].inactiveRelayerCountThreshold[chainId] =
+            nodeconfig.get(
+              `networks.${chainId}.relayers.RM${i + 1}.inactiveCountThreshold`,
+            );
+
+          merged.relayerManagers[i].pendingTransactionCountThreshold[chainId] =
+            nodeconfig.get(
+              `networks.${chainId}.relayers.RM${i + 1}.pendingTransactionCountThreshold`,
+            );
+
+          merged.relayerManagers[i].fundingRelayerAmount[chainId] =
+            nodeconfig.get(
+              `networks.${chainId}.relayers.RM${i + 1}.fundingAmount`,
+            );
+
+          merged.relayerManagers[i].fundingBalanceThreshold[chainId] =
+            nodeconfig.get(
+              `networks.${chainId}.relayers.RM${i + 1}.fundingBalanceThreshold`,
+            );
+
+          merged.relayerManagers[i].newRelayerInstanceCount[chainId] =
+            nodeconfig.get(
+              `networks.${chainId}.relayers.RM${i + 1}.newInstanceCount`,
+            );
+        }
+      }
+
+      if (nodeconfig.has(`networks.${chainId}.providers`)) {
+        const providers: any = nodeconfig.get(`networks.${chainId}.providers`);
+
+        if (!merged?.chains.provider) {
+          merged.chains.provider = {};
+        }
+
+        if (providers.length > 0) {
+          const [firstProvider] = providers;
+          merged.chains.provider[chainId] = firstProvider;
+        }
+      }
+
+      // update the updateFrequencyInSeconds
+      if (nodeconfig.has(`networks.${chainId}.updateFrequencyInSeconds`)) {
+        merged.chains.updateFrequencyInSeconds[chainId] = nodeconfig.get(
+          `networks.${chainId}.updateFrequencyInSeconds`,
+        );
+      }
+    }
+
+    if (enabledNetworks.length > 0) {
+      merged.supportedNetworks = enabledNetworks;
+    }
+  }
+
+  // throw new Error("🚫⛔ STOP HERE");
 
   return merged;
 }
