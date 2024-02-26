@@ -51,6 +51,7 @@ import {
   BLOCKCHAINS,
   BLAST_PVG_VALUE,
   NetworksNotSupportingEthCallBytecodeStateOverrides,
+  pvgMarkUp,
 } from "../constants";
 
 import {
@@ -193,14 +194,8 @@ export class BundlerSimulationService {
         preVerificationGas;
       log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
 
-      if (
-        OptimismNetworks.includes(chainId) ||
-        ArbitrumNetworks.includes(chainId)
-      ) {
-        preVerificationGas += BigInt(Math.ceil(Number(toHex(totalGas)) * 0.25));
-      } else {
-        preVerificationGas += BigInt(Math.ceil(Number(toHex(totalGas)) * 0.1));
-      }
+      preVerificationGas += BigInt(Math.ceil(Number(toHex(totalGas)) * pvgMarkUp[chainId]));
+
       log.info(
         `preVerificationGas after bumping it up: ${preVerificationGas} on chainId: ${chainId}`,
       );
