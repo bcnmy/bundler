@@ -1377,6 +1377,50 @@ export const NetworksNotSupportingEthCallBytecodeStateOverrides = [
 ];
 export const MantleNetworks = [5000, 5001];
 
+export const pvgMarkUp: {
+  [chainId: number]: number
+} = {
+  1: 0.1,
+  5: 0.1,
+  80001: 0.1,
+  137: 0.1,
+  97: 0.1,
+  56: 0.1,
+  1442: 0.1,
+  1101: 0.1,
+  421613: 0.15,
+  42161: 0.15,
+  42170: 0.15,
+  420: 0.15,
+  10: 0.15,
+  43114: 0.05,
+  43113: 0.05,
+  84531: 0.15,
+  8453: 0.15,
+  59140: 0.1,
+  59144: 0.1,
+  5000: 0.15,
+  5001: 0.15,
+  204: 0.15,
+  5611: 0.15,
+  592: 0.1,
+  88888: 0.1,
+  88882: 0.1,
+  81: 0.1,
+  1115: 0.1,
+  1116: 0.1,
+  169: 0.1,
+  3441005: 0.1,
+  91715: 0.1,
+  9980: 0.1,
+  7116: 0.1,
+  421614: 0.1,
+  11155111: 0.1,
+  168587773: 0.1,
+  84532: 0.15,
+  80085: 0.1,
+};
+
 export const BLAST_PVG_VALUE = 700000000n;
 export const MANTLE_L1_ROLL_UP_FEE_DIVISION_FACTOR = 10000000000n;
 export const MANTLE_PUBLIC_RPC_URL_1 = "https://rpc.mantle.xyz";
