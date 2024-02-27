@@ -16,7 +16,7 @@ import {
   createMantleGasEstimator,
   createOptimismGasEstimator,
   IGasEstimator,
-} from "gas-estimations";
+} from "entry-point-gas-estimations";
 import { config } from "../../config";
 import { IEVMAccount } from "../../relayer/account";
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from "../../server/middleware";
