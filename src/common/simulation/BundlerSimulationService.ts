@@ -225,11 +225,14 @@ export class BundlerSimulationService {
         supportsEthCallByteCodeOverride = false;
       }
 
+      const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
+
       const response = await this.gasEstimator.estimateUserOperationGas({
         userOperation: userOp,
         stateOverrideSet,
         supportsEthCallByteCodeOverride,
         supportsEthCallStateOverride,
+        baseFeePerGas
       });
       log.info(
         `estimation respone from gas estimation package: ${customJSONStringify(
