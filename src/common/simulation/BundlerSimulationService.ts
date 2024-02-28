@@ -38,15 +38,8 @@ import {
   SimulateValidationData,
 } from "./types";
 import {
-  OptimismNetworks,
-  PolygonZKEvmNetworks,
-  ArbitrumNetworks,
-  LineaNetworks,
-  AlchemySimulateExecutionSupportedNetworks,
-  AstarNetworks,
   OPTIMISM_L1_GAS_PRICE_ORACLE,
   ARBITRUM_L1_FEE,
-  MantleNetworks,
   MANTLE_BVM_GAS_PRICE_ORACLE,
   MANTLE_L1_ROLL_UP_FEE_DIVISION_FACTOR,
   BLOCKCHAINS,
@@ -90,7 +83,7 @@ export class BundlerSimulationService {
     this.alchemySimulationService = alchemySimulationService;
     this.gasPriceService = gasPriceService;
 
-    if (OptimismNetworks.includes(this.networkService.chainId)) {
+    if (config.optimismNetworks.includes(this.networkService.chainId)) {
       // setting up optimism gas oracle
       this.optimismL1GasPriceOracleMap[this.networkService.chainId] =
         getContract({
@@ -100,7 +93,7 @@ export class BundlerSimulationService {
         });
     }
 
-    if (MantleNetworks.includes(this.networkService.chainId)) {
+    if (config.MantleNetworks.includes(this.networkService.chainId)) {
       this.mantleBVMGasPriceOracle[this.networkService.chainId] = getContract({
         abi: MANTLE_BVM_GAS_PRICE_ORACLE,
         address: "0x420000000000000000000000000000000000000F",
@@ -150,8 +143,8 @@ export class BundlerSimulationService {
         // setting a non zero value as division with maxFeePerGas will happen
         userOp.maxFeePerGas = BigInt(1);
         if (
-          OptimismNetworks.includes(chainId) ||
-          MantleNetworks.includes(chainId)
+          config.optimismNetworks.includes(chainId) ||
+          config.MantleNetworks.includes(chainId)
         ) {
           const gasPrice = await this.gasPriceService.getGasPrice();
           if (typeof gasPrice === "bigint") {
@@ -172,8 +165,8 @@ export class BundlerSimulationService {
         // setting a non zero value as division with maxPriorityFeePerGas will happen
         userOp.maxPriorityFeePerGas = BigInt(1);
         if (
-          OptimismNetworks.includes(chainId) ||
-          MantleNetworks.includes(chainId)
+          config.optimismNetworks.includes(chainId) ||
+          config.MantleNetworks.includes(chainId)
         ) {
           const gasPrice = await this.gasPriceService.getGasPrice();
           if (typeof gasPrice === "bigint") {
@@ -224,8 +217,8 @@ export class BundlerSimulationService {
 
       // polygon zk evm nodes don't support state overrides
       if (
-        PolygonZKEvmNetworks.includes(chainId) ||
-        AstarNetworks.includes(chainId) ||
+        config.polygonZKEvmNetworks.includes(chainId) ||
+        config.AstarNetworks.includes(chainId) ||
         [169, 3441005, 91715, 7116, 9980].includes(chainId)
       ) {
         log.info(
@@ -367,8 +360,8 @@ export class BundlerSimulationService {
           ),
         );
         if (
-          OptimismNetworks.includes(chainId) ||
-          MantleNetworks.includes(chainId)
+          config.optimismNetworks.includes(chainId) ||
+          config.MantleNetworks.includes(chainId)
         ) {
           totalGas = BigInt(
             Math.ceil(Number(toHex(paid)) / Number(toHex(userOp.maxFeePerGas))),
@@ -380,8 +373,8 @@ export class BundlerSimulationService {
         log.info(`callGasLimit: ${callGasLimit} on chainId: ${chainId}`);
 
         if (
-          OptimismNetworks.includes(chainId) ||
-          ArbitrumNetworks.includes(chainId)
+          config.optimismNetworks.includes(chainId) ||
+          config.ArbitrumNetworks.includes(chainId)
         ) {
           preVerificationGas += BigInt(
             Math.ceil(Number(toHex(totalGas)) * 0.25),
@@ -396,7 +389,7 @@ export class BundlerSimulationService {
           `preVerificationGas: ${preVerificationGas} on chainId: ${chainId}`,
         );
 
-        if (LineaNetworks.includes(chainId)) {
+        if (config.LineaNetworks.includes(chainId)) {
           preVerificationGas += BigInt(
             Math.ceil(Number(toHex(verificationGasLimit + callGasLimit)) / 3),
           );
@@ -519,7 +512,7 @@ export class BundlerSimulationService {
       let reason: string | undefined;
       let totalGas: number;
       let data: string | undefined;
-      if (AlchemySimulateExecutionSupportedNetworks.includes(chainId)) {
+      if (config.AlchemySimulateExecutionSupportedNetworks.includes(chainId)) {
         try {
           const start = performance.now();
           const response =
@@ -957,7 +950,7 @@ export class BundlerSimulationService {
         ov.perUserOpWord * packed.length,
     );
 
-    if (ArbitrumNetworks.includes(chainId)) {
+    if (config.ArbitrumNetworks.includes(chainId)) {
       const handleOpsData = encodeFunctionData({
         abi: entryPointContract.abi,
         functionName: "handleOps",
@@ -970,7 +963,7 @@ export class BundlerSimulationService {
         args: [entryPointContract.address, false, handleOpsData],
       });
       ret += Number((gasEstimateForL1 as any)[0].toString());
-    } else if (OptimismNetworks.includes(chainId)) {
+    } else if (config.optimismNetworks.includes(chainId)) {
       const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
       if (!baseFeePerGas) {
         throw new RpcError(
@@ -997,7 +990,7 @@ export class BundlerSimulationService {
       const l2Price = l2MaxFee < l2PriorityFee ? l2MaxFee : l2PriorityFee;
       const extraPvg = l1Fee / l2Price;
       ret += Number(toHex(extraPvg));
-    } else if (MantleNetworks.includes(chainId)) {
+    } else if (config.MantleNetworks.includes(chainId)) {
       // https://docs.mantle.xyz/network/for-devs/tutorials/estimating-transaction-fees#description
       const handleOpsData = encodeFunctionData({
         abi: entryPointContract.abi,

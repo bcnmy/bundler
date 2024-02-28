@@ -168,6 +168,14 @@ export type ConfigType = {
   };
   simulationData: SimulationDataConfigType;
   defaultGasOverheads: DefaultGasOverheadType;
+  l2Networks: Array<number>;
+  polygonZKEvmNetworks: Array<number>;
+  optimismNetworks: Array<number>;
+  LineaNetworks: Array<number>;
+  ArbitrumNetworks: Array<number>;
+  AlchemySimulateExecutionSupportedNetworks: Array<number>;
+  AstarNetworks: Array<number>;
+  MantleNetworks: Array<number>;
 };
 
 export interface IConfig {

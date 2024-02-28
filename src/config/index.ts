@@ -2,7 +2,6 @@
 import crypto from "crypto-js";
 import fs, { existsSync } from "fs";
 import _, { isNumber } from "lodash";
-import path from "path";
 import nodeconfig from "config";
 import { logger } from "../common/logger";
 
@@ -17,104 +16,29 @@ const PBKDF2_ITERATIONS = 310000;
 const AES_PADDING = crypto.pad.Pkcs7;
 const AES_MODE = crypto.mode.CBC;
 
-export function merge(
-  userConfig: Partial<ConfigType>,
-  staticConfig: any,
-): ConfigType {
-  // clone so we don't mutate the original config
-  const clone = _.cloneDeep(userConfig);
+export function merge(decryptedConfig: Partial<ConfigType>): ConfigType {
+  const merged = nodeconfig.util.extendDeep(
+    // clone so we don't mutate the original config
+    _.cloneDeep(decryptedConfig),
+    nodeconfig.util.toObject(),
+  );
 
-  // preserve the supported networks from the user config because
-  // we want to override the default from static-config if it's present in the user config
-  const supportedNetworks = _.clone(clone.supportedNetworks);
+  // We always take the relayer secrets from the old, decrypted config
+  if (decryptedConfig.relayerManagers) {
+    for (let i = 0; i < merged.relayerManagers.length; i += 1) {
+      merged.relayerManagers[i].relayerSeed =
+        decryptedConfig.relayerManagers[i].relayerSeed;
 
-  // perform the merge
-  const merged = _.merge(clone, staticConfig);
-
-  // restore the supported networks array
-  if (supportedNetworks && supportedNetworks.length) {
-    merged.supportedNetworks = supportedNetworks;
+      merged.relayerManagers[i].ownerAccountDetails =
+        decryptedConfig.relayerManagers[i].ownerAccountDetails;
+    }
+  } else {
+    throw new Error(`Relayer managers not configured in the encrypted config file.
+    💡 HINT: Make sure that the relayerManagers property exists, contains the relayerSeed and ownerAccountDetails, and re-run ts-node encrypt-config.ts`);
   }
 
-  if (nodeconfig.has("networks")) {
-    const networks: any = nodeconfig.get("networks");
-
-    const enabledNetworks: string[] = [];
-    for (const chainId of Object.keys(networks)) {
-      if (nodeconfig.has(`networks.${chainId}.enabled`)) {
-        const enabled = nodeconfig.get(`networks.${chainId}.enabled`);
-        if (enabled) {
-          enabledNetworks.push(chainId);
-        }
-      }
-
-      if (nodeconfig.has(`networks.${chainId}.relayers`)) {
-        const relayers: any = nodeconfig.get(`networks.${chainId}.relayers`);
-        console.log(`Relayers for chainId: ${chainId}`);
-        console.log(relayers);
-
-        for (let i = 0; i < relayers.length; i += 1) {
-          // TODO: Use get() and check if relayers.minCount exists
-          merged.relayerManagers[i].minRelayerCount[chainId] = nodeconfig.get(
-            `networks.${chainId}.relayers.RM${i + 1}.minCount`,
-          );
-
-          merged.relayerManagers[i].maxRelayerCount[chainId] = nodeconfig.get(
-            `networks.${chainId}.relayers.RM${i + 1}.maxCount`,
-          );
-
-          merged.relayerManagers[i].inactiveRelayerCountThreshold[chainId] =
-            nodeconfig.get(
-              `networks.${chainId}.relayers.RM${i + 1}.inactiveCountThreshold`,
-            );
-
-          merged.relayerManagers[i].pendingTransactionCountThreshold[chainId] =
-            nodeconfig.get(
-              `networks.${chainId}.relayers.RM${i + 1}.pendingTransactionCountThreshold`,
-            );
-
-          merged.relayerManagers[i].fundingRelayerAmount[chainId] =
-            nodeconfig.get(
-              `networks.${chainId}.relayers.RM${i + 1}.fundingAmount`,
-            );
-
-          merged.relayerManagers[i].fundingBalanceThreshold[chainId] =
-            nodeconfig.get(
-              `networks.${chainId}.relayers.RM${i + 1}.fundingBalanceThreshold`,
-            );
-
-          merged.relayerManagers[i].newRelayerInstanceCount[chainId] =
-            nodeconfig.get(
-              `networks.${chainId}.relayers.RM${i + 1}.newInstanceCount`,
-            );
-        }
-      }
-
-      if (nodeconfig.has(`networks.${chainId}.providers`)) {
-        const providers: any = nodeconfig.get(`networks.${chainId}.providers`);
-
-        if (!merged?.chains.provider) {
-          merged.chains.provider = {};
-        }
-
-        if (providers.length > 0) {
-          const [firstProvider] = providers;
-          merged.chains.provider[chainId] = firstProvider;
-        }
-      }
-
-      // update the updateFrequencyInSeconds
-      if (nodeconfig.has(`networks.${chainId}.updateFrequencyInSeconds`)) {
-        merged.chains.updateFrequencyInSeconds[chainId] = nodeconfig.get(
-          `networks.${chainId}.updateFrequencyInSeconds`,
-        );
-      }
-    }
-
-    if (enabledNetworks.length > 0) {
-      merged.supportedNetworks = enabledNetworks;
-    }
-  }
+  // console.log("-------------------------------------");
+  // console.log(JSON.stringify(conf.relayerManagers, null, 2));
 
   // throw new Error("🚫⛔ STOP HERE");
 
@@ -130,10 +54,6 @@ export class Config implements IConfig {
       // decrypt the config and load it
       const encryptedEnvPath =
         process.env.BUNDLER_CONFIG_PATH || "config.json.enc";
-
-      const staticConfigPath =
-        process.env.BUNDLER_STATIC_CONFIG_PATH ||
-        "src/config/static-config.json";
 
       const passphrase = process.env.CONFIG_PASSPHRASE;
       if (!passphrase) {
@@ -178,23 +98,9 @@ export class Config implements IConfig {
         throw new Error("Error: HMAC does not match");
       }
       const data = JSON.parse(plaintext) as ConfigType;
-      const staticConfig = JSON.parse(
-        fs.readFileSync(path.resolve(staticConfigPath), "utf8"),
-      );
 
-      this.config = merge(data, staticConfig);
+      this.config = merge(data);
 
-      // if (supportsConfigV2(this.config)) {
-      // log.info("Config is using v2");
-
-      // this should load the config from the environment
-      // const config = new ConfigV2()
-
-      // and then apply it to the current config
-      // this.config = config.merge(this.config)
-      // }
-
-      // this.validate();
       log.info("Config loaded successfully");
     } catch (error) {
       log.error("Config loading failed", error);
