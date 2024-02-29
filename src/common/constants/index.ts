@@ -1373,6 +1373,7 @@ export enum BLOCKCHAINS {
   BASE_SEPOLIA_TESTNET = 84532,
   SCROLL_SEPOLIA_TESTNET = 534351,
   SCROLL_MAINNET = 534352,
+  ZEROONE_TESTNET = 56400,
 }
 
 // Network with base gas diff from 21k and maxPriorityFeePerGas is 0
