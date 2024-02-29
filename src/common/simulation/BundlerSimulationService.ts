@@ -48,8 +48,6 @@ import {
   NetworksNotSupportingEthCallStateOverrides,
   MantleNetworks,
   MANTLE_BVM_GAS_PRICE_ORACLE,
-  BLOCKCHAINS,
-  BLAST_PVG_VALUE,
   NetworksNotSupportingEthCallBytecodeStateOverrides,
   pvgMarkUp,
 } from "../constants";
@@ -243,10 +241,6 @@ export class BundlerSimulationService {
       const { callGasLimit, verificationGasLimit, validAfter, validUntil } =
         response;
       let { preVerificationGas } = response;
-
-      if (chainId === BLOCKCHAINS.BLAST_TESTNET) {
-        preVerificationGas += BLAST_PVG_VALUE;
-      }
 
       const verificationGasLimitMultiplier =
         userOp.paymasterAndData === "0x" ? 1 : 3;
