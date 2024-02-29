@@ -1374,7 +1374,7 @@ export const NetworksNotSupportingEthCallStateOverrides = [
   1101, 1442, 81, 592, 169, 3441005, 91715, 7116, 9980,
 ];
 export const NetworksNotSupportingEthCallBytecodeStateOverrides = [
-  1, 59140, 59144, 84532, 421614, 168587773,
+  1, 59140, 59144, 84532, 421614, 168587773, 80001, 43113
 ];
 export const MantleNetworks = [5000, 5001];
 
