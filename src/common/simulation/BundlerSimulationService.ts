@@ -180,7 +180,7 @@ export class BundlerSimulationService {
           }
         }
       }
-      
+
       // for userOp completeness
       userOp.callGasLimit = BigInt(20000000);
       userOp.verificationGasLimit = BigInt(10000000);
@@ -232,7 +232,7 @@ export class BundlerSimulationService {
         stateOverrideSet,
         supportsEthCallByteCodeOverride,
         supportsEthCallStateOverride,
-        baseFeePerGas
+        baseFeePerGas,
       });
       log.info(
         `estimation respone from gas estimation package: ${customJSONStringify(
@@ -256,7 +256,9 @@ export class BundlerSimulationService {
         preVerificationGas;
       log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
 
-      preVerificationGas += BigInt(Math.ceil(Number(toHex(totalGas)) * pvgMarkUp[chainId]));
+      preVerificationGas += BigInt(
+        Math.ceil(Number(toHex(totalGas)) * pvgMarkUp[chainId]),
+      );
 
       log.info(
         `preVerificationGas after bumping it up: ${preVerificationGas} on chainId: ${chainId}`,
