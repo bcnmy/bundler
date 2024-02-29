@@ -1372,6 +1372,7 @@ export enum BLOCKCHAINS {
   BLAST_TESTNET = 168587773,
   BASE_SEPOLIA_TESTNET = 84532,
   SCROLL_SEPOLIA_TESTNET = 534351,
+  SCROLL_MAINNET = 534352,
 }
 
 // Network with base gas diff from 21k and maxPriorityFeePerGas is 0
@@ -1387,7 +1388,7 @@ export const AlchemySimulateExecutionSupportedNetworks = [
 ];
 export const AstarNetworks = [81, 592];
 export const MantleNetworks = [5000, 5001];
-export const ScrollNetworks = [534351];
+export const ScrollNetworks = [534351, 534352];
 
 export const BLAST_PVG_VALUE = 700000000;
 export const MANTLE_L1_ROLL_UP_FEE_DIVISION_FACTOR = 10000000000n;
