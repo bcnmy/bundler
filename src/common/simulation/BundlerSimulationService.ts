@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable import/no-import-module-exports */
 /* eslint-disable prefer-const */
 import {
@@ -7,26 +8,28 @@ import {
   getContract,
   keccak256,
   parseAbiParameters,
-  toBytes,
   toHex,
 } from "viem";
-import { NODE_INTERFACE_ADDRESS } from "@arbitrum/sdk/dist/lib/dataEntities/constants";
+import {
+  createArbitrumGasEstimator,
+  createGasEstimator,
+  createMantleGasEstimator,
+  createOptimismGasEstimator,
+  IGasEstimator,
+} from "entry-point-gas-estimations";
 import { config } from "../../config";
 import { IEVMAccount } from "../../relayer/account";
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from "../../server/middleware";
 import { logger } from "../logger";
 import { INetworkService } from "../network";
 import {
-  DefaultGasOverheadType,
   EVMRawTransactionType,
-  EntryPointContractType,
   MantleBVMGasPriceOracleContractType,
   OptimismL1GasPriceOracleContractType,
   UserOperationType,
 } from "../types";
 import {
   customJSONStringify,
-  packUserOp,
   packUserOpForUserOpHash,
   parseError,
 } from "../utils";
@@ -39,17 +42,16 @@ import {
 } from "./types";
 import {
   OptimismNetworks,
-  PolygonZKEvmNetworks,
   ArbitrumNetworks,
-  LineaNetworks,
   AlchemySimulateExecutionSupportedNetworks,
-  AstarNetworks,
   OPTIMISM_L1_GAS_PRICE_ORACLE,
-  ARBITRUM_L1_FEE,
+  NetworksNotSupportingEthCallStateOverrides,
   MantleNetworks,
   MANTLE_BVM_GAS_PRICE_ORACLE,
-  MANTLE_L1_ROLL_UP_FEE_DIVISION_FACTOR,
+  NetworksNotSupportingEthCallBytecodeStateOverrides,
+  pvgMarkUp,
 } from "../constants";
+
 import {
   AlchemySimulationService,
   TenderlySimulationService,
@@ -73,6 +75,8 @@ export class BundlerSimulationService {
     [chainId: number]: OptimismL1GasPriceOracleContractType;
   } = {};
 
+  gasEstimator: IGasEstimator;
+
   mantleBVMGasPriceOracle: {
     [chainId: number]: MantleBVMGasPriceOracleContractType;
   } = {};
@@ -87,6 +91,9 @@ export class BundlerSimulationService {
     this.tenderlySimulationService = tenderlySimulationService;
     this.alchemySimulationService = alchemySimulationService;
     this.gasPriceService = gasPriceService;
+    this.gasEstimator = createGasEstimator({
+      rpcUrl: this.networkService.rpcUrl,
+    });
 
     if (OptimismNetworks.includes(this.networkService.chainId)) {
       // setting up optimism gas oracle
@@ -94,15 +101,29 @@ export class BundlerSimulationService {
         getContract({
           abi: OPTIMISM_L1_GAS_PRICE_ORACLE,
           address: "0x420000000000000000000000000000000000000F",
-          publicClient: networkService.provider,
+          client: {
+            public: this.networkService.provider,
+          },
         });
+      this.gasEstimator = createOptimismGasEstimator({
+        rpcUrl: this.networkService.rpcUrl,
+      });
     }
 
+    if (ArbitrumNetworks.includes(this.networkService.chainId))
+      this.gasEstimator = createArbitrumGasEstimator({
+        rpcUrl: this.networkService.rpcUrl,
+      });
     if (MantleNetworks.includes(this.networkService.chainId)) {
       this.mantleBVMGasPriceOracle[this.networkService.chainId] = getContract({
         abi: MANTLE_BVM_GAS_PRICE_ORACLE,
         address: "0x420000000000000000000000000000000000000F",
-        publicClient: networkService.provider,
+        client: {
+          public: this.networkService.provider,
+        },
+      });
+      this.gasEstimator = createMantleGasEstimator({
+        rpcUrl: this.networkService.rpcUrl,
       });
     }
   }
@@ -114,6 +135,8 @@ export class BundlerSimulationService {
       const { userOp, entryPointContract, chainId, stateOverrideSet } =
         estimateUserOperationGasData;
 
+      this.gasEstimator.setEntryPointAddress(entryPointContract.address);
+
       const start = performance.now();
       log.info(
         `userOp received: ${customJSONStringify(
@@ -121,24 +144,19 @@ export class BundlerSimulationService {
         )} on chainId: ${chainId}`,
       );
 
-      // creating fullUserOp in case of estimation
-      userOp.callGasLimit = BigInt(20000000);
-      userOp.verificationGasLimit = BigInt(5000000);
-      userOp.preVerificationGas = BigInt(1000000);
-
-      if ([43113, 43114].includes(chainId)) {
-        userOp.callGasLimit = BigInt(20000000);
-      }
-
+      // for userOp completeness
       if (!userOp.paymasterAndData) {
         userOp.paymasterAndData = "0x";
       }
 
+      // for userOp completeness
       if (!userOp.signature) {
         // signature not present, using default ECDSA
         userOp.signature =
           "0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b";
       }
+
+      // for userOp completeness
       if (
         !userOp.maxFeePerGas ||
         userOp.maxFeePerGas === BigInt(0) ||
@@ -161,6 +179,12 @@ export class BundlerSimulationService {
         }
       }
 
+      // for userOp completeness
+      userOp.callGasLimit = BigInt(20000000);
+      userOp.verificationGasLimit = BigInt(10000000);
+      userOp.preVerificationGas = BigInt(100000);
+
+      // for userOp completeness
       if (
         !userOp.maxPriorityFeePerGas ||
         userOp.maxPriorityFeePerGas === BigInt(0) ||
@@ -177,312 +201,88 @@ export class BundlerSimulationService {
           if (typeof gasPrice === "bigint") {
             userOp.maxPriorityFeePerGas = gasPrice;
           } else {
-            const { maxFeePerGas } = gasPrice;
-            userOp.maxPriorityFeePerGas = maxFeePerGas;
+            const { maxPriorityFeePerGas } = gasPrice;
+            userOp.maxPriorityFeePerGas = maxPriorityFeePerGas;
           }
         }
       }
 
-      const end = performance.now();
-      log.info(`Preparing the userOp took: ${end - start} milliseconds`);
-
-      const preVerificationGasStart = performance.now();
-      // preVerificationGas
-      let preVerificationGas = BigInt(
-        await this.calcPreVerificationGas(userOp, chainId, entryPointContract),
-      );
-
       log.info(
-        `preVerificationGas: ${preVerificationGas} on chainId: ${chainId}`,
-      );
-      userOp.preVerificationGas = preVerificationGas;
-      const preVerificationGasEnd = performance.now();
-      log.info(
-        `calcPreVerificationGas took: ${
-          preVerificationGasEnd - preVerificationGasStart
-        } milliseconds`,
-      );
-
-      userOp.maxPriorityFeePerGas = BigInt(100000000);
-      userOp.maxFeePerGas = BigInt(100000000);
-
-      log.info(
-        `userOp to used to simulate in eth_call: ${customJSONStringify(
+        `userOp to be used for estimation: ${customJSONStringify(
           userOp,
         )} on chainId: ${chainId}`,
       );
 
-      const data = encodeFunctionData({
-        abi: entryPointContract.abi,
-        functionName: "simulateHandleOp",
-        args: [userOp, config.zeroAddress, "0x"],
-      });
-
-      let ethCallParams;
-
-      // polygon zk evm nodes don't support state overrides
-      if (
-        PolygonZKEvmNetworks.includes(chainId) ||
-        AstarNetworks.includes(chainId) ||
-        [169, 3441005, 91715, 7116, 9980].includes(chainId)
+      let supportsEthCallStateOverride = true;
+      let supportsEthCallByteCodeOverride = true;
+      if (NetworksNotSupportingEthCallStateOverrides.includes(chainId)) {
+        supportsEthCallStateOverride = false;
+      } else if (
+        NetworksNotSupportingEthCallBytecodeStateOverrides.includes(chainId)
       ) {
-        log.info(
-          `Request on RPC that does not support state overrides on chainId: ${chainId}`,
-        );
-        ethCallParams = [
-          {
-            from: "0x0000000000000000000000000000000000000000",
-            to: entryPointContract.address,
-            data,
-          },
-          "latest",
-        ];
-      } else {
-        const stateOverrideSetForEthCall =
-          stateOverrideSet && Object.keys(stateOverrideSet).length > 0
-            ? stateOverrideSet
-            : {
-                [userOp.sender]: {
-                  balance: "0xFFFFFFFFFFFFFFFFFFFF",
-                },
-              };
-        log.info(
-          "Request not on polygon zk evm hence doing state overrides in eth_call",
-        );
-        ethCallParams = [
-          {
-            from: "0x0000000000000000000000000000000000000000",
-            to: entryPointContract.address,
-            data,
-          },
-          "latest",
-          stateOverrideSetForEthCall,
-        ];
+        supportsEthCallByteCodeOverride = false;
       }
 
+      const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
+
+      const response = await this.gasEstimator.estimateUserOperationGas({
+        userOperation: userOp,
+        stateOverrideSet,
+        supportsEthCallByteCodeOverride,
+        supportsEthCallStateOverride,
+        baseFeePerGas,
+      });
       log.info(
-        `ethCallParams: ${customJSONStringify(
-          ethCallParams,
+        `estimation respone from gas estimation package: ${customJSONStringify(
+          response,
         )} on chainId: ${chainId}`,
       );
 
-      let ethCallData;
-      try {
-        const ethCallStart = performance.now();
-        const simulateHandleOpResult =
-          await this.networkService.ethCall(ethCallParams);
+      const { validAfter, validUntil } = response;
+      let { verificationGasLimit, callGasLimit, preVerificationGas } = response;
 
-        const ethCallEnd = performance.now();
-        log.info(`eth_call took: ${ethCallEnd - ethCallStart} milliseconds`);
-
-        log.info(
-          `eth_call response: ${customJSONStringify(
-            simulateHandleOpResult,
-          )} on chainId: ${chainId}`,
+      if (
+        NetworksNotSupportingEthCallStateOverrides.includes(chainId) ||
+        NetworksNotSupportingEthCallBytecodeStateOverrides.includes(chainId)
+      ) {
+        callGasLimit += BigInt(Math.ceil(Number(callGasLimit) * 0.2));
+        verificationGasLimit += BigInt(
+          Math.ceil(Number(verificationGasLimit) * 0.2),
         );
-
-        ethCallData = simulateHandleOpResult.error.data;
-        log.info(`ethCallData: ${ethCallData}`);
-
-        if (ethCallData === undefined) {
-          const errorMessage = simulateHandleOpResult.error.message
-            ? simulateHandleOpResult.data.message
-            : "eth_call RPC error";
-          return {
-            code: STATUSES.BAD_REQUEST,
-            message: `Error while simulating userOp: ${parseError(
-              errorMessage,
-            )}`,
-            data: {
-              preVerificationGas: BigInt(0),
-              verificationGasLimit: BigInt(0),
-              callGasLimit: BigInt(0),
-              validAfter: 0,
-              validUntil: 0,
-              totalGas: BigInt(0),
-            },
-          };
-        }
-      } catch (error: any) {
-        const errorMessage = error.response.error.message
-          ? error.response.error.message
-          : error;
-        return {
-          code: error.response.error.code || STATUSES.BAD_REQUEST,
-          message: `Error while simulating userOp: ${parseError(errorMessage)}`,
-          data: {
-            preVerificationGas: BigInt(0),
-            verificationGasLimit: BigInt(0),
-            callGasLimit: BigInt(0),
-            validAfter: 0,
-            validUntil: 0,
-            totalGas: BigInt(0),
-          },
-        };
       }
 
-      const errorDescription = decodeErrorResult({
-        abi: entryPointContract.abi,
-        data: ethCallData,
-      });
+      const verificationGasLimitMultiplier =
+        userOp.paymasterAndData === "0x" ? 1 : 3;
+      const totalGas =
+        callGasLimit +
+        BigInt(verificationGasLimitMultiplier) * verificationGasLimit +
+        preVerificationGas;
+      log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
 
-      if (errorDescription.errorName === "ExecutionResult") {
-        const { args } = errorDescription;
-        const executionResultDecodingStart = performance.now();
-        const preOpGas = args[0];
-        log.info(`preOpGas: ${preOpGas}`);
-        const paid = args[1];
-        log.info(`paid: ${paid}`);
-        let validAfter = args[2];
-        log.info(`validAfter: ${validAfter}`);
-        let validUntil = args[3];
-        log.info(`validUntil: ${validUntil}`);
+      preVerificationGas += BigInt(
+        Math.ceil(Number(toHex(totalGas)) * pvgMarkUp[chainId]),
+      );
 
-        // 5000 gas for unaccounted gas in verification phase
-        const verificationGasLimit = BigInt(
-          Math.ceil(Number(toHex(preOpGas - preVerificationGas)) * 1.2) + 5000,
-        );
-        log.info(
-          `verificationGasLimit: ${verificationGasLimit} on chainId: ${chainId} after 1.2 multiplier on ${preOpGas} and ${preVerificationGas}`,
-        );
+      log.info(
+        `preVerificationGas after bumping it up: ${preVerificationGas} on chainId: ${chainId}`,
+      );
 
-        const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
-        log.info(`baseFeePerGas: ${baseFeePerGas} on chainId: ${chainId}`);
-        let totalGas = BigInt(
-          Math.ceil(
-            Number(toHex(paid)) /
-              Math.min(
-                Number(toHex(baseFeePerGas + userOp.maxPriorityFeePerGas)),
-                Number(toHex(userOp.maxFeePerGas)),
-              ),
-          ),
-        );
-        log.info(`totalGas ${totalGas} on chainId: ${chainId}`);
+      const end = performance.now();
+      log.info(`Estimating the userOp took: ${end - start} milliseconds`);
 
-        let callGasLimit = BigInt(
-          Math.ceil(
-            (Number(toHex(totalGas)) - Number(toHex(preOpGas)) + 30000) * 1.2,
-          ),
-        );
-        if (
-          OptimismNetworks.includes(chainId) ||
-          MantleNetworks.includes(chainId)
-        ) {
-          totalGas = BigInt(
-            Math.ceil(Number(toHex(paid)) / Number(toHex(userOp.maxFeePerGas))),
-          );
-          callGasLimit = BigInt(
-            Math.ceil(Number(totalGas - preOpGas + BigInt(30000)) * 1.2),
-          );
-        }
-        log.info(`callGasLimit: ${callGasLimit} on chainId: ${chainId}`);
-
-        if (
-          OptimismNetworks.includes(chainId) ||
-          ArbitrumNetworks.includes(chainId)
-        ) {
-          preVerificationGas += BigInt(
-            Math.ceil(Number(toHex(totalGas)) * 0.25),
-          );
-        } else {
-          preVerificationGas += BigInt(
-            Math.ceil(Number(toHex(totalGas)) * 0.1),
-          );
-        }
-
-        log.info(
-          `preVerificationGas: ${preVerificationGas} on chainId: ${chainId}`,
-        );
-
-        if (LineaNetworks.includes(chainId)) {
-          preVerificationGas += BigInt(
-            Math.ceil(Number(toHex(verificationGasLimit + callGasLimit)) / 3),
-          );
-        }
-
-        const executionResultDecodingEnd = performance.now();
-        log.info(
-          `Decoding ExecutionResult took: ${
-            executionResultDecodingEnd - executionResultDecodingStart
-          } milliseconds`,
-        );
-
-        return {
-          code: STATUSES.SUCCESS,
-          message: `Gas successfully estimated for userOp: ${customJSONStringify(
-            userOp,
-          )} on chainId: ${chainId}`,
-          data: {
-            preVerificationGas,
-            verificationGasLimit,
-            callGasLimit,
-            validAfter,
-            validUntil,
-            totalGas,
-          },
-        };
-      }
-      if (errorDescription.errorName === "FailedOp") {
-        const { args } = errorDescription;
-        const revertReason = args[1];
-        if (revertReason.includes("AA1") || revertReason.includes("AA2")) {
-          log.info(`error in account on chainId: ${chainId}`);
-          throw new RpcError(
-            revertReason,
-            BUNDLER_VALIDATION_STATUSES.SIMULATE_VALIDATION_FAILED,
-          );
-        } else if (revertReason.includes("AA3")) {
-          log.info(`error in paymaster on chainId: ${chainId}`);
-          throw new RpcError(
-            revertReason,
-            BUNDLER_VALIDATION_STATUSES.SIMULATE_PAYMASTER_VALIDATION_FAILED,
-          );
-        } else if (revertReason.includes("AA9")) {
-          log.info(`error in inner handle op on chainId: ${chainId}`);
-          throw new RpcError(
-            revertReason,
-            BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED,
-          );
-        } else if (revertReason.includes("AA4")) {
-          log.info("error in verificationGasLimit being incorrect");
-          throw new RpcError(
-            revertReason,
-            BUNDLER_VALIDATION_STATUSES.SIMULATE_VALIDATION_FAILED,
-          );
-        } else if (revertReason.includes("AA")) {
-          log.info(`error in simulate validation on chainId: ${chainId}`);
-          throw new RpcError(
-            revertReason,
-            BUNDLER_VALIDATION_STATUSES.SIMULATE_VALIDATION_FAILED,
-          );
-        } else {
-          return {
-            code: BUNDLER_VALIDATION_STATUSES.INTERNAL_SERVER_ERROR,
-            message: "Revert reason not matching known cases",
-            data: {
-              preVerificationGas: BigInt(0),
-              verificationGasLimit: BigInt(0),
-              callGasLimit: BigInt(0),
-              validAfter: 0,
-              validUntil: 0,
-              totalGas: BigInt(0),
-            },
-          };
-        }
-      } else {
-        return {
-          code: STATUSES.NOT_FOUND,
-          message: "Entry Point execution revert method not found",
-          data: {
-            preVerificationGas: BigInt(0),
-            verificationGasLimit: BigInt(0),
-            callGasLimit: BigInt(0),
-            validAfter: 0,
-            validUntil: 0,
-            totalGas: BigInt(0),
-          },
-        };
-      }
+      return {
+        code: STATUSES.SUCCESS,
+        message: `Gas successfully estimated for userOp: ${customJSONStringify(
+          userOp,
+        )} on chainId: ${chainId}`,
+        data: {
+          preVerificationGas,
+          verificationGasLimit,
+          callGasLimit,
+          validAfter,
+          validUntil,
+        },
+      };
     } catch (error: any) {
       log.error(`Error in estimating user op: ${parseError(error)}`);
       return {
@@ -494,7 +294,6 @@ export class BundlerSimulationService {
           callGasLimit: BigInt(0),
           validAfter: 0,
           validUntil: 0,
-          totalGas: BigInt(0),
         },
       };
     }
@@ -933,120 +732,6 @@ export class BundlerSimulationService {
       targetSuccess,
       targetResult,
     };
-  }
-
-  async calcPreVerificationGas(
-    userOp: UserOperationType,
-    chainId: number,
-    entryPointContract: EntryPointContractType,
-    overheads?: Partial<DefaultGasOverheadType>,
-  ) {
-    const { defaultGasOverheads } = config;
-    const ov = { ...defaultGasOverheads, ...(overheads ?? {}) };
-
-    const packed = toBytes(packUserOp(userOp, false));
-    const callDataCost = packed
-      .map((x: number) => (x === 0 ? ov.zeroByte : ov.nonZeroByte))
-      .reduce((sum: any, x: any) => sum + x);
-    let ret = Math.round(
-      callDataCost +
-        ov.fixed / ov.bundleSize +
-        ov.perUserOp +
-        ov.perUserOpWord * packed.length,
-    );
-
-    if (ArbitrumNetworks.includes(chainId)) {
-      const handleOpsData = encodeFunctionData({
-        abi: entryPointContract.abi,
-        functionName: "handleOps",
-        args: [[userOp], userOp.sender],
-      });
-      const gasEstimateForL1 = await this.networkService.provider.readContract({
-        address: NODE_INTERFACE_ADDRESS,
-        abi: ARBITRUM_L1_FEE,
-        functionName: "gasEstimateL1Component" as never,
-        args: [entryPointContract.address, false, handleOpsData],
-      });
-      ret += Number((gasEstimateForL1 as any)[0].toString());
-    } else if (OptimismNetworks.includes(chainId)) {
-      const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
-      if (!baseFeePerGas) {
-        throw new RpcError(
-          `baseFeePerGas not available for chainId: ${chainId}`,
-          BUNDLER_VALIDATION_STATUSES.SIMULATE_VALIDATION_FAILED,
-        );
-      }
-      const handleOpsData = encodeFunctionData({
-        abi: entryPointContract.abi,
-        functionName: "handleOps",
-        args: [[userOp], userOp.sender],
-      });
-
-      const l1Fee = await this.networkService.provider.readContract({
-        address:
-          this.optimismL1GasPriceOracleMap[this.networkService.chainId].address,
-        abi: this.optimismL1GasPriceOracleMap[this.networkService.chainId].abi,
-        functionName: "getL1Fee",
-        args: [handleOpsData],
-      });
-      // extraPvg = l1Cost / l2Price
-      const l2MaxFee = BigInt(userOp.maxFeePerGas);
-      const l2PriorityFee = baseFeePerGas + BigInt(userOp.maxPriorityFeePerGas);
-      const l2Price = l2MaxFee < l2PriorityFee ? l2MaxFee : l2PriorityFee;
-      const extraPvg = l1Fee / l2Price;
-      ret += Number(toHex(extraPvg));
-    } else if (MantleNetworks.includes(chainId)) {
-      // https://docs.mantle.xyz/network/for-devs/tutorials/estimating-transaction-fees#description
-      const handleOpsData = encodeFunctionData({
-        abi: entryPointContract.abi,
-        functionName: "handleOps",
-        args: [[userOp], userOp.sender],
-      });
-
-      const l1FeePromise = this.networkService.provider.readContract({
-        address:
-          this.mantleBVMGasPriceOracle[this.networkService.chainId].address,
-        abi: this.mantleBVMGasPriceOracle[this.networkService.chainId].abi,
-        functionName: "getL1Fee",
-        args: [handleOpsData],
-      });
-
-      const overheadPromise = this.networkService.provider.readContract({
-        address:
-          this.mantleBVMGasPriceOracle[this.networkService.chainId].address,
-        abi: this.mantleBVMGasPriceOracle[this.networkService.chainId].abi,
-        functionName: "overhead",
-      });
-
-      const scalarPromise = this.networkService.provider.readContract({
-        address:
-          this.mantleBVMGasPriceOracle[this.networkService.chainId].address,
-        abi: this.mantleBVMGasPriceOracle[this.networkService.chainId].abi,
-        functionName: "scalar",
-      });
-
-      const [l1Fee, overhead, scalar] = await Promise.all([
-        l1FeePromise,
-        overheadPromise,
-        scalarPromise,
-      ]);
-      log.info(`l1Fee: ${l1Fee} on chainId: ${chainId}`);
-      log.info(`overhead: ${overhead} on chainId: ${chainId}`);
-      log.info(`scalar: ${scalar} on chainId: ${chainId}`);
-
-      const l1RollupFee =
-        ((l1Fee as bigint) * (overhead as bigint) * (scalar as bigint)) /
-        MANTLE_L1_ROLL_UP_FEE_DIVISION_FACTOR;
-      log.info(`l1RollupFee: ${l1RollupFee} on chainId: ${chainId}`);
-      const l2MaxFee = BigInt(userOp.maxFeePerGas);
-      log.info(`l2MaxFee: ${l2MaxFee} on chainId: ${chainId}`);
-
-      const extraPvg = l1RollupFee / l2MaxFee;
-      log.info(`extraPvg: ${extraPvg} on chainId: ${chainId}`);
-
-      ret += Number(toHex(extraPvg));
-    }
-    return ret;
   }
 
   // eslint-disable-next-line class-methods-use-this
