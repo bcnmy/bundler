@@ -22,6 +22,7 @@ import {
   EntryPointContractType,
   MantleBVMGasPriceOracleContractType,
   OptimismL1GasPriceOracleContractType,
+  ScrollL1GasPriceOracleContractType,
   UserOperationType,
 } from "../types";
 import {
@@ -51,6 +52,8 @@ import {
   MANTLE_L1_ROLL_UP_FEE_DIVISION_FACTOR,
   BLOCKCHAINS,
   BLAST_PVG_VALUE,
+  ScrollNetworks,
+  SCROLL_L1_PRICE_ORACLE,
 } from "../constants";
 import {
   AlchemySimulationService,
@@ -79,6 +82,10 @@ export class BundlerSimulationService {
     [chainId: number]: MantleBVMGasPriceOracleContractType;
   } = {};
 
+  scrollL1GasPriceOracle: {
+    [chainId: number]: ScrollL1GasPriceOracleContractType;
+  } = {};
+
   constructor(
     networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
     tenderlySimulationService: TenderlySimulationService,
@@ -104,6 +111,14 @@ export class BundlerSimulationService {
       this.mantleBVMGasPriceOracle[this.networkService.chainId] = getContract({
         abi: MANTLE_BVM_GAS_PRICE_ORACLE,
         address: "0x420000000000000000000000000000000000000F",
+        publicClient: networkService.provider,
+      });
+    }
+
+    if (ScrollNetworks.includes(this.networkService.chainId)) {
+      this.scrollL1GasPriceOracle[this.networkService.chainId] = getContract({
+        abi: SCROLL_L1_PRICE_ORACLE,
+        address: "0x5300000000000000000000000000000000000002",
         publicClient: networkService.provider,
       });
     }
@@ -151,7 +166,8 @@ export class BundlerSimulationService {
         userOp.maxFeePerGas = BigInt(1);
         if (
           OptimismNetworks.includes(chainId) ||
-          MantleNetworks.includes(chainId)
+          MantleNetworks.includes(chainId) ||
+          ScrollNetworks.includes(chainId)
         ) {
           const gasPrice = await this.gasPriceService.getGasPrice();
           if (typeof gasPrice === "bigint") {
@@ -173,7 +189,8 @@ export class BundlerSimulationService {
         userOp.maxPriorityFeePerGas = BigInt(1);
         if (
           OptimismNetworks.includes(chainId) ||
-          MantleNetworks.includes(chainId)
+          MantleNetworks.includes(chainId) ||
+          ScrollNetworks.includes(chainId)
         ) {
           const gasPrice = await this.gasPriceService.getGasPrice();
           if (typeof gasPrice === "bigint") {
@@ -1048,8 +1065,28 @@ export class BundlerSimulationService {
 
       ret += Number(toHex(extraPvg));
     } else if (chainId === BLOCKCHAINS.BLAST_TESTNET) {
-      // as there is no way to calculte the cost of roll up, hardcoding a value
+      // as there is no way to calculate the cost of roll up, hardcoding a value
       ret += BLAST_PVG_VALUE;
+    } else if (ScrollNetworks.includes(chainId)) {
+      const handleOpsData = encodeFunctionData({
+        abi: entryPointContract.abi,
+        functionName: "handleOps",
+        args: [[userOp], userOp.sender],
+      });
+
+      // Call the L1 gas price oracle to get the L1 fee component
+      const l1Fee = await this.networkService.provider.readContract({
+        address:
+          this.scrollL1GasPriceOracle[this.networkService.chainId].address,
+        abi: this.scrollL1GasPriceOracle[this.networkService.chainId].abi,
+        functionName: "getL1Fee",
+        args: [handleOpsData],
+      });
+
+      const l2MaxFee = BigInt(userOp.maxFeePerGas);
+      // Since Scroll doesn't support EIP1559, we can ony use the l2MaxFee for division to extract the gas component
+      const extraPvg = l1Fee / l2MaxFee;
+      ret += Number(toHex(extraPvg));
     }
     return ret;
   }

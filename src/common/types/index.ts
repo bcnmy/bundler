@@ -3,6 +3,7 @@ import {
   ENTRY_POINT_ABI,
   OPTIMISM_L1_GAS_PRICE_ORACLE,
   MANTLE_BVM_GAS_PRICE_ORACLE,
+  SCROLL_L1_PRICE_ORACLE,
 } from "../constants";
 
 export enum TransactionType {
@@ -279,6 +280,10 @@ export type OptimismL1GasPriceOracleContractType = GetContractReturnType<
 
 export type MantleBVMGasPriceOracleContractType = GetContractReturnType<
   typeof MANTLE_BVM_GAS_PRICE_ORACLE
+>;
+
+export type ScrollL1GasPriceOracleContractType = GetContractReturnType<
+  typeof SCROLL_L1_PRICE_ORACLE
 >;
 
 export type StateOverrideSetType = {

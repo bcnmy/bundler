@@ -1312,6 +1312,22 @@ export const ARBITRUM_L1_FEE = [
   },
 ] as const;
 
+export const SCROLL_L1_PRICE_ORACLE = [
+  {
+    name: "getL1Fee",
+    type: "function",
+    stateMutability: "view",
+    inputs: [
+      {
+        name: "data",
+        internalType: "bytes",
+        type: "bytes",
+      },
+    ],
+    outputs: [{ name: "", internalType: "uint256", type: "uint256" }],
+  },
+] as const;
+
 export enum BLOCKCHAINS {
   MAINNET = 1,
   GOERLI = 5,
@@ -1355,6 +1371,7 @@ export enum BLOCKCHAINS {
   BERACHAIN_TESTNET = 80085,
   BLAST_TESTNET = 168587773,
   BASE_SEPOLIA_TESTNET = 84532,
+  SCROLL_SEPOLIA_TESTNET = 534351,
 }
 
 // Network with base gas diff from 21k and maxPriorityFeePerGas is 0
@@ -1370,6 +1387,7 @@ export const AlchemySimulateExecutionSupportedNetworks = [
 ];
 export const AstarNetworks = [81, 592];
 export const MantleNetworks = [5000, 5001];
+export const ScrollNetworks = [534351];
 
 export const BLAST_PVG_VALUE = 700000000;
 export const MANTLE_L1_ROLL_UP_FEE_DIVISION_FACTOR = 10000000000n;
