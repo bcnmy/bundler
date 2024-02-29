@@ -238,9 +238,14 @@ export class BundlerSimulationService {
         )} on chainId: ${chainId}`,
       );
 
-      const { callGasLimit, verificationGasLimit, validAfter, validUntil } =
+      const { validAfter, validUntil } =
         response;
-      let { preVerificationGas } = response;
+      let { verificationGasLimit, callGasLimit, preVerificationGas } = response;
+
+      if(NetworksNotSupportingEthCallStateOverrides.includes(chainId) || NetworksNotSupportingEthCallBytecodeStateOverrides.includes(chainId)) {
+        callGasLimit += BigInt(Math.ceil(Number(callGasLimit) * 0.2));
+        verificationGasLimit += BigInt(Math.ceil(Number(verificationGasLimit) * 0.2));
+      }
 
       const verificationGasLimitMultiplier =
         userOp.paymasterAndData === "0x" ? 1 : 3;
