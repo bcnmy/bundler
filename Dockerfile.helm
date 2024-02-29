@@ -44,4 +44,4 @@ RUN addgroup --gid 10001 --system nonroot \
 USER nonroot
 
 # Default arguments for your app (remove if you have none):
-ENTRYPOINT ["/usr/bin/tini", "--","/entrypoint.sh" ]
+ENTRYPOINT ["/usr/bin/tini", "--","./entrypoint.sh" ]
