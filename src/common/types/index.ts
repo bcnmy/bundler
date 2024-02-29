@@ -1,4 +1,4 @@
-import { GetContractReturnType, Hex, TransactionReceipt } from "viem";
+import { GetContractReturnType, TransactionReceipt } from "viem";
 import {
   ENTRY_POINT_ABI,
   OPTIMISM_L1_GAS_PRICE_ORACLE,
@@ -283,9 +283,9 @@ export type MantleBVMGasPriceOracleContractType = GetContractReturnType<
 
 export type StateOverrideSetType = {
   [key: string]: {
-    balance?: Hex;
-    nonce?: Hex;
-    code?: Hex;
+    balance?: string;
+    nonce?: string;
+    code?: string;
     state?: object;
     stateDiff?: object;
   };
