@@ -223,6 +223,10 @@ export class BundlerSimulationService {
         supportsEthCallByteCodeOverride = false;
       }
 
+      if (userOp.initCode !== "0x") {
+        supportsEthCallByteCodeOverride = false;
+      }
+
       const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
 
       const response = await this.gasEstimator.estimateUserOperationGas({
