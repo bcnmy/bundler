@@ -255,6 +255,10 @@ export class BundlerSimulationService {
         );
       }
 
+      if (userOp.initCode !== "0x") {
+        callGasLimit += BigInt(Math.ceil(Number(callGasLimit) * 0.05));
+      }
+
       const verificationGasLimitMultiplier =
         userOp.paymasterAndData === "0x" ? 1 : 3;
       const totalGas =
