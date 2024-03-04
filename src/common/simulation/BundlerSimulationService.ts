@@ -50,6 +50,7 @@ import {
   MANTLE_BVM_GAS_PRICE_ORACLE,
   NetworksNotSupportingEthCallBytecodeStateOverrides,
   pvgMarkUp,
+  BLOCKCHAINS,
 } from "../constants";
 
 import {
@@ -261,6 +262,10 @@ export class BundlerSimulationService {
 
       if (userOp.initCode !== "0x") {
         callGasLimit += BigInt(Math.ceil(Number(callGasLimit) * 0.05));
+      }
+
+      if (chainId === BLOCKCHAINS.BLAST_MAINNET) {
+        callGasLimit += BigInt(Math.ceil(Number(callGasLimit) * 0.5));
       }
 
       const verificationGasLimitMultiplier =
