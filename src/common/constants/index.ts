@@ -1365,7 +1365,8 @@ export enum BLOCKCHAINS {
 export const L2Networks = [421613, 42161, 42170];
 export const PolygonZKEvmNetworks = [1101, 1442];
 export const OptimismNetworks = [
-  420, 10, 84531, 8453, 204, 5611, 9980, 91715, 84532, 81457, 168587773, 11155420
+  420, 10, 84531, 8453, 204, 5611, 9980, 91715, 84532, 81457, 168587773,
+  11155420,
 ];
 export const LineaNetworks = [59140, 59144];
 export const ArbitrumNetworks = [42170, 421613, 42161, 421614];
@@ -1377,7 +1378,8 @@ export const NetworksNotSupportingEthCallStateOverrides = [
   1101, 1442, 81, 592, 169, 3441005, 91715, 7116, 9980,
 ];
 export const NetworksNotSupportingEthCallBytecodeStateOverrides = [
-  1, 59140, 59144, 84532, 421614, 168587773, 80001, 43113, 11155111, 1101, 1442, 420
+  1, 59140, 59144, 84532, 421614, 168587773, 80001, 43113, 11155111, 1101, 1442,
+  420,
 ];
 export const MantleNetworks = [5000, 5001];
 export const ScrollNetworks = [534351, 534352];

@@ -22,10 +22,7 @@ import { IEVMAccount } from "../../relayer/account";
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from "../../server/middleware";
 import { logger } from "../logger";
 import { INetworkService } from "../network";
-import {
-  EVMRawTransactionType,
-  UserOperationType,
-} from "../types";
+import { EVMRawTransactionType, UserOperationType } from "../types";
 import {
   customJSONStringify,
   packUserOpForUserOpHash,
