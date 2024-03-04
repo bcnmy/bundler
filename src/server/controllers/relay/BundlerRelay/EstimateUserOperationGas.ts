@@ -44,10 +44,14 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
       }
     }
     if (!entryPointContract) {
-      return {
-        code: STATUSES.BAD_REQUEST,
-        message: "Entry point not supported by Bundler",
-      };
+      return res.status(STATUSES.BAD_REQUEST).json({
+        jsonrpc: "2.0",
+        id: id || 1,
+        error: {
+          code: STATUSES.BAD_REQUEST,
+          message: "Entry point not supported by Bundler",
+        },
+      });
     }
 
     const estimatedUserOpGas = await bundlerSimulatonServiceMap[

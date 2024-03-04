@@ -1356,13 +1356,16 @@ export enum BLOCKCHAINS {
   BLAST_TESTNET = 168587773,
   BASE_SEPOLIA_TESTNET = 84532,
   BLAST_MAINNET = 81457,
+  SCROLL_SEPOLIA_TESTNET = 534351,
+  SCROLL_MAINNET = 534352,
+  ZEROONE_TESTNET = 56400,
 }
 
 // Network with base gas diff from 21k and maxPriorityFeePerGas is 0
 export const L2Networks = [421613, 42161, 42170];
 export const PolygonZKEvmNetworks = [1101, 1442];
 export const OptimismNetworks = [
-  420, 10, 84531, 8453, 204, 5611, 9980, 91715, 84532, 81457, 168587773,
+  420, 10, 84531, 8453, 204, 5611, 9980, 91715, 84532, 81457, 168587773, 11155420
 ];
 export const LineaNetworks = [59140, 59144];
 export const ArbitrumNetworks = [42170, 421613, 42161, 421614];
@@ -1377,6 +1380,7 @@ export const NetworksNotSupportingEthCallBytecodeStateOverrides = [
   1, 59140, 59144, 84532, 421614, 168587773, 80001, 43113, 11155111, 1101, 1442, 420
 ];
 export const MantleNetworks = [5000, 5001];
+export const ScrollNetworks = [534351, 534352];
 
 export const pvgMarkUp: {
   [chainId: number]: number;
