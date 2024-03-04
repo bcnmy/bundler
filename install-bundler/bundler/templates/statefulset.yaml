@@ -95,7 +95,7 @@ spec:
           {{- end }}
 
         volumeMounts:
-          - mountPath: "/relayer-node/config.json.enc"
+          - mountPath: "/home/nonroot/bundler/config.json.enc"
             name: gcpsecrets
             subPath: "config.json.enc"
 
