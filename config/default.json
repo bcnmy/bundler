@@ -62,6 +62,44 @@
     "80085": ["AA", "BUNDLER"]
   },
   "chains": {
+    "providers": {
+      "5000": [
+        {
+          "url": "https://rpc.mantle.xyz",
+          "type": "public"
+        },
+        {
+          "url": "https://rpc.ankr.com/mantle",
+          "type": "public"
+        },
+        {
+          "url": "https://1rpc.io/mantle",
+          "type": "public"
+        },
+        {
+          "url": "https://rpc.ankr.com/mantle/07101210d8974c619d563526229a15fdc1675bb1e862ed04a6b8c4e90fa45fab",
+          "type": "private"
+        },
+        {
+          "url": "https://rpc.ankr.com/mantle/0f2ac70eb2e86d935951e9d3874deeb44525123a1ce2a7cf609cf1f0a098d2d6",
+          "type": "private"
+        },
+        {
+          "url": "https://rpc.ankr.com/mantle/0f2ac70eb2e86d935951e9d3874deeb44525123a1ce2a7cf609cf1f0a098d2d6",
+          "type": "https://rpc.ankr.com/mantle/6ce34fc32c05d52c87f836fc1f994fd056b78c1d75ba9573a1ffbfcd8094287e"
+        }
+      ],
+      "168587773": [
+        {
+          "url": "https://sepolia.blast.io",
+          "type": "public"
+        },
+        {
+          "url": "https://rpc.ankr.com/blast_testnet_sepolia/0f2ac70eb2e86d935951e9d3874deeb44525123a1ce2a7cf609cf1f0a098d2d6",
+          "type": "private"
+        }
+      ]
+    },
     "currency": {
       "5": "ETH",
       "137": "MATIC",
@@ -877,5 +915,6 @@
     1, 5, 11155111, 137, 80001, 10, 420, 42161, 421613, 421614, 8453, 84531, 592
   ],
   "AstarNetworks": [81, 592],
-  "MantleNetworks": [5000, 5001]
+  "MantleNetworks": [5000, 5001],
+  "blastPvgValue": 700000000
 }

@@ -41,7 +41,6 @@ import {
   OnTransactionSuccessParamsType,
 } from "./types";
 import { config } from "../../config";
-import { AstarNetworks } from "../../common/constants";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -618,7 +617,7 @@ export class EVMTransactionListener
                 `latestBlock: ${latestBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
               );
               let fromBlock = latestBlock - BigInt(1000);
-              if (AstarNetworks.includes(this.chainId)) {
+              if (config.AstarNetworks.includes(this.chainId)) {
                 fromBlock += BigInt(501);
               }
               log.info(

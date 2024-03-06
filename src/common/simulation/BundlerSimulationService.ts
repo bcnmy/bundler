@@ -43,7 +43,6 @@ import {
   MANTLE_BVM_GAS_PRICE_ORACLE,
   MANTLE_L1_ROLL_UP_FEE_DIVISION_FACTOR,
   BLOCKCHAINS,
-  BLAST_PVG_VALUE,
 } from "../constants";
 import {
   AlchemySimulationService,
@@ -1040,9 +1039,9 @@ export class BundlerSimulationService {
       log.info(`extraPvg: ${extraPvg} on chainId: ${chainId}`);
 
       ret += Number(toHex(extraPvg));
-    } else if (chainId === BLOCKCHAINS.BLAST_TESTNET) {
+    } else if (chainId === BLOCKCHAINS.BLAST_SEPOLIA_TESTNET) {
       // as there is no way to calculte the cost of roll up, hardcoding a value
-      ret += BLAST_PVG_VALUE;
+      ret += config.blastPvgValue;
     }
     return ret;
   }

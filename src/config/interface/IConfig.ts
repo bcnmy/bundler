@@ -4,6 +4,20 @@ import {
   DefaultGasOverheadType,
 } from "../../common/types";
 
+enum RpcProviderType {
+  PUBLIC = "public",
+  PRIVATE = "private",
+}
+
+interface RpcProvider {
+  url: string;
+  type: RpcProviderType;
+}
+
+type ChainIdToProviderList = {
+  [key: number]: Array<RpcProvider>;
+};
+
 type ChainIdWithStringValueType = {
   [key: number]: string;
 };
@@ -102,6 +116,7 @@ type ChainsConfigType = {
   currency: ChainIdWithStringValueType;
   decimal: ChainIdWithNumberValueType;
   provider: ChainIdWithStringValueType;
+  providers: ChainIdToProviderList;
   retryTransactionInterval: ChainIdWithNumberValueType;
   updateFrequencyInSeconds: ChainIdWithNumberValueType;
 };
@@ -176,6 +191,7 @@ export type ConfigType = {
   AlchemySimulateExecutionSupportedNetworks: Array<number>;
   AstarNetworks: Array<number>;
   MantleNetworks: Array<number>;
+  blastPvgValue: number;
 };
 
 export interface IConfig {

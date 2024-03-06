@@ -24,22 +24,23 @@ import {
 } from "./types";
 import { logger } from "../logger";
 import { customJSONStringify, parseError } from "../utils";
-import {
-  MANTLE_PRIVATE_RPC_URL_1,
-  MANTLE_PUBLIC_RPC_URL_1,
-  MANTLE_PUBLIC_RPC_URL_3,
-  MANTLE_PUBLIC_RPC_URL_2,
-  MANTLE_PRIVATE_RPC_URL_2,
-  MANTLE_PRIVATE_RPC_URL_3,
-  MantleNetworks,
-  BLOCKCHAINS,
-  BLAST_SEPOLIA_PUBLIC_RPC_URL,
-  BLAST_SEPOLIA_PRIVATE_RPC_URL,
-} from "../constants";
+import { config } from "../../config";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
 });
+
+const LOAD_BALANCER_DEFAULT = {
+  rank: {
+    interval: 60_000,
+    sampleCount: 5,
+    timeout: 500,
+    weights: {
+      latency: 0.3,
+      stability: 0.7,
+    },
+  },
+};
 
 export class EVMNetworkService
   implements INetworkService<IEVMAccount, EVMRawTransactionType>
@@ -53,50 +54,23 @@ export class EVMNetworkService
   constructor(options: { chainId: number; rpcUrl: string }) {
     this.chainId = options.chainId;
     this.rpcUrl = options.rpcUrl;
-    if (MantleNetworks.includes(this.chainId)) {
-      this.provider = createPublicClient({
-        transport: fallback(
-          [
-            http(MANTLE_PRIVATE_RPC_URL_1),
-            http(MANTLE_PUBLIC_RPC_URL_1),
-            http(MANTLE_PUBLIC_RPC_URL_2),
-            http(MANTLE_PRIVATE_RPC_URL_2),
-            http(MANTLE_PUBLIC_RPC_URL_3),
-            http(MANTLE_PRIVATE_RPC_URL_3),
-          ],
-          {
-            rank: {
-              interval: 60_000,
-              sampleCount: 5,
-              timeout: 500,
-              weights: {
-                latency: 0.3,
-                stability: 0.7,
-              },
-            },
-          },
-        ),
-      });
-    } else if (this.chainId === BLOCKCHAINS.BLAST_TESTNET) {
-      this.provider = createPublicClient({
-        transport: fallback(
-          [
-            http(BLAST_SEPOLIA_PRIVATE_RPC_URL),
-            http(BLAST_SEPOLIA_PUBLIC_RPC_URL),
-          ],
-          {
-            rank: {
-              interval: 60_000,
-              sampleCount: 5,
-              timeout: 500,
-              weights: {
-                latency: 0.3,
-                stability: 0.7,
-              },
-            },
-          },
-        ),
-      });
+
+    // if the new 'providers' array property is present in the config, use it
+    const providers = config.chains.providers[this.chainId];
+    if (providers) {
+      if (providers.length > 1) {
+        this.provider = createPublicClient({
+          transport: fallback(
+            config.chains.providers[this.chainId].map((p) => http(p.url)),
+            LOAD_BALANCER_DEFAULT,
+          ),
+        });
+      } else {
+        this.provider = createPublicClient({
+          transport: http(providers[0].url),
+        });
+      }
+      // otherwise use the old 'provider' property
     } else {
       this.provider = createPublicClient({
         transport: http(this.rpcUrl),

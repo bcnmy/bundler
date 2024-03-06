@@ -17,11 +17,7 @@ const AES_PADDING = crypto.pad.Pkcs7;
 const AES_MODE = crypto.mode.CBC;
 
 export function merge(decryptedConfig: Partial<ConfigType>): ConfigType {
-  const merged = nodeconfig.util.extendDeep(
-    // clone so we don't mutate the original config
-    _.cloneDeep(decryptedConfig),
-    nodeconfig.util.toObject(),
-  );
+  const merged = nodeconfig.util.toObject();
 
   // We always take the relayer secrets from the old, decrypted config
   if (decryptedConfig.relayerManagers) {
@@ -34,13 +30,8 @@ export function merge(decryptedConfig: Partial<ConfigType>): ConfigType {
     }
   } else {
     throw new Error(`Relayer managers not configured in the encrypted config file.
-    💡 HINT: Make sure that the relayerManagers property exists, contains the relayerSeed and ownerAccountDetails, and re-run ts-node encrypt-config.ts`);
+    💡 HINT: Make sure that the relayerManagers property exists in config.json, contains the relayerSeed and ownerAccountDetails, and re-run ts-node encrypt-config.ts`);
   }
-
-  // console.log("-------------------------------------");
-  // console.log(JSON.stringify(conf.relayerManagers, null, 2));
-
-  // throw new Error("🚫⛔ STOP HERE");
 
   return merged;
 }
