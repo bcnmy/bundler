@@ -1,0 +1,24 @@
+{
+  "relayerManagers": [
+    {
+      "name": "RM1",
+      "relayerSeed": "<RANDOM SEED>",
+      "ownerAccountDetails": {
+        "80001": {
+          "publicKey": "<YOUR POLYGON MUMBAI ADDRESS>",
+          "privateKey": "<YOUR POLYGON MUMBAI PRIVATE KEY>"
+        }
+      }
+    },
+    {
+      "name": "RM2",
+      "relayerSeed": "<RANDOM SEED>",
+      "ownerAccountDetails": {
+        "80001": {
+          "publicKey": "<YOUR POLYGON MUMBAI ADDRESS>",
+          "privateKey": "<YOUR POLYGON MUMBAI PRIVATE KEY>"
+        }
+      }
+    }
+  ]
+}

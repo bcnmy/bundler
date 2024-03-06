@@ -1,9 +1,1 @@
-{
-  "socketService": {
-    "wssUrl": "wss://sdk-ws.prod.biconomy.io/connection/websocket",
-    "httpUrl": "https://sdk-ws.prod.biconomy.io/api"
-  },
-  "aaDashboardBackend": {
-    "url": "https://paymaster-dashboard-backend-v2.staging.biconomy.io/api/v2/bundlers/auth"
-  }
-}
+{}
