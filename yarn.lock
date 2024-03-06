@@ -3938,10 +3938,10 @@ end-of-stream@^1.1.0:
   dependencies:
     once "^1.4.0"
 
-entry-point-gas-estimations@0.0.14:
-  version "0.0.14"
-  resolved "https://registry.yarnpkg.com/entry-point-gas-estimations/-/entry-point-gas-estimations-0.0.14.tgz#6d5743253c32551e2146902165728e82a9a4484d"
-  integrity sha512-DNocIOxthq86c0bM7nzZy83xAUtxfkz4YfNKe4ZkiqxskJuUbrI4VjAdvXphsQ5vO73SLn60rr32ZQ0Vm3XDgw==
+entry-point-gas-estimations@0.0.13:
+  version "0.0.13"
+  resolved "https://registry.yarnpkg.com/entry-point-gas-estimations/-/entry-point-gas-estimations-0.0.13.tgz#bdd7a509fd83f4cdf8c4af317036dab4168d324b"
+  integrity sha512-boIA4bx937x4AikdZ6eGdARORQXEHgGsbk09f2OlTR1hefkfV9GJ7ogujfroWkWfdApGIFQUbeX6xD4rlopbjQ==
   dependencies:
     "@types/node" "^20.10.5"
     eslint-plugin-tsdoc "^0.2.17"
