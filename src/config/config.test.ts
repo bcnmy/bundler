@@ -12,12 +12,16 @@ describe("ConfigV2", () => {
       polygonZKEvmNetworks,
       optimismNetworks,
       l2Networks,
-      MantleNetworks,
+      mantleNetworks,
       blastPvgValue,
-      LineaNetworks,
-      AstarNetworks,
-      ArbitrumNetworks,
-      AlchemySimulateExecutionSupportedNetworks,
+      lineaNetworks,
+      astarNetworks,
+      arbitrumNetworks,
+      alchemySimulateExecutionSupportedNetworks,
+      scrollNetworks,
+      pvgMarkUp,
+      networksNotSupportingEthCallStateOverrides,
+      networksNotSupportingEthCallBytecodeStateOverrides,
       ...oldConfigValues
     } = nodeconfig.util.toObject();
 

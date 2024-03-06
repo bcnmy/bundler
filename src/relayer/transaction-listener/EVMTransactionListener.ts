@@ -617,7 +617,7 @@ export class EVMTransactionListener
                 `latestBlock: ${latestBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
               );
               let fromBlock = latestBlock - BigInt(1000);
-              if (config.AstarNetworks.includes(this.chainId)) {
+              if (config.astarNetworks.includes(this.chainId)) {
                 fromBlock += BigInt(501);
               }
               log.info(

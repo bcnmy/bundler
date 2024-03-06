@@ -65,7 +65,6 @@ export type EstimateUserOperationGasReturnType = {
     validAfter: number;
     validUntil: number;
     userOpHash?: string;
-    totalGas: bigint;
   };
 };
 

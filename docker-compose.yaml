@@ -55,9 +55,9 @@ services:
 
     healthcheck:
       test: ["CMD", "sh", "-c", "wget -nv -O - http://localhost:8000"]
-      interval: 1s
-      timeout: 10s
-      retries: 10
+      interval: 3s
+      timeout: 3s
+      retries: 3
 
     ulimits:
       nofile:

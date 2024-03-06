@@ -186,12 +186,16 @@ export type ConfigType = {
   l2Networks: Array<number>;
   polygonZKEvmNetworks: Array<number>;
   optimismNetworks: Array<number>;
-  LineaNetworks: Array<number>;
-  ArbitrumNetworks: Array<number>;
-  AlchemySimulateExecutionSupportedNetworks: Array<number>;
-  AstarNetworks: Array<number>;
-  MantleNetworks: Array<number>;
+  lineaNetworks: Array<number>;
+  arbitrumNetworks: Array<number>;
+  alchemySimulateExecutionSupportedNetworks: Array<number>;
+  astarNetworks: Array<number>;
+  mantleNetworks: Array<number>;
+  scrollNetworks: Array<number>;
   blastPvgValue: number;
+  networksNotSupportingEthCallStateOverrides: Array<number>;
+  networksNotSupportingEthCallBytecodeStateOverrides: Array<number>;
+  pvgMarkUp: ChainIdWithNumberValueType;
 };
 
 export interface IConfig {
