@@ -48,8 +48,6 @@ import {
   NetworksNotSupportingEthCallStateOverrides,
   MantleNetworks,
   MANTLE_BVM_GAS_PRICE_ORACLE,
-  BLOCKCHAINS,
-  BLAST_PVG_VALUE,
   NetworksNotSupportingEthCallBytecodeStateOverrides,
   pvgMarkUp,
 } from "../constants";
@@ -180,7 +178,7 @@ export class BundlerSimulationService {
           }
         }
       }
-      
+
       // for userOp completeness
       userOp.callGasLimit = BigInt(20000000);
       userOp.verificationGasLimit = BigInt(10000000);
@@ -225,6 +223,10 @@ export class BundlerSimulationService {
         supportsEthCallByteCodeOverride = false;
       }
 
+      if (userOp.initCode !== "0x") {
+        supportsEthCallByteCodeOverride = false;
+      }
+
       const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
 
       const response = await this.gasEstimator.estimateUserOperationGas({
@@ -232,7 +234,7 @@ export class BundlerSimulationService {
         stateOverrideSet,
         supportsEthCallByteCodeOverride,
         supportsEthCallStateOverride,
-        baseFeePerGas
+        baseFeePerGas,
       });
       log.info(
         `estimation respone from gas estimation package: ${customJSONStringify(
@@ -240,12 +242,26 @@ export class BundlerSimulationService {
         )} on chainId: ${chainId}`,
       );
 
-      const { callGasLimit, verificationGasLimit, validAfter, validUntil } =
-        response;
-      let { preVerificationGas } = response;
+      const { validAfter, validUntil } = response;
+      let { verificationGasLimit, callGasLimit, preVerificationGas } = response;
 
-      if (chainId === BLOCKCHAINS.BLAST_TESTNET) {
-        preVerificationGas += BLAST_PVG_VALUE;
+      verificationGasLimit += BigInt(
+        Math.ceil(Number(verificationGasLimit) * 0.2),
+      );
+
+      if (
+        NetworksNotSupportingEthCallStateOverrides.includes(chainId) ||
+        NetworksNotSupportingEthCallBytecodeStateOverrides.includes(chainId)
+      ) {
+        callGasLimit += BigInt(Math.ceil(Number(callGasLimit) * 0.2));
+        verificationGasLimit += BigInt(
+          Math.ceil(Number(verificationGasLimit) * 0.2),
+        );
+      } else {
+        callGasLimit += BigInt(Math.ceil(Number(callGasLimit) * 0.1));
+        verificationGasLimit += BigInt(
+          Math.ceil(Number(verificationGasLimit) * 0.1),
+        );
       }
 
       const verificationGasLimitMultiplier =
@@ -256,7 +272,9 @@ export class BundlerSimulationService {
         preVerificationGas;
       log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
 
-      preVerificationGas += BigInt(Math.ceil(Number(toHex(totalGas)) * pvgMarkUp[chainId]));
+      preVerificationGas += BigInt(
+        Math.ceil(Number(toHex(totalGas)) * pvgMarkUp[chainId]),
+      );
 
       log.info(
         `preVerificationGas after bumping it up: ${preVerificationGas} on chainId: ${chainId}`,
