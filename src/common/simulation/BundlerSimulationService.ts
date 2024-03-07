@@ -5,7 +5,6 @@ import {
   decodeErrorResult,
   encodeAbiParameters,
   encodeFunctionData,
-  getContract,
   keccak256,
   parseAbiParameters,
   toHex,
@@ -15,6 +14,7 @@ import {
   createGasEstimator,
   createMantleGasEstimator,
   createOptimismGasEstimator,
+  createScrollGasEstimator,
   IGasEstimator,
 } from "entry-point-gas-estimations";
 import { config } from "../../config";
@@ -22,12 +22,7 @@ import { IEVMAccount } from "../../relayer/account";
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from "../../server/middleware";
 import { logger } from "../logger";
 import { INetworkService } from "../network";
-import {
-  EVMRawTransactionType,
-  MantleBVMGasPriceOracleContractType,
-  OptimismL1GasPriceOracleContractType,
-  UserOperationType,
-} from "../types";
+import { EVMRawTransactionType, UserOperationType } from "../types";
 import {
   customJSONStringify,
   packUserOpForUserOpHash,
@@ -44,12 +39,11 @@ import {
   OptimismNetworks,
   ArbitrumNetworks,
   AlchemySimulateExecutionSupportedNetworks,
-  OPTIMISM_L1_GAS_PRICE_ORACLE,
   NetworksNotSupportingEthCallStateOverrides,
   MantleNetworks,
-  MANTLE_BVM_GAS_PRICE_ORACLE,
   NetworksNotSupportingEthCallBytecodeStateOverrides,
   pvgMarkUp,
+  ScrollNetworks,
 } from "../constants";
 
 import {
@@ -71,15 +65,7 @@ export class BundlerSimulationService {
 
   alchemySimulationService: AlchemySimulationService;
 
-  optimismL1GasPriceOracleMap: {
-    [chainId: number]: OptimismL1GasPriceOracleContractType;
-  } = {};
-
   gasEstimator: IGasEstimator;
-
-  mantleBVMGasPriceOracle: {
-    [chainId: number]: MantleBVMGasPriceOracleContractType;
-  } = {};
 
   constructor(
     networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
@@ -96,15 +82,6 @@ export class BundlerSimulationService {
     });
 
     if (OptimismNetworks.includes(this.networkService.chainId)) {
-      // setting up optimism gas oracle
-      this.optimismL1GasPriceOracleMap[this.networkService.chainId] =
-        getContract({
-          abi: OPTIMISM_L1_GAS_PRICE_ORACLE,
-          address: "0x420000000000000000000000000000000000000F",
-          client: {
-            public: this.networkService.provider,
-          },
-        });
       this.gasEstimator = createOptimismGasEstimator({
         rpcUrl: this.networkService.rpcUrl,
       });
@@ -115,14 +92,12 @@ export class BundlerSimulationService {
         rpcUrl: this.networkService.rpcUrl,
       });
     if (MantleNetworks.includes(this.networkService.chainId)) {
-      this.mantleBVMGasPriceOracle[this.networkService.chainId] = getContract({
-        abi: MANTLE_BVM_GAS_PRICE_ORACLE,
-        address: "0x420000000000000000000000000000000000000F",
-        client: {
-          public: this.networkService.provider,
-        },
-      });
       this.gasEstimator = createMantleGasEstimator({
+        rpcUrl: this.networkService.rpcUrl,
+      });
+    }
+    if (ScrollNetworks.includes(this.networkService.chainId)) {
+      this.gasEstimator = createScrollGasEstimator({
         rpcUrl: this.networkService.rpcUrl,
       });
     }
