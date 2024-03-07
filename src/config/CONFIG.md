@@ -72,3 +72,9 @@ Here are some most basic configuration options:
 }
 ```
 Also you could take a look at [config/default.json](../../config/default.json) and [src/config/config.template.json](config.template.json) for reference.
+
+## FAQ & caveats
+
+### The `relayerManagers` property is not merged correctly
+If you notice the `relayerManagers` property not being merged correctly in hierarchical config files, that's because it's an **array of objects** (which is a bad practice for config files and should be fixed in the future) and it can't be merged property by property.
+This means if you want to override the `relayerManagers` in some config file, you have to specify all of the relayer managers properties in the new file, not just the ones you want to override.
