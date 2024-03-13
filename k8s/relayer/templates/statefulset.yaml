@@ -119,7 +119,7 @@ spec:
           secretName: {{ .Values.name }}{{ .Values.index }}
       - name: secret-plain
         secret:
-          secretName: {{ .Values.name }}{{ .Values.index }}-plain
+          secretName: {{ .Values.name }}-plain
       {{- if .Values.datadog.enable }}
       - hostPath:
           path: /var/run/datadog/

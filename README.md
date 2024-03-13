@@ -26,3 +26,10 @@ Other useful commands:
 - `docker compose up -d`: runs the containers in the background without blocking the current terminal sessions.
 - 💡 `docker compose build server`: run this whenever you add a new package to `package.json` or it won't be reflected in the container.
 - `docker compose build --no-cache <service_name>`: build without cache if you suspect caching problems.
+
+
+### NOTES for DEVOPS
+When adding a new chain integration make sure to add the new charin id
+to all relevant config deployment files, in the `supportedNetworks`
+e.g. `config/staging.json` or the bunlder will not start that network
+even thouh is supported. 
