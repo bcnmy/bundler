@@ -1,76 +1,42 @@
-# Description
-
-<!-- Please include a summary of the changes and the related issue. Please also include relevant motivation and context. List any dependencies that are required for this change. -->
-
-- ...
-- ...
-
+# 📖 Context
 ## Type of change
 
 <!-- Please delete options that are not relevant. -->
 
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
+- [ ] Non-breaking change (backwards compatible)
 - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] This change requires a documentation update
 
-# How Has This Been Tested?
+## Why are we doing this?
 
-<!-- Please describe the tests that you ran to verify your changes. Provide instructions so we can reproduce. Please also list any relevant details for your test configuration -->
+<!-- Describe why is this PR important, examples below for inspiration: -->
 
-- [ ] Manual Testing
-  - Sample results/txn hashes/screenshots:
-    - ...
-    - ...
-- [ ] Automated Testing
-  - ...
+- Customer X complained that PVG was too high on Y network so we discovered that ...
+- The service was crashing on production because of ...
+- Person A from team B asked me to do this so they can ...
 
+<!-- If there's no ticket, delete this -->
 
-## Test Configuration:
-<!-- Please describe any new/required environment variables and also services that your test depends on -->
-- ...
+Related issues:
+- link to issue / ticket
 
-## Steps to reproduce
-<!-- Please describe how others can clone your changes and run your tests -->
-- ...
+## What did we do?
 
-### Using New Sample API
-**Endpoint**: `/api/v1/admin/withdraw-gas-fee/erc20`
+<!-- Describe how we solved the problem described in the previous section, for example -->
 
-**Sample Request**:
-```
-{
-    "chainId": 80001,
-    "executorAddress": "0xb214cb91ea1485dadfecd49114c58d5710d135a8",
-    "tokenAddress": "0xeaBc4b91d9375796AA4F69cC764A4aB509080A58"
-}
-```
+- We changed the PVG formula to use ...
+- Added a try/catch clause to prevent crashes when ...
 
-**Sample Response**:
-```
-{
-    "amountWithdrawn": "5000000000000000000"
-    "txHash": "0x123...
-}
-```
+## How Has This Been Tested?
 
-## Automated Tests Added/Updated
-<!-- List the new test files -->
-- E2E Tests
-  - [ ] ...
-- Unit Tests
-  - [ ] ...
+<!-- Explain how you tested the expected behavior described in the previous section. If you tested manually, explain how. If there are unit tests describe what they do. For example: -->
 
-## Coverage
-<!-- Please describe how code coverage has been impacted by your changes -->
+- Tested this manually by sending a user op on the Y network and ...
+- Added unit tests that check if ...
 
-# Checklist:
+# 👀 How do I review this?
 
-- [ ] My code follows the style guidelines of this project
-- [ ] I have performed a self-review of my code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
-- [ ] Any dependent changes have been merged and published in downstream modules
+<!-- 🔥 This section is **OPTIONAL** but it's very important, explain to your colleagues what to pay attention to and if they need to run something locally, explain how they do it.
+If it's something very obvious or small, you can just delete this whole section. -->
+
+- Check the parameters in file ... and compare them to ...
+- To test this you first need to checkout this branch and run the following command ...
