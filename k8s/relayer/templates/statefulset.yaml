@@ -54,6 +54,8 @@ spec:
         env:
           - name: NODE_OPTIONS
             value: "=--max_old_space_size=6000"
+          - name: NODE_ENV
+            value: {{ .Values.relayer.environment }}
         envFrom:
           {{- if .Values.datadog.enable }}
           - configMapRef:
@@ -67,7 +69,7 @@ spec:
             subPath: "config.json.enc"
           - mountPath: "/relayer-node/config/{{ .Values.secret_plain.config.name }}"
             name: secret-plain
-            subPath: "{{ .Values.secret_plain.config.name }}"
+            subPath: {{ .Values.secret_plain.config.name }}
       {{- if .Values.datadog.enable }}
           - mountPath: /var/run/datadog
             name: apmsocketpath

@@ -2,6 +2,7 @@ name: "relayer-server"
 index: 0
 
 relayer:
+  environment: "staging"
   name: "relayer-server"
   image: "gcr.io/biconomy-staging/sdk/relayer-node-service:latest"
   port: "3000"
