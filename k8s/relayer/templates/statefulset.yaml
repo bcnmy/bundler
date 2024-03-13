@@ -112,9 +112,12 @@ spec:
             exec:
               command: ["sleep", "15"]
       volumes:
-      - name: secret
+      - name: secret_encrypted
         secret:
           secretName: {{ .Values.name }}{{ .Values.index }}
+      - name: secret_plain
+        secret:
+          secretName: {{ .Values.name }}{{ .Values.index }}-plain
       {{- if .Values.datadog.enable }}
       - hostPath:
           path: /var/run/datadog/
