@@ -220,10 +220,6 @@ export class BundlerSimulationService {
       const { validAfter, validUntil } = response;
       let { verificationGasLimit, callGasLimit, preVerificationGas } = response;
 
-      verificationGasLimit += BigInt(
-        Math.ceil(Number(verificationGasLimit) * 0.2),
-      );
-
       if (
         NetworksNotSupportingEthCallStateOverrides.includes(chainId) ||
         NetworksNotSupportingEthCallBytecodeStateOverrides.includes(chainId)
