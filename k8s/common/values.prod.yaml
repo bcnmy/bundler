@@ -8,11 +8,16 @@ namespace: "sdk-prod"
 
 secret:
   projectID: biconomy-prod
-  
   passphrase:
     key: sdk-prod-relayer-node-service-passphrase
     name: CONFIG_PASSPHRASE
     version: latest
+
+secret_plain:
+  projectID: biconomy-prod
+  key: sdk-prod-relayer-node-service-plain
+  config:
+    name: production.json
 
 ingress:
   host: sdk-relayer.prod.biconomy.io
