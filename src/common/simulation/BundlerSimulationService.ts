@@ -455,10 +455,9 @@ export class BundlerSimulationService {
         args: [[userOp], userOp.sender],
       });
 
-      const { publicKey } =
-        config.relayerManagers[0].ownerAccountDetails[chainId];
+      const { ownerAddress } = config.relayerManagers[0];
       log.info(
-        `Simulating with from address: ${publicKey} on chainId: ${chainId}`,
+        `Simulating with from address: ${ownerAddress} on chainId: ${chainId}`,
       );
 
       const gasPriceFromService = await this.gasPriceService.getGasPrice();
@@ -474,7 +473,7 @@ export class BundlerSimulationService {
 
       const ethEstimateGasParams = [
         {
-          from: publicKey,
+          from: ownerAddress,
           to: entryPointContract.address,
           data,
           gasPrice: `0x${gasPrice}`,

@@ -55,25 +55,23 @@ export class EVMNetworkService
     this.chainId = options.chainId;
     this.rpcUrl = options.rpcUrl;
 
-    // if the new 'providers' array property is present in the config, use it
     const providers = config.chains.providers[this.chainId];
-    if (providers) {
-      if (providers.length > 1) {
-        this.provider = createPublicClient({
-          transport: fallback(
-            config.chains.providers[this.chainId].map((p) => http(p.url)),
-            LOAD_BALANCER_DEFAULT,
-          ),
-        });
-      } else {
-        this.provider = createPublicClient({
-          transport: http(providers[0].url),
-        });
-      }
-      // otherwise use the old 'provider' property
+    if (!providers) {
+      throw new Error(
+        `No providers found for chainId: ${this.chainId} in the config`,
+      );
+    }
+
+    if (providers.length > 1) {
+      this.provider = createPublicClient({
+        transport: fallback(
+          config.chains.providers[this.chainId].map((p) => http(p.url)),
+          LOAD_BALANCER_DEFAULT,
+        ),
+      });
     } else {
       this.provider = createPublicClient({
-        transport: http(this.rpcUrl),
+        transport: http(providers[0].url),
       });
     }
   }

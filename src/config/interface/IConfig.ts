@@ -42,13 +42,6 @@ type ChainIdAndTokenWithStringValueType = {
   };
 };
 
-type OwnerAccountDetailsType = {
-  [key: number]: {
-    publicKey: `0x${string}`;
-    privateKey: string;
-  };
-};
-
 type SocketServiceConfigType = {
   wssUrl: string;
   httpUrl: string;
@@ -86,6 +79,8 @@ type TokenPriceConfigType = {
 type RelayerManagerConfigType = Array<{
   name: string; // assume it to be an identifier by the consumer
   relayerSeed: string;
+  ownerAddress: `0x${string}`;
+  ownerPrivateKey: string;
   gasLimitMap: ChainIdWithNumberValueType;
   minRelayerCount: ChainIdWithNumberValueType;
   maxRelayerCount: ChainIdWithNumberValueType;
@@ -94,7 +89,6 @@ type RelayerManagerConfigType = Array<{
   fundingRelayerAmount: ChainIdWithNumberValueType;
   fundingBalanceThreshold: ChainIdWithNumberValueType;
   newRelayerInstanceCount: ChainIdWithNumberValueType;
-  ownerAccountDetails: OwnerAccountDetailsType;
 }>;
 
 type TransactionConfigType = {
@@ -115,7 +109,6 @@ type TransactionConfigType = {
 type ChainsConfigType = {
   currency: ChainIdWithStringValueType;
   decimal: ChainIdWithNumberValueType;
-  provider: ChainIdWithStringValueType;
   providers: ChainIdToProviderList;
   retryTransactionInterval: ChainIdWithNumberValueType;
   updateFrequencyInSeconds: ChainIdWithNumberValueType;

@@ -25,8 +25,11 @@ export function merge(decryptedConfig: Partial<ConfigType>): ConfigType {
       merged.relayerManagers[i].relayerSeed =
         decryptedConfig.relayerManagers[i].relayerSeed;
 
-      merged.relayerManagers[i].ownerAccountDetails =
-        decryptedConfig.relayerManagers[i].ownerAccountDetails;
+      merged.relayerManagers[i].ownerAddress =
+        decryptedConfig.relayerManagers[i].ownerAddress;
+
+      merged.relayerManagers[i].ownerPrivateKey =
+        decryptedConfig.relayerManagers[i].ownerPrivateKey;
     }
   } else {
     throw new Error(`Relayer managers not configured in the encrypted config file.
@@ -91,6 +94,7 @@ export class Config implements IConfig {
       const data = JSON.parse(plaintext) as ConfigType;
 
       this.config = merge(data);
+      this.validate();
 
       log.info("Config loaded successfully");
     } catch (error) {
@@ -111,9 +115,11 @@ export class Config implements IConfig {
       if (!this.config.chains.currency[chainId]) {
         throw new Error(`Currency required for chain id ${chainId}`);
       }
-      if (!this.config.chains.provider[chainId]) {
+
+      if (!this.config.chains.providers[chainId]) {
         throw new Error(`Provider required for chain id ${chainId}`);
       }
+
       if (!this.config.chains.decimal[chainId]) {
         throw new Error(`Decimals required for chain id ${chainId}`);
       }
