@@ -230,10 +230,8 @@ export class BundlerSimulationService {
           Math.ceil(Number(verificationGasLimit) * 0.2),
         );
       } else {
+        callGasLimit += BigInt(Math.ceil(Number(callGasLimit) * 0.1));
         verificationGasLimit += BigInt(
-          Math.ceil(Number(verificationGasLimit) * 0.2),
-        );
-        callGasLimit += BigInt(
           Math.ceil(Number(verificationGasLimit) * 0.1),
         );
       }
