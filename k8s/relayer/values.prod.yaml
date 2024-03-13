@@ -16,11 +16,18 @@ relayer:
       memory: "6000Mi"
       cpu: "4000m"
 
-secret:
+secret-encrypted:
   projectID: biconomy-prod
   key: sdk-prod-relayer-node-service
   config:
     name: config.json.enc
+
+secret-plain:
+  projectID: biconomy-prod
+  key: sdk-prod-relayer-node-service-plain
+  config:
+    name: production.json
+
   
 ingress:
   host: sdk-relayer.prod.biconomy.io

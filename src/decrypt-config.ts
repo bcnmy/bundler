@@ -1,7 +1,7 @@
 import crypto from 'crypto-js';
 import fs, { existsSync } from 'fs';
-import _ from 'lodash';
-import path from 'path';
+// import _ from 'lodash';
+// import path from 'path';
 
 
 const KEY_SIZE = 32;
@@ -63,4 +63,4 @@ function decryptConfig(): string {
     return plaintext;
   }
 
-decryptConfig()
+decryptConfig();

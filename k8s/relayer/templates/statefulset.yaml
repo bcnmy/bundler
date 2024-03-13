@@ -63,10 +63,10 @@ spec:
               name: {{ .Values.relayer.name }}-passphrase
         volumeMounts:
           - mountPath: "/relayer-node/config.json.enc"
-            name: secret_encrypted
+            name: secret-encrypted
             subPath: "config.json.enc"
           - mountPath: "/relayer-node/config/{{ .Values.secret_plain.config.name }}"
-            name: secret_plain
+            name: secret-plain
             subPath: "{{ .Values.secret_plain.config.name }}"
       {{- if .Values.datadog.enable }}
           - mountPath: /var/run/datadog
@@ -112,10 +112,10 @@ spec:
             exec:
               command: ["sleep", "15"]
       volumes:
-      - name: secret_encrypted
+      - name: secret-encrypted
         secret:
           secretName: {{ .Values.name }}{{ .Values.index }}
-      - name: secret_plain
+      - name: secret-plain
         secret:
           secretName: {{ .Values.name }}{{ .Values.index }}-plain
       {{- if .Values.datadog.enable }}
