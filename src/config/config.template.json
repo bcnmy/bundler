@@ -3,22 +3,14 @@
     {
       "name": "RM1",
       "relayerSeed": "<RANDOM SEED>",
-      "ownerAccountDetails": {
-        "80001": {
-          "publicKey": "<YOUR POLYGON MUMBAI ADDRESS>",
-          "privateKey": "<YOUR POLYGON MUMBAI PRIVATE KEY>"
-        }
-      }
+      "ownerPrivateKey": "<YOUR PRIVATE KEY>",
+      "ownerAddress": "<YOUR ADDRESS>"
     },
     {
       "name": "RM2",
       "relayerSeed": "<RANDOM SEED>",
-      "ownerAccountDetails": {
-        "80001": {
-          "publicKey": "<YOUR POLYGON MUMBAI ADDRESS>",
-          "privateKey": "<YOUR POLYGON MUMBAI PRIVATE KEY>"
-        }
-      }
+      "ownerPrivateKey": "<YOUR PRIVATE KEY>",
+      "ownerAddress": "<YOUR ADDRESS>"
     }
   ]
 }
