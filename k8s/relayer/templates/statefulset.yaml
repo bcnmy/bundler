@@ -63,8 +63,11 @@ spec:
               name: {{ .Values.relayer.name }}-passphrase
         volumeMounts:
           - mountPath: "/relayer-node/config.json.enc"
-            name: secret
+            name: secret_encrypted
             subPath: "config.json.enc"
+          - mountPath: "/relayer-node/config/{{ .Values.secret_plain.config.name }}"
+            name: secret_plain
+            subPath: "{{ .Values.secret_plain.config.name }}"
       {{- if .Values.datadog.enable }}
           - mountPath: /var/run/datadog
             name: apmsocketpath

@@ -24,11 +24,17 @@ affinity_tolerations:
   key: "app"
   values: "relayer-server"
 
-secret:
+secret_encrypted:
   projectID: biconomy-staging
   key: sdk-staging-relayer-node-service
   config:
     name: config.json.enc
+
+secret_plain:
+  projectID: biconomy-staging
+  key: sdk-staging-relayer-node-service-plain
+  config:
+    name: staging.json
 
 ingress:
   host: sdk-relayer.staging.biconomy.io
