@@ -44,6 +44,7 @@ import {
   NetworksNotSupportingEthCallBytecodeStateOverrides,
   pvgMarkUp,
   ScrollNetworks,
+  BLOCKCHAINS,
 } from "../constants";
 
 import {
@@ -233,6 +234,10 @@ export class BundlerSimulationService {
         verificationGasLimit += BigInt(
           Math.ceil(Number(verificationGasLimit) * 0.1),
         );
+      }
+
+      if (chainId === BLOCKCHAINS.BLAST_MAINNET) {
+        callGasLimit += BigInt(Math.ceil(Number(callGasLimit) * 0.5));
       }
 
       const verificationGasLimitMultiplier =
