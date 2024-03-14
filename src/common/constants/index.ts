@@ -1353,7 +1353,7 @@ export enum BLOCKCHAINS {
   ARBITRUM_SEPOLIA_TESTNET = 421614,
   SEPOLIA_TESTNET = 11155111,
   BERACHAIN_TESTNET = 80085,
-  BLAST_TESTNET = 168587773,
+  BLAST_SEPOLIA_TESTNET = 168587773,
   BASE_SEPOLIA_TESTNET = 84532,
   BLAST_MAINNET = 81457,
   SCROLL_SEPOLIA_TESTNET = 534351,
@@ -1361,85 +1361,4 @@ export enum BLOCKCHAINS {
   ZEROONE_TESTNET = 56400,
 }
 
-// Network with base gas diff from 21k and maxPriorityFeePerGas is 0
-export const L2Networks = [421613, 42161, 42170];
-export const PolygonZKEvmNetworks = [1101, 1442];
-export const OptimismNetworks = [
-  420, 10, 84531, 8453, 204, 5611, 9980, 91715, 84532, 81457, 168587773,
-  11155420,
-];
-export const LineaNetworks = [59140, 59144];
-export const ArbitrumNetworks = [42170, 421613, 42161, 421614];
-export const AlchemySimulateExecutionSupportedNetworks = [
-  1, 5, 11155111, 137, 80001, 10, 420, 42161, 421613, 421614, 8453, 84531, 592,
-];
-export const AstarNetworks = [81, 592];
-export const NetworksNotSupportingEthCallStateOverrides = [
-  1101, 1442, 81, 592, 169, 3441005, 91715, 7116, 9980,
-];
-export const NetworksNotSupportingEthCallBytecodeStateOverrides = [
-  1, 59140, 59144, 84532, 421614, 168587773, 80001, 43113, 11155111, 1101, 1442,
-  420,
-];
-export const MantleNetworks = [5000, 5001];
-export const ScrollNetworks = [534351, 534352];
-
-export const pvgMarkUp: {
-  [chainId: number]: number;
-} = {
-  1: 0.1,
-  5: 0.1,
-  80001: 0.1,
-  137: 0.1,
-  97: 0.1,
-  56: 0.1,
-  1442: 0.1,
-  1101: 0.1,
-  421613: 0.15,
-  42161: 0.15,
-  42170: 0.15,
-  420: 0.15,
-  10: 0.15,
-  43114: 0.05,
-  43113: 0.05,
-  84531: 0.15,
-  8453: 0.15,
-  59140: 0.1,
-  59144: 0.1,
-  5000: 0.15,
-  5001: 0.15,
-  204: 0.15,
-  5611: 0.15,
-  592: 0.1,
-  88888: 0.1,
-  88882: 0.1,
-  81: 0.1,
-  1115: 0.1,
-  1116: 0.1,
-  169: 0.1,
-  3441005: 0.1,
-  91715: 0.15,
-  9980: 0.15,
-  7116: 0.1,
-  421614: 0.1,
-  11155111: 0.1,
-  168587773: 0.15,
-  84532: 0.15,
-  80085: 0.1,
-  81457: 0.15,
-};
-
-export const BLAST_PVG_VALUE = 700000000n;
 export const MANTLE_L1_ROLL_UP_FEE_DIVISION_FACTOR = 10000000000n;
-export const MANTLE_PUBLIC_RPC_URL_1 = "https://rpc.mantle.xyz";
-export const MANTLE_PUBLIC_RPC_URL_2 = "https://rpc.ankr.com/mantle";
-export const MANTLE_PUBLIC_RPC_URL_3 = "https://1rpc.io/mantle";
-export const MANTLE_PRIVATE_RPC_URL_1 =
-  "https://rpc.ankr.com/mantle/07101210d8974c619d563526229a15fdc1675bb1e862ed04a6b8c4e90fa45fab";
-export const MANTLE_PRIVATE_RPC_URL_2 =
-  "https://rpc.ankr.com/mantle/0f2ac70eb2e86d935951e9d3874deeb44525123a1ce2a7cf609cf1f0a098d2d6";
-export const MANTLE_PRIVATE_RPC_URL_3 =
-  "https://rpc.ankr.com/mantle/6ce34fc32c05d52c87f836fc1f994fd056b78c1d75ba9573a1ffbfcd8094287e";
-export const BLAST_SEPOLIA_PUBLIC_RPC_URL = "https://sepolia.blast.io";
-export const BLAST_SEPOLIA_PRIVATE_RPC_URL =
-  "https://rpc.ankr.com/blast_testnet_sepolia/0f2ac70eb2e86d935951e9d3874deeb44525123a1ce2a7cf609cf1f0a098d2d6";

@@ -167,14 +167,17 @@ let statusService: IStatusService;
     routeTransactionToRelayerMap[chainId] = {};
     entryPointMap[chainId] = [];
 
-    if (!config.chains.provider[chainId]) {
-      throw new Error(`No provider for chainId ${chainId}`);
+    if (!config.chains.providers || !config.chains.providers[chainId]) {
+      throw new Error(`No providers in config for chainId: ${chainId}`);
     }
+
+    const [firstProvider] = config.chains.providers[chainId];
+    const rpcUrl = firstProvider.url;
 
     log.info(`Setting up network service for chainId: ${chainId}`);
     const networkService = new EVMNetworkService({
       chainId,
-      rpcUrl: config.chains.provider[chainId],
+      rpcUrl,
     });
     log.info(`Network service setup complete for chainId: ${chainId}`);
     networkServiceMap[chainId] = networkService;
@@ -313,8 +316,8 @@ let statusService: IStatusService;
           ),
           fundingRelayerAmount: relayerManager.fundingRelayerAmount[chainId],
           ownerAccountDetails: new EVMAccount(
-            relayerManager.ownerAccountDetails[chainId].publicKey,
-            relayerManager.ownerAccountDetails[chainId].privateKey,
+            relayerManager.ownerAddress,
+            relayerManager.ownerPrivateKey,
             networkService.rpcUrl,
           ),
           gasLimitMap: relayerManager.gasLimitMap,

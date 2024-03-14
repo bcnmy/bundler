@@ -16,11 +16,9 @@ There are 2 ways to run the service and it's dependencies locally:
 2. **Docker (recommended)**: follow the instructions below.
 
 ## Using the Docker development environment
-1. Install Docker and Docker compose
-2. Create an `.env` file using the `.env-example` file as a template
-3. Create a `config.json` file inside the `config` directory using `config/config-example.json` as a template.
-4. Run `ts-node encrypt-config.ts` to create the encrypted config. ⚠️ You have to do this every time you change the `config.json` and you have to restart the container for it to pick up changes.
-5. Run `docker compose up` and the server and all of it's dependencies should run in the current terminal session without throwing any errors.
+1. Install Docker, Docker compose and `ts-node` on your local machine
+2. Follow the [First setup instructions](src/config/CONFIG.md#👶🏻-first-setup-instructions) to configure the Bundler before running it.
+3. Run `docker compose up` and the server and all of it's dependencies should run in the current terminal session without throwing any errors.
 
 Other useful commands:
 - `docker compose down`: stop the containers without deleting their data.
@@ -28,3 +26,10 @@ Other useful commands:
 - `docker compose up -d`: runs the containers in the background without blocking the current terminal sessions.
 - 💡 `docker compose build server`: run this whenever you add a new package to `package.json` or it won't be reflected in the container.
 - `docker compose build --no-cache <service_name>`: build without cache if you suspect caching problems.
+
+
+### NOTES for DEVOPS
+When adding a new chain integration make sure to add the new charin id
+to all relevant config deployment files, in the `supportedNetworks`
+e.g. `config/staging.json` or the bunlder will not start that network
+even thouh is supported. 

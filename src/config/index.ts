@@ -2,7 +2,7 @@
 import crypto from "crypto-js";
 import fs, { existsSync } from "fs";
 import _, { isNumber } from "lodash";
-import path from "path";
+import nodeconfig from "config";
 import { logger } from "../common/logger";
 
 import { ConfigType, IConfig } from "./interface/IConfig";
@@ -16,23 +16,24 @@ const PBKDF2_ITERATIONS = 310000;
 const AES_PADDING = crypto.pad.Pkcs7;
 const AES_MODE = crypto.mode.CBC;
 
-export function merge(
-  userConfig: Partial<ConfigType>,
-  staticConfig: any,
-): ConfigType {
-  // clone so we don't mutate the original config
-  const clone = _.cloneDeep(userConfig);
+export function merge(decryptedConfig: Partial<ConfigType>): ConfigType {
+  const merged = nodeconfig.util.toObject();
 
-  // preserve the supported networks from the user config because
-  // we want to override the default from static-config if it's present in the user config
-  const supportedNetworks = _.clone(clone.supportedNetworks);
+  // We always take the relayer secrets from the old, decrypted config
+  if (decryptedConfig.relayerManagers) {
+    for (let i = 0; i < merged.relayerManagers.length; i += 1) {
+      merged.relayerManagers[i].relayerSeed =
+        decryptedConfig.relayerManagers[i].relayerSeed;
 
-  // perform the merge
-  const merged = _.merge(clone, staticConfig);
+      merged.relayerManagers[i].ownerAddress =
+        decryptedConfig.relayerManagers[i].ownerAddress;
 
-  // restore the supported networks array
-  if (supportedNetworks && supportedNetworks.length) {
-    merged.supportedNetworks = supportedNetworks;
+      merged.relayerManagers[i].ownerPrivateKey =
+        decryptedConfig.relayerManagers[i].ownerPrivateKey;
+    }
+  } else {
+    throw new Error(`Relayer managers not configured in the encrypted config file.
+    💡 HINT: Make sure that the relayerManagers property exists in config.json, contains the relayerSeed and ownerAccountDetails, and re-run ts-node encrypt-config.ts`);
   }
 
   return merged;
@@ -47,10 +48,6 @@ export class Config implements IConfig {
       // decrypt the config and load it
       const encryptedEnvPath =
         process.env.BUNDLER_CONFIG_PATH || "config.json.enc";
-
-      const staticConfigPath =
-        process.env.BUNDLER_STATIC_CONFIG_PATH ||
-        "src/config/static-config.json";
 
       const passphrase = process.env.CONFIG_PASSPHRASE;
       if (!passphrase) {
@@ -95,12 +92,10 @@ export class Config implements IConfig {
         throw new Error("Error: HMAC does not match");
       }
       const data = JSON.parse(plaintext) as ConfigType;
-      const staticConfig = JSON.parse(
-        fs.readFileSync(path.resolve(staticConfigPath), "utf8"),
-      );
 
-      this.config = merge(data, staticConfig);
+      this.config = merge(data);
       this.validate();
+
       log.info("Config loaded successfully");
     } catch (error) {
       log.error("Config loading failed", error);
@@ -120,9 +115,11 @@ export class Config implements IConfig {
       if (!this.config.chains.currency[chainId]) {
         throw new Error(`Currency required for chain id ${chainId}`);
       }
-      if (!this.config.chains.provider[chainId]) {
+
+      if (!this.config.chains.providers[chainId]) {
         throw new Error(`Provider required for chain id ${chainId}`);
       }
+
       if (!this.config.chains.decimal[chainId]) {
         throw new Error(`Decimals required for chain id ${chainId}`);
       }

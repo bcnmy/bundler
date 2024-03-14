@@ -35,17 +35,7 @@ import {
   SimulateValidationAndExecutionData,
   SimulateValidationData,
 } from "./types";
-import {
-  OptimismNetworks,
-  ArbitrumNetworks,
-  AlchemySimulateExecutionSupportedNetworks,
-  NetworksNotSupportingEthCallStateOverrides,
-  MantleNetworks,
-  NetworksNotSupportingEthCallBytecodeStateOverrides,
-  pvgMarkUp,
-  ScrollNetworks,
-  BLOCKCHAINS,
-} from "../constants";
+import { BLOCKCHAINS } from "../constants";
 
 import {
   AlchemySimulationService,
@@ -82,22 +72,24 @@ export class BundlerSimulationService {
       rpcUrl: this.networkService.rpcUrl,
     });
 
-    if (OptimismNetworks.includes(this.networkService.chainId)) {
+    if (config.optimismNetworks.includes(this.networkService.chainId)) {
       this.gasEstimator = createOptimismGasEstimator({
         rpcUrl: this.networkService.rpcUrl,
       });
     }
 
-    if (ArbitrumNetworks.includes(this.networkService.chainId))
+    if (config.arbitrumNetworks.includes(this.networkService.chainId))
       this.gasEstimator = createArbitrumGasEstimator({
         rpcUrl: this.networkService.rpcUrl,
       });
-    if (MantleNetworks.includes(this.networkService.chainId)) {
+
+    if (config.mantleNetworks.includes(this.networkService.chainId)) {
       this.gasEstimator = createMantleGasEstimator({
         rpcUrl: this.networkService.rpcUrl,
       });
     }
-    if (ScrollNetworks.includes(this.networkService.chainId)) {
+
+    if (config.scrollNetworks.includes(this.networkService.chainId)) {
       this.gasEstimator = createScrollGasEstimator({
         rpcUrl: this.networkService.rpcUrl,
       });
@@ -142,8 +134,8 @@ export class BundlerSimulationService {
         // setting a non zero value as division with maxFeePerGas will happen
         userOp.maxFeePerGas = BigInt(1);
         if (
-          OptimismNetworks.includes(chainId) ||
-          MantleNetworks.includes(chainId)
+          config.optimismNetworks.includes(chainId) ||
+          config.mantleNetworks.includes(chainId)
         ) {
           const gasPrice = await this.gasPriceService.getGasPrice();
           if (typeof gasPrice === "bigint") {
@@ -170,8 +162,8 @@ export class BundlerSimulationService {
         // setting a non zero value as division with maxPriorityFeePerGas will happen
         userOp.maxPriorityFeePerGas = BigInt(1);
         if (
-          OptimismNetworks.includes(chainId) ||
-          MantleNetworks.includes(chainId)
+          config.optimismNetworks.includes(chainId) ||
+          config.mantleNetworks.includes(chainId)
         ) {
           const gasPrice = await this.gasPriceService.getGasPrice();
           if (typeof gasPrice === "bigint") {
@@ -191,10 +183,12 @@ export class BundlerSimulationService {
 
       let supportsEthCallStateOverride = true;
       let supportsEthCallByteCodeOverride = true;
-      if (NetworksNotSupportingEthCallStateOverrides.includes(chainId)) {
+      if (config.networksNotSupportingEthCallStateOverrides.includes(chainId)) {
         supportsEthCallStateOverride = false;
       } else if (
-        NetworksNotSupportingEthCallBytecodeStateOverrides.includes(chainId)
+        config.networksNotSupportingEthCallBytecodeStateOverrides.includes(
+          chainId,
+        )
       ) {
         supportsEthCallByteCodeOverride = false;
       }
@@ -222,8 +216,10 @@ export class BundlerSimulationService {
       let { verificationGasLimit, callGasLimit, preVerificationGas } = response;
 
       if (
-        NetworksNotSupportingEthCallStateOverrides.includes(chainId) ||
-        NetworksNotSupportingEthCallBytecodeStateOverrides.includes(chainId)
+        config.networksNotSupportingEthCallStateOverrides.includes(chainId) ||
+        config.networksNotSupportingEthCallBytecodeStateOverrides.includes(
+          chainId,
+        )
       ) {
         callGasLimit += BigInt(Math.ceil(Number(callGasLimit) * 0.2));
         verificationGasLimit += BigInt(
@@ -249,7 +245,7 @@ export class BundlerSimulationService {
       log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
 
       preVerificationGas += BigInt(
-        Math.ceil(Number(toHex(totalGas)) * pvgMarkUp[chainId]),
+        Math.ceil(Number(toHex(totalGas)) * config.pvgMarkUp[chainId]),
       );
 
       log.info(
@@ -305,7 +301,7 @@ export class BundlerSimulationService {
       let reason: string | undefined;
       let totalGas: number;
       let data: string | undefined;
-      if (AlchemySimulateExecutionSupportedNetworks.includes(chainId)) {
+      if (config.alchemySimulateExecutionSupportedNetworks.includes(chainId)) {
         try {
           const start = performance.now();
           const response =
@@ -459,10 +455,9 @@ export class BundlerSimulationService {
         args: [[userOp], userOp.sender],
       });
 
-      const { publicKey } =
-        config.relayerManagers[0].ownerAccountDetails[chainId];
+      const { ownerAddress } = config.relayerManagers[0];
       log.info(
-        `Simulating with from address: ${publicKey} on chainId: ${chainId}`,
+        `Simulating with from address: ${ownerAddress} on chainId: ${chainId}`,
       );
 
       const gasPriceFromService = await this.gasPriceService.getGasPrice();
@@ -478,7 +473,7 @@ export class BundlerSimulationService {
 
       const ethEstimateGasParams = [
         {
-          from: publicKey,
+          from: ownerAddress,
           to: entryPointContract.address,
           data,
           gasPrice: `0x${gasPrice}`,
