@@ -56,7 +56,7 @@ spec:
             value: "=--max_old_space_size=6000"
           - name: NODE_ENV
             value: {{ .Values.relayer.environment }}
-          - name: NODE_PATH_INDEX
+          - name: NODE_CONFIG
             value: '{"relayer": {"nodePathIndex": {{ .Values.index }}}}'
         envFrom:
           {{- if .Values.datadog.enable }}
