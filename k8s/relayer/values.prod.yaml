@@ -4,6 +4,7 @@ index: 0
 
 
 relayer:
+  environment: "production"
   name: "relayer-server"
   image: "gcr.io/biconomy-prod/sdk/relayer-node-service:latest"
   port: "3000"
