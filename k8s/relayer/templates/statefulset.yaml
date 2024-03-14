@@ -57,7 +57,7 @@ spec:
           - name: NODE_ENV
             value: {{ .Values.relayer.environment }}
           - name: NODE_PATH_INDEX
-            value: {{ .Values.index }}
+            value: "{{ .Values.index }}"
         envFrom:
           {{- if .Values.datadog.enable }}
           - configMapRef:
