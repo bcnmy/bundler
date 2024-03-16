@@ -39,7 +39,7 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
 
     const chainIdInNum = parseInt(chainId, 10);
     if (chainIdInNum === 5000) {
-      gasLimitFromSimulation += 100000000;
+      gasLimitFromSimulation += 500000000;
     }
 
     const transactionId = generateTransactionId(Date.now().toString());
