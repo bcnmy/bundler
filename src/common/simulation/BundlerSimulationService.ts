@@ -236,6 +236,10 @@ export class BundlerSimulationService {
         callGasLimit += BigInt(Math.ceil(Number(callGasLimit) * 0.5));
       }
 
+      if(chainId === BLOCKCHAINS.MANTA_MAINNET) {
+        preVerificationGas += preVerificationGas;
+      }
+
       const verificationGasLimitMultiplier =
         userOp.paymasterAndData === "0x" ? 1 : 3;
       const totalGas =
