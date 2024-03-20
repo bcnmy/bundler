@@ -418,7 +418,7 @@ let statusService: IStatusService;
             abi: ENTRY_POINT_ABI,
             address: entryPointAddress as `0x${string}`,
             client: {
-              public: networkService.provider,
+              public: networkService.client,
             },
           }),
         });

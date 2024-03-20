@@ -1050,5 +1050,21 @@
   },
   "aaDashboardBackend": {
     "url": "https://paymaster-dashboard-backend-v2.staging.biconomy.io/api/v2/bundlers/auth"
+  },
+  "EVMNetworkService": {
+    "waitForTransaction": {
+      "timeoutMs": 240000,
+      "pollingIntervalMs": 1000,
+      "retryCount": 240
+    },
+    "loadBalancer": {
+      "interval": 60000,
+      "sampleCount": 5,
+      "timeout": 500,
+      "weights": {
+        "latency": 0.3,
+        "stability": 0.7
+      }
+    }
   }
 }

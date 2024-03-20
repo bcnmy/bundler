@@ -6,8 +6,7 @@ import {
 
 export interface INetworkService<AccountType, RawTransactionType> {
   chainId: number;
-  rpcUrl: string;
-  provider: PublicClient;
+  client: PublicClient;
 
   sendRpcCall(method: string, params: Array<any>): Promise<any>;
   getBaseFeePerGas(): Promise<bigint>;
@@ -29,7 +28,7 @@ export interface INetworkService<AccountType, RawTransactionType> {
     confirmations?: number,
     timeout?: number,
   ): Promise<TransactionReceipt>;
-  getLatesBlockNumber(): Promise<bigint>;
+  getLatestBlockNumber(): Promise<bigint>;
   getTransaction(transactionHash: string): Promise<Transaction | null>;
   runAlchemySimulation(params: any): Promise<any>;
   ethCall(params: any): Promise<any>;

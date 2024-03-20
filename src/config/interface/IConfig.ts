@@ -9,7 +9,7 @@ enum RpcProviderType {
   PRIVATE = "private",
 }
 
-interface RpcProvider {
+export interface RpcProvider {
   url: string;
   type: RpcProviderType;
 }

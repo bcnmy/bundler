@@ -2,8 +2,8 @@
 /* eslint-disable import/no-import-module-exports */
 /* eslint-disable @typescript-eslint/return-await */
 /* eslint-disable new-cap */
-// eslint-disable-next-line max-classes-per-file
 import axios from "axios";
+import nodeconfig from "config";
 import {
   PublicClient,
   Transaction,
@@ -24,8 +24,9 @@ import {
   Type2TransactionGasPriceType,
 } from "./types";
 import { logger } from "../logger";
-import { customJSONStringify, parseError } from "../utils";
-import { config } from "../../config";
+import { customJSONStringify } from "../utils";
+import { ErrorCheckingTransactionReceipt } from "./errors";
+import { RpcProvider } from "../../config/interface/IConfig";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -43,51 +44,34 @@ const LOAD_BALANCER_DEFAULT = {
   },
 };
 
-class ErrorCheckingTransactionReceipt extends Error {
-  constructor(
-    error: any,
-    transactionHash: string,
-    transactionId: string,
-    chainId: number,
-  ) {
-    super(
-      `Error checking transaction receipt: ${parseError(
-        error,
-      )} for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${chainId}`,
-    );
-  }
-}
-
 export class EVMNetworkService
   implements INetworkService<IEVMAccount, EVMRawTransactionType>
 {
   chainId: number;
 
-  rpcUrl: string;
+  client: PublicClient;
 
-  provider: PublicClient;
+  providers: RpcProvider[];
 
-  constructor(options: { chainId: number; rpcUrl: string }) {
+  constructor(options: { chainId: number; client?: PublicClient }) {
     this.chainId = options.chainId;
-    this.rpcUrl = options.rpcUrl;
 
-    const providers = config.chains.providers[this.chainId];
-    if (!providers) {
-      throw new Error(
-        `No providers found for chainId: ${this.chainId} in the config`,
-      );
-    }
+    this.providers = nodeconfig.get<RpcProvider[]>(
+      `chains.providers.${this.chainId}`,
+    );
 
-    if (providers.length > 1) {
-      this.provider = createPublicClient({
+    if (options.client) {
+      this.client = options.client;
+    } else if (this.providers.length > 1) {
+      this.client = createPublicClient({
         transport: fallback(
-          config.chains.providers[this.chainId].map((p) => http(p.url)),
+          this.providers.map((p) => http(p.url)),
           LOAD_BALANCER_DEFAULT,
         ),
       });
     } else {
-      this.provider = createPublicClient({
-        transport: http(providers[0].url),
+      this.client = createPublicClient({
+        transport: http(this.providers[0].url),
       });
     }
   }
@@ -99,7 +83,7 @@ export class EVMNetworkService
       jsonrpc: "2.0",
       id: Date.now(),
     };
-    const response = await axios.post(this.rpcUrl, requestData);
+    const response = await axios.post(this.providers[0].url, requestData);
     const { data } = response;
     log.info(
       `data from RPC call: ${customJSONStringify(
@@ -128,7 +112,7 @@ export class EVMNetworkService
   }
 
   async getBaseFeePerGas(): Promise<bigint> {
-    const block = await this.provider.getBlock({
+    const block = await this.client.getBlock({
       blockTag: "latest",
     });
     if (typeof block.baseFeePerGas !== "bigint") {
@@ -219,91 +203,51 @@ export class EVMNetworkService
 
   /**
    * @param transactionHash transaction hash
+   * @param transactionId transaction application id, specific for our implementation
    * @returns receipt of the transaction once mined, else waits for the transaction to be mined
    */
   async waitForTransaction(
     transactionHash: string,
     transactionId: string,
-    // confirmations?: number,
-    // timeout?: number,
   ): Promise<TransactionReceipt> {
-    log.info(
-      `Starting waitFortransaction polling on transactionHash: ${transactionHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-    );
-
-    const response: TransactionReceipt | null = await new Promise(
-      async (resolve, reject) => {
-        // Set interval to check every 1 second (adjust the interval as needed)
-        const intervalId = setInterval(async () => {
-          try {
-            log.info(
-              `Polling started to fetch receipt for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${this.chainId}`,
-            );
-            const transactionReceipt =
-              await this.getTransactionReceipt(transactionHash);
-
-            const isTransactionMined =
-              transactionReceipt &&
-              ((transactionReceipt.status as unknown as string) === "0x1" ||
-                (transactionReceipt.status as unknown as string) === "0x0");
-
-            if (isTransactionMined) {
-              // Transaction resolved successfully
-              log.info(
-                `Transaction receipt: ${customJSONStringify(
-                  transactionReceipt,
-                )} fetched for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${
-                  this.chainId
-                }`,
-              );
-              clearInterval(intervalId);
-              resolve(transactionReceipt);
-            } else {
-              // Transaction is still pending
-              log.info(
-                `Transaction is still pending for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${this.chainId}`,
-              );
-            }
-          } catch (error) {
-            const wrappedError = new ErrorCheckingTransactionReceipt(
-              error,
-              transactionHash,
-              transactionId,
-              this.chainId,
-            );
-            log.error(wrappedError.message);
-            clearInterval(intervalId);
-            reject(wrappedError);
-          }
-        }, 2000);
-
-        // Uncomment the line below to stop the interval after a certain number of iterations (optional)
-        setTimeout(
-          () => {
-            clearInterval(intervalId);
-            reject(
-              new Error(
-                "Timeout: The transaction is taking too long to confirm.",
-              ),
-            );
-          },
-          4 * 60 * 1000,
-        );
-      },
-    );
-    log.info(
-      `waitForTransactionReceipt from provider response: ${customJSONStringify(
-        response,
-      )} for transactionHash: ${transactionHash} for transactionId: ${transactionId} on chainId: ${
-        this.chainId
-      }`,
-    );
-    if (response === null) {
-      throw new Error(
-        `Error in fetching transactionReceipt for transactionHash: ${transactionHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+    try {
+      log.info(
+        `Starting waitForTransaction polling on transactionHash: ${transactionHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
       );
+
+      // See https://viem.sh/docs/actions/public/waitForTransactionReceipt.html
+      const response = await this.client.waitForTransactionReceipt({
+        hash: transactionHash as `0x${string}`,
+        timeout: nodeconfig.get(
+          "EVMNetworkService.waitForTransaction.timeoutMs",
+        ),
+        pollingInterval: nodeconfig.get(
+          "EVMNetworkService.waitForTransaction.pollingIntervalMs",
+        ),
+        retryCount: nodeconfig.get(
+          "EVMNetworkService.waitForTransaction.retryCount",
+        ),
+      });
+
+      log.info(
+        `waitForTransactionReceipt from provider response: ${customJSONStringify(
+          response,
+        )} for transactionHash: ${transactionHash} for transactionId: ${transactionId} on chainId: ${
+          this.chainId
+        }`,
+      );
+
+      return response;
+    } catch (err) {
+      const wrappedError = new ErrorCheckingTransactionReceipt(
+        err,
+        transactionHash,
+        transactionId,
+        this.chainId,
+      );
+      log.error(wrappedError.message);
+      throw wrappedError;
     }
-    return response;
   }
 
   /**
@@ -312,7 +256,7 @@ export class EVMNetworkService
    */
   async getTransaction(transactionHash: string): Promise<Transaction | null> {
     try {
-      return await this.provider.getTransaction({
+      return await this.client.getTransaction({
         hash: transactionHash as `0x${string}`,
       });
     } catch (error) {
@@ -320,8 +264,8 @@ export class EVMNetworkService
     }
   }
 
-  async getLatesBlockNumber(): Promise<bigint> {
-    const block = await this.provider.getBlock({
+  async getLatestBlockNumber(): Promise<bigint> {
+    const block = await this.client.getBlock({
       blockTag: "latest",
     });
     return block.number;

@@ -9,5 +9,10 @@
         }
       ]
     }
+  },
+  "EVMNetworkService": {
+    "waitForTransaction": {
+      "timeoutMs": 2000
+    }
   }
 }
