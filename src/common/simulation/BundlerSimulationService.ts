@@ -236,7 +236,7 @@ export class BundlerSimulationService {
         callGasLimit += BigInt(Math.ceil(Number(callGasLimit) * 0.5));
       }
 
-      if(chainId === BLOCKCHAINS.MANTA_MAINNET) {
+      if(chainId === BLOCKCHAINS.MANTLE_MAINNET) {
         preVerificationGas += preVerificationGas;
       }
 
