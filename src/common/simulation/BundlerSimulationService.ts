@@ -613,7 +613,7 @@ export class BundlerSimulationService {
         },
       };
     } catch (error: any) {
-      log.error(parseError(error));
+      log.error(`Error in simulateValidation: ${parseError(error)} on chainId: ${simulateValidationData.chainId}`);
       return {
         code: error.code,
         message: parseError(error),
