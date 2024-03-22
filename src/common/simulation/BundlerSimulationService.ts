@@ -69,29 +69,29 @@ export class BundlerSimulationService {
     this.alchemySimulationService = alchemySimulationService;
     this.gasPriceService = gasPriceService;
     this.gasEstimator = createGasEstimator({
-      rpcUrl: this.networkService.rpcUrl,
+      rpcUrl: this.networkService.providers[0].url,
     });
 
     if (config.optimismNetworks.includes(this.networkService.chainId)) {
       this.gasEstimator = createOptimismGasEstimator({
-        rpcUrl: this.networkService.rpcUrl,
+        rpcUrl: this.networkService.providers[0].url,
       });
     }
 
     if (config.arbitrumNetworks.includes(this.networkService.chainId))
       this.gasEstimator = createArbitrumGasEstimator({
-        rpcUrl: this.networkService.rpcUrl,
+        rpcUrl: this.networkService.providers[0].url,
       });
 
     if (config.mantleNetworks.includes(this.networkService.chainId)) {
       this.gasEstimator = createMantleGasEstimator({
-        rpcUrl: this.networkService.rpcUrl,
+        rpcUrl: this.networkService.providers[0].url,
       });
     }
 
     if (config.scrollNetworks.includes(this.networkService.chainId)) {
       this.gasEstimator = createScrollGasEstimator({
-        rpcUrl: this.networkService.rpcUrl,
+        rpcUrl: this.networkService.providers[0].url,
       });
     }
   }

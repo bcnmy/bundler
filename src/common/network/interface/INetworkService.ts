@@ -3,10 +3,12 @@ import {
   Type0TransactionGasPriceType,
   Type2TransactionGasPriceType,
 } from "../types";
+import { RpcProvider } from "../../../config/interface/IConfig";
 
 export interface INetworkService<AccountType, RawTransactionType> {
   chainId: number;
   client: PublicClient;
+  providers: RpcProvider[];
 
   sendRpcCall(method: string, params: Array<any>): Promise<any>;
   getBaseFeePerGas(): Promise<bigint>;
