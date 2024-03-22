@@ -361,7 +361,7 @@
         "9980": 1,
         "7116": 40,
         "421614": 5,
-        "11155111": 5,
+        "11155111": 10,
         "80085": 2,
         "168587773": 20,
         "84532": 2,
@@ -747,7 +747,7 @@
         "insufficient funds for transfer",
         "insufficient funds for gas * price + value"
       ],
-      "NONCE_TOO_LOW": ["nonce too low", "nonce has already been used"],
+      "NONCE_TOO_LOW": ["nonce too low", "nonce has already been used", "lower than the current nonce of the account"],
       "MAX_PRIORITY_FEE_HIGHER_THAN_MAX_FEE": [
         "max priority fee per gas higher than max fee per gas",
         "cannot be higher than the fee cap"
@@ -996,10 +996,10 @@
   "blastPvgValue": 700000000,
   "scrollNetworks": [534351, 534352],
   "networksNotSupportingEthCallStateOverrides": [
-    1101, 1442, 81, 592, 169, 3441005, 91715, 7116, 9980
+    1101, 1442, 81, 592, 169, 3441005, 91715, 7116, 9980, 88882, 88888
   ],
   "networksNotSupportingEthCallBytecodeStateOverrides": [
-    1, 59140, 59144, 84532, 421614, 168587773, 80001, 43113, 11155111, 1101,
+    1, 59140, 59144, 84532, 421614, 168587773, 80001, 43113, 11155111, 1101, 88882, 88888,
     1442, 420
   ],
   "pvgMarkUp": {

@@ -225,6 +225,11 @@ export class BundlerSimulationService {
         verificationGasLimit += BigInt(
           Math.ceil(Number(verificationGasLimit) * 0.2),
         );
+        if(chainId === BLOCKCHAINS.CHILIZ_MAINNET || chainId === BLOCKCHAINS.CHILIZ_TESTNET) {
+          verificationGasLimit += BigInt(
+            Math.ceil(Number(verificationGasLimit) * 0.2),
+          );
+        }
       } else {
         callGasLimit += BigInt(Math.ceil(Number(callGasLimit) * 0.1));
         verificationGasLimit += BigInt(
@@ -234,6 +239,10 @@ export class BundlerSimulationService {
 
       if (chainId === BLOCKCHAINS.BLAST_MAINNET) {
         callGasLimit += BigInt(Math.ceil(Number(callGasLimit) * 0.5));
+      }
+
+      if(chainId === BLOCKCHAINS.MANTLE_MAINNET) {
+        preVerificationGas += preVerificationGas;
       }
 
       const verificationGasLimitMultiplier =
@@ -609,7 +618,7 @@ export class BundlerSimulationService {
         },
       };
     } catch (error: any) {
-      log.error(parseError(error));
+      log.error(`Error in simulateValidation: ${parseError(error)} on chainId: ${simulateValidationData.chainId}`);
       return {
         code: error.code,
         message: parseError(error),
