@@ -225,6 +225,11 @@ export class BundlerSimulationService {
         verificationGasLimit += BigInt(
           Math.ceil(Number(verificationGasLimit) * 0.2),
         );
+        if(chainId === BLOCKCHAINS.CHILIZ_MAINNET || chainId === BLOCKCHAINS.CHILIZ_TESTNET) {
+          verificationGasLimit += BigInt(
+            Math.ceil(Number(verificationGasLimit) * 0.2),
+          );
+        }
       } else {
         callGasLimit += BigInt(Math.ceil(Number(callGasLimit) * 0.1));
         verificationGasLimit += BigInt(
