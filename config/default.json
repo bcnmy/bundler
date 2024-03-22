@@ -747,7 +747,7 @@
         "insufficient funds for transfer",
         "insufficient funds for gas * price + value"
       ],
-      "NONCE_TOO_LOW": ["nonce too low", "nonce has already been used"],
+      "NONCE_TOO_LOW": ["nonce too low", "nonce has already been used", "lower than the current nonce of the account"],
       "MAX_PRIORITY_FEE_HIGHER_THAN_MAX_FEE": [
         "max priority fee per gas higher than max fee per gas",
         "cannot be higher than the fee cap"
