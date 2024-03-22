@@ -5,4 +5,5 @@ module.exports = {
   transform: {
     "^.+\\.(ts|tsx)?$": "ts-jest",
   },
+  workerThreads: true,
 };

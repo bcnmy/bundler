@@ -27,22 +27,11 @@ import { logger } from "../logger";
 import { customJSONStringify } from "../utils";
 import { ErrorCheckingTransactionReceipt } from "./errors";
 import { RpcProvider } from "../../config/interface/IConfig";
+import { serializeTransactionReceipt } from "./serialize";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
 });
-
-const LOAD_BALANCER_DEFAULT = {
-  rank: {
-    interval: 60_000,
-    sampleCount: 5,
-    timeout: 500,
-    weights: {
-      latency: 0.3,
-      stability: 0.7,
-    },
-  },
-};
 
 export class EVMNetworkService
   implements INetworkService<IEVMAccount, EVMRawTransactionType>
@@ -60,16 +49,43 @@ export class EVMNetworkService
       `chains.providers.${this.chainId}`,
     );
 
+    // if client is provided, use it
     if (options.client) {
       this.client = options.client;
-    } else if (this.providers.length > 1) {
+    }
+    // if there are multiple providers, use load balancer
+    else if (this.providers.length > 1) {
+      const loadBalancerConfig = {
+        rank: {
+          interval: nodeconfig.get<number>(
+            `EVMNetworkService.loadBalancer.interval`,
+          ),
+          sampleCount: nodeconfig.get<number>(
+            `EVMNetworkService.loadBalancer.sampleCount`,
+          ),
+          timeout: nodeconfig.get<number>(
+            `EVMNetworkService.loadBalancer.timeout`,
+          ),
+          weights: {
+            latency: nodeconfig.get<number>(
+              `EVMNetworkService.loadBalancer.weights.latency`,
+            ),
+            stability: nodeconfig.get<number>(
+              `EVMNetworkService.loadBalancer.weights.stability`,
+            ),
+          },
+        },
+      };
+
       this.client = createPublicClient({
         transport: fallback(
           this.providers.map((p) => http(p.url)),
-          LOAD_BALANCER_DEFAULT,
+          loadBalancerConfig,
         ),
       });
-    } else {
+    }
+    // if there's only one provider use a simple client
+    else {
       this.client = createPublicClient({
         transport: http(this.providers[0].url),
       });
@@ -202,6 +218,8 @@ export class EVMNetworkService
   }
 
   /**
+   * waitForTransaction with poll the RPC provider for the transaction receipt until it's either mined or it times out.
+   * Polling parameters can be configured in the config file.
    * @param transactionHash transaction hash
    * @param transactionId transaction application id, specific for our implementation
    * @returns receipt of the transaction once mined, else waits for the transaction to be mined
@@ -237,7 +255,7 @@ export class EVMNetworkService
         }`,
       );
 
-      return response;
+      return serializeTransactionReceipt(response);
     } catch (err) {
       const wrappedError = new ErrorCheckingTransactionReceipt(
         err,
