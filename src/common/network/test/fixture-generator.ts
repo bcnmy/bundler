@@ -1,11 +1,9 @@
 /* eslint-disable no-console */
 import axios from "axios";
 
-const rpcUrl =
-  "https://opt-mainnet.g.alchemy.com/v2/0s6Ch-MRZPAmq1mdh0pTUCbm3q5IzpdN";
+const rpcUrl = "<YOUR RPC URL>";
 
-const txHash =
-  "0x4a3107bf0b3988da1bd48cc646ac993c6d48f06b86733f0092fcfc89b7e84916";
+const txHash = "<YOUR TRANSACTION HASH>";
 
 // Change the constants defined above and run this script using: `ts-node fixture-generator.ts`
 async function generate() {
