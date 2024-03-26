@@ -354,7 +354,7 @@
         "81": 1,
         "88882": 1,
         "1115": 1,
-        "1116": 1,
+        "1116": 15,
         "169": 1,
         "3441005": 1,
         "91715": 1,
@@ -403,7 +403,7 @@
         "81": 5,
         "88882": 5,
         "1115": 5,
-        "1116": 5,
+        "1116": 20,
         "169": 5,
         "3441005": 5,
         "91715": 5,
@@ -550,7 +550,7 @@
         "81": 5,
         "88882": 5,
         "1115": 0.4,
-        "1116": 10,
+        "1116": 0.2,
         "169": 0.002,
         "3441005": 0.002,
         "91715": 0.05,
@@ -747,7 +747,11 @@
         "insufficient funds for transfer",
         "insufficient funds for gas * price + value"
       ],
-      "NONCE_TOO_LOW": ["nonce too low", "nonce has already been used", "lower than the current nonce of the account"],
+      "NONCE_TOO_LOW": [
+        "nonce too low",
+        "nonce has already been used",
+        "lower than the current nonce of the account"
+      ],
       "MAX_PRIORITY_FEE_HIGHER_THAN_MAX_FEE": [
         "max priority fee per gas higher than max fee per gas",
         "cannot be higher than the fee cap"
@@ -999,8 +1003,8 @@
     1101, 1442, 81, 592, 169, 3441005, 91715, 7116, 9980, 88882, 88888
   ],
   "networksNotSupportingEthCallBytecodeStateOverrides": [
-    1, 59140, 59144, 84532, 421614, 168587773, 80001, 43113, 11155111, 1101, 88882, 88888,
-    1442, 420
+    1, 59140, 59144, 84532, 421614, 168587773, 80001, 43113, 11155111, 1101,
+    88882, 88888, 1442, 420
   ],
   "pvgMarkUp": {
     "1": 0.1,
