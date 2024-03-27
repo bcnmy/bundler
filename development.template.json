@@ -1,0 +1,109 @@
+{
+  "supportedNetworks": [80001],
+  "chains": {
+    "retryTransactionInterval": {
+      "80001": 120000
+    },
+    "updateFrequencyInSeconds": {
+      "80001": 60
+    },
+    "providers": {
+      "80001": [
+        {
+          "url": "<YOUR RPC URL>",
+          "type": "private"
+        }
+      ]
+    }
+  },
+  "relayerManagers": [
+    {
+      "name": "RM1",
+      "gasLimitMap": {
+        "0": 21000,
+        "1": 710000,
+        "2": 1700000
+      },
+      "minRelayerCount": {
+        "80001": 1
+      },
+      "maxRelayerCount": {
+        "80001": 1
+      },
+      "inactiveRelayerCountThreshold": {
+        "80001": 1
+      },
+      "pendingTransactionCountThreshold": {
+        "80001": 15
+      },
+      "fundingRelayerAmount": {
+        "80001": 0.1
+      },
+      "fundingBalanceThreshold": {
+        "80001": 0.01
+      },
+      "newRelayerInstanceCount": {
+        "80001": 1
+      }
+    },
+    {
+      "name": "RM2",
+      "gasLimitMap": {
+        "0": 21000,
+        "1": 710000,
+        "2": 1700000
+      },
+      "minRelayerCount": {
+        "80001": 1
+      },
+      "maxRelayerCount": {
+        "80001": 1
+      },
+      "inactiveRelayerCountThreshold": {
+        "80001": 1
+      },
+      "pendingTransactionCountThreshold": {
+        "80001": 15
+      },
+      "fundingRelayerAmount": {
+        "80001": 0.1
+      },
+      "fundingBalanceThreshold": {
+        "80001": 0.01
+      },
+      "newRelayerInstanceCount": {
+        "80001": 1
+      }
+    }
+  ],
+  "slack": {
+    "token": "",
+    "channel": ""
+  },
+  "dataSources": {
+    "mongoUrl": "mongodb://mongo:27017/relayer-node-service",
+    "redisUrl": "redis://redis:6379"
+  },
+  "queueUrl": "amqp://guest:guest@rabbitmq:5672?heartbeat=30",
+  "socketService": {
+    "token": "",
+    "apiKey": ""
+  },
+  "simulationData": {
+    "tenderlyData": {
+      "tenderlyUser": "",
+      "tenderlyProject": "",
+      "tenderlyAccessKey": ""
+    }
+  },
+  "relayer": {
+    "nodePathIndex": 0
+  },
+  "tokenPrice": {
+    "coinMarketCapApi": "",
+    "refreshIntervalSeconds": 90
+  },
+  "aaDashboardBackend": {
+    "url": ""
+  }
+}

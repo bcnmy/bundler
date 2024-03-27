@@ -6,7 +6,8 @@
     "dev": "nodemon",
     "build": "tsc -p .",
     "start": "node --max_old_space_size=6000 dist/server/index.js",
-    "test": "jest --setupFiles dotenv/config"
+    "start:production": "NODE_ENV=production node --max_old_space_size=6000 dist/server/index.js",
+    "test": "jest --setupFiles dotenv/config --verbose"
   },
   "dependencies": {
     "@arbitrum/sdk": "^3.1.3",
@@ -15,6 +16,7 @@
     "@biconomy/core-types": "^3.0.0",
     "@biconomy/paymaster": "^3.0.0",
     "@slack/web-api": "^6.8.0",
+    "@types/config": "^3.3.3",
     "@types/crypto-js": "^4.1.1",
     "@types/express-prometheus-middleware": "^1.2.1",
     "@types/pino": "^7.0.5",
@@ -24,12 +26,14 @@
     "big.js": "^6.2.1",
     "cent.js": "^2.0.5",
     "cls-rtracer": "^2.6.2",
+    "config": "^3.3.11",
     "consolidate": "^0.16.0",
     "cors": "^2.8.5",
     "cron": "^3.1.6",
     "crypto-js": "^4.1.1",
     "dd-trace": "^4.17.0",
     "dotenv": "^16.0.3",
+    "entry-point-gas-estimations": "0.0.19",
     "ethereumjs-util": "^7.1.5",
     "express": "^4.18.2",
     "express-handlebars": "^6.0.6",
@@ -53,7 +57,7 @@
     "redlock": "^5.0.0-beta.2",
     "rest-api-errors": "^1.2.5",
     "serialize-error": "8.1.0",
-    "typescript": "^5.2.0",
+    "typescript": "^5.3.3",
     "viem": "^2.7.8"
   },
   "devDependencies": {

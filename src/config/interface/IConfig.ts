@@ -4,6 +4,20 @@ import {
   DefaultGasOverheadType,
 } from "../../common/types";
 
+enum RpcProviderType {
+  PUBLIC = "public",
+  PRIVATE = "private",
+}
+
+export interface RpcProvider {
+  url: string;
+  type: RpcProviderType;
+}
+
+type ChainIdToProviderList = {
+  [key: number]: Array<RpcProvider>;
+};
+
 type ChainIdWithStringValueType = {
   [key: number]: string;
 };
@@ -62,12 +76,11 @@ type TokenPriceConfigType = {
   refreshIntervalSeconds: number;
 };
 
-
 type RelayerManagerConfigType = Array<{
   name: string; // assume it to be an identifier by the consumer
   relayerSeed: string;
+  ownerAddress: `0x${string}`;
   ownerPrivateKey: string;
-  ownerPublicKey: string;
   gasLimitMap: ChainIdWithNumberValueType;
   minRelayerCount: ChainIdWithNumberValueType;
   maxRelayerCount: ChainIdWithNumberValueType;
@@ -96,7 +109,7 @@ type TransactionConfigType = {
 type ChainsConfigType = {
   currency: ChainIdWithStringValueType;
   decimal: ChainIdWithNumberValueType;
-  provider: ChainIdWithStringValueType;
+  providers: ChainIdToProviderList;
   retryTransactionInterval: ChainIdWithNumberValueType;
   updateFrequencyInSeconds: ChainIdWithNumberValueType;
 };
@@ -120,55 +133,84 @@ type EntryPointDataConfigType = {
   };
 };
 
-type DataSourcesConfigType = {
-  mongoUrl: string;
-  redisUrl: string;
-};
-
 // TODO // Review how to make it generic
 type SimulationDataConfigType = {
   [key: string]: any;
-};
-
-type CacheServiceConfigType = {
-  lockTTL: number;
 };
 
 type PaymasterDashboardBackendConfigType = {
   dappDataUrl: string;
 };
 
-type FallbackProviderConfig = {
-  [chainId: string]: Array<string>;
-};
-
 export type ConfigType = {
-  queueUrl: string;
-  paymasterDashboardBackendConfig: PaymasterDashboardBackendConfigType;
-  slack: SlackConfigType;
-  dataSources: DataSourcesConfigType;
-  socketService: SocketServiceConfigType;
-  cacheService: CacheServiceConfigType;
-  supportedNetworks: Array<number>;
-  testnetNetworks: Array<number>;
-  nonRM2SupportedNetworks: Array<number>;
-  EIP1559SupportedNetworks: Array<number>;
-  supportedTransactionType: ChainIdSupportedTransactionType;
-  chains: ChainsConfigType;
-  relayer: RelayerConfigType;
-  relayerManagers: RelayerManagerConfigType;
-  transaction: TransactionConfigType;
-  feeOption: FeeOptionConfigType;
-  tokenPrice: TokenPriceConfigType;
-  entryPointData: EntryPointDataConfigType;
-  zeroAddress: `0x${string}`;
   aaDashboardBackend: {
     url: string;
   };
-  simulationData: SimulationDataConfigType;
+  // array of chain Ids for networks that are supported by Alchemy for simulate execution
+  alchemySimulateExecutionSupportedNetworks: Array<number>;
+  // array of chain Ids for networks that are part of the Arbitrum ecosystem
+  arbitrumNetworks: Array<number>;
+  // array of chain Ids for networks that are part of the Astar ecosystem
+  astarNetworks: Array<number>;
+  // hard-coded Pre-Verification Gas value for the Blast network
+  blastPvgValue: number;
+  // Redis cache configuration
+  cacheService: {
+    // lock time to live
+    lockTTL: number;
+  };
+  // network constants for each supported chain
+  chains: ChainsConfigType;
+  // configuration for Mongo and Redis
+  dataSources: {
+    mongoUrl: string;
+    redisUrl: string;
+  };
+  // default, hard-coded gas overheads
   defaultGasOverheads: DefaultGasOverheadType;
+  // true if this is running on a TrustWallet dedicated setup
   isTWSetup: boolean;
-  fallbackProviderConfig: FallbackProviderConfig;
+  // array of chain Ids for networks that support https://eips.ethereum.org/EIPS/eip-1559
+  EIP1559SupportedNetworks: Array<number>;
+  // map of entrypoint addresses -> supported chain Ids
+  entryPointData: EntryPointDataConfigType;
+  // legacy fee options configuration
+  feeOption: FeeOptionConfigType;
+  // array of chain Ids for supported L2 networks
+  l2Networks: Array<number>;
+  // array of chain Ids for networks that are part of the Linea ecosystem
+  lineaNetworks: Array<number>;
+  // array of chain Ids for networks that are part of the Mantle ecosystem
+  mantleNetworks: Array<number>;
+  networksNotSupportingEthCallBytecodeStateOverrides: Array<number>;
+  networksNotSupportingEthCallStateOverrides: Array<number>;
+  nonRM2SupportedNetworks: Array<number>;
+  // array of chain Ids for networks that are part of the Optimism ecosystem
+  optimismNetworks: Array<number>;
+  paymasterDashboardBackendConfig: PaymasterDashboardBackendConfigType;
+  // array of chain Ids for networks that are part of the Polygon zkEVM ecosystem
+  polygonZKEvmNetworks: Array<number>;
+  pvgMarkUp: ChainIdWithNumberValueType;
+  // RabbitMQ URL in the format amqp://username:password@host:port
+  queueUrl: string;
+  relayer: RelayerConfigType;
+  // relayer manager configuration (contains secrets)
+  relayerManagers: RelayerManagerConfigType;
+  // array of chain Ids for networks that are part of the Polygon zkEVM ecosystem
+  scrollNetworks: Array<number>;
+  simulationData: SimulationDataConfigType;
+  // Slack credentials for sending notifications
+  slack: SlackConfigType;
+  socketService: SocketServiceConfigType;
+  // array of chain Ids for networks that are supported by the Bundler
+  supportedNetworks: Array<number>;
+  supportedTransactionType: ChainIdSupportedTransactionType;
+  // array of chain Ids for networks that are TEST networks
+  testnetNetworks: Array<number>;
+  tokenPrice: TokenPriceConfigType;
+  // Transaction error messages
+  transaction: TransactionConfigType;
+  zeroAddress: `0x${string}`;
 };
 
 export interface IConfig {

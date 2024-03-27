@@ -24,13 +24,12 @@ services:
       # centrifugo:
       #   condition: service_healthy
       #   restart: true
-
     build:
       context: .
       dockerfile: Dockerfile.dev
     restart: always
     volumes:
-      - .:/usr/app
+      - .:/home/nonroot/bundler
 
   redis:
     image: redis:6.0
@@ -47,30 +46,26 @@ services:
       timeout: 20s
       retries: 5
 
-  # centrifugo:
-  #   container_name: centrifugo
-  #   image: centrifugo/centrifugo:v3.2.2
-  #   volumes:
-  #     - ./centrifugo_config.json:/centrifugo/config.json:ro
-  #   command: centrifugo -c config.json
-  #   healthcheck:
-  #     test:
-  #       [
-  #         "CMD",
-  #         "sh",
-  #         "-c",
-  #         "wget -nv -O - http://localhost:8000"
-  #       ]
-  #     interval: 3s
-  #     timeout: 3s
-  #     retries: 3
+  centrifugo:
+    container_name: centrifugo
+    image: centrifugo/centrifugo:v3.2.2
+    volumes:
+      - ./centrifugo_config.json:/centrifugo/config.json
+    command: centrifugo -c config.json
 
-  #   ulimits:
-  #     nofile:
-  #       soft: 65535
-  #       hard: 65535
-  #   ports:
-  #     - "0.0.0.0:8000:8000"
+    healthcheck:
+      test: ["CMD", "sh", "-c", "wget -nv -O - http://localhost:8000"]
+      interval: 3s
+      timeout: 3s
+      retries: 3
+
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+
+    ports:
+      - "0.0.0.0:8000:8000"
 
   mongo:
     image: mongo:latest

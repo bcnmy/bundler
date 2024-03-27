@@ -33,11 +33,14 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
     const { id } = req.body;
     const userOp = req.body.params[0];
     const entryPointAddress = req.body.params[1];
-    const gasLimitFromSimulation = req.body.params[2] + 500000;
+    let gasLimitFromSimulation = req.body.params[2] + 500000;
     const userOpHash = req.body.params[3];
     const { chainId, dappAPIKey } = req.params;
 
     const chainIdInNum = parseInt(chainId, 10);
+    if (chainIdInNum === 5000) {
+      gasLimitFromSimulation += 5000000000;
+    }
 
     const transactionId = generateTransactionId(Date.now().toString());
     log.info(

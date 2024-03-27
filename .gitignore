@@ -22,4 +22,6 @@ refundAddresses.ts
 
 !example.cfg
 dist/
-
+*.code-workspace
+config/development.json
+config/production.json

@@ -1,7 +1,8 @@
 module.exports = {
-  preset: 'ts-jest',
+  preset: "ts-jest",
   testTimeout: 600000,
+  testMatch: ["**/__tests__/**/*.ts?(x)", "**/?(*.)+(spec|test).ts?(x)"],
   transform: {
-    '^.+\\.(ts|tsx)?$': 'ts-jest'
+    "^.+\\.(ts|tsx)?$": "ts-jest",
   },
 };

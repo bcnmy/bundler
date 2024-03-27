@@ -2,7 +2,7 @@
 import crypto from "crypto-js";
 import fs, { existsSync } from "fs";
 import _, { isNumber } from "lodash";
-import path from "path";
+import nodeconfig from "config";
 import { logger } from "../common/logger";
 
 import { ConfigType, IConfig } from "./interface/IConfig";
@@ -16,82 +16,27 @@ const PBKDF2_ITERATIONS = 310000;
 const AES_PADDING = crypto.pad.Pkcs7;
 const AES_MODE = crypto.mode.CBC;
 
-function getEnvMinRelayerCount(): number {
-  if (process.env.BUNDLER_MIN_RELAYER_COUNT) {
-    return parseInt(process.env.BUNDLER_MIN_RELAYER_COUNT, 10);
-  }
-  return 0;
-}
-
-function getEnvMaxRelayerCount(): number {
-  if (process.env.BUNDLER_MAX_RELAYER_COUNT) {
-    return parseInt(process.env.BUNDLER_MAX_RELAYER_COUNT, 10);
-  }
-  return 0;
-}
-
-function getEnvfundingBalanceThreshold(): number {
-  if (process.env.BUNDLER_FUNDING_BALANCE_THRESHOLD) {
-    return parseFloat(process.env.BUNDLER_FUNDING_BALANCE_THRESHOLD);
-  }
-  return 0;
-}
-
-function getEnvfundingRelayerAmount(): number {
-  if (process.env.BUNDLER_FUNDING_RELAYER_AMOUNT) {
-    return parseFloat(process.env.BUNDLER_FUNDING_RELAYER_AMOUNT);
-  }
-  return 0;
-}
-
-function getJsonFromEnvVariable(envVariableName: string): any {
-  const jsonString = process.env[envVariableName];
-
-  if (!jsonString) {
-    throw new Error(
-      `Environment variable ${envVariableName} is not defined or empty.`,
-    );
-  }
-
-  try {
-    const jsonObject = JSON.parse(jsonString);
-    return jsonObject;
-  } catch (error: any) {
-    throw new Error(
-      `Error parsing JSON from ${envVariableName}: ${error.message}`,
-    );
-  }
-}
-
-function getEnvVariable(envVariableName: string): string {
-  const value = process.env[envVariableName];
-
-  if (!value) {
-    throw new Error(
-      `Environment variable ${envVariableName} is not defined or empty.`,
-    );
-  }
-
-  return value;
-}
-
-export function merge(
-  userConfig: Partial<ConfigType>,
-  staticConfig: any,
+// A part of our config is encrypted and other part is not. This function merges the decrypted part with the rest of the config.
+export function mergeWithDecryptedConfig(
+  decryptedConfig: Partial<ConfigType>,
 ): ConfigType {
-  // clone so we don't mutate the original config
-  const clone = _.cloneDeep(userConfig);
+  const merged = nodeconfig.util.toObject();
 
-  // preserve the supported networks from the user config because
-  // we want to override the default from static-config if it's present in the user config
-  const supportedNetworks = _.clone(clone.supportedNetworks);
+  // We always take the relayer secrets from the old, decrypted config
+  if (decryptedConfig.relayerManagers) {
+    for (let i = 0; i < merged.relayerManagers.length; i += 1) {
+      merged.relayerManagers[i].relayerSeed =
+        decryptedConfig.relayerManagers[i].relayerSeed;
 
-  // perform the merge
-  const merged = _.merge(clone, staticConfig);
+      merged.relayerManagers[i].ownerAddress =
+        decryptedConfig.relayerManagers[i].ownerAddress;
 
-  // restore the supported networks array
-  if (supportedNetworks && supportedNetworks.length) {
-    merged.supportedNetworks = supportedNetworks;
+      merged.relayerManagers[i].ownerPrivateKey =
+        decryptedConfig.relayerManagers[i].ownerPrivateKey;
+    }
+  } else {
+    throw new Error(`Relayer managers not configured in the encrypted config file.
+    💡 HINT: Make sure that the relayerManagers property exists in config.json, contains the relayerSeed and ownerAccountDetails, and re-run ts-node encrypt-config.ts`);
   }
 
   return merged;
@@ -100,138 +45,65 @@ export function merge(
 export class Config implements IConfig {
   config: ConfigType;
 
-  readEnvVariables() {
-    log.info("Reading env Variables");
-    const slackConfig = getJsonFromEnvVariable("BUNDLER_SLACK_JSON");
-    const simulationDataConfig = getJsonFromEnvVariable(
-      "BUNDLER_SIMULATION_DATA_JSON",
-    );
-    const dataSourcesConfig = getJsonFromEnvVariable(
-      "BUNDLER_DATASOURCES_JSON",
-    );
-    const socketServiceConfig = getJsonFromEnvVariable(
-      "BUNDLER_SOCKET_SERVICE_JSON",
-    );
-    const providerConfig = getJsonFromEnvVariable("BUNDLER_PROVIDER_JSON");
-    const tokenPriceConfig = getJsonFromEnvVariable("BUNDLER_TOKEN_PRICE_JSON");
-    const fallbackProviderConfig = getJsonFromEnvVariable(
-      "BUNDLER_FALLBACK_PROVIDER_JSON",
-    );
-
-    this.config.queueUrl = getEnvVariable("BUNDLER_QUEUE_URL");
-
-    this.config.chains.provider = providerConfig;
-    this.config.dataSources = dataSourcesConfig;
-    this.config.socketService = socketServiceConfig;
-    this.config.slack = slackConfig;
-    this.config.simulationData = simulationDataConfig;
-    this.config.tokenPrice = _.merge(this.config.tokenPrice, tokenPriceConfig);
-    this.config.fallbackProviderConfig = fallbackProviderConfig;
-
-    this.config.isTWSetup =
-      getEnvVariable("BUNDLER_IS_TRUSTWALLET_SETUP") === "true";
-
-    // this.config.tokenPrice = tokenPriceConfig;
-    const chainId = parseInt(process.env.BUNDLER_CHAIN_ID as string, 10);
-    log.info(`CHAIN ID <${process.env.BUNDLER_CHAIN_ID}>`);
-
-    const supportedNetworks = [chainId];
-    this.config.supportedNetworks = supportedNetworks;
-
-    this.config.relayer = {
-      nodePathIndex: parseInt(
-        process.env.BUNDLER_NODE_PATH_INDEX as string,
-        10,
-      ),
-    };
-
-    // rest of the params in .env file in being read by code directly
-    // not from the config.
-    // REDIS_URL, MONGO_URL, QUEUE_URL, CONFIG_PASSPHRASE, NODE_PATH_INDEX
-    // TENDERLY_USER. TENDERLY_PROJECT, TENDERLY_KEY
-    for (const relayerManager of this.config.relayerManagers) {
-      const minRelayerCount = getEnvMinRelayerCount();
-      const maxRelayerCount = getEnvMaxRelayerCount();
-      const fundingBalanceThreshold = getEnvfundingBalanceThreshold();
-      const fundingRelayerAmount = getEnvfundingRelayerAmount();
-
-      relayerManager.minRelayerCount[chainId] = minRelayerCount;
-      relayerManager.maxRelayerCount[chainId] = maxRelayerCount;
-      relayerManager.fundingBalanceThreshold[chainId] = fundingBalanceThreshold;
-      relayerManager.fundingRelayerAmount[chainId] = fundingRelayerAmount;
-    }
-
-    const relayerManager = this.config.relayerManagers[0];
-    log.info(
-      `RelayarManager ${relayerManager.name} publicKey <${relayerManager.ownerPublicKey}>`,
-    );
-
-    log.info(
-      `RelayarManager ${relayerManager.name} Min relayer count <${relayerManager.minRelayerCount[chainId]}>`,
-    );
-    log.info(
-      `RelayarManager ${relayerManager.name} Max relayer count <${relayerManager.maxRelayerCount[chainId]}>`,
-    );
-    log.info(
-      `RelayarManager ${relayerManager.name} fundingBalanceThreshold  <${relayerManager.fundingBalanceThreshold[chainId]}>`,
-    );
-    log.info(
-      `RelayarManager ${relayerManager.name} fundingRelayerAmount <${relayerManager.fundingRelayerAmount[chainId]}>`,
-    );
-    log.info("Reading env Variables completed");
-  }
-
   // eslint-disable-next-line class-methods-use-this
   decryptConfig(): string {
-    const encryptedEnvPath = "./config.json.enc";
+    const encryptedEnvPath =
+      process.env.BUNDLER_CONFIG_PATH || "./config.json.enc";
+
     const passphrase = process.env.BUNDLER_CONFIG_PASSPHRASE;
     if (!passphrase) {
-      throw new Error("Passphrase for config required in .env file");
+      throw new Error(
+        "BUNDLER_CONFIG_PASSPHRASE environment variable required",
+      );
     }
 
     if (!existsSync(encryptedEnvPath)) {
       throw new Error(`Invalid ENV Path: ${encryptedEnvPath}`);
     }
     const ciphertext = fs.readFileSync(encryptedEnvPath, "utf8");
-    // First 44 bits are Base64 encodded HMAC
-    const hashInBase64 = ciphertext.substr(0, 44);
 
-    // Next 32 bits are the salt
-    const salt = crypto.enc.Hex.parse(ciphertext.substr(44, 32));
-
-    // Next 32 bits are the initialization vector
-    const iv = crypto.enc.Hex.parse(ciphertext.substr(44 + 32, 32));
-
-    // Rest is encrypted .env
-    const encrypted = ciphertext.substr(44 + 32 + 32);
-
-    // Derive key from passphrase
-    const key = crypto.PBKDF2(passphrase, salt, {
-      keySize: KEY_SIZE / 32,
-      iterations: PBKDF2_ITERATIONS,
-    });
-
-    let plaintext;
     try {
-      const encryptedBytes = crypto.AES.decrypt(encrypted, key, {
+      // First 44 bits are Base64 encodded HMAC
+      const hashInBase64 = ciphertext.substr(0, 44);
+
+      // Next 32 bits are the salt
+      const salt = crypto.enc.Hex.parse(ciphertext.substr(44, 32));
+
+      // Next 32 bits are the initialization vector
+      const iv = crypto.enc.Hex.parse(ciphertext.substr(44 + 32, 32));
+
+      // Rest is encrypted .env
+      const encrypted = ciphertext.substr(44 + 32 + 32);
+
+      // Derive key from passphrase
+      const key = crypto.PBKDF2(passphrase, salt, {
+        keySize: KEY_SIZE / 32,
+        iterations: PBKDF2_ITERATIONS,
+      });
+
+      const bytes = crypto.AES.decrypt(encrypted, key, {
         iv,
         padding: AES_PADDING,
         mode: AES_MODE,
       });
-      plaintext = encryptedBytes.toString(crypto.enc.Utf8);
+
+      const plaintext = bytes.toString(crypto.enc.Utf8);
+
+      // Verify HMAC
+      const decryptedHmac = crypto.HmacSHA256(plaintext, key);
+      const decryptedHmacInBase64 = crypto.enc.Base64.stringify(decryptedHmac);
+
+      if (decryptedHmacInBase64 !== hashInBase64) {
+        throw new Error("Error: HMAC does not match");
+      }
+      return plaintext;
     } catch (e) {
-      log.error("Incorrect password for decryption");
-      process.exit();
+      const wrappedError = new Error(
+        `Config decryption failed (check your BUNDLER_CONFIG_PASSPHRASE): ${e}`,
+      );
+      log.error(wrappedError);
+      throw wrappedError;
     }
-
-    // Verify HMAC
-    const decryptedHmac = crypto.HmacSHA256(plaintext, key);
-    const decryptedHmacInBase64 = crypto.enc.Base64.stringify(decryptedHmac);
-
-    if (decryptedHmacInBase64 !== hashInBase64) {
-      throw new Error("Error: HMAC does not match");
-    }
-    return plaintext;
   }
 
   constructor() {
@@ -240,17 +112,21 @@ export class Config implements IConfig {
       // decrypt the config and load it
       const plaintext = this.decryptConfig();
       const data = JSON.parse(plaintext) as ConfigType;
-      const staticConfig = JSON.parse(
-        fs.readFileSync(path.resolve("src/config/static-config.json"), "utf8"),
-      );
 
-      this.config = merge(data, staticConfig);
-      this.readEnvVariables();
+      this.config = mergeWithDecryptedConfig(data);
       this.validate();
-      // Setting up supportTed network from env variable if avaialable
-      // this will come from env variable
+
+      // // log.info("Config:", this.config);
+      // log.info(`Supported networks: ${this.config.supportedNetworks}`);
+
+      // // log.info(
+      // //   `Sources: ${JSON.stringify(nodeconfig.util.getConfigSources(), null, 2)}`,
+      // // );
+      // throw new Error("🚫 STOP HERE");
+
+      log.info("Config loaded successfully");
     } catch (error) {
-      log.error("Config constructor failed", error);
+      log.error("Config loading failed", error);
       throw error;
     }
   }
@@ -267,9 +143,11 @@ export class Config implements IConfig {
       if (!this.config.chains.currency[chainId]) {
         throw new Error(`Currency required for chain id ${chainId}`);
       }
-      if (!this.config.chains.provider[chainId]) {
+
+      if (!this.config.chains.providers[chainId]) {
         throw new Error(`Provider required for chain id ${chainId}`);
       }
+
       if (!this.config.chains.decimal[chainId]) {
         throw new Error(`Decimals required for chain id ${chainId}`);
       }
@@ -286,7 +164,7 @@ export class Config implements IConfig {
   }
 
   update(data: object): boolean {
-    this.config = merge(this.config, data);
+    this.config = _.merge(this.config, data);
     return true;
   }
 

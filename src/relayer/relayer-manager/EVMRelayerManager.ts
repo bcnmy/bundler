@@ -28,7 +28,6 @@ import { EVMRelayerMetaDataType, IRelayerQueue } from "../relayer-queue";
 import { ITransactionService } from "../transaction-service/interface/ITransactionService";
 import { IRelayerManager } from "./interface/IRelayerManager";
 import { EVMRelayerManagerServiceParamsType } from "./types";
-import { L2Networks } from "../../common/constants";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -377,7 +376,7 @@ export class EVMRelayerManager
         const relayer = new EVMAccount(
           address,
           privateKey,
-          this.networkService.rpcUrl,
+          this.networkService.providers[0].url,
         );
         this.relayerMap[address] = relayer;
         relayers.push(relayer);
@@ -485,7 +484,7 @@ export class EVMRelayerManager
         try {
           let gasLimitIndex = 0;
           // different gas limit for arbitrum
-          if (L2Networks.includes(this.chainId)) gasLimitIndex = 1;
+          if (config.l2Networks.includes(this.chainId)) gasLimitIndex = 1;
 
           const gasLimit = this.gasLimitMap[gasLimitIndex];
 

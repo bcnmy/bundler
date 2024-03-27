@@ -160,18 +160,18 @@ let statusService: IStatusService;
     routeTransactionToRelayerMap[chainId] = {};
     entryPointMap[chainId] = [];
 
-    if (!config.chains.provider[chainId]) {
-      throw new Error(`No provider for chainId ${chainId}`);
+    if (!config.chains.providers || !config.chains.providers[chainId]) {
+      throw new Error(`No providers in config for chainId: ${chainId}`);
     }
+
+    const [firstProvider] = config.chains.providers[chainId];
+    const rpcUrl = firstProvider.url;
 
     log.info(`Setting up network service for chainId: ${chainId}`);
     const networkService = new EVMNetworkService({
       chainId,
-      rpcUrl: config.chains.provider[chainId],
     });
-    log.info(
-      `Network service setup complete for chainId: ${chainId}`,
-    );
+    log.info(`Network service setup complete for chainId: ${chainId}`);
     networkServiceMap[chainId] = networkService;
 
     log.info(`Setting up gas price manager for chainId: ${chainId}`);
@@ -308,9 +308,9 @@ let statusService: IStatusService;
           ),
           fundingRelayerAmount: relayerManager.fundingRelayerAmount[chainId],
           ownerAccountDetails: new EVMAccount(
-            relayerManager.ownerPublicKey,
+            relayerManager.ownerAddress,
             relayerManager.ownerPrivateKey,
-            networkService.rpcUrl,
+            rpcUrl,
           ),
           gasLimitMap: relayerManager.gasLimitMap,
         },
@@ -412,7 +412,7 @@ let statusService: IStatusService;
             abi: ENTRY_POINT_ABI,
             address: entryPointAddress as `0x${string}`,
             client: {
-              public: networkService.provider,
+              public: networkService.client,
             },
           }),
         });

@@ -172,16 +172,15 @@ export class TenderlySimulationService implements IExternalSimulation {
       const SIMULATE_URL = `https://api.tenderly.co/api/v1/account/${this.tenderlyUser}/project/${this.tenderlyProject}/simulate`;
       const tAxios = this.tenderlyInstance();
 
-      const { ownerPublicKey } =
-        config.relayerManagers[0];
+      const { ownerAddress } = config.relayerManagers[0];
       log.info(
-        `Simulating with from address: ${ownerPublicKey} on chainId: ${chainId}`,
+        `Simulating with from address: ${ownerAddress} on chainId: ${chainId}`,
       );
 
       const data = encodeFunctionData({
         abi: entryPointContract.abi,
         functionName: "handleOps",
-        args: [[userOp], ownerPublicKey as `0x${string}`],
+        args: [[userOp], ownerAddress],
       });
 
       let gas = 9000000;
