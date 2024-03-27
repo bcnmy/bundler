@@ -375,7 +375,7 @@ export class EVMRelayerManager
         const relayer = new EVMAccount(
           address,
           privateKey,
-          this.networkService.providers[0].url,
+          this.networkService.rpcUrl,
         );
         this.relayerMap[address] = relayer;
         relayers.push(relayer);
