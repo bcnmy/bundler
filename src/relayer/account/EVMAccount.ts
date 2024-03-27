@@ -34,7 +34,7 @@ export class EVMAccount implements IEVMAccount {
   }
 
   signTransaction(rawTransaction: EVMRawTransactionType): Promise<string> {
-    return this.account.signTransaction(rawTransaction);
+    return this.account.signTransaction(rawTransaction as any);
   }
 
   async sendTransaction(

@@ -24,7 +24,9 @@
   },
   "EVMNetworkService": {
     "waitForTransaction": {
-      "timeoutMs": 2000
+      "defaults": {
+        "timeoutMs": 2000
+      }
     }
   }
 }

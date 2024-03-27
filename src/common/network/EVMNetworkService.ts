@@ -233,18 +233,21 @@ export class EVMNetworkService
         `Starting waitForTransaction polling on transactionHash: ${transactionHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
       );
 
+      const { chainId } = this;
+
       // See https://viem.sh/docs/actions/public/waitForTransactionReceipt.html
       const response = await this.client.waitForTransactionReceipt({
         hash: transactionHash as `0x${string}`,
-        timeout: nodeconfig.get(
-          "EVMNetworkService.waitForTransaction.timeoutMs",
-        ),
-        pollingInterval: nodeconfig.get(
-          "EVMNetworkService.waitForTransaction.pollingIntervalMs",
-        ),
-        retryCount: nodeconfig.get(
-          "EVMNetworkService.waitForTransaction.retryCount",
-        ),
+        confirmations: this.getWFTConfigVariable("confirmations"),
+        timeout: this.getWFTConfigVariable("timeoutMs"),
+        pollingInterval: this.getWFTConfigVariable("pollingIntervalMs"),
+        retryDelay: this.getWFTConfigVariable("retryDelayMs"),
+        retryCount: this.getWFTConfigVariable("retryCount"),
+        onReplaced(replacement) {
+          log.info(
+            `waitForTransactionReceipt.replacement: txHash=${transactionHash} is replaced by txHash=${replacement.replacedTransaction.hash} with reason=${replacement.reason} on chainId: ${chainId}`,
+          );
+        },
       });
 
       log.info(
@@ -291,5 +294,26 @@ export class EVMNetworkService
 
   async runAlchemySimulation(params: any): Promise<any> {
     return await this.sendRpcCall(AlchemyMethodType.SIMULATE_EXECUTION, params);
+  }
+
+  // getWFTConfigVariable tries to read a chain-specific config variable for viem.waitForTransactionReceipt.
+  // If it doesn't exist, it falls back to the default value. If a default value doesn't exist in the config, it will throw an error.
+  getWFTConfigVariable(name: string) {
+    let value = 0;
+    if (
+      nodeconfig.has(
+        `EVMNetworkService.waitForTransaction.networks.${this.chainId}.${name}`,
+      )
+    ) {
+      value = nodeconfig.get(
+        `EVMNetworkService.waitForTransaction.networks.${this.chainId}.${name}`,
+      );
+    } else {
+      value = nodeconfig.get(
+        `EVMNetworkService.waitForTransaction.defaults.${name}`,
+      );
+    }
+
+    return value;
   }
 }

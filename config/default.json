@@ -1057,9 +1057,18 @@
   },
   "EVMNetworkService": {
     "waitForTransaction": {
-      "timeoutMs": 240000,
-      "pollingIntervalMs": 1000,
-      "retryCount": 240
+      "defaults": {
+        "confirmations": 1,
+        "timeoutMs": 240000,
+        "pollingIntervalMs": 2000,
+        "retryCount": 10,
+        "retryDelayMs": 2000
+      },
+      "networks": {
+        "137": {
+          "confirmations": 3
+        }
+      }
     },
     "loadBalancer": {
       "interval": 60000,
