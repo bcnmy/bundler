@@ -177,7 +177,6 @@ let statusService: IStatusService;
     log.info(`Setting up network service for chainId: ${chainId}`);
     const networkService = new EVMNetworkService({
       chainId,
-      rpcUrl,
     });
     log.info(`Network service setup complete for chainId: ${chainId}`);
     networkServiceMap[chainId] = networkService;
@@ -318,7 +317,7 @@ let statusService: IStatusService;
           ownerAccountDetails: new EVMAccount(
             relayerManager.ownerAddress,
             relayerManager.ownerPrivateKey,
-            networkService.rpcUrl,
+            rpcUrl,
           ),
           gasLimitMap: relayerManager.gasLimitMap,
         },
@@ -418,7 +417,7 @@ let statusService: IStatusService;
             abi: ENTRY_POINT_ABI,
             address: entryPointAddress as `0x${string}`,
             client: {
-              public: networkService.provider,
+              public: networkService.client,
             },
           }),
         });

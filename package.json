@@ -7,7 +7,7 @@
     "build": "tsc -p .",
     "start": "node --max_old_space_size=6000 dist/server/index.js",
     "start:production": "NODE_ENV=production node --max_old_space_size=6000 dist/server/index.js",
-    "test": "jest --setupFiles dotenv/config"
+    "test": "jest --setupFiles dotenv/config --verbose"
   },
   "dependencies": {
     "@arbitrum/sdk": "^3.1.3",

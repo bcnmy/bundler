@@ -18,7 +18,7 @@ The following setup is for Polygon Mumbai that you can use for local development
    1. Set the CONFIG_PASSPHRASE in your local terminal environment before running the encryption script: `export CONFIG_PASSPHRASE=<YOUR_PASSPHRASE>`
    2. Run the encryption script: `cd src && ts-node encrypt-config.ts`
    3. It should say `completed` without logging any errors.
-4. Create the `config/development.json` file using the template `config/development.template.json`:
+4. Create the `config/development.json` file using the template `development.template.json`:
    1. Update the RPC URL for Mumbai (80001). You will need a **private** RPC endpoint for this, either you create a free account with a provider (like Alchemy) or you ping the DevOps team for access to our company provider accounts. Using a public RPC URL probably won't work because public providers have strict rate limits.
    2. Because this is our primary config file, it changes often and you may need to change some other variables by the time you are reading this. The best approach is to ping your colleague for a working config file.
 5. 🎉 That's it, the Bundler is configured to run on Polygon Mumbai (80001). Refer back to the instructions in the main [README.md](../../README.md) file to run the Bundler server locally.
