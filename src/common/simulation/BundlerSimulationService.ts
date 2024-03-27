@@ -278,7 +278,7 @@ export class BundlerSimulationService {
         },
       };
     } catch (error: any) {
-      log.error(`Error in estimating user op: ${parseError(error)}`);
+      log.error(`Error in estimating user op: ${parseError(error)} on chainId: ${estimateUserOperationGasData.chainId}`);
       return {
         code: error.code,
         message: parseError(error),
@@ -508,7 +508,7 @@ export class BundlerSimulationService {
       log.info(
         `Response from eth_estimateGas: ${customJSONStringify(
           ethEstimatGasResponse,
-        )}`,
+        )} on chainId: ${chainId}`,
       );
 
       const ethEstimateGasError = ethEstimatGasResponse.error;
