@@ -612,7 +612,7 @@ export class EVMTransactionListener
 
             if (entryPointContract) {
               const latestBlock =
-                await this.networkService.getLatestBlockNumber();
+                await this.networkService.getLatesBlockNumber();
               log.info(
                 `latestBlock: ${latestBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
               );
@@ -630,7 +630,7 @@ export class EVMTransactionListener
                   transactionReceipt,
                   entryPointContract,
                   fromBlock,
-                  this.networkService.client,
+                  this.networkService.provider,
                 );
               log.info(
                 `userOpReceipt: ${customJSONStringify(
