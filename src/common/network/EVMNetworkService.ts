@@ -5,6 +5,7 @@
 import axios from "axios";
 import nodeconfig from "config";
 import {
+  Hex,
   PublicClient,
   Transaction,
   TransactionReceipt,
@@ -217,6 +218,56 @@ export class EVMNetworkService
     return response;
   }
 
+  async pollForTransactionReceipt(hash: Hex) {
+    const timeoutMs = this.getWFTConfigVariable("timeoutMs");
+    const pollingIntervalMs = this.getWFTConfigVariable("pollingIntervalMs");
+    const startTime = Date.now();
+    const { chainId, client } = this;
+
+    let timeoutId: any;
+    const timeoutPromise = new Promise<null>((resolve) => {
+      timeoutId = setTimeout(() => resolve(null), timeoutMs);
+    });
+
+    // Disable the linter because it's a known problem: https://github.com/eslint/eslint/issues/5477
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      // Whatever finishes first: API call or timeout will resolve the promise
+      // Also disable the linter because it's what we want: https://stackoverflow.com/questions/48957022/unexpected-await-inside-a-loop-no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop
+      const receipt = await Promise.race([
+        new Promise<TransactionReceipt | null>((resolve) => {
+          client
+            .getTransactionReceipt({
+              hash,
+            })
+            .then((rcp) => {
+              resolve(rcp);
+            })
+            .catch(() => resolve(null));
+        }),
+        timeoutPromise,
+      ]);
+
+      if (receipt) {
+        if (timeoutId) clearTimeout(timeoutId);
+        return receipt;
+      }
+
+      // Sleep for pollingIntervalMs before retrying
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise((resolve) => {
+        setTimeout(resolve, pollingIntervalMs);
+      });
+
+      if (Date.now() - startTime > timeoutMs) {
+        throw new Error(
+          `waitForTransaction timeout of ${timeoutMs}ms exceeded for transaction: ${hash} on chainId: ${chainId}`,
+        );
+      }
+    }
+  }
+
   /**
    * waitForTransaction with poll the RPC provider for the transaction receipt until it's either mined or it times out.
    * Polling parameters can be configured in the config file.
@@ -233,22 +284,9 @@ export class EVMNetworkService
         `Starting waitForTransaction polling on transactionHash: ${transactionHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
       );
 
-      const { chainId } = this;
-
-      // See https://viem.sh/docs/actions/public/waitForTransactionReceipt.html
-      const response = await this.client.waitForTransactionReceipt({
-        hash: transactionHash as `0x${string}`,
-        confirmations: this.getWFTConfigVariable("confirmations"),
-        timeout: this.getWFTConfigVariable("timeoutMs"),
-        pollingInterval: this.getWFTConfigVariable("pollingIntervalMs"),
-        retryDelay: this.getWFTConfigVariable("retryDelayMs"),
-        retryCount: this.getWFTConfigVariable("retryCount"),
-        onReplaced(replacement) {
-          log.info(
-            `waitForTransactionReceipt.replacement: txHash=${transactionHash} is replaced by txHash=${replacement.replacedTransaction.hash} with reason=${replacement.reason} on chainId: ${chainId}`,
-          );
-        },
-      });
+      const response = await this.pollForTransactionReceipt(
+        transactionHash as Hex,
+      );
 
       log.info(
         `waitForTransactionReceipt from provider response: ${customJSONStringify(

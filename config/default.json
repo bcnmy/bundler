@@ -1058,15 +1058,12 @@
   "EVMNetworkService": {
     "waitForTransaction": {
       "defaults": {
-        "confirmations": 1,
-        "timeoutMs": 240000,
         "pollingIntervalMs": 2000,
-        "retryCount": 10,
-        "retryDelayMs": 2000
+        "timeoutMs": 240000
       },
       "networks": {
         "137": {
-          "confirmations": 3
+          "pollingIntervalMs": 2000
         }
       }
     },
