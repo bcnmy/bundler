@@ -1,1 +1,33 @@
-{}
+{
+  "supportedNetworks": [80001],
+  "relayer": {
+    "nodePathIndex": 0
+  },
+  "chains": {
+    "providers": {
+      "80001": [
+        {
+          "url": "https://thislinkdoesnotexist.rs",
+          "type": "private"
+        }
+      ],
+      "1": [
+        {
+          "url": "https://thislinkdoesnotexist.rs",
+          "type": "private"
+        }
+      ],
+      "10": [
+        {
+          "url": "https://thislinkdoesnotexist.rs",
+          "type": "private"
+        }
+      ]
+    }
+  },
+  "EVMNetworkService": {
+    "waitForTransaction": {
+      "timeoutMs": 2000
+    }
+  }
+}
