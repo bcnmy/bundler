@@ -2,6 +2,7 @@
 /* eslint-disable import/no-import-module-exports */
 /* eslint-disable @typescript-eslint/return-await */
 /* eslint-disable new-cap */
+// eslint-disable-next-line max-classes-per-file
 import axios from "axios";
 import {
   PublicClient,
@@ -41,6 +42,21 @@ const LOAD_BALANCER_DEFAULT = {
     },
   },
 };
+
+class ErrorCheckingTransactionReceipt extends Error {
+  constructor(
+    error: any,
+    transactionHash: string,
+    transactionId: string,
+    chainId: number,
+  ) {
+    super(
+      `Error checking transaction receipt: ${parseError(
+        error,
+      )} for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${chainId}`,
+    );
+  }
+}
 
 export class EVMNetworkService
   implements INetworkService<IEVMAccount, EVMRawTransactionType>
@@ -217,15 +233,13 @@ export class EVMNetworkService
 
     const response: TransactionReceipt | null = await new Promise(
       async (resolve, reject) => {
-        let transactionReceipt =
-          await this.getTransactionReceipt(transactionHash);
         // Set interval to check every 1 second (adjust the interval as needed)
         const intervalId = setInterval(async () => {
           try {
             log.info(
               `Polling started to fetch receipt for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${this.chainId}`,
             );
-            transactionReceipt =
+            const transactionReceipt =
               await this.getTransactionReceipt(transactionHash);
 
             const isTransactionMined =
@@ -251,23 +265,15 @@ export class EVMNetworkService
               );
             }
           } catch (error) {
-            log.info(
-              `Error checking transaction receipt: ${parseError(
-                error,
-              )} for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${
-                this.chainId
-              }`,
+            const wrappedError = new ErrorCheckingTransactionReceipt(
+              error,
+              transactionHash,
+              transactionId,
+              this.chainId,
             );
+            log.error(wrappedError.message);
             clearInterval(intervalId);
-            reject(
-              new Error(
-                `Error checking transaction receipt: ${parseError(
-                  error,
-                )} for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${
-                  this.chainId
-                }`,
-              ),
-            );
+            reject(wrappedError);
           }
         }, 2000);
 
