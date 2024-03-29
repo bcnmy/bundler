@@ -8,6 +8,8 @@ describe("ConfigV2", () => {
     // every property and it's value from the static config should be present in the new config,
     // except the ones that were added to default.json and don't exist in the old config
     const {
+      // don't check supported networks because it's manually overridden in test.json
+      supportedNetworks,
       // the following fields were added to the new config and don't exist in static-config.json
       polygonZKEvmNetworks,
       optimismNetworks,
@@ -32,7 +34,11 @@ describe("ConfigV2", () => {
     const { chains, ...configWithoutChains } = oldConfigValues;
     const { providers, ...chainsWithoutProviders } = chains;
 
-    expect(staticConfig).toEqual(
+    // don't check supported networks
+    const { supportedNetworks: supportedNetworks2, ...staticConfigClean } =
+      staticConfig;
+
+    expect(staticConfigClean).toEqual(
       expect.objectContaining({
         ...configWithoutChains,
         chains: expect.objectContaining(chainsWithoutProviders),
