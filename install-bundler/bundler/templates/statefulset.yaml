@@ -86,6 +86,9 @@ spec:
               name: {{ include "chart.name" . }}-datadogconfigmap
           {{- end }}
 
+          - secretRef:
+              name: {{.Values.env}}-tw-bundler-plain-config
+
           - configMapRef:
               name: {{ include "chart.name" . }}-env-configmap
 
@@ -98,6 +101,10 @@ spec:
           - mountPath: "/home/nonroot/bundler/config.json.enc"
             name: gcpsecrets
             subPath: "config.json.enc"
+
+          - name: {{.Values.env}}-tw-bundler-plain-config
+            mountPath:  "/home/nonroot/bundler/{{.Values.env}}"
+            subPath: {{.Values.env}}
 
           - name: gcpsecrets
             mountPath: /gcpsecrets
@@ -162,6 +169,16 @@ spec:
       - name: env-config-volume
         configMap:
           name: {{ include "chart.name" . }}-env-configmap
+
+      - name: {{.Values.env}}-tw-bundler-plain-config
+        secret:
+          secretName:  {{.Values.env}}-tw-bundler-plain-config
+          optional: false
+          defaultMode: 511
+          items:
+          - key: {{.Values.env}}.json
+            path: {{.Values.env}}.json
+
       - name: podinfo
         emptyDir: {}
 
