@@ -247,7 +247,7 @@ for array_name in $array_names; do
         --set-string projectId="$PROJECT_ID" \
         --set-string secretName="$SECRET_NAME" \
         --set-string configSecretName="$GCP_ENCRYPTED_CONFIG_SECRET" \
-        --set-string plainConfigSecretName="$GCP_PLAIN_CONFIG_SECRET" \
+        --set-string plainConfigSecretName="$GCP_PLAINTEXT_CONFIG_SECRET" \
         --set-string serviceAccount="$KUBE_SERVICE_ACCOUNT" \
         --set datadog.enable=true \
         --set-string datadog.env="bundler-$NAMESPACE" \
