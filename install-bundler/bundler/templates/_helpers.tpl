@@ -7,7 +7,7 @@ Expand the name of the chart.
 
 
 {{- define "selectServer" -}}
-{{- if eq .Values.env "prod" -}}
+{{- if eq .Values.env "production" -}}
 https://acme-v02.api.letsencrypt.org/directory
 {{- else -}}
 https://acme-staging-v02.api.letsencrypt.org/directory
