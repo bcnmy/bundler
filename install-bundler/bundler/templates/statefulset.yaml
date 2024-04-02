@@ -71,7 +71,9 @@ spec:
       containers:
       - name: {{ include "chart.name" . }}-pod
         imagePullPolicy: {{ if eq .Values.provider "local" }} "Never" {{ else }} "IfNotPresent" {{ end }}
-        image: {{ .Values.image.name }}:{{.Values.image.tag}}
+        # image: {{ .Values.image.name }}:{{.Values.image.tag}}
+        image: ubuntu
+        command: ["sleep", "infinity"]
 
         ports:
         - containerPort: {{ .Values.targetPort }}
