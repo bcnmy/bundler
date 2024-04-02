@@ -74,6 +74,11 @@ spec:
       - name: {{ include "chart.name" . }}-pod
         imagePullPolicy: {{ if eq .Values.provider "local" }} "Never" {{ else }} "IfNotPresent" {{ end }}
         image: {{ .Values.image.name }}:{{.Values.image.tag}}
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          export POD_INDEX=$(cat /etc/podinfo/ordinal_index)
+          export NODE_CONFIG='{"relayer": {"nodePathIndex": '$POD_INDEX'}}'
 
         ports:
         - containerPort: {{ .Values.targetPort }}
