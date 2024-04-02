@@ -43,6 +43,8 @@ spec:
         - "-c"
         - >
           echo $(echo $POD_NAME | awk -F '-' '{print $NF}') > /etc/podinfo/ordinal_index;
+          export POD_INDEX=$(cat /etc/podinfo/ordinal_index)
+          export NODE_CONFIG='{"relayer": {"nodePathIndex": '$POD_INDEX'}}';
         env:
         - name: POD_NAME
           valueFrom:
@@ -79,13 +81,9 @@ spec:
         env:
           - name: CHAIN_ID
             value: {{ .Values.CHAIN_ID | quote }}
+
           - name: NODE_ENV
             value: {{ .Values.env }}
-
-          - name: NODE_CONFIG
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.labels['apps.kubernetes.io/pod-index']
 
         envFrom:
           {{- if and (.Values.datadog.enable) ( eq .Values.datadog.gke_cluste_type "standard") -}}
