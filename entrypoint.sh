@@ -5,7 +5,7 @@
 ## this is being mounted from the kubernetes statefulset
 ## the nodepathindex will be extracetd from the statefulset
 #ordinal index and will be written to this path.
-export BUNDLER_NODE_PATH_INDEX=$(cat /etc/podinfo/ordinal_index)
+export NODE_CONFIG=$(cat /etc/podinfo/ordinal_index)
 
 
 ## this is being mounted from the kubernetes statefulset
