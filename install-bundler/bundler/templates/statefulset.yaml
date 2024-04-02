@@ -31,7 +31,7 @@ spec:
         - |
           gcloud secrets versions access latest --secret="{{.Values.secretName}}" > /gcpsecrets/config-passphrase
           gcloud secrets versions access latest --secret="{{.Values.configSecretName}}" > /gcpsecrets/config.json.enc
-
+          gcloud secrets versions access latest --secret="{{.Values.plainConfigSecretName}}" > /gcpsecrets/{{.Values.env}}.json
         volumeMounts:
         - name: gcpsecrets
           mountPath: /gcpsecrets
@@ -100,6 +100,10 @@ spec:
             subPath: "config.json.enc"
 
           - name: gcpsecrets
+            mountPath:  "/home/nonroot/bundler/{{.Values.env}}.json"
+            subPath: "{{.Values.env}}.json"
+
+          - name: gcpsecrets
             mountPath: /gcpsecrets
 
           - name: podinfo
@@ -162,6 +166,7 @@ spec:
       - name: env-config-volume
         configMap:
           name: {{ include "chart.name" . }}-env-configmap
+
       - name: podinfo
         emptyDir: {}
 
