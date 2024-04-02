@@ -114,15 +114,15 @@ export class Config implements IConfig {
       const data = JSON.parse(plaintext) as ConfigType;
 
       this.config = mergeWithDecryptedConfig(data);
+
+      // check if BUNDLER_CHAIN_ID is set, if true override the supportedNetworks
+      // This exists to easily support single chain per bundler for TW
+      const chainId = parseInt(process.env.BUNDLER_CHAIN_ID || "", 10);
+      if (chainId) {
+        this.config.supportedNetworks = [chainId];
+      }
+
       this.validate();
-
-      // // log.info("Config:", this.config);
-      // log.info(`Supported networks: ${this.config.supportedNetworks}`);
-
-      // // log.info(
-      // //   `Sources: ${JSON.stringify(nodeconfig.util.getConfigSources(), null, 2)}`,
-      // // );
-      // throw new Error("🚫 STOP HERE");
 
       log.info("Config loaded successfully");
     } catch (error) {
