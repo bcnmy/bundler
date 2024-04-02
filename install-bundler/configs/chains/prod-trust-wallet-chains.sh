@@ -4,10 +4,6 @@ declare -A chain_mumbai=(
   [chainId]="80001"
   [autoScalingThreshholdHTTPRequestsPerMinute]=1000
   [autoScalingThreshholdCPU]=800m
-  [minRelayerCount]="200"
-  [maxRelayerCount]="220"
-  [fundingBalanceThreshold]="2"
-  [fundingRelayerAmount]="5"
   [minReplica]=1
   [maxReplica]=20
   )
@@ -17,10 +13,6 @@ declare -A chain_bnb=(
   [chainId]="56"
   [autoScalingThreshholdHTTPRequestsPerMinute]=1000
   [autoScalingThreshholdCPU]=800m
-  [minRelayerCount]="200"
-  [maxRelayerCount]="220"
-  [fundingBalanceThreshold]="0.06"
-  [fundingRelayerAmount]="0.15"
   [minReplica]=6
   [maxReplica]=6
 )
@@ -30,10 +22,6 @@ declare -A chain_polygon=(
   [chainId]="137"
   [autoScalingThreshholdHTTPRequestsPerMinute]=1000
   [autoScalingThreshholdCPU]=800m
-  [minRelayerCount]="200"
-  [maxRelayerCount]="220"
-  [fundingBalanceThreshold]="2"
-  [fundingRelayerAmount]="5"
   [minReplica]=6
   [maxReplica]=6)
 
@@ -43,10 +31,6 @@ declare -A chain_arbitrum=(
   [chainId]="42161"
   [autoScalingThreshholdHTTPRequestsPerMinute]=1000
   [autoScalingThreshholdCPU]=800m
-  [minRelayerCount]="200"
-  [maxRelayerCount]="220"
-  [fundingBalanceThreshold]="0.01"
-  [fundingRelayerAmount]="0.03"
   [minReplica]=3
   [maxReplica]=3
 )
@@ -57,10 +41,6 @@ declare -A chain_avalanche=(
   [chainId]="43114"
   [autoScalingThreshholdHTTPRequestsPerMinute]=1000
   [autoScalingThreshholdCPU]=800m
-  [minRelayerCount]="200"
-  [maxRelayerCount]="220"
-  [fundingBalanceThreshold]="0.1"
-  [fundingRelayerAmount]="0.25"
   [minReplica]=3
   [maxReplica]=3
 )
@@ -70,10 +50,6 @@ declare -A chain_opBNB=(
   [chainId]="204"
   [autoScalingThreshholdHTTPRequestsPerMinute]=1000
   [autoScalingThreshholdCPU]=900m
-  [minRelayerCount]="200"
-  [maxRelayerCount]="220"
-  [fundingBalanceThreshold]=".001"
-  [fundingRelayerAmount]=".0025"
   [minReplica]=3
   [maxReplica]=3
 )
@@ -83,10 +59,6 @@ declare -A chain_base=(
   [chainId]="8453"
   [autoScalingThreshholdHTTPRequestsPerMinute]=1000
   [autoScalingThreshholdCPU]=800m
-  [minRelayerCount]="200"
-  [maxRelayerCount]="220"
-  [fundingBalanceThreshold]="0.006"
-  [fundingRelayerAmount]="0.015"
   [minReplica]=3
   [maxReplica]=3
 )
@@ -96,10 +68,6 @@ declare -A chain_optimism=(
   [chainId]="10"
   [autoScalingThreshholdHTTPRequestsPerMinute]=1000
   [autoScalingThreshholdCPU]=800m
-  [minRelayerCount]="200"
-  [maxRelayerCount]="220"
-  [fundingBalanceThreshold]="0.01"
-  [fundingRelayerAmount]="0.025"
   [minReplica]=3
   [maxReplica]=3
 )
