@@ -81,8 +81,11 @@ spec:
             value: {{ .Values.CHAIN_ID | quote }}
           - name: NODE_ENV
             value: {{ .Values.env }}
+
           - name: NODE_CONFIG
-            value: '{"relayer": {"nodePathIndex": 0}}'
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['apps.kubernetes.io/pod-index']
 
         envFrom:
           {{- if and (.Values.datadog.enable) ( eq .Values.datadog.gke_cluste_type "standard") -}}
