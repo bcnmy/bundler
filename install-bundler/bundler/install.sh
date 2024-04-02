@@ -103,27 +103,6 @@ if [[ -z "${GCP_SECRET_CONFIG_VALUE}" ]] ; then
   exit 1
 fi
 
-echo ""
-echo "Getting secret config data stored in ${GCP_PLAINTEXT_CONFIG_SECRET}"
-BUNDLER_SIMULATION_DATA_JSON=$(grep BUNDLER_SIMULATION_DATA_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" \
-                         | sed 's/BUNDLER_SIMULATION_DATA_JSON=//g')
-BUNDLER_TOKEN_PRICE_JSON=$(grep BUNDLER_TOKEN_PRICE_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" \
-                         | sed 's/BUNDLER_TOKEN_PRICE_JSON=//g')
-BUNDLER_SLACK_JSON=$(grep BUNDLER_SLACK_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" \
-                         | sed 's/BUNDLER_SLACK_JSON=//g')
-BUNDLER_PROVIDER_JSON=$(grep BUNDLER_PROVIDER_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" \
-                         | sed 's/BUNDLER_PROVIDER_JSON=//g')
-BUNDLER_DATASOURCES_JSON=$(grep BUNDLER_DATASOURCES_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" \
-                         | sed 's/BUNDLER_DATASOURCES_JSON=//g')
-BUNDLER_SOCKET_SERVICE_JSON=$(grep BUNDLER_SOCKET_SERVICE_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" \
-                         | sed 's/BUNDLER_SOCKET_SERVICE_JSON=//g')
-BUNDLER_QUEUE_URL=$(grep BUNDLER_QUEUE_URL <<< "${GCP_SECRET_CONFIG_VALUE}" \
-                         | sed 's/BUNDLER_QUEUE_URL=//g')
-BUNDLER_IS_TRUSTWALLET_SETUP=$(grep BUNDLER_IS_TRUSTWALLET_SETUP <<< "${GCP_SECRET_CONFIG_VALUE}" \
-                         | sed 's/BUNDLER_IS_TRUSTWALLET_SETUP=//g')
-BUNDLER_FALLBACK=$(grep BUNDLER_FALLBACK_PROVIDER_JSON <<< "${GCP_SECRET_CONFIG_VALUE}" \
-                         | sed 's/BUNDLER_FALLBACK_PROVIDER_JSON=//g')
-
 if ! kubectl get namespace "${NAMESPACE}"; then
   echo "Error: ${NAMESPACE} doesnt exists, creating it now"
   kubectl create ns "${NAMESPACE}"
@@ -151,10 +130,6 @@ source "${GIT_ROOT}/install-bundler/configs/chains/$CHAINS_CFG_FILENAME"
 #   [chainId]="80001"
 #   [autoScalingThreshholdHTTPRequestsPerMinute]=10000
 #   [autoScalingThreshholdCPU]=2500m
-#   [minRelayerCount]="200"
-#   [maxRelayerCount]="220"
-#   [fundingBalanceThreshold]="1"
-#   [fundingRelayerAmount]="2"
 #   [minReplica]=8
 #   [maxReplica]=8
 #   )
@@ -176,14 +151,6 @@ for array_name in $array_names; do
     eval "MIN_REPLICA=\${$array_name[minReplica]}"
     # shellcheck disable=SC1087
     eval "MAX_REPLICA=\${$array_name[maxReplica]}"
-    # shellcheck disable=SC1087
-    eval "MIN_RELAYER_COUNT=\${$array_name[minRelayerCount]}"
-    # shellcheck disable=SC1087
-    eval "MAX_RELAYER_COUNT=\${$array_name[maxRelayerCount]}"
-    # shellcheck disable=SC1087
-    eval "FUNDING_BALANCE_THRESHOLD=\${$array_name[fundingBalanceThreshold]}"
-    # shellcheck disable=SC1087
-    eval "FUNDING_RELAYER_AMOUNT=\${$array_name[fundingRelayerAmount]}"
 
     ADJ_AUTOSCALING_THRESHHOLD_HTTP_REQUESTS=$(bc -l <<< "$AUTOSCALING_THRESHHOLD_HTTP_REQUESTS_PER_MINUTE/60*1000" | cut -d'.' -f1)m
 
@@ -193,20 +160,8 @@ for array_name in $array_names; do
     print_green "AUTOSCALING_THRESHHOLD_CPU=$AUTOSCALING_THRESHHOLD_CPU"
     print_green "MIN_REPLICA=$MIN_REPLICA"
     print_green "MAX_REPLICA=$MAX_REPLICA"
-    print_green "MIN_RELAYER_COUNT=$MIN_RELAYER_COUNT"
-    print_green "MAX_RELAYER_COUNT=$MAX_RELAYER_COUNT"
-    print_green "FUNDING_BALANCE_THRESHOLD=$FUNDING_BALANCE_THRESHOLD"
-    print_green "FUNDING_RELAYER_AMOUNT=$FUNDING_RELAYER_AMOUNT"
     print_green "ADJ_AUTOSCALING_THRESHHOLD_HTTP_REQUESTS=${ADJ_AUTOSCALING_THRESHHOLD_HTTP_REQUESTS}"
 
-    ENCODED_BUNDLER_SIMULATION_DATA_JSON=$(echo -n "$BUNDLER_SIMULATION_DATA_JSON" | base64)
-    ENCODED_BUNDLER_TOKEN_PRICE_JSON=$(echo -n "$BUNDLER_TOKEN_PRICE_JSON" | base64)
-    ENCODED_BUNDLER_SLACK_JSON=$(echo -n "$BUNDLER_SLACK_JSON" | base64)
-    ENCODED_BUNDLER_PROVIDER_JSON=$(echo -n "$BUNDLER_PROVIDER_JSON" | base64)
-    ENCODED_BUNDLER_DATASOURCES_JSON=$(echo -n "$BUNDLER_DATASOURCES_JSON" | base64)
-    ENCODED_BUNDLER_SOCKET_SERVICE_JSON=$(echo -n "$BUNDLER_SOCKET_SERVICE_JSON" | base64)
-    ENCODED_BUNDLER_IS_TRUSTWALLET_SETUP=$(echo -n "$BUNDLER_IS_TRUSTWALLET_SETUP" | base64)
-    ENCODED_BUNDLER_FALLBACK_PROVIDER_JSON=$(echo -n "$BUNDLER_FALLBACK" | base64)
     echo ""
     echo "Deploying HELM chart for $NAME $CHAIN_ID"
 
@@ -227,19 +182,6 @@ for array_name in $array_names; do
         --set hpa.average_cpu_hpa="$AUTOSCALING_THRESHHOLD_CPU" \
         --set-string image.name="$IMAGE" \
         --set-string image.tag="$IMAGE_TAG" \
-        --set-string minRelayerCount="$MIN_RELAYER_COUNT" \
-        --set-string maxRelayerCount="$MAX_RELAYER_COUNT" \
-        --set-string fundingBalanceThreshold="$FUNDING_BALANCE_THRESHOLD" \
-        --set-string fundingRelayerAmount="$FUNDING_RELAYER_AMOUNT" \
-        --set-string encodedBundlerSimulationDataJson="$ENCODED_BUNDLER_SIMULATION_DATA_JSON" \
-        --set-string encodedBundlerTokenPriceJson="$ENCODED_BUNDLER_TOKEN_PRICE_JSON" \
-        --set-string encodedBundlerSlackJson="$ENCODED_BUNDLER_SLACK_JSON" \
-        --set-string encodedBundlerProviderJson="$ENCODED_BUNDLER_PROVIDER_JSON" \
-        --set-string encodedBundlerDatasourcesJson="$ENCODED_BUNDLER_DATASOURCES_JSON" \
-        --set-string encodedBundlerSocketServiceJson="$ENCODED_BUNDLER_SOCKET_SERVICE_JSON" \
-        --set-string bundlerQueueUrl="$BUNDLER_QUEUE_URL" \
-        --set-string encodedBundlerIsTrustWalletSetup="$ENCODED_BUNDLER_IS_TRUSTWALLET_SETUP" \
-        --set-string encodedBundlerFallbackProviderJson="$ENCODED_BUNDLER_FALLBACK_PROVIDER_JSON" \
         --set-string gcpSecretManagerName="$GCP_SECRETS_MANAGER_NAME" \
         --set-string hpa.minReplicas="$MIN_REPLICA" \
         --set-string hpa.maxReplicas="$MAX_REPLICA" \
