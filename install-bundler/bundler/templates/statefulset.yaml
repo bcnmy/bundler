@@ -109,6 +109,7 @@ spec:
             mountPath:  "/home/nonroot/bundler/config/{{.Values.env}}.json"
             subPath: "{{.Values.env}}.json"
 
+
           - name: gcpsecrets
             mountPath: /gcpsecrets
 
