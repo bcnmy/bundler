@@ -54,14 +54,14 @@ declare -A chain_mumbai=(
 #   [maxReplica]=3
 # )
 
-# declare -A chain_base=(
-#   [name]='chain-8453'
-#   [chainId]="8453"
-#   [autoScalingThreshholdHTTPRequestsPerMinute]=1000
-#   [autoScalingThreshholdCPU]=800m
-#   [minReplica]=3
-#   [maxReplica]=3
-# )
+declare -A chain_base=(
+  [name]='chain-8453'
+  [chainId]="8453"
+  [autoScalingThreshholdHTTPRequestsPerMinute]=1000
+  [autoScalingThreshholdCPU]=800m
+  [minReplica]=3
+  [maxReplica]=3
+)
 
 # declare -A chain_optimism=(
 #   [name]='chain-10'
