@@ -15,7 +15,7 @@ COPY package.json yarn.lock  ./
 RUN yarn install
 
 # Copy the rest of the files
-COPY . /relayer-node
+COPY . /bundler
 
 # Build the application
 RUN yarn run build
