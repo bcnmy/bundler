@@ -31,7 +31,7 @@ spec:
         - |
           gcloud secrets versions access latest --secret="{{.Values.secretName}}" > /gcpsecrets/config-passphrase
           gcloud secrets versions access latest --secret="{{.Values.configSecretName}}" > /gcpsecrets/config.json.enc
-          gcloud secrets versions access latest --secret="{{.Values.plainConfigSecretName}}" > /gcpsecrets/{{.Values.env}}.json
+          gcloud secrets versions access latest --secret="{{.Values.plainConfigSecretName}}" > /gcpsecrets/{{.Values.environment}}.json
         volumeMounts:
         - name: gcpsecrets
           mountPath: /gcpsecrets
@@ -84,7 +84,7 @@ spec:
             value: {{ .Values.CHAIN_ID | quote }}
 
           - name: NODE_ENV
-            value: {{ .Values.env }}
+            value: {{ .Values.environment }}
 
         envFrom:
           {{- if and (.Values.datadog.enable) ( eq .Values.datadog.gke_cluste_type "standard") -}}
@@ -106,8 +106,8 @@ spec:
             subPath: "config.json.enc"
 
           - name: gcpsecrets
-            mountPath:  "/home/nonroot/bundler/config/{{.Values.env}}.json"
-            subPath: "{{.Values.env}}.json"
+            mountPath:  "/home/nonroot/bundler/config/{{.Values.environment}}.json"
+            subPath: "{{.Values.environment}}.json"
 
           - name: gcpsecrets
             mountPath: /gcpsecrets
