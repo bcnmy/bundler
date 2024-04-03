@@ -173,6 +173,7 @@ for array_name in $array_names; do
         --namespace "$NAMESPACE" \
         --set nameOverride="$NAME" \
         --set env="$ENV" \
+        --set environment="$environment" \
         --set-string namespace="$NAMESPACE" \
         --set secret.passphrase.value="$CONFIG_PASSPHRASE" \
         --set CHAIN_ID="$CHAIN_ID" \
