@@ -8,14 +8,14 @@ declare -A chain_mumbai=(
   [maxReplica]=20
   )
 
-# declare -A chain_bnb=(
-#   [name]='chain-56'
-#   [chainId]="56"
-#   [autoScalingThreshholdHTTPRequestsPerMinute]=1000
-#   [autoScalingThreshholdCPU]=800m
-#   [minReplica]=6
-#   [maxReplica]=6
-# )
+declare -A chain_bnb=(
+  [name]='chain-56'
+  [chainId]="56"
+  [autoScalingThreshholdHTTPRequestsPerMinute]=1000
+  [autoScalingThreshholdCPU]=800m
+  [minReplica]=6
+  [maxReplica]=6
+)
 
 # declare -A chain_polygon=(
 #   [name]='chain-137'
