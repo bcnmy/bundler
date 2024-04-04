@@ -45,14 +45,14 @@
 #   [maxReplica]=3
 # )
 
-declare -A chain_opBNB=(
-  [name]='chain-204'
-  [chainId]="204"
-  [autoScalingThreshholdHTTPRequestsPerMinute]=1000
-  [autoScalingThreshholdCPU]=900m
-  [minReplica]=3
-  [maxReplica]=3
-)
+# declare -A chain_opBNB=(
+#   [name]='chain-204'
+#   [chainId]="204"
+#   [autoScalingThreshholdHTTPRequestsPerMinute]=1000
+#   [autoScalingThreshholdCPU]=900m
+#   [minReplica]=3
+#   [maxReplica]=3
+# )
 
 # declare -A chain_base=(
 #   [name]='chain-8453'
@@ -63,11 +63,11 @@ declare -A chain_opBNB=(
 #   [maxReplica]=3
 # )
 
-# declare -A chain_optimism=(
-#   [name]='chain-10'
-#   [chainId]="10"
-#   [autoScalingThreshholdHTTPRequestsPerMinute]=1000
-#   [autoScalingThreshholdCPU]=800m
-#   [minReplica]=3
-#   [maxReplica]=3
-# )
+declare -A chain_optimism=(
+  [name]='chain-10'
+  [chainId]="10"
+  [autoScalingThreshholdHTTPRequestsPerMinute]=1000
+  [autoScalingThreshholdCPU]=800m
+  [minReplica]=3
+  [maxReplica]=3
+)
