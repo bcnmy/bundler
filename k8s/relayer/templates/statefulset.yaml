@@ -48,9 +48,7 @@ spec:
     {{- end }}
       containers:
       - name: {{ .Values.relayer.name }}{{ .Values.index }}
-      #   image: {{ .Values.relayer.image }}
-        image: ubuntu
-        command: ["sleep", "infinity"]
+        image: {{ .Values.relayer.image }}
         ports:
         - containerPort: {{ .Values.relayer.port }}
         env:
