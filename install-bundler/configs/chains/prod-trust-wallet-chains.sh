@@ -8,14 +8,14 @@
 #   [maxReplica]=20
 #   )
 
-# declare -A chain_bnb=(
-#   [name]='chain-56'
-#   [chainId]="56"
-#   [autoScalingThreshholdHTTPRequestsPerMinute]=1000
-#   [autoScalingThreshholdCPU]=800m
-#   [minReplica]=6
-#   [maxReplica]=6
-# )
+declare -A chain_bnb=(
+  [name]='chain-56'
+  [chainId]="56"
+  [autoScalingThreshholdHTTPRequestsPerMinute]=1000
+  [autoScalingThreshholdCPU]=800m
+  [minReplica]=6
+  [maxReplica]=6
+)
 
 # declare -A chain_polygon=(
 #   [name]='chain-137'
@@ -36,14 +36,14 @@
 # )
 
 
-declare -A chain_avalanche=(
-  [name]='chain-43114'
-  [chainId]="43114"
-  [autoScalingThreshholdHTTPRequestsPerMinute]=1000
-  [autoScalingThreshholdCPU]=800m
-  [minReplica]=3
-  [maxReplica]=3
-)
+# declare -A chain_avalanche=(
+#   [name]='chain-43114'
+#   [chainId]="43114"
+#   [autoScalingThreshholdHTTPRequestsPerMinute]=1000
+#   [autoScalingThreshholdCPU]=800m
+#   [minReplica]=3
+#   [maxReplica]=3
+# )
 
 # declare -A chain_opBNB=(
 #   [name]='chain-204'
