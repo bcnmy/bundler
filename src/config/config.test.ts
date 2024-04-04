@@ -26,6 +26,7 @@ describe("ConfigV2", () => {
       networksNotSupportingEthCallBytecodeStateOverrides,
       EVMNetworkService,
       relayer,
+      trustWalletSupportedNetworks,
       ...oldConfigValues
     } = nodeconfig.util.toObject();
 

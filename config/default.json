@@ -1014,6 +1014,7 @@
   "networksNotSupportingEthCallStateOverrides": [
     1101, 1442, 81, 592, 169, 3441005, 91715, 7116, 9980, 88882, 88888, 81457
   ],
+  "trustWalletSupportedNetworks": [137, 80001, 56, 204, 42161, 10, 8453],
   "networksNotSupportingEthCallBytecodeStateOverrides": [
     1, 59140, 59144, 84532, 421614, 168587773, 80001, 43113, 11155111, 1101,
     88882, 88888, 1442, 420, 81457
@@ -1067,5 +1068,6 @@
   },
   "aaDashboardBackend": {
     "url": "https://paymaster-dashboard-backend-v2.staging.biconomy.io/api/v2/bundlers/auth"
-  }
+  },
+  "isTWSetup": false
 }

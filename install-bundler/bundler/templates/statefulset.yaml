@@ -1,0 +1,186 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+    {{- include "chart.statefulset.metadata" . | nindent 2 }}
+spec:
+  serviceName: {{ include "chart.name" . }}-service
+  # updateStrategy:
+  #   type: RollingUpdate
+  #   rollingUpdate:
+  #     partition: 0
+
+  replicas: {{.Values.hpa.minReplicas}}
+  selector:
+    matchLabels:
+    {{ include "chart.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{ include "chart.template.metadata.labels" . | nindent 8 }}
+      annotations:
+        {{ include "chart.template.metadata.annotations" . | nindent 8 }}
+      name:  {{ include "chart.name" . }}-pod
+    spec:
+      serviceAccountName: {{  .Values.serviceAccount}}
+      initContainers:
+      - name: fetch-gcp-secrets
+        image: google/cloud-sdk:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          gcloud secrets versions access latest --secret="{{.Values.secretName}}" > /gcpsecrets/config-passphrase
+          gcloud secrets versions access latest --secret="{{.Values.configSecretName}}" > /gcpsecrets/config.json.enc
+          gcloud secrets versions access latest --secret="{{.Values.plainConfigSecretName}}" > /gcpsecrets/{{.Values.environment}}.json
+        volumeMounts:
+        - name: gcpsecrets
+          mountPath: /gcpsecrets
+
+      - name: init-ordinal
+        image: busybox:1.28
+        command:
+        - "sh"
+        - "-c"
+        - >
+          echo $(echo $POD_NAME | awk -F '-' '{print $NF}') > /etc/podinfo/ordinal_index;
+          export POD_INDEX=$(cat /etc/podinfo/ordinal_index);
+          export NODE_CONFIG='{"relayer": {"nodePathIndex": '$POD_INDEX'}}';
+          echo $NODE_CONFIG > /etc/podinfo/ordinal_index ;
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        volumeMounts:
+        - name: podinfo
+          mountPath: /etc/podinfo
+
+    {{- if .Values.affinity_tolerations.enable }}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: {{ .Values.affinity_tolerations.key }}
+                operator: In
+                values:
+                - {{ .Values.affinity_tolerations.values }}
+      tolerations:
+      - effect: NoSchedule
+        key: {{ .Values.affinity_tolerations.key }}
+        operator: Equal
+        value: {{ .Values.affinity_tolerations.values }}
+    {{- end }}
+      containers:
+      - name: {{ include "chart.name" . }}-pod
+        imagePullPolicy: {{ if eq .Values.provider "local" }} "Never" {{ else }} "IfNotPresent" {{ end }}
+        image: {{ .Values.image.name }}:{{.Values.image.tag}}
+
+        ports:
+        - containerPort: {{ .Values.targetPort }}
+
+        env:
+          - name: CHAIN_ID
+            value: {{ .Values.CHAIN_ID | quote }}
+
+          - name: NODE_ENV
+            value: {{ .Values.environment }}
+
+        envFrom:
+          {{- if and (.Values.datadog.enable) ( eq .Values.datadog.gke_cluste_type "standard") -}}
+          - configMapRef:
+              name: {{ include "chart.name" . }}-datadogconfigmap
+          {{- end }}
+
+          - configMapRef:
+              name: {{ include "chart.name" . }}-env-configmap
+
+          {{- if eq .Values.env "test" }}
+          - secretRef:
+              name: {{ include "chart.name" . }}-passphrase
+          {{- end }}
+
+        volumeMounts:
+          - mountPath: "/home/nonroot/bundler/config.json.enc"
+            name: gcpsecrets
+            subPath: "config.json.enc"
+
+          - name: gcpsecrets
+            mountPath:  "/home/nonroot/bundler/config/{{.Values.environment}}.json"
+            subPath: "{{.Values.environment}}.json"
+
+          - name: gcpsecrets
+            mountPath: /gcpsecrets
+
+          - name: podinfo
+            mountPath: /etc/podinfo
+
+      {{- if and (.Values.datadog.enable) ( eq .Values.datadog.gke_cluste_type "standard") }}
+          - mountPath: /var/run/datadog
+            name: apmsocketpath
+      {{- end }} 
+        resources:
+          requests:
+            memory: {{ .Values.resources.requests.memory }}
+            cpu: {{ .Values.resources.requests.cpu }}
+          limits:
+            memory: {{ .Values.resources.limits.memory }}
+            cpu: {{ .Values.resources.limits.cpu }}
+
+        startupProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.port }}
+          failureThreshold: 40
+          periodSeconds: 10
+
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.targetPort }}
+          initialDelaySeconds: 30
+          periodSeconds: 60
+          successThreshold: 1
+          timeoutSeconds: 30
+          failureThreshold: 5
+
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.targetPort }}
+          initialDelaySeconds: 10 
+          periodSeconds: 15
+          successThreshold: 1
+          timeoutSeconds: 10
+          failureThreshold: 3
+
+        lifecycle:
+        # https://learnk8s.io/graceful-shutdown
+        # still server traffic for 15 seconds after k8s issued the SIG term
+          preStop:
+            exec:
+              command: ["sleep", "15"]
+
+      volumes:
+      {{- if eq .Values.env "test" }}
+
+      - name: config-volume
+        configMap:
+          name: bundler-common-configmap
+      {{- end}}
+
+      - name: env-config-volume
+        configMap:
+          name: {{ include "chart.name" . }}-env-configmap
+
+      - name: podinfo
+        emptyDir: {}
+
+      - name: gcpsecrets
+        emptyDir: { }
+      
+      {{- if and (.Values.datadog.enable) ( eq .Values.datadog.gke_cluste_type "standard") }}
+      - hostPath:
+          path: /var/run/datadog/
+        name: apmsocketpath
+      {{- end }}

@@ -16,7 +16,10 @@ const PBKDF2_ITERATIONS = 310000;
 const AES_PADDING = crypto.pad.Pkcs7;
 const AES_MODE = crypto.mode.CBC;
 
-export function merge(decryptedConfig: Partial<ConfigType>): ConfigType {
+// A part of our config is encrypted and other part is not. This function merges the decrypted part with the rest of the config.
+export function mergeWithDecryptedConfig(
+  decryptedConfig: Partial<ConfigType>,
+): ConfigType {
   const merged = nodeconfig.util.toObject();
 
   // We always take the relayer secrets from the old, decrypted config
@@ -42,22 +45,24 @@ export function merge(decryptedConfig: Partial<ConfigType>): ConfigType {
 export class Config implements IConfig {
   config: ConfigType;
 
-  constructor() {
-    log.info("Config loading started");
+  // eslint-disable-next-line class-methods-use-this
+  decryptConfig(): string {
+    const encryptedEnvPath =
+      process.env.BUNDLER_CONFIG_PATH || "./config.json.enc";
+
+    const passphrase = process.env.BUNDLER_CONFIG_PASSPHRASE;
+    if (!passphrase) {
+      throw new Error(
+        "BUNDLER_CONFIG_PASSPHRASE environment variable required",
+      );
+    }
+
+    if (!existsSync(encryptedEnvPath)) {
+      throw new Error(`Invalid ENV Path: ${encryptedEnvPath}`);
+    }
+    const ciphertext = fs.readFileSync(encryptedEnvPath, "utf8");
+
     try {
-      // decrypt the config and load it
-      const encryptedEnvPath =
-        process.env.BUNDLER_CONFIG_PATH || "config.json.enc";
-
-      const passphrase = process.env.CONFIG_PASSPHRASE;
-      if (!passphrase) {
-        throw new Error("Passphrase for config required in .env file");
-      }
-
-      if (!existsSync(encryptedEnvPath)) {
-        throw new Error(`Invalid ENV Path: ${encryptedEnvPath}`);
-      }
-      const ciphertext = fs.readFileSync(encryptedEnvPath, "utf8");
       // First 44 bits are Base64 encodded HMAC
       const hashInBase64 = ciphertext.substr(0, 44);
 
@@ -91,9 +96,32 @@ export class Config implements IConfig {
       if (decryptedHmacInBase64 !== hashInBase64) {
         throw new Error("Error: HMAC does not match");
       }
+      return plaintext;
+    } catch (e) {
+      const wrappedError = new Error(
+        `Config decryption failed (check your BUNDLER_CONFIG_PASSPHRASE): ${e}`,
+      );
+      log.error(wrappedError);
+      throw wrappedError;
+    }
+  }
+
+  constructor() {
+    log.info("Config loading started");
+    try {
+      // decrypt the config and load it
+      const plaintext = this.decryptConfig();
       const data = JSON.parse(plaintext) as ConfigType;
 
-      this.config = merge(data);
+      this.config = mergeWithDecryptedConfig(data);
+
+      // check if BUNDLER_CHAIN_ID is set, if true override the supportedNetworks
+      // This exists to easily support single chain per bundler for TW
+      const chainId = parseInt(process.env.BUNDLER_CHAIN_ID || "", 10);
+      if (chainId) {
+        this.config.supportedNetworks = [chainId];
+      }
+
       this.validate();
 
       log.info("Config loaded successfully");
