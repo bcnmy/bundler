@@ -49,6 +49,7 @@ spec:
       containers:
       - name: {{ .Values.relayer.name }}{{ .Values.index }}
         image: {{ .Values.relayer.image }}
+        imagePullPolicy: "Always"
         ports:
         - containerPort: {{ .Values.relayer.port }}
         env:
