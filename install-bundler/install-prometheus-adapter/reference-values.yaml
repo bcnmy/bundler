@@ -1,0 +1,16 @@
+rules:
+  custom:
+      - seriesQuery: '{__name__=~"process_cpu_seconds_total",app="chain-137"}'
+        resources:
+          template: <<.Resource>>
+        name:
+          matches: "^(.*)_total"
+          as: "137-cpu-usage"
+        metricsQuery: 'avg(rate(<<.Series>>{<<.LabelMatchers>>}[1m])) by (<<.GroupBy>>)'
+      - seriesQuery: '{__name__=~"eth_sendUserOperation_requests", code="200", rpc_method="eth_sendUserOperation", app="chain-137"}'
+        resources:
+          template: <<.Resource>>
+        name:
+          matches: "^(.*)_requests"   # Assumes the metric in Prometheus is 'eth_sendUserOperation_requests'
+          as: "137-http-requests"
+        metricsQuery: 'avg(rate(<<.Series>>{<<.LabelMatchers>>}[1m])) by (<<.GroupBy>>)'

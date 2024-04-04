@@ -168,6 +168,8 @@ export type ConfigType = {
   };
   // default, hard-coded gas overheads
   defaultGasOverheads: DefaultGasOverheadType;
+  // true if this is running on a TrustWallet dedicated setup
+  isTWSetup: boolean;
   // array of chain Ids for networks that support https://eips.ethereum.org/EIPS/eip-1559
   EIP1559SupportedNetworks: Array<number>;
   // map of entrypoint addresses -> supported chain Ids
