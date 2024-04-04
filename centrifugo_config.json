@@ -1,0 +1,30 @@
+{
+  "token_hmac_secret_key": "9edb7c38-0f55-4627-9bda-4cc050b5f6cb",
+  "admin_password": "admin_password",
+  "admin_secret": "admin_secret",
+  "api_key": "a4c3c3df-4294-4719-a6a6-0c3416d68466",
+  "allowed_origins": ["*"],
+  "debug": true,
+  "admin": true,
+  "log_level": "debug",
+  "client_anonymous": true,
+  "client_channel_limit": 512,
+  "namespaces": [
+    {
+      "name": "relayer",
+      "publish": true,
+      "history_size": 10,
+      "history_ttl": "300s",
+      "recover": true,
+      "anonymous": false
+    },
+    {
+      "name": "transaction",
+      "publish": true,
+      "history_size": 10,
+      "history_ttl": "300s",
+      "recover": true,
+      "anonymous": true
+    }
+  ]
+}

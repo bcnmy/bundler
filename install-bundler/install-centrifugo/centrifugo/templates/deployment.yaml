@@ -1,0 +1,191 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "centrifugo.fullname" . }}
+  namespace: {{ include "centrifugo.namespace" . }}
+  labels:
+    {{- include "centrifugo.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "centrifugo.selectorLabels" . | nindent 6 }}
+  {{- if .Values.deploymentStrategy }}
+  strategy:
+    {{- toYaml .Values.deploymentStrategy | nindent 4 }}
+  {{- end }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "centrifugo.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- if .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- with .Values.topologySpreadConstraints }}
+          {{- tpl (toYaml .) $ | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- if .Values.priorityClassName }}
+      priorityClassName: {{ .Values.priorityClassName | quote }}
+      {{- end }}
+      {{- include "centrifugo.imagePullSecrets" . | indent 6 }}
+      serviceAccountName: {{ include "centrifugo.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      volumes:
+        - name: {{ include "centrifugo.fullname" . }}-config
+          configMap:
+            name: {{ include "centrifugo.fullname" . }}-config
+        {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- if .Values.initContainers}}
+      initContainers:
+        {{- with .Values.initContainers }}
+          {{- tpl (toYaml .) $ | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ include "centrifugo.image" .}}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - centrifugo
+          args:
+            - --health
+            - --prometheus
+            - --port
+            - "{{ .Values.service.port }}"
+            - --internal_port
+            - "{{ .Values.internalService.port }}"
+            - --grpc_api
+            - --grpc_api_port
+            - "{{ .Values.grpcService.port }}"
+            - --uni_grpc_port
+            - "{{ .Values.uniGrpcService.port }}"
+          env:
+            - name: CENTRIFUGO_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "centrifugo.secretName" . }}
+                  key: adminPassword
+            - name: CENTRIFUGO_ADMIN_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "centrifugo.secretName" . }}
+                  key: adminSecret
+            - name: CENTRIFUGO_TOKEN_HMAC_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "centrifugo.secretName" . }}
+                  key: tokenHmacSecretKey
+                  optional: true
+            - name: CENTRIFUGO_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "centrifugo.secretName" . }}
+                  key: apiKey
+                  optional: true
+            - name: CENTRIFUGO_GRPC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "centrifugo.secretName" . }}
+                  key: grpcApiKey
+                  optional: true
+            - name: CENTRIFUGO_REDIS_ADDRESS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "centrifugo.secretName" . }}
+                  key: redisAddress
+                  optional: true
+            - name: CENTRIFUGO_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "centrifugo.secretName" . }}
+                  key: redisPassword
+                  optional: true
+            - name: CENTRIFUGO_REDIS_SENTINEL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "centrifugo.secretName" . }}
+                  key: redisSentinelPassword
+                  optional: true
+            - name: CENTRIFUGO_NATS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "centrifugo.secretName" . }}
+                  key: natsUrl
+                  optional: true
+            - name: CENTRIFUGO_LICENSE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "centrifugo.secretName" . }}
+                  key: license
+                  optional: true
+            {{- range .Values.envSecret }}
+            - name: {{ .name }}
+              valueFrom:
+                secretKeyRef: 
+                  {{- toYaml .secretKeyRef | nindent 18 }}
+            {{- end }}
+            {{- range $key, $value := .Values.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          volumeMounts:
+            - name: "{{ include "centrifugo.fullname" . }}-config"
+              mountPath: "/centrifugo"
+              readOnly: true
+            {{- with .Values.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          ports:
+            - name: external
+              containerPort: {{ .Values.service.port }}
+            - name: internal
+              containerPort: {{ .Values.internalService.port }}
+            - name: grpc
+              containerPort: {{ .Values.grpcService.port }}
+            - name: uni-grpc
+              containerPort: {{ .Values.uniGrpcService.port }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.internalService.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.internalService.port }}
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
