@@ -225,10 +225,7 @@ export class BundlerSimulationService {
         verificationGasLimit += BigInt(
           Math.ceil(Number(verificationGasLimit) * 0.2),
         );
-        if (
-          chainId === BLOCKCHAINS.CHILIZ_MAINNET ||
-          chainId === BLOCKCHAINS.CHILIZ_TESTNET
-        ) {
+        if(chainId === BLOCKCHAINS.CHILIZ_MAINNET || chainId === BLOCKCHAINS.CHILIZ_TESTNET) {
           verificationGasLimit += BigInt(
             Math.ceil(Number(verificationGasLimit) * 0.2),
           );
@@ -244,7 +241,7 @@ export class BundlerSimulationService {
         callGasLimit += BigInt(Math.ceil(Number(callGasLimit) * 0.5));
       }
 
-      if (chainId === BLOCKCHAINS.MANTLE_MAINNET) {
+      if(chainId === BLOCKCHAINS.MANTLE_MAINNET) {
         preVerificationGas += preVerificationGas;
       }
 
@@ -281,9 +278,7 @@ export class BundlerSimulationService {
         },
       };
     } catch (error: any) {
-      log.error(
-        `Error in estimating user op: ${parseError(error)} on chainId: ${estimateUserOperationGasData.chainId}`,
-      );
+      log.error(`Error in estimating user op: ${parseError(error)} on chainId: ${estimateUserOperationGasData.chainId}`);
       return {
         code: error.code,
         message: parseError(error),
@@ -623,9 +618,7 @@ export class BundlerSimulationService {
         },
       };
     } catch (error: any) {
-      log.error(
-        `Error in simulateValidation: ${parseError(error)} on chainId: ${simulateValidationData.chainId}`,
-      );
+      log.error(`Error in simulateValidation: ${parseError(error)} on chainId: ${simulateValidationData.chainId}`);
       return {
         code: error.code,
         message: parseError(error),

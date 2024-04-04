@@ -10,7 +10,7 @@ secret:
   projectID: biconomy-staging
   passphrase:
     key: sdk-staging-relayer-node-service-passphrase
-    name: BUNDLER_CONFIG_PASSPHRASE
+    name: CONFIG_PASSPHRASE
     version: latest
 
 secret_plain:

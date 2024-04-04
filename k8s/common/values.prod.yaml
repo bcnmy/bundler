@@ -10,7 +10,7 @@ secret:
   projectID: biconomy-prod
   passphrase:
     key: sdk-prod-relayer-node-service-passphrase
-    name: BUNDLER_CONFIG_PASSPHRASE
+    name: CONFIG_PASSPHRASE
     version: latest
 
 secret_plain:

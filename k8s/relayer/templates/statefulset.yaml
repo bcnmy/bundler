@@ -49,7 +49,6 @@ spec:
       containers:
       - name: {{ .Values.relayer.name }}{{ .Values.index }}
         image: {{ .Values.relayer.image }}
-        imagePullPolicy: "Always"
         ports:
         - containerPort: {{ .Values.relayer.port }}
         env:
@@ -67,10 +66,10 @@ spec:
           - secretRef:
               name: {{ .Values.relayer.name }}-passphrase
         volumeMounts:
-          - mountPath: "/home/nonroot/bundler/config.json.enc"
+          - mountPath: "/relayer-node/config.json.enc"
             name: secret-encrypted
             subPath: "config.json.enc"
-          - mountPath: "/home/nonroot/bundler/config/{{ .Values.secret_plain.config.name }}"
+          - mountPath: "/relayer-node/config/{{ .Values.secret_plain.config.name }}"
             name: secret-plain
             subPath: {{ .Values.secret_plain.config.name }}
       {{- if .Values.datadog.enable }}
