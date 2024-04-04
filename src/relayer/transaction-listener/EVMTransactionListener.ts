@@ -136,7 +136,7 @@ export class EVMTransactionListener
           )}`,
         );
       }
-      if (config.isTWSetup) {
+      if (!config.isTWSetup) {
         try {
           await this.publishToTransactionQueue({
             transactionId,
@@ -221,7 +221,7 @@ export class EVMTransactionListener
       );
     }
 
-    if (config.isTWSetup) {
+    if (!config.isTWSetup) {
       try {
         // transaction queue is being listened by socket service to notify the client about the hash
         await this.publishToTransactionQueue({
@@ -648,7 +648,7 @@ export class EVMTransactionListener
                 log.info(
                   `Publishing to transaction queue on failure for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`,
                 );
-                if (config.isTWSetup) {
+                if (!config.isTWSetup) {
                   try {
                     await this.publishToTransactionQueue({
                       transactionId,
@@ -742,7 +742,7 @@ export class EVMTransactionListener
                 `Transaction got front runned. Publishing to transaction queue on failure for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`,
               );
 
-              if (config.isTWSetup) {
+              if (!config.isTWSetup) {
                 try {
                   await this.publishToTransactionQueue({
                     transactionId,
