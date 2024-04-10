@@ -82,10 +82,9 @@ app.route("/health").get((req, res) => {
   res.send("ok");
 });
 
-app.route('/:chainId/health')
-  .get((req, res) => {
-    res.send('ok');
-  });
+app.route("/:chainId/health").get((req, res) => {
+  res.send("ok");
+});
 
 // error handler
 app.use(

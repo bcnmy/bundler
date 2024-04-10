@@ -486,6 +486,8 @@ export class EVMRelayerManager
           // different gas limit for arbitrum
           if (config.l2Networks.includes(this.chainId)) gasLimitIndex = 1;
 
+          if (config.mantleNetworks.includes(this.chainId)) gasLimitIndex = 3;
+
           const gasLimit = this.gasLimitMap[gasLimitIndex];
 
           const fundingAmount = this.fundingRelayerAmount;
