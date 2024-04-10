@@ -1,0 +1,52 @@
+{{- if .Values.autoscaling.enabled }}
+{{- if .Capabilities.APIVersions.Has "autoscaling/v2" }}
+apiVersion: "autoscaling/v2"
+{{- else }}
+apiVersion: "autoscaling/v2beta1"
+{{- end }}
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "centrifugo.fullname" . }}
+  namespace: {{ include "centrifugo.namespace" . }}
+  labels:
+    {{- include "centrifugo.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "centrifugo.fullname" . }}
+  minReplicas: {{ .Values.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.autoscaling.maxReplicas }}
+  metrics:
+  {{- with .Values.autoscalingTemplate }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
+  {{- if .Values.autoscaling.cpu.enabled }}
+  - type: Resource
+    resource:
+      name: cpu
+      {{- if .Capabilities.APIVersions.Has "autoscaling/v2" }}
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.autoscaling.cpu.targetCPUUtilizationPercentage }}
+      {{- else }}
+      targetAverageUtilization: {{ .Values.autoscaling.cpu.targetCPUUtilizationPercentage }}
+      {{- end }}
+  {{- end }}
+  {{- if .Values.autoscaling.memory.enabled }}
+  - type: Resource
+    resource:
+      name: memory
+      {{- if .Capabilities.APIVersions.Has "autoscaling/v2" }}
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.autoscaling.memory.targetMemoryUtilizationPercentage }}
+      {{- else }}
+      targetAverageUtilization: {{ .Values.autoscaling.memory.targetMemoryUtilizationPercentage }}
+      {{- end }}
+  {{- end }}
+  {{- with .Values.autoscaling.behavior }}
+  behavior:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}

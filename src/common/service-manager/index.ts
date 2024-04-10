@@ -127,8 +127,8 @@ let statusService: IStatusService;
   await cacheService.connect();
 
   const slackNotificationService = new SlackNotificationService(
-    config.slack.token,
-    config.slack.channel,
+    process.env.BUNDLER_SLACK_TOKEN || config.slack.token,
+    process.env.BUNDLER_SLACK_CHANNEL || config.slack.channel,
   );
   const notificationManager = new NotificationManager(slackNotificationService);
 
@@ -360,19 +360,21 @@ let statusService: IStatusService;
     );
     log.info(`Retry transaction service setup for chainId: ${chainId}`);
 
-    log.info(`Setting up socket complete consumer for chainId: ${chainId}`);
-    socketConsumerMap[chainId] = new SocketConsumer({
-      queue: transactionQueue,
-      options: {
-        chainId,
-        wssUrl: config.socketService.wssUrl,
-        EVMRelayerManagerMap,
-      },
-    });
-    transactionQueue.consume(socketConsumerMap[chainId].onMessageReceived);
-    log.info(
-      `Socket consumer setup complete for chainId: ${chainId} and attached to transaction queue`,
-    );
+    if(!config.isTWSetup) {
+      log.info(`Setting up socket complete consumer for chainId: ${chainId}`);
+      socketConsumerMap[chainId] = new SocketConsumer({
+        queue: transactionQueue,
+        options: {
+          chainId,
+          wssUrl: config.socketService.wssUrl,
+          EVMRelayerManagerMap,
+        },
+      });
+      transactionQueue.consume(socketConsumerMap[chainId].onMessageReceived);
+      log.info(
+        `Socket consumer setup complete for chainId: ${chainId} and attached to transaction queue`,
+      );
+    }
 
     log.info(`Setting up fee options service for chainId: ${chainId}`);
     const feeOptionService = new FeeOption(gasPriceService, cacheService, {

@@ -1,0 +1,331 @@
+## Global Docker image parameters
+## Please, note that this will override the image parameters, including dependencies, configured to use the global value
+## Current available global Docker image parameters: imageRegistry and imagePullSecrets
+##
+# global:
+#   imageRegistry: myRegistryName
+#   imagePullSecrets:
+#     - myRegistryKeySecretName
+
+replicaCount: 1
+
+image:
+  registry: docker.io
+  repository: centrifugo/centrifugo
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+namespaceOverride: ""
+priorityClassName: ""
+
+service:
+  ## Service type
+  ##
+  type: ClusterIP
+  ## Service port
+  ##
+  port: 8000
+  ## Specify the nodePort value for the LoadBalancer and NodePort service types.
+  ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport
+  ##
+  nodePort: ""
+  ## Provide any additional annotations which may be required
+  ##
+  annotations: {}
+  ## Provide any additional labels which may be required
+  ##
+  labels: {}
+  ##
+  ## Specify custom appProtocol for a service port.
+  appProtocol: ""
+  ##
+  ## Use separate service for internal endpoints. It could be useful for configuring same port number for all services.
+  useSeparateInternalService: false
+  ## Use separate service for GRPC API endpoints. It could be useful for configuring same port number for all services.
+  useSeparateGrpcService: false
+  ## Use separate service for GRPC unidirectional stream. It could be useful for configuring same port number for all services.
+  useSeparateUniGrpcService: false
+
+internalService:
+  port: 9000
+  type: ClusterIP
+  nodePort: ""
+  # Static NodePort, if set.
+  # nodePort: 30101
+  annotations: {}
+    # prometheus.io/scrape: "true"
+    # prometheus.io/path: "/metrics"
+    # prometheus.io/port: "9000"
+  ## Specify custom appProtocol for a service port.
+  labels: {}
+  appProtocol: ""
+
+grpcService:
+  port: 10000
+  type: ClusterIP
+  nodePort: ""
+  # Static NodePort, if set.
+  # nodePort: 30102
+  annotations: {}
+  ## Specify custom appProtocol for a service port.
+  labels: {}
+  appProtocol: ""
+
+uniGrpcService:
+  port: 11000
+  type: ClusterIP
+  nodePort: ""
+  # Static NodePort, if set.
+  # nodePort: 30103
+  annotations: {}
+  ## Specify custom appProtocol for a service port.
+  labels: {}
+  appProtocol: ""
+
+ingress:
+  enabled: false
+
+  # Optionally set the ingressClassName. k8s >= 1.18
+  ingressClassName: ""
+
+  # pathType override - see: https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types
+  pathType: Prefix
+
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+    #
+    # To run on custom path:
+    # nginx.ingress.kubernetes.io/rewrite-target: /$2
+  hosts: []
+    # - host: centrifugo.local
+    #   paths:
+    #     - /
+    # - host: centrifugo-with-prefix.local
+    #   paths:
+    #     - /test(/|$)(.*)
+  # https://kubernetes.github.io/ingress-nginx/examples/tls-termination/
+  tls: []
+    # - secretName: centrifugo-example-tls
+    #   hosts:
+    #     - centrifugo.local
+
+ingressInternal:
+  # !!! ATTENTION !!!
+  # Be careful in exposing internal services by ingressInternal. Make sure
+  # you understand which Centrifugo endpoints are exposed in this case (server API,
+  # admin, Prometheus metrics, healthcheck, etc.). If you really need exposing internal
+  # endpoints consider limiting access to the ingress from the outside by load balancer
+  # rules, probably per specific path. Probably `admin_external` or `api_external`
+  # options which expose corresponding handlers on the external ingress will work better
+  # for you.
+  enabled: false
+
+  # Optionally set the ingressClassName. k8s >= 1.18
+  ingressClassName: ""
+
+  # pathType override - see: https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types
+  pathType: Prefix
+
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+    #
+    # To run on custom path:
+    # nginx.ingress.kubernetes.io/rewrite-target: /$2
+  hosts: []
+    # - host: centrifugo.local
+    #   paths:
+    #     - /
+    # - host: centrifugo-with-prefix.local
+    #   paths:
+    #     - /test(/|$)(.*)
+  # https://kubernetes.github.io/ingress-nginx/examples/tls-termination/
+  tls: []
+    # - secretName: centrifugo-example-tls
+    #   hosts:
+    #     - centrifugo.local
+
+resources:
+  requests:
+    memory: "100Mi"
+    cpu: "200m"
+  limits:
+    memory: "512Mi"
+    cpu: "512m"
+
+serviceAccount:
+  # Specifies whether a service account should be created.
+  create: true
+  # Annotations to add to the service account.
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template.
+  name: ""
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  cpu:
+    enabled: false
+    targetCPUUtilizationPercentage: 80
+  memory:
+    enabled: false
+    targetMemoryUtilizationPercentage: 80
+  # ref: https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#default-behavior
+  behavior: {}
+
+autoscalingTemplate: []
+  # Custom or additional autoscaling metrics
+  # ref: https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#support-for-metrics-apis
+  # ref: https://github.com/kubernetes-sigs/prometheus-adapter/
+  # - type: Pods
+  #   pods:
+  #     metric:
+  #       # kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1/namespaces/default/pods/*/hpa_custom_metric_centrifugo_node_num_clients" | jq .
+  #       name: hpa_custom_metric_centrifugo_node_num_clients
+  #     target:
+  #       type: AverageValue
+  #       averageValue: 10000m # NOTE: # 10000m = 10 actual metric value (10 clients)
+
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+
+terminationGracePeriodSeconds: 30
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+  #
+  # You can also tune sysctl, ex.:
+  # sysctls:
+  #   - name: net.core.somaxconn
+  #     value: "2048"
+
+deploymentStrategy: {}
+  # type: RollingUpdate
+  # rollingUpdate:
+  #   maxSurge: 0
+  #   maxUnavailable: 1
+
+metrics:
+  enabled: false
+  serviceMonitor:
+    enabled: false
+    ## Specify the namespace in which the serviceMonitor resource will be created
+    ##
+    # namespace: ""
+    ## Specify the interval at which metrics should be scraped
+    ##
+    interval: 30s
+    ## Specify the timeout after which the scrape is ended
+    ##
+    # scrapeTimeout: 30s
+    ## Specify Metric Relabellings to add to the scrape endpoint
+    ##
+    # relabellings:
+    ## Specify honorLabels parameter to add the scrape endpoint
+    ##
+    honorLabels: false
+    ## Used to pass Labels that are used by the Prometheus installed in your cluster to select Service Monitors to work with
+    ## ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#prometheusspec
+    ## Can be used to specify the release label for ServiceMonitor. Sometimes it should be custom for prometheus operator to work.
+    additionalLabels: {}
+    ## Set custom annotations.
+    annotations: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Additional environment variables to be passed to Centrifugo container.
+env: {}
+
+# Additional secret environment variables to be passed to Centrifugo container.
+envSecret: []
+
+# Centrifugo configuration, will be transformed into config.json file.
+config:
+  # Engine to use. Default memory engine allows running only one Centrifugo pod.
+  # Scale to many pods with Redis engine or Nats broker. Refer to Centrifugo
+  # documentation: https://centrifugal.github.io/centrifugo/server/engines/
+  engine: "memory"
+
+  # Enable admin web interface by default.
+  admin: true
+
+  # Array of namespaces.
+  namespaces: []
+
+# Additional volumes for Centrifugo deployment.
+volumes: []
+  # - name: volume
+  #   secret:
+  #     secretName: volumeSecretName
+
+# Additional volume mounts for Centrifugo container.
+volumeMounts: []
+  # - name: volume
+  #   mountPath: "/volume"
+  #   readOnly: true
+
+
+# TopologySpreadConstrains, e.g. for spreading pods across nodes
+# see https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/
+topologySpreadConstraints: ""
+
+# Init Containers, e.g. for waiting for other resources like redis  (evaluated as template)
+# see https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+initContainers: ""
+
+# existingSecret: my-secret
+
+# Centrifugo secrets.
+secrets:
+  # Secret key for HMAC tokens.
+  tokenHmacSecretKey: ""
+
+  # Admin password used to protect access to web interface.
+  adminPassword: ""
+
+  # Admin secret used to create auth tokens on user login into admin web interface.
+  adminSecret: ""
+
+  # Centrifugo api_key for Centrifugo API endpoint authorization.
+  apiKey: ""
+
+  # Centrifugo grpc_api_key for Centrifugo GRPC API authorization.
+  grpcApiKey: ""
+
+  # Connection string to Redis.
+  redisAddress: ""
+
+  # Password for Redis.
+  redisPassword: ""
+
+  # Password for Redis Sentinel.
+  redisSentinelPassword: ""
+
+  # Connection string to Nats.
+  natsUrl: ""
+
+  # Centrifugo PRO license.
+  license: ""

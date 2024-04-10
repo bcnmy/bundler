@@ -1,0 +1,31 @@
+{{- if .Values.service.useSeparateInternalService -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "centrifugo.fullname" . }}-internal
+  namespace: {{ include "centrifugo.namespace" . }}
+  labels:
+    {{- include "centrifugo.labels" . | nindent 4 }}
+    {{- with .Values.internalService.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.internalService.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.internalService.type }}
+  ports:
+    - port: {{ .Values.internalService.port }}
+      targetPort: internal
+      protocol: TCP
+      {{- if .Values.internalService.appProtocol }}
+      appProtocol: {{ .Values.internalService.appProtocol }}
+      {{- end }}
+      name: internal
+      {{- if (and (eq .Values.internalService.type "NodePort") (not (empty .Values.internalService.nodePort))) }}
+      nodePort: {{ .Values.internalService.nodePort }}
+      {{- end }}
+  selector:
+    {{- include "centrifugo.selectorLabels" . | nindent 4 }}
+{{- end }}

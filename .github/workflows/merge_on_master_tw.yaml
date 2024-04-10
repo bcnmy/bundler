@@ -1,0 +1,66 @@
+# This workflow will do a clean installation of node dependencies, build the 
+# source code and run tests across different versions of node
+# For more information see: 
+# https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+name: Main_or_Master
+on:
+# The trigger event is for every pull request. If we would trigger when we push
+# to any branch and on pull request we would have double workflow runs and will
+# consume more minutes. I chose to trigger the workflow run on pull requests only.
+  push:
+    branches:
+      - 'dedicated-bundler-setup_new'
+
+jobs:
+  js_build_test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [21.x]
+        # node-version: [14.x, 16.x, 18.x, 20.x]
+        # See supported Node.js release schedule at
+        # https://nodejs.org/en/about/releases/
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Yarn install, build and test
+        run: echo "In the steps below we will build and run first set of tests for all components"
+      - run: echo yarn install
+      - run: echo yarn lint
+      - run: echo yarn build
+      - run: echo yarn test
+
+  container_img_build_push_gar:
+    needs: [js_build_test]
+    # Allow the job to fetch a GitHub ID token
+    permissions:
+      id-token: write
+      contents: read
+    # The plan is to build and push each docker image in parallel.
+    strategy:
+      matrix:
+        image:
+          - us-docker.pkg.dev/biconomy-prod/bundler/trustwallet
+          - us-docker.pkg.dev/prj-biconomy-prod-001/bundler/bundler
+          # LOCATION-docker.pkg.dev/PROJECT-ID/REPOSITORY/IMAGE
+          # {owner}/{repo}/.github/workflows/{filename}@{ref}
+    uses: bcnmy/devops/.github/workflows/container_img_build_push_gar.yaml@master
+    with:
+      image: ${{ matrix.image }}
+      dockerfile: Dockerfile.helm
+      # GCP project where the identity provider is
+      # gcloud projects describe prj-workload-identity-001
+      gcp_project_number: '766873424314'
+      gcp_pool_id: 'pool-id-github-actions'
+      # gcp_provider_id: 'ga-GITHUB_REPO_NAME'
+      gcp_provider_id: 'ga-bundler'
+      # LOCATION-docker.pkg.dev/PROJECT-ID/REPOSITORY/IMAGE
+      gcp_registry: 'us-docker.pkg.dev/biconomy-prod/bundler/trustwallet'
+      gcp_service_account: 'sa-bundler@prj-workload-identity-001.iam.gserviceaccount.com'
+
+  # TODO: Add integrations tests here
