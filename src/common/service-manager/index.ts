@@ -360,7 +360,7 @@ let statusService: IStatusService;
     );
     log.info(`Retry transaction service setup for chainId: ${chainId}`);
 
-    if (!config.isTWSetup) {
+    if(!config.isTWSetup) {
       log.info(`Setting up socket complete consumer for chainId: ${chainId}`);
       socketConsumerMap[chainId] = new SocketConsumer({
         queue: transactionQueue,
