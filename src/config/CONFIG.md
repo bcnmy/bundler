@@ -1,7 +1,6 @@
 # Configuring the Bundler
 
 Configuring the Bundler is a bit complicated and involves multiple configuration sources:
-
 1. **Secret config**: relayer keys are kept inside [src/config/config.json](./config.json) and encrypted using `ts-node encrypt-config.ts` which produces a [config.json.enc](../../config.json.enc) encrypted file in the project root folder. The secret config should **never** be pushed to this repo.
 2. **Default config**: default (non-secret) values are kept in [config/default.json](../../config/default.json) and they contain parameters that are shared across all environments, such as network constants etc. The default config is pushed to the repo.
 3. **Environment specific configs**: these are environment specific configs that contain both (semi)private data like RPC URLs but also allow us to override **any** of the values specified in the default config. Each environment has it's own file (`development.json`, `production.json` and so on) and these files should **never** be pushed to this repo, the only exception is [test.json](../../config/test.json) which is used in tests.
@@ -28,10 +27,9 @@ The following setup is for Polygon Mumbai that you can use for local development
 
 The Bundler previously used a custom-built configuration system that read the default values from the [static-config.json](./static-config.json) file and merged it with the decrypted config from the [config.json](./config.json) file. We call this Config V1.
 
-The new config system (V2) uses the popular node config package that gives us more flexibility while providing some best-practice patterns like _hierarchical config_ and forcing us to use a industry-standard config file approach (the same one Nest.js uses).
+The new config system (V2) uses the popular node config package that gives us more flexibility while providing some best-practice patterns like *hierarchical config* and forcing us to use a industry-standard config file approach (the same one Nest.js uses).
 
 This is what changed:
-
 - All of the new config files are in the [config](../../config/) directory
 - Everything that was inside [static-config.json](./static-config.json) is now in [default.json](../../config/default.json)
 - Everything **except the relayer keys** that was in your local development [config.json](./config.json) file should now be in `../../config/development.json`.
@@ -39,10 +37,9 @@ This is what changed:
 ### Migration instructions
 
 Perform the following steps if you have old config files and you want to migrate to the new config system:
-
 1. Copy the contents of your old (decrypted) `config.json` file and put them in a new file at `config/development.json`
    1. ❗ If you are migrating files for an environment that is not `development`, then create the appropriate file, for example `config/production.json` instead of `config/development.json` (don't create both).
-   2. Pay attention to the `supportedNetworks` array in your new config file. Chains that are not specified there won't be enabled on this bundler, even if they exist in `default.json` (or they existed in the old `static-config.json`)
+   2. Pay attention to the `supportedNetworks` array in your new config file. Chains that are not specified there won't be enabled on this  bundler, even if they exist in `default.json` (or they existed in the old `static-config.json`)
 2. Open your new `config/development.json` file and delete the `relayerSeed` and `ownerAccountDetails` properties. ⚠️ Don't delete other properties in `relayerManagers` if they are there. This file shouldn't contain any private keys.
 3. Open your old `config.json` and delete everything except the `relayerSeed` and `ownerAccountDetails` properties. The file should have the same format like [this template](./config.template.json).
 4. ❗ Don't forget to re-encrypt your config!
@@ -53,7 +50,6 @@ Perform the following steps if you have old config files and you want to migrate
 The best reference for supported configuration options is the `ConfigType` in [IConfig.ts](./interface/IConfig.ts), it lists and documents every variable.
 
 Here are some most basic configuration options:
-
 ```
 {
   // List of networks you want to enable on this Bundler instance.
@@ -75,12 +71,10 @@ Here are some most basic configuration options:
   }
 }
 ```
-
 Also you could take a look at [config/default.json](../../config/default.json) and [src/config/config.template.json](config.template.json) for reference.
 
 ## FAQ & caveats
 
 ### The `relayerManagers` property is not merged correctly
-
 If you notice the `relayerManagers` property not being merged correctly in hierarchical config files, that's because it's an **array of objects** (which is a bad practice for config files and should be fixed in the future) and it can't be merged property by property.
 This means if you want to override the `relayerManagers` in some config file, you have to specify all of the relayer managers properties in the new file, not just the ones you want to override.
