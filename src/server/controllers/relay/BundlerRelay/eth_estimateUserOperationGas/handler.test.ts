@@ -14,7 +14,7 @@ const getGasPriceMock = jest.fn();
 
 // 💡 These import mocks have to happen before we call import { estimateUserOperationGas }
 // because estimateUserOperationGas imports the service manager produces SIDE EFFECTS (bad practice) like trying to connect to the DB
-jest.mock("../../../../common/service-manager", () => ({
+jest.mock("../../../../../common/service-manager", () => ({
   entryPointMap: {
     1: [entryPointContract],
     2: [entryPointContract],
@@ -36,7 +36,7 @@ jest.mock("../../../../common/service-manager", () => ({
 }));
 
 // Now we can import after we have mocked the dependencies
-import { estimateUserOperationGas } from "./EstimateUserOperationGas";
+import { estimateUserOperationGas } from "./handler";
 
 describe("EstimateUserOperationGas", () => {
   afterEach(() => {
