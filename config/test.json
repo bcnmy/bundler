@@ -3,6 +3,9 @@
   "relayer": {
     "nodePathIndex": 0
   },
+  "dataSources": {
+    "redisUrl": "test"
+  },
   "chains": {
     "providers": {
       "80001": [
