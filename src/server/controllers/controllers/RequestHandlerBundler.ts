@@ -16,7 +16,7 @@ import {
   getGasAndGasPrices,
   getGasFeeValues,
   getUserOperationStatus,
-} from "./BundlerRelay";
+} from "./v2";
 
 export const bundlerRequestHandler = async (req: Request, res: Response) => {
   const { method } = req.body;

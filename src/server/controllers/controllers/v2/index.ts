@@ -1,5 +1,5 @@
 export * from "./BundleUserOperation";
-export * from "./ChainId";
+export * from "./eth_chainId/handler";
 export * from "./eth_estimateUserOperationGas/handler";
 export * from "./GetUserOperationByHash";
 export * from "./GetUserOperationReceipt";

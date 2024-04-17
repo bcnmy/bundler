@@ -3,7 +3,7 @@ import { EthMethodType, TransactionMethodType } from "../../../common/types";
 import { BUNDLER_VALIDATION_STATUSES, STATUSES } from "../../middleware";
 import { relayAATransaction } from "./AARelay";
 import { relaySCWTransaction } from "./SCWRelay";
-import { getGasAndGasPrices } from "./BundlerRelay/GetGasAndGasPrices";
+import { getGasAndGasPrices } from "./v2/GetGasAndGasPrices";
 
 export const requestHandler = async (req: Request, res: Response) => {
   const { method } = req.body;

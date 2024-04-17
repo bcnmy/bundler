@@ -1,5 +1,5 @@
 /* eslint-disable max-classes-per-file */
-import { JsonRpcError } from "./errors";
+import { RPCError } from "../shared/errors";
 
 abstract class RPCResponse {
   constructor(
@@ -9,7 +9,7 @@ abstract class RPCResponse {
 }
 
 export class RPCErrorResponse extends RPCResponse {
-  constructor(public error: JsonRpcError) {
+  constructor(public error: RPCError) {
     super();
   }
 }

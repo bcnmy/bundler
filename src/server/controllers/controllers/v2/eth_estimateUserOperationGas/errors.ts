@@ -2,15 +2,9 @@
 
 import { parseError } from "../../../../../common/utils";
 import { BUNDLER_VALIDATION_STATUSES } from "../../../../middleware";
+import { RPCError } from "../shared/errors";
 
-export class JsonRpcError {
-  constructor(
-    public code = BUNDLER_VALIDATION_STATUSES.INTERNAL_SERVER_ERROR,
-    public message = "Internal Server Error",
-  ) {}
-}
-
-export class InternalServerError extends JsonRpcError {
+export class InternalServerError extends RPCError {
   constructor(error: unknown) {
     super(
       BUNDLER_VALIDATION_STATUSES.INTERNAL_SERVER_ERROR,
@@ -19,7 +13,7 @@ export class InternalServerError extends JsonRpcError {
   }
 }
 
-export class EntryPointNotSupportedError extends JsonRpcError {
+export class EntryPointNotSupportedError extends RPCError {
   constructor(entryPointAddress: string) {
     super(
       BUNDLER_VALIDATION_STATUSES.BAD_REQUEST,
@@ -29,7 +23,7 @@ export class EntryPointNotSupportedError extends JsonRpcError {
   }
 }
 
-export class ChainIdNotSupportedError extends JsonRpcError {
+export class ChainIdNotSupportedError extends RPCError {
   constructor(chainId: string) {
     super(
       BUNDLER_VALIDATION_STATUSES.BAD_REQUEST,
@@ -39,7 +33,7 @@ export class ChainIdNotSupportedError extends JsonRpcError {
   }
 }
 
-export class GasPriceError extends JsonRpcError {
+export class GasPriceError extends RPCError {
   constructor(chainId: string) {
     super(
       BUNDLER_VALIDATION_STATUSES.BAD_REQUEST,

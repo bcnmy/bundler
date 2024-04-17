@@ -12,11 +12,11 @@ import { customJSONStringify, parseError } from "../../../../../common/utils";
 import {
   EntryPointNotSupportedError,
   ChainIdNotSupportedError,
-  JsonRpcError,
   GasPriceError,
   InternalServerError,
 } from "./errors";
 import { EstimateUserOperationGasResponse, RPCErrorResponse } from "./response";
+import { RPCError } from "../shared/errors";
 
 const filenameLogger = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -73,7 +73,7 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
     if (code !== STATUSES.SUCCESS) {
       return res
         .status(STATUSES.BAD_REQUEST)
-        .json(new RPCErrorResponse(new JsonRpcError(code, message)));
+        .json(new RPCErrorResponse(new RPCError(code, message)));
     }
 
     const {
