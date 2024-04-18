@@ -19,7 +19,10 @@ import {
 } from "entry-point-gas-estimations";
 import { config } from "../../config";
 import { IEVMAccount } from "../../relayer/account";
-import { BUNDLER_VALIDATION_STATUSES, STATUSES } from "../../server/middleware";
+import {
+  BUNDLER_VALIDATION_STATUSES,
+  STATUSES,
+} from "../../server/api/shared/middleware";
 import { logger } from "../logger";
 import { INetworkService } from "../network";
 import { EVMRawTransactionType, UserOperationType } from "../types";
