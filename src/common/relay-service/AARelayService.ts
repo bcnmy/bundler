@@ -1,5 +1,5 @@
 /* eslint-disable import/no-import-module-exports */
-import { STATUSES } from "../../server/middleware";
+import { STATUSES } from "../../server/api/shared/middleware";
 import { IQueue } from "../interface";
 import { logger } from "../logger";
 import { AATransactionMessageType, RelayServiceResponseType } from "../types";

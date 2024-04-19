@@ -9,7 +9,7 @@ import express, {
 import cons from "consolidate";
 import logger from "pino-http";
 import { randomUUID } from "node:crypto";
-import { routes } from "./routes";
+import { routes } from "./api/router";
 
 const app = express();
 

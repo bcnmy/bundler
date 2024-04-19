@@ -22,7 +22,7 @@ import { IRelayerManager } from "../relayer-manager";
 import { ITransactionService } from "../transaction-service";
 import { ITransactionConsumer } from "./interface/ITransactionConsumer";
 import { BundlerConsumerParamsType } from "./types";
-import { STATUSES } from "../../server/middleware";
+import { STATUSES } from "../../server/api/shared/middleware";
 import { ENTRY_POINT_ABI } from "../../common/constants";
 
 const log = logger.child({

@@ -19,7 +19,6 @@ import { EVMRelayerQueue } from "../../relayer/relayer-queue";
 import { EVMRetryTransactionService } from "../../relayer/retry-transaction-service";
 import { EVMTransactionListener } from "../../relayer/transaction-listener";
 import { EVMTransactionService } from "../../relayer/transaction-service";
-import { FeeOption } from "../../server/services";
 import { RedisCacheService } from "../cache";
 import { Mongo, TransactionDAO } from "../db";
 import { UserOperationDAO } from "../db/dao/UserOperationDAO";
@@ -62,6 +61,7 @@ import { customJSONStringify, parseError } from "../utils";
 import { GasPriceService } from "../gas-price";
 import { CacheFeesJob } from "../gas-price/jobs/CacheFees";
 import { CachePricesJob } from "../token-price/jobs/CachePrices";
+import { FeeOption } from "../fee-options";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -84,7 +84,7 @@ const gasPriceServiceMap: {
   [chainId: number]: GasPriceService;
 } = {};
 
-const bundlerSimulatonServiceMap: {
+const bundlerSimulationServiceMap: {
   [chainId: number]: BundlerSimulationService;
 } = {};
 
@@ -110,9 +110,9 @@ const userOperationDao = new UserOperationDAO();
 const userOperationStateDao = new UserOperationStateDAO();
 
 const socketConsumerMap: Record<number, SocketConsumer> = {};
-const retryTransactionSerivceMap: Record<number, EVMRetryTransactionService> =
+const retryTransactionServiceMap: Record<number, EVMRetryTransactionService> =
   {};
-const transactionSerivceMap: Record<number, EVMTransactionService> = {};
+const transactionServiceMap: Record<number, EVMTransactionService> = {};
 const transactionListenerMap: Record<number, EVMTransactionListener> = {};
 const retryTransactionQueueMap: {
   [key: number]: RetryTransactionHandlerQueue;
@@ -274,7 +274,7 @@ let statusService: IStatusService;
         chainId,
       },
     });
-    transactionSerivceMap[chainId] = transactionService;
+    transactionServiceMap[chainId] = transactionService;
     log.info(`Transaction service setup complete for chainId: ${chainId}`);
 
     log.info(`Setting up relayer manager for chainId: ${chainId}`);
@@ -343,7 +343,7 @@ let statusService: IStatusService;
     log.info(`Relayer manager setup complete for chainId: ${chainId}`);
 
     log.info(`Setting up retry transaction service for chainId: ${chainId}`);
-    retryTransactionSerivceMap[chainId] = new EVMRetryTransactionService({
+    retryTransactionServiceMap[chainId] = new EVMRetryTransactionService({
       retryTransactionQueue,
       transactionService,
       networkService,
@@ -356,7 +356,7 @@ let statusService: IStatusService;
     });
 
     retryTransactionQueueMap[chainId].consume(
-      retryTransactionSerivceMap[chainId].onMessageReceived,
+      retryTransactionServiceMap[chainId].onMessageReceived,
     );
     log.info(`Retry transaction service setup for chainId: ${chainId}`);
 
@@ -398,7 +398,7 @@ let statusService: IStatusService;
     );
 
     // eslint-disable-next-line max-len
-    bundlerSimulatonServiceMap[chainId] = new BundlerSimulationService(
+    bundlerSimulationServiceMap[chainId] = new BundlerSimulationService(
       networkService,
       tenderlySimulationService,
       alchemySimulationService,
@@ -571,11 +571,11 @@ let statusService: IStatusService;
 export {
   routeTransactionToRelayerMap,
   feeOptionMap,
-  bundlerSimulatonServiceMap,
+  bundlerSimulationServiceMap,
   scwSimulationServiceMap,
   entryPointMap,
   EVMRelayerManagerMap,
-  transactionSerivceMap,
+  transactionServiceMap,
   transactionDao,
   userOperationDao,
   userOperationStateDao,
