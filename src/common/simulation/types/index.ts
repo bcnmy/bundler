@@ -91,10 +91,10 @@ export type SimulateHandleOpsReturnType = {
   isExecutionSuccess?: boolean;
 };
 
-export type SimulateValidationAndExecutionData = {
+export type SimulationData = {
   userOp: UserOperationType;
   entryPointContract: EntryPointContractType;
   chainId: number;
 };
 
-export type SimulateValidationData = SimulateValidationAndExecutionData;
+export type ValidationData = SimulationData;

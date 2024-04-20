@@ -35,8 +35,8 @@ import RpcError from "../utils/rpc-error";
 import {
   EstimateUserOperationGasDataType,
   EstimateUserOperationGasReturnType,
-  SimulateValidationAndExecutionData,
-  SimulateValidationData,
+  SimulationData,
+  ValidationData,
 } from "./types";
 import { BLOCKCHAINS } from "../constants";
 
@@ -302,12 +302,16 @@ export class BundlerSimulationService {
   }
 
   async simulateValidationAndExecution(
-    simulateValidationAndExecutionData: SimulateValidationAndExecutionData,
+    simulateValidationAndExecutionData: SimulationData,
   ) {
     let handleOpsCallData;
     try {
       const { userOp, entryPointContract, chainId } =
         simulateValidationAndExecutionData;
+
+      await this.checkUserOperationForRejection(
+        simulateValidationAndExecutionData,
+      );
 
       log.info(
         `userOp received: ${customJSONStringify(
@@ -455,10 +459,12 @@ export class BundlerSimulationService {
     }
   }
 
-  async simulateValidation(simulateValidationData: SimulateValidationData) {
+  async simulateValidation(simulateValidationData: SimulationData) {
     let handleOpsCallData;
     try {
       const { userOp, entryPointContract, chainId } = simulateValidationData;
+
+      await this.checkUserOperationForRejection(simulateValidationData);
 
       log.info(
         `userOp received: ${customJSONStringify(
@@ -638,6 +644,68 @@ export class BundlerSimulationService {
           handleOpsCallData,
         },
       };
+    }
+  }
+
+  async checkUserOperationForRejection(validationData: ValidationData) {
+    const { userOp, entryPointContract } = validationData;
+
+    const { maxPriorityFeePerGas, maxFeePerGas, preVerificationGas } = userOp;
+
+    // TODO change it to be fetched from config after config gets from env
+    const maxPriorityFeePerGasThresholdPercentage =
+      process.env.MAX_PRIORITY_FEE_PER_GAS_THRESHOLD_PERCENTAGE;
+    const maxFeePerGasThresholdPercentage =
+      process.env.MAX_FEE_PER_GAS_THRESHOLD_PERCENTAGE;
+    const preVerificationGasThresholdPercentage =
+      process.env.PRE_VERIFICAION_GAS_THRESHOLD_PERCENTAGE;
+
+    const gasPrice = await this.gasPriceService.getGasPrice();
+    let networkMaxPriorityFeePerGas;
+    let networkMaxFeePerGas;
+
+    if (typeof gasPrice === "bigint") {
+      networkMaxPriorityFeePerGas = gasPrice;
+      networkMaxFeePerGas = gasPrice;
+    } else {
+      networkMaxPriorityFeePerGas = gasPrice.maxPriorityFeePerGas;
+      networkMaxFeePerGas = gasPrice.maxFeePerGas;
+    }
+
+    // TODO add error code in RpcError
+    if (
+      networkMaxPriorityFeePerGas *
+        BigInt(maxPriorityFeePerGasThresholdPercentage as string) >
+      maxPriorityFeePerGas
+    ) {
+      throw new RpcError(
+        `maxPriorityFeePerGas in userOp: ${maxPriorityFeePerGas} is lower than expected maxPriorityFeePerGas: ${networkMaxPriorityFeePerGas * BigInt(maxPriorityFeePerGasThresholdPercentage as string)}`,
+      );
+    }
+
+    if (
+      networkMaxFeePerGas * BigInt(maxFeePerGasThresholdPercentage as string) >
+      maxFeePerGas
+    ) {
+      throw new RpcError(
+        `maxFeePerGas in userOp: ${maxPriorityFeePerGas} is lower than expected maxFeePerGas: ${networkMaxPriorityFeePerGas * BigInt(maxFeePerGas)}`,
+      );
+    }
+
+    this.gasEstimator.setEntryPointAddress(entryPointContract.address);
+    const networkPreVerificationGas =
+      await this.gasEstimator.calculatePreVerificationGas({
+        userOperation: userOp,
+      });
+
+    if (
+      networkPreVerificationGas.preVerificationGas *
+        BigInt(preVerificationGasThresholdPercentage as string) >
+      preVerificationGas
+    ) {
+      throw new RpcError(
+        `preVerificationGas in userOp: ${preVerificationGas} is lower than expected preVerificationGas: ${networkPreVerificationGas.preVerificationGas * BigInt(preVerificationGasThresholdPercentage as string)}`,
+      );
     }
   }
 
