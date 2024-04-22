@@ -97,4 +97,6 @@ export type SimulationData = {
   chainId: number;
 };
 
-export type ValidationData = SimulationData;
+export type ValidationData = {
+  userOp: UserOperationType;
+};

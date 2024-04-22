@@ -648,7 +648,7 @@ export class BundlerSimulationService {
   }
 
   async checkUserOperationForRejection(validationData: ValidationData) {
-    const { userOp, entryPointContract } = validationData;
+    const { userOp } = validationData;
 
     const { maxPriorityFeePerGas, maxFeePerGas, preVerificationGas } = userOp;
 
@@ -692,7 +692,6 @@ export class BundlerSimulationService {
       );
     }
 
-    this.gasEstimator.setEntryPointAddress(entryPointContract.address);
     const networkPreVerificationGas =
       await this.gasEstimator.calculatePreVerificationGas({
         userOperation: userOp,
