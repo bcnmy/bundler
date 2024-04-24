@@ -99,4 +99,6 @@ export type SimulationData = {
 
 export type ValidationData = {
   userOp: UserOperationType;
+  networkMaxPriorityFeePerGas: bigint;
+  networkMaxFeePerGas: bigint;
 };

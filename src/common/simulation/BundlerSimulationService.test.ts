@@ -1,29 +1,35 @@
-import { RedisCacheService } from "../cache";
+import { GasEstimator } from "entry-point-gas-estimations/dist/gas-estimator/entry-point-v6/GasEstimator/GasEstimator";
+import { config } from "../../config";
 import { GasPriceService } from "../gas-price";
 import { EVMNetworkService } from "../network";
 import { UserOperationType } from "../types";
 import { BundlerSimulationService } from "./BundlerSimulationService";
-import { AlchemySimulationService, TenderlySimulationService } from "./external-simulation";
+import {
+  AlchemySimulationService,
+  TenderlySimulationService,
+} from "./external-simulation";
 
 describe("BundlerSimulationService", () => {
-  const networkService = new EVMNetworkService({ chainId: 137, rpcUrl: "https://best-rpc-url.io"});
-  const cacheService = RedisCacheService.getInstance();
-  const gasPriceService = new GasPriceService(cacheService, networkService, { chainId: 137, EIP1559SupportedNetworks: [137]});  
-  const tenderlySimulationService = new TenderlySimulationService(gasPriceService, cacheService, {
-    tenderlyAccessKey: "",
-    tenderlyProject: "",
-    tenderlyUser: "",
-  });
-  const alchemySimulationService = new AlchemySimulationService(networkService);
+  const networkService = {} as unknown as EVMNetworkService;
+  const gasPriceService = {} as unknown as GasPriceService;
+  const tenderlySimulationService = {} as unknown as TenderlySimulationService;
+  const alchemySimulationService = {} as unknown as AlchemySimulationService;
   const bundlerSimulationService = new BundlerSimulationService(
     networkService,
     tenderlySimulationService,
     alchemySimulationService,
-    gasPriceService
+    gasPriceService,
   );
-  
+
   describe("user op rejection", () => {
     it("user op has insufficient max priority fee per gas", async () => {
+      bundlerSimulationService.gasEstimator = {
+        calculatePreVerificationGas: jest.fn().mockResolvedValue(50000n),
+      } as unknown as GasEstimator;
+
+      const networkMaxFeePerGas = 10n;
+      const networkMaxPriorityFeePerGas = 10n;
+
       const userOp: UserOperationType = {
         sender: "0xabc",
         nonce: 1n,
@@ -35,14 +41,30 @@ describe("BundlerSimulationService", () => {
         preVerificationGas: 5000n,
         maxPriorityFeePerGas: 1n,
         maxFeePerGas: 10n,
-        signature: "0xsignature"
+        signature: "0xsignature",
       };
-      bundlerSimulationService.checkUserOperationForRejection({
-        userOp
-      });
+
+      try {
+        await bundlerSimulationService.checkUserOperationForRejection({
+          userOp,
+          networkMaxFeePerGas,
+          networkMaxPriorityFeePerGas,
+        });
+      } catch (error) {
+        expect(error).toEqual(
+          `maxPriorityFeePerGas in userOp: ${userOp.maxPriorityFeePerGas} is lower than expected maxPriorityFeePerGas: ${networkMaxPriorityFeePerGas * BigInt(config.maxPriorityFeePerGasThresholdPercentage)}`,
+        );
+      }
     });
 
     it("user op has insufficient max fee per gas", async () => {
+      bundlerSimulationService.gasEstimator = {
+        calculatePreVerificationGas: jest.fn().mockResolvedValue(50000n),
+      } as unknown as GasEstimator;
+
+      const networkMaxFeePerGas = 10n;
+      const networkMaxPriorityFeePerGas = 10n;
+
       const userOp: UserOperationType = {
         sender: "0xabc",
         nonce: 1n,
@@ -52,16 +74,31 @@ describe("BundlerSimulationService", () => {
         callGasLimit: 5000n,
         verificationGasLimit: 5000n,
         preVerificationGas: 5000n,
-        maxPriorityFeePerGas: 1n,
-        maxFeePerGas: 10n,
-        signature: "0xsignature"
+        maxPriorityFeePerGas: 20n,
+        maxFeePerGas: 1n,
+        signature: "0xsignature",
       };
-      bundlerSimulationService.checkUserOperationForRejection({
-        userOp
-      });
+      try {
+        await bundlerSimulationService.checkUserOperationForRejection({
+          userOp,
+          networkMaxFeePerGas,
+          networkMaxPriorityFeePerGas,
+        });
+      } catch (error) {
+        expect(error).toEqual(
+          `maxFeePerGas in userOp: ${userOp.maxFeePerGas} is lower than expected maxFeePerGas: ${networkMaxFeePerGas * BigInt(config.maxFeePerGasThresholdPercentage)}`,
+        );
+      }
     });
 
     it("user op has insufficient preVerificationGas", async () => {
+      bundlerSimulationService.gasEstimator = {
+        calculatePreVerificationGas: jest.fn().mockResolvedValue(50000n),
+      } as unknown as GasEstimator;
+
+      const networkMaxFeePerGas = 1n;
+      const networkMaxPriorityFeePerGas = 1n;
+
       const userOp: UserOperationType = {
         sender: "0xabc",
         nonce: 1n,
@@ -71,16 +108,31 @@ describe("BundlerSimulationService", () => {
         callGasLimit: 5000n,
         verificationGasLimit: 5000n,
         preVerificationGas: 5000n,
-        maxPriorityFeePerGas: 1n,
+        maxPriorityFeePerGas: 10n,
         maxFeePerGas: 10n,
-        signature: "0xsignature"
+        signature: "0xsignature",
       };
-      bundlerSimulationService.checkUserOperationForRejection({
-        userOp
-      });
+      try {
+        bundlerSimulationService.checkUserOperationForRejection({
+          userOp,
+          networkMaxFeePerGas,
+          networkMaxPriorityFeePerGas,
+        });
+      } catch (error) {
+        expect(error).toEqual(
+          `preVerificationGas in userOp: ${userOp.preVerificationGas} is lower than expected preVerificationGas: ${50000n * BigInt(config.preVerificationGasThresholdPercentage)}`,
+        );
+      }
     });
 
     it("user op has sufficient max fee values and preVerificationGas", async () => {
+      bundlerSimulationService.gasEstimator = {
+        calculatePreVerificationGas: jest.fn().mockResolvedValue(5n),
+      } as unknown as GasEstimator;
+
+      const networkMaxFeePerGas = 1n;
+      const networkMaxPriorityFeePerGas = 1n;
+
       const userOp: UserOperationType = {
         sender: "0xabc",
         nonce: 1n,
@@ -90,13 +142,17 @@ describe("BundlerSimulationService", () => {
         callGasLimit: 5000n,
         verificationGasLimit: 5000n,
         preVerificationGas: 5000n,
-        maxPriorityFeePerGas: 1n,
+        maxPriorityFeePerGas: 10n,
         maxFeePerGas: 10n,
-        signature: "0xsignature"
+        signature: "0xsignature",
       };
-      bundlerSimulationService.checkUserOperationForRejection({
-        userOp
-      });
+      const response =
+        await bundlerSimulationService.checkUserOperationForRejection({
+          userOp,
+          networkMaxFeePerGas,
+          networkMaxPriorityFeePerGas,
+        });
+      expect(response).toBe(true);
     });
   });
 });

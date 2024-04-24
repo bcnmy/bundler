@@ -309,14 +309,30 @@ export class BundlerSimulationService {
       const { userOp, entryPointContract, chainId } =
         simulateValidationAndExecutionData;
 
-      await this.checkUserOperationForRejection(
-        simulateValidationAndExecutionData,
-      );
-
       log.info(
         `userOp received: ${customJSONStringify(
           userOp,
         )} on chainId: ${chainId}`,
+      );
+
+      const gasPrice = await this.gasPriceService.getGasPrice();
+      let networkMaxPriorityFeePerGas: bigint;
+      let networkMaxFeePerGas: bigint;
+  
+      if (typeof gasPrice === "bigint") {
+        networkMaxPriorityFeePerGas = gasPrice;
+        networkMaxFeePerGas = gasPrice;
+      } else {
+        networkMaxPriorityFeePerGas = gasPrice.maxPriorityFeePerGas;
+        networkMaxFeePerGas = gasPrice.maxFeePerGas;
+      }
+
+      await this.checkUserOperationForRejection(
+        {
+          userOp,
+          networkMaxPriorityFeePerGas,
+          networkMaxFeePerGas
+        },
       );
 
       let reason: string | undefined;
@@ -464,13 +480,34 @@ export class BundlerSimulationService {
     try {
       const { userOp, entryPointContract, chainId } = simulateValidationData;
 
-      await this.checkUserOperationForRejection(simulateValidationData);
-
       log.info(
         `userOp received: ${customJSONStringify(
           userOp,
         )} on chainId: ${chainId}`,
       );
+      
+      const gasPriceFromService = await this.gasPriceService.getGasPrice();
+      let gasPrice;
+      let networkMaxPriorityFeePerGas: bigint;
+      let networkMaxFeePerGas: bigint;
+
+      if (typeof gasPriceFromService === "bigint") {
+        gasPrice = Math.ceil(Number(gasPriceFromService) * 2).toString(16);
+        networkMaxPriorityFeePerGas = gasPriceFromService;
+        networkMaxFeePerGas = gasPriceFromService;
+      } else {
+        gasPrice = Math.ceil(
+          Number(gasPriceFromService.maxFeePerGas) * 2,
+        ).toString(16);
+        networkMaxPriorityFeePerGas = gasPriceFromService.maxPriorityFeePerGas;
+        networkMaxFeePerGas = gasPriceFromService.maxFeePerGas;
+      }
+
+      await this.checkUserOperationForRejection({
+        userOp,
+        networkMaxPriorityFeePerGas,
+        networkMaxFeePerGas,
+      });
 
       const data = encodeFunctionData({
         abi: entryPointContract.abi,
@@ -482,17 +519,6 @@ export class BundlerSimulationService {
       log.info(
         `Simulating with from address: ${ownerAddress} on chainId: ${chainId}`,
       );
-
-      const gasPriceFromService = await this.gasPriceService.getGasPrice();
-      let gasPrice;
-
-      if (typeof gasPriceFromService === "bigint") {
-        gasPrice = Math.ceil(Number(gasPriceFromService) * 2).toString(16);
-      } else {
-        gasPrice = Math.ceil(
-          Number(gasPriceFromService.maxFeePerGas) * 2,
-        ).toString(16);
-      }
 
       const ethEstimateGasParams = [
         {
@@ -647,48 +673,35 @@ export class BundlerSimulationService {
     }
   }
 
-  async checkUserOperationForRejection(validationData: ValidationData) {
-    const { userOp } = validationData;
+  async checkUserOperationForRejection(validationData: ValidationData): Promise<boolean | RpcError> {
+    const { userOp, networkMaxFeePerGas, networkMaxPriorityFeePerGas } = validationData;
 
     const { maxPriorityFeePerGas, maxFeePerGas, preVerificationGas } = userOp;
 
-    // TODO change it to be fetched from config after config gets from env
-    const maxPriorityFeePerGasThresholdPercentage =
-      process.env.MAX_PRIORITY_FEE_PER_GAS_THRESHOLD_PERCENTAGE;
-    const maxFeePerGasThresholdPercentage =
-      process.env.MAX_FEE_PER_GAS_THRESHOLD_PERCENTAGE;
-    const preVerificationGasThresholdPercentage =
-      process.env.PRE_VERIFICAION_GAS_THRESHOLD_PERCENTAGE;
+    const {
+      maxPriorityFeePerGasThresholdPercentage,
+      maxFeePerGasThresholdPercentage,
+      preVerificationGasThresholdPercentage
+    } = config;
 
-    const gasPrice = await this.gasPriceService.getGasPrice();
-    let networkMaxPriorityFeePerGas;
-    let networkMaxFeePerGas;
-
-    if (typeof gasPrice === "bigint") {
-      networkMaxPriorityFeePerGas = gasPrice;
-      networkMaxFeePerGas = gasPrice;
-    } else {
-      networkMaxPriorityFeePerGas = gasPrice.maxPriorityFeePerGas;
-      networkMaxFeePerGas = gasPrice.maxFeePerGas;
-    }
-
-    // TODO add error code in RpcError
     if (
       networkMaxPriorityFeePerGas *
-        BigInt(maxPriorityFeePerGasThresholdPercentage as string) >
+        BigInt(maxPriorityFeePerGasThresholdPercentage) >
       maxPriorityFeePerGas
     ) {
       throw new RpcError(
-        `maxPriorityFeePerGas in userOp: ${maxPriorityFeePerGas} is lower than expected maxPriorityFeePerGas: ${networkMaxPriorityFeePerGas * BigInt(maxPriorityFeePerGasThresholdPercentage as string)}`,
+        `maxPriorityFeePerGas in userOp: ${maxPriorityFeePerGas} is lower than expected maxPriorityFeePerGas: ${networkMaxPriorityFeePerGas * BigInt(maxPriorityFeePerGasThresholdPercentage)}`,
+        BUNDLER_VALIDATION_STATUSES.MAX_PRIORITY_FEE_PER_GAS_TOO_LOW,
       );
     }
 
     if (
-      networkMaxFeePerGas * BigInt(maxFeePerGasThresholdPercentage as string) >
+      networkMaxFeePerGas * BigInt(maxFeePerGasThresholdPercentage) >
       maxFeePerGas
     ) {
       throw new RpcError(
         `maxFeePerGas in userOp: ${maxPriorityFeePerGas} is lower than expected maxFeePerGas: ${networkMaxPriorityFeePerGas * BigInt(maxFeePerGas)}`,
+        BUNDLER_VALIDATION_STATUSES.MAX_FEE_PER_GAS_TOO_LOW,
       );
     }
 
@@ -699,13 +712,16 @@ export class BundlerSimulationService {
 
     if (
       networkPreVerificationGas.preVerificationGas *
-        BigInt(preVerificationGasThresholdPercentage as string) >
+        BigInt(preVerificationGasThresholdPercentage) >
       preVerificationGas
     ) {
       throw new RpcError(
-        `preVerificationGas in userOp: ${preVerificationGas} is lower than expected preVerificationGas: ${networkPreVerificationGas.preVerificationGas * BigInt(preVerificationGasThresholdPercentage as string)}`,
+        `preVerificationGas in userOp: ${preVerificationGas} is lower than expected preVerificationGas: ${networkPreVerificationGas.preVerificationGas * BigInt(preVerificationGasThresholdPercentage)}`,
+        BUNDLER_VALIDATION_STATUSES.PRE_VERIFICATION_GAS_TOO_LOW,
       );
     }
+
+    return true;
   }
 
   // eslint-disable-next-line class-methods-use-this
