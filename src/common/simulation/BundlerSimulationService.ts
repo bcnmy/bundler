@@ -315,23 +315,16 @@ export class BundlerSimulationService {
         )} on chainId: ${chainId}`,
       );
 
-      const gasPrice = await this.gasPriceService.getGasPrice();
-      let networkMaxPriorityFeePerGas: bigint;
-      let networkMaxFeePerGas: bigint;
-  
-      if (typeof gasPrice === "bigint") {
-        networkMaxPriorityFeePerGas = gasPrice;
-        networkMaxFeePerGas = gasPrice;
-      } else {
-        networkMaxPriorityFeePerGas = gasPrice.maxPriorityFeePerGas;
-        networkMaxFeePerGas = gasPrice.maxFeePerGas;
-      }
+      const {
+        maxPriorityFeePerGas, 
+        maxFeePerGas
+      } = await this.gasPriceService.getParsedGasPrice();
 
       await this.checkUserOperationForRejection(
         {
           userOp,
-          networkMaxPriorityFeePerGas,
-          networkMaxFeePerGas
+          networkMaxPriorityFeePerGas: maxPriorityFeePerGas,
+          networkMaxFeePerGas: maxFeePerGas,
         },
       );
 
@@ -485,29 +478,22 @@ export class BundlerSimulationService {
           userOp,
         )} on chainId: ${chainId}`,
       );
-      
-      const gasPriceFromService = await this.gasPriceService.getGasPrice();
-      let gasPrice;
-      let networkMaxPriorityFeePerGas: bigint;
-      let networkMaxFeePerGas: bigint;
 
-      if (typeof gasPriceFromService === "bigint") {
-        gasPrice = Math.ceil(Number(gasPriceFromService) * 2).toString(16);
-        networkMaxPriorityFeePerGas = gasPriceFromService;
-        networkMaxFeePerGas = gasPriceFromService;
-      } else {
-        gasPrice = Math.ceil(
-          Number(gasPriceFromService.maxFeePerGas) * 2,
-        ).toString(16);
-        networkMaxPriorityFeePerGas = gasPriceFromService.maxPriorityFeePerGas;
-        networkMaxFeePerGas = gasPriceFromService.maxFeePerGas;
-      }
+      const {
+        maxPriorityFeePerGas, 
+        maxFeePerGas
+      } = await this.gasPriceService.getParsedGasPrice();
+      let gasPrice = Math.ceil(
+        Number(maxFeePerGas) * 2,
+      ).toString(16);
 
-      await this.checkUserOperationForRejection({
-        userOp,
-        networkMaxPriorityFeePerGas,
-        networkMaxFeePerGas,
-      });
+      await this.checkUserOperationForRejection(
+        {
+          userOp,
+          networkMaxPriorityFeePerGas: maxPriorityFeePerGas,
+          networkMaxFeePerGas: maxFeePerGas,
+        },
+      );
 
       const data = encodeFunctionData({
         abi: entryPointContract.abi,

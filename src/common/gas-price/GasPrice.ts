@@ -324,6 +324,27 @@ export class GasPriceService implements IGasPriceService {
   }
 
   /**
+   * Method that returns gas price in an EIP 1559 format
+   * @returns { maxPriorityFeePerGas: bigint, maxFeePerGas: bigint }
+   */
+  async getParsedGasPrice(): Promise<{
+    maxPriorityFeePerGas: bigint;
+    maxFeePerGas: bigint;
+  }> {
+    const gasPrice = await this.getGasPrice();
+    if (typeof gasPrice === 'bigint') {
+      return {
+        maxPriorityFeePerGas: gasPrice,
+        maxFeePerGas: gasPrice
+      };
+    } 
+    return {
+      maxPriorityFeePerGas: gasPrice.maxPriorityFeePerGas,
+      maxFeePerGas: gasPrice.maxFeePerGas
+    };
+  }
+
+  /**
    * Method sets up gas price manager
    */
   async setup() {
