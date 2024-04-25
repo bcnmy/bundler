@@ -332,15 +332,15 @@ export class GasPriceService implements IGasPriceService {
     maxFeePerGas: bigint;
   }> {
     const gasPrice = await this.getGasPrice();
-    if (typeof gasPrice === 'bigint') {
+    if (typeof gasPrice === "bigint") {
       return {
         maxPriorityFeePerGas: gasPrice,
-        maxFeePerGas: gasPrice
+        maxFeePerGas: gasPrice,
       };
-    } 
+    }
     return {
       maxPriorityFeePerGas: gasPrice.maxPriorityFeePerGas,
-      maxFeePerGas: gasPrice.maxFeePerGas
+      maxFeePerGas: gasPrice.maxFeePerGas,
     };
   }
 

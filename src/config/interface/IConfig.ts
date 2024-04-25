@@ -183,10 +183,10 @@ export type ConfigType = {
   // array of chain Ids for networks that are part of the Mantle ecosystem
   mantleNetworks: Array<number>;
   // percentage of maxFeePerGas wrt to the network we are okay to accept
-  // for example: a value of 0.5 represents we are okay to accept 50% of the network's maxFeePerGas in the user operation 
+  // for example: a value of 0.5 represents we are okay to accept 50% of the network's maxFeePerGas in the user operation
   maxFeePerGasThresholdPercentage: number;
   // percentage of maxPriorityFeePerGas wrt to the network we are okay to accept
-  // for example: a value of 0.5 represents we are okay to accept 50% of the network's maxPriorityFeePerGas in the user operation 
+  // for example: a value of 0.5 represents we are okay to accept 50% of the network's maxPriorityFeePerGas in the user operation
   maxPriorityFeePerGasThresholdPercentage: number;
   networksNotSupportingEthCallBytecodeStateOverrides: Array<number>;
   networksNotSupportingEthCallStateOverrides: Array<number>;
@@ -197,7 +197,7 @@ export type ConfigType = {
   // array of chain Ids for networks that are part of the Polygon zkEVM ecosystem
   polygonZKEvmNetworks: Array<number>;
   // percentage of preVerificationGas wrt to the network we are okay to accept
-  // for example: a value of 0.5 represents we are okay to accept 50% of the network's max priority fee per gas in the user operation 
+  // for example: a value of 0.5 represents we are okay to accept 50% of the network's max priority fee per gas in the user operation
   preVerificationGasThresholdPercentage: number;
   pvgMarkUp: ChainIdWithNumberValueType;
   // RabbitMQ URL in the format amqp://username:password@host:port

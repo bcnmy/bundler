@@ -711,13 +711,10 @@ export class BundlerSimulationService {
       await this.gasEstimator.calculatePreVerificationGas({
         userOperation: userOp,
       });
-    log.info(
-      `networkPreVerificationGas: ${networkPreVerificationGas}`,
-    );
+    log.info(`networkPreVerificationGas: ${networkPreVerificationGas}`);
 
     const minimumAcceptablePreVerificationGas =
-      networkPreVerificationGas *
-      BigInt(preVerificationGasThresholdPercentage);
+      networkPreVerificationGas * BigInt(preVerificationGasThresholdPercentage);
 
     if (minimumAcceptablePreVerificationGas > preVerificationGas) {
       log.info(
