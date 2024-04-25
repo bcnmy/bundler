@@ -315,18 +315,14 @@ export class BundlerSimulationService {
         )} on chainId: ${chainId}`,
       );
 
-      const {
-        maxPriorityFeePerGas, 
-        maxFeePerGas
-      } = await this.gasPriceService.getParsedGasPrice();
+      const { maxPriorityFeePerGas, maxFeePerGas } =
+        await this.gasPriceService.getParsedGasPrice();
 
-      await this.checkUserOperationForRejection(
-        {
-          userOp,
-          networkMaxPriorityFeePerGas: maxPriorityFeePerGas,
-          networkMaxFeePerGas: maxFeePerGas,
-        },
-      );
+      await this.checkUserOperationForRejection({
+        userOp,
+        networkMaxPriorityFeePerGas: maxPriorityFeePerGas,
+        networkMaxFeePerGas: maxFeePerGas,
+      });
 
       let reason: string | undefined;
       let totalGas: number;
@@ -479,21 +475,15 @@ export class BundlerSimulationService {
         )} on chainId: ${chainId}`,
       );
 
-      const {
-        maxPriorityFeePerGas, 
-        maxFeePerGas
-      } = await this.gasPriceService.getParsedGasPrice();
-      let gasPrice = Math.ceil(
-        Number(maxFeePerGas) * 2,
-      ).toString(16);
+      const { maxPriorityFeePerGas, maxFeePerGas } =
+        await this.gasPriceService.getParsedGasPrice();
+      let gasPrice = Math.ceil(Number(maxFeePerGas) * 2).toString(16);
 
-      await this.checkUserOperationForRejection(
-        {
-          userOp,
-          networkMaxPriorityFeePerGas: maxPriorityFeePerGas,
-          networkMaxFeePerGas: maxFeePerGas,
-        },
-      );
+      await this.checkUserOperationForRejection({
+        userOp,
+        networkMaxPriorityFeePerGas: maxPriorityFeePerGas,
+        networkMaxFeePerGas: maxFeePerGas,
+      });
 
       const data = encodeFunctionData({
         abi: entryPointContract.abi,
@@ -659,54 +649,89 @@ export class BundlerSimulationService {
     }
   }
 
-  async checkUserOperationForRejection(validationData: ValidationData): Promise<boolean | RpcError> {
-    const { userOp, networkMaxFeePerGas, networkMaxPriorityFeePerGas } = validationData;
+  /**
+   * Check if the user operation is valid for the network
+   * @param validationData
+   * @returns true if the user operation is valid
+   */
+  async checkUserOperationForRejection(
+    validationData: ValidationData,
+  ): Promise<boolean> {
+    const { userOp, networkMaxFeePerGas, networkMaxPriorityFeePerGas } =
+      validationData;
 
     const { maxPriorityFeePerGas, maxFeePerGas, preVerificationGas } = userOp;
 
     const {
       maxPriorityFeePerGasThresholdPercentage,
       maxFeePerGasThresholdPercentage,
-      preVerificationGasThresholdPercentage
+      preVerificationGasThresholdPercentage,
     } = config;
 
-    if (
+    log.info(
+      `maxPriorityFeePerGasThresholdPercentage: ${maxPriorityFeePerGasThresholdPercentage} maxFeePerGasThresholdPercentage: ${maxFeePerGasThresholdPercentage} preVerificationGasThresholdPercentage: ${preVerificationGasThresholdPercentage}`,
+    );
+
+    const minimumAcceptableMaxPriorityFeePerGas =
       networkMaxPriorityFeePerGas *
-        BigInt(maxPriorityFeePerGasThresholdPercentage) >
-      maxPriorityFeePerGas
-    ) {
+      BigInt(maxPriorityFeePerGasThresholdPercentage);
+    const minimumAcceptableMaxFeePerGas =
+      networkMaxFeePerGas * BigInt(maxFeePerGas);
+
+    log.info(
+      `minimumAcceptableMaxPriorityFeePerGas: ${minimumAcceptableMaxPriorityFeePerGas} minimumAcceptableMaxFeePerGas: ${minimumAcceptableMaxFeePerGas}`,
+    );
+    log.info(`Checking if maxPriorityFeePerGas is within acceptable limits`);
+
+    if (minimumAcceptableMaxPriorityFeePerGas > maxPriorityFeePerGas) {
+      log.info(
+        `maxPriorityFeePerGas in userOp: ${maxPriorityFeePerGas} is lower than expected maxPriorityFeePerGas: ${minimumAcceptableMaxPriorityFeePerGas}`,
+      );
       throw new RpcError(
-        `maxPriorityFeePerGas in userOp: ${maxPriorityFeePerGas} is lower than expected maxPriorityFeePerGas: ${networkMaxPriorityFeePerGas * BigInt(maxPriorityFeePerGasThresholdPercentage)}`,
+        `maxPriorityFeePerGas in userOp: ${maxPriorityFeePerGas} is lower than expected maxPriorityFeePerGas: ${minimumAcceptableMaxPriorityFeePerGas}`,
         BUNDLER_ERROR_CODES.MAX_PRIORITY_FEE_PER_GAS_TOO_LOW,
       );
     }
+    log.info(`maxPriorityFeePerGas is within acceptable limits`);
+    log.info(`Checking if maxFeePerGas is within acceptable limits`);
 
-    if (
-      networkMaxFeePerGas * BigInt(maxFeePerGasThresholdPercentage) >
-      maxFeePerGas
-    ) {
+    if (minimumAcceptableMaxFeePerGas > maxFeePerGas) {
+      log.info(
+        `maxFeePerGas in userOp: ${maxPriorityFeePerGas} is lower than expected maxFeePerGas: ${minimumAcceptableMaxFeePerGas}`,
+      );
       throw new RpcError(
-        `maxFeePerGas in userOp: ${maxPriorityFeePerGas} is lower than expected maxFeePerGas: ${networkMaxPriorityFeePerGas * BigInt(maxFeePerGas)}`,
+        `maxFeePerGas in userOp: ${maxPriorityFeePerGas} is lower than expected maxFeePerGas: ${minimumAcceptableMaxFeePerGas}`,
         BUNDLER_ERROR_CODES.MAX_FEE_PER_GAS_TOO_LOW,
       );
     }
+    log.info(`maxFeePerGas is within acceptable limits`);
+    log.info(`Checking if preVerificationGas is within acceptable limits`);
 
-    const networkPreVerificationGas =
+    const { preVerificationGas: networkPreVerificationGas } =
       await this.gasEstimator.calculatePreVerificationGas({
         userOperation: userOp,
       });
+    log.info(
+      `networkPreVerificationGas: ${networkPreVerificationGas}`,
+    );
 
-    if (
-      networkPreVerificationGas.preVerificationGas *
-        BigInt(preVerificationGasThresholdPercentage) >
-      preVerificationGas
-    ) {
+    const minimumAcceptablePreVerificationGas =
+      networkPreVerificationGas *
+      BigInt(preVerificationGasThresholdPercentage);
+
+    if (minimumAcceptablePreVerificationGas > preVerificationGas) {
+      log.info(
+        `preVerificationGas in userOp: ${preVerificationGas} is lower than minimumAcceptablePreVerificationGas: ${minimumAcceptablePreVerificationGas}`,
+      );
       throw new RpcError(
-        `preVerificationGas in userOp: ${preVerificationGas} is lower than expected preVerificationGas: ${networkPreVerificationGas.preVerificationGas * BigInt(preVerificationGasThresholdPercentage)}`,
+        `preVerificationGas in userOp: ${preVerificationGas} is lower than minimumAcceptablePreVerificationGas: ${minimumAcceptablePreVerificationGas}`,
         BUNDLER_ERROR_CODES.PRE_VERIFICATION_GAS_TOO_LOW,
       );
     }
 
+    log.info(
+      `maxFeePerGas, maxPriorityFeePerGas and preVerification are within acceptable limits`,
+    );
     return true;
   }
 
@@ -766,10 +791,7 @@ export class BundlerSimulationService {
             userOp,
           )}`,
         );
-        throw new RpcError(
-          msg,
-          BUNDLER_ERROR_CODES.SIMULATE_VALIDATION_FAILED,
-        );
+        throw new RpcError(msg, BUNDLER_ERROR_CODES.SIMULATE_VALIDATION_FAILED);
       } else {
         log.info(
           `paymaster validation failed: ${msg} for userOp: ${customJSONStringify(
