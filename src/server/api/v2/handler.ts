@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import config from "config";
 import {
   BiconomyMethodType,
   EthMethodType,
@@ -16,9 +17,24 @@ import {
   getGasFeeValues,
   getUserOperationStatus,
 } from ".";
+import { RPCErrorResponse } from "./shared/response";
+import { ChainIdNotSupportedError } from "./shared/errors";
+
+const isChainIdSupported = (chainId: number): boolean => {
+  const supportedNetworks = config.get<Array<number>>("supportedNetworks");
+  return supportedNetworks.includes(chainId);
+};
 
 export const handleV2Request = async (req: Request, res: Response) => {
-  const { method } = req.body;
+  const { method, id } = req.body;
+  const { chainId } = req.params;
+
+  if (!isChainIdSupported(parseInt(chainId, 10))) {
+    return res
+      .status(STATUSES.NOT_FOUND)
+      .json(new RPCErrorResponse(new ChainIdNotSupportedError(chainId), id));
+  }
+
   let response;
   switch (method) {
     case TransactionMethodType.BUNDLER:

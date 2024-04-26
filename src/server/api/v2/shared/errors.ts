@@ -17,3 +17,12 @@ export class InternalServerError extends RPCError {
     );
   }
 }
+
+export class ChainIdNotSupportedError extends RPCError {
+  constructor(chainId: string) {
+    super(
+      BUNDLER_VALIDATION_STATUSES.BAD_REQUEST,
+      `chainId: ${chainId} not supported by our Bundler`,
+    );
+  }
+}
