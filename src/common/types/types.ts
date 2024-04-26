@@ -111,7 +111,9 @@ export type SymbolMapByChainIdType = {
   };
 };
 
-export type EntryPointContractType = GetContractReturnType<typeof ENTRY_POINT_ABI>;
+export type EntryPointContractType = GetContractReturnType<
+  typeof ENTRY_POINT_ABI
+>;
 
 export type EntryPointMapType = {
   [chainId: number]: Array<{

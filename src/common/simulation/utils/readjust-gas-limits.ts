@@ -12,28 +12,19 @@ import { BLOCKCHAINS } from "../../types";
  * @returns readjusted gas limits
  */
 export const readjustGasLimits = async (data: {
-  callGasLimit: bigint,
-  verificationGasLimit: bigint,
-  preVerificationGas: bigint,
-  chainId: number,
-  config: ConfigType,
+  callGasLimit: bigint;
+  verificationGasLimit: bigint;
+  preVerificationGas: bigint;
+  chainId: number;
+  config: ConfigType;
 }) => {
-  let {
-    callGasLimit,
-    verificationGasLimit,
-    preVerificationGas,
-  } = data;
+  let { callGasLimit, verificationGasLimit, preVerificationGas } = data;
 
-  const {
-    chainId,
-    config
-  } = data;
+  const { chainId, config } = data;
 
   if (
     config.networksNotSupportingEthCallStateOverrides.includes(chainId) ||
-    config.networksNotSupportingEthCallBytecodeStateOverrides.includes(
-      chainId,
-    )
+    config.networksNotSupportingEthCallBytecodeStateOverrides.includes(chainId)
   ) {
     callGasLimit += BigInt(Math.ceil(Number(callGasLimit) * 0.2));
     verificationGasLimit += BigInt(

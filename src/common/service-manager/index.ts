@@ -402,9 +402,9 @@ let statusService: IStatusService;
     for (const type of supportedTransactionType[chainId]) {
       if (type === TransactionType.AA) {
         const aaRelayerManager =
-          EVMRelayerManagerMap[config.relayerManagerTransactionTypeNameMap[type]][
-            chainId
-          ];
+          EVMRelayerManagerMap[
+            config.relayerManagerTransactionTypeNameMap[type]
+          ][chainId];
         if (!aaRelayerManager) {
           throw new Error(`Relayer manager not found for ${type}`);
         }
@@ -452,9 +452,9 @@ let statusService: IStatusService;
         );
 
         const scwRelayerManager =
-          EVMRelayerManagerMap[config.relayerManagerTransactionTypeNameMap[type]][
-            chainId
-          ];
+          EVMRelayerManagerMap[
+            config.relayerManagerTransactionTypeNameMap[type]
+          ][chainId];
         if (!scwRelayerManager) {
           throw new Error(`Relayer manager not found for ${type}`);
         }
@@ -480,9 +480,9 @@ let statusService: IStatusService;
         );
       } else if (type === TransactionType.BUNDLER) {
         const bundlerRelayerManager =
-          EVMRelayerManagerMap[config.relayerManagerTransactionTypeNameMap[type]][
-            chainId
-          ];
+          EVMRelayerManagerMap[
+            config.relayerManagerTransactionTypeNameMap[type]
+          ][chainId];
         if (!bundlerRelayerManager) {
           throw new Error(`Relayer manager not found for ${type}`);
         }

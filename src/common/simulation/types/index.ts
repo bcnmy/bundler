@@ -90,8 +90,8 @@ export type ValidationData = {
   userOp: UserOperationType;
   networkMaxPriorityFeePerGas: bigint;
   networkMaxFeePerGas: bigint;
-  networkPreVerificationGas: bigint,
-  maxPriorityFeePerGasThresholdPercentage: number,
-  maxFeePerGasThresholdPercentage: number,
-  preVerificationGasThresholdPercentage: number,
+  networkPreVerificationGas: bigint;
+  maxPriorityFeePerGasThresholdPercentage: number;
+  maxFeePerGasThresholdPercentage: number;
+  preVerificationGasThresholdPercentage: number;
 };

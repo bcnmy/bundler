@@ -224,7 +224,7 @@ export type ConfigType = {
   transaction: TransactionConfigType;
   zeroAddress: `0x${string}`;
   // Mapping of which tranasction type is supported by which Relayer Manager
-  relayerManagerTransactionTypeNameMap: RelayerManagerTransactionTypeNameMapType
+  relayerManagerTransactionTypeNameMap: RelayerManagerTransactionTypeNameMapType;
 };
 
 export interface IConfig {

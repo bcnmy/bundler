@@ -8,7 +8,10 @@ import RpcError from "../utils/rpc-error";
 import { checkUserOperationForRejection } from "./utils";
 
 describe("BundlerSimulationService", () => {
-  const networkService = new EVMNetworkService({ chainId: 137, rpcUrl: "https://random-rpc-url.com"});
+  const networkService = new EVMNetworkService({
+    chainId: 137,
+    rpcUrl: "https://random-rpc-url.com",
+  });
   const gasPriceService = {} as unknown as GasPriceService;
   const bundlerSimulationService = new BundlerSimulationService(
     networkService,
@@ -46,7 +49,7 @@ describe("BundlerSimulationService", () => {
           networkPreVerificationGas: 0n,
           maxPriorityFeePerGasThresholdPercentage: 0,
           maxFeePerGasThresholdPercentage: 0,
-          preVerificationGasThresholdPercentage: 0
+          preVerificationGasThresholdPercentage: 0,
         });
       } catch (error) {
         expect((error as RpcError).message).toEqual(
@@ -84,7 +87,7 @@ describe("BundlerSimulationService", () => {
           networkPreVerificationGas: 0n,
           maxPriorityFeePerGasThresholdPercentage: 0,
           maxFeePerGasThresholdPercentage: 0,
-          preVerificationGasThresholdPercentage: 0
+          preVerificationGasThresholdPercentage: 0,
         });
       } catch (error) {
         expect((error as RpcError).message).toEqual(
@@ -122,7 +125,7 @@ describe("BundlerSimulationService", () => {
           networkPreVerificationGas: 0n,
           maxPriorityFeePerGasThresholdPercentage: 0,
           maxFeePerGasThresholdPercentage: 0,
-          preVerificationGasThresholdPercentage: 0
+          preVerificationGasThresholdPercentage: 0,
         });
       } catch (error) {
         expect((error as RpcError).message).toEqual(
@@ -152,16 +155,15 @@ describe("BundlerSimulationService", () => {
         maxFeePerGas: 10n,
         signature: "0xsignature",
       };
-      const response =
-        await checkUserOperationForRejection({
-          userOp,
-          networkMaxFeePerGas,
-          networkMaxPriorityFeePerGas,
-          networkPreVerificationGas: 0n,
-          maxPriorityFeePerGasThresholdPercentage: 0,
-          maxFeePerGasThresholdPercentage: 0,
-          preVerificationGasThresholdPercentage: 0
-        });
+      const response = await checkUserOperationForRejection({
+        userOp,
+        networkMaxFeePerGas,
+        networkMaxPriorityFeePerGas,
+        networkPreVerificationGas: 0n,
+        maxPriorityFeePerGasThresholdPercentage: 0,
+        maxFeePerGasThresholdPercentage: 0,
+        preVerificationGasThresholdPercentage: 0,
+      });
       expect(response).toBe(true);
     });
   });

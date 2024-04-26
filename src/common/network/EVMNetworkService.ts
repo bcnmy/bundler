@@ -13,10 +13,7 @@ import {
   http,
 } from "viem";
 import { IEVMAccount } from "../../relayer/account";
-import {
-  EVMRawTransactionType,
-  EthMethodType,
-} from "../types";
+import { EVMRawTransactionType, EthMethodType } from "../types";
 import { INetworkService } from "./interface";
 import {
   Type0TransactionGasPriceType,

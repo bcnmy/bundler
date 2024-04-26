@@ -12,17 +12,12 @@ import { UserOperationType } from "../../types";
  * @returns complete user operation
  */
 export const getCompleteUserOp = async (data: {
-  userOp: UserOperationType,
-  chainId: number,
-  config: ConfigType,
-  gasPriceService: IGasPriceService,
+  userOp: UserOperationType;
+  chainId: number;
+  config: ConfigType;
+  gasPriceService: IGasPriceService;
 }) => {
-  const {
-    userOp,
-    chainId,
-    config,
-    gasPriceService,
-  } = data;
+  const { userOp, chainId, config, gasPriceService } = data;
 
   // for userOp completeness
   if (!userOp.paymasterAndData) {

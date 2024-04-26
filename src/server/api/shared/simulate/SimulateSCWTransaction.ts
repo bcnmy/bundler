@@ -10,7 +10,7 @@ export const simulateSCWTransaction = async (req: Request) => {
   try {
     const { to, chainId } = req.body.params[0];
 
-    // Removed a lot of values as we have planned to clean the code 
+    // Removed a lot of values as we have planned to clean the code
     // Tenderly simulation was being used but only for a very old flow
     // Hence hardcoding some values to avoid errors
     // The SCW will be completely removed in the future

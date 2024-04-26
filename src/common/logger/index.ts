@@ -10,6 +10,7 @@ const logger = pino({
   }, // ... other options
 });
 
-export const getLogger = (module: NodeModule) => logger.child({
+export const getLogger = (module: NodeModule) =>
+  logger.child({
     module: module.filename.split("/").slice(-4).join("/"),
   });
