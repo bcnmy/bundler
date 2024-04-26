@@ -3,13 +3,11 @@ import crypto from "crypto-js";
 import fs, { existsSync } from "fs";
 import _, { isNumber } from "lodash";
 import nodeconfig from "config";
-import { logger } from "../common/logger";
+import { getLogger } from "../common/logger";
 
 import { ConfigType, IConfig } from "./interface/IConfig";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 const KEY_SIZE = 32;
 const PBKDF2_ITERATIONS = 310000;

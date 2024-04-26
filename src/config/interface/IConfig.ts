@@ -141,6 +141,9 @@ type SimulationDataConfigType = {
 type PaymasterDashboardBackendConfigType = {
   dappDataUrl: string;
 };
+type RelayerManagerTransactionTypeNameMapType = {
+  [key: string]: string;
+};
 
 export type ConfigType = {
   aaDashboardBackend: {
@@ -220,6 +223,8 @@ export type ConfigType = {
   // Transaction error messages
   transaction: TransactionConfigType;
   zeroAddress: `0x${string}`;
+  // Mapping of which tranasction type is supported by which Relayer Manager
+  relayerManagerTransactionTypeNameMap: RelayerManagerTransactionTypeNameMapType
 };
 
 export interface IConfig {

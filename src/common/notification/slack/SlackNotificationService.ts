@@ -1,15 +1,13 @@
 /* eslint-disable import/no-import-module-exports */
 import { WebClient } from "@slack/web-api";
-import { logger } from "../../logger";
+import { getLogger } from "../../logger";
 import { ISlackNotificationService } from "../interface";
 import {
   PostSlackMessageParamsType,
   SlackNotificationObjectType,
 } from "../types";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 export class SlackNotificationService implements ISlackNotificationService {
   web: WebClient;

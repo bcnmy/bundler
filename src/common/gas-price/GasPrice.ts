@@ -3,16 +3,14 @@
 import { formatUnits, toHex } from "viem";
 import { IEVMAccount } from "../../relayer/account";
 import { ICacheService } from "../cache";
-import { logger } from "../logger";
+import { getLogger } from "../logger";
 import { INetworkService } from "../network";
 import { EVMRawTransactionType, NetworkBasedGasPriceType } from "../types";
 import { GasPriceType } from "./types";
 import { customJSONStringify } from "../utils";
 import { IGasPriceService } from "./interface/IGasPriceService";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 export class GasPriceService implements IGasPriceService {
   chainId: number;
 

@@ -1,6 +1,6 @@
 /* eslint-disable import/no-import-module-exports */
 import { Request } from "express";
-import { logger } from "../../../../common/logger";
+import { getLogger } from "../../../../common/logger";
 import {
   bundlerSimulationServiceMap,
   entryPointMap,
@@ -8,9 +8,7 @@ import {
 import { customJSONStringify, parseError } from "../../../../common/utils";
 import { BUNDLER_ERROR_CODES, STATUSES } from "../middleware";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 // eslint-disable-next-line consistent-return
 export const simulateAATransaction = async (req: Request) => {

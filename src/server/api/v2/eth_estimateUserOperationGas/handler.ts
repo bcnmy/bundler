@@ -2,7 +2,7 @@
 import { Request, Response } from "express";
 import { toHex } from "viem";
 import { STATUSES } from "../../shared/middleware";
-import { logger } from "../../../../common/logger";
+import { getLogger } from "../../../../common/logger";
 import {
   bundlerSimulationServiceMap,
   entryPointMap,
@@ -18,9 +18,7 @@ import { EstimateUserOperationGasResponse } from "./response";
 import { InternalServerError, RPCError } from "../shared/errors";
 import { RPCErrorResponse } from "../shared/response";
 
-const filenameLogger = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const filenameLogger = getLogger(module);
 
 export const estimateUserOperationGas = async (req: Request, res: Response) => {
   const { id } = req.body;

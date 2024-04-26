@@ -1,7 +1,7 @@
 /* eslint-disable import/no-import-module-exports */
 /* eslint-disable no-case-declarations */
 import { NextFunction, Request, Response } from "express";
-import { logger } from "../../../../common/logger";
+import { getLogger } from "../../../../common/logger";
 import {
   EthMethodType,
   BiconomyMethodType,
@@ -25,9 +25,7 @@ import {
 } from "../../shared/middleware/RequestHelpers";
 import { parseError } from "../../../../common/utils";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 export const validateBundlerRequest =
   () => async (req: Request, res: Response, next: NextFunction) => {

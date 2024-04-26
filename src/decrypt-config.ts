@@ -1,10 +1,14 @@
+/* eslint-disable import/no-import-module-exports */
 import crypto from "crypto-js";
 import fs, { existsSync } from "fs";
+import { getLogger } from "./common/logger";
 
 const KEY_SIZE = 32;
 const PBKDF2_ITERATIONS = 310000;
 const AES_PADDING = crypto.pad.Pkcs7;
 const AES_MODE = crypto.mode.CBC;
+
+const log = getLogger(module);
 
 function decryptConfig(): string {
   // const encryptedEnvPath = './config.json.enc';
@@ -45,7 +49,7 @@ function decryptConfig(): string {
     });
     plaintext = encryptedBytes.toString(crypto.enc.Utf8);
   } catch (e) {
-    console.log("Incorrect password for decryption");
+    log.info("Incorrect password for decryption");
     process.exit();
   }
 
@@ -56,7 +60,7 @@ function decryptConfig(): string {
   if (decryptedHmacInBase64 !== hashInBase64) {
     throw new Error("Error: HMAC does not match");
   }
-  console.log(plaintext);
+  log.info(plaintext);
   return plaintext;
 }
 

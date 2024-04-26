@@ -1,14 +1,12 @@
 /* eslint-disable import/no-import-module-exports */
 import { Request, Response } from "express";
 import { BUNDLER_ERROR_CODES, STATUSES } from "../../shared/middleware";
-import { logger } from "../../../../common/logger";
+import { getLogger } from "../../../../common/logger";
 import { config } from "../../../../config";
 import { parseError } from "../../../../common/utils";
 // import { updateRequest } from '../../auth/UpdateRequest';
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 export const getSupportedEntryPoints = async (req: Request, res: Response) => {
   // const bundlerRequestId = req.body.params[6];

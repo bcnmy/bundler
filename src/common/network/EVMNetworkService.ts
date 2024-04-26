@@ -14,7 +14,6 @@ import {
 } from "viem";
 import { IEVMAccount } from "../../relayer/account";
 import {
-  AlchemyMethodType,
   EVMRawTransactionType,
   EthMethodType,
 } from "../types";
@@ -23,13 +22,11 @@ import {
   Type0TransactionGasPriceType,
   Type2TransactionGasPriceType,
 } from "./types";
-import { logger } from "../logger";
+import { getLogger } from "../logger";
 import { customJSONStringify, parseError } from "../utils";
 import { config } from "../../config";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 const LOAD_BALANCER_DEFAULT = {
   rank: {
@@ -325,9 +322,5 @@ export class EVMNetworkService
       blockTag: "latest",
     });
     return block.number;
-  }
-
-  async runAlchemySimulation(params: any): Promise<any> {
-    return await this.sendRpcCall(AlchemyMethodType.SIMULATE_EXECUTION, params);
   }
 }

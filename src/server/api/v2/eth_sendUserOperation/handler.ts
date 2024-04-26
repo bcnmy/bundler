@@ -1,6 +1,6 @@
 /* eslint-disable import/no-import-module-exports */
 import { Request, Response } from "express";
-import { logger } from "../../../../common/logger";
+import { getLogger } from "../../../../common/logger";
 import {
   routeTransactionToRelayerMap,
   transactionDao,
@@ -21,9 +21,7 @@ import {
 import { BUNDLER_ERROR_CODES, STATUSES } from "../../shared/middleware";
 // import { updateRequest } from '../../auth/UpdateRequest';
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 export const bundleUserOperation = async (req: Request, res: Response) => {
   // const bundlerRequestId = req.body.params[6];

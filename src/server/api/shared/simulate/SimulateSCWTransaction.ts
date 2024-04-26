@@ -1,39 +1,25 @@
 /* eslint-disable import/no-import-module-exports */
 import { Request } from "express";
-import { logger } from "../../../../common/logger";
-import { scwSimulationServiceMap } from "../../../../common/service-manager";
+import { getLogger } from "../../../../common/logger";
 import { STATUSES } from "../middleware";
 import { customJSONStringify } from "../../../../common/utils";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 export const simulateSCWTransaction = async (req: Request) => {
   try {
-    const { to, data, chainId, refundInfo } = req.body.params[0];
+    const { to, chainId } = req.body.params[0];
 
-    const scwSimulationResponse = await scwSimulationServiceMap[
-      chainId
-    ].simulate({
-      to,
-      data,
-      chainId,
-      refundInfo,
-    });
+    // Removed a lot of values as we have planned to clean the code 
+    // Tenderly simulation was being used but only for a very old flow
+    // Hence hardcoding some values to avoid errors
+    // The SCW will be completely removed in the future
+    // The logic for refundAmount was anyways storing incorrect values so defaulting to 0
 
-    if (!scwSimulationResponse.isSimulationSuccessful) {
-      const { message } = scwSimulationResponse;
-      return {
-        code: STATUSES.BAD_REQUEST,
-        message,
-      };
-    }
-    const simulationData = scwSimulationResponse.data;
-    req.body.params[1] = simulationData.gasLimitFromSimulation;
+    req.body.params[1] = 5000000;
     req.body.params[2] = {
-      refundAmount: simulationData.refundAmount,
-      refundAmountInUSD: simulationData.refundAmountInUSD,
+      refundAmount: 0,
+      refundAmountInUSD: 0,
     };
     log.info(
       `Transaction successfully simulated for SCW: ${to} on chainId: ${chainId}`,

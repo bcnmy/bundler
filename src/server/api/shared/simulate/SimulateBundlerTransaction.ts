@@ -6,12 +6,10 @@ import {
   bundlerSimulationServiceMap,
 } from "../../../../common/service-manager";
 import { parseError } from "../../../../common/utils";
-import { logger } from "../../../../common/logger";
+import { getLogger } from "../../../../common/logger";
 import { config } from "../../../../config";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 // eslint-disable-next-line consistent-return
 export const validateBundlerTransaction = async (req: Request) => {
@@ -73,7 +71,7 @@ export const validateBundlerTransaction = async (req: Request) => {
       bundlerSimulationAndValidationResponse =
         await bundlerSimulationServiceMap[
           parseInt(chainId, 10)
-        ].simulateValidationAndExecution({
+        ].simulateValidation({
           userOp,
           entryPointContract,
           chainId: parseInt(chainId, 10),

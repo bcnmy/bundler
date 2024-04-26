@@ -3,12 +3,10 @@ import { Mutex } from "async-mutex";
 import { IRelayerQueue } from "./interface/IRelayerQueue";
 // import { SortEVMRelayerByBalance } from './strategy';
 import { EVMRelayerMetaDataType } from "./types";
-import { logger } from "../../common/logger";
+import { getLogger } from "../../common/logger";
 import { customJSONStringify } from "../../common/utils";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 const popMutex = new Mutex();
 const pushMutex = new Mutex();

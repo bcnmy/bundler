@@ -11,14 +11,12 @@ import {
   parseAbiParameters,
   toHex,
 } from "viem";
-import { logger } from "../logger";
+import { getLogger } from "../logger";
 import { EntryPointContractType, StakeInfo, UserOperationType } from "../types";
 import { parseError } from "./parse-error";
 import { customJSONStringify } from "./custom-json-stringifier";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 export const getPaymasterFromPaymasterAndData = (
   paymasterAndData: string,

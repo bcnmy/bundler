@@ -1168,5 +1168,11 @@
   "aaDashboardBackend": {
     "url": "https://paymaster-dashboard-backend-v2.staging.biconomy.io/api/v2/bundlers/auth"
   },
-  "isTWSetup": false
+  "isTWSetup": false,
+  "relayerManagerTransactionTypeNameMap": {
+    "AA": "RM1",
+    "SCW": "RM2",
+    "FUNDING": "RM0",
+    "BUNDLER": "RM1"
+  }
 }

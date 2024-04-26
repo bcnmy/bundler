@@ -4,21 +4,14 @@ import { GasPriceService } from "../gas-price";
 import { EVMNetworkService } from "../network";
 import { UserOperationType } from "../types";
 import { BundlerSimulationService } from "./BundlerSimulationService";
-import {
-  AlchemySimulationService,
-  TenderlySimulationService,
-} from "./external-simulation";
 import RpcError from "../utils/rpc-error";
+import { checkUserOperationForRejection } from "./utils";
 
 describe("BundlerSimulationService", () => {
   const networkService = new EVMNetworkService({ chainId: 137, rpcUrl: "https://random-rpc-url.com"});
   const gasPriceService = {} as unknown as GasPriceService;
-  const tenderlySimulationService = {} as unknown as TenderlySimulationService;
-  const alchemySimulationService = {} as unknown as AlchemySimulationService;
   const bundlerSimulationService = new BundlerSimulationService(
     networkService,
-    tenderlySimulationService,
-    alchemySimulationService,
     gasPriceService,
   );
 
@@ -46,10 +39,14 @@ describe("BundlerSimulationService", () => {
       };
 
       try {
-        await bundlerSimulationService.checkUserOperationForRejection({
+        await checkUserOperationForRejection({
           userOp,
           networkMaxFeePerGas,
           networkMaxPriorityFeePerGas,
+          networkPreVerificationGas: 0n,
+          maxPriorityFeePerGasThresholdPercentage: 0,
+          maxFeePerGasThresholdPercentage: 0,
+          preVerificationGasThresholdPercentage: 0
         });
       } catch (error) {
         expect((error as RpcError).message).toEqual(
@@ -80,10 +77,14 @@ describe("BundlerSimulationService", () => {
         signature: "0xsignature",
       };
       try {
-        await bundlerSimulationService.checkUserOperationForRejection({
+        await checkUserOperationForRejection({
           userOp,
           networkMaxFeePerGas,
           networkMaxPriorityFeePerGas,
+          networkPreVerificationGas: 0n,
+          maxPriorityFeePerGasThresholdPercentage: 0,
+          maxFeePerGasThresholdPercentage: 0,
+          preVerificationGasThresholdPercentage: 0
         });
       } catch (error) {
         expect((error as RpcError).message).toEqual(
@@ -114,10 +115,14 @@ describe("BundlerSimulationService", () => {
         signature: "0xsignature",
       };
       try {
-        bundlerSimulationService.checkUserOperationForRejection({
+        checkUserOperationForRejection({
           userOp,
           networkMaxFeePerGas,
           networkMaxPriorityFeePerGas,
+          networkPreVerificationGas: 0n,
+          maxPriorityFeePerGasThresholdPercentage: 0,
+          maxFeePerGasThresholdPercentage: 0,
+          preVerificationGasThresholdPercentage: 0
         });
       } catch (error) {
         expect((error as RpcError).message).toEqual(
@@ -148,10 +153,14 @@ describe("BundlerSimulationService", () => {
         signature: "0xsignature",
       };
       const response =
-        await bundlerSimulationService.checkUserOperationForRejection({
+        await checkUserOperationForRejection({
           userOp,
           networkMaxFeePerGas,
           networkMaxPriorityFeePerGas,
+          networkPreVerificationGas: 0n,
+          maxPriorityFeePerGasThresholdPercentage: 0,
+          maxFeePerGasThresholdPercentage: 0,
+          preVerificationGasThresholdPercentage: 0
         });
       expect(response).toBe(true);
     });

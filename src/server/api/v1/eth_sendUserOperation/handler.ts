@@ -1,6 +1,6 @@
 /* eslint-disable import/no-import-module-exports */
 import { Request, Response } from "express";
-import { logger } from "../../../../common/logger";
+import { getLogger } from "../../../../common/logger";
 import {
   routeTransactionToRelayerMap,
   transactionDao,
@@ -24,9 +24,7 @@ import { STATUSES } from "../../shared/middleware";
 
 const websocketUrl = config.socketService.wssUrl;
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 export const relayAATransaction = async (req: Request, res: Response) => {
   try {

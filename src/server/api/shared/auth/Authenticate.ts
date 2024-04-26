@@ -1,6 +1,6 @@
 /* eslint-disable import/no-import-module-exports */
 import { Request } from "express";
-import { logger } from "../../../../common/logger";
+import { getLogger } from "../../../../common/logger";
 import {
   axiosPostCall,
   customJSONStringify,
@@ -9,9 +9,7 @@ import {
 import { config } from "../../../../config";
 import { STATUSES } from "../middleware";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 export const authenticate = async (req: Request) => {
   try {

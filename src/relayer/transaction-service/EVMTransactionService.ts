@@ -4,7 +4,7 @@ import { Mutex } from "async-mutex";
 import { toHex } from "viem";
 import { ICacheService } from "../../common/cache";
 import { IGasPriceService } from "../../common/gas-price";
-import { logger } from "../../common/logger";
+import { getLogger } from "../../common/logger";
 import { INetworkService } from "../../common/network";
 import {
   getMaxRetryCountNotificationMessage,
@@ -43,9 +43,7 @@ import {
 } from "./types";
 import { IUserOperationStateDAO } from "../../common/db";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 export class EVMTransactionService
   implements ITransactionService<IEVMAccount, EVMRawTransactionType>

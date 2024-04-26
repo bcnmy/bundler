@@ -1,15 +1,13 @@
 /* eslint-disable import/no-import-module-exports */
 import axios from "axios";
 import { ICacheService } from "../cache";
-import { logger } from "../logger";
+import { getLogger } from "../logger";
 import { SymbolMapByChainIdType } from "../types";
 import { customJSONStringify, getTokenPriceKey, parseError } from "../utils";
 import { ITokenPrice } from "./interface/ITokenPrice";
 import { CoinsRateObjType, NetworkSymbolCategoriesType } from "./types";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 export class CMCTokenPriceManager implements ITokenPrice {
   private apiKey: string;

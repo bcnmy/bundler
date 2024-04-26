@@ -5,7 +5,6 @@ import {
   IUserOperationDAO,
   IUserOperationStateDAO,
 } from "../../../common/db";
-import { IQueue } from "../../../common/interface";
 import { INetworkService } from "../../../common/network";
 import { RetryTransactionQueueData } from "../../../common/queue/types";
 import {
@@ -15,6 +14,7 @@ import {
   TransactionType,
 } from "../../../common/types";
 import { IEVMAccount } from "../../account";
+import { IQueue } from "../../../common/queue";
 
 export type EVMTransactionListenerParamsType = {
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;

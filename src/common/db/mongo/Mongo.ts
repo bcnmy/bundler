@@ -2,7 +2,7 @@
 /* eslint-disable import/no-import-module-exports */
 import mongoose, { Mongoose } from "mongoose";
 import { config } from "../../../config";
-import { logger } from "../../logger";
+import { getLogger } from "../../logger";
 import { IDBService } from "../interface/IDBService";
 import {
   BlockchainTransactionsMap,
@@ -13,9 +13,7 @@ import {
   UserOperationsStateMapType,
 } from "./models";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 export class Mongo implements IDBService {
   private static instance: Mongo;
@@ -61,8 +59,8 @@ export class Mongo implements IDBService {
         }
       }
     } catch (error) {
-      logger.error("Error while creating indexes");
-      logger.error(error);
+      log.error("Error while creating indexes");
+      log.error(error);
       process.exit();
     }
   }
@@ -90,11 +88,11 @@ export class Mongo implements IDBService {
       await collectionObject.createIndex(compoundIndexOne, {
         background: true,
       });
-      logger.info(
+      log.info(
         `Compound index ${compoundIndexKeyOne} created for collection ${collectionName}`,
       );
     } else {
-      logger.info(
+      log.info(
         `Compound index ${compoundIndexKeyOne} found for collection ${collectionName}`,
       );
     }
@@ -112,11 +110,11 @@ export class Mongo implements IDBService {
       await collectionObject.createIndex(compoundIndexTwo, {
         background: true,
       });
-      logger.info(
+      log.info(
         `Compound index ${compoundIndexKeyTwo} created for collection ${collectionName}`,
       );
     } else {
-      logger.info(
+      log.info(
         `Compound index ${compoundIndexKeyTwo} found for collection ${collectionName}`,
       );
     }

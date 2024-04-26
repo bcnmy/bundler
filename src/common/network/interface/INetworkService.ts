@@ -31,6 +31,5 @@ export interface INetworkService<AccountType, RawTransactionType> {
   ): Promise<TransactionReceipt>;
   getLatesBlockNumber(): Promise<bigint>;
   getTransaction(transactionHash: string): Promise<Transaction | null>;
-  runAlchemySimulation(params: any): Promise<any>;
   ethCall(params: any): Promise<any>;
 }

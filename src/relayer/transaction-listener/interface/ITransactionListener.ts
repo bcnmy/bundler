@@ -1,7 +1,7 @@
 import { ICacheService } from "../../../common/cache";
 import { ITransactionDAO } from "../../../common/db";
-import { IQueue } from "../../../common/interface";
 import { INetworkService } from "../../../common/network";
+import { IQueue } from "../../../common/queue";
 import { RetryTransactionQueueData } from "../../../common/queue/types";
 import { TransactionQueueMessageType } from "../../../common/types";
 import { NotifyTransactionListenerParamsType } from "../types";
