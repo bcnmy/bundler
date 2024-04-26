@@ -8,9 +8,10 @@ import {
   AlchemySimulationService,
   TenderlySimulationService,
 } from "./external-simulation";
+import RpcError from "../utils/rpc-error";
 
 describe("BundlerSimulationService", () => {
-  const networkService = {} as unknown as EVMNetworkService;
+  const networkService = new EVMNetworkService({ chainId: 137, rpcUrl: "https://random-rpc-url.com"});
   const gasPriceService = {} as unknown as GasPriceService;
   const tenderlySimulationService = {} as unknown as TenderlySimulationService;
   const alchemySimulationService = {} as unknown as AlchemySimulationService;
@@ -51,8 +52,8 @@ describe("BundlerSimulationService", () => {
           networkMaxPriorityFeePerGas,
         });
       } catch (error) {
-        expect(error).toEqual(
-          `maxPriorityFeePerGas in userOp: ${userOp.maxPriorityFeePerGas} is lower than expected maxPriorityFeePerGas: ${networkMaxPriorityFeePerGas * BigInt(config.maxPriorityFeePerGasThresholdPercentage)}`,
+        expect((error as RpcError).message).toEqual(
+          `maxPriorityFeePerGas in userOp: ${userOp.maxPriorityFeePerGas} is lower than expected maxPriorityFeePerGas: ${Number(networkMaxPriorityFeePerGas) * config.maxPriorityFeePerGasThresholdPercentage}`,
         );
       }
     });
@@ -85,8 +86,8 @@ describe("BundlerSimulationService", () => {
           networkMaxPriorityFeePerGas,
         });
       } catch (error) {
-        expect(error).toEqual(
-          `maxFeePerGas in userOp: ${userOp.maxFeePerGas} is lower than expected maxFeePerGas: ${networkMaxFeePerGas * BigInt(config.maxFeePerGasThresholdPercentage)}`,
+        expect((error as RpcError).message).toEqual(
+          `maxFeePerGas in userOp: ${userOp.maxFeePerGas} is lower than expected maxFeePerGas: ${Number(networkMaxFeePerGas) * config.maxFeePerGasThresholdPercentage}`,
         );
       }
     });
@@ -119,8 +120,8 @@ describe("BundlerSimulationService", () => {
           networkMaxPriorityFeePerGas,
         });
       } catch (error) {
-        expect(error).toEqual(
-          `preVerificationGas in userOp: ${userOp.preVerificationGas} is lower than expected preVerificationGas: ${50000n * BigInt(config.preVerificationGasThresholdPercentage)}`,
+        expect((error as RpcError).message).toEqual(
+          `preVerificationGas in userOp: ${userOp.preVerificationGas} is lower than expected preVerificationGas: ${50000 * config.preVerificationGasThresholdPercentage}`,
         );
       }
     });

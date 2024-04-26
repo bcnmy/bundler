@@ -669,21 +669,23 @@ export class BundlerSimulationService {
     } = config;
 
     log.info(
-      `maxPriorityFeePerGasThresholdPercentage: ${maxPriorityFeePerGasThresholdPercentage} maxFeePerGasThresholdPercentage: ${maxFeePerGasThresholdPercentage} preVerificationGasThresholdPercentage: ${preVerificationGasThresholdPercentage}`,
+      `maxPriorityFeePerGasThresholdPercentage: ${maxPriorityFeePerGasThresholdPercentage}
+       maxFeePerGasThresholdPercentage: ${maxFeePerGasThresholdPercentage} 
+       preVerificationGasThresholdPercentage: ${preVerificationGasThresholdPercentage}`,
     );
 
     const minimumAcceptableMaxPriorityFeePerGas =
-      networkMaxPriorityFeePerGas *
-      BigInt(maxPriorityFeePerGasThresholdPercentage);
+      Number(networkMaxPriorityFeePerGas) *
+      maxPriorityFeePerGasThresholdPercentage;
     const minimumAcceptableMaxFeePerGas =
-      networkMaxFeePerGas * BigInt(maxFeePerGas);
+      Number(networkMaxFeePerGas) * maxFeePerGasThresholdPercentage;
 
     log.info(
       `minimumAcceptableMaxPriorityFeePerGas: ${minimumAcceptableMaxPriorityFeePerGas} minimumAcceptableMaxFeePerGas: ${minimumAcceptableMaxFeePerGas}`,
     );
     log.info(`Checking if maxPriorityFeePerGas is within acceptable limits`);
 
-    if (minimumAcceptableMaxPriorityFeePerGas > maxPriorityFeePerGas) {
+    if (minimumAcceptableMaxPriorityFeePerGas > Number(maxPriorityFeePerGas)) {
       log.info(
         `maxPriorityFeePerGas in userOp: ${maxPriorityFeePerGas} is lower than expected maxPriorityFeePerGas: ${minimumAcceptableMaxPriorityFeePerGas}`,
       );
@@ -695,12 +697,12 @@ export class BundlerSimulationService {
     log.info(`maxPriorityFeePerGas is within acceptable limits`);
     log.info(`Checking if maxFeePerGas is within acceptable limits`);
 
-    if (minimumAcceptableMaxFeePerGas > maxFeePerGas) {
+    if (minimumAcceptableMaxFeePerGas > Number(maxFeePerGas)) {
       log.info(
-        `maxFeePerGas in userOp: ${maxPriorityFeePerGas} is lower than expected maxFeePerGas: ${minimumAcceptableMaxFeePerGas}`,
+        `maxFeePerGas in userOp: ${maxFeePerGas} is lower than expected maxFeePerGas: ${minimumAcceptableMaxFeePerGas}`,
       );
       throw new RpcError(
-        `maxFeePerGas in userOp: ${maxPriorityFeePerGas} is lower than expected maxFeePerGas: ${minimumAcceptableMaxFeePerGas}`,
+        `maxFeePerGas in userOp: ${maxFeePerGas} is lower than expected maxFeePerGas: ${minimumAcceptableMaxFeePerGas}`,
         BUNDLER_ERROR_CODES.MAX_FEE_PER_GAS_TOO_LOW,
       );
     }
@@ -714,9 +716,9 @@ export class BundlerSimulationService {
     log.info(`networkPreVerificationGas: ${networkPreVerificationGas}`);
 
     const minimumAcceptablePreVerificationGas =
-      networkPreVerificationGas * BigInt(preVerificationGasThresholdPercentage);
+      Number(networkPreVerificationGas) * preVerificationGasThresholdPercentage;
 
-    if (minimumAcceptablePreVerificationGas > preVerificationGas) {
+    if (minimumAcceptablePreVerificationGas > Number(preVerificationGas)) {
       log.info(
         `preVerificationGas in userOp: ${preVerificationGas} is lower than minimumAcceptablePreVerificationGas: ${minimumAcceptablePreVerificationGas}`,
       );
