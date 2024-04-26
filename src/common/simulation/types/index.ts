@@ -4,17 +4,6 @@ import {
   UserOperationType,
 } from "../../types";
 
-// data response type that external simulation serivcereturns
-export type ExternalSimulationResponseType = {
-  isSimulationSuccessful: boolean;
-  message: string;
-  data: {
-    refundAmount: number;
-    refundAmountInUSD: number;
-    gasLimitFromSimulation: number | BigInt;
-  };
-};
-
 // data type that simulation service expects
 export type SimulationDataType = {
   chainId: number;
@@ -91,10 +80,18 @@ export type SimulateHandleOpsReturnType = {
   isExecutionSuccess?: boolean;
 };
 
-export type SimulateValidationAndExecutionData = {
+export type SimulationData = {
   userOp: UserOperationType;
   entryPointContract: EntryPointContractType;
   chainId: number;
 };
 
-export type SimulateValidationData = SimulateValidationAndExecutionData;
+export type ValidationData = {
+  userOp: UserOperationType;
+  networkMaxPriorityFeePerGas: bigint;
+  networkMaxFeePerGas: bigint;
+  networkPreVerificationGas: bigint;
+  maxPriorityFeePerGasThresholdPercentage: number;
+  maxFeePerGasThresholdPercentage: number;
+  preVerificationGasThresholdPercentage: number;
+};

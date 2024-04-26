@@ -7,8 +7,7 @@ import {
   IUserOperationDAO,
   IUserOperationStateDAO,
 } from "../../common/db";
-import { IQueue } from "../../common/interface";
-import { logger } from "../../common/logger";
+import { getLogger } from "../../common/logger";
 import { INetworkService } from "../../common/network";
 import { RetryTransactionQueueData } from "../../common/queue/types";
 import {
@@ -41,10 +40,9 @@ import {
   OnTransactionSuccessParamsType,
 } from "./types";
 import { config } from "../../config";
+import { IQueue } from "../../common/queue";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 export class EVMTransactionListener
   implements

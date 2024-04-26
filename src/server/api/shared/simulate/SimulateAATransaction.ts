@@ -1,16 +1,14 @@
 /* eslint-disable import/no-import-module-exports */
 import { Request } from "express";
-import { logger } from "../../../../common/logger";
+import { getLogger } from "../../../../common/logger";
 import {
   bundlerSimulationServiceMap,
   entryPointMap,
 } from "../../../../common/service-manager";
 import { customJSONStringify, parseError } from "../../../../common/utils";
-import { BUNDLER_VALIDATION_STATUSES, STATUSES } from "../middleware";
+import { BUNDLER_ERROR_CODES, STATUSES } from "../middleware";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 // eslint-disable-next-line consistent-return
 export const simulateAATransaction = async (req: Request) => {
@@ -54,7 +52,7 @@ export const simulateAATransaction = async (req: Request) => {
     const { code, message } = aaSimulationResponse;
 
     if (code !== STATUSES.SUCCESS) {
-      if (code === BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED) {
+      if (code === BUNDLER_ERROR_CODES.WALLET_TRANSACTION_REVERTED) {
         return {
           code,
           message,

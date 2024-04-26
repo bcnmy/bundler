@@ -1,12 +1,10 @@
 /* eslint-disable import/no-import-module-exports */
 import { NextFunction, Request, Response } from "express";
-import { logger } from "../../../../../common/logger";
+import { getLogger } from "../../../../../common/logger";
 import { transactionStatusSchema } from "../../schema";
 import { STATUSES } from "../../../shared/middleware/RequestHelpers";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 export const validateTransactionStatus = async (
   req: Request,

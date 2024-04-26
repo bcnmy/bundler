@@ -4,15 +4,13 @@ import Big from "big.js";
 import { ICacheService } from "../cache";
 import { IGasPriceService } from "../gas-price";
 import { GasPriceType } from "../gas-price/types";
-import { logger } from "../logger";
+import { getLogger } from "../logger";
 import { getTokenPriceKey } from "../utils";
 import { config } from "../../config";
 import { STATUSES } from "../../server/api/shared/middleware";
 import { FeeOptionResponseType } from "./types";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 const convertGasPriceToUSD = async (
   nativeChainId: number,

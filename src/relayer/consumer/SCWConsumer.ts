@@ -1,7 +1,7 @@
 /* eslint-disable import/no-import-module-exports */
 import { ConsumeMessage } from "amqplib";
 import { ICacheService } from "../../common/cache";
-import { logger } from "../../common/logger";
+import { getLogger } from "../../common/logger";
 import { IQueue } from "../../common/queue";
 import {
   EVMRawTransactionType,
@@ -20,9 +20,7 @@ import { ITransactionService } from "../transaction-service";
 import { ITransactionConsumer } from "./interface/ITransactionConsumer";
 import { SCWConsumerParamsType } from "./types";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 export class SCWConsumer
   implements ITransactionConsumer<IEVMAccount, EVMRawTransactionType>
 {

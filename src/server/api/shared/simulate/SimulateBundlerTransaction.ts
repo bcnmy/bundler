@@ -1,17 +1,15 @@
 /* eslint-disable import/no-import-module-exports */
 import { Request } from "express";
-import { BUNDLER_VALIDATION_STATUSES, STATUSES } from "../middleware";
+import { BUNDLER_ERROR_CODES, STATUSES } from "../middleware";
 import {
   entryPointMap,
   bundlerSimulationServiceMap,
 } from "../../../../common/service-manager";
 import { parseError } from "../../../../common/utils";
-import { logger } from "../../../../common/logger";
+import { getLogger } from "../../../../common/logger";
 import { config } from "../../../../config";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 // eslint-disable-next-line consistent-return
 export const validateBundlerTransaction = async (req: Request) => {
@@ -73,7 +71,7 @@ export const validateBundlerTransaction = async (req: Request) => {
       bundlerSimulationAndValidationResponse =
         await bundlerSimulationServiceMap[
           parseInt(chainId, 10)
-        ].simulateValidationAndExecution({
+        ].simulateValidation({
           userOp,
           entryPointContract,
           chainId: parseInt(chainId, 10),
@@ -95,7 +93,7 @@ export const validateBundlerTransaction = async (req: Request) => {
     const { code, message, data } = bundlerSimulationAndValidationResponse;
 
     if (code !== STATUSES.SUCCESS) {
-      if (code === BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED) {
+      if (code === BUNDLER_ERROR_CODES.WALLET_TRANSACTION_REVERTED) {
         return {
           code,
           message,

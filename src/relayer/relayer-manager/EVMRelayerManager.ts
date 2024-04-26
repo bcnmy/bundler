@@ -10,7 +10,7 @@ import hdkey from "hdkey";
 import { parseEther, toHex } from "viem";
 import { ICacheService } from "../../common/cache";
 import { IGasPriceService } from "../../common/gas-price";
-import { logger } from "../../common/logger";
+import { getLogger } from "../../common/logger";
 import { INetworkService } from "../../common/network";
 import { getPendingTransactionIncreasingMessage } from "../../common/notification";
 import { INotificationManager } from "../../common/notification/interface";
@@ -29,9 +29,7 @@ import { ITransactionService } from "../transaction-service/interface/ITransacti
 import { IRelayerManager } from "./interface/IRelayerManager";
 import { EVMRelayerManagerServiceParamsType } from "./types";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 const createRelayerMutex = new Mutex();
 const nodePathRoot = "m/44'/60'/0'/";

@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { parseError } from "../../../../common/utils";
-import { BUNDLER_VALIDATION_STATUSES, STATUSES } from "../middleware";
+import { BUNDLER_ERROR_CODES, STATUSES } from "../middleware";
 import { EthMethodType, TransactionMethodType } from "../../../../common/types";
 import { authenticate } from "./Authenticate";
 
@@ -58,7 +58,7 @@ export const authenticateBundlerRequest =
           jsonrpc: "2.0",
           id: id || 1,
           error: {
-            code: BUNDLER_VALIDATION_STATUSES.UNAUTHORIZED_REQUEST,
+            code: BUNDLER_ERROR_CODES.UNAUTHORIZED_REQUEST,
             message: response.message,
           },
         });

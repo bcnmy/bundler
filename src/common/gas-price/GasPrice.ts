@@ -3,16 +3,14 @@
 import { formatUnits, toHex } from "viem";
 import { IEVMAccount } from "../../relayer/account";
 import { ICacheService } from "../cache";
-import { logger } from "../logger";
+import { getLogger } from "../logger";
 import { INetworkService } from "../network";
 import { EVMRawTransactionType, NetworkBasedGasPriceType } from "../types";
 import { GasPriceType } from "./types";
 import { customJSONStringify } from "../utils";
 import { IGasPriceService } from "./interface/IGasPriceService";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 export class GasPriceService implements IGasPriceService {
   chainId: number;
 
@@ -321,6 +319,27 @@ export class GasPriceService implements IGasPriceService {
       this.getBaseFeePerGasKey(),
     );
     return BigInt(baseFeePerGas);
+  }
+
+  /**
+   * Method that returns gas price in an EIP 1559 format
+   * @returns { maxPriorityFeePerGas: bigint, maxFeePerGas: bigint }
+   */
+  async getParsedGasPrice(): Promise<{
+    maxPriorityFeePerGas: bigint;
+    maxFeePerGas: bigint;
+  }> {
+    const gasPrice = await this.getGasPrice();
+    if (typeof gasPrice === "bigint") {
+      return {
+        maxPriorityFeePerGas: gasPrice,
+        maxFeePerGas: gasPrice,
+      };
+    }
+    return {
+      maxPriorityFeePerGas: gasPrice.maxPriorityFeePerGas,
+      maxFeePerGas: gasPrice.maxFeePerGas,
+    };
   }
 
   /**

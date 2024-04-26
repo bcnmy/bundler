@@ -2,11 +2,14 @@
 /* eslint-disable no-console */
 import crypto from "crypto-js";
 import { promises, existsSync } from "fs";
+import { getLogger } from "./common/logger";
 
 const KEY_SIZE = 32;
 const PBKDF2_ITERATIONS = 310000;
 const AES_PADDING = crypto.pad.Pkcs7;
 const AES_MODE = crypto.mode.CBC;
+
+const log = getLogger(module);
 
 const encryptConfig = async (
   passphrase: string,
@@ -44,7 +47,7 @@ const encryptConfig = async (
     encrypted.toString();
 
   await promises.writeFile(outputPath, ciphertext);
-  console.log("completed");
+  log.info("completed");
   process.exit(1);
 };
 

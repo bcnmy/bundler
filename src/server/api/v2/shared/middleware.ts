@@ -1,7 +1,7 @@
 /* eslint-disable import/no-import-module-exports */
 /* eslint-disable no-case-declarations */
 import { NextFunction, Request, Response } from "express";
-import { logger } from "../../../../common/logger";
+import { getLogger } from "../../../../common/logger";
 import {
   EthMethodType,
   BiconomyMethodType,
@@ -20,14 +20,12 @@ import {
   getUserOperationStatusSchema,
 } from "../schema";
 import {
-  BUNDLER_VALIDATION_STATUSES,
+  BUNDLER_ERROR_CODES,
   STATUSES,
 } from "../../shared/middleware/RequestHelpers";
 import { parseError } from "../../../../common/utils";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 export const validateBundlerRequest =
   () => async (req: Request, res: Response, next: NextFunction) => {
@@ -84,7 +82,7 @@ export const validateBundlerRequest =
             jsonrpc: "2.0",
             id: id || 1,
             error: {
-              code: BUNDLER_VALIDATION_STATUSES.METHOD_NOT_FOUND,
+              code: BUNDLER_ERROR_CODES.METHOD_NOT_FOUND,
               message:
                 "Wrong transaction type sent in validate BUNDLER request",
             },
@@ -115,7 +113,7 @@ export const validateBundlerRequest =
         jsonrpc: "2.0",
         id: id || 1,
         error: {
-          code: BUNDLER_VALIDATION_STATUSES.INVALID_USER_OP_FIELDS,
+          code: BUNDLER_ERROR_CODES.INVALID_USER_OP_FIELDS,
           message,
         },
       });

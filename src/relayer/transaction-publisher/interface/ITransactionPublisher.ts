@@ -1,4 +1,4 @@
-import { IQueue } from "../../../common/interface";
+import { IQueue } from "../../../common/queue";
 import { RetryTransactionQueueData } from "../../../common/queue/types";
 
 export interface ITransactionPublisher<TransactionMessageType> {

@@ -9,11 +9,9 @@ import {
 import { STATUSES } from "../middleware";
 import { validateBundlerTransaction } from "./SimulateBundlerTransaction";
 import { parseError } from "../../../../common/utils";
-import { logger } from "../../../../common/logger";
+import { getLogger } from "../../../../common/logger";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 export const simulateBundlerTransaction =
   () => async (req: Request, res: Response, next: NextFunction) => {

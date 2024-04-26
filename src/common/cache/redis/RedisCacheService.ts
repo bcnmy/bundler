@@ -2,13 +2,11 @@
 import Redlock, { Lock } from "redlock";
 import Redis from "ioredis";
 import { config } from "../../../config";
-import { logger } from "../../logger";
+import { getLogger } from "../../logger";
 import { ICacheService } from "../interface";
 import { parseError } from "../../utils";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 export class RedisCacheService implements ICacheService {
   private static instance: ICacheService;

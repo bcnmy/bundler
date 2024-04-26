@@ -1,13 +1,11 @@
 /* eslint-disable import/no-import-module-exports */
 import { CronJob } from "cron";
-import { logger } from "../../logger";
+import { getLogger } from "../../logger";
 import { parseError } from "../../utils";
 import { formatHrtimeSeconds } from "../../utils/formatting";
 import { CMCTokenPriceManager } from "../CMCTokenPriceManager";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 /**
  * `CachePricesJob` periodically fetches the token prices from CMC API and saves them to the cache them for faster access.

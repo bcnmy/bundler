@@ -1,6 +1,6 @@
 /* eslint-disable import/no-import-module-exports */
 import { ConsumeMessage } from "amqplib";
-import { logger } from "../../common/logger";
+import { getLogger } from "../../common/logger";
 import { INetworkService } from "../../common/network";
 import { IQueue } from "../../common/queue";
 import { RetryTransactionQueueData } from "../../common/queue/types";
@@ -19,9 +19,7 @@ import {
 } from "../../common/utils";
 import { ICacheService } from "../../common/cache";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 export class EVMRetryTransactionService
   implements IRetryTransactionService<IEVMAccount, EVMRawTransactionType>
 {

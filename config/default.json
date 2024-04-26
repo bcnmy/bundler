@@ -356,6 +356,9 @@
     "bundleSize": 1,
     "sigSize": 65
   },
+  "maxPriorityFeePerGasThresholdPercentage": 0.5,
+  "maxFeePerGasThresholdPercentage": 0.5,
+  "preVerificationGasThresholdPercentage": 0.5,
   "relayerManagers": [
     {
       "name": "RM1",
@@ -1165,5 +1168,11 @@
   "aaDashboardBackend": {
     "url": "https://paymaster-dashboard-backend-v2.staging.biconomy.io/api/v2/bundlers/auth"
   },
-  "isTWSetup": false
+  "isTWSetup": false,
+  "relayerManagerTransactionTypeNameMap": {
+    "AA": "RM1",
+    "SCW": "RM2",
+    "FUNDING": "RM0",
+    "BUNDLER": "RM1"
+  }
 }

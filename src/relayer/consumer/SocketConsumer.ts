@@ -1,7 +1,7 @@
 /* eslint-disable import/no-import-module-exports */
 import { ConsumeMessage } from "amqplib";
 import { CentClient } from "cent.js";
-import { logger } from "../../common/logger";
+import { getLogger } from "../../common/logger";
 import { IQueue } from "../../common/queue";
 import {
   EVMRawTransactionType,
@@ -15,9 +15,7 @@ import { ISocketConsumer } from "./interface/ISocketConsumer";
 import { SocketConsumerParamsType } from "./types";
 import { customJSONStringify } from "../../common/utils";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 export class SocketConsumer implements ISocketConsumer {
   chainId: number;
 

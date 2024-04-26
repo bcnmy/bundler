@@ -1,7 +1,7 @@
 /* eslint-disable import/no-import-module-exports */
 import { STATUSES } from "../../server/api/shared/middleware";
-import { IQueue } from "../interface";
-import { logger } from "../logger";
+import { getLogger } from "../logger";
+import { IQueue } from "../queue";
 import {
   BundlerTransactionMessageType,
   RelayServiceResponseType,
@@ -9,9 +9,7 @@ import {
 import { parseError } from "../utils";
 import { IRelayService } from "./interface/IRelayService";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 export class BundlerRelayService
   implements IRelayService<BundlerTransactionMessageType>
 {

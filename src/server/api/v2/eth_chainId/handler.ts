@@ -3,16 +3,14 @@ import { Request, Response } from "express";
 import config from "config";
 import { Hex } from "viem";
 import { STATUSES } from "../../shared/middleware";
-import { logger } from "../../../../common/logger";
+import { getLogger } from "../../../../common/logger";
 import { customJSONStringify } from "../../../../common/utils";
 import { ChainIdNotSupportedError } from "./errors";
 import { InternalServerError } from "../shared/errors";
 import { ChainIdResponse } from "./response";
 import { RPCErrorResponse } from "../shared/response";
 
-const filenameLogger = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const filenameLogger = getLogger(module);
 
 const isChainIdSupported = (chainId: number): boolean => {
   const supportedNetworks = config.get<Array<number>>("supportedNetworks");

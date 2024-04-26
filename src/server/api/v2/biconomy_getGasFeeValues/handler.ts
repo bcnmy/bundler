@@ -1,14 +1,12 @@
 /* eslint-disable import/no-import-module-exports */
 import { Request, Response } from "express";
-import { BUNDLER_VALIDATION_STATUSES, STATUSES } from "../../shared/middleware";
-import { logger } from "../../../../common/logger";
+import { BUNDLER_ERROR_CODES, STATUSES } from "../../shared/middleware";
+import { getLogger } from "../../../../common/logger";
 import { gasPriceServiceMap } from "../../../../common/service-manager";
 import { customJSONStringify, parseError } from "../../../../common/utils";
 // import { updateRequest } from '../../auth/UpdateRequest';
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 export const getGasFeeValues = async (req: Request, res: Response) => {
   // const bundlerRequestId = req.body.params[6];
@@ -96,7 +94,7 @@ export const getGasFeeValues = async (req: Request, res: Response) => {
     //     jsonrpc: '2.0',
     //     id: id || 1,
     //     error: {
-    //       code: BUNDLER_VALIDATION_STATUSES.INTERNAL_SERVER_ERROR,
+    //       code: BUNDLER_ERROR_CODES.INTERNAL_SERVER_ERROR,
     //       message: `Internal Server error: ${parseError(error)}`,
     //     },
     //   },
@@ -106,7 +104,7 @@ export const getGasFeeValues = async (req: Request, res: Response) => {
       jsonrpc: "2.0",
       id: id || 1,
       error: {
-        code: BUNDLER_VALIDATION_STATUSES.INTERNAL_SERVER_ERROR,
+        code: BUNDLER_ERROR_CODES.INTERNAL_SERVER_ERROR,
         message: `Internal Server error: ${parseError(error)}`,
       },
     });

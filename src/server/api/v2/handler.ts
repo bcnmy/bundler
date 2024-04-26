@@ -4,7 +4,7 @@ import {
   EthMethodType,
   TransactionMethodType,
 } from "../../../common/types";
-import { BUNDLER_VALIDATION_STATUSES, STATUSES } from "../shared/middleware";
+import { BUNDLER_ERROR_CODES, STATUSES } from "../shared/middleware";
 import {
   bundleUserOperation,
   getChainId,
@@ -51,7 +51,7 @@ export const handleV2Request = async (req: Request, res: Response) => {
       break;
     default:
       return res.status(STATUSES.BAD_REQUEST).send({
-        code: BUNDLER_VALIDATION_STATUSES.METHOD_NOT_FOUND,
+        code: BUNDLER_ERROR_CODES.METHOD_NOT_FOUND,
         error: `method: ${method} not supported`,
       });
   }

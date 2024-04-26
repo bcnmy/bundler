@@ -1,14 +1,12 @@
 /* eslint-disable import/no-import-module-exports */
 import amqp, { Channel, ConsumeMessage, Replies } from "amqplib";
 import { config } from "../../config";
-import { logger } from "../logger";
+import { getLogger } from "../logger";
 import { BundlerTransactionMessageType, TransactionType } from "../types";
 import { IQueue } from "./interface/IQueue";
 import { customJSONStringify, parseError } from "../utils";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 const queueUrl = process.env.BUNDLER_QUEUE_URL || config.queueUrl;
 

@@ -1,6 +1,6 @@
 /* eslint-disable import/no-import-module-exports */
 import { NextFunction, Request, Response } from "express";
-import { logger } from "../../../../../common/logger";
+import { getLogger } from "../../../../../common/logger";
 import {
   EthMethodType,
   TransactionMethodType,
@@ -13,9 +13,7 @@ import {
 import { STATUSES } from "../../../shared/middleware/RequestHelpers";
 import { parseError } from "../../../../../common/utils";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 export const validateRelayRequest =
   () => async (req: Request, res: Response, next: NextFunction) => {

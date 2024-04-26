@@ -1,13 +1,11 @@
 /* eslint-disable import/no-import-module-exports */
 import { Request, Response } from "express";
 import { STATUSES } from "../../shared/middleware";
-import { logger } from "../../../../common/logger";
+import { getLogger } from "../../../../common/logger";
 import { userOperationDao } from "../../../../common/service-manager";
 import { parseError } from "../../../../common/utils";
 
-const log = logger.child({
-  module: module.filename.split("/").slice(-4).join("/"),
-});
+const log = getLogger(module);
 
 const getStartTimeAndEndTimeInMs = (
   startTime: string | null,
