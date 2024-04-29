@@ -327,7 +327,7 @@ export class GasPriceService implements IGasPriceService {
    * Method that returns gas price in an EIP 1559 format
    * @returns { maxPriorityFeePerGas: bigint, maxFeePerGas: bigint }
    */
-  async getParsedGasPrice(): Promise<{
+  async get1559GasPrice(): Promise<{
     maxPriorityFeePerGas: bigint;
     maxFeePerGas: bigint;
   }> {

@@ -30,7 +30,7 @@ export interface IGasPriceService {
   setBaseFeePerGas(baseFeePerGas: string): Promise<void>;
   getBaseFeePerGas(): Promise<bigint>;
 
-  getParsedGasPrice(): Promise<{
+  get1559GasPrice(): Promise<{
     maxPriorityFeePerGas: bigint;
     maxFeePerGas: bigint;
   }>;

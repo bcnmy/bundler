@@ -316,7 +316,7 @@ export class BundlerSimulationService {
       );
 
       const { maxPriorityFeePerGas, maxFeePerGas } =
-        await this.gasPriceService.getParsedGasPrice();
+        await this.gasPriceService.get1559GasPrice();
 
       await this.checkUserOperationForRejection({
         userOp,
@@ -476,7 +476,7 @@ export class BundlerSimulationService {
       );
 
       const { maxPriorityFeePerGas, maxFeePerGas } =
-        await this.gasPriceService.getParsedGasPrice();
+        await this.gasPriceService.get1559GasPrice();
       let gasPrice = Math.ceil(Number(maxFeePerGas) * 2).toString(16);
 
       await this.checkUserOperationForRejection({
