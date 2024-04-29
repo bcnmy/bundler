@@ -1104,7 +1104,7 @@
   "blastPvgValue": 700000000,
   "scrollNetworks": [534351, 534352],
   "networksNotSupportingEthCallStateOverrides": [
-    1101, 1442, 81, 592, 169, 3441005, 91715, 7116, 9980, 88882, 88888, 81457, 666666666, 2442, 8101902
+    1101, 1442, 81, 592, 169, 3441005, 91715, 7116, 9980, 88882, 88888, 81457, 666666666, 2442, 8101902, 7001
   ],
   "trustWalletSupportedNetworks": [137, 80001, 56, 204, 42161, 10, 8453],
   "networksNotSupportingEthCallBytecodeStateOverrides": [
