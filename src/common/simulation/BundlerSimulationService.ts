@@ -709,9 +709,12 @@ export class BundlerSimulationService {
     log.info(`maxFeePerGas is within acceptable limits`);
     log.info(`Checking if preVerificationGas is within acceptable limits`);
 
+    const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas(); 
+
     const { preVerificationGas: networkPreVerificationGas } =
       await this.gasEstimator.calculatePreVerificationGas({
         userOperation: userOp,
+        baseFeePerGas
       });
     log.info(`networkPreVerificationGas: ${networkPreVerificationGas}`);
 
