@@ -356,6 +356,9 @@
     "bundleSize": 1,
     "sigSize": 65
   },
+  "maxPriorityFeePerGasThresholdPercentage": 0.5,
+  "maxFeePerGasThresholdPercentage": 0.5,
+  "preVerificationGasThresholdPercentage": 0.5,
   "relayerManagers": [
     {
       "name": "RM1",

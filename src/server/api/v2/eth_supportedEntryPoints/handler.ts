@@ -1,6 +1,6 @@
 /* eslint-disable import/no-import-module-exports */
 import { Request, Response } from "express";
-import { BUNDLER_VALIDATION_STATUSES, STATUSES } from "../../shared/middleware";
+import { BUNDLER_ERROR_CODES, STATUSES } from "../../shared/middleware";
 import { logger } from "../../../../common/logger";
 import { config } from "../../../../config";
 import { parseError } from "../../../../common/utils";
@@ -60,7 +60,7 @@ export const getSupportedEntryPoints = async (req: Request, res: Response) => {
     //     jsonrpc: '2.0',
     //     id: id || 1,
     //     error: {
-    //       code: BUNDLER_VALIDATION_STATUSES.INTERNAL_SERVER_ERROR,
+    //       code: BUNDLER_ERROR_CODES.INTERNAL_SERVER_ERROR,
     //       message: `Internal Server error: ${parseError(error)}`,
     //     },
     //   },
@@ -70,7 +70,7 @@ export const getSupportedEntryPoints = async (req: Request, res: Response) => {
       jsonrpc: "2.0",
       id: id || 1,
       error: {
-        code: BUNDLER_VALIDATION_STATUSES.INTERNAL_SERVER_ERROR,
+        code: BUNDLER_ERROR_CODES.INTERNAL_SERVER_ERROR,
         message: `Internal Server error: ${parseError(error)}`,
       },
     });

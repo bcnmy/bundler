@@ -1,6 +1,6 @@
 /* eslint-disable import/no-import-module-exports */
 import { Request, Response } from "express";
-import { BUNDLER_VALIDATION_STATUSES, STATUSES } from "../../shared/middleware";
+import { BUNDLER_ERROR_CODES, STATUSES } from "../../shared/middleware";
 import { logger } from "../../../../common/logger";
 import { customJSONStringify, parseError } from "../../../../common/utils";
 import {
@@ -39,7 +39,7 @@ const getUserOperationStateData = async (
     return {
       error: true,
       result: {
-        code: BUNDLER_VALIDATION_STATUSES.USER_OP_HASH_NOT_FOUND,
+        code: BUNDLER_ERROR_CODES.USER_OP_HASH_NOT_FOUND,
         message: `UserOpHash: ${userOpHash} not found for chainId: ${chainId}`,
       },
     };
@@ -122,7 +122,7 @@ const getUserOperationStateData = async (
       return {
         error: true,
         result: {
-          code: BUNDLER_VALIDATION_STATUSES.USER_OP_HASH_NOT_FOUND,
+          code: BUNDLER_ERROR_CODES.USER_OP_HASH_NOT_FOUND,
           message: `UserOpHash: ${userOpHash} not found for chainId: ${chainId}`,
         },
       };
@@ -175,7 +175,7 @@ const getUserOperationStateData = async (
   return {
     error: true,
     result: {
-      code: BUNDLER_VALIDATION_STATUSES.UNABLE_TO_PROCESS_USER_OP,
+      code: BUNDLER_ERROR_CODES.UNABLE_TO_PROCESS_USER_OP,
       message: `Unable to process userOp with UserOpHash: ${userOpHash} on chainId: ${chainId}`,
     },
   };
@@ -216,7 +216,7 @@ export const getUserOperationStatus = async (req: Request, res: Response) => {
     //     jsonrpc: '2.0',
     //     id: id || 1,
     //     error: {
-    //       code: BUNDLER_VALIDATION_STATUSES.INTERNAL_SERVER_ERROR,
+    //       code: BUNDLER_ERROR_CODES.INTERNAL_SERVER_ERROR,
     //       message: `Internal Server error: ${parseError(error)}`,
     //     },
     //   },
@@ -226,7 +226,7 @@ export const getUserOperationStatus = async (req: Request, res: Response) => {
       jsonrpc: "2.0",
       id: id || 1,
       error: {
-        code: BUNDLER_VALIDATION_STATUSES.INTERNAL_SERVER_ERROR,
+        code: BUNDLER_ERROR_CODES.INTERNAL_SERVER_ERROR,
         message: `Internal Server error: ${parseError(error)}`,
       },
     });

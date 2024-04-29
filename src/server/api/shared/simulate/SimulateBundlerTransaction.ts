@@ -1,6 +1,6 @@
 /* eslint-disable import/no-import-module-exports */
 import { Request } from "express";
-import { BUNDLER_VALIDATION_STATUSES, STATUSES } from "../middleware";
+import { BUNDLER_ERROR_CODES, STATUSES } from "../middleware";
 import {
   entryPointMap,
   bundlerSimulationServiceMap,
@@ -95,7 +95,7 @@ export const validateBundlerTransaction = async (req: Request) => {
     const { code, message, data } = bundlerSimulationAndValidationResponse;
 
     if (code !== STATUSES.SUCCESS) {
-      if (code === BUNDLER_VALIDATION_STATUSES.WALLET_TRANSACTION_REVERTED) {
+      if (code === BUNDLER_ERROR_CODES.WALLET_TRANSACTION_REVERTED) {
         return {
           code,
           message,

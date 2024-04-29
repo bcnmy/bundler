@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { EthMethodType, TransactionMethodType } from "../../../common/types";
-import { BUNDLER_VALIDATION_STATUSES, STATUSES } from "../shared/middleware";
+import { BUNDLER_ERROR_CODES, STATUSES } from "../shared/middleware";
 import { relayAATransaction } from "./eth_sendUserOperation/handler";
 import { relaySCWTransaction } from "./eth_sendSmartContractWalletTransaction/handler";
 import { getGasAndGasPrices } from "./eth_getUserOpGasFields/handler";
@@ -16,7 +16,7 @@ export const handleV1Request = async (req: Request, res: Response) => {
     response = await getGasAndGasPrices(req, res);
   } else {
     return res.status(STATUSES.BAD_REQUEST).send({
-      code: BUNDLER_VALIDATION_STATUSES.METHOD_NOT_FOUND,
+      code: BUNDLER_ERROR_CODES.METHOD_NOT_FOUND,
       error: `method: ${method} not supported`,
     });
   }
