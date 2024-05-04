@@ -22,7 +22,7 @@ export class ChainIdNotSupportedError extends RPCError {
   constructor(chainId: string) {
     super(
       BUNDLER_VALIDATION_STATUSES.BAD_REQUEST,
-      `chainId: ${chainId} not supported by our Bundler`,
+      `chainId: ${chainId} not supported by the Bundler`,
     );
   }
 }

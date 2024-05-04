@@ -7,7 +7,7 @@ export class EntryPointNotSupportedError extends RPCError {
   constructor(entryPointAddress: string) {
     super(
       BUNDLER_VALIDATION_STATUSES.BAD_REQUEST,
-      `Entry point with entryPointAddress: ${entryPointAddress} not supported by our Bundler.
+      `Entry point with entryPointAddress: ${entryPointAddress} not supported by the Bundler.
       Please make sure that the given entryPointAddress is correct`,
     );
   }

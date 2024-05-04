@@ -205,7 +205,7 @@ describe("EstimateUserOperationGas", () => {
 
     expect(
       responseData.error.message.startsWith(
-        `Entry point with entryPointAddress: ${unknownEntrypointAddress} not supported by our Bundler`,
+        `Entry point with entryPointAddress: ${unknownEntrypointAddress} not supported by the Bundler`,
       ),
     );
 
