@@ -21,7 +21,7 @@ export class InternalServerError extends RPCError {
 export class ChainIdNotSupportedError extends RPCError {
   constructor(chainId: string) {
     super(
-      BUNDLER_VALIDATION_STATUSES.BAD_REQUEST,
+      BUNDLER_ERROR_CODES.BAD_REQUEST,
       `chainId: ${chainId} not supported by the Bundler`,
     );
   }
