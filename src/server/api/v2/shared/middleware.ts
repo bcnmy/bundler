@@ -86,7 +86,7 @@ export const validateBundlerRequest =
             error: {
               code: BUNDLER_ERROR_CODES.METHOD_NOT_FOUND,
               message:
-                "Wrong transaction type sent in validate BUNDLER request",
+                `Unsupported method: ${method}. See available methods at https://docs.biconomy.io/Bundler/api/`,
             },
           });
       }
@@ -101,6 +101,7 @@ export const validateBundlerRequest =
         `error from validation: ${parseError(error)} for method: ${method}`,
       );
       const { details } = error;
+      // TODO: Fix this error, it is very bad
       let message;
       if (details) {
         message = details

@@ -15,6 +15,7 @@ import {
   createMantleGasEstimator,
   createOptimismGasEstimator,
   createScrollGasEstimator,
+  handleFailedOp,
   IGasEstimator,
 } from "entry-point-gas-estimations";
 import { config } from "../../config";
@@ -289,7 +290,7 @@ export class BundlerSimulationService {
       );
       return {
         code: error.code,
-        message: parseError(error),
+        message: `Error in estimating gas for user op: ${parseError(error)}`,
         data: {
           preVerificationGas: BigInt(0),
           verificationGasLimit: BigInt(0),
@@ -392,43 +393,8 @@ export class BundlerSimulationService {
         log.info(
           `Transaction failed with reason: ${reason} on chainId: ${chainId}`,
         );
-        if (reason.includes("AA1") || reason.includes("AA2")) {
-          log.info(`error in account on chainId: ${chainId}`);
-          const message = this.removeSpecialCharacters(reason);
-          log.info(`message after removing special characters: ${message}`);
-          throw new RpcError(
-            message,
-            BUNDLER_ERROR_CODES.SIMULATE_VALIDATION_FAILED,
-          );
-        } else if (reason.includes("AA3")) {
-          log.info(`error in paymaster on chainId: ${chainId}`);
-          const message = this.removeSpecialCharacters(reason);
-          log.info(`message after removing special characters: ${message}`);
-          throw new RpcError(
-            message,
-            BUNDLER_ERROR_CODES.SIMULATE_PAYMASTER_VALIDATION_FAILED,
-          );
-        } else if (reason.includes("AA9")) {
-          log.info(`error in inner handle op on chainId: ${chainId}`);
-          const message = this.removeSpecialCharacters(reason);
-          log.info(`message after removing special characters: ${message}`);
-          throw new RpcError(
-            message,
-            BUNDLER_ERROR_CODES.WALLET_TRANSACTION_REVERTED,
-          );
-        } else if (reason.includes("AA4")) {
-          log.info("error in verificationGasLimit being incorrect");
-          const message = this.removeSpecialCharacters(reason);
-          log.info(`message after removing special characters: ${message}`);
-          throw new RpcError(
-            message,
-            BUNDLER_ERROR_CODES.SIMULATE_VALIDATION_FAILED,
-          );
-        }
-        throw new RpcError(
-          `Transaction reverted in simulation with reason: ${reason}. Use handleOpsCallData to simulate transaction to check transaction execution steps`,
-          BUNDLER_ERROR_CODES.WALLET_TRANSACTION_REVERTED,
-        );
+        // use entry point gas estimation package helper method to handle failed op errors
+        handleFailedOp(reason);
       }
 
       const start = performance.now();
@@ -547,53 +513,11 @@ export class BundlerSimulationService {
           log.info(
             `Transaction failed with reason: ${reason} on chainId: ${chainId}`,
           );
-          if (reason.includes("AA1") || reason.includes("AA2")) {
-            log.info(`error in account on chainId: ${chainId}`);
-            const message = this.removeSpecialCharacters(reason);
-            log.info(`message after removing special characters: ${message}`);
-            throw new RpcError(
-              message,
-              BUNDLER_ERROR_CODES.SIMULATE_VALIDATION_FAILED,
-            );
-          } else if (reason.includes("AA3")) {
-            log.info(`error in paymaster on chainId: ${chainId}`);
-            const message = this.removeSpecialCharacters(reason);
-            log.info(`message after removing special characters: ${message}`);
-            throw new RpcError(
-              message,
-              BUNDLER_ERROR_CODES.SIMULATE_PAYMASTER_VALIDATION_FAILED,
-            );
-          } else if (reason.includes("AA9")) {
-            log.info(`error in inner handle op on chainId: ${chainId}`);
-            const message = this.removeSpecialCharacters(reason);
-            log.info(`message after removing special characters: ${message}`);
-            throw new RpcError(
-              message,
-              BUNDLER_ERROR_CODES.WALLET_TRANSACTION_REVERTED,
-            );
-          } else if (reason.includes("AA4")) {
-            log.info("error in verificationGasLimit being incorrect");
-            const message = this.removeSpecialCharacters(reason);
-            log.info(`message after removing special characters: ${message}`);
-            throw new RpcError(
-              message,
-              BUNDLER_ERROR_CODES.SIMULATE_VALIDATION_FAILED,
-            );
-          }
-          const message = this.removeSpecialCharacters(reason);
-          throw new RpcError(
-            message,
-            BUNDLER_ERROR_CODES.WALLET_TRANSACTION_REVERTED,
-          );
+          // use entry point gas estimation package helper method to handle failed op errors
+          handleFailedOp(reason);
         } else {
-          const { args } = errorDescription;
-
-          const reason = args[1]
-            ? args[1].toString()
-            : errorDescription.errorName;
-          const message = this.removeSpecialCharacters(reason);
           throw new RpcError(
-            message,
+            `Error in estimating handleOps gas`,
             BUNDLER_ERROR_CODES.WALLET_TRANSACTION_REVERTED,
           );
         }
@@ -660,6 +584,8 @@ export class BundlerSimulationService {
     const { userOp, networkMaxFeePerGas, networkMaxPriorityFeePerGas } =
       validationData;
 
+    const { chainId } = this.networkService;
+
     const { maxPriorityFeePerGas, maxFeePerGas, preVerificationGas } = userOp;
 
     const {
@@ -671,7 +597,7 @@ export class BundlerSimulationService {
     log.info(
       `maxPriorityFeePerGasThresholdPercentage: ${maxPriorityFeePerGasThresholdPercentage}
        maxFeePerGasThresholdPercentage: ${maxFeePerGasThresholdPercentage} 
-       preVerificationGasThresholdPercentage: ${preVerificationGasThresholdPercentage}`,
+       preVerificationGasThresholdPercentage: ${preVerificationGasThresholdPercentage} on chainId: ${chainId}`,
     );
 
     const minimumAcceptableMaxPriorityFeePerGas =
@@ -681,33 +607,33 @@ export class BundlerSimulationService {
       Number(networkMaxFeePerGas) * maxFeePerGasThresholdPercentage;
 
     log.info(
-      `minimumAcceptableMaxPriorityFeePerGas: ${minimumAcceptableMaxPriorityFeePerGas} minimumAcceptableMaxFeePerGas: ${minimumAcceptableMaxFeePerGas}`,
+      `minimumAcceptableMaxPriorityFeePerGas: ${minimumAcceptableMaxPriorityFeePerGas} minimumAcceptableMaxFeePerGas: ${minimumAcceptableMaxFeePerGas} on chainId: ${chainId}`,
     );
-    log.info(`Checking if maxPriorityFeePerGas is within acceptable limits`);
+    log.info(`Checking if maxPriorityFeePerGas is within acceptable limits on chainId: ${chainId}`);
 
     if (minimumAcceptableMaxPriorityFeePerGas > Number(maxPriorityFeePerGas)) {
       log.info(
-        `maxPriorityFeePerGas in userOp: ${maxPriorityFeePerGas} is lower than expected maxPriorityFeePerGas: ${minimumAcceptableMaxPriorityFeePerGas}`,
+        `maxPriorityFeePerGas in userOp: ${maxPriorityFeePerGas} is lower than expected maxPriorityFeePerGas: ${minimumAcceptableMaxPriorityFeePerGas} on chainId: ${chainId}`,
       );
       throw new RpcError(
-        `maxPriorityFeePerGas in userOp: ${maxPriorityFeePerGas} is lower than expected maxPriorityFeePerGas: ${minimumAcceptableMaxPriorityFeePerGas}`,
+        `maxPriorityFeePerGas in userOp: ${maxPriorityFeePerGas} is lower than expected maxPriorityFeePerGas: ${minimumAcceptableMaxPriorityFeePerGas} on chainId: ${chainId}`,
         BUNDLER_ERROR_CODES.MAX_PRIORITY_FEE_PER_GAS_TOO_LOW,
       );
     }
-    log.info(`maxPriorityFeePerGas is within acceptable limits`);
-    log.info(`Checking if maxFeePerGas is within acceptable limits`);
+    log.info(`maxPriorityFeePerGas is within acceptable limits on chainId: ${chainId}`);
+    log.info(`Checking if maxFeePerGas is within acceptable limits on chainId: ${chainId}`);
 
     if (minimumAcceptableMaxFeePerGas > Number(maxFeePerGas)) {
       log.info(
-        `maxFeePerGas in userOp: ${maxFeePerGas} is lower than expected maxFeePerGas: ${minimumAcceptableMaxFeePerGas}`,
+        `maxFeePerGas in userOp: ${maxFeePerGas} is lower than expected maxFeePerGas: ${minimumAcceptableMaxFeePerGas} on chainId: ${chainId}`,
       );
       throw new RpcError(
-        `maxFeePerGas in userOp: ${maxFeePerGas} is lower than expected maxFeePerGas: ${minimumAcceptableMaxFeePerGas}`,
+        `maxFeePerGas in userOp: ${maxFeePerGas} is lower than expected maxFeePerGas: ${minimumAcceptableMaxFeePerGas} on chainId: ${chainId}`,
         BUNDLER_ERROR_CODES.MAX_FEE_PER_GAS_TOO_LOW,
       );
     }
-    log.info(`maxFeePerGas is within acceptable limits`);
-    log.info(`Checking if preVerificationGas is within acceptable limits`);
+    log.info(`maxFeePerGas is within acceptable limits on chainId: ${chainId}`);
+    log.info(`Checking if preVerificationGas is within acceptable limits on chainId: ${chainId}`);
 
     const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas(); 
 
@@ -716,118 +642,25 @@ export class BundlerSimulationService {
         userOperation: userOp,
         baseFeePerGas
       });
-    log.info(`networkPreVerificationGas: ${networkPreVerificationGas}`);
+    log.info(`networkPreVerificationGas: ${networkPreVerificationGas} on chainId: ${chainId}`);
 
     const minimumAcceptablePreVerificationGas =
       Number(networkPreVerificationGas) * preVerificationGasThresholdPercentage;
 
     if (minimumAcceptablePreVerificationGas > Number(preVerificationGas)) {
       log.info(
-        `preVerificationGas in userOp: ${preVerificationGas} is lower than minimumAcceptablePreVerificationGas: ${minimumAcceptablePreVerificationGas}`,
+        `preVerificationGas in userOp: ${preVerificationGas} is lower than minimumAcceptablePreVerificationGas: ${minimumAcceptablePreVerificationGas} on chainId: ${chainId}`,
       );
       throw new RpcError(
-        `preVerificationGas in userOp: ${preVerificationGas} is lower than minimumAcceptablePreVerificationGas: ${minimumAcceptablePreVerificationGas}`,
+        `preVerificationGas in userOp: ${preVerificationGas} is lower than minimumAcceptablePreVerificationGas: ${minimumAcceptablePreVerificationGas} on chainId: ${chainId}`,
         BUNDLER_ERROR_CODES.PRE_VERIFICATION_GAS_TOO_LOW,
       );
     }
 
     log.info(
-      `maxFeePerGas, maxPriorityFeePerGas and preVerification are within acceptable limits`,
+      `maxFeePerGas, maxPriorityFeePerGas and preVerification are within acceptable limits on chainId: ${chainId}`,
     );
     return true;
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  removeSpecialCharacters(input: string): string {
-    const match = input.match(/AA(\d+)\s(.+)/);
-
-    if (match) {
-      const errorCode = match[1]; // e.g., "25"
-      const errorMessage = match[2]; // e.g., "invalid account nonce"
-      const newMatch = `AA${errorCode} ${errorMessage}`.match(
-        // eslint-disable-next-line no-control-regex
-        /AA.*?(?=\\u|\u0000)/,
-      );
-      if (newMatch) {
-        const extractedString = newMatch[0];
-        return extractedString;
-      }
-      return `AA${errorCode} ${errorMessage}`;
-    }
-    return input;
-  }
-
-  static parseSimulateHandleOpResult(
-    userOp: UserOperationType,
-    simulateHandleOpResult: any,
-  ) {
-    if (!simulateHandleOpResult?.errorName?.startsWith("ExecutionResult")) {
-      log.info(
-        `Inside ${!simulateHandleOpResult?.errorName?.startsWith(
-          "ExecutionResult",
-        )}`,
-      );
-      // parse it as FailedOp
-      // if its FailedOp, then we have the paymaster param... otherwise its an Error(string)
-      log.info(
-        `simulateHandleOpResult.errorArgs: ${simulateHandleOpResult.errorArgs}`,
-      );
-      if (!simulateHandleOpResult.errorArgs) {
-        throw new RpcError(
-          `Error: ${customJSONStringify(simulateHandleOpResult)}`,
-          BUNDLER_ERROR_CODES.WALLET_TRANSACTION_REVERTED,
-        );
-      }
-      let { paymaster } = simulateHandleOpResult.errorArgs;
-      if (paymaster === config.zeroAddress) {
-        paymaster = undefined;
-      }
-      // eslint-disable-next-line
-      const msg: string =
-        simulateHandleOpResult.errorArgs?.reason ??
-        simulateHandleOpResult.toString();
-
-      if (paymaster == null) {
-        log.info(
-          `account validation failed: ${msg} for userOp: ${customJSONStringify(
-            userOp,
-          )}`,
-        );
-        throw new RpcError(msg, BUNDLER_ERROR_CODES.SIMULATE_VALIDATION_FAILED);
-      } else {
-        log.info(
-          `paymaster validation failed: ${msg} for userOp: ${customJSONStringify(
-            userOp,
-          )}`,
-        );
-        throw new RpcError(
-          msg,
-          BUNDLER_ERROR_CODES.SIMULATE_PAYMASTER_VALIDATION_FAILED,
-        );
-      }
-    }
-
-    const preOpGas = simulateHandleOpResult.errorArgs[0];
-    log.info(`preOpGas: ${preOpGas}`);
-    const paid = simulateHandleOpResult.errorArgs[1];
-    log.info(`paid: ${paid}`);
-    const validAfter = simulateHandleOpResult.errorArgs[2];
-    log.info(`validAfter: ${validAfter}`);
-    const validUntil = simulateHandleOpResult.errorArgs[3];
-    log.info(`validUntil: ${validUntil}`);
-    const targetSuccess = simulateHandleOpResult.errorArgs[4];
-    log.info(`targetSuccess: ${targetSuccess}`);
-    const targetResult = simulateHandleOpResult.errorArgs[5];
-    log.info(`targetResult: ${targetResult}`);
-
-    return {
-      preOpGas,
-      paid,
-      validAfter,
-      validUntil,
-      targetSuccess,
-      targetResult,
-    };
   }
 
   // eslint-disable-next-line class-methods-use-this
