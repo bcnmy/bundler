@@ -1159,7 +1159,8 @@
     "4653": 0.15,
     "5003": 0.15,
     "8101902": 0.15, 
-    "666666666": 0.15
+    "666666666": 0.15,
+    "11155420": 0.15
   },
   "socketService": {
     "wssUrl": "wss://sdk-ws.prod.biconomy.io/connection/websocket",
