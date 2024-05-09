@@ -2,6 +2,7 @@
 /* eslint-disable no-await-in-loop */
 import { getContract, parseEther } from "viem";
 import { chain } from "lodash";
+import { ENTRY_POINT_ABI } from "entry-point-gas-estimations";
 import { config } from "../../config";
 import { EVMAccount, IEVMAccount } from "../../relayer/account";
 import {
@@ -56,7 +57,6 @@ import {
   TransactionType,
 } from "../types";
 import { UserOperationStateDAO } from "../db/dao/UserOperationStateDAO";
-import { ENTRY_POINT_ABI } from "../constants";
 import { customJSONStringify, parseError } from "../utils";
 import { GasPriceService } from "../gas-price";
 import { CacheFeesJob } from "../gas-price/jobs/CacheFees";

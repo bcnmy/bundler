@@ -1,6 +1,7 @@
 /* eslint-disable import/no-import-module-exports */
 import { ConsumeMessage } from "amqplib";
 import { encodeFunctionData } from "viem";
+import { ENTRY_POINT_ABI } from "entry-point-gas-estimations";
 import { ICacheService } from "../../common/cache";
 import { logger } from "../../common/logger";
 import { IQueue } from "../../common/queue";
@@ -21,7 +22,6 @@ import { IRelayerManager } from "../relayer-manager";
 import { ITransactionService } from "../transaction-service";
 import { ITransactionConsumer } from "./interface/ITransactionConsumer";
 import { AAConsumerParamsType } from "./types";
-import { ENTRY_POINT_ABI } from "../../common/constants";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
