@@ -11,7 +11,10 @@ import {
 import RpcError from "../utils/rpc-error";
 
 describe("BundlerSimulationService", () => {
-  const networkService = new EVMNetworkService({ chainId: 137, rpcUrl: "https://random-rpc-url.com"});
+  const networkService = new EVMNetworkService({
+    chainId: 137,
+    rpcUrl: "https://random-rpc-url.com",
+  });
   const gasPriceService = {} as unknown as GasPriceService;
   const tenderlySimulationService = {} as unknown as TenderlySimulationService;
   const alchemySimulationService = {} as unknown as AlchemySimulationService;

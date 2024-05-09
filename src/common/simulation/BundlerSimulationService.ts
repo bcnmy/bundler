@@ -258,8 +258,8 @@ export class BundlerSimulationService {
         BigInt(verificationGasLimitMultiplier) * verificationGasLimit +
         preVerificationGas;
       log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
-      
-      const pvgMarkUp = config.pvgMarkUp[chainId] || 0.10; // setting default pvgMarkUp to 10% incase the value for a given chainId is not set
+
+      const pvgMarkUp = config.pvgMarkUp[chainId] || 0.1; // setting default pvgMarkUp to 10% incase the value for a given chainId is not set
 
       preVerificationGas += BigInt(
         Math.ceil(Number(toHex(totalGas)) * pvgMarkUp),
@@ -711,12 +711,12 @@ export class BundlerSimulationService {
     log.info(`maxFeePerGas is within acceptable limits`);
     log.info(`Checking if preVerificationGas is within acceptable limits`);
 
-    const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas(); 
+    const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
 
     const { preVerificationGas: networkPreVerificationGas } =
       await this.gasEstimator.calculatePreVerificationGas({
         userOperation: userOp,
-        baseFeePerGas
+        baseFeePerGas,
       });
     log.info(`networkPreVerificationGas: ${networkPreVerificationGas}`);
 

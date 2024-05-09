@@ -1,9 +1,5 @@
+import { ENTRY_POINT_ABI } from "entry-point-gas-estimations";
 import { GetContractReturnType, Hex, TransactionReceipt } from "viem";
-import {
-  ENTRY_POINT_ABI,
-  OPTIMISM_L1_GAS_PRICE_ORACLE,
-  MANTLE_BVM_GAS_PRICE_ORACLE,
-} from "../constants";
 
 export enum TransactionType {
   AA = "AA",
@@ -273,13 +269,7 @@ export type UpdateRequestDataType = {
 export type EntryPointContractType = GetContractReturnType<
   typeof ENTRY_POINT_ABI
 >;
-export type OptimismL1GasPriceOracleContractType = GetContractReturnType<
-  typeof OPTIMISM_L1_GAS_PRICE_ORACLE
->;
 
-export type MantleBVMGasPriceOracleContractType = GetContractReturnType<
-  typeof MANTLE_BVM_GAS_PRICE_ORACLE
->;
 
 export type StateOverrideSetType = {
   [key: string]: {
