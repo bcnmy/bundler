@@ -258,9 +258,11 @@ export class BundlerSimulationService {
         BigInt(verificationGasLimitMultiplier) * verificationGasLimit +
         preVerificationGas;
       log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
+      
+      const pvgMarkUp = config.pvgMarkUp[chainId] || 0.10; // setting default pvgMarkUp to 10% incase the value for a given chainId is not set
 
       preVerificationGas += BigInt(
-        Math.ceil(Number(toHex(totalGas)) * config.pvgMarkUp[chainId]),
+        Math.ceil(Number(toHex(totalGas)) * pvgMarkUp),
       );
 
       log.info(

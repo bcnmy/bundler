@@ -275,7 +275,7 @@ export class EVMNetworkService
             clearInterval(intervalId);
             reject(wrappedError);
           }
-        }, 2000);
+        }, 1000);
 
         // Uncomment the line below to stop the interval after a certain number of iterations (optional)
         setTimeout(
@@ -287,7 +287,7 @@ export class EVMNetworkService
               ),
             );
           },
-          4 * 60 * 1000,
+          1 * 60 * 1000,
         );
       },
     );
