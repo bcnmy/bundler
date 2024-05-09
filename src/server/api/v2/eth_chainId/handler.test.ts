@@ -60,7 +60,7 @@ describe("eth_chainId", () => {
       id: requestId,
       error: {
         code: -32003,
-        message: `chainId: unknown not supported by our Bundler`,
+        message: `chainId: unknown not supported by the Bundler`,
       },
     });
   });
