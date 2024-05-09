@@ -31,7 +31,7 @@ export const handleV2Request = async (req: Request, res: Response) => {
 
   if (!isChainIdSupported(parseInt(chainId, 10))) {
     return res
-      .status(STATUSES.NOT_FOUND)
+      .status(STATUSES.BAD_REQUEST)
       .json(new RPCErrorResponse(new ChainIdNotSupportedError(chainId), id));
   }
 
