@@ -241,16 +241,6 @@ export type Log = {
   logIndex: number;
 };
 
-export type DefaultGasOverheadType = {
-  fixed: number;
-  perUserOp: number;
-  perUserOpWord: number;
-  zeroByte: number;
-  nonZeroByte: number;
-  bundleSize: number;
-  sigSize: number;
-};
-
 export type StakeInfo = {
   addr: string;
   stake: bigint;
