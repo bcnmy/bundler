@@ -3,7 +3,7 @@
     1, 137, 97, 56, 1101, 42161, 42170, 10, 43113, 43114, 8453, 59140, 59144, 5000, 204, 5611, 88888, 592, 88882, 81,
     1115, 1116, 169, 3441005, 91715, 9980, 421614, 11155111, 84532, 168587773,
     80085, 81457, 534351, 534352, 56400, 7000, 11155420, 80002, 27827,
-    4653, 8101902, 666666666, 2442, 7001, 5003, 100
+    4653, 8101902, 666666666, 2442, 7001, 5003, 100, 10200, 195, 196
   ],
   "EIP1559SupportedNetworks": [
     1, 137, 42161, 10, 43114, 43113, 8453, 59140, 59144, 204,
@@ -331,15 +331,6 @@
       "196": 60
     }
   },
-  "defaultGasOverheads": {
-    "fixed": 21000,
-    "perUserOp": 18300,
-    "perUserOpWord": 4,
-    "zeroByte": 4,
-    "nonZeroByte": 16,
-    "bundleSize": 1,
-    "sigSize": 65
-  },
   "maxPriorityFeePerGasThresholdPercentage": 0.5,
   "maxFeePerGasThresholdPercentage": 0.5,
   "preVerificationGasThresholdPercentage": 0.5,
@@ -402,9 +393,9 @@
         "8101902": 4, 
         "666666666": 4,
         "100": 50,
-        "10200": 4,
-        "195": 4, 
-        "196": 4
+        "10200": 10,
+        "195": 2, 
+        "196": 10
       },
       "maxRelayerCount": {
         "137": 400,
@@ -456,9 +447,9 @@
         "8101902": 10, 
         "666666666": 10,
         "100": 60,
-        "10200": 8,
-        "195": 8, 
-        "196": 8
+        "10200": 20,
+        "195": 10, 
+        "196": 20
       },
       "inactiveRelayerCountThreshold": {
         "137": 250,
@@ -510,9 +501,9 @@
         "8101902": 5, 
         "666666666": 5,
         "100": 45,
-        "10200": 3,
-        "195": 3, 
-        "196": 3
+        "10200": 8,
+        "195": 8, 
+        "196": 8
       },
       "pendingTransactionCountThreshold": {
         "137": 15,
@@ -618,9 +609,9 @@
         "8101902": 0.01,
         "666666666": 0.01,
         "100": 1,
-        "10200": 1,
-        "195": 1, 
-        "196": 1
+        "10200": 0.05,
+        "195": 0.03, 
+        "196": 0.05
       },
       "fundingBalanceThreshold": {
         "137": 3,
@@ -672,9 +663,9 @@
         "8101902": 0.005, 
         "666666666": 0.005,
         "100": 0.8,
-        "10200": 0.8,
-        "195": 0.8, 
-        "196": 0.8
+        "10200": 0.01,
+        "195": 0.01, 
+        "196": 0.02
       },
       "newRelayerInstanceCount": {
         "137": 10,
@@ -790,7 +781,7 @@
         "replacement_underpriced",
         "replacement transaction underpriced"
       ],
-      "TRANSACTION_UNDERPRICED": ["transaction underpriced"],
+      "TRANSACTION_UNDERPRICED": ["transaction underpriced", "gas price too low"],
       "INSUFFICIENT_FUNDS": [
         "insufficient funds for gas",
         "transaction would cause overdraft",

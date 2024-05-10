@@ -1,7 +1,6 @@
 import {
   SymbolMapByChainIdType,
   TransactionType,
-  DefaultGasOverheadType,
 } from "../../common/types";
 
 enum RpcProviderType {
@@ -166,8 +165,6 @@ export type ConfigType = {
     mongoUrl: string;
     redisUrl: string;
   };
-  // default, hard-coded gas overheads
-  defaultGasOverheads: DefaultGasOverheadType;
   // true if this is running on a TrustWallet dedicated setup
   isTWSetup: boolean;
   // array of chain Ids for networks that support https://eips.ethereum.org/EIPS/eip-1559
