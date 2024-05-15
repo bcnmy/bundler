@@ -134,7 +134,7 @@ export class Config implements IConfig {
   validate(): boolean {
     // check for each supported networks if the config is valid
     for (const chainId of this.config.supportedNetworks) {
-      if (!this.config.supportedTransactionType[chainId].length) {
+      if (!this.config.supportedTransactionType[chainId]?.length) {
         throw new Error(
           `No supported transaction type for chain id ${chainId}`,
         );
