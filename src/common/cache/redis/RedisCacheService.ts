@@ -1,7 +1,7 @@
 /* eslint-disable import/no-import-module-exports */
 import Redlock, { Lock } from "redlock";
 import Redis from "ioredis";
-import { config } from "../../../config";
+import { config } from "../../config";
 import { logger } from "../../logger";
 import { ICacheService } from "../interface";
 import { parseError } from "../../utils";

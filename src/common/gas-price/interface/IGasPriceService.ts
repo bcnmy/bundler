@@ -1,31 +1,33 @@
-import { IEVMAccount } from "../../../relayer/account";
+import { IEVMAccount } from "../../../node/account";
+import { INetworkService } from "../../../node/network";
 import { ICacheService } from "../../cache";
-import { INetworkService } from "../../network";
-import { EVMRawTransactionType, NetworkBasedGasPriceType } from "../../types";
-import { GasPriceType } from "../types";
+import {
+  EVM1559RawTransaction,
+  EVMLegacyRawTransaction,
+  GasPriceType,
+} from "../../types";
 
 export interface IGasPriceService {
   chainId: number;
-  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
+  networkService: INetworkService<
+    IEVMAccount,
+    EVM1559RawTransaction | EVMLegacyRawTransaction
+  >;
   cacheService: ICacheService;
 
-  setGasPrice(gasType: GasPriceType, price: string): Promise<void>;
-  getGasPrice(gasType?: GasPriceType): Promise<NetworkBasedGasPriceType>;
-  getGasPriceForSimulation(gasType?: GasPriceType): Promise<bigint>;
+  setGasPrice(price: string): Promise<void>;
+  getGasPrice(): Promise<GasPriceType>;
 
-  setMaxFeeGasPrice(gasType: GasPriceType, price: string): Promise<void>;
-  getMaxFeeGasPrice(gasType: GasPriceType): Promise<string>;
+  setMaxFeeGasPrice(price: string): Promise<void>;
+  getMaxFeeGasPrice(): Promise<string>;
 
-  setMaxPriorityFeeGasPrice(
-    gasType: GasPriceType,
-    price: string,
-  ): Promise<void>;
-  getMaxPriorityFeeGasPrice(gasType: GasPriceType): Promise<string>;
+  setMaxPriorityFeeGasPrice(price: string): Promise<void>;
+  getMaxPriorityFeeGasPrice(): Promise<string>;
 
   getBumpedUpGasPrice(
-    pastGasPrice: NetworkBasedGasPriceType,
+    pastGasPrice: GasPriceType,
     bumpingPercentage: number,
-  ): NetworkBasedGasPriceType;
+  ): GasPriceType;
 
   setBaseFeePerGas(baseFeePerGas: string): Promise<void>;
   getBaseFeePerGas(): Promise<bigint>;
