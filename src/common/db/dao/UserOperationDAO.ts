@@ -1,3 +1,4 @@
+import { LeanDocument } from "mongoose";
 import {
   InitialUserOperationDataType,
   FinalUserOperationDataType,
@@ -73,7 +74,7 @@ export class UserOperationDAO implements IUserOperationDAO {
   async getUserOpsByTransactionId(
     chainId: number,
     transactionId: string,
-  ): Promise<IUserOperation[]> {
+  ): Promise<LeanDocument<IUserOperation>[]> {
     const data = await this._db
       .getUserOperation(chainId)
       .find({

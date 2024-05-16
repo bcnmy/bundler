@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { config } from "../../../../../config";
+import { config } from "../../../../config";
 import { IUserOperationState } from "../../interface";
 import { UserOperationStateSchema } from "./schema";
 
@@ -13,6 +13,7 @@ const UserOperationsStateMap: UserOperationsStateMapType = {};
 
 for (const networkId of supportedNetworks) {
   const collectionName = `UserOperations_State_${networkId}`;
+  // @ts-ignore
   UserOperationsStateMap[networkId] = mongoose.model(
     collectionName,
     UserOperationStateSchema,

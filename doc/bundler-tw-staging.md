@@ -229,23 +229,6 @@ To test connections
 kubectl run -i --tty --rm debugmongo --image=mongo --restart=Never --namespace=bundler-tw-staging -- bash
 mongosh mongodb://mongo.bundler-tw-staging.svc.cluster.local:27017/relayer-node-service -u userone -p useronepassword
 
-####### Deploying centrifugo to bundler-tw-staging  #######
-Release "centrifugo" does not exist. Installing it now.
-W0120 19:41:09.094580   31734 warnings.go:70] autopilot-default-resources-mutator:Autopilot updated Deployment bundler-tw-staging/centrifugo: adjusted resources to meet requirements for containers [centrifugo] (see http://g.co/gke/autopilot-resources)
-NAME: centrifugo
-LAST DEPLOYED: Sat Jan 20 19:41:02 2024
-NAMESPACE: bundler-tw-staging
-STATUS: deployed
-REVISION: 1
-TEST SUITE: None
-NOTES:
-1. Get the application URL by running these commands:
-  export POD_NAME=$(kubectl get pods --namespace bundler-tw-staging -l "app.kubernetes.io/name=centrifugo,app.kubernetes.io/instance=centrifugo" -o jsonpath="{.items[0].metadata.name}")
-  kubectl --namespace bundler-tw-staging port-forward $POD_NAME 8000:8000
-
-
- ####### Deployed centrifugo to bundler-tw-staging #######
-
 staging-trust-wallet-chains.sh
 bundler-tw-staging.biconomy.io
 staging-trust-wallet-chains.sh

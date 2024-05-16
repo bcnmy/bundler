@@ -1,4 +1,4 @@
-import { IUserOperation } from "../mongo/interface";
+import { IUserOperation } from "../mongo";
 
 export type InitialUserOperationDataType = {
   transactionId: string;
@@ -55,18 +55,4 @@ export interface IUserOperationDAO {
     chainId: number,
     transactionId: string,
   ): Promise<IUserOperation[]>;
-  getUserOperationsDataByApiKey(
-    chainId: number,
-    bundlerApiKey: string,
-    startTime: number,
-    endTime: number,
-    limit: number,
-    offSet: number,
-  ): Promise<Array<IUserOperation>>;
-  getUserOperationsCountByApiKey(
-    chainId: number,
-    bundlerApiKey: string,
-    startTime: number,
-    endTime: number,
-  ): Promise<number>;
 }

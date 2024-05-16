@@ -48,13 +48,10 @@ source "$DIR/$CONFIG_FILE"
 # IP_NAME
 # CHAINS_CFG_FILENAME
 # CONTEXT
-# SIMULATION_DATA_JSON
 # TOKEN_PRICE_JSON
 # SLACK_JSON
 # PROVIDER_JSON
 # DATASOURCES_JSON
-# SOCKET_SERVICE_JSON
-# QUEUE_URL
 
 # Check if the current context matches the one you're looking for
 if [[ "$CURRENT_CONTEXT" == "$CONTEXT" ]]; then
@@ -151,9 +148,6 @@ RABBITMQ_REPLICA_COUNT=3
 sh install-rabbitmq/install.sh "${NAMESPACE}" "${RABBITMQ_REPLICA_COUNT}"
 
 sh install-mongo/install.sh "${NAMESPACE}"
-
-CENTRIFUGO_REPLICA_COUNT=3
-sh install-centrifugo/install.sh "${NAMESPACE}" "${CENTRIFUGO_REPLICA_COUNT}"
 
 # sh install-prometheus/install.sh
 # bash install-prometheus-adapter/install.sh $ENV $NAMESPACE "$CHAINS_CFG_FILENAME"
