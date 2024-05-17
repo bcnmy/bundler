@@ -90,7 +90,7 @@ spec:
             path: /admin/startup
             port: {{ .Values.relayer.port }}
           failureThreshold: 30
-          periodSeconds: 300
+          periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /health
