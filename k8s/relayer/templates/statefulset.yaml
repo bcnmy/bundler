@@ -89,7 +89,7 @@ spec:
           httpGet:
             path: /admin/startup
             port: {{ .Values.relayer.port }}
-          failureThreshold: 60
+          failureThreshold: {{ .Values.startupProbe.failureThreshold }}
           successThreshold: 1
           periodSeconds: 10
         readinessProbe:

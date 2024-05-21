@@ -39,6 +39,10 @@ affinity_tolerations:
   key: "app"
   values: "monitoring"
 
+# wait for 120 * 10s to fail
+startupProbe:
+  failureThreshold: 120
+
 datadog:
   enable: true
   env: "production"
