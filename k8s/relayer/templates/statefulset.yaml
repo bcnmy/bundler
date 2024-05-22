@@ -87,10 +87,11 @@ spec:
         # allow in to total failureThreshold(30) * periodSeconds(10) = 300 seconds
         startupProbe:
           httpGet:
-            path: /health
+            path: /admin/startup
             port: {{ .Values.relayer.port }}
-          failureThreshold: 30
-          periodSeconds: 300
+          failureThreshold: {{ .Values.startupProbe.failureThreshold }}
+          successThreshold: 1
+          periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /health

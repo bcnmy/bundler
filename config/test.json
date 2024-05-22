@@ -1,5 +1,5 @@
 {
-  "supportedNetworks": [80001],
+  "supportedNetworks": [137],
   "relayer": {
     "nodePathIndex": 0
   },
@@ -8,12 +8,6 @@
   },
   "chains": {
     "providers": {
-      "80001": [
-        {
-          "url": "https://thislinkdoesnotexist.rs",
-          "type": "private"
-        }
-      ],
       "1": [
         {
           "url": "https://thislinkdoesnotexist.rs",
@@ -21,6 +15,12 @@
         }
       ],
       "10": [
+        {
+          "url": "https://thislinkdoesnotexist.rs",
+          "type": "private"
+        }
+      ],
+      "137": [
         {
           "url": "https://thislinkdoesnotexist.rs",
           "type": "private"
