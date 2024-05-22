@@ -134,6 +134,14 @@ spec:
           failureThreshold: 40
           periodSeconds: 10
 
+        startupProbe:
+          httpGet:
+            path: /admin/startup
+            port: {{ .Values.port }}
+          failureThreshold: {{ .Values.startupProbe.failureThreshold }}
+          successThreshold: 1
+          periodSeconds: 10
+
         livenessProbe:
           httpGet:
             path: /health

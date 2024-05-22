@@ -17,6 +17,10 @@ resources:
     memory: "2500Mi"
     cpu: "2500m"
 
+# wait for 120 * 10s to fail
+startupProbe:
+  failureThreshold: 120
+
 # secret:
 #   projectID: biconomy-test
 #   key: bundlers

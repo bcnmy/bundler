@@ -169,7 +169,7 @@ for array_name in $array_names; do
     helm upgrade --install "${HELM_RELEASE}-${CHAIN_ID}" "$DIR/."  \
         --wait \
         --timeout 600s \
-        --values "$DIR/values.yaml" \
+        --values "$DIR/values.$environment.yaml" \
         --namespace "$NAMESPACE" \
         --set nameOverride="$NAME" \
         --set env="$ENV" \
