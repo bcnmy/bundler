@@ -3,6 +3,6 @@ declare -A chain_optimism=(
   [chainId]="10"
   [autoScalingThreshholdHTTPRequestsPerMinute]=1000
   [autoScalingThreshholdCPU]=800m
-  [minReplica]=3
-  [maxReplica]=3
+  [minReplica]=1
+  [maxReplica]=2
 )
