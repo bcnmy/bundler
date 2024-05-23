@@ -5,7 +5,7 @@ import { IRelayerManager } from "../../relayer/relayer-manager";
 import { ICacheService } from "../cache";
 import { IDBService } from "../db";
 import { EVMNetworkService } from "../network";
-import { ChainStatus, EVMRawTransactionType } from "../types";
+import { ChainStatus, EVMRawTransactionType, StatusInfo } from "../types";
 import { customJSONStringify } from "../utils";
 import { IStatusService } from "./interface/IStatusService";
 import { logger } from "../logger";
@@ -253,5 +253,39 @@ export class StatusService implements IStatusService {
         throw new Error("Not connected to the database");
       }
     });
+  }
+
+  // info returns some basic information about the service.
+  // Currently it returns just info about the relayers, but it can easily be extended to return other data also.
+  // TODO: Ideas for stuff to add to the info response:
+  // - master account address and balance
+  // - relayer queues sizes
+  // - bundler version information (we need to fetch this from git somehow)
+  // - RPC provider information (without leaking keys, basically just the provider name)
+  async info(): Promise<StatusInfo> {
+    const statusInfo: StatusInfo = {};
+
+    // eslint-disable-next-line @typescript-eslint/dot-notation
+    const relayerManagers = this.evmRelayerManagerMap["RM1"];
+    if (!relayerManagers) {
+      throw new Error(`Relayers are temporarily unavailable`);
+    }
+
+    for (const [chainId, relayerManager] of Object.entries(relayerManagers)) {
+      const chainIdInt = parseInt(chainId, 10);
+      statusInfo[chainIdInt] = {
+        relayers: [],
+      };
+
+      for (const address of Object.keys(relayerManager.relayerMap)) {
+        const relayer =
+          relayerManager.relayerQueue.get(address) ||
+          relayerManager.transactionProcessingRelayerMap[address];
+
+        statusInfo[chainIdInt].relayers.push(relayer);
+      }
+    }
+
+    return statusInfo;
   }
 }

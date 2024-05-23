@@ -276,3 +276,14 @@ export type ChainStatus = {
   errors: string[];
   latencies?: any;
 };
+
+export type EVMRelayerMetaDataType = {
+  address: string;
+  nonce: number;
+  pendingCount: number;
+  balance: number;
+};
+
+export type StatusInfo = {
+  [chainId: number]: { relayers: Array<EVMRelayerMetaDataType> };
+};

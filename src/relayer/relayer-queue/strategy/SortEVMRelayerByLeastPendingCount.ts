@@ -1,4 +1,4 @@
-import { EVMRelayerMetaDataType } from "../types";
+import { EVMRelayerMetaDataType } from "../../../common/types";
 
 export class SortEVMRelayerByLeastPendingCount {
   static performAlgorithm(
