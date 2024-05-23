@@ -40,6 +40,9 @@ secret_plain:
 ingress:
   host: sdk-relayer.staging.biconomy.io
 
+# wait for 60 * 10s to fail
+startupProbe:
+  failureThreshold: 60
   
 datadog:
   enable: true
