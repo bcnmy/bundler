@@ -137,6 +137,10 @@ export class EVMNetworkService
     return block.baseFeePerGas;
   }
 
+  async getChainId(): Promise<number> {
+    return this.provider.getChainId();
+  }
+
   async getLegacyGasPrice(): Promise<Type0TransactionGasPriceType> {
     return BigInt(await this.sendRpcCall(EthMethodType.GAS_PRICE, []));
   }

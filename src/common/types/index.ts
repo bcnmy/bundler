@@ -260,7 +260,6 @@ export type EntryPointContractType = GetContractReturnType<
   typeof ENTRY_POINT_ABI
 >;
 
-
 export type StateOverrideSetType = {
   [key: string]: {
     balance?: Hex;
@@ -269,4 +268,11 @@ export type StateOverrideSetType = {
     state?: object;
     stateDiff?: object;
   };
+};
+
+export type ChainStatus = {
+  chainId: number;
+  healthy: boolean;
+  errors: string[];
+  latencies?: any;
 };

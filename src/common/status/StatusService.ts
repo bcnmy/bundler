@@ -1,19 +1,48 @@
-import { config } from "../../config";
+/* eslint-disable import/no-import-module-exports */
+import { parseEther } from "viem/utils";
 import { IEVMAccount } from "../../relayer/account";
 import { IRelayerManager } from "../../relayer/relayer-manager";
 import { ICacheService } from "../cache";
 import { IDBService } from "../db";
 import { EVMNetworkService } from "../network";
-import { EVMRawTransactionType } from "../types";
-import { getTokenPriceKey } from "../utils";
+import { ChainStatus, EVMRawTransactionType } from "../types";
+import { customJSONStringify } from "../utils";
 import { IStatusService } from "./interface/IStatusService";
-import {
-  MongoStatusResponseType,
-  NetworkServiceStatusResponseType,
-  RedisStatusResponseType,
-  StatusServiceParamsType,
-  TokenPriceStatusResponseType,
-} from "./types";
+import { logger } from "../logger";
+import { StatusServiceParamsType } from "./types";
+import { GasPriceService } from "../gas-price";
+import { BundlerSimulationService } from "../simulation";
+import { formatHrtimeSeconds } from "../utils/formatting";
+
+const filenameLogger = logger.child({
+  module: module.filename.split("/").slice(-4).join("/"),
+});
+
+type StatusCheckResult = {
+  errors: string[];
+  durationSeconds: number;
+};
+
+// statusCheck is a helper function that runs a check function and returns the result,
+//  measuring the time it took to run the check.
+async function statusCheck(
+  checkFunc: () => Promise<void>,
+): Promise<StatusCheckResult> {
+  const errors: string[] = [];
+  const start = process.hrtime();
+
+  try {
+    await checkFunc();
+  } catch (err: any) {
+    errors.push(err.message);
+  }
+
+  const end = process.hrtime(start);
+  return {
+    errors,
+    durationSeconds: formatHrtimeSeconds(end),
+  };
+}
 
 export class StatusService implements IStatusService {
   cacheService: ICacheService;
@@ -28,152 +57,201 @@ export class StatusService implements IStatusService {
     };
   } = {};
 
+  gasPriceServiceMap: {
+    [chainId: number]: GasPriceService;
+  };
+
+  bundlerSimulationServiceMap: {
+    [chainId: number]: BundlerSimulationService;
+  };
+
   constructor(params: StatusServiceParamsType) {
     const {
       cacheService,
       networkServiceMap,
       evmRelayerManagerMap,
       dbInstance,
+      gasPriceServiceMap,
+      bundlerSimulationServiceMap,
     } = params;
     this.cacheService = cacheService;
     this.networkServiceMap = networkServiceMap;
     this.evmRelayerManagerMap = evmRelayerManagerMap;
     this.dbInstance = dbInstance;
+    this.gasPriceServiceMap = gasPriceServiceMap;
+    this.bundlerSimulationServiceMap = bundlerSimulationServiceMap;
   }
 
-  async checkRedis(): Promise<RedisStatusResponseType> {
+  // checkChain is a function that checks the health of a specific chain.
+  // It checks the health of the individual components that are required to estimate gas & relay transactions
+  async checkChain(chainId: number): Promise<ChainStatus> {
+    let healthy = true;
+    let errors: string[] = [];
+    const latencies: any = {};
+
+    const log = filenameLogger.child({
+      chainId,
+    });
+
+    const start = process.hrtime();
+
+    // 💡 This could be parallelized with Promise.all, but I decided not to do it.
+    // We are doing a lot of calls like this one in our regular user flows (e.g. eth_estimateUserOperationGas, eth_sendUserOperation)
+    // without much parallelization, so I want this check to behave similarly so we can spot latency issues
     try {
-      await this.cacheService.set("health", "ok");
-      const result = await this.cacheService.get("health");
-      return {
-        active: result === "ok",
-        lastUpdated: new Date().toISOString(),
-      };
-    } catch (error) {
-      return {
-        active: false,
-        lastUpdated: new Date().toISOString(),
-      };
+      const redisHealth = await this.checkRedis();
+      errors = errors.concat(redisHealth.errors);
+      latencies.redis = redisHealth.durationSeconds;
+
+      const rpcHealth = await this.checkRPC(chainId);
+      errors = errors.concat(rpcHealth.errors);
+      latencies.rpc = rpcHealth.durationSeconds;
+
+      const gasPriceHealth = await this.checkGasPrice(chainId);
+      errors = errors.concat(gasPriceHealth.errors);
+      latencies.gasPrice = gasPriceHealth.durationSeconds;
+
+      const simulatorHealth = await this.checkSimulator(chainId);
+      errors = errors.concat(simulatorHealth.errors);
+      latencies.simulator = simulatorHealth.durationSeconds;
+
+      const relayersHealth = await this.checkRelayers(chainId);
+      errors = errors.concat(relayersHealth.errors);
+      latencies.relayers = relayersHealth.durationSeconds;
+    } catch (err: any) {
+      log.error(`Error in checkChain: ${customJSONStringify(err)}`);
+      healthy = false;
+      errors.push(err.message);
     }
+
+    latencies.total = formatHrtimeSeconds(process.hrtime(start));
+
+    return {
+      chainId,
+      healthy,
+      errors,
+      latencies,
+    };
   }
 
-  async checkMongo(): Promise<MongoStatusResponseType> {
-    try {
-      return {
-        active: this.dbInstance.isConnected(),
-        lastUpdated: new Date().toISOString(),
-      };
-    } catch (error) {
-      return {
-        active: false,
-        lastUpdated: new Date().toISOString(),
-      };
-    }
+  // checkRPC checks if the RPC connection for this chain is healthy and if it's connected to the right chain
+  async checkRPC(chainId: number): Promise<StatusCheckResult> {
+    return statusCheck(async () => {
+      const networkService = this.networkServiceMap[chainId];
+      if (!networkService) {
+        throw new Error("RPC connection temporarily unavailable");
+      }
+
+      const networkChainId = await networkService.getChainId();
+      if (networkChainId !== chainId) {
+        throw new Error(
+          `Bad RPC connection: chainId mismatch. Expected ${chainId}, got ${networkChainId}`,
+        );
+      }
+    });
   }
 
-  async checkRelayerManager(): Promise<any> {
-    // iterate over the 2d keys of relayer manager map of name and chain id
-    // for each key, check if the relayer manager is active by making a call to the network
-    // return the result
-    const relayerManagerStatus: any = {};
-    const relayerManagerNameKeys: string[] = Object.keys(
-      this.evmRelayerManagerMap,
-    );
-    for (const relayerManagerNameKey of relayerManagerNameKeys) {
-      relayerManagerStatus[relayerManagerNameKey] = {};
-      const chainIdKeys: string[] = Object.keys(
-        this.evmRelayerManagerMap[relayerManagerNameKey],
-      );
-      for (const chainIdKey of chainIdKeys) {
-        const chainId = parseInt(chainIdKey, 10);
-        relayerManagerStatus[relayerManagerNameKey][chainId] = [];
-        const relayerManager =
-          this.evmRelayerManagerMap[relayerManagerNameKey][chainId];
-        // get list of relayers from relayer manager
-        const relayerAddresses = Object.keys(relayerManager.relayerMap);
-        // iterate over the list of relayers
-        for (const relayerAddress of relayerAddresses) {
-          const relayerDetails =
-            relayerManager.relayerQueue.get(relayerAddress);
-          if (relayerDetails) {
-            // eslint-disable-next-line no-await-in-loop
-            relayerManagerStatus[relayerManagerNameKey][chainId].push({
-              address: relayerAddress,
-              balance: relayerDetails.balance,
-              nonce: relayerDetails.nonce,
-              status: "active",
-              lastUpdated: new Date().toISOString(),
-            });
-          } else if (
-            relayerManager.transactionProcessingRelayerMap[relayerAddress]
-          ) {
-            // eslint-disable-next-line no-await-in-loop
-            relayerManagerStatus[relayerManagerNameKey][chainId].push({
-              address: relayerAddress,
-              // convert hex to decimal
-              balance:
-                relayerManager.transactionProcessingRelayerMap[relayerAddress]
-                  .balance,
-              nonce:
-                relayerManager.transactionProcessingRelayerMap[relayerAddress]
-                  .nonce,
-              status: "processing",
-              lastUpdated: new Date().toISOString(),
-            });
-          }
+  // checkGasPrice checks if we have cached the gas price for this chain
+  async checkGasPrice(chainId: number): Promise<StatusCheckResult> {
+    return statusCheck(async () => {
+      const gasPriceService = this.gasPriceServiceMap[chainId];
+      if (!gasPriceService) {
+        throw new Error(
+          `Gas price is temporarily unavailable for chainId: ${chainId}`,
+        );
+      }
+
+      const gasPrice = await gasPriceService.getGasPrice();
+      if (typeof gasPrice !== "bigint") {
+        if (!gasPrice.maxFeePerGas) {
+          throw new Error(
+            `Could not fetch maxFeePerGas for chainId: ${chainId}`,
+          );
+        }
+
+        if (!gasPrice.maxPriorityFeePerGas) {
+          throw new Error(
+            `Could not fetch maxPriorityFeePerGas for chainId: ${chainId}`,
+          );
+        }
+      } else if (!gasPrice) {
+        throw new Error(`Could not fetch gasPrice for chainId: ${chainId}`);
+      }
+    });
+  }
+
+  // checkRelayers (tries to) check if the relayers can actually relay transactions
+  async checkRelayers(chainId: number): Promise<StatusCheckResult> {
+    return statusCheck(async () => {
+      // eslint-disable-next-line @typescript-eslint/dot-notation
+      const relayerManager = this.evmRelayerManagerMap["RM1"][chainId];
+      if (!relayerManager) {
+        throw new Error(
+          `Relayers are temporarily unavailable for chainId: ${chainId}`,
+        );
+      }
+
+      // A basic sanity check: this will be 0 if and only if it was never funded.
+      // Even if it was funded and then drained, the balance will be non-zero.
+      const masterAccount = relayerManager.ownerAccountDetails.getPublicKey();
+      const masterAccountBalance =
+        await this.networkServiceMap[chainId].getBalance(masterAccount);
+
+      if (masterAccountBalance === 0n) {
+        throw new Error(`Relayer for chainId: ${chainId} is not funded`);
+      }
+
+      // The following checks if the relayers are low on balance and returns an error only if the master account is also low on balance
+      for (const address of Object.keys(relayerManager.relayerMap)) {
+        const relayer =
+          relayerManager.relayerQueue.get(address) ||
+          relayerManager.transactionProcessingRelayerMap[address];
+
+        // this value is in ETH and we need to convert it to wei.
+        // This is confusing because the fundingBalanceThreshold is already parsed to wei
+        const fundingRelayerAmount = parseEther(
+          relayerManager.fundingRelayerAmount.toString(),
+        );
+
+        if (
+          relayer.balance < relayerManager.fundingBalanceThreshold &&
+          masterAccountBalance < fundingRelayerAmount
+        ) {
+          throw new Error(`Relayers for chainId: ${chainId} have low balance`);
         }
       }
-    }
-    return relayerManagerStatus;
+    });
   }
 
-  async checkNetworkService(): Promise<NetworkServiceStatusResponseType> {
-    // iterate over the keys of network service map
-    // for each key, check if the network service is active by making a call to the network
-    // return the result
-    const networkServiceStatus: NetworkServiceStatusResponseType = {};
-    const networkIdKeys: string[] = Object.keys(this.networkServiceMap);
-    for (const networkIdKey of networkIdKeys) {
-      const networkId = parseInt(networkIdKey, 10);
-      const networkService = this.networkServiceMap[networkId];
-      try {
-        // eslint-disable-next-line no-await-in-loop
-        await networkService.getBalance(config.zeroAddress);
-        networkServiceStatus[networkId] = {
-          active: true,
-          lastUpdated: new Date().toISOString(),
-        };
-      } catch (error) {
-        networkServiceStatus[networkId] = {
-          active: false,
-          lastUpdated: new Date().toISOString(),
-        };
+  // checkSimulator checks if the simulation service is available for this chain
+  async checkSimulator(chainId: number): Promise<StatusCheckResult> {
+    return statusCheck(async () => {
+      const simulator = this.bundlerSimulationServiceMap[chainId];
+      if (!simulator) {
+        throw new Error(
+          `Simulation service temporarily unavailable for chainId: ${chainId}`,
+        );
       }
-    }
-    return networkServiceStatus;
+    });
   }
 
-  async checkTokenPrice(): Promise<TokenPriceStatusResponseType> {
-    try {
-      const result = await this.cacheService.get(getTokenPriceKey());
-      if (result !== null) {
-        return {
-          active: true,
-          data: {
-            tokenPrice: JSON.parse(result),
-          },
-          lastUpdated: new Date().toISOString(),
-        };
+  // checkRedis checks if we can set & get from the cache
+  async checkRedis(): Promise<StatusCheckResult> {
+    return statusCheck(async () => {
+      await this.cacheService.set("health", "ok");
+      const result = await this.cacheService.get("health");
+      if (result !== "ok") {
+        throw new Error("Redis is not working as expected");
       }
-      return {
-        active: false,
-        lastUpdated: new Date().toISOString(),
-      };
-    } catch (error) {
-      return {
-        active: false,
-        lastUpdated: new Date().toISOString(),
-      };
-    }
+    });
+  }
+
+  // checkMongo checks if we are connected to the database
+  async checkMongo(): Promise<StatusCheckResult> {
+    return statusCheck(async () => {
+      if (!this.dbInstance.isConnected()) {
+        throw new Error("Not connected to the database");
+      }
+    });
   }
 }

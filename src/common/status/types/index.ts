@@ -2,7 +2,9 @@ import { IEVMAccount } from "../../../relayer/account";
 import { IRelayerManager } from "../../../relayer/relayer-manager";
 import { ICacheService } from "../../cache";
 import { IDBService } from "../../db";
+import { GasPriceService } from "../../gas-price";
 import { EVMNetworkService } from "../../network";
+import { BundlerSimulationService } from "../../simulation";
 import { EVMRawTransactionType } from "../../types";
 
 export type StatusServiceParamsType = {
@@ -14,6 +16,12 @@ export type StatusServiceParamsType = {
     };
   };
   dbInstance: IDBService;
+  gasPriceServiceMap: {
+    [chainId: number]: GasPriceService;
+  };
+  bundlerSimulationServiceMap: {
+    [chainId: number]: BundlerSimulationService;
+  };
 };
 
 export type RedisStatusResponseType = {

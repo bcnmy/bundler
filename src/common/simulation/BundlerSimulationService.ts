@@ -672,7 +672,7 @@ export class BundlerSimulationService {
 
     log.info(
       `maxPriorityFeePerGasThresholdPercentage: ${maxPriorityFeePerGasThresholdPercentage}
-       maxFeePerGasThresholdPercentage: ${maxFeePerGasThresholdPercentage} 
+       maxFeePerGasThresholdPercentage: ${maxFeePerGasThresholdPercentage}
        preVerificationGasThresholdPercentage: ${preVerificationGasThresholdPercentage}`,
     );
 
