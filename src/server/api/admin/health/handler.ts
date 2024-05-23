@@ -30,9 +30,17 @@ export const health = async (req: Request, res: Response) => {
       });
     }
 
-    const chainStatus = await statusService.checkChain(parseInt(chainId, 10));
+    // if chainId is provided, return the health of a specific chain
+    if (chainId) {
+      const chainStatus = await statusService.checkChain(parseInt(chainId, 10));
+      return res.status(chainStatus.healthy ? 200 : 500).json(chainStatus);
+    }
 
-    return res.status(chainStatus.healthy ? 200 : 500).json(chainStatus);
+    // otherwise, return the health of all chains
+    const chainStatuses = await statusService.checkAllChains();
+    return res
+      .status(chainStatuses.every((cs) => cs.healthy) ? 200 : 500)
+      .json(chainStatuses);
   } catch (err: any) {
     log.error(`Error in /health/:chainId handler: ${customJSONStringify(err)}`);
     return res.status(500).json({

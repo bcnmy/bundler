@@ -39,7 +39,7 @@ export const validateChainId =
       const supportedNetworks = config.get<Array<number>>("supportedNetworks");
       const chainId = parseInt(req.params.chainId, 10);
 
-      if (!supportedNetworks.includes(chainId)) {
+      if (chainId && !supportedNetworks.includes(chainId)) {
         return res
           .status(STATUSES.BAD_REQUEST)
           .json(

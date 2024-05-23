@@ -1,4 +1,5 @@
 /* eslint-disable import/no-import-module-exports */
+import nodeconfig from "config";
 import { parseEther } from "viem/utils";
 import { IEVMAccount } from "../../relayer/account";
 import { IRelayerManager } from "../../relayer/relayer-manager";
@@ -82,6 +83,16 @@ export class StatusService implements IStatusService {
     this.bundlerSimulationServiceMap = bundlerSimulationServiceMap;
   }
 
+  async checkAllChains(): Promise<ChainStatus[]> {
+    const supportedNetworks = nodeconfig.get<number[]>("supportedNetworks");
+
+    const promises = supportedNetworks.map((chainId) =>
+      this.checkChain(chainId),
+    );
+
+    return Promise.all(promises);
+  }
+
   // checkChain is a function that checks the health of a specific chain.
   // It checks the health of the individual components that are required to estimate gas & relay transactions
   async checkChain(chainId: number): Promise<ChainStatus> {
@@ -95,29 +106,83 @@ export class StatusService implements IStatusService {
 
     const start = process.hrtime();
 
-    // 💡 This could be parallelized with Promise.all, but I decided not to do it.
-    // We are doing a lot of calls like this one in our regular user flows (e.g. eth_estimateUserOperationGas, eth_sendUserOperation)
-    // without much parallelization, so I want this check to behave similarly so we can spot latency issues
+    // Run all checks in parallel with Promise.all
     try {
-      const redisHealth = await this.checkRedis();
-      errors = errors.concat(redisHealth.errors);
-      latencies.redis = redisHealth.durationSeconds;
+      const promises = [];
 
-      const rpcHealth = await this.checkRPC(chainId);
-      errors = errors.concat(rpcHealth.errors);
-      latencies.rpc = rpcHealth.durationSeconds;
+      promises.push(
+        new Promise((resolve, reject) => {
+          this.checkRedis()
+            .then((res) => {
+              errors = errors.concat(res.errors);
+              latencies.redis = res.durationSeconds;
+              resolve(res);
+            })
+            .catch((err) => reject(err));
+        }),
+      );
 
-      const gasPriceHealth = await this.checkGasPrice(chainId);
-      errors = errors.concat(gasPriceHealth.errors);
-      latencies.gasPrice = gasPriceHealth.durationSeconds;
+      promises.push(
+        new Promise((resolve, reject) => {
+          this.checkMongo()
+            .then((res) => {
+              errors = errors.concat(res.errors);
+              latencies.mongo = res.durationSeconds;
+              resolve(res);
+            })
+            .catch((err) => reject(err));
+        }),
+      );
 
-      const simulatorHealth = await this.checkSimulator(chainId);
-      errors = errors.concat(simulatorHealth.errors);
-      latencies.simulator = simulatorHealth.durationSeconds;
+      promises.push(
+        new Promise((resolve, reject) => {
+          this.checkRPC(chainId)
+            .then((res) => {
+              errors = errors.concat(res.errors);
+              latencies.rpc = res.durationSeconds;
+              resolve(res);
+            })
+            .catch((err) => reject(err));
+        }),
+      );
 
-      const relayersHealth = await this.checkRelayers(chainId);
-      errors = errors.concat(relayersHealth.errors);
-      latencies.relayers = relayersHealth.durationSeconds;
+      promises.push(
+        new Promise((resolve, reject) => {
+          this.checkGasPrice(chainId)
+            .then((res) => {
+              errors = errors.concat(res.errors);
+              latencies.gasPrice = res.durationSeconds;
+              resolve(res);
+            })
+            .catch((err) => reject(err));
+        }),
+      );
+
+      promises.push(
+        new Promise((resolve, reject) => {
+          this.checkSimulator(chainId)
+            .then((res) => {
+              errors = errors.concat(res.errors);
+              latencies.simulator = res.durationSeconds;
+              resolve(res);
+            })
+            .catch((err) => reject(err));
+        }),
+      );
+
+      promises.push(
+        new Promise((resolve, reject) => {
+          this.checkRelayers(chainId)
+            .then((res) => {
+              errors = errors.concat(res.errors);
+              latencies.relayers = res.durationSeconds;
+              resolve(res);
+            })
+            .catch((err) => reject(err));
+        }),
+      );
+
+      await Promise.all(promises);
     } catch (err: any) {
       log.error(`Error in checkChain: ${customJSONStringify(err)}`);
       healthy = false;
