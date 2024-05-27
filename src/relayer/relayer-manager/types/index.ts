@@ -2,10 +2,13 @@ import { ICacheService } from "../../../common/cache";
 import { IGasPriceService } from "../../../common/gas-price";
 import { INetworkService } from "../../../common/network";
 import { INotificationManager } from "../../../common/notification/interface";
-import { EVMRawTransactionType } from "../../../common/types";
+import {
+  EVMRawTransactionType,
+  EVMRelayerMetaDataType,
+} from "../../../common/types";
 import { IEVMAccount } from "../../account";
 import { INonceManager } from "../../nonce-manager";
-import { EVMRelayerMetaDataType, IRelayerQueue } from "../../relayer-queue";
+import { IRelayerQueue } from "../../relayer-queue";
 import { ITransactionService } from "../../transaction-service";
 
 export type EVMRelayerManagerServiceParamsType = {
