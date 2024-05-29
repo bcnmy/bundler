@@ -836,11 +836,25 @@ export class EVMTransactionListener
                   )}`,
                 );
               } else {
-                frontRunnedTransactionFee = Number(
-                  frontRunnedTransactionReceipt.gasUsed.mul(
-                    frontRunnedTransactionReceipt.effectiveGasPrice,
-                  ),
-                );
+                frontRunnedTransactionFee = 0;
+                try {
+                  frontRunnedTransactionFee = Number(
+                    frontRunnedTransactionReceipt.gasUsed *
+                      frontRunnedTransactionReceipt.effectiveGasPrice,
+                  );
+                } catch (err) {
+                  log.error(
+                    `Error in calculating front ran transaction fee, defaulting to ${frontRunnedTransactionFee}`,
+                    {
+                      transactionId,
+                      chainId: this.chainId,
+                      gasUsed: frontRunnedTransactionReceipt.gasUsed,
+                      effectiveGasPrice:
+                        frontRunnedTransactionReceipt.effectiveGasPrice,
+                    },
+                  );
+                }
+
                 frontRunnedTransactionFeeCurrency =
                   config.chains.currency[this.chainId];
                 const coinsRateObj =
@@ -1139,4 +1153,17 @@ export class EVMTransactionListener
       return "Unable to parse transaction failure reason, please check transaction hash on explorer";
     }
   }
+}
+
+export function calculateFrontRunnedTransactionFee(
+  frontRunnedTransactionReceipt: any,
+) {
+  // Cast to BigInt in case the returned value is a number
+  // If it's already a BigInt, it will remain the same
+  const gasUsed = BigInt(frontRunnedTransactionReceipt.gasUsed);
+  const effectiveGasPrice = BigInt(
+    frontRunnedTransactionReceipt.effectiveGasPrice,
+  );
+
+  return gasUsed * effectiveGasPrice;
 }
