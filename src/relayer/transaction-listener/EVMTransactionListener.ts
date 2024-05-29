@@ -1154,16 +1154,3 @@ export class EVMTransactionListener
     }
   }
 }
-
-export function calculateFrontRunnedTransactionFee(
-  frontRunnedTransactionReceipt: any,
-) {
-  // Cast to BigInt in case the returned value is a number
-  // If it's already a BigInt, it will remain the same
-  const gasUsed = BigInt(frontRunnedTransactionReceipt.gasUsed);
-  const effectiveGasPrice = BigInt(
-    frontRunnedTransactionReceipt.effectiveGasPrice,
-  );
-
-  return gasUsed * effectiveGasPrice;
-}
