@@ -1,6 +1,7 @@
 /* eslint-disable import/no-import-module-exports */
 /* eslint-disable no-case-declarations */
 import { NextFunction, Request, Response } from "express";
+import config from "config";
 import { logger } from "../../../../common/logger";
 import {
   EthMethodType,
@@ -24,10 +25,44 @@ import {
   STATUSES,
 } from "../../shared/middleware/RequestHelpers";
 import { parseError } from "../../../../common/utils";
+import { RPCErrorResponse } from "./response";
+import { ChainIdNotSupportedError } from "./errors";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
 });
+
+// validateChainId middleware checks if the chainId provided in the request is supported by this bundler
+export const validateChainId =
+  () => async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const supportedNetworks = config.get<Array<number>>("supportedNetworks");
+      const chainId = parseInt(req.params.chainId, 10);
+
+      if (chainId && !supportedNetworks.includes(chainId)) {
+        return res
+          .status(STATUSES.BAD_REQUEST)
+          .json(
+            new RPCErrorResponse(
+              new ChainIdNotSupportedError(req.params.chainId),
+              0,
+            ),
+          );
+      }
+    } catch (err: any) {
+      log.error(`Error in validateChainId: ${parseError(err)}`);
+      return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
+        jsonrpc: "2.0",
+        id: 0,
+        error: {
+          code: STATUSES.INTERNAL_SERVER_ERROR,
+          message: parseError(err),
+        },
+      });
+    }
+
+    return next();
+  };
 
 export const validateBundlerRequest =
   () => async (req: Request, res: Response, next: NextFunction) => {

@@ -14,7 +14,11 @@ import { logger } from "../../common/logger";
 import { INetworkService } from "../../common/network";
 import { getPendingTransactionIncreasingMessage } from "../../common/notification";
 import { INotificationManager } from "../../common/notification/interface";
-import { EVMRawTransactionType, TransactionType } from "../../common/types";
+import {
+  EVMRawTransactionType,
+  EVMRelayerMetaDataType,
+  TransactionType,
+} from "../../common/types";
 import {
   customJSONStringify,
   generateTransactionId,
@@ -24,7 +28,7 @@ import {
 import { config } from "../../config";
 import { EVMAccount, IEVMAccount } from "../account";
 import { INonceManager } from "../nonce-manager";
-import { EVMRelayerMetaDataType, IRelayerQueue } from "../relayer-queue";
+import { IRelayerQueue } from "../relayer-queue";
 import { ITransactionService } from "../transaction-service/interface/ITransactionService";
 import { IRelayerManager } from "./interface/IRelayerManager";
 import { EVMRelayerManagerServiceParamsType } from "./types";
