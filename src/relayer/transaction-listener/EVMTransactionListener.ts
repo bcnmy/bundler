@@ -836,11 +836,25 @@ export class EVMTransactionListener
                   )}`,
                 );
               } else {
-                frontRunnedTransactionFee = Number(
-                  frontRunnedTransactionReceipt.gasUsed.mul(
-                    frontRunnedTransactionReceipt.effectiveGasPrice,
-                  ),
-                );
+                frontRunnedTransactionFee = 0;
+                try {
+                  frontRunnedTransactionFee = Number(
+                    frontRunnedTransactionReceipt.gasUsed *
+                      frontRunnedTransactionReceipt.effectiveGasPrice,
+                  );
+                } catch (err) {
+                  log.error(
+                    `Error in calculating front ran transaction fee, defaulting to ${frontRunnedTransactionFee}`,
+                    {
+                      transactionId,
+                      chainId: this.chainId,
+                      gasUsed: frontRunnedTransactionReceipt.gasUsed,
+                      effectiveGasPrice:
+                        frontRunnedTransactionReceipt.effectiveGasPrice,
+                    },
+                  );
+                }
+
                 frontRunnedTransactionFeeCurrency =
                   config.chains.currency[this.chainId];
                 const coinsRateObj =
