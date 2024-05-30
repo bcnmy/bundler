@@ -190,6 +190,7 @@ export class StatusService implements IStatusService {
     }
 
     latencies.total = formatHrtimeSeconds(process.hrtime(start));
+    healthy = errors.length === 0;
 
     return {
       chainId,
