@@ -233,12 +233,6 @@ export class StatusService implements IStatusService {
             `Could not fetch maxFeePerGas for chainId: ${chainId}`,
           );
         }
-
-        if (!gasPrice.maxPriorityFeePerGas) {
-          throw new Error(
-            `Could not fetch maxPriorityFeePerGas for chainId: ${chainId}`,
-          );
-        }
       } else if (!gasPrice) {
         throw new Error(`Could not fetch gasPrice for chainId: ${chainId}`);
       }
