@@ -782,9 +782,6 @@
   ],
   "lineaNetworks": [59140, 59144],
   "arbitrumNetworks": [42170, 42161, 421614, 8101902, 666666666],
-  "alchemySimulateExecutionSupportedNetworks": [
-    1, 11155111, 137, 10, 42161, 421614, 8453, 592
-  ],
   "astarNetworks": [81, 592],
   "mantleNetworks": [5000, 5003],
   "blastPvgValue": 700000000,

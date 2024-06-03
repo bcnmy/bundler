@@ -87,8 +87,6 @@ export type ConfigType = {
   aaDashboardBackend: {
     url: string;
   };
-  // array of chain Ids for networks that are supported by Alchemy for simulate execution
-  alchemySimulateExecutionSupportedNetworks: Array<number>;
   // array of chain Ids for networks that are part of the Arbitrum ecosystem
   arbitrumNetworks: Array<number>;
   // array of chain Ids for networks that are part of the Astar ecosystem
