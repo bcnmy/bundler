@@ -39,11 +39,6 @@ import {
   ValidationData,
 } from "./types";
 import { BLOCKCHAINS } from "../constants";
-
-import {
-  AlchemySimulationService,
-  TenderlySimulationService,
-} from "./external-simulation";
 import { IGasPriceService } from "../gas-price";
 
 const log = logger.child({
@@ -53,23 +48,15 @@ const log = logger.child({
 export class BundlerSimulationService {
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
 
-  tenderlySimulationService: TenderlySimulationService;
-
   gasPriceService: IGasPriceService;
-
-  alchemySimulationService: AlchemySimulationService;
 
   gasEstimator: IGasEstimator;
 
   constructor(
     networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
-    tenderlySimulationService: TenderlySimulationService,
-    alchemySimulationService: AlchemySimulationService,
     gasPriceService: IGasPriceService,
   ) {
     this.networkService = networkService;
-    this.tenderlySimulationService = tenderlySimulationService;
-    this.alchemySimulationService = alchemySimulationService;
     this.gasPriceService = gasPriceService;
     this.gasEstimator = createGasEstimator({
       rpcUrl: this.networkService.rpcUrl,
@@ -298,169 +285,6 @@ export class BundlerSimulationService {
           callGasLimit: BigInt(0),
           validAfter: 0,
           validUntil: 0,
-        },
-      };
-    }
-  }
-
-  async simulateValidationAndExecution(
-    simulateValidationAndExecutionData: SimulationData,
-  ) {
-    let handleOpsCallData;
-    try {
-      const { userOp, entryPointContract, chainId } =
-        simulateValidationAndExecutionData;
-
-      log.info(
-        `userOp received: ${customJSONStringify(
-          userOp,
-        )} on chainId: ${chainId}`,
-      );
-
-      const { maxPriorityFeePerGas, maxFeePerGas } =
-        await this.gasPriceService.get1559GasPrice();
-
-      await this.checkUserOperationForRejection({
-        userOp,
-        networkMaxPriorityFeePerGas: maxPriorityFeePerGas,
-        networkMaxFeePerGas: maxFeePerGas,
-      });
-
-      let reason: string | undefined;
-      let totalGas: number;
-      let data: string | undefined;
-      if (config.alchemySimulateExecutionSupportedNetworks.includes(chainId)) {
-        try {
-          const start = performance.now();
-          const response =
-            await this.alchemySimulationService.simulateHandleOps({
-              userOp,
-              entryPointContract,
-              chainId,
-            });
-          reason = response.reason as string | undefined;
-          totalGas = response.totalGas;
-          data = response.data;
-          const end = performance.now();
-          log.info(
-            `Alchemy Simulation Service's simulateHandleOps took ${
-              end - start
-            } milliseconds`,
-          );
-        } catch (error) {
-          log.error(
-            `Error in Alchemy Simulation Service: ${parseError(error)}`,
-          );
-          log.info("Retrying simulation with Tenderly Simulation service");
-          const start = performance.now();
-          const response =
-            await this.tenderlySimulationService.simulateHandleOps({
-              userOp,
-              entryPointContract,
-              chainId,
-            });
-          reason = response.reason;
-          totalGas = response.totalGas;
-          data = response.data;
-          const end = performance.now();
-          log.info(
-            `Tenderly Simulation Service's simulateHandleOps took ${
-              end - start
-            } milliseconds`,
-          );
-        }
-      } else {
-        const start = performance.now();
-        const response = await this.tenderlySimulationService.simulateHandleOps(
-          {
-            userOp,
-            entryPointContract,
-            chainId,
-          },
-        );
-        reason = response.reason;
-        totalGas = response.totalGas;
-        data = response.data;
-        const end = performance.now();
-        log.info(
-          `Tenderly Simulation Service's simulateHandleOps took ${
-            end - start
-          } milliseconds`,
-        );
-      }
-      handleOpsCallData = data;
-
-      if (reason) {
-        log.info(
-          `Transaction failed with reason: ${reason} on chainId: ${chainId}`,
-        );
-        if (reason.includes("AA1") || reason.includes("AA2")) {
-          log.info(`error in account on chainId: ${chainId}`);
-          const message = this.removeSpecialCharacters(reason);
-          log.info(`message after removing special characters: ${message}`);
-          throw new RpcError(
-            message,
-            BUNDLER_ERROR_CODES.SIMULATE_VALIDATION_FAILED,
-          );
-        } else if (reason.includes("AA3")) {
-          log.info(`error in paymaster on chainId: ${chainId}`);
-          const message = this.removeSpecialCharacters(reason);
-          log.info(`message after removing special characters: ${message}`);
-          throw new RpcError(
-            message,
-            BUNDLER_ERROR_CODES.SIMULATE_PAYMASTER_VALIDATION_FAILED,
-          );
-        } else if (reason.includes("AA9")) {
-          log.info(`error in inner handle op on chainId: ${chainId}`);
-          const message = this.removeSpecialCharacters(reason);
-          log.info(`message after removing special characters: ${message}`);
-          throw new RpcError(
-            message,
-            BUNDLER_ERROR_CODES.WALLET_TRANSACTION_REVERTED,
-          );
-        } else if (reason.includes("AA4")) {
-          log.info("error in verificationGasLimit being incorrect");
-          const message = this.removeSpecialCharacters(reason);
-          log.info(`message after removing special characters: ${message}`);
-          throw new RpcError(
-            message,
-            BUNDLER_ERROR_CODES.SIMULATE_VALIDATION_FAILED,
-          );
-        }
-        throw new RpcError(
-          `Transaction reverted in simulation with reason: ${reason}. Use handleOpsCallData to simulate transaction to check transaction execution steps`,
-          BUNDLER_ERROR_CODES.WALLET_TRANSACTION_REVERTED,
-        );
-      }
-
-      const start = performance.now();
-      const userOpHash = this.getUserOpHash(
-        entryPointContract.address,
-        userOp,
-        chainId,
-      );
-      log.info(`userOpHash: ${userOpHash} on chainId: ${chainId}`);
-      const end = performance.now();
-      log.info(`Getting userOpHash took ${end - start} milliseconds`);
-
-      return {
-        code: STATUSES.SUCCESS,
-        message: "userOp Validated",
-        data: {
-          totalGas,
-          userOpHash,
-          handleOpsCallData: null,
-        },
-      };
-    } catch (error: any) {
-      log.error(parseError(error));
-      return {
-        code: error.code,
-        message: parseError(error),
-        data: {
-          totalGas: 0,
-          userOpHash: null,
-          handleOpsCallData,
         },
       };
     }

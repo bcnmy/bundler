@@ -4,10 +4,6 @@ import { GasPriceService } from "../gas-price";
 import { EVMNetworkService } from "../network";
 import { UserOperationType } from "../types";
 import { BundlerSimulationService } from "./BundlerSimulationService";
-import {
-  AlchemySimulationService,
-  TenderlySimulationService,
-} from "./external-simulation";
 import RpcError from "../utils/rpc-error";
 
 describe("BundlerSimulationService", () => {
@@ -16,12 +12,8 @@ describe("BundlerSimulationService", () => {
     rpcUrl: "https://random-rpc-url.com",
   });
   const gasPriceService = {} as unknown as GasPriceService;
-  const tenderlySimulationService = {} as unknown as TenderlySimulationService;
-  const alchemySimulationService = {} as unknown as AlchemySimulationService;
   const bundlerSimulationService = new BundlerSimulationService(
     networkService,
-    tenderlySimulationService,
-    alchemySimulationService,
     gasPriceService,
   );
 

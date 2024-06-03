@@ -18,13 +18,11 @@ export const status = async (req: Request, res: Response) => {
     const mongo = await statusService.checkMongo();
     const relayerManager = await statusService.checkRelayerManager();
     const networkService = await statusService.checkNetworkService();
-    const tokenPrice = await statusService.checkTokenPrice();
     res.render("status", {
       redis,
       mongo,
       relayerManager,
       networkService,
-      tokenPrice,
     });
   } catch (error) {
     res.render("status", {});

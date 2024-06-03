@@ -73,7 +73,7 @@ export const validateBundlerTransaction = async (req: Request) => {
       bundlerSimulationAndValidationResponse =
         await bundlerSimulationServiceMap[
           parseInt(chainId, 10)
-        ].simulateValidationAndExecution({
+        ].simulateValidation({
           userOp,
           entryPointContract,
           chainId: parseInt(chainId, 10),
