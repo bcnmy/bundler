@@ -81,7 +81,6 @@ export type EVMRawTransactionType = {
   type: string;
 };
 
-
 export type BundlerTransactionMessageType = {
   type: string;
   to: string;
@@ -206,7 +205,6 @@ export type UpdateRequestDataType = {
 export type EntryPointContractType = GetContractReturnType<
   typeof ENTRY_POINT_ABI
 >;
-
 
 export type StateOverrideSetType = {
   [key: string]: {

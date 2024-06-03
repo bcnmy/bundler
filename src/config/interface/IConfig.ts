@@ -1,6 +1,4 @@
-import {
-  TransactionType,
-} from "../../common/types";
+import { TransactionType } from "../../common/types";
 
 enum RpcProviderType {
   PUBLIC = "public",

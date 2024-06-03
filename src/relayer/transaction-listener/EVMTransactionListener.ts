@@ -44,8 +44,7 @@ const log = logger.child({
 });
 
 export class EVMTransactionListener
-  implements
-    ITransactionListener<IEVMAccount, EVMRawTransactionType>
+  implements ITransactionListener<IEVMAccount, EVMRawTransactionType>
 {
   chainId: number;
 
@@ -104,9 +103,7 @@ export class EVMTransactionListener
       log.error(`transactionExecutionResponse is null for transactionId: ${transactionId} for bundler: ${relayerAddress} hence
       updating transaction and userOp data`);
       try {
-        if (
-          transactionType === TransactionType.BUNDLER
-        ) {
+        if (transactionType === TransactionType.BUNDLER) {
           await this.transactionDao.updateByTransactionIdAndTransactionHash(
             this.chainId,
             transactionId,
@@ -266,9 +263,7 @@ export class EVMTransactionListener
         log.info(
           `transactionType: ${transactionType} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
         );
-        if (
-          transactionType === TransactionType.BUNDLER
-        ) {
+        if (transactionType === TransactionType.BUNDLER) {
           log.info(
             `Getting userOps for transactionId: ${transactionId} on chainId: ${this.chainId}`,
           );
@@ -468,9 +463,7 @@ export class EVMTransactionListener
         log.info(
           `transactionType: ${transactionType} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
         );
-        if (
-          transactionType === TransactionType.BUNDLER
-        ) {
+        if (transactionType === TransactionType.BUNDLER) {
           log.info(
             `Getting userOps for transactionId: ${transactionId} on chainId: ${this.chainId}`,
           );

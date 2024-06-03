@@ -5,9 +5,7 @@ import { chain } from "lodash";
 import { ENTRY_POINT_ABI } from "entry-point-gas-estimations";
 import { config } from "../../config";
 import { EVMAccount, IEVMAccount } from "../../relayer/account";
-import {
-  BundlerConsumer,
-} from "../../relayer/consumer";
+import { BundlerConsumer } from "../../relayer/consumer";
 import { EVMNonceManager } from "../../relayer/nonce-manager";
 import {
   EVMRelayerManager,
@@ -30,9 +28,7 @@ import {
   BundlerTransactionQueue,
   RetryTransactionHandlerQueue,
 } from "../queue";
-import {
-  BundlerRelayService,
-} from "../relay-service";
+import { BundlerRelayService } from "../relay-service";
 import { BundlerSimulationService } from "../simulation";
 import { IStatusService, StatusService } from "../status";
 import {
@@ -52,8 +48,7 @@ const log = logger.child({
 
 const routeTransactionToRelayerMap: {
   [chainId: number]: {
-    [transactionType: string]:
-      | BundlerRelayService;
+    [transactionType: string]: BundlerRelayService;
   };
 } = {};
 

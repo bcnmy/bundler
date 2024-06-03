@@ -1,8 +1,5 @@
 import { Transaction } from "viem";
-import {
-  EVMRawTransactionType,
-  TransactionType,
-} from "../../types";
+import { EVMRawTransactionType, TransactionType } from "../../types";
 
 export type TransactionMessageType = Transaction;
 
