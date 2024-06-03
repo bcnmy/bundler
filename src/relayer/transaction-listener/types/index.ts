@@ -11,14 +11,12 @@ import { RetryTransactionQueueData } from "../../../common/queue/types";
 import {
   EntryPointMapType,
   EVMRawTransactionType,
-  TransactionQueueMessageType,
   TransactionType,
 } from "../../../common/types";
 import { IEVMAccount } from "../../account";
 
 export type EVMTransactionListenerParamsType = {
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
-  transactionQueue: IQueue<TransactionQueueMessageType>;
   retryTransactionQueue: IQueue<RetryTransactionQueueData>;
   transactionDao: ITransactionDAO;
   userOperationDao: IUserOperationDAO;

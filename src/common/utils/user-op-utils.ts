@@ -77,19 +77,23 @@ export const getUserOperationReceiptForFailedTransaction = async (
   try {
     try {
       // get event logs from the underlying eth_getLogs RPC
-      const userOperationEventLogs = await provider.getLogs({  
+      const userOperationEventLogs = await provider.getLogs({
         address: entryPointContract.address,
-        event: parseAbiItem('event UserOperationEvent(bytes32 indexed userOpHash, address indexed sender, address indexed paymaster, uint256 nonce, bool success, uint256 actualGasCost, uint256 actualGasUsed)'),
+        event: parseAbiItem(
+          "event UserOperationEvent(bytes32 indexed userOpHash, address indexed sender, address indexed paymaster, uint256 nonce, bool success, uint256 actualGasCost, uint256 actualGasUsed)",
+        ),
         args: {
-          userOpHash: userOpHash as `0x${string}`
+          userOpHash: userOpHash as `0x${string}`,
         },
         fromBlock,
-        toBlock: receipt.blockNumber
+        toBlock: receipt.blockNumber,
       });
 
       // check if logs for the userOpHash are fetched in the given block range
       if (userOperationEventLogs.length === 0) {
-        log.error(`error in getUserOperationReceipt: No user operation event logs found`);
+        log.error(
+          `error in getUserOperationReceipt: No user operation event logs found`,
+        );
         return null;
       }
 

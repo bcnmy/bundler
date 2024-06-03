@@ -1,7 +1,4 @@
-import {
-  SymbolMapByChainIdType,
-  TransactionType,
-} from "../../common/types";
+import { TransactionType } from "../../common/types";
 
 enum RpcProviderType {
   PUBLIC = "public",
@@ -21,58 +18,8 @@ type ChainIdWithStringValueType = {
   [key: number]: string;
 };
 
-type ChainIdWithArrayStringValueType = {
-  [key: number]: string[];
-};
-
 type ChainIdWithNumberValueType = {
   [key: number]: number;
-};
-
-type ChainIdAndTokenWithNumberValueType = {
-  [key: number]: {
-    [key: string]: number;
-  };
-};
-
-type ChainIdAndTokenWithStringValueType = {
-  [key: number]: {
-    [key: string]: string;
-  };
-};
-
-type SocketServiceConfigType = {
-  wssUrl: string;
-  httpUrl: string;
-  token: string;
-  apiKey: string;
-};
-
-type NetworkSymbolMapType = {
-  [key: string]: Array<number>;
-};
-
-type NativeChainIdMapType = {
-  [key: string]: number;
-};
-
-type FeeOptionConfigType = {
-  supportedFeeTokens: ChainIdWithArrayStringValueType;
-  similarTokens: ChainIdWithArrayStringValueType;
-  nativeChainIds: NativeChainIdMapType;
-  offset: ChainIdAndTokenWithNumberValueType;
-  logoUrl: ChainIdAndTokenWithStringValueType;
-  tokenContractAddress: ChainIdAndTokenWithStringValueType;
-  decimals: ChainIdAndTokenWithNumberValueType;
-  feeTokenTransferGas: ChainIdAndTokenWithNumberValueType;
-  refundReceiver: ChainIdWithStringValueType;
-};
-
-type TokenPriceConfigType = {
-  coinMarketCapApi: string;
-  networkSymbols: NetworkSymbolMapType;
-  symbolMapByChainId: SymbolMapByChainIdType;
-  refreshIntervalSeconds: number;
 };
 
 type RelayerManagerConfigType = Array<{
@@ -132,11 +79,6 @@ type EntryPointDataConfigType = {
   };
 };
 
-// TODO // Review how to make it generic
-type SimulationDataConfigType = {
-  [key: string]: any;
-};
-
 type PaymasterDashboardBackendConfigType = {
   dappDataUrl: string;
 };
@@ -145,8 +87,6 @@ export type ConfigType = {
   aaDashboardBackend: {
     url: string;
   };
-  // array of chain Ids for networks that are supported by Alchemy for simulate execution
-  alchemySimulateExecutionSupportedNetworks: Array<number>;
   // array of chain Ids for networks that are part of the Arbitrum ecosystem
   arbitrumNetworks: Array<number>;
   // array of chain Ids for networks that are part of the Astar ecosystem
@@ -171,8 +111,6 @@ export type ConfigType = {
   EIP1559SupportedNetworks: Array<number>;
   // map of entrypoint addresses -> supported chain Ids
   entryPointData: EntryPointDataConfigType;
-  // legacy fee options configuration
-  feeOption: FeeOptionConfigType;
   // array of chain Ids for supported L2 networks
   l2Networks: Array<number>;
   // array of chain Ids for networks that are part of the Linea ecosystem
@@ -187,7 +125,6 @@ export type ConfigType = {
   maxPriorityFeePerGasThresholdPercentage: number;
   networksNotSupportingEthCallBytecodeStateOverrides: Array<number>;
   networksNotSupportingEthCallStateOverrides: Array<number>;
-  nonRM2SupportedNetworks: Array<number>;
   // array of chain Ids for networks that are part of the Optimism ecosystem
   optimismNetworks: Array<number>;
   paymasterDashboardBackendConfig: PaymasterDashboardBackendConfigType;
@@ -204,16 +141,13 @@ export type ConfigType = {
   relayerManagers: RelayerManagerConfigType;
   // array of chain Ids for networks that are part of the Polygon zkEVM ecosystem
   scrollNetworks: Array<number>;
-  simulationData: SimulationDataConfigType;
   // Slack credentials for sending notifications
   slack: SlackConfigType;
-  socketService: SocketServiceConfigType;
   // array of chain Ids for networks that are supported by the Bundler
   supportedNetworks: Array<number>;
   supportedTransactionType: ChainIdSupportedTransactionType;
   // array of chain Ids for networks that are TEST networks
   testnetNetworks: Array<number>;
-  tokenPrice: TokenPriceConfigType;
   // Transaction error messages
   transaction: TransactionConfigType;
   zeroAddress: `0x${string}`;

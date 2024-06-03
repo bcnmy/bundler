@@ -15,58 +15,52 @@
     59144, 421614, 11155111, 1115, 3441005, 84532, 168587773, 80085, 534351,
     56400, 11155420, 80002, 7001, 2442, 5003, 10200, 195
   ],
-  "nonRM2SupportedNetworks": [
-    97, 1101, 42170, 10, 43113, 43114, 8453, 59140, 59144,
-    5000, 204, 5611, 88888, 592, 88882, 81, 1115, 1116, 169, 3441005,
-    91715, 9980, 421614, 11155111, 84532, 168587773, 80085, 81457, 534351,
-    534352, 56400, 7000, 11155420, 80002, 27827, 7001, 2442, 4653, 5003, 8101902, 666666666, 100, 10200, 195, 196
-  ],
   "supportedTransactionType": {
-    "1": ["AA", "SCW", "BUNDLER"],
-    "137": ["AA", "SCW", "BUNDLER"],
-    "1101": ["AA", "BUNDLER"],
-    "42161": ["AA", "SCW", "BUNDLER"],
-    "42170": ["AA", "BUNDLER"],
-    "97": ["AA", "BUNDLER"],
-    "56": ["AA", "SCW", "BUNDLER"],
-    "10": ["AA", "BUNDLER"],
-    "43113": ["AA", "BUNDLER"],
-    "43114": ["AA", "BUNDLER"],
-    "8453": ["AA", "BUNDLER"],
-    "59140": ["AA", "BUNDLER"],
-    "59144": ["AA", "BUNDLER"],
-    "1287": ["AA", "BUNDLER"],
-    "1284": ["AA", "BUNDLER"],
-    "5000": ["AA", "BUNDLER"],
-    "204": ["AA", "BUNDLER"],
-    "5611": ["AA", "BUNDLER"],
-    "592": ["AA", "BUNDLER"],
-    "88888": ["AA", "BUNDLER"],
-    "81": ["AA", "BUNDLER"],
-    "88882": ["AA", "BUNDLER"],
-    "1115": ["AA", "BUNDLER"],
-    "1116": ["AA", "BUNDLER"],
-    "169": ["AA", "BUNDLER"],
-    "3441005": ["AA", "BUNDLER"],
-    "91715": ["AA", "BUNDLER"],
-    "9980": ["AA", "BUNDLER"],
-    "7116": ["AA", "BUNDLER"],
-    "421614": ["AA", "BUNDLER"],
-    "11155111": ["AA", "BUNDLER"],
-    "168587773": ["AA", "BUNDLER"],
-    "84532": ["AA", "BUNDLER"],
-    "80085": ["AA", "BUNDLER"],
-    "81457": ["AA", "BUNDLER"],
-    "534351": ["AA", "BUNDLER"],
-    "534352": ["AA", "BUNDLER"],
-    "56400": ["AA", "BUNDLER"],
-    "7000": ["AA", "BUNDLER"],
-    "11155420": ["AA", "BUNDLER"],
-    "80002": ["AA", "BUNDLER"],
-    "7001": ["AA", "BUNDLER"],
-    "2442": ["AA", "BUNDLER"],
-    "4653": ["AA", "BUNDLER"],
-    "5003": ["AA", "BUNDLER"],
+    "1": ["BUNDLER"],
+    "137": ["BUNDLER"],
+    "1101": ["BUNDLER"],
+    "42161": ["BUNDLER"],
+    "42170": ["BUNDLER"],
+    "97": ["BUNDLER"],
+    "56": ["BUNDLER"],
+    "10": ["BUNDLER"],
+    "43113": ["BUNDLER"],
+    "43114": ["BUNDLER"],
+    "8453": ["BUNDLER"],
+    "59140": ["BUNDLER"],
+    "59144": ["BUNDLER"],
+    "1287": ["BUNDLER"],
+    "1284": ["BUNDLER"],
+    "5000": ["BUNDLER"],
+    "204": ["BUNDLER"],
+    "5611": ["BUNDLER"],
+    "592": ["BUNDLER"],
+    "88888": ["BUNDLER"],
+    "81": ["BUNDLER"],
+    "88882": ["BUNDLER"],
+    "1115": ["BUNDLER"],
+    "1116": ["BUNDLER"],
+    "169": ["BUNDLER"],
+    "3441005": ["BUNDLER"],
+    "91715": ["BUNDLER"],
+    "9980": ["BUNDLER"],
+    "7116": ["BUNDLER"],
+    "421614": ["BUNDLER"],
+    "11155111": ["BUNDLER"],
+    "168587773": ["BUNDLER"],
+    "84532": ["BUNDLER"],
+    "80085": ["BUNDLER"],
+    "81457": ["BUNDLER"],
+    "534351": ["BUNDLER"],
+    "534352": ["BUNDLER"],
+    "56400": ["BUNDLER"],
+    "7000": ["BUNDLER"],
+    "11155420": ["BUNDLER"],
+    "80002": ["BUNDLER"],
+    "7001": ["BUNDLER"],
+    "2442": ["BUNDLER"],
+    "4653": ["BUNDLER"],
+    "5003": ["BUNDLER"],
     "27827": ["BUNDLER"],
     "8101902": ["BUNDLER"], 
     "666666666": ["BUNDLER"],
@@ -721,56 +715,6 @@
         "195": 2, 
         "196": 2
       }
-    },
-    {
-      "name": "RM2",
-      "gasLimitMap": {
-        "0": 21000,
-        "1": 710000,
-        "2": 1700000
-      },
-      "minRelayerCount": {
-        "137": 5,
-        "1": 2,
-        "56": 2,
-        "42161": 2
-      },
-      "maxRelayerCount": {
-        "137": 15,
-        "1": 2,
-        "56": 7,
-        "42161": 10
-      },
-      "inactiveRelayerCountThreshold": {
-        "137": 5,
-        "1": 2,
-        "56": 5,
-        "42161": 5
-      },
-      "pendingTransactionCountThreshold": {
-        "137": 15,
-        "1": 15,
-        "56": 15,
-        "42161": 15
-      },
-      "fundingRelayerAmount": {
-        "137": 10,
-        "1": 1,
-        "56": 0.2,
-        "42161": 0.2
-      },
-      "fundingBalanceThreshold": {
-        "137": 3,
-        "1": 0.5,
-        "56": 0.05,
-        "42161": 0.01
-      },
-      "newRelayerInstanceCount": {
-        "137": 5,
-        "1": 1,
-        "56": 1,
-        "42161": 2
-      }
     }
   ],
   "transaction": {
@@ -816,203 +760,6 @@
       ]
     }
   },
-  "feeOption": {
-    "supportedFeeTokens": {
-      "137": ["MATIC", "USDC", "USDT", "DAI", "WETH"],
-      "1": ["ETH", "USDC", "USDT", "DAI", "WETH"],
-      "56": ["BNB"],
-      "42161": ["ETH"]
-    },
-    "offset": {
-      "137": {
-        "USDC": 1000000,
-        "USDT": 1000000,
-        "WETH": 1,
-        "DAI": 1,
-        "MATIC": 1,
-        "BICO": 1
-      },
-      "1": {
-        "USDC": 1000000,
-        "USDT": 1000000,
-        "WETH": 1,
-        "DAI": 1,
-        "MATIC": 1,
-        "BICO": 1
-      },
-      "42161": {
-        "USDC": 1000000,
-        "USDT": 1000000,
-        "WETH": 1,
-        "DAI": 1,
-        "MATIC": 1,
-        "BICO": 1
-      },
-      "56": {
-        "BND": 1,
-        "USDT": 1
-      }
-    },
-    "similarTokens": {
-      "1": ["ETH", "WETH"],
-      "137": ["MATIC", "WMATIC"],
-      "56": ["BNB", "WBNB"],
-      "42161": ["ETH", "WETH"]
-    },
-    "nativeChainIds": {
-      "WETH": 1,
-      "WMATIC": 137
-    },
-    "logoUrl": {
-      "1": {
-        "ETH": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png",
-        "WETH": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png",
-        "MATIC": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png",
-        "WMATIC": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png",
-        "USDC": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdc.png",
-        "USDT": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png",
-        "DAI": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/dai.png"
-      },
-      "137": {
-        "ETH": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png",
-        "WETH": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png",
-        "MATIC": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png",
-        "WMATIC": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png",
-        "USDC": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdc.png",
-        "USDT": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png",
-        "DAI": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/dai.png",
-        "BICO": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/bico.png"
-      },
-      "56": {
-        "BNB": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/bnb.png",
-        "USDT": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png"
-      },
-      "42161": {
-        "ETH": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png",
-        "WETH": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png",
-        "MATIC": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png",
-        "WMATIC": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png",
-        "USDC": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdc.png",
-        "USDT": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png",
-        "XDAI": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xdai.png"
-      }
-    },
-    "tokenContractAddress": {
-      "1": {
-        "ETH": "0x0000000000000000000000000000000000000000",
-        "USDC": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-        "USDT": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-        "WETH": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-        "DAI": "0x6B175474E89094C44Da98b954EedeAC495271d0F"
-      },
-      "137": {
-        "MATIC": "0x0000000000000000000000000000000000000000",
-        "USDC": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
-        "USDT": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
-        "WETH": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
-        "DAI": "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063",
-        "BICO": "0x91c89A94567980f0e9723b487b0beD586eE96aa7"
-      },
-      "56": {
-        "BNB": "0x0000000000000000000000000000000000000000",
-        "USDT": "0xbf22b04E250A5921ab4dC0d4ceD6E391459e92D4"
-      },
-      "42161": {
-        "ETH": "0x0000000000000000000000000000000000000000",
-        "USDC": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-        "USDT": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-        "WETH": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-        "DAI": "0x6B175474E89094C44Da98b954EedeAC495271d0F"
-      }
-    },
-    "decimals": {
-      "1": {
-        "ETH": 18,
-        "USDC": 6,
-        "USDT": 6,
-        "WETH": 18,
-        "DAI": 18
-      },
-      "137": {
-        "MATIC": 18,
-        "USDC": 6,
-        "USDT": 6,
-        "WETH": 18,
-        "DAI": 18,
-        "BICO": 18
-      },
-      "56": {
-        "BNB": 18,
-        "USDT": 18
-      },
-      "42161": {
-        "ETH": 18,
-        "USDC": 6,
-        "USDT": 6,
-        "WETH": 18,
-        "DAI": 18
-      }
-    },
-    "feeTokenTransferGas": {
-      "1": {
-        "ETH": 7300,
-        "USDC": 22975,
-        "USDT": 22975,
-        "WETH": 22975,
-        "DAI": 22975
-      },
-      "137": {
-        "MATIC": 7300,
-        "USDC": 22975,
-        "USDT": 22975,
-        "WETH": 22975,
-        "DAI": 22975,
-        "BICO": 22975
-      },
-      "56": {
-        "BNB": 7300,
-        "USDT": 22975
-      },
-      "42161": {
-        "ETH": 7300,
-        "USDC": 22975,
-        "USDT": 22975,
-        "WETH": 22975,
-        "DAI": 22975
-      }
-    },
-    "refundReceiver": {
-      "137": "0xfC614d949CcdC9EC2Ffc2b17eA0824c5A3beC69e",
-      "1": "0xfC614d949CcdC9EC2Ffc2b17eA0824c5A3beC69e",
-      "56": "0xfC614d949CcdC9EC2Ffc2b17eA0824c5A3beC69e",
-      "42161": "0xfC614d949CcdC9EC2Ffc2b17eA0824c5A3beC69e"
-    }
-  },
-  "tokenPrice": {
-    "networkSymbols": {
-      "ETH": [
-        1, 3, 4, 42, 42161, 10, 1101, 10, 8453,
-        59140, 59144, 5000, 5611, 204, 84532, 168587773
-      ],
-      "BNB": [97, 56],
-      "MATIC": [8995, 15001, 16110, 137, 80002],
-      "BERA": [80085]
-    },
-    "symbolMapByChainId": {
-      "1": {
-        "0x6B175474E89094C44Da98b954EedeAC495271d0F": "DAI"
-      },
-      "137": {
-        "0x6B175474E89094C44Da98b954EedeAC495271d0F": "DAI"
-      },
-      "56": {
-        "0x6B175474E89094C44Da98b954EedeAC495271d0F": "DAI"
-      },
-      "42161": {
-        "0x6B175474E89094C44Da98b954EedeAC495271d0F": "DAI"
-      }
-    }
-  },
   "entryPointData": {
     "0x5ff137d4b0fdcd49dca30c7cf57e578a026d2789": {
       "supportedChainIds": [
@@ -1035,9 +782,6 @@
   ],
   "lineaNetworks": [59140, 59144],
   "arbitrumNetworks": [42170, 42161, 421614, 8101902, 666666666],
-  "alchemySimulateExecutionSupportedNetworks": [
-    1, 11155111, 137, 10, 42161, 421614, 8453, 592
-  ],
   "astarNetworks": [81, 592],
   "mantleNetworks": [5000, 5003],
   "blastPvgValue": 700000000,
@@ -1097,10 +841,6 @@
     "10200": 0.1,
     "195": 0.1, 
     "196": 0.1
-  },
-  "socketService": {
-    "wssUrl": "wss://sdk-ws.prod.biconomy.io/connection/websocket",
-    "httpUrl": "https://sdk-ws.prod.biconomy.io/api"
   },
   "aaDashboardBackend": {
     "url": "https://paymaster-dashboard-backend-v2.staging.biconomy.io/api/v2/bundlers/auth"

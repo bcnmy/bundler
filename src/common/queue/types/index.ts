@@ -1,9 +1,5 @@
 import { Transaction } from "viem";
-import {
-  EVMRawTransactionType,
-  SocketEventType,
-  TransactionType,
-} from "../../types";
+import { EVMRawTransactionType, TransactionType } from "../../types";
 
 export type TransactionMessageType = Transaction;
 
@@ -16,5 +12,4 @@ export type RetryTransactionQueueData = {
   walletAddress: string;
   metaData: any;
   relayerManagerName: string;
-  event: SocketEventType;
 };

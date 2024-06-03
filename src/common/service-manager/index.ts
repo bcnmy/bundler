@@ -5,12 +5,7 @@ import { chain } from "lodash";
 import { ENTRY_POINT_ABI } from "entry-point-gas-estimations";
 import { config } from "../../config";
 import { EVMAccount, IEVMAccount } from "../../relayer/account";
-import {
-  AAConsumer,
-  SCWConsumer,
-  SocketConsumer,
-  BundlerConsumer,
-} from "../../relayer/consumer";
+import { BundlerConsumer } from "../../relayer/consumer";
 import { EVMNonceManager } from "../../relayer/nonce-manager";
 import {
   EVMRelayerManager,
@@ -30,38 +25,22 @@ import { EVMNetworkService } from "../network";
 import { NotificationManager } from "../notification";
 import { SlackNotificationService } from "../notification/slack/SlackNotificationService";
 import {
-  AATransactionQueue,
   BundlerTransactionQueue,
   RetryTransactionHandlerQueue,
-  SCWTransactionQueue,
-  TransactionHandlerQueue,
 } from "../queue";
-import {
-  AARelayService,
-  SCWRelayService,
-  BundlerRelayService,
-} from "../relay-service";
-import { BundlerSimulationService, SCWSimulationService } from "../simulation";
-import {
-  AlchemySimulationService,
-  TenderlySimulationService,
-} from "../simulation/external-simulation";
+import { BundlerRelayService } from "../relay-service";
+import { BundlerSimulationService } from "../simulation";
 import { IStatusService, StatusService } from "../status";
-import { CMCTokenPriceManager } from "../token-price";
 import {
-  AATransactionMessageType,
   BundlerTransactionMessageType,
   EntryPointMapType,
   EVMRawTransactionType,
-  SCWTransactionMessageType,
   TransactionType,
 } from "../types";
 import { UserOperationStateDAO } from "../db/dao/UserOperationStateDAO";
 import { customJSONStringify, parseError } from "../utils";
 import { GasPriceService } from "../gas-price";
 import { CacheFeesJob } from "../gas-price/jobs/CacheFees";
-import { CachePricesJob } from "../token-price/jobs/CachePrices";
-import { FeeOption } from "../fee-options";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -69,15 +48,8 @@ const log = logger.child({
 
 const routeTransactionToRelayerMap: {
   [chainId: number]: {
-    [transactionType: string]:
-      | AARelayService
-      | SCWRelayService
-      | BundlerRelayService;
+    [transactionType: string]: BundlerRelayService;
   };
-} = {};
-
-const feeOptionMap: {
-  [chainId: number]: FeeOption;
 } = {};
 
 const gasPriceServiceMap: {
@@ -86,10 +58,6 @@ const gasPriceServiceMap: {
 
 const bundlerSimulationServiceMap: {
   [chainId: number]: BundlerSimulationService;
-} = {};
-
-const scwSimulationServiceMap: {
-  [chainId: number]: SCWSimulationService;
 } = {};
 
 const entryPointMap: EntryPointMapType = {};
@@ -109,7 +77,6 @@ const transactionDao = new TransactionDAO();
 const userOperationDao = new UserOperationDAO();
 const userOperationStateDao = new UserOperationStateDAO();
 
-const socketConsumerMap: Record<number, SocketConsumer> = {};
 const retryTransactionServiceMap: Record<number, EVMRetryTransactionService> =
   {};
 const transactionServiceMap: Record<number, EVMTransactionService> = {};
@@ -131,29 +98,6 @@ let statusService: IStatusService;
     process.env.BUNDLER_SLACK_CHANNEL || config.slack.channel,
   );
   const notificationManager = new NotificationManager(slackNotificationService);
-
-  const tokenService = new CMCTokenPriceManager(cacheService, {
-    apiKey: config.tokenPrice.coinMarketCapApi,
-    networkSymbolCategories: config.tokenPrice.networkSymbols,
-    updateFrequencyInSeconds: 90,
-    symbolMapByChainId: config.tokenPrice.symbolMapByChainId,
-  });
-  // added check for relayer node path in order to run on only one server
-  if (config.relayer.nodePathIndex === 0) {
-    const DEFAULT_PRICE_JOB_INTERVAL_SECONDS = 90;
-    const priceJobSchedule = `*/${
-      config.tokenPrice.refreshIntervalSeconds ||
-      DEFAULT_PRICE_JOB_INTERVAL_SECONDS
-    } * * * * *`;
-
-    log.info(`Scheduling CachePricesJob with schedule='${priceJobSchedule}'`);
-    try {
-      const priceJob = new CachePricesJob(priceJobSchedule, tokenService);
-      priceJob.start();
-    } catch (err) {
-      log.error(`Error in scheduling CachePricesJob: ${parseError(err)}`);
-    }
-  }
 
   log.info(
     `Setting up instances for following chainIds: ${customJSONStringify(
@@ -215,13 +159,6 @@ let statusService: IStatusService;
     gasPriceServiceMap[chainId] = gasPriceService;
     log.info(`Gas price service setup complete for chainId: ${chainId}`);
 
-    log.info(`Setting up transaction queue for chainId: ${chainId}`);
-    const transactionQueue = new TransactionHandlerQueue({
-      chainId,
-    });
-    await transactionQueue.connect();
-    log.info(`Transaction queue setup complete for chainId: ${chainId}`);
-
     log.info(`Setting up retry transaction queue for chainId: ${chainId}`);
     const retryTransactionQueue = new RetryTransactionHandlerQueue({
       chainId,
@@ -247,7 +184,6 @@ let statusService: IStatusService;
     const transactionListener = new EVMTransactionListener({
       networkService,
       cacheService,
-      transactionQueue,
       retryTransactionQueue,
       transactionDao,
       userOperationDao,
@@ -279,14 +215,6 @@ let statusService: IStatusService;
 
     log.info(`Setting up relayer manager for chainId: ${chainId}`);
     for (const relayerManager of config.relayerManagers) {
-      if (
-        relayerManager.name === "RM2" &&
-        config.nonRM2SupportedNetworks.includes(chainId)
-      ) {
-        log.info(`chainId: ${chainId} not supported on relayer manager RM2`);
-        // eslint-disable-next-line no-continue
-        continue;
-      }
       const relayerQueue = new EVMRelayerQueue([]);
       if (!EVMRelayerManagerMap[relayerManager.name]) {
         EVMRelayerManagerMap[relayerManager.name] = {};
@@ -360,48 +288,9 @@ let statusService: IStatusService;
     );
     log.info(`Retry transaction service setup for chainId: ${chainId}`);
 
-    if (!config.isTWSetup) {
-      log.info(`Setting up socket complete consumer for chainId: ${chainId}`);
-      socketConsumerMap[chainId] = new SocketConsumer({
-        queue: transactionQueue,
-        options: {
-          chainId,
-          wssUrl: config.socketService.wssUrl,
-          EVMRelayerManagerMap,
-        },
-      });
-      transactionQueue.consume(socketConsumerMap[chainId].onMessageReceived);
-      log.info(
-        `Socket consumer setup complete for chainId: ${chainId} and attached to transaction queue`,
-      );
-    }
-
-    log.info(`Setting up fee options service for chainId: ${chainId}`);
-    const feeOptionService = new FeeOption(gasPriceService, cacheService, {
-      chainId,
-    });
-    feeOptionMap[chainId] = feeOptionService;
-    log.info(`Fee option service setup complete for chainId: ${chainId}`);
-
-    const tenderlySimulationService = new TenderlySimulationService(
-      gasPriceService,
-      cacheService,
-      {
-        tenderlyUser: config.simulationData.tenderlyData.tenderlyUser,
-        tenderlyProject: config.simulationData.tenderlyData.tenderlyProject,
-        tenderlyAccessKey: config.simulationData.tenderlyData.tenderlyAccessKey,
-      },
-    );
-
-    const alchemySimulationService = new AlchemySimulationService(
-      networkService,
-    );
-
     // eslint-disable-next-line max-len
     bundlerSimulationServiceMap[chainId] = new BundlerSimulationService(
       networkService,
-      tenderlySimulationService,
-      alchemySimulationService,
       gasPriceService,
     );
 
@@ -429,90 +318,7 @@ let statusService: IStatusService;
 
     // for each network get transaction type
     for (const type of supportedTransactionType[chainId]) {
-      if (type === TransactionType.AA) {
-        const aaRelayerManager =
-          EVMRelayerManagerMap[relayerManagerTransactionTypeNameMap[type]][
-            chainId
-          ];
-        if (!aaRelayerManager) {
-          throw new Error(`Relayer manager not found for ${type}`);
-        }
-        log.info(`Setting up AA transaction queue for chainId: ${chainId}`);
-        const aaQueue: IQueue<AATransactionMessageType> =
-          new AATransactionQueue({
-            chainId,
-          });
-
-        await aaQueue.connect();
-        log.info(`AA transaction queue setup complete for chainId: ${chainId}`);
-
-        log.info(
-          `Setting up AA consumer, relay service & simulation service for chainId: ${chainId}`,
-        );
-        const aaConsumer = new AAConsumer({
-          queue: aaQueue,
-          relayerManager: aaRelayerManager,
-          transactionService,
-          cacheService,
-          options: {
-            chainId,
-            entryPointMap,
-          },
-        });
-        // start listening for transaction
-        await aaQueue.consume(aaConsumer.onMessageReceived);
-
-        const aaRelayService = new AARelayService(aaQueue);
-        routeTransactionToRelayerMap[chainId][type] = aaRelayService;
-
-        log.info(
-          `AA consumer, relay service & simulation service setup complete for chainId: ${chainId}`,
-        );
-      } else if (type === TransactionType.SCW) {
-        // queue for scw
-        log.info(`Setting up SCW transaction queue for chainId: ${chainId}`);
-        const scwQueue: IQueue<SCWTransactionMessageType> =
-          new SCWTransactionQueue({
-            chainId,
-          });
-        await scwQueue.connect();
-        log.info(
-          `SCW transaction queue setup complete for chainId: ${chainId}`,
-        );
-
-        const scwRelayerManager =
-          EVMRelayerManagerMap[relayerManagerTransactionTypeNameMap[type]][
-            chainId
-          ];
-        if (!scwRelayerManager) {
-          throw new Error(`Relayer manager not found for ${type}`);
-        }
-
-        log.info(
-          `Setting up SCW consumer, relay service & simulation service for chainId: ${chainId}`,
-        );
-        const scwConsumer = new SCWConsumer({
-          queue: scwQueue,
-          relayerManager: scwRelayerManager,
-          transactionService,
-          cacheService,
-          options: {
-            chainId,
-          },
-        });
-        await scwQueue.consume(scwConsumer.onMessageReceived);
-
-        const scwRelayService = new SCWRelayService(scwQueue);
-        routeTransactionToRelayerMap[chainId][type] = scwRelayService;
-
-        scwSimulationServiceMap[chainId] = new SCWSimulationService(
-          networkService,
-          tenderlySimulationService,
-        );
-        log.info(
-          `SCW consumer, relay service & simulation service setup complete for chainId: ${chainId}`,
-        );
-      } else if (type === TransactionType.BUNDLER) {
+      if (type === TransactionType.BUNDLER) {
         const bundlerRelayerManager =
           EVMRelayerManagerMap[relayerManagerTransactionTypeNameMap[type]][
             chainId
@@ -572,9 +378,7 @@ let statusService: IStatusService;
 
 export {
   routeTransactionToRelayerMap,
-  feeOptionMap,
   bundlerSimulationServiceMap,
-  scwSimulationServiceMap,
   entryPointMap,
   EVMRelayerManagerMap,
   transactionServiceMap,

@@ -148,22 +148,6 @@ export class GasPriceService implements IGasPriceService {
   }
 
   /**
-   * Method used by Tenderly Simulation call
-   * @param gasType Set to DEFAULT
-   * @returns gas price
-   */
-  async getGasPriceForSimulation(
-    gasType = GasPriceType.DEFAULT,
-  ): Promise<bigint> {
-    let gasPrice: bigint;
-    gasPrice = BigInt(await this.cacheService.get(this.getGasFeeKey(gasType)));
-    if (!gasPrice) {
-      gasPrice = await this.networkService.getLegacyGasPrice();
-    }
-    return gasPrice;
-  }
-
-  /**
    * Method gives bumped up gas price in case of resubmitted transaction
    * @param pastGasPrice gas price of original transaction
    * @param bumpingPercentage how much to bump by
