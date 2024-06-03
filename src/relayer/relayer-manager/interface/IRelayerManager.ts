@@ -1,8 +1,9 @@
 import { ICacheService } from "../../../common/cache";
 import { IGasPriceService } from "../../../common/gas-price";
 import { INetworkService } from "../../../common/network";
+import { EVMRelayerMetaDataType } from "../../../common/types";
 import { INonceManager } from "../../nonce-manager";
-import { EVMRelayerMetaDataType, IRelayerQueue } from "../../relayer-queue";
+import { IRelayerQueue } from "../../relayer-queue";
 import { ITransactionService } from "../../transaction-service";
 
 export interface IRelayerManager<AccountType, RawTransactionType> {

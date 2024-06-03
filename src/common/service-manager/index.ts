@@ -370,6 +370,8 @@ let statusService: IStatusService;
     networkServiceMap,
     evmRelayerManagerMap: EVMRelayerManagerMap,
     dbInstance,
+    gasPriceServiceMap,
+    bundlerSimulationServiceMap,
   });
   log.info("<=== Config setup completed ===>");
 })();
