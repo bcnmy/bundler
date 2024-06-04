@@ -1,4 +1,5 @@
 import { ICacheService } from "../../../common/cache";
+import { IMonitoringService } from "../../../common/monitoring/interface";
 import { IQueue } from "../../../common/queue";
 import {
   BundlerTransactionMessageType,
@@ -14,6 +15,7 @@ export type BundlerConsumerParamsType = {
   relayerManager: IRelayerManager<IEVMAccount, EVMRawTransactionType>;
   transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>;
   cacheService: ICacheService;
+  monitoringService: IMonitoringService;
   options: {
     chainId: number;
     entryPointMap: EntryPointMapType;

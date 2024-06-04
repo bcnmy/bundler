@@ -10,6 +10,7 @@ import cons from "consolidate";
 import logger from "pino-http";
 import { randomUUID } from "node:crypto";
 import { routes } from "./api/router";
+import { registry } from '../common/monitoring';
 
 const app = express();
 
@@ -84,6 +85,12 @@ app.route("/health").get((req, res) => {
 
 app.route("/:chainId/health").get((req, res) => {
   res.send("ok");
+});
+
+// Endpoint to expose metrics
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', registry.contentType);
+  res.end(await registry.metrics());
 });
 
 // error handler

@@ -1,4 +1,5 @@
 import { ICacheService } from "../../../common/cache";
+import { IMonitoringService } from "../../../common/monitoring/interface";
 import { INetworkService } from "../../../common/network";
 import { INotificationManager } from "../../../common/notification/interface";
 import { IQueue } from "../../../common/queue";
@@ -14,6 +15,7 @@ export type EVMRetryTransactionServiceParamsType = {
   retryTransactionQueue: IQueue<RetryTransactionQueueData>;
   notificationManager: INotificationManager;
   cacheService: ICacheService;
+  monitoringService: IMonitoringService;
   options: {
     chainId: number;
     EVMRelayerManagerMap: {

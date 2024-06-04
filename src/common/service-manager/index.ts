@@ -41,6 +41,7 @@ import { UserOperationStateDAO } from "../db/dao/UserOperationStateDAO";
 import { customJSONStringify, parseError } from "../utils";
 import { GasPriceService } from "../gas-price";
 import { CacheFeesJob } from "../gas-price/jobs/CacheFees";
+import { MonitoringService } from "../monitoring";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -104,6 +105,8 @@ let statusService: IStatusService;
       supportedNetworks,
     )}`,
   );
+
+  const monitoringService = new MonitoringService();
 
   log.info(`Supported networks are: ${supportedNetworks}`);
   for (const chainId of supportedNetworks) {
@@ -188,6 +191,7 @@ let statusService: IStatusService;
       transactionDao,
       userOperationDao,
       userOperationStateDao,
+      monitoringService,
       options: {
         chainId,
         entryPointMap,
@@ -206,6 +210,7 @@ let statusService: IStatusService;
       cacheService,
       notificationManager,
       userOperationStateDao,
+      monitoringService,
       options: {
         chainId,
       },
@@ -227,6 +232,7 @@ let statusService: IStatusService;
         nonceManager,
         relayerQueue,
         notificationManager,
+        monitoringService,
         options: {
           chainId,
           name: relayerManager.name,
@@ -276,6 +282,7 @@ let statusService: IStatusService;
       transactionService,
       networkService,
       notificationManager,
+      monitoringService,
       cacheService,
       options: {
         chainId,
@@ -292,6 +299,7 @@ let statusService: IStatusService;
     bundlerSimulationServiceMap[chainId] = new BundlerSimulationService(
       networkService,
       gasPriceService,
+      monitoringService
     );
 
     const { entryPointData } = config;
@@ -347,6 +355,7 @@ let statusService: IStatusService;
           relayerManager: bundlerRelayerManager,
           transactionService,
           cacheService,
+          monitoringService,
           options: {
             chainId,
             entryPointMap,

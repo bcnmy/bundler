@@ -24,6 +24,7 @@ import { ITransactionService } from "../transaction-service";
 import { ITransactionConsumer } from "./interface/ITransactionConsumer";
 import { BundlerConsumerParamsType } from "./types";
 import { STATUSES } from "../../server/api/shared/middleware";
+import { IMonitoringService } from "../../common/monitoring/interface";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -45,8 +46,10 @@ export class BundlerConsumer
 
   cacheService: ICacheService;
 
+  monitoringService: IMonitoringService;
+
   constructor(bundlerConsumerParamas: BundlerConsumerParamsType) {
-    const { options, queue, relayerManager, transactionService, cacheService } =
+    const { options, queue, relayerManager, transactionService, cacheService, monitoringService } =
       bundlerConsumerParamas;
     this.queue = queue;
     this.relayerManager = relayerManager;
@@ -54,6 +57,16 @@ export class BundlerConsumer
     this.entryPointMap = options.entryPointMap;
     this.transactionService = transactionService;
     this.cacheService = cacheService;
+    this.monitoringService = monitoringService;
+    this.createMonitoringGauges();
+  }
+
+  private createMonitoringGauges() {
+    this.monitoringService.createGauge({
+      name: 'userop_received',
+      help: 'Number of user operations received by the Bundler to send on chain',
+      labelNames: ['bundler_consumer'],
+    });
   }
 
   onMessageReceived = async (

@@ -15,6 +15,7 @@ import {
   createMantleGasEstimator,
   createOptimismGasEstimator,
   createScrollGasEstimator,
+  handleFailedOp,
   IGasEstimator,
 } from "entry-point-gas-estimations";
 import { config } from "../../config";
@@ -40,6 +41,7 @@ import {
 } from "./types";
 import { BLOCKCHAINS } from "../constants";
 import { IGasPriceService } from "../gas-price";
+import { IMonitoringService } from "../monitoring/interface";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -52,12 +54,16 @@ export class BundlerSimulationService {
 
   gasEstimator: IGasEstimator;
 
+  monitoringService: IMonitoringService;
+
   constructor(
     networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
     gasPriceService: IGasPriceService,
+    monitoringService: IMonitoringService,
   ) {
     this.networkService = networkService;
     this.gasPriceService = gasPriceService;
+    this.monitoringService = monitoringService;
     this.gasEstimator = createGasEstimator({
       rpcUrl: this.networkService.rpcUrl,
     });
@@ -373,55 +379,7 @@ export class BundlerSimulationService {
           log.info(
             `Transaction failed with reason: ${reason} on chainId: ${chainId}`,
           );
-          if (reason.includes("AA1") || reason.includes("AA2")) {
-            log.info(`error in account on chainId: ${chainId}`);
-            const message = this.removeSpecialCharacters(reason);
-            log.info(`message after removing special characters: ${message}`);
-            throw new RpcError(
-              message,
-              BUNDLER_ERROR_CODES.SIMULATE_VALIDATION_FAILED,
-            );
-          } else if (reason.includes("AA3")) {
-            log.info(`error in paymaster on chainId: ${chainId}`);
-            const message = this.removeSpecialCharacters(reason);
-            log.info(`message after removing special characters: ${message}`);
-            throw new RpcError(
-              message,
-              BUNDLER_ERROR_CODES.SIMULATE_PAYMASTER_VALIDATION_FAILED,
-            );
-          } else if (reason.includes("AA9")) {
-            log.info(`error in inner handle op on chainId: ${chainId}`);
-            const message = this.removeSpecialCharacters(reason);
-            log.info(`message after removing special characters: ${message}`);
-            throw new RpcError(
-              message,
-              BUNDLER_ERROR_CODES.WALLET_TRANSACTION_REVERTED,
-            );
-          } else if (reason.includes("AA4")) {
-            log.info("error in verificationGasLimit being incorrect");
-            const message = this.removeSpecialCharacters(reason);
-            log.info(`message after removing special characters: ${message}`);
-            throw new RpcError(
-              message,
-              BUNDLER_ERROR_CODES.SIMULATE_VALIDATION_FAILED,
-            );
-          }
-          const message = this.removeSpecialCharacters(reason);
-          throw new RpcError(
-            message,
-            BUNDLER_ERROR_CODES.WALLET_TRANSACTION_REVERTED,
-          );
-        } else {
-          const { args } = errorDescription;
-
-          const reason = args[1]
-            ? args[1].toString()
-            : errorDescription.errorName;
-          const message = this.removeSpecialCharacters(reason);
-          throw new RpcError(
-            message,
-            BUNDLER_ERROR_CODES.WALLET_TRANSACTION_REVERTED,
-          );
+          handleFailedOp(reason);
         }
       } else if (typeof ethEstimatGasResponse === "string") {
         totalGas = Number(ethEstimatGasResponse);
@@ -561,99 +519,6 @@ export class BundlerSimulationService {
       `maxFeePerGas, maxPriorityFeePerGas and preVerification are within acceptable limits`,
     );
     return true;
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  removeSpecialCharacters(input: string): string {
-    const match = input.match(/AA(\d+)\s(.+)/);
-
-    if (match) {
-      const errorCode = match[1]; // e.g., "25"
-      const errorMessage = match[2]; // e.g., "invalid account nonce"
-      const newMatch = `AA${errorCode} ${errorMessage}`.match(
-        // eslint-disable-next-line no-control-regex
-        /AA.*?(?=\\u|\u0000)/,
-      );
-      if (newMatch) {
-        const extractedString = newMatch[0];
-        return extractedString;
-      }
-      return `AA${errorCode} ${errorMessage}`;
-    }
-    return input;
-  }
-
-  static parseSimulateHandleOpResult(
-    userOp: UserOperationType,
-    simulateHandleOpResult: any,
-  ) {
-    if (!simulateHandleOpResult?.errorName?.startsWith("ExecutionResult")) {
-      log.info(
-        `Inside ${!simulateHandleOpResult?.errorName?.startsWith(
-          "ExecutionResult",
-        )}`,
-      );
-      // parse it as FailedOp
-      // if its FailedOp, then we have the paymaster param... otherwise its an Error(string)
-      log.info(
-        `simulateHandleOpResult.errorArgs: ${simulateHandleOpResult.errorArgs}`,
-      );
-      if (!simulateHandleOpResult.errorArgs) {
-        throw new RpcError(
-          `Error: ${customJSONStringify(simulateHandleOpResult)}`,
-          BUNDLER_ERROR_CODES.WALLET_TRANSACTION_REVERTED,
-        );
-      }
-      let { paymaster } = simulateHandleOpResult.errorArgs;
-      if (paymaster === config.zeroAddress) {
-        paymaster = undefined;
-      }
-      // eslint-disable-next-line
-      const msg: string =
-        simulateHandleOpResult.errorArgs?.reason ??
-        simulateHandleOpResult.toString();
-
-      if (paymaster == null) {
-        log.info(
-          `account validation failed: ${msg} for userOp: ${customJSONStringify(
-            userOp,
-          )}`,
-        );
-        throw new RpcError(msg, BUNDLER_ERROR_CODES.SIMULATE_VALIDATION_FAILED);
-      } else {
-        log.info(
-          `paymaster validation failed: ${msg} for userOp: ${customJSONStringify(
-            userOp,
-          )}`,
-        );
-        throw new RpcError(
-          msg,
-          BUNDLER_ERROR_CODES.SIMULATE_PAYMASTER_VALIDATION_FAILED,
-        );
-      }
-    }
-
-    const preOpGas = simulateHandleOpResult.errorArgs[0];
-    log.info(`preOpGas: ${preOpGas}`);
-    const paid = simulateHandleOpResult.errorArgs[1];
-    log.info(`paid: ${paid}`);
-    const validAfter = simulateHandleOpResult.errorArgs[2];
-    log.info(`validAfter: ${validAfter}`);
-    const validUntil = simulateHandleOpResult.errorArgs[3];
-    log.info(`validUntil: ${validUntil}`);
-    const targetSuccess = simulateHandleOpResult.errorArgs[4];
-    log.info(`targetSuccess: ${targetSuccess}`);
-    const targetResult = simulateHandleOpResult.errorArgs[5];
-    log.info(`targetResult: ${targetResult}`);
-
-    return {
-      preOpGas,
-      paid,
-      validAfter,
-      validUntil,
-      targetSuccess,
-      targetResult,
-    };
   }
 
   // eslint-disable-next-line class-methods-use-this

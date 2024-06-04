@@ -32,6 +32,7 @@ import { IRelayerQueue } from "../relayer-queue";
 import { ITransactionService } from "../transaction-service/interface/ITransactionService";
 import { IRelayerManager } from "./interface/IRelayerManager";
 import { EVMRelayerManagerServiceParamsType } from "./types";
+import { IMonitoringService } from "../../common/monitoring/interface";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -98,6 +99,8 @@ export class EVMRelayerManager
 
   notificationManager: INotificationManager;
 
+  monitoringService: IMonitoringService;
+
   constructor(
     evmRelayerManagerServiceParams: EVMRelayerManagerServiceParamsType,
   ) {
@@ -110,6 +113,7 @@ export class EVMRelayerManager
       relayerQueue,
       transactionService,
       notificationManager,
+      monitoringService
     } = evmRelayerManagerServiceParams;
     this.chainId = options.chainId;
     this.name = options.name;
@@ -131,6 +135,7 @@ export class EVMRelayerManager
     this.nonceManager = nonceManager;
     this.cacheService = cacheService;
     this.notificationManager = notificationManager;
+    this.monitoringService = monitoringService;
   }
 
   private async sendPendingTransactionIncreasingSlackNotification(

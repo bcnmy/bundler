@@ -38,6 +38,7 @@ import {
   OnTransactionSuccessParamsType,
 } from "./types";
 import { config } from "../../config";
+import { IMonitoringService } from "../../common/monitoring/interface";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -62,6 +63,8 @@ export class EVMTransactionListener
 
   cacheService: ICacheService;
 
+  monitoringService: IMonitoringService;
+
   constructor(evmTransactionListenerParams: EVMTransactionListenerParamsType) {
     const {
       options,
@@ -71,6 +74,7 @@ export class EVMTransactionListener
       userOperationDao,
       userOperationStateDao,
       cacheService,
+      monitoringService
     } = evmTransactionListenerParams;
     this.chainId = options.chainId;
     this.entryPointMap = options.entryPointMap;
@@ -80,6 +84,22 @@ export class EVMTransactionListener
     this.userOperationDao = userOperationDao;
     this.userOperationStateDao = userOperationStateDao;
     this.cacheService = cacheService;
+    this.monitoringService = monitoringService;
+    this.createMonitoringGauges();
+  }
+
+  private createMonitoringGauges() {
+    this.monitoringService.createGauge({
+      name: 'successful_transactions',
+      help: 'Number of successful transactions submitted on chain',
+      labelNames: ['evm_transaction_listener'],
+    });
+
+    this.monitoringService.createGauge({
+      name: 'failed_transactions',
+      help: 'Number of failed transactions submitted on chain',
+      labelNames: ['evm_transaction_listener']
+    });
   }
 
   async notify(

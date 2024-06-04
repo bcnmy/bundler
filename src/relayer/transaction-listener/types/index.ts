@@ -14,6 +14,7 @@ import {
   TransactionType,
 } from "../../../common/types";
 import { IEVMAccount } from "../../account";
+import { IMonitoringService } from "../../../common/monitoring/interface";
 
 export type EVMTransactionListenerParamsType = {
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
@@ -22,6 +23,7 @@ export type EVMTransactionListenerParamsType = {
   userOperationDao: IUserOperationDAO;
   userOperationStateDao: IUserOperationStateDAO;
   cacheService: ICacheService;
+  monitoringService: IMonitoringService;
   options: {
     chainId: number;
     entryPointMap: EntryPointMapType;

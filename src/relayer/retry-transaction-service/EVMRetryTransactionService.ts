@@ -18,6 +18,7 @@ import {
   parseError,
 } from "../../common/utils";
 import { ICacheService } from "../../common/cache";
+import { IMonitoringService } from "../../common/monitoring/interface";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -37,6 +38,8 @@ export class EVMRetryTransactionService
 
   cacheService: ICacheService;
 
+  monitoringService: IMonitoringService;
+
   EVMRelayerManagerMap: {
     [name: string]: {
       [chainId: number]: IRelayerManager<IEVMAccount, EVMRawTransactionType>;
@@ -53,6 +56,7 @@ export class EVMRetryTransactionService
       retryTransactionQueue,
       notificationManager,
       cacheService,
+      monitoringService,
     } = evmRetryTransactionServiceParams;
     this.chainId = options.chainId;
     this.EVMRelayerManagerMap = options.EVMRelayerManagerMap;
@@ -61,6 +65,7 @@ export class EVMRetryTransactionService
     this.notificationManager = notificationManager;
     this.cacheService = cacheService;
     this.queue = retryTransactionQueue;
+    this.monitoringService = monitoringService;
   }
 
   onMessageReceived = async (msg?: ConsumeMessage) => {

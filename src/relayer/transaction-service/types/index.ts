@@ -9,6 +9,7 @@ import { AccessListItem, EVMRawTransactionType } from "../../../common/types";
 import { IEVMAccount } from "../../account";
 import { INonceManager } from "../../nonce-manager";
 import { ITransactionListener } from "../../transaction-listener";
+import { IMonitoringService } from "../../../common/monitoring/interface";
 
 export type EVMTransactionServiceParamsType = {
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
@@ -19,6 +20,7 @@ export type EVMTransactionServiceParamsType = {
   cacheService: ICacheService;
   notificationManager: INotificationManager;
   userOperationStateDao: IUserOperationStateDAO;
+  monitoringService: IMonitoringService;
   options: {
     chainId: number;
   };

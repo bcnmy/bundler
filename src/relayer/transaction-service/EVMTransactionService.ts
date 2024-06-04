@@ -42,6 +42,7 @@ import {
   TransactionDataType,
 } from "./types";
 import { IUserOperationStateDAO } from "../../common/db";
+import { IMonitoringService } from "../../common/monitoring/interface";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -66,6 +67,8 @@ export class EVMTransactionService
 
   userOperationStateDao: IUserOperationStateDAO;
 
+  monitoringService: IMonitoringService;
+
   addressMutex: {
     [address: string]: Mutex;
   } = {};
@@ -80,6 +83,7 @@ export class EVMTransactionService
       cacheService,
       notificationManager,
       userOperationStateDao,
+      monitoringService
     } = evmTransactionServiceParams;
     this.chainId = options.chainId;
     this.networkService = networkService;
@@ -89,6 +93,16 @@ export class EVMTransactionService
     this.cacheService = cacheService;
     this.notificationManager = notificationManager;
     this.userOperationStateDao = userOperationStateDao;
+    this.monitoringService = monitoringService;
+    this.createMonitoringGauges();
+  }
+
+  private createMonitoringGauges() {
+    this.monitoringService.createGauge({
+      name: 'failed_to_submit',
+      help: 'Number of userops that were not submitted on chain',
+      labelNames: ['evm_transaction_service'],
+    });
   }
 
   private getMutex(address: string) {
