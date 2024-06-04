@@ -1,0 +1,36 @@
+{
+  "supportedNetworks": [137],
+  "relayer": {
+    "nodePathIndex": 0
+  },
+  "dataSources": {
+    "redisUrl": "test"
+  },
+  "chains": {
+    "providers": {
+      "1": [
+        {
+          "url": "https://thislinkdoesnotexist.rs",
+          "type": "private"
+        }
+      ],
+      "10": [
+        {
+          "url": "https://thislinkdoesnotexist.rs",
+          "type": "private"
+        }
+      ],
+      "137": [
+        {
+          "url": "https://thislinkdoesnotexist.rs",
+          "type": "private"
+        }
+      ]
+    }
+  },
+  "EVMNetworkService": {
+    "waitForTransaction": {
+      "timeoutMs": 2000
+    }
+  }
+}

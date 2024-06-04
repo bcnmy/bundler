@@ -1,20 +1,12 @@
-import { GetContractReturnType, Hex, TransactionReceipt } from "viem";
-import {
-  ENTRY_POINT_ABI,
-  OPTIMISM_L1_GAS_PRICE_ORACLE,
-  MANTLE_BVM_GAS_PRICE_ORACLE,
-} from "../constants";
+import { ENTRY_POINT_ABI } from "entry-point-gas-estimations";
+import { GetContractReturnType, Hex } from "viem";
 
 export enum TransactionType {
-  AA = "AA",
-  SCW = "SCW",
   FUNDING = "FUNDING",
   BUNDLER = "BUNDLER",
 }
 
 export enum TransactionMethodType {
-  SCW = "eth_sendSmartContractWalletTransaction",
-  AA = "eth_sendUserOperation",
   BUNDLER = "eth_sendUserOperation",
 }
 
@@ -54,38 +46,12 @@ export enum UserOperationStateEnum {
   DROPPED_FROM_BUNDLER_MEMPOOL = "DROPPED_FROM_BUNDLER_MEMPOOL",
 }
 
-export enum RelayerDestinationSmartContractName {
-  ENTRY_POINT = "Entry Point",
-}
-
-export enum SocketEventType {
-  onTransactionHashGenerated = "transactionHashGenerated",
-  onTransactionHashChanged = "transactionHashChanged",
-  onTransactionMined = "transactionMined",
-  onTransactionError = "error",
-}
-
-export type TransactionQueueMessageType = {
-  transactionId: string;
-  event: SocketEventType;
-  relayerManagerName: string;
-  transactionHash?: string;
-  previousTransactionHash?: string;
-  receipt?: TransactionReceipt;
-  error?: string;
-};
-
 export enum TransactionStatus {
   IN_PROCESS = "IN_PROCESS",
   PENDING = "PENDING",
   SUCCESS = "SUCCESS",
   FAILED = "FAILED",
   DROPPED = "DROPPED",
-}
-
-export enum RelayerManagerType {
-  AA = 0,
-  SCW = 0,
 }
 
 export type AccessListItem = {
@@ -115,20 +81,6 @@ export type EVMRawTransactionType = {
   type: string;
 };
 
-export type AATransactionMessageType = {
-  type: string;
-  to: string;
-  data: string;
-  gasLimit: string;
-  chainId: number;
-  value: string;
-  transactionId: string;
-  userOp?: UserOperationType;
-  metaData?: {
-    dappAPIKey: string;
-  };
-};
-
 export type BundlerTransactionMessageType = {
   type: string;
   to: string;
@@ -138,17 +90,7 @@ export type BundlerTransactionMessageType = {
   value: string;
   transactionId: string;
   userOp?: UserOperationType;
-};
-
-export type SCWTransactionMessageType = {
-  type: string;
-  to: string;
-  data: string;
-  gasLimit: string;
-  chainId: number;
-  value: string;
-  transactionId: string;
-  walletAddress: string;
+  walletAddress?: string;
 };
 
 type ResponseType = {
@@ -245,16 +187,6 @@ export type Log = {
   logIndex: number;
 };
 
-export type DefaultGasOverheadType = {
-  fixed: number;
-  perUserOp: number;
-  perUserOpWord: number;
-  zeroByte: number;
-  nonZeroByte: number;
-  bundleSize: number;
-  sigSize: number;
-};
-
 export type StakeInfo = {
   addr: string;
   stake: bigint;
@@ -273,13 +205,6 @@ export type UpdateRequestDataType = {
 export type EntryPointContractType = GetContractReturnType<
   typeof ENTRY_POINT_ABI
 >;
-export type OptimismL1GasPriceOracleContractType = GetContractReturnType<
-  typeof OPTIMISM_L1_GAS_PRICE_ORACLE
->;
-
-export type MantleBVMGasPriceOracleContractType = GetContractReturnType<
-  typeof MANTLE_BVM_GAS_PRICE_ORACLE
->;
 
 export type StateOverrideSetType = {
   [key: string]: {
@@ -289,4 +214,22 @@ export type StateOverrideSetType = {
     state?: object;
     stateDiff?: object;
   };
+};
+
+export type ChainStatus = {
+  chainId: number;
+  healthy: boolean;
+  errors: string[];
+  latencies?: any;
+};
+
+export type EVMRelayerMetaDataType = {
+  address: string;
+  nonce: number;
+  pendingCount: number;
+  balance: number;
+};
+
+export type StatusInfo = {
+  [chainId: number]: { relayers: Array<EVMRelayerMetaDataType> };
 };

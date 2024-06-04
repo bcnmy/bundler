@@ -52,6 +52,7 @@ services:
     volumes:
       - ./centrifugo_config.json:/centrifugo/config.json
     command: centrifugo -c config.json
+
     healthcheck:
       test: ["CMD", "sh", "-c", "wget -nv -O - http://localhost:8000"]
       interval: 3s
@@ -62,6 +63,7 @@ services:
       nofile:
         soft: 65535
         hard: 65535
+
     ports:
       - "0.0.0.0:8000:8000"
 

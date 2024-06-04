@@ -15,8 +15,6 @@ import {
   EntryPointContractType,
   EntryPointMapType,
   EVMRawTransactionType,
-  SocketEventType,
-  TransactionQueueMessageType,
   TransactionStatus,
   TransactionType,
   UserOperationStateEnum,
@@ -32,7 +30,6 @@ import {
   convertBigIntToString,
 } from "../../common/utils";
 import { IEVMAccount } from "../account";
-import { ITransactionPublisher } from "../transaction-publisher";
 import { ITransactionListener } from "./interface/ITransactionListener";
 import {
   EVMTransactionListenerParamsType,
@@ -41,22 +38,17 @@ import {
   OnTransactionSuccessParamsType,
 } from "./types";
 import { config } from "../../config";
-import { AstarNetworks } from "../../common/constants";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
 });
 
 export class EVMTransactionListener
-  implements
-    ITransactionListener<IEVMAccount, EVMRawTransactionType>,
-    ITransactionPublisher<TransactionQueueMessageType>
+  implements ITransactionListener<IEVMAccount, EVMRawTransactionType>
 {
   chainId: number;
 
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
-
-  transactionQueue: IQueue<TransactionQueueMessageType>;
 
   retryTransactionQueue: IQueue<RetryTransactionQueueData>;
 
@@ -74,7 +66,6 @@ export class EVMTransactionListener
     const {
       options,
       networkService,
-      transactionQueue,
       retryTransactionQueue,
       transactionDao,
       userOperationDao,
@@ -84,7 +75,6 @@ export class EVMTransactionListener
     this.chainId = options.chainId;
     this.entryPointMap = options.entryPointMap;
     this.networkService = networkService;
-    this.transactionQueue = transactionQueue;
     this.retryTransactionQueue = retryTransactionQueue;
     this.transactionDao = transactionDao;
     this.userOperationDao = userOperationDao;
@@ -105,7 +95,6 @@ export class EVMTransactionListener
       metaData,
       relayerManagerName,
       previousTransactionHash,
-      error,
     } = notifyTransactionListenerParams;
 
     // if no transactionExecutionResponse then it means transactions was not published onc hain
@@ -114,10 +103,7 @@ export class EVMTransactionListener
       log.error(`transactionExecutionResponse is null for transactionId: ${transactionId} for bundler: ${relayerAddress} hence
       updating transaction and userOp data`);
       try {
-        if (
-          transactionType === TransactionType.BUNDLER ||
-          transactionType === TransactionType.AA
-        ) {
+        if (transactionType === TransactionType.BUNDLER) {
           await this.transactionDao.updateByTransactionIdAndTransactionHash(
             this.chainId,
             transactionId,
@@ -137,22 +123,7 @@ export class EVMTransactionListener
           )}`,
         );
       }
-      try {
-        await this.publishToTransactionQueue({
-          transactionId,
-          relayerManagerName,
-          error,
-          event: SocketEventType.onTransactionError,
-        });
-      } catch (publishToTransactionQueueError) {
-        log.error(
-          `publishToTransactionQueueError: ${parseError(
-            publishToTransactionQueueError,
-          )} while publishing to transaction queue for transactionId: ${transactionId} on chainId: ${
-            this.chainId
-          }`,
-        );
-      }
+
       log.error(
         `transactionExecutionResponse is null for transactionId: ${transactionId} for bundler: ${relayerAddress}`,
       );
@@ -220,26 +191,6 @@ export class EVMTransactionListener
       );
     }
 
-    try {
-      // transaction queue is being listened by socket service to notify the client about the hash
-      await this.publishToTransactionQueue({
-        transactionId,
-        relayerManagerName,
-        transactionHash,
-        receipt: undefined,
-        event: previousTransactionHash
-          ? SocketEventType.onTransactionHashChanged
-          : SocketEventType.onTransactionHashGenerated,
-      });
-    } catch (publishToTransactionQueueError) {
-      log.error(
-        `publishToTransactionQueueError: ${parseError(
-          publishToTransactionQueueError,
-        )} while publishing to transaction queue for transactionId: ${transactionId} on chainId: ${
-          this.chainId
-        }`,
-      );
-    }
     // retry txn service will check for receipt
     log.info(
       `Publishing transaction data of transactionId: ${transactionId} to retry transaction queue on chainId ${this.chainId}`,
@@ -254,13 +205,12 @@ export class EVMTransactionListener
         walletAddress,
         metaData,
         relayerManagerName,
-        event: SocketEventType.onTransactionHashGenerated,
       });
-    } catch (publishToTransactionQueueError) {
+    } catch (publishToRetryTransactionQueueError) {
       log.error(
-        `publishToTransactionQueueError: ${parseError(
-          publishToTransactionQueueError,
-        )} while publishing to transaction queue for transactionId: ${transactionId} on chainId: ${
+        `publishToRetryTransactionQueueError: ${parseError(
+          publishToRetryTransactionQueueError,
+        )} while publishing to retry transaction queue for transactionId: ${transactionId} on chainId: ${
           this.chainId
         }`,
       );
@@ -285,13 +235,6 @@ export class EVMTransactionListener
     return true;
   }
 
-  async publishToTransactionQueue(
-    data: TransactionQueueMessageType,
-  ): Promise<boolean> {
-    await this.transactionQueue.publish(data);
-    return true;
-  }
-
   async publishToRetryTransactionQueue(
     data: RetryTransactionQueueData,
   ): Promise<boolean> {
@@ -306,7 +249,6 @@ export class EVMTransactionListener
       transactionHash,
       transactionReceipt,
       transactionId,
-      relayerManagerName,
       transactionType,
     } = onTransactionSuccessParams;
     if (!transactionReceipt) {
@@ -316,37 +258,12 @@ export class EVMTransactionListener
       return;
     }
 
-    log.info(
-      `Publishing to transaction queue on success for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`,
-    );
-    if (!(transactionType === TransactionType.BUNDLER)) {
-      try {
-        await this.publishToTransactionQueue({
-          transactionId,
-          relayerManagerName,
-          transactionHash,
-          receipt: transactionReceipt,
-          event: SocketEventType.onTransactionMined,
-        });
-      } catch (error) {
-        log.error(
-          `error: ${parseError(
-            error,
-          )} while publishing to transaction queue for transactionId: ${transactionId} on chainId: ${
-            this.chainId
-          }`,
-        );
-      }
-    }
     if (transactionHash) {
       try {
         log.info(
           `transactionType: ${transactionType} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
         );
-        if (
-          transactionType === TransactionType.BUNDLER ||
-          transactionType === TransactionType.AA
-        ) {
+        if (transactionType === TransactionType.BUNDLER) {
           log.info(
             `Getting userOps for transactionId: ${transactionId} on chainId: ${this.chainId}`,
           );
@@ -493,9 +410,9 @@ export class EVMTransactionListener
           transactionFeeCurrency = config.chains.currency[this.chainId];
           const coinsRateObj = await this.cacheService.get(getTokenPriceKey());
           if (!coinsRateObj) {
-            log.info("Coins Rate Obj not fetched from cache"); // TODO should it make call to token price service?
+            log.info("Coins Rate Obj not fetched from cache");
           } else {
-            transactionFeeInUSD = JSON.parse(coinsRateObj)[this.chainId];
+            transactionFeeInUSD = JSON.parse(coinsRateObj)[this.chainId] || 0;
           }
         }
         await this.transactionDao.updateByTransactionIdAndTransactionHash(
@@ -532,7 +449,6 @@ export class EVMTransactionListener
       transactionHash,
       transactionId,
       transactionReceipt,
-      relayerManagerName,
       transactionType,
     } = onTransactionFailureParams;
     if (!transactionReceipt) {
@@ -541,43 +457,13 @@ export class EVMTransactionListener
       );
       return;
     }
-    if (
-      !(
-        transactionType === TransactionType.BUNDLER ||
-        transactionType === TransactionType.AA
-      )
-    ) {
-      log.info(
-        `Publishing to transaction queue on failure for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`,
-      );
-      try {
-        await this.publishToTransactionQueue({
-          transactionId,
-          relayerManagerName,
-          transactionHash,
-          receipt: transactionReceipt,
-          event: SocketEventType.onTransactionMined,
-        });
-      } catch (error) {
-        log.error(
-          `error: ${parseError(
-            error,
-          )} while publishing to transaction queue for transactionId: ${transactionId} on chainId: ${
-            this.chainId
-          }`,
-        );
-      }
-    }
 
     if (transactionHash) {
       try {
         log.info(
           `transactionType: ${transactionType} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
         );
-        if (
-          transactionType === TransactionType.BUNDLER ||
-          transactionType === TransactionType.AA
-        ) {
+        if (transactionType === TransactionType.BUNDLER) {
           log.info(
             `Getting userOps for transactionId: ${transactionId} on chainId: ${this.chainId}`,
           );
@@ -618,7 +504,7 @@ export class EVMTransactionListener
                 `latestBlock: ${latestBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
               );
               let fromBlock = latestBlock - BigInt(1000);
-              if (AstarNetworks.includes(this.chainId)) {
+              if (config.astarNetworks.includes(this.chainId)) {
                 fromBlock += BigInt(501);
               }
               log.info(
@@ -642,27 +528,6 @@ export class EVMTransactionListener
               );
 
               if (!userOpReceipt) {
-                log.info(
-                  `Publishing to transaction queue on failure for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`,
-                );
-                try {
-                  await this.publishToTransactionQueue({
-                    transactionId,
-                    relayerManagerName,
-                    transactionHash,
-                    receipt: transactionReceipt,
-                    event: SocketEventType.onTransactionMined,
-                  });
-                } catch (publishToTransactionQueueError) {
-                  log.error(
-                    `publishToTransactionQueueError: ${parseError(
-                      publishToTransactionQueueError,
-                    )} while publishing to transaction queue for transactionId: ${transactionId} on chainId: ${
-                      this.chainId
-                    }`,
-                  );
-                }
-
                 log.info(
                   `userOpReceipt not fetched for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
                 );
@@ -732,30 +597,6 @@ export class EVMTransactionListener
                 logs,
                 frontRunnedTransactionReceipt,
               } = userOpReceipt;
-
-              log.info(
-                `Transaction got front runned. Publishing to transaction queue on failure for transactionId: ${transactionId} to transaction queue on chainId ${this.chainId}`,
-              );
-
-              try {
-                await this.publishToTransactionQueue({
-                  transactionId,
-                  relayerManagerName,
-                  transactionHash: (
-                    frontRunnedTransactionReceipt as TransactionReceipt
-                  ).transactionHash,
-                  receipt: transactionReceipt,
-                  event: SocketEventType.onTransactionMined,
-                });
-              } catch (publishToTransactionQueueError) {
-                log.error(
-                  `publishToTransactionQueueError: ${parseError(
-                    publishToTransactionQueueError,
-                  )} while publishing to transaction queue for transactionId: ${transactionId} on chainId: ${
-                    this.chainId
-                  }`,
-                );
-              }
 
               log.info(
                 `Updating transaction data for a front runned transaction for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
@@ -829,11 +670,25 @@ export class EVMTransactionListener
                   )}`,
                 );
               } else {
-                frontRunnedTransactionFee = Number(
-                  frontRunnedTransactionReceipt.gasUsed.mul(
-                    frontRunnedTransactionReceipt.effectiveGasPrice,
-                  ),
-                );
+                frontRunnedTransactionFee = 0;
+                try {
+                  frontRunnedTransactionFee = Number(
+                    frontRunnedTransactionReceipt.gasUsed *
+                      frontRunnedTransactionReceipt.effectiveGasPrice,
+                  );
+                } catch (err) {
+                  log.error(
+                    `Error in calculating front ran transaction fee, defaulting to ${frontRunnedTransactionFee}`,
+                    {
+                      transactionId,
+                      chainId: this.chainId,
+                      gasUsed: frontRunnedTransactionReceipt.gasUsed,
+                      effectiveGasPrice:
+                        frontRunnedTransactionReceipt.effectiveGasPrice,
+                    },
+                  );
+                }
+
                 frontRunnedTransactionFeeCurrency =
                   config.chains.currency[this.chainId];
                 const coinsRateObj =
@@ -919,7 +774,7 @@ export class EVMTransactionListener
           if (!coinsRateObj) {
             log.info("Coins Rate Obj not fetched from cache");
           } else {
-            transactionFeeInUSD = JSON.parse(coinsRateObj)[this.chainId];
+            transactionFeeInUSD = JSON.parse(coinsRateObj)[this.chainId] || 0;
           }
         }
         await this.transactionDao.updateByTransactionIdAndTransactionHash(

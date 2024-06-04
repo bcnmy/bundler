@@ -4,6 +4,7 @@ index: 0
 
 
 relayer:
+  environment: "production"
   name: "relayer-server"
   image: "gcr.io/biconomy-prod/sdk/relayer-node-service:latest"
   port: "3000"
@@ -16,11 +17,18 @@ relayer:
       memory: "6000Mi"
       cpu: "4000m"
 
-secret:
+secret_encrypted:
   projectID: biconomy-prod
   key: sdk-prod-relayer-node-service
   config:
     name: config.json.enc
+
+secret_plain:
+  projectID: biconomy-prod
+  key: sdk-prod-relayer-node-service-plain
+  config:
+    name: production.json
+
   
 ingress:
   host: sdk-relayer.prod.biconomy.io
@@ -30,6 +38,10 @@ affinity_tolerations:
   enable: true 
   key: "app"
   values: "monitoring"
+
+# wait for 120 * 10s to fail
+startupProbe:
+  failureThreshold: 120
 
 datadog:
   enable: true

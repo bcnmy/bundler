@@ -1,0 +1,30 @@
+namespace: ""
+
+port: "3000"
+targetPort: "3000"
+replicaCount: 2
+resource:
+  requests:
+    memory: "500Mi"
+    cpu: "200m"
+  limits:
+    memory: "1Gi"
+    cpu: "500m"
+
+secret:
+  projectID: biconomy-test
+  key: sdk-test-relayer-node-service
+  config:
+    name: config.json.enc
+
+  passphrase:
+    key: sdk-test-relayer-node-service-passphrase
+    name: CONFIG_PASSPHRASE
+    version: latest
+
+# datadog configs
+affinity_tolerations:
+  enable: false
+
+datadog:
+  enable: false

@@ -11,7 +11,6 @@ export interface IGasPriceService {
 
   setGasPrice(gasType: GasPriceType, price: string): Promise<void>;
   getGasPrice(gasType?: GasPriceType): Promise<NetworkBasedGasPriceType>;
-  getGasPriceForSimulation(gasType?: GasPriceType): Promise<bigint>;
 
   setMaxFeeGasPrice(gasType: GasPriceType, price: string): Promise<void>;
   getMaxFeeGasPrice(gasType: GasPriceType): Promise<string>;
@@ -29,4 +28,9 @@ export interface IGasPriceService {
 
   setBaseFeePerGas(baseFeePerGas: string): Promise<void>;
   getBaseFeePerGas(): Promise<bigint>;
+
+  get1559GasPrice(): Promise<{
+    maxPriorityFeePerGas: bigint;
+    maxFeePerGas: bigint;
+  }>;
 }

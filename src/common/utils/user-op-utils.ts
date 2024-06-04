@@ -8,6 +8,7 @@ import {
   decodeEventLog,
   encodeAbiParameters,
   keccak256,
+  parseAbiItem,
   parseAbiParameters,
   toHex,
 } from "viem";
@@ -55,6 +56,16 @@ const filterLogs = (
   return [userOperationEventFilteredLog as Log];
 };
 
+/**
+ * Method is responsible for checking if the transaction was front runned
+ * and to to return the correct user operation receipt
+ * @param {number} chainId
+ * @param {string} userOpHash
+ * @param {TransactionReceipt} receipt
+ * @param {EntryPointContractType} entryPointContract
+ * @param {bigint} fromBlock
+ * @param {PublicClient} provider
+ */
 export const getUserOperationReceiptForFailedTransaction = async (
   chainId: number,
   userOpHash: string,
@@ -65,63 +76,32 @@ export const getUserOperationReceiptForFailedTransaction = async (
 ): Promise<any> => {
   try {
     try {
-      const filter = await provider.createEventFilter({
+      // get event logs from the underlying eth_getLogs RPC
+      const userOperationEventLogs = await provider.getLogs({
         address: entryPointContract.address,
-        event: {
-          name: "UserOperationEvent",
-          type: "event",
-          inputs: [
-            {
-              indexed: true,
-              name: "userOpHash",
-              type: "bytes32",
-            },
-            {
-              indexed: true,
-              name: "sender",
-              type: "address",
-            },
-            {
-              indexed: true,
-              name: "paymaster",
-              type: "address",
-            },
-            {
-              indexed: false,
-              name: "nonce",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              name: "success",
-              type: "bool",
-            },
-            {
-              indexed: false,
-              name: "actualGasCost",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              name: "actualGasUsed",
-              type: "uint256",
-            },
-          ],
+        event: parseAbiItem(
+          "event UserOperationEvent(bytes32 indexed userOpHash, address indexed sender, address indexed paymaster, uint256 nonce, bool success, uint256 actualGasCost, uint256 actualGasUsed)",
+        ),
+        args: {
+          userOpHash: userOpHash as `0x${string}`,
         },
         fromBlock,
         toBlock: receipt.blockNumber,
       });
 
-      const providerFilterLogs = await provider.getFilterLogs({ filter });
+      // check if logs for the userOpHash are fetched in the given block range
+      if (userOperationEventLogs.length === 0) {
+        log.error(
+          `error in getUserOperationReceipt: No user operation event logs found`,
+        );
+        return null;
+      }
 
-      const { args } = providerFilterLogs[0];
+      // extract args from logs
+      const { args } = userOperationEventLogs[0];
 
-      log.info(
-        `filter: ${customJSONStringify(
-          filter,
-        )} for userOpHash: ${userOpHash} and chainId: ${chainId}`,
-      );
       if (args) {
+        // start extracting all the necessary fields from args
         const userOperationEventArgs = args;
         log.info(
           `userOperationEventArgs: ${customJSONStringify(
@@ -145,8 +125,12 @@ export const getUserOperationReceiptForFailedTransaction = async (
           `actualGasUsedInNumber: ${actualGasUsedInNumber} for userOpHash: ${userOpHash} and chainId: ${chainId}`,
         );
 
-        const { transactionHash } = providerFilterLogs[0];
+        const { transactionHash } = userOperationEventLogs[0];
         let logs;
+        // check if the transaction hash received in the receipt by Bundler is same
+        // as the one received in the logs from userOpHas
+        // if different it means some other transaction mined the transaction and hence
+        // the transaction was front runned
         if (
           !(
             transactionHash.toLowerCase() ===
@@ -156,12 +140,14 @@ export const getUserOperationReceiptForFailedTransaction = async (
           log.info(
             `Transaction for userOpHash: ${userOpHash} on chainId: ${chainId} was front runned`,
           );
+          // get the receipt for the transaction that was front runned
+          // for data saving and returning the correct userOp receipt
           const frontRunnedTransactionReceipt =
             (await provider.getTransactionReceipt({
               hash: transactionHash,
             })) as TransactionReceipt;
           logs = filterLogs(
-            providerFilterLogs[0],
+            userOperationEventLogs[0],
             frontRunnedTransactionReceipt.logs,
           );
           log.info(
@@ -177,7 +163,9 @@ export const getUserOperationReceiptForFailedTransaction = async (
             frontRunnedTransactionReceipt,
           };
         }
-        logs = filterLogs(providerFilterLogs[0], receipt.logs);
+        // if the transaction hash does not match then ideally this
+        // piece of code should not be touched but filtering logs still
+        logs = filterLogs(userOperationEventLogs[0], receipt.logs);
         log.info(
           `logs: ${customJSONStringify(
             logs,
@@ -195,7 +183,7 @@ export const getUserOperationReceiptForFailedTransaction = async (
       return null;
     } catch (error) {
       log.error(
-        `Missing/invalid userOpHash for userOpHash: ${userOpHash} on chainId: ${chainId} with erro: ${parseError(
+        `Missing/invalid userOpHash for userOpHash: ${userOpHash} on chainId: ${chainId} with error: ${parseError(
           error,
         )}`,
       );

@@ -2,6 +2,7 @@ name: "relayer-server"
 index: 0
 
 relayer:
+  environment: "staging"
   name: "relayer-server"
   image: "gcr.io/biconomy-staging/sdk/relayer-node-service:latest"
   port: "3000"
@@ -24,15 +25,24 @@ affinity_tolerations:
   key: "app"
   values: "relayer-server"
 
-secret:
+secret_encrypted:
   projectID: biconomy-staging
   key: sdk-staging-relayer-node-service
   config:
     name: config.json.enc
 
+secret_plain:
+  projectID: biconomy-staging
+  key: sdk-staging-relayer-node-service-plain
+  config:
+    name: staging.json
+
 ingress:
   host: sdk-relayer.staging.biconomy.io
 
+# wait for 60 * 10s to fail
+startupProbe:
+  failureThreshold: 60
   
 datadog:
   enable: true

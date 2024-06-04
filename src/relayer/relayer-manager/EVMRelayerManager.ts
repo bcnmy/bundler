@@ -14,7 +14,11 @@ import { logger } from "../../common/logger";
 import { INetworkService } from "../../common/network";
 import { getPendingTransactionIncreasingMessage } from "../../common/notification";
 import { INotificationManager } from "../../common/notification/interface";
-import { EVMRawTransactionType, TransactionType } from "../../common/types";
+import {
+  EVMRawTransactionType,
+  EVMRelayerMetaDataType,
+  TransactionType,
+} from "../../common/types";
 import {
   customJSONStringify,
   generateTransactionId,
@@ -24,11 +28,10 @@ import {
 import { config } from "../../config";
 import { EVMAccount, IEVMAccount } from "../account";
 import { INonceManager } from "../nonce-manager";
-import { EVMRelayerMetaDataType, IRelayerQueue } from "../relayer-queue";
+import { IRelayerQueue } from "../relayer-queue";
 import { ITransactionService } from "../transaction-service/interface/ITransactionService";
 import { IRelayerManager } from "./interface/IRelayerManager";
 import { EVMRelayerManagerServiceParamsType } from "./types";
-import { L2Networks } from "../../common/constants";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -364,7 +367,8 @@ export class EVMRelayerManager
         const seedInBuffer = Buffer.from(relayersMasterSeed, "utf-8");
         const ethRoot = hdkey.fromMasterSeed(seedInBuffer);
 
-        const { nodePathIndex } = config.relayer;
+        const nodePathIndex =
+          process.env.BUNDLER_NODE_PATH_INDEX || config.relayer.nodePathIndex;
         const nodePath = `${nodePathRoot + nodePathIndex}/`;
         const ethNodePath: any = ethRoot.derive(nodePath + relayerIndex);
         const privateKey = ethNodePath._privateKey.toString("hex");
@@ -484,7 +488,9 @@ export class EVMRelayerManager
         try {
           let gasLimitIndex = 0;
           // different gas limit for arbitrum
-          if (L2Networks.includes(this.chainId)) gasLimitIndex = 1;
+          if (config.l2Networks.includes(this.chainId)) gasLimitIndex = 1;
+
+          if (config.mantleNetworks.includes(this.chainId)) gasLimitIndex = 3;
 
           const gasLimit = this.gasLimitMap[gasLimitIndex];
 

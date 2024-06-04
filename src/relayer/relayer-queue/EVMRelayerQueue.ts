@@ -2,9 +2,9 @@
 import { Mutex } from "async-mutex";
 import { IRelayerQueue } from "./interface/IRelayerQueue";
 // import { SortEVMRelayerByBalance } from './strategy';
-import { EVMRelayerMetaDataType } from "./types";
 import { logger } from "../../common/logger";
 import { customJSONStringify } from "../../common/utils";
+import { EVMRelayerMetaDataType } from "../../common/types";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),

@@ -9,7 +9,7 @@ import express, {
 import cons from "consolidate";
 import logger from "pino-http";
 import { randomUUID } from "node:crypto";
-import { routes } from "./routes";
+import { routes } from "./api/router";
 
 const app = express();
 
@@ -79,6 +79,10 @@ app.use(express.urlencoded({ extended: false }));
 app.use("", routes);
 
 app.route("/health").get((req, res) => {
+  res.send("ok");
+});
+
+app.route("/:chainId/health").get((req, res) => {
   res.send("ok");
 });
 

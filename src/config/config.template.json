@@ -1,0 +1,16 @@
+{
+  "relayerManagers": [
+    {
+      "name": "RM1",
+      "relayerSeed": "<RANDOM SEED>",
+      "ownerPrivateKey": "<YOUR PRIVATE KEY>",
+      "ownerAddress": "<YOUR ADDRESS>"
+    },
+    {
+      "name": "RM2",
+      "relayerSeed": "<RANDOM SEED>",
+      "ownerPrivateKey": "<YOUR PRIVATE KEY>",
+      "ownerAddress": "<YOUR ADDRESS>"
+    }
+  ]
+}
