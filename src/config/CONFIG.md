@@ -78,6 +78,38 @@ Here are some most basic configuration options:
 
 Also you could take a look at [config/default.json](../../config/default.json) and [src/config/config.template.json](config.template.json) for reference.
 
+## Configuring Redis
+
+There are two supported Redis setups:
+- **Redis Cluster:** used on production, configured through the `redisCluster` config object
+- **Single Redis instance:** used locally, configured through `dataSources.redisUrl`
+
+If `redisCluster.host` is specified in the config (by default it's empty) the Bundler will try to connect to a cluster with a given hostname.
+Otherwise it will try to connect to a single redis instance.
+
+🚨 The two types of Redis are not compatible or interchangeable. If you try to connect to a single Redis instance using the `redisCluster` setting, the service will crash with `None of startup nodes is available`.
+
+### Redis Cluster configuration
+
+The only parameter you have to set is `redisCluster.host` and it should contain the **hostname** (without the port) of your Redis cluster.
+
+Other parameters are optional and have default values. See the `new Cluster` options in the [ioredis docs](https://ioredis.readthedocs.io/en/latest/API/#new-clusterstartupnodes-options).
+
+```
+"redisCluster": {
+  // 🔥 This is the only REQUIRED parameter
+  "host": "https://your-redis-cluster-hostname"
+
+  // All other parameters are optional because they have default values
+  "port": 6379,
+  "reconnectOnError": true,
+  "enableOfflineQueue": true,
+  "maxRedirections": 16,
+  "retryDelayOnFailover": 100,
+  "scaleReads": "master"
+}
+```
+
 ## FAQ & caveats
 
 ### The `relayerManagers` property is not merged correctly

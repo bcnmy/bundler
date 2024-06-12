@@ -37,12 +37,13 @@
     "handlebars": "^4.7.7",
     "hdkey": "^2.0.1",
     "husky": "^8.0.2",
-    "ioredis": "^5.2.4",
+    "ioredis": "^5.4.1",
     "joi": "^17.6.3",
     "lodash": "^4.17.21",
     "mongodb": "^6.3.0",
     "mongoose": "^6.6.5",
     "node-cache": "^5.1.2",
+    "node-mocks-http": "^1.14.1",
     "numeral": "^2.0.6",
     "perf_hooks": "^0.0.1",
     "pino": "^8.15.6",
@@ -54,8 +55,7 @@
     "rest-api-errors": "^1.2.5",
     "serialize-error": "8.1.0",
     "typescript": "^5.3.3",
-    "viem": "^2.7.8",
-    "node-mocks-http": "^1.14.1"
+    "viem": "^2.7.8"
   },
   "devDependencies": {
     "@types/amqplib": "^0.8.2",
