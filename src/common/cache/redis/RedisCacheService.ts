@@ -1,6 +1,7 @@
 /* eslint-disable import/no-import-module-exports */
 import Redlock, { Lock } from "redlock";
 import Redis from "ioredis";
+import nodeconfig from "config";
 import { config } from "../../../config";
 import { logger } from "../../logger";
 import { ICacheService } from "../interface";
@@ -18,9 +19,35 @@ export class RedisCacheService implements ICacheService {
   private redLock: Redlock | undefined;
 
   private constructor() {
-    this.redisClient = new Redis(config.dataSources.redisUrl, {
-      lazyConnect: true,
-    });
+    // If cluster host is specified in the config, connect to the cluster
+    if (nodeconfig.has("redisCluster.host")) {
+      this.redisClient = new Redis.Cluster(
+        [
+          {
+            host: nodeconfig.get("redisCluster.host"),
+            port: nodeconfig.get("redisCluster.port"),
+          },
+        ],
+        {
+          lazyConnect: true,
+          redisOptions: {
+            reconnectOnError: () =>
+              nodeconfig.get("redisCluster.reconnectOnError"),
+          },
+          enableOfflineQueue: nodeconfig.get("redisCluster.enableOfflineQueue"),
+          maxRedirections: nodeconfig.get("redisCluster.maxRedirections"),
+          retryDelayOnFailover: nodeconfig.get(
+            "redisCluster.retryDelayOnFailover",
+          ),
+          scaleReads: nodeconfig.get("redisCluster.scaleReads"),
+        },
+      );
+      // otherwise connect to a single Redis instance
+    } else {
+      this.redisClient = new Redis(config.dataSources.redisUrl, {
+        lazyConnect: true,
+      });
+    }
   }
 
   connectRedLock(): Redlock {
