@@ -6,7 +6,7 @@ This project uses [GitHub issues][gh-issue] to [track bugs][gh-bug] and [feature
 
 For help and questions about using this project, please look at the [docs site for Bundler][docs].
 
-[gh-issue]: https://github.com/bcnmy/relayer-node-service/issues/new/choose
-[gh-bug]: https://github.com/bcnmy/relayer-node-service/issues/new?assignees=&labels=Issue-Bug&template=bug_report.md&title=
-[gh-feature]: https://github.com/bcnmy/relayer-node-service/issues/new?assignees=&labels=Issue-Feature&template=Feature_Request.md&title=
+[gh-issue]: https://github.com/bcnmy/bundler/issues/new/choose
+[gh-bug]: https://github.com/bcnmy/bundler/issues/new?assignees=&labels=Issue-Bug&template=bug_report.md&title=
+[gh-feature]: https://github.com/bcnmy/bundler/issues/new?assignees=&labels=Issue-Feature&template=Feature_Request.md&title=
 [docs]: https://docs.biconomy.io/bundler
