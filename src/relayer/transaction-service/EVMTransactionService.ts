@@ -1,7 +1,7 @@
 /* eslint-disable import/no-import-module-exports */
 /* eslint-disable no-else-return */
 import { Mutex } from "async-mutex";
-import { toHex } from "viem";
+import { TransactionReceipt, toHex } from "viem";
 import { ICacheService } from "../../common/cache";
 import { IGasPriceService } from "../../common/gas-price";
 import { logger } from "../../common/logger";
@@ -42,6 +42,7 @@ import {
   TransactionDataType,
 } from "./types";
 import { IUserOperationStateDAO } from "../../common/db";
+import { GasPriceType } from "../../common/gas-price/types";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -125,6 +126,8 @@ export class EVMTransactionService
     );
 
     const maxRetryCount = 5;
+
+    // TODO: Here is where we can add the logic to cancel the transaction
 
     if (retryTransactionCount > maxRetryCount) {
       try {
@@ -726,6 +729,83 @@ export class EVMTransactionService
 
     const response = await retryExecuteTransaction(executeTransactionParams);
     return response;
+  }
+
+  async cancelTransaction(
+    account: IEVMAccount,
+    nonce: number,
+  ): Promise<TransactionReceipt> {
+    const relayerAddress = account.getPublicKey();
+    log.info(
+      `Cancel transaction request received for relayerAddress: ${relayerAddress} for nonce=${nonce} on chainId: ${this.chainId}`,
+    );
+
+    const addressMutex = this.getMutex(account.getPublicKey());
+    log.info(
+      `Taking lock on address: ${account.getPublicKey()} to cancel transaction for relayerAddress: ${relayerAddress} for nonce: ${nonce} on chainId: ${
+        this.chainId
+      }`,
+    );
+    const release = await addressMutex.acquire();
+
+    try {
+      const gasPrice = await this.gasPriceService.getGasPrice(
+        GasPriceType.FAST,
+      );
+      let gasParams:
+        | { type: "legacy"; gasPrice: bigint }
+        | {
+            type: "eip1559";
+            maxFeePerGas: bigint;
+            maxPriorityFeePerGas: bigint;
+          };
+      if (typeof gasPrice !== "bigint") {
+        log.info(
+          `Gas price being used to cancel transaction by relayer: ${relayerAddress} for nonce: ${nonce} is: ${customJSONStringify(
+            gasPrice,
+          )} on chainId: ${this.chainId}`,
+        );
+        const { maxPriorityFeePerGas, maxFeePerGas } = gasPrice;
+        gasParams = {
+          type: "eip1559",
+          maxFeePerGas: BigInt(maxFeePerGas),
+          maxPriorityFeePerGas: BigInt(maxPriorityFeePerGas),
+        };
+      } else {
+        gasParams = { type: "legacy", gasPrice: BigInt(gasPrice) };
+      }
+
+      const rawCancelTransaction: EVMRawTransactionType = {
+        from: relayerAddress,
+        to: relayerAddress as `0x${string}`,
+        value: BigInt(0),
+        data: "0x",
+        nonce,
+        gasLimit: toHex(21000),
+        chainId: this.chainId,
+        ...gasParams,
+      };
+
+      const cancelTransactionResponse =
+        await this.networkService.sendTransaction(
+          rawCancelTransaction,
+          account,
+        );
+
+      log.info(
+        `Cancel transaction txHash: ${cancelTransactionResponse} for relayerAddress=${relayerAddress} and nonce: ${nonce} on chainId: ${this.chainId}`,
+      );
+
+      const receipt = await this.networkService.waitForTransaction(
+        cancelTransactionResponse as string,
+        "ADMIN_CANCEL",
+      );
+
+      return receipt;
+    } catch (err: any) {
+      release();
+      throw err;
+    }
   }
 
   private async handleNonceTooLow(rawTransaction: EVMRawTransactionType) {
