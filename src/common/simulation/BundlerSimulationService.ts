@@ -13,6 +13,7 @@ import {
   createArbitrumGasEstimator,
   createGasEstimator,
   createMantleGasEstimator,
+  createMorphGasEstimator,
   createOptimismGasEstimator,
   createScrollGasEstimator,
   IGasEstimator,
@@ -81,6 +82,12 @@ export class BundlerSimulationService {
 
     if (config.scrollNetworks.includes(this.networkService.chainId)) {
       this.gasEstimator = createScrollGasEstimator({
+        rpcUrl: this.networkService.rpcUrl,
+      });
+    }
+
+    if (config.morphNetworks.includes(this.networkService.chainId)) {
+      this.gasEstimator = createMorphGasEstimator({
         rpcUrl: this.networkService.rpcUrl,
       });
     }

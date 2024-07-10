@@ -127,6 +127,8 @@ export type ConfigType = {
   networksNotSupportingEthCallStateOverrides: Array<number>;
   // array of chain Ids for networks that are part of the Optimism ecosystem
   optimismNetworks: Array<number>;
+  // array of chain Ids for networks that are part of the Optimism ecosystem - they have a different gas price oracle than Optimism
+  morphNetworks: Array<number>;
   paymasterDashboardBackendConfig: PaymasterDashboardBackendConfigType;
   // array of chain Ids for networks that are part of the Polygon zkEVM ecosystem
   polygonZKEvmNetworks: Array<number>;
