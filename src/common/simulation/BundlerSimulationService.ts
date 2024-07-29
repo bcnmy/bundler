@@ -16,6 +16,7 @@ import {
   createMorphGasEstimator,
   createOptimismGasEstimator,
   createScrollGasEstimator,
+  createSeiGasEstimator,
   IGasEstimator,
 } from "entry-point-gas-estimations";
 import { config } from "../../config";
@@ -88,6 +89,12 @@ export class BundlerSimulationService {
 
     if (config.morphNetworks.includes(this.networkService.chainId)) {
       this.gasEstimator = createMorphGasEstimator({
+        rpcUrl: this.networkService.rpcUrl,
+      });
+    }
+
+    if (config.seiNetworks.includes(this.networkService.chainId)) {
+      this.gasEstimator = createSeiGasEstimator({
         rpcUrl: this.networkService.rpcUrl,
       });
     }
