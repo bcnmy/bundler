@@ -17,10 +17,10 @@ services:
         condition: service_started
       redis:
         condition: service_healthy
-        restart: true
+        # restart: true
       rabbitmq:
         condition: service_healthy
-        restart: true
+        # restart: true
       # centrifugo:
       #   condition: service_healthy
       #   restart: true
@@ -78,7 +78,7 @@ services:
 
   rabbitmq:
     image: heidiks/rabbitmq-delayed-message-exchange:3.8.3-management
-    container_name: "rabbitmq"
+    container_name: rabbitmq
     healthcheck:
       test: rabbitmq-diagnostics -q ping
       interval: 5s

@@ -33,7 +33,7 @@ Other useful commands:
 
 
 ### NOTES for DEVOPS
-When adding a new chain integration make sure to add the new charin id
+When adding a new chain integration make sure to add the new chain id
 to all relevant config deployment files, in the `supportedNetworks`
 e.g. `config/staging.json` or the bunlder will not start that network
 even thouh is supported.
