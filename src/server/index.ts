@@ -6,6 +6,7 @@ import tracer from "dd-trace";
 import { logger } from "../common/logger";
 import { configInstance } from "../config";
 
+// eslint-disable-next-line func-names
 tracer.init({ logInjection: false });
 
 const log = logger.child({
