@@ -6,6 +6,11 @@ import tracer from "dd-trace";
 import { logger } from "../common/logger";
 import { configInstance } from "../config";
 
+// eslint-disable-next-line func-names
+(BigInt.prototype as any).toJSON = function () {
+  return this.toString();
+};
+
 tracer.init({ logInjection: false });
 
 const log = logger.child({

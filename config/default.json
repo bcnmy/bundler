@@ -899,6 +899,9 @@
     },
     "0x00000061fefce24a79343c27127435286bb7a4e1": {
       "supportedChainIds": [88888, 88882]
+    },
+    "0x0000000071727De22E5E9d8BAf0edAc6f37da032": {
+      "supportedChainIds": [84532]
     }
   },
   "zeroAddress": "0x0000000000000000000000000000000000000000",
@@ -983,5 +986,12 @@
     "maxRedirections": 16,
     "retryDelayOnFailover": 100,
     "scaleReads": "master"
+  },
+  "hardcodedGasLimits": {
+    "84532": {
+      "verificationGasLimit": 50000000,
+      "callGasLimit": 50000000,
+      "preVerificationGasLimit": 50000000
+    }
   }
 }
