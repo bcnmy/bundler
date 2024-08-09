@@ -123,7 +123,7 @@ export function getUserOpHash(
         userOp.gasFees,
         keccak256(userOp.paymasterAndData),
       ]
-    )
+    );
     const userOpHash = keccak256(userOpEncoded);
   
     const fullEncodedData = encodeAbiParameters(

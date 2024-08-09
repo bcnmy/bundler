@@ -1,11 +1,5 @@
 import { UserOperationType } from "../../types";
 import { getUserOpHash, packUserOperation } from "../PackedUserOperation";
-import { logger } from "../../logger";
-import { assert } from "joi";
-
-const log = logger.child({
-   module: module.filename.split("/").slice(-4).join("/"),
-});
 
 describe("PackedUserOperation test", () => {
     const ENTRYPOINT_V7_ADDRESS = "0x0000000071727De22E5E9d8BAf0edAc6f37da032";
@@ -53,8 +47,7 @@ describe("PackedUserOperation test", () => {
     
             
             const packedUserOp = packUserOperation(userOp);
-            console.log(getUserOpHash(packedUserOp, ENTRYPOINT_V7_ADDRESS, chainId));
-            expect(getUserOpHash(packedUserOp, ENTRYPOINT_V7_ADDRESS, chainId) == correctHash).toEqual(false);
+            expect(getUserOpHash(packedUserOp, ENTRYPOINT_V7_ADDRESS, chainId) === correctHash).toEqual(false);
             });
     });
 });
