@@ -2,7 +2,7 @@ import { type Hex, concat, pad, slice, toHex, keccak256, encodeAbiParameters} fr
 import type { UserOperationType } from "../types";
 
 // TODO: Move this to config after we refactor the config
-export const COMMON_ENTRYPOINT_V7_ADDRESSES = [
+export const COMMON_ENTRYPOINT_V7_ADDRESSES : [`0x${string}`] = [
   "0x0000000071727De22E5E9d8BAf0edAc6f37da032",
 ];
 
@@ -32,32 +32,43 @@ export function packPaymasterData(
       paymasterData
   ]) as Hex;
 }
-export function getAccountGasLimits(userOperation: UserOperationType): Hex {
-    return concat([
-        pad(toHex(userOperation.verificationGasLimit), { size: 16 }),
-        pad(toHex(userOperation.callGasLimit), { size: 16 }),
-    ]) as Hex;
+
+export function packUint(a: bigint, b: bigint): Hex {
+  return concat([
+    pad(toHex(a), { size: 16 }),
+    pad(toHex(b), { size: 16 }),
+  ]) as Hex;
+}
+
+export function unpackUint(packedUints: Hex) {
+    return {
+      a: BigInt(slice(packedUints, 0, 16)),
+      b: BigInt(slice(packedUints, 16)),
+  };
+}
+
+export function packAccountGasLimits(userOperation: UserOperationType): Hex {
+  return packUint(userOperation.verificationGasLimit, userOperation.callGasLimit);
 }
 
 export function unpackAccountGasLimits(accountGasLimits: Hex) {
-    return {
-        verificationGasLimit: BigInt(slice(accountGasLimits, 0, 16)),
-        callGasLimit: BigInt(slice(accountGasLimits, 16)),
-    };
+  const { a, b } = unpackUint(accountGasLimits);
+  const verificationGasLimit = a;
+  const callGasLimit = b;
+
+  return {verificationGasLimit, callGasLimit};
 }
 
-export function getGasFees(userOperation: UserOperationType): Hex {
-    return concat([
-        pad(toHex(userOperation.maxPriorityFeePerGas), { size: 16 }),
-        pad(toHex(userOperation.maxFeePerGas), { size: 16 }),
-    ]) as Hex;
+export function packGasFees(userOperation: UserOperationType): Hex {
+  return packUint(userOperation.maxPriorityFeePerGas, userOperation.maxFeePerGas);
 }
 
 export function unpackGasFees(gasFees: Hex) {
-    return {
-        maxPriorityFeePerGas: BigInt(slice(gasFees, 0, 16)),
-        maxFeePerGas: BigInt(slice(gasFees, 16)),
-    };
+    const { a, b } = unpackUint(gasFees);
+    const maxPriorityFeePerGas = a;
+    const maxFeePerGas = b;
+
+    return {maxPriorityFeePerGas, maxFeePerGas};
 }
 
 export function packUserOperation(
@@ -68,9 +79,9 @@ export function packUserOperation(
         nonce: userOperation.nonce,
         initCode: userOperation.initCode,
         callData: userOperation.callData,
-        accountGasLimits: getAccountGasLimits(userOperation),
+        accountGasLimits: packAccountGasLimits(userOperation),
         preVerificationGas: userOperation.preVerificationGas,
-        gasFees: getGasFees(userOperation),
+        gasFees: packGasFees(userOperation),
         paymasterAndData: userOperation.paymasterAndData,
         signature: userOperation.signature,
     };
@@ -97,34 +108,67 @@ export function unpackUserOperation(
     };
 }
 
+export function encodePackedUserOp(
+  userOp: PackedUserOperation,
+  forSignature=true
+): `0x${string}` {
+    if (forSignature) {
+      return encodeAbiParameters(
+        [
+          { type: 'address' },
+          { type: 'uint256' },
+          { type: 'bytes32' },
+          { type: 'bytes32' },
+          { type: 'bytes32' },
+          { type: 'uint256' },
+          { type: 'bytes32' },
+          { type: 'bytes32' },
+        ],
+        [
+          userOp.sender,
+          userOp.nonce,
+          keccak256(userOp.initCode),
+          keccak256(userOp.callData),
+          userOp.accountGasLimits,
+          userOp.preVerificationGas,
+          userOp.gasFees,
+          keccak256(userOp.paymasterAndData),
+        ]
+      );
+    } else {
+      return encodeAbiParameters(
+        [
+          { type: 'address' },
+          { type: 'uint256' },
+          { type: 'bytes32' },
+          { type: 'bytes32' },
+          { type: 'bytes32' },
+          { type: 'uint256' },
+          { type: 'bytes32' },
+          { type: 'bytes32' },
+          { type: 'bytes'   }, 
+        ],
+        [
+          userOp.sender,
+          userOp.nonce,
+          userOp.initCode,
+          userOp.callData,
+          userOp.accountGasLimits,
+          userOp.preVerificationGas,
+          userOp.gasFees,
+          userOp.paymasterAndData,
+          userOp.signature
+        ]
+      );
+    }
+}
+
 export function getUserOpHash(
     userOp: PackedUserOperation,
     entryPoint: `0x${string}`,
     chainId: bigint
 ): Hex {
-    const userOpEncoded = encodeAbiParameters(
-      [
-        { type: 'address' },
-        { type: 'uint256' },
-        { type: 'bytes32' },
-        { type: 'bytes32' },
-        { type: 'bytes32' },
-        { type: 'uint256' },
-        { type: 'bytes32' },
-        { type: 'bytes32' },
-      ],
-      [
-        userOp.sender,
-        userOp.nonce,
-        keccak256(userOp.initCode),
-        keccak256(userOp.callData),
-        userOp.accountGasLimits,
-        userOp.preVerificationGas,
-        userOp.gasFees,
-        keccak256(userOp.paymasterAndData),
-      ]
-    );
-    const userOpHash = keccak256(userOpEncoded);
+    const userOpHash = keccak256(encodePackedUserOp(userOp, true));
   
     const fullEncodedData = encodeAbiParameters(
       [
