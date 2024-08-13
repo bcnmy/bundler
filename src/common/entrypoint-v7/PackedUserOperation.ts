@@ -19,19 +19,6 @@ export interface PackedUserOperation {
   signature: `0x${string}`;
 }
 
-export function packPaymasterData(
-  paymaster: `0x${string}`,
-  paymasterVerificationGasLimit: number | bigint,
-  postOpGasLimit: number | bigint,
-  paymasterData: `0x${string}`
-): Hex {
-  return concat([
-      paymaster,
-      pad(toHex(paymasterVerificationGasLimit), { size: 16 }),
-      pad(toHex(postOpGasLimit), { size: 16 }),
-      paymasterData
-  ]) as Hex;
-}
 
 export function packUint(a: bigint, b: bigint): Hex {
   return concat([
