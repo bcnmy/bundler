@@ -77,6 +77,6 @@ declare -A chain_eth=(
   [chainId]="1"
   [autoScalingThreshholdHTTPRequestsPerMinute]=1000
   [autoScalingThreshholdCPU]=800m
-  [minReplica]=3
-  [maxReplica]=3
+  [minReplica]=2
+  [maxReplica]=2
 )
