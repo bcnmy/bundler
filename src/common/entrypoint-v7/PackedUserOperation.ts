@@ -1,22 +1,22 @@
 import { type Hex, concat, pad, slice, toHex, keccak256, encodeAbiParameters} from "viem";
-import type { UserOperationType } from "../types";
+import type { UserOperationStruct } from "../types";
 
 // TODO: Move this to config after we refactor the config
-export const COMMON_ENTRYPOINT_V7_ADDRESSES : [`0x${string}`] = [
+export const COMMON_ENTRYPOINT_V7_ADDRESSES : [Hex] = [
   "0x0000000071727De22E5E9d8BAf0edAc6f37da032",
 ];
 
 // Definitions can be found in the ERC doc: https://eips.ethereum.org/EIPS/eip-4337#entrypoint-definition
 export interface PackedUserOperation {
-  sender: `0x${string}`;
+  sender: Hex;
   nonce: bigint;
-  initCode: `0x${string}`;
-  callData: `0x${string}`;
-  accountGasLimits: `0x${string}`;
+  initCode: Hex;
+  callData: Hex;
+  accountGasLimits: Hex;
   preVerificationGas: bigint;
-  gasFees: `0x${string}`;
-  paymasterAndData: `0x${string}`;
-  signature: `0x${string}`;
+  gasFees: Hex;
+  paymasterAndData: Hex;
+  signature: Hex;
 }
 
 /**
@@ -49,7 +49,7 @@ export function unpackUint(packedUints: Hex) {
   };
 }
 
-export function packAccountGasLimits(userOperation: UserOperationType): Hex {
+export function packAccountGasLimits(userOperation: UserOperationStruct): Hex {
   return packUint(userOperation.verificationGasLimit, userOperation.callGasLimit);
 }
 
@@ -61,16 +61,63 @@ export function unpackAccountGasLimits(accountGasLimits: Hex) {
   return {verificationGasLimit, callGasLimit};
 }
 
-export function packGasFees(userOperation: UserOperationType): Hex {
+export function packGasFees(userOperation: UserOperationStruct): Hex {
   return packUint(userOperation.maxPriorityFeePerGas, userOperation.maxFeePerGas);
 }
 
 export function unpackGasFees(gasFees: Hex) {
-    const { a, b } = unpackUint(gasFees);
-    const maxPriorityFeePerGas = a;
-    const maxFeePerGas = b;
+  const { a, b } = unpackUint(gasFees);
+  const maxPriorityFeePerGas = a;
+  const maxFeePerGas = b;
 
-    return {maxPriorityFeePerGas, maxFeePerGas};
+  return {maxPriorityFeePerGas, maxFeePerGas};
+}
+
+export function packInitCode(userOperation: UserOperationStruct): Hex {
+  return userOperation.factory == null ? '0x' : concat([userOperation.factory, toHex(userOperation.factoryData ?? '')]);
+}
+
+export function unpackInitCode(initCode: Hex) {
+  if (initCode != null && initCode.length > 2) {
+    const factory = slice(initCode, 0, 20);
+    const factoryData = slice(initCode, 20);
+    return { factory, factoryData };
+  }
+  return null;
+}
+
+export function packPaymasterAndData(userOperation: UserOperationStruct): Hex {
+  if (userOperation.paymaster == null) {
+    return `0x`;
+  } 
+    if (userOperation.paymasterVerificationGasLimit == null || userOperation.paymasterPostOpGasLimit == null) {
+      throw new Error('paymaster with no gas limits');
+    }
+    return concat([
+      userOperation.paymaster,
+      packUint(userOperation.paymasterVerificationGasLimit, userOperation.paymasterPostOpGasLimit),
+      userOperation.paymasterData ?? '0x'
+    ]);
+  
+}
+
+export function unpackPaymasterAndData(paymasterAndData: Hex): {
+  paymaster: Hex
+  paymasterVerificationGas: bigint
+  postOpGasLimit: bigint
+  paymasterData: Hex
+} | null {
+  if (paymasterAndData.length <= 2) return null;
+  if (paymasterAndData.length < 52) {
+    throw new Error(`invalid paymasterAndData: ${paymasterAndData as string}`);
+  }
+  const {a, b} = unpackUint(slice(paymasterAndData, 20, 52));
+  return {
+    paymaster: slice(paymasterAndData, 0, 20),
+    paymasterVerificationGas: a,
+    postOpGasLimit: b,
+    paymasterData: slice(paymasterAndData, 52)
+  };
 }
 
 /**
@@ -84,17 +131,17 @@ export function unpackGasFees(gasFees: Hex) {
  * @returns The PackedUserOperation object.
  */
 export function packUserOperation(
-    userOperation: UserOperationType,
+    userOperation: UserOperationStruct,
 ): PackedUserOperation {
     return {
         sender: userOperation.sender,
         nonce: userOperation.nonce,
-        initCode: userOperation.initCode,
+        initCode: packInitCode(userOperation),
         callData: userOperation.callData,
         accountGasLimits: packAccountGasLimits(userOperation),
         preVerificationGas: userOperation.preVerificationGas,
         gasFees: packGasFees(userOperation),
-        paymasterAndData: userOperation.paymasterAndData,
+        paymasterAndData: packPaymasterAndData(userOperation),
         signature: userOperation.signature,
     };
 }
@@ -107,23 +154,43 @@ export function packUserOperation(
  */
 export function unpackUserOperation(
     packedUserOperation: PackedUserOperation,
-): UserOperationType {
+): UserOperationStruct {
     const { verificationGasLimit, callGasLimit } = unpackAccountGasLimits(packedUserOperation.accountGasLimits);
     const { maxPriorityFeePerGas, maxFeePerGas } = unpackGasFees(packedUserOperation.gasFees);
 
-    return {
+    let result : UserOperationStruct = {
         sender: packedUserOperation.sender,
         nonce: packedUserOperation.nonce,
-        initCode: packedUserOperation.initCode,
+        // initCode: packedUserOperation.initCode,
         callData: packedUserOperation.callData,
         callGasLimit,
         verificationGasLimit,
         preVerificationGas: packedUserOperation.preVerificationGas,
         maxFeePerGas,
         maxPriorityFeePerGas,
-        paymasterAndData: packedUserOperation.paymasterAndData,
         signature: packedUserOperation.signature,
     };
+
+    if (packedUserOperation.initCode != null && packedUserOperation.initCode.length > 2) {
+      const factory = slice(packedUserOperation.initCode, 0, 20);
+      const factoryData = slice(packedUserOperation.initCode, 20);
+      result = {
+        ...result,
+        factory,
+        factoryData
+      };
+    }
+    const paymasterData = unpackPaymasterAndData(packedUserOperation.paymasterAndData);
+    if (paymasterData != null) {
+      result = {
+        ...result,
+        paymaster: paymasterData.paymaster,
+        paymasterVerificationGasLimit: paymasterData.paymasterVerificationGas,
+        paymasterPostOpGasLimit: paymasterData.postOpGasLimit,
+        paymasterData: paymasterData.paymasterData
+      };
+    }
+    return result;
 }
 
 export function encodePackedUserOp(

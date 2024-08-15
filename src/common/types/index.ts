@@ -123,6 +123,26 @@ export type UserOperationType = {
   signature: `0x${string}`;
 };
 
+export type UserOperationStruct = {
+  sender: Hex
+  nonce: bigint
+  factory?: Hex
+  factoryData?: Hex
+  callData: Hex
+  callGasLimit: bigint
+  verificationGasLimit: bigint
+  preVerificationGas: bigint
+  maxFeePerGas: bigint
+  maxPriorityFeePerGas: bigint
+  paymaster?: Hex
+  paymasterVerificationGasLimit?: bigint
+  paymasterPostOpGasLimit?: bigint
+  paymasterData?: Hex
+  signature: Hex
+  paymasterAndData?: never
+  initCode?: never
+};
+
 export type SymbolMapByChainIdType = {
   [key: number]: {
     [key: string]: string;
