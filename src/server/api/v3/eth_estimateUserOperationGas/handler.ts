@@ -4,7 +4,7 @@ import { toHex } from "viem";
 import { STATUSES } from "../../shared/middleware";
 import { logger } from "../../../../common/logger";
 import {
-  bundlerSimulationServiceMap,
+  bundlerSimulationServiceMapV07,
   entryPointMap,
   gasPriceServiceMap,
 } from "../../../../common/service-manager";
@@ -60,7 +60,7 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
     }
 
     // Check if given chain id is supported by our bundler
-    const simulator = bundlerSimulationServiceMap[parseInt(chainId, 10)];
+    const simulator = bundlerSimulationServiceMapV07[parseInt(chainId, 10)];
     if (!simulator) {
       return res
         .status(STATUSES.BAD_REQUEST)

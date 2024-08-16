@@ -2,6 +2,7 @@ import {
   EntryPointContractType,
   StateOverrideSetType,
   UserOperationType,
+  UserOperationStruct
 } from "../../types";
 
 // data response type that external simulation serivcereturns
@@ -29,6 +30,7 @@ export type AASimulationDataType = {
   chainId: number;
 };
 
+
 export type BundlerSimulationDataType = {
   userOp: UserOperationType;
   entryPointContract: EntryPointContractType;
@@ -37,6 +39,13 @@ export type BundlerSimulationDataType = {
 
 export type EstimateUserOperationGasDataType = {
   userOp: UserOperationType;
+  entryPointContract: EntryPointContractType;
+  chainId: number;
+  stateOverrideSet?: StateOverrideSetType;
+};
+
+export type EstimateUserOperationGasDataTypeV07 = {
+  userOp: UserOperationStruct;
   entryPointContract: EntryPointContractType;
   chainId: number;
   stateOverrideSet?: StateOverrideSetType;
@@ -97,8 +106,21 @@ export type SimulationData = {
   chainId: number;
 };
 
+export type SimulationDataV07 = {
+  userOp: UserOperationStruct;
+  entryPointContract: EntryPointContractType;
+  chainId: number;
+};
+
+
 export type ValidationData = {
   userOp: UserOperationType;
+  networkMaxPriorityFeePerGas: bigint;
+  networkMaxFeePerGas: bigint;
+};
+
+export type ValidationDataV07 = {
+  userOp: UserOperationStruct;
   networkMaxPriorityFeePerGas: bigint;
   networkMaxFeePerGas: bigint;
 };

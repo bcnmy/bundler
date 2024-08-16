@@ -1,4 +1,5 @@
 import { type Hex, concat, pad, slice, toHex, keccak256, encodeAbiParameters} from "viem";
+import { isUndefined } from "lodash";
 import type { UserOperationStruct } from "../types";
 
 // TODO: Move this to config after we refactor the config
@@ -74,7 +75,11 @@ export function unpackGasFees(gasFees: Hex) {
 }
 
 export function packInitCode(userOperation: UserOperationStruct): Hex {
-  return userOperation.factory == null ? '0x' : concat([userOperation.factory, toHex(userOperation.factoryData ?? '')]);
+  console.log('factoryData', userOperation.factoryData);
+  if (userOperation.factory !== null && !isUndefined(userOperation.factory) && userOperation.factoryData !== null && !isUndefined(userOperation.factoryData)) {
+    return concat([userOperation.factory, userOperation.factoryData]);
+  }
+  return userOperation.factory == null ? '0x' : toHex(concat([userOperation.factory]));
 }
 
 export function unpackInitCode(initCode: Hex) {

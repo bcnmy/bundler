@@ -29,7 +29,7 @@ import {
   RetryTransactionHandlerQueue,
 } from "../queue";
 import { BundlerRelayService } from "../relay-service";
-import { BundlerSimulationService } from "../simulation";
+import { BundlerSimulationService, BundlerSimulationServiceV07 } from "../simulation";
 import { IStatusService, StatusService } from "../status";
 import {
   BundlerTransactionMessageType,
@@ -58,6 +58,10 @@ const gasPriceServiceMap: {
 
 const bundlerSimulationServiceMap: {
   [chainId: number]: BundlerSimulationService;
+} = {};
+
+const bundlerSimulationServiceMapV07: {
+  [chainId: number]: BundlerSimulationServiceV07;
 } = {};
 
 const entryPointMap: EntryPointMapType = {};
@@ -293,6 +297,11 @@ let statusService: IStatusService;
       networkService,
       gasPriceService,
     );
+    //TODO: get v7 chains
+    bundlerSimulationServiceMapV07[chainId] = new BundlerSimulationServiceV07(
+      networkService,
+      gasPriceService,
+    );
 
     const { entryPointData } = config;
 
@@ -372,6 +381,7 @@ let statusService: IStatusService;
     dbInstance,
     gasPriceServiceMap,
     bundlerSimulationServiceMap,
+    bundlerSimulationServiceMapV07,
   });
   log.info("<=== Config setup completed ===>");
 })();
@@ -379,6 +389,7 @@ let statusService: IStatusService;
 export {
   routeTransactionToRelayerMap,
   bundlerSimulationServiceMap,
+  bundlerSimulationServiceMapV07,
   entryPointMap,
   EVMRelayerManagerMap,
   transactionServiceMap,

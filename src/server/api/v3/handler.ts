@@ -25,7 +25,7 @@ const isChainIdSupported = (chainId: number): boolean => {
   return supportedNetworks.includes(chainId);
 };
 
-export const handleV2Request = async (req: Request, res: Response) => {
+export const handleV3Request = async (req: Request, res: Response) => {
   const { method, id } = req.body;
   const { chainId } = req.params;
 
