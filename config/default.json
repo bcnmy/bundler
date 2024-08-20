@@ -917,7 +917,7 @@
   "scrollNetworks": [534351, 534352],
   "networksNotSupportingEthCallStateOverrides": [
     1101, 81, 592, 169, 3441005, 1715, 7116, 9980, 88882, 88888, 81457,
-    666666666, 2442, 8101902, 7001, 196, 195, 167009, 713715, 167000, 1328, 1329
+    666666666, 2442, 8101902, 7001, 196, 195, 167009, 713715, 167000, 1328, 1329, 100
   ],
   "trustWalletSupportedNetworks": [137, 56, 204, 42161, 10, 8453],
   "networksNotSupportingEthCallBytecodeStateOverrides": [
