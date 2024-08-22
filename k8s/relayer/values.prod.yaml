@@ -37,7 +37,7 @@ ingress:
 affinity_tolerations:
   enable: true 
   key: "app"
-  values: "monitoring"
+  values: "relayer-server"
 
 # wait for 120 * 10s to fail
 startupProbe:
