@@ -43,6 +43,11 @@ affinity_tolerations:
 startupProbe:
   failureThreshold: 120
 
+# Whether or not we want a pod disruption budget, enabled by default
+podDisruptionBudget:
+  enable: true
+  minAvailable: 1
+
 datadog:
   enable: true
   env: "production"
