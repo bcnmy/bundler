@@ -12,10 +12,10 @@ relayer:
   resource:
     requests:
       memory: "6000Mi"
-      cpu: "4000m"
+      cpu: "2000m"
     limits:
       memory: "6000Mi"
-      cpu: "4000m"
+      # cpu: "4000m" # don't need to set limit Ref: https://home.robusta.dev/blog/stop-using-cpu-limits
 
 secret_encrypted:
   projectID: biconomy-prod
