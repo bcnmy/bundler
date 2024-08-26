@@ -2,7 +2,7 @@
 import { Request, Response } from "express";
 import { STATUSES } from "../../shared/middleware";
 import { logger } from "../../../../common/logger";
-import { userOperationDao } from "../../../../common/service-manager";
+import { userOperationV07Dao } from "../../../../common/service-manager";
 import { parseError } from "../../../../common/utils";
 
 const log = logger.child({
@@ -117,7 +117,7 @@ export const getUserOperationsByApiKey = async (
     );
 
     const userOperationsData =
-      await userOperationDao.getUserOperationsDataByApiKey(
+      await userOperationV07Dao.getUserOperationsDataByApiKey(
         parseInt(chainId, 10),
         bundlerApiKey,
         startTimeInMs,
@@ -138,7 +138,7 @@ export const getUserOperationsByApiKey = async (
     }
 
     const totalUserOperationsCount =
-      await userOperationDao.getUserOperationsCountByApiKey(
+      await userOperationV07Dao.getUserOperationsCountByApiKey(
         parseInt(chainId, 10),
         bundlerApiKey,
         0,
@@ -155,12 +155,13 @@ export const getUserOperationsByApiKey = async (
       const {
         sender,
         nonce,
-        initCode,
+        factory,
+        factoryData,
         callData,
         callGasLimit,
         preVerificationGas,
         verificationGasLimit,
-        paymasterAndData,
+        paymaster,
         maxFeePerGas,
         maxPriorityFeePerGas,
         signature,
@@ -169,7 +170,6 @@ export const getUserOperationsByApiKey = async (
         blockHash,
         entryPoint,
         success,
-        paymaster,
         actualGasCost,
         actualGasUsed,
         logs,
@@ -180,12 +180,12 @@ export const getUserOperationsByApiKey = async (
       userOpsData.push({
         sender,
         nonce,
-        initCode,
+        factory,
+        factoryData,
         callData,
         callGasLimit,
         preVerificationGas,
         verificationGasLimit,
-        paymasterAndData,
         maxFeePerGas,
         maxPriorityFeePerGas,
         signature,

@@ -7,6 +7,9 @@
     5003, 100, 10200, 195, 196, 2810, 997, 713715, 3799, 167009, 80084, 5845,
     167000, 1328, 1329
   ],
+  "supportedNetworksV07": [
+    84532
+  ],
   "EIP1559SupportedNetworks": [
     1, 137, 42161, 10, 43114, 43113, 8453, 59140, 59144, 204, 5611, 421614,
     11155111, 84532, 168587773, 80085, 81457, 42170, 169, 56400, 11155420,
@@ -81,6 +84,9 @@
     "167000": ["BUNDLER"],
     "1328": ["BUNDLER"],
     "1329": ["BUNDLER"]
+  },
+  "supportedTransactionTypeV07": {
+    "84532": ["BUNDLER_V3"]
   },
   "chains": {
     "providers": {
@@ -380,7 +386,7 @@
   },
   "maxPriorityFeePerGasThresholdPercentage": 0.5,
   "maxFeePerGasThresholdPercentage": 0.5,
-  "preVerificationGasThresholdPercentage": 0.5,
+  "preVerificationGasThresholdPercentage": 0.0001,
   "relayerManagers": [
     {
       "name": "RM1",
@@ -904,6 +910,11 @@
       "supportedChainIds": [84532]
     }
   },
+  "entryPointV07Data": {
+    "0x0000000071727De22E5E9d8BAf0edAc6f37da032": {
+      "supportedChainIds": [84532]
+    }
+  },
   "zeroAddress": "0x0000000000000000000000000000000000000000",
   "l2Networks": [42161, 42170],
   "polygonZKEvmNetworks": [1101, 2442, 195, 196],
@@ -989,9 +1000,9 @@
   },
   "hardcodedGasLimits": {
     "84532": {
-      "verificationGasLimit": 50000000,
-      "callGasLimit": 50000000,
-      "preVerificationGasLimit": 50000000
+      "verificationGasLimit": 2000000,
+      "callGasLimit": 2000000,
+      "preVerificationGas": 2000000
     }
   }
 }

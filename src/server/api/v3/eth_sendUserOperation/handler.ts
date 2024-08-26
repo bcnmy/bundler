@@ -2,14 +2,14 @@
 import { Request, Response } from "express";
 import { logger } from "../../../../common/logger";
 import {
-  routeTransactionToRelayerMap,
   transactionDao,
-  userOperationDao,
+  userOperationV07Dao,
   userOperationStateDao,
+  routeTransactionToRelayerMapV07,
 } from "../../../../common/service-manager";
 import {
   generateTransactionId,
-  getPaymasterFromPaymasterAndData,
+  getPaymasterFromPaymasterAndDataV7,
   parseError,
 } from "../../../../common/utils";
 import {
@@ -54,7 +54,7 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
 
     transactionDao.save(chainIdInNum, {
       transactionId,
-      transactionType: TransactionType.BUNDLER,
+      transactionType: TransactionType.BUNDLER_V3,
       status: TransactionStatus.PENDING,
       chainId: chainIdInNum,
       walletAddress,
@@ -70,11 +70,9 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
       userOpHash,
       state: UserOperationStateEnum.BUNDLER_MEMPOOL,
     });
-
     const {
       sender,
       nonce,
-      initCode,
       callData,
       callGasLimit,
       verificationGasLimit,
@@ -85,23 +83,21 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
       signature,
     } = userOp;
 
-    const paymaster = getPaymasterFromPaymasterAndData(paymasterAndData);
+    const paymaster = getPaymasterFromPaymasterAndDataV7(paymasterAndData);
 
-    userOperationDao.save(chainIdInNum, {
+    userOperationV07Dao.save(chainIdInNum, {
       transactionId,
       dappAPIKey,
       status: TransactionStatus.PENDING,
       entryPoint: entryPointAddress,
       sender,
       nonce,
-      initCode,
       callData,
       callGasLimit,
       verificationGasLimit,
       preVerificationGas,
       maxFeePerGas,
       maxPriorityFeePerGas,
-      paymasterAndData,
       signature,
       userOpHash,
       chainId: chainIdInNum,
@@ -109,7 +105,7 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
       creationTime: Date.now(),
     });
 
-    if (!routeTransactionToRelayerMap[chainIdInNum][TransactionType.BUNDLER]) {
+    if (!routeTransactionToRelayerMapV07[chainIdInNum][TransactionType.BUNDLER_V3]) {
       // updateRequest({
       //   chainId: parseInt(chainId, 10),
       //   apiKey,
@@ -136,10 +132,10 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
         },
       });
     }
-    const response = routeTransactionToRelayerMap[chainIdInNum][
-      TransactionType.BUNDLER
+    const response = routeTransactionToRelayerMapV07[chainIdInNum][
+      TransactionType.BUNDLER_V3
     ].sendTransactionToRelayer({
-      type: TransactionType.BUNDLER,
+      type: TransactionType.BUNDLER_V3,
       to: entryPointAddress,
       data: "0x0",
       gasLimit: `0x${Number(gasLimitFromSimulation).toString(16)}`,

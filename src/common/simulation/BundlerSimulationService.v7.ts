@@ -3,10 +3,7 @@
 /* eslint-disable prefer-const */
 import {
   decodeErrorResult,
-  encodeAbiParameters,
   encodeFunctionData,
-  keccak256,
-  parseAbiParameters,
   toHex,
 } from "viem";
 import {
@@ -32,7 +29,6 @@ import { INetworkService } from "../network";
 import { EVMRawTransactionType, UserOperationType } from "../types";
 import {
   customJSONStringify,
-  packUserOpForUserOpHash,
   parseError,
 } from "../utils";
 import RpcError from "../utils/rpc-error";
@@ -205,7 +201,6 @@ export class BundlerSimulationServiceV07 {
       if (userOp.initCode !== "0x") {
         supportsEthCallByteCodeOverride = false;
       }
-      log.info("line 211");
       // For testing/debugging purposes you can override the AA gas limits in the config file
       // and avoid calling the gas estimation package
       if (nodeconfig.has(`hardcodedGasLimits.${chainId}`)) {
@@ -214,7 +209,6 @@ export class BundlerSimulationServiceV07 {
 
         const validAfter = Date.now();
         const validUntil = Date.now() + 10000000000;
-        log.info("returning this", preVerificationGas);
         return {
           code: STATUSES.SUCCESS,
           message: `Gas successfully estimated for userOp: ${customJSONStringify(
@@ -233,10 +227,8 @@ export class BundlerSimulationServiceV07 {
       // Otherwise get the gas limits from the gas estimation package
       let response: EstimateUserOperationGas;
       const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
-      log.info("line 239");
 
       try {
-        // TODO: This throws an execution_reverted error in v7
         response = await this.gasEstimator.estimateUserOperationGas({
           userOperation: {...userOp,initCode: "0x", paymasterAndData:"0x"}, // TODO fix me
           stateOverrideSet,
@@ -244,7 +236,6 @@ export class BundlerSimulationServiceV07 {
           supportsEthCallStateOverride,
           baseFeePerGas,
         });
-        log.info("line 250");
 
         log.info(
           `estimation response from gas estimation package: ${customJSONStringify(
@@ -385,7 +376,6 @@ export class BundlerSimulationServiceV07 {
       });
 
       const packed = packUserOperation(userOp);
-      log.info(`packedPacked  ${customJSONStringify(packed)}`);
       const data = encodeFunctionData({
         abi: entrypointV7,
         functionName: "handleOps",
@@ -414,7 +404,6 @@ export class BundlerSimulationServiceV07 {
 
       const ethEstimateGasStart = performance.now();
 
-      // TODO: This fails with "execution_reverted" in V7
       const ethEstimateGasResponse =
         await this.networkService.estimateGas(ethEstimateGasParams);
       const ethEstimateGasEnd = performance.now();
@@ -732,19 +721,5 @@ export class BundlerSimulationServiceV07 {
       targetSuccess,
       targetResult,
     };
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  getUserOpHash(
-    entryPointAddress: `0x${string}`,
-    userOp: UserOperationType,
-    chainId: number,
-  ) {
-    const userOpHash = keccak256(packUserOpForUserOpHash(userOp, true));
-    const enc = encodeAbiParameters(
-      parseAbiParameters("bytes32, address, uint256"),
-      [userOpHash, entryPointAddress, BigInt(chainId)],
-    );
-    return keccak256(enc);
   }
 }

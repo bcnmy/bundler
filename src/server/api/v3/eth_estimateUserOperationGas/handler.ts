@@ -89,7 +89,6 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
       validUntil,
       validAfter,
     } = data;
-
     const gasPriceService = gasPriceServiceMap[parseInt(chainId, 10)];
     if (!gasPriceService) {
       return res
@@ -116,7 +115,6 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
       maxPriorityFeePerGas = gasPrice?.toString() as string;
       maxFeePerGas = gasPrice?.toString() as string;
     }
-
     const response = new EstimateUserOperationGasResponse({
       callGasLimit: Number(callGasLimit),
       verificationGasLimit: Number(verificationGasLimit),

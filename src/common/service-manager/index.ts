@@ -5,7 +5,7 @@ import { chain } from "lodash";
 import { ENTRY_POINT_ABI } from "entry-point-gas-estimations";
 import { config } from "../../config";
 import { EVMAccount, IEVMAccount } from "../../relayer/account";
-import { BundlerConsumer } from "../../relayer/consumer";
+import { BundlerConsumer, BundlerConsumerV3 } from "../../relayer/consumer";
 import { EVMNonceManager } from "../../relayer/nonce-manager";
 import {
   EVMRelayerManager,
@@ -17,7 +17,8 @@ import { EVMTransactionListener } from "../../relayer/transaction-listener";
 import { EVMTransactionService } from "../../relayer/transaction-service";
 import { RedisCacheService } from "../cache";
 import { Mongo, TransactionDAO } from "../db";
-import { UserOperationDAO } from "../db/dao/UserOperationDAO";
+import { UserOperationDAO} from "../db/dao/UserOperationDAO";
+import { UserOperationV07DAO } from "../db/dao/UserOperationV07DAO";
 import { IQueue } from "../interface";
 import { logger } from "../logger";
 import { relayerManagerTransactionTypeNameMap } from "../maps";
@@ -26,6 +27,7 @@ import { NotificationManager } from "../notification";
 import { SlackNotificationService } from "../notification/slack/SlackNotificationService";
 import {
   BundlerTransactionQueue,
+  BundlerTransactionQueueV3,
   RetryTransactionHandlerQueue,
 } from "../queue";
 import { BundlerRelayService } from "../relay-service";
@@ -33,7 +35,9 @@ import { BundlerSimulationService, BundlerSimulationServiceV07 } from "../simula
 import { IStatusService, StatusService } from "../status";
 import {
   BundlerTransactionMessageType,
+  BundlerV3TransactionMessageType,
   EntryPointMapType,
+  EntryPointV07MapType,
   EVMRawTransactionType,
   TransactionType,
 } from "../types";
@@ -41,6 +45,8 @@ import { UserOperationStateDAO } from "../db/dao/UserOperationStateDAO";
 import { customJSONStringify, parseError } from "../utils";
 import { GasPriceService } from "../gas-price";
 import { CacheFeesJob } from "../gas-price/jobs/CacheFees";
+import { BundlerRelayServiceV3 } from "../relay-service/BundlerRelayServiceV3";
+import { ENTRY_POINT_V07_ABI } from "../entrypoint-v7/abiv7";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -49,6 +55,12 @@ const log = logger.child({
 const routeTransactionToRelayerMap: {
   [chainId: number]: {
     [transactionType: string]: BundlerRelayService;
+  };
+} = {};
+
+const routeTransactionToRelayerMapV07: {
+  [chainId: number]: {
+    [transactionType: string]: BundlerRelayServiceV3;
   };
 } = {};
 
@@ -65,11 +77,13 @@ const bundlerSimulationServiceMapV07: {
 } = {};
 
 const entryPointMap: EntryPointMapType = {};
+const entryPointV07Map: EntryPointV07MapType = {};
 
 const dbInstance = Mongo.getInstance();
 const cacheService = RedisCacheService.getInstance();
 
 const { supportedNetworks, supportedTransactionType } = config;
+const { supportedNetworksV07, supportedTransactionTypeV07 } = config;
 
 const EVMRelayerManagerMap: {
   [name: string]: {
@@ -79,6 +93,8 @@ const EVMRelayerManagerMap: {
 
 const transactionDao = new TransactionDAO();
 const userOperationDao = new UserOperationDAO();
+const userOperationV07Dao = new UserOperationV07DAO();
+
 const userOperationStateDao = new UserOperationStateDAO();
 
 const retryTransactionServiceMap: Record<number, EVMRetryTransactionService> =
@@ -191,10 +207,12 @@ let statusService: IStatusService;
       retryTransactionQueue,
       transactionDao,
       userOperationDao,
+      userOperationDaoV07: userOperationV07Dao,
       userOperationStateDao,
       options: {
         chainId,
         entryPointMap,
+        entryPointV07Map
       },
     });
     transactionListenerMap[chainId] = transactionListener;
@@ -223,6 +241,7 @@ let statusService: IStatusService;
       if (!EVMRelayerManagerMap[relayerManager.name]) {
         EVMRelayerManagerMap[relayerManager.name] = {};
       }
+
       const relayerMangerInstance = new EVMRelayerManager({
         networkService,
         gasPriceService,
@@ -258,6 +277,12 @@ let statusService: IStatusService;
       EVMRelayerManagerMap[relayerManager.name][chainId] =
         relayerMangerInstance;
 
+      if (relayerManager.name === "RM1") {
+        if (!EVMRelayerManagerMap.RM2) {
+          EVMRelayerManagerMap.RM2 = {};
+        }
+        EVMRelayerManagerMap.RM2[chainId] = relayerMangerInstance;
+      }
       const addressList = await relayerMangerInstance.createRelayers();
       log.info(
         `Relayer address list length: ${
@@ -297,12 +322,6 @@ let statusService: IStatusService;
       networkService,
       gasPriceService,
     );
-    //TODO: get v7 chains
-    bundlerSimulationServiceMapV07[chainId] = new BundlerSimulationServiceV07(
-      networkService,
-      gasPriceService,
-    );
-
     const { entryPointData } = config;
 
     for (const [
@@ -373,6 +392,157 @@ let statusService: IStatusService;
       }
     }
   }
+
+  log.info(`Supported networks with EPv07 are: ${supportedNetworksV07}`);
+  for (const chainId of supportedNetworksV07) {
+    log.info(`Setup of services started for chainId: ${chainId}`);
+    routeTransactionToRelayerMapV07[chainId] = {};
+    entryPointV07Map[chainId] = [];
+
+    const networkService = networkServiceMap[chainId];
+    const gasPriceService = gasPriceServiceMap[chainId];
+    const retryTransactionQueue = retryTransactionQueueMap[chainId];
+
+    log.info(`Setting up nonce manager for chainId: ${chainId}`);
+    const nonceExpiryTTL = 3600;
+    const nonceManager = new EVMNonceManager({
+      options: {
+        chainId,
+        nonceExpiryTTL,
+      },
+      networkService,
+      cacheService,
+    });
+    log.info(`Nonce manager setup complete for chainId: ${chainId}`);
+
+    log.info(`Setting up transaction listener for chainId: ${chainId}`);
+    const transactionListener = new EVMTransactionListener({
+      networkService,
+      cacheService,
+      retryTransactionQueue,
+      transactionDao,
+      userOperationDao,
+      userOperationDaoV07: userOperationV07Dao,
+      userOperationStateDao,
+      options: {
+        chainId,
+        entryPointMap,
+        entryPointV07Map
+      },
+    });
+    transactionListenerMap[chainId] = transactionListener;
+    log.info(`Transaction listener setup complete for chainId: ${chainId}`);
+
+    log.info(`Setting up transaction service for chainId: ${chainId}`);
+    const transactionService = new EVMTransactionService({
+      networkService,
+      transactionListener,
+      nonceManager,
+      gasPriceService,
+      transactionDao,
+      cacheService,
+      notificationManager,
+      userOperationStateDao,
+      options: {
+        chainId,
+      },
+    });
+    transactionServiceMap[chainId] = transactionService;
+    log.info(`Transaction service setup complete for chainId: ${chainId}`);
+
+    log.info(`Setting up retry transaction service for chainId: ${chainId}`);
+    retryTransactionServiceMap[chainId] = new EVMRetryTransactionService({
+      retryTransactionQueue,
+      transactionService,
+      networkService,
+      notificationManager,
+      cacheService,
+      options: {
+        chainId,
+        EVMRelayerManagerMap, // TODO // Review a better way
+      },
+    });
+
+    retryTransactionQueueMap[chainId].consume(
+      retryTransactionServiceMap[chainId].onMessageReceived,
+    );
+    log.info(`Retry transaction service setup for chainId: ${chainId}`);
+
+    bundlerSimulationServiceMapV07[chainId] = new BundlerSimulationServiceV07(
+      networkService,
+      gasPriceService,
+    );
+
+    const { entryPointV07Data } = config;
+
+    for (const [
+      entryPointAddress,
+      entryPointSupportedChainIdsAndAbi,
+    ] of Object.entries(entryPointV07Data)) {
+      if (
+        entryPointSupportedChainIdsAndAbi.supportedChainIds.includes(chainId)
+      ) {
+        entryPointV07Map[chainId].push({
+          address: entryPointAddress,
+          entryPointContract: getContract({
+            abi: ENTRY_POINT_V07_ABI,
+            address: entryPointAddress as `0x${string}`,
+            client: {
+              public: networkService.provider,
+            },
+          }),
+        });
+      }
+    }
+
+    // for each network get transaction type
+    for (const type of supportedTransactionTypeV07[chainId]) {
+      if (type === TransactionType.BUNDLER_V3) {
+        const bundlerRelayerManagerV07 =
+        EVMRelayerManagerMap[relayerManagerTransactionTypeNameMap[type]][
+            chainId
+          ];
+        if (!bundlerRelayerManagerV07) {
+          throw new Error(`Relayer manager not found for ${type}`);
+        }
+        log.info(
+          `Setting up Bundler transaction queue for chainId: ${chainId}`,
+        );
+        const bundlerQueue: IQueue<BundlerV3TransactionMessageType> =
+          new BundlerTransactionQueueV3({
+            chainId,
+          });
+
+        await bundlerQueue.connect();
+        log.info(
+          `Bundler transaction queue setup complete for chainId: ${chainId}`,
+        );
+
+        log.info(
+          `Setting up Bundler consumer, relay service, simulation & validation service for chainId: ${chainId}`,
+        );
+        const bundlerConsumer = new BundlerConsumerV3({
+          queue: bundlerQueue,
+          relayerManager: bundlerRelayerManagerV07,
+          transactionService,
+          cacheService,
+          options: {
+            chainId,
+            entryPointMap: entryPointV07Map,
+          },
+        });
+        // start listening for transaction
+        await bundlerQueue.consume(bundlerConsumer.onMessageReceived);
+
+        const bundlerRelayService = new BundlerRelayServiceV3(bundlerQueue);
+        routeTransactionToRelayerMapV07[chainId][type] = bundlerRelayService;
+
+        log.info(
+          `Bundler consumer, relay service, simulation and validation service setup complete for chainId: ${chainId}`,
+        );
+      }
+    }
+  }
   // eslint-disable-next-line no-new
   statusService = new StatusService({
     cacheService,
@@ -388,14 +558,17 @@ let statusService: IStatusService;
 
 export {
   routeTransactionToRelayerMap,
+  routeTransactionToRelayerMapV07,
   bundlerSimulationServiceMap,
   bundlerSimulationServiceMapV07,
   entryPointMap,
+  entryPointV07Map,
   EVMRelayerManagerMap,
   transactionServiceMap,
   transactionDao,
   userOperationDao,
   userOperationStateDao,
+  userOperationV07Dao,
   statusService,
   networkServiceMap,
   gasPriceServiceMap,

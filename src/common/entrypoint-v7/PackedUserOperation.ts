@@ -1,4 +1,4 @@
-import { type Hex, concat, pad, slice, toHex, keccak256, encodeAbiParameters} from "viem";
+import { type Hex, concat, pad, slice, toHex, keccak256, encodeAbiParameters, fromHex} from "viem";
 import { isUndefined } from "lodash";
 import type { UserOperationStruct } from "../types";
 
@@ -20,34 +20,36 @@ export interface PackedUserOperation {
   signature: Hex;
 }
 
-/**
- * Packs two unsigned 16 byte (128-bit) integers into a single hexadecimal string.
- * The two integers are converted to hex and padded to ensure a fixed size.
- * 
- * @param a - The first unsigned integer (128-bit).
- * @param b - The second unsigned integer (128-bit).
- * @returns A Hex string that represents the packed integers.
- */
-export function packUint(a: bigint, b: bigint): Hex {
-  return concat([
-    pad(toHex(a), { size: 16 }),
-    pad(toHex(b), { size: 16 }),
-  ]) as Hex;
+// /**
+//  * Packs two unsigned 16 byte (128-bit) integers into a single hexadecimal string.
+//  * The two integers are converted to hex and padded to ensure a fixed size.
+//  * 
+//  * @param a - The first unsigned integer (128-bit).
+//  * @param b - The second unsigned integer (128-bit).
+//  * @returns A Hex string that represents the packed integers.
+//  */
+export function packUint(high128: bigint, low128: bigint): Hex {
+    // eslint-disable-next-line no-bitwise
+  const packed = (BigInt(high128) << BigInt(128)) + BigInt(low128);
+  return pad(toHex(packed), { size: 32 });
 }
 
-/**
- * Unpacks a hexadecimal string into two unsigned 16 bytes (128-bit) integers.
- * The hex string is sliced into two parts corresponding to the original integers.
- * 
- * It is used to undo the application of packUint function.
- * @param packedUints - A Hex string containing the packed integers.
- * @returns An object containing the two unpacked integers as `a` and `b`.
- */
-export function unpackUint(packedUints: Hex) {
-    return {
-      a: BigInt(slice(packedUints, 0, 16)),
-      b: BigInt(slice(packedUints, 16)),
-  };
+
+// /**
+//  * Unpacks a hexadecimal string into two unsigned 16 bytes (128-bit) integers.
+//  * The hex string is sliced into two parts corresponding to the original integers.
+//  * 
+//  * It is used to undo the application of packUint function.
+//  * @param packedUints - A Hex string containing the packed integers.
+//  * @returns An object containing the two unpacked integers as `a` and `b`.
+//  */
+export function unpackUint(packed: Hex): [high128: bigint, low128: bigint] {
+  const packedNumber = BigInt(fromHex(packed, "bigint"));
+    // eslint-disable-next-line no-bitwise
+  const high128 = packedNumber >> BigInt(128);
+    // eslint-disable-next-line no-bitwise
+  const low128 = packedNumber & ((BigInt(1) << BigInt(128)) - BigInt(1));
+  return [high128, low128];
 }
 
 export function packAccountGasLimits(userOperation: UserOperationStruct): Hex {
@@ -55,10 +57,7 @@ export function packAccountGasLimits(userOperation: UserOperationStruct): Hex {
 }
 
 export function unpackAccountGasLimits(accountGasLimits: Hex) {
-  const { a, b } = unpackUint(accountGasLimits);
-  const verificationGasLimit = a;
-  const callGasLimit = b;
-
+  const [ verificationGasLimit, callGasLimit ] = unpackUint(accountGasLimits);
   return {verificationGasLimit, callGasLimit};
 }
 
@@ -67,7 +66,7 @@ export function packGasFees(userOperation: UserOperationStruct): Hex {
 }
 
 export function unpackGasFees(gasFees: Hex) {
-  const { a, b } = unpackUint(gasFees);
+  const [ a, b ] = unpackUint(gasFees);
   const maxPriorityFeePerGas = a;
   const maxFeePerGas = b;
 
@@ -75,7 +74,6 @@ export function unpackGasFees(gasFees: Hex) {
 }
 
 export function packInitCode(userOperation: UserOperationStruct): Hex {
-  console.log('factoryData', userOperation.factoryData);
   if (userOperation.factory !== null && !isUndefined(userOperation.factory) && userOperation.factoryData !== null && !isUndefined(userOperation.factoryData)) {
     return concat([userOperation.factory, userOperation.factoryData]);
   }
@@ -116,7 +114,7 @@ export function unpackPaymasterAndData(paymasterAndData: Hex): {
   if (paymasterAndData.length < 52) {
     throw new Error(`invalid paymasterAndData: ${paymasterAndData as string}`);
   }
-  const {a, b} = unpackUint(slice(paymasterAndData, 20, 52));
+  const [a, b] = unpackUint(slice(paymasterAndData, 20, 52));
   return {
     paymaster: slice(paymasterAndData, 0, 20),
     paymasterVerificationGas: a,
@@ -166,7 +164,6 @@ export function unpackUserOperation(
     let result : UserOperationStruct = {
         sender: packedUserOperation.sender,
         nonce: packedUserOperation.nonce,
-        // initCode: packedUserOperation.initCode,
         callData: packedUserOperation.callData,
         callGasLimit,
         verificationGasLimit,

@@ -1,9 +1,11 @@
 import { ENTRY_POINT_ABI } from "entry-point-gas-estimations";
 import { GetContractReturnType, Hex } from "viem";
+import { ENTRY_POINT_V07_ABI } from "../entrypoint-v7/abiv7";
 
 export enum TransactionType {
   FUNDING = "FUNDING",
   BUNDLER = "BUNDLER",
+  BUNDLER_V3 = "BUNDLER_V3",
 }
 
 export enum TransactionMethodType {
@@ -93,6 +95,18 @@ export type BundlerTransactionMessageType = {
   walletAddress?: string;
 };
 
+export type BundlerV3TransactionMessageType = {
+  type: string;
+  to: string;
+  data: string;
+  gasLimit: string;
+  chainId: number;
+  value: string;
+  transactionId: string;
+  userOp?: UserOperationStruct;
+  walletAddress?: string;
+};
+
 type ResponseType = {
   code: number;
   transactionId: string;
@@ -153,6 +167,13 @@ export type EntryPointMapType = {
   [chainId: number]: Array<{
     address: string;
     entryPointContract: EntryPointContractType;
+  }>;
+};
+
+export type EntryPointV07MapType = {
+  [chainId: number]: Array<{
+    address: string;
+    entryPointContract: EntryPointV07ContractType;
   }>;
 };
 
@@ -224,6 +245,10 @@ export type UpdateRequestDataType = {
 
 export type EntryPointContractType = GetContractReturnType<
   typeof ENTRY_POINT_ABI
+>;
+
+export type EntryPointV07ContractType = GetContractReturnType<
+  typeof ENTRY_POINT_V07_ABI
 >;
 
 export type StateOverrideSetType = {

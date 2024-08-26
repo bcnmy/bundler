@@ -1,5 +1,6 @@
 import {
   EntryPointContractType,
+  EntryPointV07ContractType,
   StateOverrideSetType,
   UserOperationType,
   UserOperationStruct
@@ -37,6 +38,12 @@ export type BundlerSimulationDataType = {
   chainId: number;
 };
 
+export type BundlerSimulationDataTypeV07 = {
+  userOp: UserOperationStruct;
+  entryPointContract: EntryPointV07ContractType;
+  chainId: number;
+};
+
 export type EstimateUserOperationGasDataType = {
   userOp: UserOperationType;
   entryPointContract: EntryPointContractType;
@@ -46,7 +53,7 @@ export type EstimateUserOperationGasDataType = {
 
 export type EstimateUserOperationGasDataTypeV07 = {
   userOp: UserOperationStruct;
-  entryPointContract: EntryPointContractType;
+  entryPointContract: EntryPointV07ContractType;
   chainId: number;
   stateOverrideSet?: StateOverrideSetType;
 };
@@ -108,7 +115,7 @@ export type SimulationData = {
 
 export type SimulationDataV07 = {
   userOp: UserOperationStruct;
-  entryPointContract: EntryPointContractType;
+  entryPointContract: EntryPointV07ContractType;
   chainId: number;
 };
 

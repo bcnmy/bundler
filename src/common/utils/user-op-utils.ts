@@ -13,7 +13,7 @@ import {
   toHex,
 } from "viem";
 import { logger } from "../logger";
-import { EntryPointContractType, StakeInfo, UserOperationType } from "../types";
+import { EntryPointContractType, EntryPointV07ContractType, StakeInfo, UserOperationType } from "../types";
 import { parseError } from "./parse-error";
 import { customJSONStringify } from "./custom-json-stringifier";
 
@@ -24,6 +24,19 @@ const log = logger.child({
 export const getPaymasterFromPaymasterAndData = (
   paymasterAndData: string,
 ): string => {
+  const paymasterAddress = `${paymasterAndData.substring(0, 42)}`;
+  log.info(
+    `paymasterAddress: ${paymasterAddress} for paymasterAndData: ${paymasterAndData}`,
+  );
+  return paymasterAddress;
+};
+
+export const getPaymasterFromPaymasterAndDataV7 = (
+  paymasterAndData: string,
+): string => {
+  if (!paymasterAndData) {
+    return "";
+  }
   const paymasterAddress = `${paymasterAndData.substring(0, 42)}`;
   log.info(
     `paymasterAddress: ${paymasterAddress} for paymasterAndData: ${paymasterAndData}`,
@@ -199,7 +212,7 @@ export const getUserOperationReceiptForSuccessfulTransaction = async (
   chainId: number,
   userOpHash: string,
   receipt: TransactionReceipt,
-  entryPointContract: EntryPointContractType,
+  entryPointContract: EntryPointContractType | EntryPointV07ContractType,
   // eslint-disable-next-line consistent-return
 ): Promise<{
   actualGasCost: number;
