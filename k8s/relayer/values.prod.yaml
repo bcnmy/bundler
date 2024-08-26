@@ -33,12 +33,18 @@ secret_plain:
 ingress:
   host: sdk-relayer.prod.biconomy.io
 
-# datadog configs
+# deploy to dedicated k8s node with taint
 affinity_tolerations:
   enable: true 
   key: "app"
   values: "relayer-server"
 
+# make sure pods are deployed in different nodes
+affinity: 
+  antiAffinity:
+    topologyKey: kubernetes.io/hostname
+    weight: 100
+    
 # wait for 120 * 10s to fail
 startupProbe:
   failureThreshold: 120
