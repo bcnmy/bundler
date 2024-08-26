@@ -30,8 +30,21 @@ spec:
       {{- end }}
         releaseTime: {{ dateInZone "2006-01-02 15:04:05Z" (now) "UTC"| quote }} 
     spec:
-    {{- if .Values.affinity_tolerations.enable }}
       affinity:
+        {{- if .Values.affinity.antiAffinity }}
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - {{ .Values.name }}
+              topologyKey:  {{ .Values.affinity.antiAffinity.topologyKey }}
+            weight: {{ .Values.affinity.antiAffinity.weight }}
+        {{- end }} 
+    {{- if .Values.affinity_tolerations.enable }}
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
