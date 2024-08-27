@@ -125,6 +125,12 @@
           "url": "https://rpc.ankr.com/blast_testnet_sepolia/0f2ac70eb2e86d935951e9d3874deeb44525123a1ce2a7cf609cf1f0a098d2d6",
           "type": "private"
         }
+      ],
+      "84532":  [
+        {
+          "url": "https://sepolia.base.org",
+          "type": "public"
+        }
       ]
     },
     "currency": {
@@ -386,7 +392,7 @@
   },
   "maxPriorityFeePerGasThresholdPercentage": 0.5,
   "maxFeePerGasThresholdPercentage": 0.5,
-  "preVerificationGasThresholdPercentage": 0.0001,
+  "preVerificationGasThresholdPercentage": 0.5,
   "relayerManagers": [
     {
       "name": "RM1",

@@ -15,12 +15,12 @@ const getGasPriceMock = jest.fn();
 // 💡 These import mocks have to happen before we call import { estimateUserOperationGas }
 // because estimateUserOperationGas imports the service manager produces SIDE EFFECTS (bad practice) like trying to connect to the DB
 jest.mock("../../../../common/service-manager", () => ({
-  entryPointMap: {
+  entryPointV07Map: {
     1: [entryPointContract],
     2: [entryPointContract],
     3: [entryPointContract],
   },
-  bundlerSimulationServiceMap: {
+  bundlerSimulationServiceMapV07: {
     1: {
       estimateUserOperationGas: estimateUserOperationGasMock,
     },
@@ -49,7 +49,7 @@ describe("EstimateUserOperationGas", () => {
     // Create the RPC request
     const requestOptions: RequestOptions = {
       method: "POST",
-      url: `/api/v2/${chainId}/test`,
+      url: `/api/v3/${chainId}/test`,
       params: { chainId },
       body: {
         id: requestId,
@@ -113,7 +113,7 @@ describe("EstimateUserOperationGas", () => {
     // Create the RPC request
     const requestOptions: RequestOptions = {
       method: "POST",
-      url: `/api/v2/${chainId}/test`,
+      url: `/api/v3/${chainId}/test`,
       params: { chainId },
       body: {
         id: requestId,
@@ -182,7 +182,7 @@ describe("EstimateUserOperationGas", () => {
     // Create the RPC request
     const requestOptions: RequestOptions = {
       method: "POST",
-      url: `/api/v2/${chainId}/test`,
+      url: `/api/v3/${chainId}/test`,
       params: { chainId },
       body: {
         id: requestId,
@@ -218,7 +218,7 @@ describe("EstimateUserOperationGas", () => {
     // Create the RPC request
     const requestOptions: RequestOptions = {
       method: "POST",
-      url: `/api/v2/${unsupportedChainId}/test`,
+      url: `/api/v3/${unsupportedChainId}/test`,
       params: { chainId: unsupportedChainId },
       body: {
         id: requestId,
@@ -253,7 +253,7 @@ describe("EstimateUserOperationGas", () => {
     // Create the RPC request
     const requestOptions: RequestOptions = {
       method: "POST",
-      url: `/api/v2/${chainId}/test`,
+      url: `/api/v3/${chainId}/test`,
       params: { chainId },
       body: {
         id: requestId,
@@ -288,7 +288,7 @@ describe("EstimateUserOperationGas", () => {
     // Create the RPC request
     const requestOptions: RequestOptions = {
       method: "POST",
-      url: `/api/v2/${chainId}/test`,
+      url: `/api/v3/${chainId}/test`,
       params: { chainId },
       body: {
         id: requestId,
@@ -329,7 +329,7 @@ describe("EstimateUserOperationGas", () => {
     // Create the RPC request
     const requestOptions: RequestOptions = {
       method: "POST",
-      url: `/api/v2/${targetChainId}/test`,
+      url: `/api/v3/${targetChainId}/test`,
       params: { chainId: targetChainId },
       body: {
         id: requestId,
@@ -373,7 +373,7 @@ describe("EstimateUserOperationGas", () => {
     // Create the RPC request
     const requestOptions: RequestOptions = {
       method: "POST",
-      url: `/api/v2/${chainId}/test`,
+      url: `/api/v3/${chainId}/test`,
       params: { chainId },
       body: {
         id: requestId,

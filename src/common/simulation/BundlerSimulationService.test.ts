@@ -5,6 +5,7 @@ import { EVMNetworkService } from "../network";
 import { UserOperationType } from "../types";
 import { BundlerSimulationService } from "./BundlerSimulationService";
 import RpcError from "../utils/rpc-error";
+import { unknown } from "zod";
 
 describe("BundlerSimulationService", () => {
   const networkService = new EVMNetworkService({
@@ -22,7 +23,9 @@ describe("BundlerSimulationService", () => {
       bundlerSimulationService.gasEstimator = {
         calculatePreVerificationGas: jest.fn().mockResolvedValue(50000n),
       } as unknown as GasEstimator;
-
+      bundlerSimulationService.gasPriceService = {
+        getBaseFeePerGas: jest.fn().mockResolvedValue(50000n),
+      } as unknown as GasPriceService;
       const networkMaxFeePerGas = 10n;
       const networkMaxPriorityFeePerGas = 10n;
 

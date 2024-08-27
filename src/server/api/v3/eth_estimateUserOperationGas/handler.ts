@@ -5,7 +5,7 @@ import { STATUSES } from "../../shared/middleware";
 import { logger } from "../../../../common/logger";
 import {
   bundlerSimulationServiceMapV07,
-  entryPointMap,
+  entryPointV07Map,
   gasPriceServiceMap,
 } from "../../../../common/service-manager";
 import { customJSONStringify, parseError } from "../../../../common/utils";
@@ -44,7 +44,7 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
     log = log.child({ entryPointAddress });
 
     // Check if given entrypoint is supported by our bundler
-    const entryPointContracts = entryPointMap[parseInt(chainId, 10)];
+    const entryPointContracts = entryPointV07Map[parseInt(chainId, 10)];
     const entryPointContract = entryPointContracts?.find(
       (e) => e.address.toLowerCase() === entryPointAddress.toLowerCase(),
     );
