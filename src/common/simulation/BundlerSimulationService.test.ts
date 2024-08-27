@@ -5,7 +5,6 @@ import { EVMNetworkService } from "../network";
 import { UserOperationType } from "../types";
 import { BundlerSimulationService } from "./BundlerSimulationService";
 import RpcError from "../utils/rpc-error";
-import { unknown } from "zod";
 
 describe("BundlerSimulationService", () => {
   const networkService = new EVMNetworkService({
