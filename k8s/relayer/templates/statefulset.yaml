@@ -94,7 +94,9 @@ spec:
             cpu: {{ .Values.relayer.resource.requests.cpu }}
           limits:
             memory: {{ .Values.relayer.resource.limits.memory }}
+            {{- if .Values.relayer.resource.limits.cpu }}
             cpu: {{ .Values.relayer.resource.limits.cpu }}
+            {{- end }} 
         # allow in to total failureThreshold(30) * periodSeconds(10) = 300 seconds
         startupProbe:
           httpGet:
