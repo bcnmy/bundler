@@ -42,7 +42,7 @@ spec:
                   values:
                   - {{ .Values.name }}
               topologyKey:  {{ .Values.affinity.antiAffinity.topologyKey }}
-            weight: {{ .Values.affinity.antiAffinity.weight }}
+            # weight: {{ .Values.affinity.antiAffinity.weight }} # weight is only for podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution
         {{- end }} 
     {{- if .Values.affinity_tolerations.enable }}
         nodeAffinity:
