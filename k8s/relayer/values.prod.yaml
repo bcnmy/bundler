@@ -42,7 +42,7 @@ affinity_tolerations:
 # make sure pods are deployed in different nodes
 affinity: 
   antiAffinity:
-    topologyKey: kubernetes.io/hostname
+    topologyKey: "kubernetes.io/hostname"
     weight: 100
     
 # wait for 120 * 10s to fail
