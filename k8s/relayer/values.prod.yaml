@@ -8,7 +8,7 @@ relayer:
   name: "relayer-server"
   image: "gcr.io/biconomy-prod/sdk/relayer-node-service:latest"
   port: "3000"
-  replicaCount: 1 
+  replicaCount: 1
   resource:
     requests:
       memory: "6000Mi"
@@ -43,7 +43,6 @@ affinity_tolerations:
 affinity: 
   antiAffinity:
     topologyKey: "kubernetes.io/hostname"
-    weight: 100
     
 # wait for 120 * 10s to fail
 startupProbe:
