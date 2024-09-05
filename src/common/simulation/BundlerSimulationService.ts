@@ -12,6 +12,7 @@ import {
 import {
   createArbitrumGasEstimator,
   createGasEstimator,
+  createKakarotGasEstimator,
   createMantleGasEstimator,
   createMorphGasEstimator,
   createOptimismGasEstimator,
@@ -95,6 +96,12 @@ export class BundlerSimulationService {
 
     if (config.seiNetworks.includes(this.networkService.chainId)) {
       this.gasEstimator = createSeiGasEstimator({
+        rpcUrl: this.networkService.rpcUrl,
+      });
+    }
+
+    if (config.kakarotNetworks.includes(this.networkService.chainId)) {
+      this.gasEstimator = createKakarotGasEstimator({
         rpcUrl: this.networkService.rpcUrl,
       });
     }
