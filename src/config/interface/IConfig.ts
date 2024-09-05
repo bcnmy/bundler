@@ -131,6 +131,8 @@ export type ConfigType = {
   morphNetworks: Array<number>;
   // array of chain Ids for networks that are part of the Esi ecosystem - they have different gas limits than other networks
   seiNetworks: Array<number>;
+  // array of chain Ids for networks that are part of the Kakarot ecosystem - they have a 7m gas limit
+  kakarotNetworks: Array<number>;
   paymasterDashboardBackendConfig: PaymasterDashboardBackendConfigType;
   // array of chain Ids for networks that are part of the Polygon zkEVM ecosystem
   polygonZKEvmNetworks: Array<number>;
