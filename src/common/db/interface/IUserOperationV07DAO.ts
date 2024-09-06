@@ -17,6 +17,11 @@ export type InitialUserOperationV07DataType = {
   chainId: number;
   status: string;
   paymaster: string;
+  paymasterVerificationGasLimit: number;
+  paymasterPostOpGasLimit: number;
+  factory: string;
+  factoryData: string;
+  paymasterData: string;
   creationTime: number;
   metaData?: object;
 };

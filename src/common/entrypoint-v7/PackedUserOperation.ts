@@ -1,11 +1,11 @@
 import { type Hex, concat, pad, slice, toHex, keccak256, encodeAbiParameters, fromHex} from "viem";
 import { isUndefined } from "lodash";
 import type { UserOperationStruct } from "../types";
+import { config } from "../../config";
+const { entryPointV07Data } = config;
 
-// TODO: Move this to config after we refactor the config
-export const COMMON_ENTRYPOINT_V7_ADDRESSES : [Hex] = [
-  "0x0000000071727De22E5E9d8BAf0edAc6f37da032",
-];
+export const COMMON_ENTRYPOINT_V7_ADDRESSES : Hex[] = Array.from(Object.keys(entryPointV07Data).map(
+  key => key as Hex));
 
 // Definitions can be found in the ERC doc: https://eips.ethereum.org/EIPS/eip-4337#entrypoint-definition
 export interface PackedUserOperation {
@@ -106,8 +106,8 @@ export function packPaymasterAndData(userOperation: UserOperationStruct): Hex {
 
 export function unpackPaymasterAndData(paymasterAndData: Hex): {
   paymaster: Hex
-  paymasterVerificationGas: bigint
-  postOpGasLimit: bigint
+  paymasterVerificationGasLimit: bigint
+  paymasterPostOpGasLimit: bigint
   paymasterData: Hex
 } | null {
   if (paymasterAndData.length <= 2) return null;
@@ -117,8 +117,8 @@ export function unpackPaymasterAndData(paymasterAndData: Hex): {
   const [a, b] = unpackUint(slice(paymasterAndData, 20, 52));
   return {
     paymaster: slice(paymasterAndData, 0, 20),
-    paymasterVerificationGas: a,
-    postOpGasLimit: b,
+    paymasterVerificationGasLimit: a,
+    paymasterPostOpGasLimit: b,
     paymasterData: slice(paymasterAndData, 52)
   };
 }
@@ -187,8 +187,8 @@ export function unpackUserOperation(
       result = {
         ...result,
         paymaster: paymasterData.paymaster,
-        paymasterVerificationGasLimit: paymasterData.paymasterVerificationGas,
-        paymasterPostOpGasLimit: paymasterData.postOpGasLimit,
+        paymasterVerificationGasLimit: paymasterData.paymasterVerificationGasLimit,
+        paymasterPostOpGasLimit: paymasterData.paymasterPostOpGasLimit,
         paymasterData: paymasterData.paymasterData
       };
     }

@@ -606,7 +606,7 @@ export class BundlerSimulationServiceV07 {
 
     const { preVerificationGas: networkPreVerificationGas } =
       await this.gasEstimator.calculatePreVerificationGas({
-        userOperation: {...userOp, initCode:"0x", paymasterAndData: "0x"}, // TODO fix me, use new UserOp in gas profiler
+        userOperation: {...userOp, initCode:"0x", paymasterAndData: "0x"}, // TODO fix me, use new UserOp in gas estimation
         baseFeePerGas,
       });
     log.info(`networkPreVerificationGas: ${networkPreVerificationGas}`);
@@ -616,7 +616,7 @@ export class BundlerSimulationServiceV07 {
 
     if (minimumAcceptablePreVerificationGas > Number(preVerificationGas)) {
       log.info(
-        `preVerificationGas in userOp: ${preVerificationGas} is lower than minimumAcceptablePreVerificationGas: ${minimumAcceptablePreVerificationGas}`,
+        `preVerificationGas in userOp: ${Number(preVerificationGas)} is lower than minimumAcceptablePreVerificationGas: ${minimumAcceptablePreVerificationGas}`,
       );
       throw new RpcError(
         `preVerificationGas in userOp: ${preVerificationGas} is lower than minimumAcceptablePreVerificationGas: ${minimumAcceptablePreVerificationGas}`,

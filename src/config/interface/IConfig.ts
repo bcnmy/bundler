@@ -80,7 +80,7 @@ type EntryPointDataConfigType = {
 };
 
 type EntryPointV07DataConfigType = {
-  [address: string]: {
+  [address: `0x${string}`]: {
     supportedChainIds: Array<number>;
   };
 };

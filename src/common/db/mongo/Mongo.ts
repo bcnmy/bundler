@@ -149,7 +149,6 @@ export class Mongo implements IDBService {
           dbName: "relayer-node-service",
         });
       }
-      log.info(`Connected to db ${dbUrl}`);
     } catch (error) {
       log.error("error while connecting to mongo db");
       log.error(error);

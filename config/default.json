@@ -1008,7 +1008,7 @@
     "84532": {
       "verificationGasLimit": 2000000,
       "callGasLimit": 2000000,
-      "preVerificationGas": 2000000
+      "preVerificationGas": 8000000
     }
   }
 }
