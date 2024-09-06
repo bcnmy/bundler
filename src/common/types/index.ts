@@ -91,19 +91,7 @@ export type BundlerTransactionMessageType = {
   chainId: number;
   value: string;
   transactionId: string;
-  userOp?: UserOperationType;
-  walletAddress?: string;
-};
-
-export type BundlerV3TransactionMessageType = {
-  type: string;
-  to: string;
-  data: string;
-  gasLimit: string;
-  chainId: number;
-  value: string;
-  transactionId: string;
-  userOp?: UserOperationStruct;
+  userOp?: UserOperationType | UserOperationStruct;
   walletAddress?: string;
 };
 

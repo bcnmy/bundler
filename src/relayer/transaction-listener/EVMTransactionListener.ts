@@ -81,7 +81,7 @@ export class EVMTransactionListener
     } = evmTransactionListenerParams;
     this.chainId = options.chainId;
     this.entryPointMap = options.entryPointMap;
-    this.entryPointV07Map = options.entryPointV07Map;
+    this.entryPointV07Map = options.entryPointMapV07;
     this.networkService = networkService;
     this.retryTransactionQueue = retryTransactionQueue;
     this.transactionDao = transactionDao;

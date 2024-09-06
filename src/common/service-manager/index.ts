@@ -5,7 +5,7 @@ import { chain } from "lodash";
 import { ENTRY_POINT_ABI } from "entry-point-gas-estimations";
 import { config } from "../../config";
 import { EVMAccount, IEVMAccount } from "../../relayer/account";
-import { BundlerConsumer, BundlerConsumerV3 } from "../../relayer/consumer";
+import { BundlerConsumer } from "../../relayer/consumer";
 import { EVMNonceManager } from "../../relayer/nonce-manager";
 import {
   EVMRelayerManager,
@@ -27,7 +27,6 @@ import { NotificationManager } from "../notification";
 import { SlackNotificationService } from "../notification/slack/SlackNotificationService";
 import {
   BundlerTransactionQueue,
-  BundlerTransactionQueueV3,
   RetryTransactionHandlerQueue,
 } from "../queue";
 import { BundlerRelayService } from "../relay-service";
@@ -35,7 +34,6 @@ import { BundlerSimulationService, BundlerSimulationServiceV07 } from "../simula
 import { IStatusService, StatusService } from "../status";
 import {
   BundlerTransactionMessageType,
-  BundlerV3TransactionMessageType,
   EntryPointMapType,
   EntryPointV07MapType,
   EVMRawTransactionType,
@@ -77,13 +75,12 @@ const bundlerSimulationServiceMapV07: {
 } = {};
 
 const entryPointMap: EntryPointMapType = {};
-const entryPointV07Map: EntryPointV07MapType = {};
+const entryPointMapV07: EntryPointV07MapType = {};
 
 const dbInstance = Mongo.getInstance();
 const cacheService = RedisCacheService.getInstance();
 
 const { supportedNetworks, supportedTransactionType } = config;
-const { supportedNetworksV07, supportedTransactionTypeV07 } = config;
 
 const EVMRelayerManagerMap: {
   [name: string]: {
@@ -130,6 +127,7 @@ let statusService: IStatusService;
     log.info(`Setup of services started for chainId: ${chainId}`);
     routeTransactionToRelayerMap[chainId] = {};
     entryPointMap[chainId] = [];
+    entryPointMapV07[chainId] = [];
 
     if (!config.chains.providers || !config.chains.providers[chainId]) {
       throw new Error(`No providers in config for chainId: ${chainId}`);
@@ -212,7 +210,7 @@ let statusService: IStatusService;
       options: {
         chainId,
         entryPointMap,
-        entryPointV07Map
+        entryPointMapV07
       },
     });
     transactionListenerMap[chainId] = transactionListener;
@@ -322,7 +320,12 @@ let statusService: IStatusService;
       networkService,
       gasPriceService,
     );
-    const { entryPointData } = config;
+
+    bundlerSimulationServiceMapV07[chainId] = new BundlerSimulationServiceV07(
+      networkService,
+      gasPriceService,
+    );
+    const { entryPointData, entryPointV07Data } = config;
 
     for (const [
       entryPointAddress,
@@ -335,6 +338,26 @@ let statusService: IStatusService;
           address: entryPointAddress,
           entryPointContract: getContract({
             abi: ENTRY_POINT_ABI,
+            address: entryPointAddress as `0x${string}`,
+            client: {
+              public: networkService.provider,
+            },
+          }),
+        });
+      }
+    }
+
+    for (const [
+      entryPointAddress,
+      entryPointSupportedChainIdsAndAbi,
+    ] of Object.entries(entryPointV07Data)) {
+      if (
+        entryPointSupportedChainIdsAndAbi.supportedChainIds.includes(chainId)
+      ) {
+        entryPointMapV07[chainId].push({
+          address: entryPointAddress,
+          entryPointContract: getContract({
+            abi: ENTRY_POINT_V07_ABI,
             address: entryPointAddress as `0x${string}`,
             client: {
               public: networkService.provider,
@@ -378,6 +401,7 @@ let statusService: IStatusService;
           options: {
             chainId,
             entryPointMap,
+            entryPointMapV07,
           },
         });
         // start listening for transaction
@@ -393,156 +417,6 @@ let statusService: IStatusService;
     }
   }
 
-  log.info(`Supported networks with EPv07 are: ${supportedNetworksV07}`);
-  for (const chainId of supportedNetworksV07) {
-    log.info(`Setup of services started for chainId: ${chainId}`);
-    routeTransactionToRelayerMapV07[chainId] = {};
-    entryPointV07Map[chainId] = [];
-
-    const networkService = networkServiceMap[chainId];
-    const gasPriceService = gasPriceServiceMap[chainId];
-    const retryTransactionQueue = retryTransactionQueueMap[chainId];
-
-    log.info(`Setting up nonce manager for chainId: ${chainId}`);
-    const nonceExpiryTTL = 3600;
-    const nonceManager = new EVMNonceManager({
-      options: {
-        chainId,
-        nonceExpiryTTL,
-      },
-      networkService,
-      cacheService,
-    });
-    log.info(`Nonce manager setup complete for chainId: ${chainId}`);
-
-    log.info(`Setting up transaction listener for chainId: ${chainId}`);
-    const transactionListener = new EVMTransactionListener({
-      networkService,
-      cacheService,
-      retryTransactionQueue,
-      transactionDao,
-      userOperationDao,
-      userOperationDaoV07: userOperationV07Dao,
-      userOperationStateDao,
-      options: {
-        chainId,
-        entryPointMap,
-        entryPointV07Map
-      },
-    });
-    transactionListenerMap[chainId] = transactionListener;
-    log.info(`Transaction listener setup complete for chainId: ${chainId}`);
-
-    log.info(`Setting up transaction service for chainId: ${chainId}`);
-    const transactionService = new EVMTransactionService({
-      networkService,
-      transactionListener,
-      nonceManager,
-      gasPriceService,
-      transactionDao,
-      cacheService,
-      notificationManager,
-      userOperationStateDao,
-      options: {
-        chainId,
-      },
-    });
-    transactionServiceMap[chainId] = transactionService;
-    log.info(`Transaction service setup complete for chainId: ${chainId}`);
-
-    log.info(`Setting up retry transaction service for chainId: ${chainId}`);
-    retryTransactionServiceMap[chainId] = new EVMRetryTransactionService({
-      retryTransactionQueue,
-      transactionService,
-      networkService,
-      notificationManager,
-      cacheService,
-      options: {
-        chainId,
-        EVMRelayerManagerMap, // TODO // Review a better way
-      },
-    });
-
-    retryTransactionQueueMap[chainId].consume(
-      retryTransactionServiceMap[chainId].onMessageReceived,
-    );
-    log.info(`Retry transaction service setup for chainId: ${chainId}`);
-
-    bundlerSimulationServiceMapV07[chainId] = new BundlerSimulationServiceV07(
-      networkService,
-      gasPriceService,
-    );
-
-    const { entryPointV07Data } = config;
-
-    for (const [
-      entryPointAddress,
-      entryPointSupportedChainIdsAndAbi,
-    ] of Object.entries(entryPointV07Data)) {
-      if (
-        entryPointSupportedChainIdsAndAbi.supportedChainIds.includes(chainId)
-      ) {
-        entryPointV07Map[chainId].push({
-          address: entryPointAddress,
-          entryPointContract: getContract({
-            abi: ENTRY_POINT_V07_ABI,
-            address: entryPointAddress as `0x${string}`,
-            client: {
-              public: networkService.provider,
-            },
-          }),
-        });
-      }
-    }
-
-    // for each network get transaction type
-    for (const type of supportedTransactionTypeV07[chainId]) {
-      if (type === TransactionType.BUNDLER_V3) {
-        const bundlerRelayerManagerV07 =
-        EVMRelayerManagerMap[relayerManagerTransactionTypeNameMap[type]][
-            chainId
-          ];
-        if (!bundlerRelayerManagerV07) {
-          throw new Error(`Relayer manager not found for ${type}`);
-        }
-        log.info(
-          `Setting up Bundler transaction queue for chainId: ${chainId}`,
-        );
-        const bundlerQueue: IQueue<BundlerV3TransactionMessageType> =
-          new BundlerTransactionQueueV3({
-            chainId,
-          });
-
-        await bundlerQueue.connect();
-        log.info(
-          `Bundler transaction queue setup complete for chainId: ${chainId}`,
-        );
-
-        log.info(
-          `Setting up Bundler consumer, relay service, simulation & validation service for chainId: ${chainId}`,
-        );
-        const bundlerConsumer = new BundlerConsumerV3({
-          queue: bundlerQueue,
-          relayerManager: bundlerRelayerManagerV07,
-          transactionService,
-          cacheService,
-          options: {
-            chainId,
-            entryPointMap: entryPointV07Map,
-          },
-        });
-        // start listening for transaction
-        await bundlerQueue.consume(bundlerConsumer.onMessageReceived);
-
-        const bundlerRelayService = new BundlerRelayServiceV3(bundlerQueue);
-        routeTransactionToRelayerMapV07[chainId][type] = bundlerRelayService;
-
-        log.info(
-          `Bundler consumer, relay service, simulation and validation service setup complete for chainId: ${chainId}`,
-        );
-      }
-    }
-  }
   // eslint-disable-next-line no-new
   statusService = new StatusService({
     cacheService,
@@ -562,7 +436,7 @@ export {
   bundlerSimulationServiceMap,
   bundlerSimulationServiceMapV07,
   entryPointMap,
-  entryPointV07Map,
+  entryPointMapV07,
   EVMRelayerManagerMap,
   transactionServiceMap,
   transactionDao,

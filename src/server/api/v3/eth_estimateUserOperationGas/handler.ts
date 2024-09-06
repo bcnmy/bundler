@@ -5,7 +5,7 @@ import { STATUSES } from "../../shared/middleware";
 import { logger } from "../../../../common/logger";
 import {
   bundlerSimulationServiceMapV07,
-  entryPointV07Map,
+  entryPointMapV07,
   gasPriceServiceMap,
 } from "../../../../common/service-manager";
 import { customJSONStringify, parseError } from "../../../../common/utils";
@@ -44,7 +44,7 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
     log = log.child({ entryPointAddress });
 
     // Check if given entrypoint is supported by our bundler
-    const entryPointContracts = entryPointV07Map[parseInt(chainId, 10)];
+    const entryPointContracts = entryPointMapV07[parseInt(chainId, 10)];
     const entryPointContract = entryPointContracts?.find(
       (e) => e.address.toLowerCase() === entryPointAddress.toLowerCase(),
     );
@@ -59,6 +59,8 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
         );
     }
 
+    log.info("HERE!");
+
     // Check if given chain id is supported by our bundler
     const simulator = bundlerSimulationServiceMapV07[parseInt(chainId, 10)];
     if (!simulator) {
@@ -66,7 +68,7 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
         .status(STATUSES.BAD_REQUEST)
         .json(new RPCErrorResponse(new ChainIdNotSupportedError(chainId), id));
     }
-
+    log.info("HERE!!");
     // Estimate gas for the user operation using the simulator
     const estimatedUserOpGas = await simulator.estimateUserOperationGas({
       userOp,

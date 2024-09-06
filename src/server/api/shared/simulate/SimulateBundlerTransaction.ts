@@ -3,7 +3,7 @@ import { Request } from "express";
 import { BUNDLER_ERROR_CODES, STATUSES } from "../middleware";
 import {
   entryPointMap,
-  entryPointV07Map,
+  entryPointMapV07,
   bundlerSimulationServiceMap,
   bundlerSimulationServiceMapV07,
 } from "../../../../common/service-manager";
@@ -152,7 +152,7 @@ export const validateBundlerV3Transaction = async (req: Request) => {
       }
     }
 
-    const entryPointContracts = entryPointV07Map[parseInt(chainId, 10)];
+    const entryPointContracts = entryPointMapV07[parseInt(chainId, 10)];
 
     const entryPointContract = entryPointContracts.find(
       (entryPoint) =>

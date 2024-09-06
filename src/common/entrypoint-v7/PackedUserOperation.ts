@@ -2,6 +2,7 @@ import { type Hex, concat, pad, slice, toHex, keccak256, encodeAbiParameters, fr
 import { isUndefined } from "lodash";
 import type { UserOperationStruct } from "../types";
 import { config } from "../../config";
+
 const { entryPointV07Data } = config;
 
 export const COMMON_ENTRYPOINT_V7_ADDRESSES : Hex[] = Array.from(Object.keys(entryPointV07Data).map(

@@ -2,7 +2,6 @@ import { ICacheService } from "../../../common/cache";
 import { IQueue } from "../../../common/queue";
 import {
   BundlerTransactionMessageType,
-  BundlerV3TransactionMessageType,
   EntryPointMapType,
   EntryPointV07MapType,
   EVMRawTransactionType,
@@ -19,16 +18,6 @@ export type BundlerConsumerParamsType = {
   options: {
     chainId: number;
     entryPointMap: EntryPointMapType;
-  };
-};
-
-export type BundlerV3ConsumerParamsType = {
-  queue: IQueue<BundlerV3TransactionMessageType>;
-  relayerManager: IRelayerManager<IEVMAccount, EVMRawTransactionType>;
-  transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>;
-  cacheService: ICacheService;
-  options: {
-    chainId: number;
-    entryPointMap: EntryPointV07MapType;
+    entryPointMapV07: EntryPointV07MapType;
   };
 };

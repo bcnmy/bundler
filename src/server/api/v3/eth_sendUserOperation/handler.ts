@@ -5,7 +5,7 @@ import {
   transactionDao,
   userOperationV07Dao,
   userOperationStateDao,
-  routeTransactionToRelayerMapV07,
+  routeTransactionToRelayerMap,
 } from "../../../../common/service-manager";
 import {
   generateTransactionId,
@@ -54,7 +54,7 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
 
     transactionDao.save(chainIdInNum, {
       transactionId,
-      transactionType: TransactionType.BUNDLER_V3,
+      transactionType: TransactionType.BUNDLER,
       status: TransactionStatus.PENDING,
       chainId: chainIdInNum,
       walletAddress,
@@ -81,6 +81,11 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
       maxPriorityFeePerGas,
       paymasterAndData,
       signature,
+      paymasterData,
+      factory,
+      factoryData,
+      paymasterPostOpGasLimit,
+      paymasterVerificationGasLimit,
     } = userOp;
 
     const paymaster = getPaymasterFromPaymasterAndDataV7(paymasterAndData);
@@ -102,10 +107,15 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
       userOpHash,
       chainId: chainIdInNum,
       paymaster,
+      paymasterData,
+      paymasterPostOpGasLimit,
+      paymasterVerificationGasLimit,
+      factory,
+      factoryData,
       creationTime: Date.now(),
     });
 
-    if (!routeTransactionToRelayerMapV07[chainIdInNum][TransactionType.BUNDLER_V3]) {
+    if (!routeTransactionToRelayerMap[chainIdInNum][TransactionType.BUNDLER]) {
       // updateRequest({
       //   chainId: parseInt(chainId, 10),
       //   apiKey,
@@ -132,10 +142,10 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
         },
       });
     }
-    const response = routeTransactionToRelayerMapV07[chainIdInNum][
-      TransactionType.BUNDLER_V3
+    const response = routeTransactionToRelayerMap[chainIdInNum][
+      TransactionType.BUNDLER
     ].sendTransactionToRelayer({
-      type: TransactionType.BUNDLER_V3,
+      type: TransactionType.BUNDLER,
       to: entryPointAddress,
       data: "0x0",
       gasLimit: `0x${Number(gasLimitFromSimulation).toString(16)}`,

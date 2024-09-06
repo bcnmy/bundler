@@ -28,7 +28,7 @@ export type EVMTransactionListenerParamsType = {
   options: {
     chainId: number;
     entryPointMap: EntryPointMapType;
-    entryPointV07Map: EntryPointV07MapType;
+    entryPointMapV07: EntryPointV07MapType;
   };
 };
 
