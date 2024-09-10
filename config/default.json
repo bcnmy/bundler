@@ -1044,5 +1044,6 @@
       "baseFeePerGas": 1,
       "preVerificationGas": 2172916
     }
-  }
+  },
+  "disableFeeValidation": []
 }
