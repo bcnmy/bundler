@@ -1038,5 +1038,11 @@
     "maxRedirections": 16,
     "retryDelayOnFailover": 100,
     "scaleReads": "master"
+  },
+  "gasOverrides": {
+    "204": {
+      "baseFeePerGas": 1,
+      "preVerificationGas": 2172916
+    }
   }
 }

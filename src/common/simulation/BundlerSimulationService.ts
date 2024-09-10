@@ -208,7 +208,12 @@ export class BundlerSimulationService {
         supportsEthCallByteCodeOverride = false;
       }
 
-      const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
+      let baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
+      if (chainId === BLOCKCHAINS.OP_BNB_MAINNET && baseFeePerGas === 0n) {
+        baseFeePerGas = BigInt(
+          config.gasOverrides[BLOCKCHAINS.OP_BNB_MAINNET].baseFeePerGas,
+        );
+      }
 
       const response = await this.gasEstimator.estimateUserOperationGas({
         userOperation: userOp,
@@ -279,6 +284,12 @@ export class BundlerSimulationService {
 
       const end = performance.now();
       log.info(`Estimating the userOp took: ${end - start} milliseconds`);
+
+      if (chainId === BLOCKCHAINS.OP_BNB_MAINNET && baseFeePerGas === 0n) {
+        preVerificationGas = BigInt(
+          config.gasOverrides[BLOCKCHAINS.OP_BNB_MAINNET].preVerificationGas,
+        );
+      }
 
       return {
         code: STATUSES.SUCCESS,
