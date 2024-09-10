@@ -157,6 +157,13 @@ export type ConfigType = {
   // Transaction error messages
   transaction: TransactionConfigType;
   zeroAddress: `0x${string}`;
+  gasOverrides: Record<
+    number,
+    {
+      baseFeePerGas: number;
+      preVerificationGas: number;
+    }
+  >;
 };
 
 export interface IConfig {
