@@ -157,6 +157,7 @@ export type ConfigType = {
   // Transaction error messages
   transaction: TransactionConfigType;
   zeroAddress: `0x${string}`;
+  // hardcode override some gas values for a specific chain
   gasOverrides: Record<
     number,
     {
@@ -164,6 +165,8 @@ export type ConfigType = {
       preVerificationGas: number;
     }
   >;
+  // disable maxFeePerGas & maxPriorityFeePerGas validation for specific chain ids
+  disableFeeValidation: Array<number>;
 };
 
 export interface IConfig {
