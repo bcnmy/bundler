@@ -567,7 +567,15 @@ export class BundlerSimulationService {
     log.info(`maxFeePerGas is within acceptable limits`);
     log.info(`Checking if preVerificationGas is within acceptable limits`);
 
-    const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
+    let baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
+    if (
+      this.networkService.chainId === BLOCKCHAINS.OP_BNB_MAINNET &&
+      baseFeePerGas === 0n
+    ) {
+      baseFeePerGas = BigInt(
+        config.gasOverrides[BLOCKCHAINS.OP_BNB_MAINNET].baseFeePerGas,
+      );
+    }
 
     const { preVerificationGas: networkPreVerificationGas } =
       await this.gasEstimator.calculatePreVerificationGas({
