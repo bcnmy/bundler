@@ -12,6 +12,7 @@ import {
 import {
   createArbitrumGasEstimator,
   createGasEstimator,
+  createKakarotGasEstimator,
   createMantleGasEstimator,
   createMorphGasEstimator,
   createOptimismGasEstimator,
@@ -95,6 +96,12 @@ export class BundlerSimulationService {
 
     if (config.seiNetworks.includes(this.networkService.chainId)) {
       this.gasEstimator = createSeiGasEstimator({
+        rpcUrl: this.networkService.rpcUrl,
+      });
+    }
+
+    if (config.kakarotNetworks.includes(this.networkService.chainId)) {
+      this.gasEstimator = createKakarotGasEstimator({
         rpcUrl: this.networkService.rpcUrl,
       });
     }
@@ -201,7 +208,12 @@ export class BundlerSimulationService {
         supportsEthCallByteCodeOverride = false;
       }
 
-      const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
+      let baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
+      if (chainId === BLOCKCHAINS.OP_BNB_MAINNET && baseFeePerGas === 0n) {
+        baseFeePerGas = BigInt(
+          config.gasOverrides[BLOCKCHAINS.OP_BNB_MAINNET].baseFeePerGas,
+        );
+      }
 
       const response = await this.gasEstimator.estimateUserOperationGas({
         userOperation: userOp,
@@ -272,6 +284,12 @@ export class BundlerSimulationService {
 
       const end = performance.now();
       log.info(`Estimating the userOp took: ${end - start} milliseconds`);
+
+      if (chainId === BLOCKCHAINS.OP_BNB_MAINNET && baseFeePerGas === 0n) {
+        preVerificationGas = BigInt(
+          config.gasOverrides[BLOCKCHAINS.OP_BNB_MAINNET].preVerificationGas,
+        );
+      }
 
       return {
         code: STATUSES.SUCCESS,
@@ -525,7 +543,10 @@ export class BundlerSimulationService {
     );
     log.info(`Checking if maxPriorityFeePerGas is within acceptable limits`);
 
-    if (minimumAcceptableMaxPriorityFeePerGas > Number(maxPriorityFeePerGas)) {
+    if (
+      !config.disableFeeValidation.includes(this.networkService.chainId) &&
+      minimumAcceptableMaxPriorityFeePerGas > Number(maxPriorityFeePerGas)
+    ) {
       log.info(
         `maxPriorityFeePerGas in userOp: ${maxPriorityFeePerGas} is lower than expected maxPriorityFeePerGas: ${minimumAcceptableMaxPriorityFeePerGas}`,
       );
@@ -537,7 +558,10 @@ export class BundlerSimulationService {
     log.info(`maxPriorityFeePerGas is within acceptable limits`);
     log.info(`Checking if maxFeePerGas is within acceptable limits`);
 
-    if (minimumAcceptableMaxFeePerGas > Number(maxFeePerGas)) {
+    if (
+      !config.disableFeeValidation.includes(this.networkService.chainId) &&
+      minimumAcceptableMaxFeePerGas > Number(maxFeePerGas)
+    ) {
       log.info(
         `maxFeePerGas in userOp: ${maxFeePerGas} is lower than expected maxFeePerGas: ${minimumAcceptableMaxFeePerGas}`,
       );
@@ -549,7 +573,15 @@ export class BundlerSimulationService {
     log.info(`maxFeePerGas is within acceptable limits`);
     log.info(`Checking if preVerificationGas is within acceptable limits`);
 
-    const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
+    let baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
+    if (
+      this.networkService.chainId === BLOCKCHAINS.OP_BNB_MAINNET &&
+      baseFeePerGas === 0n
+    ) {
+      baseFeePerGas = BigInt(
+        config.gasOverrides[BLOCKCHAINS.OP_BNB_MAINNET].baseFeePerGas,
+      );
+    }
 
     const { preVerificationGas: networkPreVerificationGas } =
       await this.gasEstimator.calculatePreVerificationGas({
