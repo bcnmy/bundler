@@ -17,10 +17,10 @@ services:
         condition: service_started
       redis:
         condition: service_healthy
-        #restart: true
+        restart: true
       rabbitmq:
         condition: service_healthy
-        #restart: true
+        restart: true
       # centrifugo:
       #   condition: service_healthy
       #   restart: true
