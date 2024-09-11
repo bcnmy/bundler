@@ -5,7 +5,6 @@ import { ENTRY_POINT_V07_ABI } from "../entrypoint-v7/abiv7";
 export enum TransactionType {
   FUNDING = "FUNDING",
   BUNDLER = "BUNDLER",
-  BUNDLER_V3 = "BUNDLER_V3",
 }
 
 export enum TransactionMethodType {

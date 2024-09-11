@@ -36,6 +36,7 @@ export const getUserOperationReceipt = async (req: Request, res: Response) => {
         parseInt(chainId, 10),
         userOpHash,
       );
+
     if (!userOperationData || !userOperationData.receipt) {
       // updateRequest({
       //   chainId: parseInt(chainId, 10),
@@ -94,6 +95,7 @@ export const getUserOperationReceipt = async (req: Request, res: Response) => {
     //   },
     //   httpResponseCode: STATUSES.SUCCESS,
     // });
+
     return res.status(STATUSES.SUCCESS).json({
       jsonrpc: "2.0",
       id: 1,

@@ -1,6 +1,6 @@
 import { type Hex, concat, pad, slice, toHex, keccak256, encodeAbiParameters, fromHex} from "viem";
 import { isUndefined } from "lodash";
-import type { UserOperationStruct } from "../types";
+import type { UserOperationStruct, UserOperationType } from "../types";
 import { config } from "../../config";
 
 const { entryPointV07Data } = config;
@@ -53,19 +53,53 @@ export function unpackUint(packed: Hex): [high128: bigint, low128: bigint] {
   return [high128, low128];
 }
 
+/**
+ * Packs the `verificationGasLimit` and `callGasLimit` fields from a UserOperationStruct into a single hexadecimal string.
+ * 
+ * This function uses `packUint` to combine the two gas limits into one hex string, which can be used for 
+ * encoding gas-related information of a user operation.
+ * 
+ * @param userOperation - The UserOperationStruct containing the `verificationGasLimit` and `callGasLimit` fields to pack.
+ * @returns A hexadecimal string representing the packed gas limits.
+ */
 export function packAccountGasLimits(userOperation: UserOperationStruct): Hex {
   return packUint(userOperation.verificationGasLimit, userOperation.callGasLimit);
 }
 
+/**
+ * Unpacks a hexadecimal string into `verificationGasLimit` and `callGasLimit` gas limit values.
+ * 
+ * The function splits the packed hex string back into the two original gas limit values.
+ * 
+ * @param accountGasLimits - The hexadecimal string containing packed gas limits.
+ * @returns An object with `verificationGasLimit` and `callGasLimit` as two unpacked gas limit values.
+ */
 export function unpackAccountGasLimits(accountGasLimits: Hex) {
   const [ verificationGasLimit, callGasLimit ] = unpackUint(accountGasLimits);
   return {verificationGasLimit, callGasLimit};
 }
 
+/**
+ * Packs the `maxPriorityFeePerGas` and `maxFeePerGas` fields from a UserOperationStruct into a single hexadecimal string.
+ * 
+ * This function uses `packUint` to combine the two fee-related values into one hex string for compact storage 
+ * or transmission.
+ * 
+ * @param userOperation - The UserOperationStruct containing the `maxPriorityFeePerGas` and `maxFeePerGas` fields to pack.
+ * @returns A hexadecimal string representing the packed gas fee limits.
+ */
 export function packGasFees(userOperation: UserOperationStruct): Hex {
   return packUint(userOperation.maxPriorityFeePerGas, userOperation.maxFeePerGas);
 }
 
+/**
+ * Unpacks a hexadecimal string into `maxPriorityFeePerGas` and `maxFeePerGas` gas fee values.
+ * 
+ * The function extracts the two gas fee values from the packed hexadecimal string.
+ * 
+ * @param gasFees - The hexadecimal string containing packed gas fee values.
+ * @returns An object with `maxPriorityFeePerGas` and `maxFeePerGas` as two unpacked gas fee values.
+ */
 export function unpackGasFees(gasFees: Hex) {
   const [ a, b ] = unpackUint(gasFees);
   const maxPriorityFeePerGas = a;
@@ -74,6 +108,19 @@ export function unpackGasFees(gasFees: Hex) {
   return {maxPriorityFeePerGas, maxFeePerGas};
 }
 
+/**
+ * Packs the factory and factoryData fields from a UserOperationStruct into a single hexadecimal string.
+ * 
+ * This function checks if both `factory` and `factoryData` fields are not null or undefined. If both fields
+ * are valid, it concatenates them into a single hexadecimal string and returns it. If only the `factory`
+ * field is available, it returns its hexadecimal representation. If `factory` is null, it returns a default
+ * '0x' hex string.
+ * 
+ * This function is useful for encoding initialization data of a user operation for later use or storage.
+ * 
+ * @param userOperation - The UserOperationStruct containing the `factory` and `factoryData` fields to pack.
+ * @returns A hexadecimal string representing the packed initialization data, or '0x' if no data exists.
+ */
 export function packInitCode(userOperation: UserOperationStruct): Hex {
   if (userOperation.factory !== null && !isUndefined(userOperation.factory) && userOperation.factoryData !== null && !isUndefined(userOperation.factoryData)) {
     return concat([userOperation.factory, userOperation.factoryData]);
@@ -81,6 +128,16 @@ export function packInitCode(userOperation: UserOperationStruct): Hex {
   return userOperation.factory == null ? '0x' : toHex(concat([userOperation.factory]));
 }
 
+/**
+ * Unpacks the `initCode` into its components: `factory` and `factoryData`.
+ * 
+ * This function checks if the `initCode` is valid (non-null and longer than 2 characters). It slices the 
+ * first 20 bytes to extract the `factory` and uses the remaining portion as `factoryData`. If the `initCode`
+ * is invalid, it returns null.
+ * 
+ * @param initCode - The hexadecimal string containing the packed factory and factoryData.
+ * @returns An object with `factory` and `factoryData` as separate components or null if invalid.
+ */
 export function unpackInitCode(initCode: Hex) {
   if (initCode != null && initCode.length > 2) {
     const factory = slice(initCode, 0, 20);
@@ -90,6 +147,18 @@ export function unpackInitCode(initCode: Hex) {
   return null;
 }
 
+/**
+ * Packs the `paymaster`, `paymasterVerificationGasLimit`, `paymasterPostOpGasLimit`, and `paymasterData` fields
+ * from a UserOperationStruct into a single hexadecimal string.
+ * 
+ * If the `paymaster` is null, it returns a default '0x' hex string. If any gas limits are missing while the 
+ * `paymaster` is set, it throws an error. This packed data is useful for combining paymaster-related information
+ * into a single hex string for transmission or storage.
+ * 
+ * @param userOperation - The UserOperationStruct containing the `paymaster`, gas limits, and `paymasterData`.
+ * @returns A hexadecimal string representing the packed paymaster and associated data.
+ * @throws An error if the `paymaster` is set but required gas limits are missing.
+ */
 export function packPaymasterAndData(userOperation: UserOperationStruct): Hex {
   if (userOperation.paymaster == null) {
     return `0x`;
@@ -105,6 +174,17 @@ export function packPaymasterAndData(userOperation: UserOperationStruct): Hex {
   
 }
 
+/**
+ * Unpacks the `paymasterAndData` hex string into its components: `paymaster`, `paymasterVerificationGasLimit`, 
+ * `paymasterPostOpGasLimit`, and `paymasterData`.
+ * 
+ * It checks the length of the hex string for validity. If invalid, it returns null or throws an error. If valid,
+ * it slices the string to extract the `paymaster`, gas limits, and `paymasterData`.
+ * 
+ * @param paymasterAndData - The hexadecimal string containing the packed paymaster-related information.
+ * @returns An object containing `paymaster`, `paymasterVerificationGasLimit`, `paymasterPostOpGasLimit`, and `paymasterData`.
+ * @throws An error if the `paymasterAndData` string is too short to contain valid gas limit data.
+ */
 export function unpackPaymasterAndData(paymasterAndData: Hex): {
   paymaster: Hex
   paymasterVerificationGasLimit: bigint
@@ -271,4 +351,10 @@ export function getUserOpHash(
     );
   
     return keccak256(fullEncodedData);
+}
+
+export function isUserOpV06(
+  userOp: UserOperationType | UserOperationStruct
+): boolean {
+  return 'initCode' in userOp;
 }

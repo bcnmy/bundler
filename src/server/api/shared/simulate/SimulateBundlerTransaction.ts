@@ -229,7 +229,7 @@ export const validateBundlerV3Transaction = async (req: Request) => {
     req.body.params[2] = bundlerSimulationAndValidationResponse.data.totalGas;
     req.body.params[3] = bundlerSimulationAndValidationResponse.data.userOpHash;
     log.info(
-      `Transaction successfully simulated and validated for userOp: ${JSON.stringify(
+      `V3 Transaction successfully simulated and validated for userOp: ${JSON.stringify(
         userOp,
       )} on chainId: ${chainId}`,
     );

@@ -152,10 +152,10 @@ export class BundlerSimulationServiceV07 {
         }
       }
 
-      // for userOp completeness
-      userOp.callGasLimit = BigInt(58000);
-      userOp.verificationGasLimit = BigInt(58000);
-      userOp.preVerificationGas = BigInt(58000);
+      // // for userOp completeness
+      // userOp.callGasLimit = BigInt(58000);
+      // userOp.verificationGasLimit = BigInt(58000);
+      // userOp.preVerificationGas = BigInt(58000);
 
       // for userOp completeness
       if (

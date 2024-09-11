@@ -85,9 +85,6 @@
     "1328": ["BUNDLER"],
     "1329": ["BUNDLER"]
   },
-  "supportedTransactionTypeV07": {
-    "84532": ["BUNDLER_V3"]
-  },
   "chains": {
     "providers": {
       "5000": [
@@ -1008,7 +1005,7 @@
     "84532": {
       "verificationGasLimit": 2000000,
       "callGasLimit": 2000000,
-      "preVerificationGas": 8000000
+      "preVerificationGas": 45000000 
     }
   }
 }

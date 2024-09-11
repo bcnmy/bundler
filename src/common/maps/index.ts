@@ -4,5 +4,4 @@ import { TransactionType } from "../types";
 export const relayerManagerTransactionTypeNameMap = {
   [TransactionType.FUNDING]: "RM0",
   [TransactionType.BUNDLER]: "RM1",
-  [TransactionType.BUNDLER_V3]: "RM2",
 };

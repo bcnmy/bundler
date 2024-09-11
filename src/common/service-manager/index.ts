@@ -275,12 +275,6 @@ let statusService: IStatusService;
       EVMRelayerManagerMap[relayerManager.name][chainId] =
         relayerMangerInstance;
 
-      if (relayerManager.name === "RM1") {
-        if (!EVMRelayerManagerMap.RM2) {
-          EVMRelayerManagerMap.RM2 = {};
-        }
-        EVMRelayerManagerMap.RM2[chainId] = relayerMangerInstance;
-      }
       const addressList = await relayerMangerInstance.createRelayers();
       log.info(
         `Relayer address list length: ${
