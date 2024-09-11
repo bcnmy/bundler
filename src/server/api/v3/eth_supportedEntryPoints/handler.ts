@@ -20,12 +20,12 @@ export const getSupportedEntryPoints = async (req: Request, res: Response) => {
     log.info(`chainId: ${chainId}`);
 
     const chainIdInInt = parseInt(chainId, 10);
-    const { entryPointData } = config;
+    const { entryPointV07Data } = config;
 
     const supportedEntryPoints = [];
 
     for (const [entryPointAddress, chainIds] of Object.entries(
-      entryPointData,
+      entryPointV07Data,
     )) {
       if (chainIds.supportedChainIds.includes(chainIdInInt)) {
         supportedEntryPoints.push(entryPointAddress);

@@ -2,7 +2,7 @@
 import { Request, Response } from "express";
 import { BUNDLER_ERROR_CODES, STATUSES } from "../../shared/middleware";
 import { logger } from "../../../../common/logger";
-import { userOperationDao } from "../../../../common/service-manager";
+import { userOperationV07Dao } from "../../../../common/service-manager";
 import { parseError } from "../../../../common/utils";
 // import { updateRequest } from '../../auth/UpdateRequest';
 
@@ -25,7 +25,7 @@ export const getUserOperationByHash = async (req: Request, res: Response) => {
     const userOpHash = req.body.params[0];
 
     const userOperation =
-      await userOperationDao.getUserOperationDataByUserOpHash(
+      await userOperationV07Dao.getUserOperationDataByUserOpHash(
         parseInt(chainId, 10),
         userOpHash,
       );
@@ -53,12 +53,13 @@ export const getUserOperationByHash = async (req: Request, res: Response) => {
     const {
       sender,
       nonce,
-      initCode,
       callData,
       callGasLimit,
       preVerificationGas,
       verificationGasLimit,
-      paymasterAndData,
+      paymaster,
+      factory,
+      factoryData,
       maxFeePerGas,
       maxPriorityFeePerGas,
       signature,
@@ -71,12 +72,13 @@ export const getUserOperationByHash = async (req: Request, res: Response) => {
     const result = {
       sender,
       nonce,
-      initCode,
+      factory,
+      factoryData,
       callData,
       callGasLimit,
       preVerificationGas,
       verificationGasLimit,
-      paymasterAndData,
+      paymaster,
       maxFeePerGas,
       maxPriorityFeePerGas,
       signature,

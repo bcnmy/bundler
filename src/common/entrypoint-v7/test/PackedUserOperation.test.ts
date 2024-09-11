@@ -1,6 +1,6 @@
 import { PackedUserOperation } from "viem/_types/account-abstraction/types/userOperation";
 import _ from 'lodash';
-import { UserOperationType } from "../../types";
+import { UserOperationStruct } from "../../types";
 import { getUserOpHash, packUserOperation, COMMON_ENTRYPOINT_V7_ADDRESSES, unpackUserOperation} from "../PackedUserOperation";
 
 describe("PackedUserOperation simple test", () => {
@@ -9,16 +9,16 @@ describe("PackedUserOperation simple test", () => {
 
     describe("user op convertion 1", () => {
         const sender = "0x1234567890abcdef1234567890abcdef12345678";
-        const calldata = "0x";
+        const callData = "0x";
         const correctHash = "0x42bfcf0ecae5b274838cba8bbe6c6012f2259014607d22248b3414337c26f25d";
         const correctAccountGasLimits = "0x0000000000000000000000000007a12000000000000000000000000000017ed0";
         const correctGasFees = "0x000000000000000000000000000f424000000000000000000000000000c8bf5e";
-        const userOp: UserOperationType = {
+        const userOp: UserOperationStruct = {
             sender,
             nonce: 1n,
-            initCode: "0x",
-            callData: calldata,
-            paymasterAndData: "0x",
+            // initCode: "0x",
+            callData,
+            // paymasterAndData: "0x",
             callGasLimit: 98000n,
             verificationGasLimit: 500000n,
             preVerificationGas: 21000n,
@@ -32,7 +32,7 @@ describe("PackedUserOperation simple test", () => {
             expect(packedUserOp.sender).toEqual(sender);
             expect(packedUserOp.accountGasLimits).toEqual(correctAccountGasLimits);
             expect(packedUserOp.gasFees).toEqual(correctGasFees);
-            expect(packedUserOp.callData).toEqual(calldata);
+            expect(packedUserOp.callData).toEqual(callData);
 
             expect(getUserOpHash(packedUserOp, ENTRYPOINT_V7_ADDRESS, chainId)).toEqual(correctHash);
         });
@@ -45,7 +45,7 @@ describe("PackedUserOperation simple test", () => {
             expect(packedUserOp.sender).toEqual(sender);
             expect(packedUserOp.accountGasLimits).toEqual(correctAccountGasLimits);
             expect(packedUserOp.gasFees).toEqual(correctGasFees);
-            expect(packedUserOp.callData).toEqual(calldata);
+            expect(packedUserOp.callData).toEqual(callData);
 
             expect(_.isEqual(unpackedUserOp, userOp)).toBeTruthy();
         });

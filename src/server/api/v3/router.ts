@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { simulateBundlerTransaction } from "../shared/simulate";
-import { handleV2Request } from "./handler";
+import { simulateBundlerV3Transaction } from "../shared/simulate";
+import { handleV3Request } from "./handler";
 import { validateBundlerRequest } from "./shared/middleware";
 
 export const v3Router = Router();
@@ -8,11 +8,11 @@ export const v3Router = Router();
 v3Router.post(
   "/:chainId/:dappAPIKey",
   validateBundlerRequest(),
-  simulateBundlerTransaction(),
-  handleV2Request,
+  simulateBundlerV3Transaction(),
+  handleV3Request,
 );
 v3Router.get(
   "/:chainId/:bundlerApiKey",
   validateBundlerRequest(),
-  handleV2Request,
+  handleV3Request,
 );

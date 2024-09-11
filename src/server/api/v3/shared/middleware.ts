@@ -70,6 +70,7 @@ export const validateBundlerRequest =
       const start = performance.now();
       const { method, id } = req.body;
       let validationResponse;
+      log.info(`Received method: ${method}`);
       switch (method) {
         case TransactionMethodType.BUNDLER:
           validationResponse = bundlerSendUserOpRequestSchema.validate(

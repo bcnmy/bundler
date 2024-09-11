@@ -2,7 +2,7 @@
 import { Request, Response } from "express";
 import { BUNDLER_ERROR_CODES, STATUSES } from "../../shared/middleware";
 import { logger } from "../../../../common/logger";
-import { userOperationDao } from "../../../../common/service-manager";
+import { userOperationV07Dao } from "../../../../common/service-manager";
 import { parseError } from "../../../../common/utils";
 // import { updateRequest } from '../../auth/UpdateRequest';
 
@@ -32,7 +32,7 @@ export const getUserOperationReceipt = async (req: Request, res: Response) => {
     const userOpHash = req.body.params[0];
 
     const userOperationData =
-      await userOperationDao.getUserOperationDataByUserOpHash(
+      await userOperationV07Dao.getUserOperationDataByUserOpHash(
         parseInt(chainId, 10),
         userOpHash,
       );
@@ -49,6 +49,7 @@ export const getUserOperationReceipt = async (req: Request, res: Response) => {
       //   },
       //   httpResponseCode: STATUSES.SUCCESS,
       // });
+
       return res.status(STATUSES.SUCCESS).json({
         jsonrpc: "2.0",
         id: id || 1,

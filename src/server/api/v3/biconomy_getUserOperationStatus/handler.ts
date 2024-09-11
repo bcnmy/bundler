@@ -4,7 +4,7 @@ import { BUNDLER_ERROR_CODES, STATUSES } from "../../shared/middleware";
 import { logger } from "../../../../common/logger";
 import { customJSONStringify, parseError } from "../../../../common/utils";
 import {
-  userOperationDao,
+  userOperationV07Dao,
   userOperationStateDao,
 } from "../../../../common/service-manager";
 import { UserOperationStateEnum } from "../../../../common/types";
@@ -107,7 +107,7 @@ const getUserOperationStateData = async (
       `Fetching userOpReceipt for userOpHash: ${userOpHash} on chainId: ${chainId}`,
     );
     const userOperationData =
-      await userOperationDao.getUserOperationDataByUserOpHash(
+      await userOperationV07Dao.getUserOperationDataByUserOpHash(
         chainId,
         userOpHash,
       );

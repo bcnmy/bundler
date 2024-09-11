@@ -1,17 +1,17 @@
-export interface IUserOperation {
+export interface IUserOperationV07 {
   transactionId: string;
   transactionHash: string;
   entryPoint: string;
   sender: string;
   nonce: number;
-  initCode: string;
+  factory: string;
+  factoryData: string,
   callData: string;
   callGasLimit: number;
   verificationGasLimit: number;
   preVerificationGas: number;
   maxFeePerGas: number;
   maxPriorityFeePerGas: number;
-  paymasterAndData: string;
   signature: string;
   userOpHash: string;
   receipt: object;

@@ -11,31 +11,31 @@ const userOpForSendUserOp = object.keys({
   nonce: string
     .required()
     .error(new Error("nonce is required and should be a string")),
-  initCode: string,
+  factory: string,
+  factoryData: string,
   callData: string
     .required()
-    .error(new Error("callData is required and should be a string")),
+    .error(new Error("callData is required and should be a hex string")),
   callGasLimit: string
     .required()
     .error(new Error("callGasLimit is required and should be a string")),
   verificationGasLimit: string
     .required()
-    .error(
-      new Error("verificationGasLimit is required and should be a string"),
-    ),
+    .error(new Error("verificationGasLimit is required and should be a string")),
   preVerificationGas: string
     .required()
     .error(new Error("preVerificationGas is required and should be a string")),
   maxFeePerGas: string
     .required()
-    .error(new Error("maxFeePerGas is required and should be a number")),
+    .error(new Error("maxFeePerGas is required and should be a string")),
   maxPriorityFeePerGas: string
     .required()
-    .error(
-      new Error("maxPriorityFeePerGas is required and should be a string"),
-    ),
-  paymasterAndData: string,
-  signature: string.required().error(new Error("signature is required")),
+    .error(new Error("maxFeePerGas is required and should be a string")),
+  paymaster: string,
+  paymasterVerificationGasLimit: string,
+  paymasterPostOpGasLimit: string,
+  paymasterData: string,
+  signature: string.required().error(new Error("signature is required and should be a string")),
 });
 
 const entryPointAddress = string
@@ -70,13 +70,8 @@ const userOpEstimateUserOpGas = object.keys({
   nonce: string
     .required()
     .error(new Error("nonce is required and should be a string")),
-  initCode: string
-    .required()
-    .error(
-      new Error(
-        "initCode is required and should be a hex string. Send 0x if not applicable",
-      ),
-    ),
+  factory: string,
+  factoryData: string,
   callData: string
     .required()
     .error(new Error("callData is required and should be a hex string")),
@@ -85,7 +80,10 @@ const userOpEstimateUserOpGas = object.keys({
   preVerificationGas: string,
   maxFeePerGas: string,
   maxPriorityFeePerGas: string,
-  paymasterAndData: string,
+  paymaster: string,
+  paymasterVerificationGasLimit: string,
+  paymasterPostOpGasLimit: string,
+  paymasterData: string,
   signature: string,
 });
 

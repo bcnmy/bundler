@@ -1,5 +1,6 @@
 /* eslint-disable import/no-import-module-exports */
 import { Request, Response } from "express";
+import { toHex } from "viem";
 import { BUNDLER_ERROR_CODES, STATUSES } from "../../shared/middleware";
 import { logger } from "../../../../common/logger";
 import { gasPriceServiceMap } from "../../../../common/service-manager";
@@ -50,8 +51,18 @@ export const getGasFeeValues = async (req: Request, res: Response) => {
         jsonrpc: "2.0",
         id: id || 1,
         result: {
-          maxPriorityFeePerGas: gasPrice?.maxPriorityFeePerGas?.toString(),
-          maxFeePerGas: gasPrice?.maxFeePerGas?.toString(),
+          slow:{
+            maxPriorityFeePerGas: toHex(gasPrice?.maxPriorityFeePerGas)?.toString(),
+            maxFeePerGas: toHex(gasPrice?.maxFeePerGas)?.toString(),
+          },
+          standard:{
+            maxPriorityFeePerGas: toHex(gasPrice?.maxPriorityFeePerGas)?.toString(),
+            maxFeePerGas: toHex(gasPrice?.maxFeePerGas)?.toString(),
+          },
+          fast:{
+            maxPriorityFeePerGas: toHex(gasPrice?.maxPriorityFeePerGas)?.toString(),
+            maxFeePerGas: toHex(gasPrice?.maxFeePerGas)?.toString(),
+          },        
         },
       });
     }

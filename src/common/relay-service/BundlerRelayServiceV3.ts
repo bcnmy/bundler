@@ -3,7 +3,7 @@ import { STATUSES } from "../../server/api/shared/middleware";
 import { IQueue } from "../interface";
 import { logger } from "../logger";
 import {
-  BundlerTransactionMessageType,
+  BundlerV3TransactionMessageType,
   RelayServiceResponseType,
 } from "../types";
 import { parseError } from "../utils";
@@ -12,12 +12,12 @@ import { IRelayService } from "./interface/IRelayService";
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
 });
-export class BundlerRelayService
-  implements IRelayService<BundlerTransactionMessageType>
+export class BundlerRelayServiceV3
+  implements IRelayService<BundlerV3TransactionMessageType>
 {
-  queue: IQueue<BundlerTransactionMessageType>;
+  queue: IQueue<BundlerV3TransactionMessageType>;
 
-  constructor(queue: IQueue<BundlerTransactionMessageType>) {
+  constructor(queue: IQueue<BundlerV3TransactionMessageType>) {
     this.queue = queue;
   }
 
@@ -27,10 +27,10 @@ export class BundlerRelayService
    * @returns transaction id
    */
   async sendTransactionToRelayer(
-    data: BundlerTransactionMessageType,
+    data: BundlerV3TransactionMessageType,
   ): Promise<RelayServiceResponseType> {
     log.info(
-      `Sending transaction to Bundler transaction queue with transactionId: ${data.transactionId}`,
+      `Sending transaction to Bundler transaction queue with transactionId: ${data.transactionId} and transactionType: ${data.type}`,
     );
     let response: RelayServiceResponseType;
     try {
@@ -48,5 +48,4 @@ export class BundlerRelayService
     }
     return response;
   }
-
 }

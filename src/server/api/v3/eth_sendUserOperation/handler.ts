@@ -2,14 +2,14 @@
 import { Request, Response } from "express";
 import { logger } from "../../../../common/logger";
 import {
-  routeTransactionToRelayerMap,
   transactionDao,
-  userOperationDao,
+  userOperationV07Dao,
   userOperationStateDao,
+  routeTransactionToRelayerMap,
 } from "../../../../common/service-manager";
 import {
   generateTransactionId,
-  getPaymasterFromPaymasterAndData,
+  getPaymasterFromPaymasterAndDataV7,
   parseError,
 } from "../../../../common/utils";
 import {
@@ -70,11 +70,9 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
       userOpHash,
       state: UserOperationStateEnum.BUNDLER_MEMPOOL,
     });
-
     const {
       sender,
       nonce,
-      initCode,
       callData,
       callGasLimit,
       verificationGasLimit,
@@ -83,29 +81,37 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
       maxPriorityFeePerGas,
       paymasterAndData,
       signature,
+      paymasterData,
+      factory,
+      factoryData,
+      paymasterPostOpGasLimit,
+      paymasterVerificationGasLimit,
     } = userOp;
 
-    const paymaster = getPaymasterFromPaymasterAndData(paymasterAndData);
+    const paymaster = getPaymasterFromPaymasterAndDataV7(paymasterAndData);
 
-    userOperationDao.save(chainIdInNum, {
+    userOperationV07Dao.save(chainIdInNum, {
       transactionId,
       dappAPIKey,
       status: TransactionStatus.PENDING,
       entryPoint: entryPointAddress,
       sender,
       nonce,
-      initCode,
       callData,
       callGasLimit,
       verificationGasLimit,
       preVerificationGas,
       maxFeePerGas,
       maxPriorityFeePerGas,
-      paymasterAndData,
       signature,
       userOpHash,
       chainId: chainIdInNum,
       paymaster,
+      paymasterData,
+      paymasterPostOpGasLimit,
+      paymasterVerificationGasLimit,
+      factory,
+      factoryData,
       creationTime: Date.now(),
     });
 
