@@ -30,7 +30,7 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
   let log = filenameLogger.child({
     chainId,
     requestId: id,
-    apiKey: apiKey,
+    apiKey,
   });
 
   log.info(

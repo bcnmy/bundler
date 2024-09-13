@@ -13,7 +13,6 @@ import {
   bundlerEstimateUserOpGasRequestSchema,
   bundlerGetUserOpByHashRequestSchema,
   bundlerGetUserOpReceiptRequestSchema,
-  bundlerGetUserOpsByApiKeyRequestSchema,
   bundlerSendUserOpRequestSchema,
   bundlerSupportedEntryPointsRequestSchema,
   gasAndGasPricesRequestSchema,
@@ -101,11 +100,6 @@ export const validateBundlerRequest =
           break;
         case EthMethodType.GAS_AND_GAS_PRICES:
           validationResponse = gasAndGasPricesRequestSchema.validate(req.body);
-          break;
-        case EthMethodType.GET_USER_OPERATIONS_BY_API_KEY:
-          validationResponse = bundlerGetUserOpsByApiKeyRequestSchema.validate(
-            req.body,
-          );
           break;
         case BiconomyMethodType.GET_GAS_FEE_VALUES:
           validationResponse = getGasFeeValuesRequestSchema.validate(req.body);

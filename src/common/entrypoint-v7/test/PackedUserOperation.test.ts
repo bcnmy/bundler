@@ -1,7 +1,6 @@
-import { PackedUserOperation } from "../PackedUserOperation";
 import _ from 'lodash';
+import { PackedUserOperation , getUserOpHash, packUserOperation, COMMON_ENTRYPOINT_V7_ADDRESSES, unpackUserOperation} from "../PackedUserOperation";
 import { UserOperationStruct } from "../../types";
-import { getUserOpHash, packUserOperation, COMMON_ENTRYPOINT_V7_ADDRESSES, unpackUserOperation} from "../PackedUserOperation";
 
 describe("PackedUserOperation simple test", () => {
     const ENTRYPOINT_V7_ADDRESS = COMMON_ENTRYPOINT_V7_ADDRESSES[0];

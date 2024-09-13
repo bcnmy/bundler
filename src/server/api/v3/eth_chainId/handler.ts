@@ -20,7 +20,7 @@ export const getChainId = async (req: Request, res: Response) => {
   const log = filenameLogger.child({
     chainId,
     requestId: id,
-    apiKey: apiKey,
+    apiKey,
   });
 
   try {
