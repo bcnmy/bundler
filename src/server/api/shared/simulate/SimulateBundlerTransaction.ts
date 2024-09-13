@@ -137,12 +137,12 @@ export const validateBundlerV3Transaction = async (req: Request) => {
   try {
     const userOp = req.body.params[0];
     const entryPointAddress = req.body.params[1];
-    const { chainId, dappAPIKey } = req.params;
+    const { chainId, apiKey } = req.params;
     const simulationTypeData = req.body.params[2];
     log.info(`chainId from request params: ${chainId}`);
-    log.info(`dappAPIKey from request params: ${dappAPIKey}`);
+    log.info(`apiKey from request params: ${apiKey}`);
 
-    if (dappAPIKey === "nJPK7B3ru.dd7f7861-190d-41bd-af80-6877f74b8f44") {
+    if (apiKey === "nJPK7B3ru.dd7f7861-190d-41bd-af80-6877f74b8f44") {
       if (!config.testnetNetworks.includes(parseInt(chainId, 10))) {
         return {
           code: -32400,

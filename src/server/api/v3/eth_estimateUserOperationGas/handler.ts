@@ -24,13 +24,13 @@ const filenameLogger = logger.child({
 
 export const estimateUserOperationGas = async (req: Request, res: Response) => {
   const { id } = req.body;
-  const { chainId, bundlerApiKey } = req.params;
+  const { chainId, apiKey } = req.params;
 
   // create a child logger so all important tracing info is logged with each call
   let log = filenameLogger.child({
     chainId,
     requestId: id,
-    apiKey: bundlerApiKey,
+    apiKey: apiKey,
   });
 
   log.info(
@@ -48,6 +48,7 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
     const entryPointContract = entryPointContracts?.find(
       (e) => e.address.toLowerCase() === entryPointAddress.toLowerCase(),
     );
+
     if (!entryPointContract) {
       return res
         .status(STATUSES.BAD_REQUEST)
@@ -59,8 +60,6 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
         );
     }
 
-    log.info("HERE!");
-
     // Check if given chain id is supported by our bundler
     const simulator = bundlerSimulationServiceMapV07[parseInt(chainId, 10)];
     if (!simulator) {
@@ -68,7 +67,7 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
         .status(STATUSES.BAD_REQUEST)
         .json(new RPCErrorResponse(new ChainIdNotSupportedError(chainId), id));
     }
-    log.info("HERE!!");
+
     // Estimate gas for the user operation using the simulator
     const estimatedUserOpGas = await simulator.estimateUserOperationGas({
       userOp,

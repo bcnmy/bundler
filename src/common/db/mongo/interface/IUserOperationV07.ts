@@ -27,5 +27,5 @@ export interface IUserOperationV07 {
   logs: object;
   creationTime: number;
   metaData: object;
-  dappAPIKey: string;
+  apiKey: string;
 }

@@ -39,7 +39,7 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
     const entryPointAddress = req.body.params[1];
     let gasLimitFromSimulation = req.body.params[2] + 500000;
     const userOpHash = req.body.params[3];
-    const { chainId, dappAPIKey } = req.params;
+    const { chainId, apiKey } = req.params;
 
     const chainIdInNum = parseInt(chainId, 10);
     if (chainIdInNum === 5000) {
@@ -48,7 +48,7 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
 
     const transactionId = generateTransactionId(Date.now().toString());
     log.info(
-      `transactionId: ${transactionId} for userOpHash: ${userOpHash} on chainId: ${chainIdInNum} for apiKey: ${dappAPIKey}`,
+      `transactionId: ${transactionId} for userOpHash: ${userOpHash} on chainId: ${chainIdInNum} for apiKey: ${apiKey}`,
     );
     const walletAddress = userOp.sender.toLowerCase();
 
@@ -92,7 +92,7 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
 
     userOperationV07Dao.save(chainIdInNum, {
       transactionId,
-      dappAPIKey,
+      apiKey,
       status: TransactionStatus.PENDING,
       entryPoint: entryPointAddress,
       sender,

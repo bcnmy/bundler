@@ -15,12 +15,12 @@ const filenameLogger = logger.child({
 // TODO: Use the network service to actually check if that chainId is supported and RPC works
 export const getChainId = async (req: Request, res: Response) => {
   const { id } = req.body;
-  const { chainId, bundlerApiKey } = req.params;
+  const { chainId, apiKey } = req.params;
 
   const log = filenameLogger.child({
     chainId,
     requestId: id,
-    apiKey: bundlerApiKey,
+    apiKey: apiKey,
   });
 
   try {

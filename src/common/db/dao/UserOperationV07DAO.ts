@@ -21,7 +21,7 @@ export class UserOperationV07DAO implements IUserOperationV07DAO {
 
   async getUserOperationsDataByApiKey(
     chainId: number,
-    bundlerApiKey: string,
+    apiKey: string,
     startTime: number,
     endTime: number,
     limit: number,
@@ -33,7 +33,7 @@ export class UserOperationV07DAO implements IUserOperationV07DAO {
         {
           $match: {
             $and: [
-              { "metaData.dappAPIKey": bundlerApiKey },
+              { "metaData.apiKey": apiKey },
               { creationTime: { $gte: startTime } },
               { creationTime: { $lte: endTime } },
             ],
@@ -86,12 +86,12 @@ export class UserOperationV07DAO implements IUserOperationV07DAO {
 
   async getUserOperationsCountByApiKey(
     chainId: number,
-    bundlerApiKey: string,
+    apiKey: string,
     startTime: number,
     endTime: number,
   ): Promise<number> {
     const data = await this._db.getUserOperationV07(chainId).count({
-      "metaData.dappAPIKey": bundlerApiKey,
+      "metaData.apiKey": apiKey,
       creationTime: { $gte: startTime, $lte: endTime },
     });
     return data;

@@ -1,4 +1,4 @@
-import { PackedUserOperation } from "viem/_types/account-abstraction/types/userOperation";
+import { PackedUserOperation } from "../PackedUserOperation";
 import _ from 'lodash';
 import { UserOperationStruct } from "../../types";
 import { getUserOpHash, packUserOperation, COMMON_ENTRYPOINT_V7_ADDRESSES, unpackUserOperation} from "../PackedUserOperation";

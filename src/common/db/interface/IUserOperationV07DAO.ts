@@ -2,7 +2,7 @@ import { IUserOperationV07 } from "../mongo/interface";
 
 export type InitialUserOperationV07DataType = {
   transactionId: string;
-  dappAPIKey?: string;
+  apiKey?: string;
   entryPoint: string;
   sender: string;
   nonce: number;
@@ -60,7 +60,7 @@ export interface IUserOperationV07DAO {
   ): Promise<IUserOperationV07[]>;
   getUserOperationsDataByApiKey(
     chainId: number,
-    bundlerApiKey: string,
+    apiKey: string,
     startTime: number,
     endTime: number,
     limit: number,
@@ -68,7 +68,7 @@ export interface IUserOperationV07DAO {
   ): Promise<Array<IUserOperationV07>>;
   getUserOperationsCountByApiKey(
     chainId: number,
-    bundlerApiKey: string,
+    apiKey: string,
     startTime: number,
     endTime: number,
   ): Promise<number>;

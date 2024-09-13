@@ -15,7 +15,7 @@ const getGasPriceMock = jest.fn();
 // 💡 These import mocks have to happen before we call import { estimateUserOperationGas }
 // because estimateUserOperationGas imports the service manager produces SIDE EFFECTS (bad practice) like trying to connect to the DB
 jest.mock("../../../../common/service-manager", () => ({
-  entryPointV07Map: {
+  entryPointMapV07: {
     1: [entryPointContract],
     2: [entryPointContract],
     3: [entryPointContract],

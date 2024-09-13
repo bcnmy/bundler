@@ -13,7 +13,6 @@ import {
   getUserOperationByHash,
   getUserOperationReceipt,
   getSupportedEntryPoints,
-  getUserOperationsByApiKey,
   getGasFeeValues,
   getUserOperationStatus,
 } from ".";
@@ -55,9 +54,6 @@ export const handleV3Request = async (req: Request, res: Response) => {
       break;
     case EthMethodType.CHAIN_ID:
       response = await getChainId(req, res);
-      break;
-    case EthMethodType.GET_USER_OPERATIONS_BY_API_KEY:
-      response = await getUserOperationsByApiKey(req, res);
       break;
     case BiconomyMethodType.GET_GAS_FEE_VALUES:
       response = await getGasFeeValues(req, res);

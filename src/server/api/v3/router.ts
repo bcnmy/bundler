@@ -6,13 +6,13 @@ import { validateBundlerRequest } from "./shared/middleware";
 export const v3Router = Router();
 
 v3Router.post(
-  "/:chainId/:dappAPIKey",
+  "/:chainId/:apiKey",
   validateBundlerRequest(),
   simulateBundlerV3Transaction(),
   handleV3Request,
 );
 v3Router.get(
-  "/:chainId/:bundlerApiKey",
+  "/:chainId/:apiKey",
   validateBundlerRequest(),
   handleV3Request,
 );

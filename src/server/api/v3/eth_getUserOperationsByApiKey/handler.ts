@@ -82,7 +82,7 @@ const getStartTimeAndEndTimeInMs = (
 };
 
 /**
- * it should give a lit of all userOps by the bundlerApiKey
+ * it should give a lit of all userOps by the apiKey
  * data should be a combination of userOp data + receipt
  */
 export const getUserOperationsByApiKey = async (
@@ -90,7 +90,7 @@ export const getUserOperationsByApiKey = async (
   res: Response,
 ) => {
   try {
-    const { chainId, bundlerApiKey } = req.params;
+    const { chainId, apiKey } = req.params;
     const startTime = req.body.params[0];
     const endTime = req.body.params[1];
     let limit = req.body.params[2];
@@ -101,7 +101,7 @@ export const getUserOperationsByApiKey = async (
       endTime,
     );
     log.info(
-      `startTimeInMs: ${startTimeInMs}, endTimeInMs: ${endTimeInMs} for bundlerApiKey: ${bundlerApiKey} on chainId: ${chainId}`,
+      `startTimeInMs: ${startTimeInMs}, endTimeInMs: ${endTimeInMs} for apiKey: ${apiKey} on chainId: ${chainId}`,
     );
 
     if (typeof limit !== "number" || ![10, 25, 100].includes(limit)) {
@@ -113,13 +113,13 @@ export const getUserOperationsByApiKey = async (
     }
 
     log.info(
-      `getUserOperationsByApiKey request received for bundlerApiKey: ${bundlerApiKey} on chainId: ${chainId}`,
+      `getUserOperationsByApiKey request received for apiKey: ${apiKey} on chainId: ${chainId}`,
     );
 
     const userOperationsData =
       await userOperationV07Dao.getUserOperationsDataByApiKey(
         parseInt(chainId, 10),
-        bundlerApiKey,
+        apiKey,
         startTimeInMs,
         endTimeInMs,
         limit,
@@ -128,25 +128,25 @@ export const getUserOperationsByApiKey = async (
 
     if (!userOperationsData) {
       log.info(
-        `User operations data could not for apiKey: ${bundlerApiKey} on chainId: ${chainId}`,
+        `User operations data could not for apiKey: ${apiKey} on chainId: ${chainId}`,
       );
       return res.status(STATUSES.SUCCESS).json({
         jsonrpc: "2.0",
         id: 1,
-        result: `User operations data could not for apiKey: ${bundlerApiKey} on chainId: ${chainId}`,
+        result: `User operations data could not for apiKey: ${apiKey} on chainId: ${chainId}`,
       });
     }
 
     const totalUserOperationsCount =
       await userOperationV07Dao.getUserOperationsCountByApiKey(
         parseInt(chainId, 10),
-        bundlerApiKey,
+        apiKey,
         0,
         Date.now(),
       );
 
     log.info(
-      `totalUserOperationsCount: ${totalUserOperationsCount} for apiKey: ${bundlerApiKey} on chainId: ${chainId}`,
+      `totalUserOperationsCount: ${totalUserOperationsCount} for apiKey: ${apiKey} on chainId: ${chainId}`,
     );
 
     const userOpsData = [];

@@ -171,7 +171,7 @@ export const UserOperationV07Schema = new Schema<IUserOperationV07>({
   metaData: {
     type: Object,
   },
-  dappAPIKey: {
+  apiKey: {
     type: String,
   },
 });
