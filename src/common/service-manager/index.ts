@@ -43,7 +43,6 @@ import { UserOperationStateDAO } from "../db/dao/UserOperationStateDAO";
 import { customJSONStringify, parseError } from "../utils";
 import { GasPriceService } from "../gas-price";
 import { CacheFeesJob } from "../gas-price/jobs/CacheFees";
-import { BundlerRelayServiceV3 } from "../relay-service/BundlerRelayServiceV3";
 import { ENTRY_POINT_V07_ABI } from "../entrypoint-v7/abiv7";
 
 const log = logger.child({
@@ -53,12 +52,6 @@ const log = logger.child({
 const routeTransactionToRelayerMap: {
   [chainId: number]: {
     [transactionType: string]: BundlerRelayService;
-  };
-} = {};
-
-const routeTransactionToRelayerMapV07: {
-  [chainId: number]: {
-    [transactionType: string]: BundlerRelayServiceV3;
   };
 } = {};
 
@@ -426,7 +419,6 @@ let statusService: IStatusService;
 
 export {
   routeTransactionToRelayerMap,
-  routeTransactionToRelayerMapV07,
   bundlerSimulationServiceMap,
   bundlerSimulationServiceMapV07,
   entryPointMap,
