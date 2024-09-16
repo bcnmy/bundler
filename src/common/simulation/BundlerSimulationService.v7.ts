@@ -40,7 +40,7 @@ import {
 } from "./types";
 import { BLOCKCHAINS } from "../constants";
 import { IGasPriceService } from "../gas-price";
-import entrypointV7 from "../entrypoint-v7/abi.json";
+import { ENTRY_POINT_V07_ABI } from "../entrypoint-v7/abiv7";
 import { getUserOpHash, packUserOperation } from "../entrypoint-v7/PackedUserOperation";
 
 const log = logger.child({
@@ -377,7 +377,7 @@ export class BundlerSimulationServiceV07 {
 
       const packed = packUserOperation(userOp);
       const data = encodeFunctionData({
-        abi: entrypointV7,
+        abi: ENTRY_POINT_V07_ABI,
         functionName: "handleOps",
         args: [[packed], userOp.sender],
       });
