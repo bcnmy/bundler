@@ -1,4 +1,4 @@
-FROM node:21.6-bookworm as builder
+FROM --platform=linux/amd64 node:21.6-bookworm as builder
 
 # Install dependencies
 
@@ -21,7 +21,7 @@ COPY . /bundler
 RUN yarn run build
 
 # Second stage
-FROM node:21.6-bookworm
+FROM --platform=linux/amd64 node:21.6-bookworm
 
 # Tini allows us to avoid several Docker edge cases, see https://github.com/krallin/tini.
 # NOTE: See https://github.com/hexops/dockerfile#is-tini-still-required-in-2020-i-thought-docker-added-it-natively
