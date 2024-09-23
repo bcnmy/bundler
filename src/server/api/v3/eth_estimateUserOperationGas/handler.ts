@@ -122,8 +122,8 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
       preVerificationGas: Number(preVerificationGas),
       validUntil: toHex(validUntil),
       validAfter: toHex(validAfter),
-      maxPriorityFeePerGas,
-      maxFeePerGas,
+      maxPriorityFeePerGas: Number(maxPriorityFeePerGas),
+      maxFeePerGas: Number(maxFeePerGas),
     });
     response.id = id;
 
