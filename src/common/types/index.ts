@@ -1,4 +1,4 @@
-import { ENTRY_POINT_ABI } from "entry-point-gas-estimations/src/gas-estimator/entry-point-v6";
+import { ENTRY_POINT_ABI } from "entry-point-gas-estimations/dist/gas-estimator/entry-point-v6";
 import { GetContractReturnType, Hex } from "viem";
 import { ENTRY_POINT_V07_ABI } from "../entrypoint-v7/abiv7";
 

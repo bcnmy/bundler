@@ -2,7 +2,7 @@
 /* eslint-disable no-await-in-loop */
 import { getContract, parseEther } from "viem";
 import { chain } from "lodash";
-import { ENTRY_POINT_ABI } from "entry-point-gas-estimations/src/gas-estimator/entry-point-v6";
+import { ENTRY_POINT_ABI } from "entry-point-gas-estimations/dist/gas-estimator/entry-point-v6";
 import { config } from "../../config";
 import { EVMAccount, IEVMAccount } from "../../relayer/account";
 import { BundlerConsumer } from "../../relayer/consumer";

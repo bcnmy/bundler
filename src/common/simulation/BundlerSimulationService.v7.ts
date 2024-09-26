@@ -11,7 +11,7 @@ import {
   createOptimismGasEstimator,
   EstimateUserOperationGas,
   IGasEstimator,
-} from "entry-point-gas-estimations/src/gas-estimator/entry-point-v7";
+} from "entry-point-gas-estimations/dist/gas-estimator/entry-point-v7";
 import { config } from "../../config";
 import { IEVMAccount } from "../../relayer/account";
 import {

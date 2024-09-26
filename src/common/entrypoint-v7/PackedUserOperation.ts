@@ -283,7 +283,7 @@ export function unpackUserOperation(
     maxFeePerGas,
     maxPriorityFeePerGas,
     signature: packedUserOperation.signature,
-  };
+  } as unknown as UserOperationStruct;
 
   if (
     packedUserOperation.initCode != null &&

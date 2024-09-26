@@ -33,7 +33,7 @@ describe("PackedUserOperation simple test", () => {
       maxPriorityFeePerGas: 1000000n,
       maxFeePerGas: 13156190n,
       signature: "0x",
-    };
+    } as unknown as UserOperationStruct;
 
     it("user op with simple fields", async () => {
       const packedUserOp = packUserOperation(userOp);
