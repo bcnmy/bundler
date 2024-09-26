@@ -11,7 +11,10 @@ import { IStatusService } from "./interface/IStatusService";
 import { logger } from "../logger";
 import { StatusServiceParamsType } from "./types";
 import { GasPriceService } from "../gas-price";
-import { BundlerSimulationService, BundlerSimulationServiceV07 } from "../simulation";
+import {
+  BundlerSimulationService,
+  BundlerSimulationServiceV07,
+} from "../simulation";
 import { formatHrtimeSeconds } from "../utils/formatting";
 
 const filenameLogger = logger.child({

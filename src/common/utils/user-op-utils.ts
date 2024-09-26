@@ -13,7 +13,12 @@ import {
   toHex,
 } from "viem";
 import { logger } from "../logger";
-import { EntryPointContractType, EntryPointV07ContractType, StakeInfo, UserOperationType } from "../types";
+import {
+  EntryPointContractType,
+  EntryPointV07ContractType,
+  StakeInfo,
+  UserOperationType,
+} from "../types";
 import { parseError } from "./parse-error";
 import { customJSONStringify } from "./custom-json-stringifier";
 

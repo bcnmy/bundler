@@ -5,7 +5,7 @@ export interface IUserOperationV07 {
   sender: string;
   nonce: number;
   factory: string;
-  factoryData: string,
+  factoryData: string;
   callData: string;
   callGasLimit: number;
   verificationGasLimit: number;

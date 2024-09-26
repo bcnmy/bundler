@@ -3711,10 +3711,10 @@ end-of-stream@^1.1.0:
   dependencies:
     once "^1.4.0"
 
-entry-point-gas-estimations@0.0.26:
-  version "0.0.26"
-  resolved "https://registry.yarnpkg.com/entry-point-gas-estimations/-/entry-point-gas-estimations-0.0.26.tgz#74fc91fc1b0b8fc464d70e10f889804e4f5db2eb"
-  integrity sha512-4qQAjbRs0LsE5wcbhZZ8fFq6K0dgy97r+iGqxDYXLNawMF0yu0P9IfGlhoDlstRP/pTvDTc/ltAg5u8q9A9W+g==
+entry-point-gas-estimations@1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/entry-point-gas-estimations/-/entry-point-gas-estimations-1.0.1.tgz#22d86e205680532c204f547ac070e0ec29b81d49"
+  integrity sha512-xR1rCMBk6v3IVuvZPdOq/wxUbRY/lCT5dV6d3UqcKFJQKNrp+Jfsli7zhoE5oIWG7b44jxVklxaa4OQNzrAKHQ==
   dependencies:
     viem "^2.17.3"
     zod "^3.22.4"

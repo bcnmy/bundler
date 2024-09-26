@@ -11,8 +11,4 @@ v3Router.post(
   simulateBundlerV3Transaction(),
   handleV3Request,
 );
-v3Router.get(
-  "/:chainId/:apiKey",
-  validateBundlerRequest(),
-  handleV3Request,
-);
+v3Router.get("/:chainId/:apiKey", validateBundlerRequest(), handleV3Request);

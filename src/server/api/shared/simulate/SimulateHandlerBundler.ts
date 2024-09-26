@@ -7,7 +7,10 @@ import {
   TransactionMethodType,
 } from "../../../../common/types";
 import { STATUSES } from "../middleware";
-import { validateBundlerTransaction, validateBundlerV3Transaction } from "./SimulateBundlerTransaction";
+import {
+  validateBundlerTransaction,
+  validateBundlerV3Transaction,
+} from "./SimulateBundlerTransaction";
 import { parseError } from "../../../../common/utils";
 import { logger } from "../../../../common/logger";
 
@@ -144,92 +147,108 @@ export const simulateBundlerTransaction =
   };
 
 export const simulateBundlerV3Transaction =
-() => async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const start = performance.now();
-    const { method, id } = req.body;
-    let response = null;
-    switch (method) {
-      case TransactionMethodType.BUNDLER:
-        response = await validateBundlerV3Transaction(req);
-        break;
-      case EthMethodType.ESTIMATE_USER_OPERATION_GAS:
-        response = {
-          code: STATUSES.SUCCESS,
-          message: `Method: ${method} does not require simulation`,
-        };
-        break;
-      case EthMethodType.GET_USER_OPERATION_BY_HASH:
-        response = {
-          code: STATUSES.SUCCESS,
-          message: `Method: ${method} does not require simulation`,
-        };
-        break;
-      case EthMethodType.GET_USER_OPERATION_RECEIPT:
-        response = {
-          code: STATUSES.SUCCESS,
-          message: `Method: ${method} does not require simulation`,
-        };
-        break;
-      case EthMethodType.SUPPORTED_ENTRY_POINTS:
-        response = {
-          code: STATUSES.SUCCESS,
-          message: `Method: ${method} does not require simulation`,
-        };
-        break;
-      case EthMethodType.CHAIN_ID:
-        response = {
-          code: STATUSES.SUCCESS,
-          message: `Method: ${method} does not require simulation`,
-        };
-        break;
-      case EthMethodType.GAS_AND_GAS_PRICES:
-        response = {
-          code: STATUSES.SUCCESS,
-          message: `Method: ${method} does not require simulation`,
-        };
-        break;
-      case BiconomyMethodType.GET_GAS_FEE_VALUES:
-        response = {
-          code: STATUSES.SUCCESS,
-          message: `Method: ${method} does not require simulation`,
-        };
-        break;
-      case BiconomyMethodType.GET_USER_OPERATION_STATUS:
-        response = {
-          code: STATUSES.SUCCESS,
-          message: `Method: ${method} does not require simulation`,
-        };
-        break;
-      default:
+  () => async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const start = performance.now();
+      const { method, id } = req.body;
+      let response = null;
+      switch (method) {
+        case TransactionMethodType.BUNDLER:
+          response = await validateBundlerV3Transaction(req);
+          break;
+        case EthMethodType.ESTIMATE_USER_OPERATION_GAS:
+          response = {
+            code: STATUSES.SUCCESS,
+            message: `Method: ${method} does not require simulation`,
+          };
+          break;
+        case EthMethodType.GET_USER_OPERATION_BY_HASH:
+          response = {
+            code: STATUSES.SUCCESS,
+            message: `Method: ${method} does not require simulation`,
+          };
+          break;
+        case EthMethodType.GET_USER_OPERATION_RECEIPT:
+          response = {
+            code: STATUSES.SUCCESS,
+            message: `Method: ${method} does not require simulation`,
+          };
+          break;
+        case EthMethodType.SUPPORTED_ENTRY_POINTS:
+          response = {
+            code: STATUSES.SUCCESS,
+            message: `Method: ${method} does not require simulation`,
+          };
+          break;
+        case EthMethodType.CHAIN_ID:
+          response = {
+            code: STATUSES.SUCCESS,
+            message: `Method: ${method} does not require simulation`,
+          };
+          break;
+        case EthMethodType.GAS_AND_GAS_PRICES:
+          response = {
+            code: STATUSES.SUCCESS,
+            message: `Method: ${method} does not require simulation`,
+          };
+          break;
+        case BiconomyMethodType.GET_GAS_FEE_VALUES:
+          response = {
+            code: STATUSES.SUCCESS,
+            message: `Method: ${method} does not require simulation`,
+          };
+          break;
+        case BiconomyMethodType.GET_USER_OPERATION_STATUS:
+          response = {
+            code: STATUSES.SUCCESS,
+            message: `Method: ${method} does not require simulation`,
+          };
+          break;
+        default:
+          const end = performance.now();
+          log.info(
+            `simulateBundlerTransaction took ${end - start} milliseconds`,
+          );
+          response = {
+            jsonrpc: "2.0",
+            id: id || 1,
+            error: {
+              code: STATUSES.BAD_REQUEST,
+              message: `Method: ${method} not supported by Bundler`,
+            },
+          };
+      }
+
+      if (!response) {
         const end = performance.now();
         log.info(
-          `simulateBundlerTransaction took ${end - start} milliseconds`,
+          `simulateBundlerV3Transaction took ${end - start} milliseconds`,
         );
-        response = {
+        return res.status(STATUSES.INTERNAL_SERVER_ERROR).send({
           jsonrpc: "2.0",
           id: id || 1,
           error: {
-            code: STATUSES.BAD_REQUEST,
-            message: `Method: ${method} not supported by Bundler`,
+            code: STATUSES.INTERNAL_SERVER_ERROR,
+            message: "Internal Server Error",
           },
-        };
-    }
-
-    if (!response) {
-      const end = performance.now();
-      log.info(`simulateBundlerV3Transaction took ${end - start} milliseconds`);
-      return res.status(STATUSES.INTERNAL_SERVER_ERROR).send({
-        jsonrpc: "2.0",
-        id: id || 1,
-        error: {
-          code: STATUSES.INTERNAL_SERVER_ERROR,
-          message: "Internal Server Error",
-        },
-      });
-    }
-    if ((response as any).code !== STATUSES.SUCCESS) {
-      if ((response as any).handleOpsCallData !== null) {
+        });
+      }
+      if ((response as any).code !== STATUSES.SUCCESS) {
+        if ((response as any).handleOpsCallData !== null) {
+          const end = performance.now();
+          log.info(
+            `simulateBundlerV3Transaction took ${end - start} milliseconds`,
+          );
+          return res.status(STATUSES.BAD_REQUEST).send({
+            jsonrpc: "2.0",
+            id: id || 1,
+            error: {
+              code: (response as any).code,
+              message: (response as any).message,
+              handleOpsCallData: (response as any).handleOpsCallData,
+            },
+          });
+        }
         const end = performance.now();
         log.info(
           `simulateBundlerV3Transaction took ${end - start} milliseconds`,
@@ -240,33 +259,21 @@ export const simulateBundlerV3Transaction =
           error: {
             code: (response as any).code,
             message: (response as any).message,
-            handleOpsCallData: (response as any).handleOpsCallData,
           },
         });
       }
       const end = performance.now();
       log.info(`simulateBundlerV3Transaction took ${end - start} milliseconds`);
-      return res.status(STATUSES.BAD_REQUEST).send({
+      return next();
+    } catch (error) {
+      const { id } = req.body;
+      return res.status(STATUSES.INTERNAL_SERVER_ERROR).send({
         jsonrpc: "2.0",
         id: id || 1,
         error: {
-          code: (response as any).code,
-          message: (response as any).message,
+          code: STATUSES.INTERNAL_SERVER_ERROR,
+          message: `Internal Server Error: ${parseError(error)}`,
         },
       });
     }
-    const end = performance.now();
-    log.info(`simulateBundlerV3Transaction took ${end - start} milliseconds`);
-    return next();
-  } catch (error) {
-    const { id } = req.body;
-    return res.status(STATUSES.INTERNAL_SERVER_ERROR).send({
-      jsonrpc: "2.0",
-      id: id || 1,
-      error: {
-        code: STATUSES.INTERNAL_SERVER_ERROR,
-        message: `Internal Server Error: ${parseError(error)}`,
-      },
-    });
-  }
-};
+  };

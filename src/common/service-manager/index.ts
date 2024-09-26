@@ -2,7 +2,7 @@
 /* eslint-disable no-await-in-loop */
 import { getContract, parseEther } from "viem";
 import { chain } from "lodash";
-import { ENTRY_POINT_ABI } from "entry-point-gas-estimations";
+import { ENTRY_POINT_ABI } from "entry-point-gas-estimations/src/gas-estimator/entry-point-v6";
 import { config } from "../../config";
 import { EVMAccount, IEVMAccount } from "../../relayer/account";
 import { BundlerConsumer } from "../../relayer/consumer";
@@ -17,7 +17,7 @@ import { EVMTransactionListener } from "../../relayer/transaction-listener";
 import { EVMTransactionService } from "../../relayer/transaction-service";
 import { RedisCacheService } from "../cache";
 import { Mongo, TransactionDAO } from "../db";
-import { UserOperationDAO} from "../db/dao/UserOperationDAO";
+import { UserOperationDAO } from "../db/dao/UserOperationDAO";
 import { UserOperationV07DAO } from "../db/dao/UserOperationV07DAO";
 import { IQueue } from "../interface";
 import { logger } from "../logger";
@@ -30,7 +30,10 @@ import {
   RetryTransactionHandlerQueue,
 } from "../queue";
 import { BundlerRelayService } from "../relay-service";
-import { BundlerSimulationService, BundlerSimulationServiceV07 } from "../simulation";
+import {
+  BundlerSimulationService,
+  BundlerSimulationServiceV07,
+} from "../simulation";
 import { IStatusService, StatusService } from "../status";
 import {
   BundlerTransactionMessageType,
@@ -203,7 +206,7 @@ let statusService: IStatusService;
       options: {
         chainId,
         entryPointMap,
-        entryPointMapV07
+        entryPointMapV07,
       },
     });
     transactionListenerMap[chainId] = transactionListener;

@@ -388,14 +388,15 @@ export class EVMTransactionListener
             }
           }
         }
-        if (transactionType === TransactionType.BUNDLER){
+        if (transactionType === TransactionType.BUNDLER) {
           log.info(
             `Getting userOps for transactionId: ${transactionId} on chainId: ${this.chainId}`,
           );
-          const userOps = await this.userOperationDaoV07.getUserOpsByTransactionId(
-            this.chainId,
-            transactionId,
-          );
+          const userOps =
+            await this.userOperationDaoV07.getUserOpsByTransactionId(
+              this.chainId,
+              transactionId,
+            );
           log.info(
             `userOps: ${customJSONStringify(
               userOps,

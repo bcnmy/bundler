@@ -21,7 +21,9 @@ const userOpForSendUserOp = object.keys({
     .error(new Error("callGasLimit is required and should be a string")),
   verificationGasLimit: string
     .required()
-    .error(new Error("verificationGasLimit is required and should be a string")),
+    .error(
+      new Error("verificationGasLimit is required and should be a string"),
+    ),
   preVerificationGas: string
     .required()
     .error(new Error("preVerificationGas is required and should be a string")),
@@ -35,7 +37,9 @@ const userOpForSendUserOp = object.keys({
   paymasterVerificationGasLimit: string,
   paymasterPostOpGasLimit: string,
   paymasterData: string,
-  signature: string.required().error(new Error("signature is required and should be a string")),
+  signature: string
+    .required()
+    .error(new Error("signature is required and should be a string")),
 });
 
 const entryPointAddress = string

@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/return-await */
 import { ConsumeMessage } from "amqplib";
 import { encodeFunctionData } from "viem";
-import { ENTRY_POINT_ABI } from "entry-point-gas-estimations";
+import { ENTRY_POINT_ABI } from "entry-point-gas-estimations/src/gas-estimator/entry-point-v6";
 import { ICacheService } from "../../common/cache";
 import { logger } from "../../common/logger";
 import { IQueue } from "../../common/queue";
@@ -25,7 +25,10 @@ import { ITransactionConsumer } from "./interface/ITransactionConsumer";
 import { BundlerConsumerParamsType } from "./types";
 import { STATUSES } from "../../server/api/shared/middleware";
 import { ENTRY_POINT_V07_ABI } from "../../common/entrypoint-v7/abiv7";
-import { isUserOpV06, packUserOperation } from "../../common/entrypoint-v7/PackedUserOperation";
+import {
+  isUserOpV06,
+  packUserOperation,
+} from "../../common/entrypoint-v7/PackedUserOperation";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
