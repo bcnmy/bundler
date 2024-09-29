@@ -1,0 +1,117 @@
+---
+# yamllint disable rule:line-length
+name: Setup_Connection_GKE_Cluster
+# yamllint disable-line rule:truthy
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: false
+        type: string
+      gcp_project_number:
+        required: true
+        type: string
+      gcp_project_id:
+        required: true
+        type: string
+      gcp_bastion:
+        required: false
+        type: string
+      gcp_bastion_zone:
+        required: true
+        type: string
+      gcp_pool_id:
+        required: true
+        type: string
+      gcp_provider_id:
+        required: true
+        type: string
+      gcp_service_account:
+        required: true
+        type: string
+      gcp_cluster_name:
+        required: true
+        type: string
+      gcp_cluster_location:
+        required: true
+        type: string
+      use_internal_ip:
+        required: true
+        type: boolean
+      deploy_command:
+        required: true
+        type: string
+
+jobs:
+  # To avoid packing and passing artifacts from one job to another, we will
+  # build and test in the same github job.
+  auth_gke:
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    # Allow the job to fetch a GitHub ID token
+    # !!! IMPORTANT set "permissions:" section in the calling workflow job
+    # same like lines below
+    # permissions:
+    #   id-token: write
+    #   contents: read
+
+    # https://github.com/marketplace/actions/build-and-push-docker-images
+    # Checks out the repository source code with ref/SHA commit that trigger the workflow as HEAD.
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # https://cloud.google.com/iam/docs/workload-identity-federation-with-deployment-pipelines#authenticate
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v2'
+        with:
+          token_format: access_token
+          workload_identity_provider: "projects/${{inputs.gcp_project_number}}/locations/global/workloadIdentityPools/${{inputs.gcp_pool_id}}/providers/${{inputs.gcp_provider_id}}"
+          service_account: ${{ inputs.gcp_service_account }}
+
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v2'
+        with:
+          version: '>= 363.0.0'
+
+      - name: 'Use gcloud CLI to open ssh tunnel'
+        run: |
+          gcloud info
+          # TODO: look into https://github.com/google-github-actions/ssh-compute
+          if [[ -n "${{ inputs.gcp_bastion }}" ]] ; then
+            gcloud compute ssh ${{ inputs.gcp_bastion }} \
+                  --project ${{ inputs.gcp_project_id }} \
+                  --zone  ${{ inputs.gcp_bastion_zone }}\
+                  -- -L8888:127.0.0.1:8888 -f tail -f /dev/null
+          else
+            echo "INFO: no need for a bastion tunnel"
+          fi
+
+      - id: 'get-gke-cluster-credentilas'
+        uses: 'google-github-actions/get-gke-credentials@v2'
+        with:
+          cluster_name: ${{ inputs.gcp_cluster_name }}
+          location: ${{ inputs.gcp_cluster_location }}
+          project_id: ${{ inputs.gcp_project_id }}
+          use_internal_ip: ${{ inputs.use_internal_ip }}
+      # The KUBECONFIG env var is automatically exported and picked up by kubectl.
+      - id: 'set-proxy'
+        run: |
+          if [[ -n "${{ inputs.gcp_bastion }}" ]] ; then
+            echo kubectl config set "clusters.${{inputs.gcp_cluster_name}}.proxy-url" "http://localhost:8888"
+            kubectl config set "clusters.${{inputs.gcp_cluster_name}}.proxy-url" "http://localhost:8888"
+            kubectl get nodes
+          else
+            echo "INFO: No proxy-url is needed"
+            kubectl get nodes
+          fi
+      - id: 'setup-helm'
+        uses: azure/setup-helm@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}  # only needed if version is 'latest'
+          # default version is latest (stable)
+      - name: deploy with helm
+        run: |
+          echo ${{ inputs.deploy_command }}
+          eval '${{ inputs.deploy_command }}'
