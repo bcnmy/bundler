@@ -44,8 +44,8 @@ jobs:
     strategy:
       matrix:
         image:
-          - ${{ env.STG_IMAGE }}
-          - ${{ env.PRD_IMAGE }}
+          - us-docker.pkg.dev/biconomy-prod/bundler/trustwallet
+          - us-docker.pkg.dev/prj-biconomy-prod-001/bundler/bundler
           # LOCATION-docker.pkg.dev/PROJECT-ID/REPOSITORY/IMAGE
           # {owner}/{repo}/.github/workflows/{filename}@{ref}
     uses: bcnmy/bundler/.github/workflows/container_img_build_push_gar.yaml@fix-reusable-workflows
