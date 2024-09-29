@@ -81,7 +81,6 @@ jobs:
       gcp_bastion: 'bastion02'
       gcp_bastion_zone: 'us-east1-b'
       gcp_pool_id: 'pool-id-github-actions'
-      # created by devops/gcp/github-actions/configure_workload_identity_federation_with_github_actions_pipelines.sh
       # gcp_provider_id: 'ga-GITHUB_REPO_NAME'
       gcp_provider_id: 'ga-bundler'
       # SERVICE_ACCOUNT_EMAIL="${SERVICE_ACCOUNT}@${PROJECT}.iam.gserviceaccount.com"
@@ -113,7 +112,6 @@ jobs:
       gcp_bastion: 'bastion02'
       gcp_bastion_zone: 'us-central1-a'
       gcp_pool_id: 'pool-id-github-actions'
-      # created by devops/gcp/github-actions/configure_workload_identity_federation_with_github_actions_pipelines.sh
       # gcp_provider_id: 'ga-GITHUB_REPO_NAME'
       gcp_provider_id: 'ga-bundler'
       # SERVICE_ACCOUNT_EMAIL="${SERVICE_ACCOUNT}@${PROJECT}.iam.gserviceaccount.com"
