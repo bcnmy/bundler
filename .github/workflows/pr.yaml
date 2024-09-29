@@ -44,21 +44,20 @@ jobs:
     strategy:
       matrix:
         image:
-          - us-docker.pkg.dev/biconomy-prod/bundler/trustwallet
-          - us-docker.pkg.dev/prj-biconomy-prod-001/bundler/bundler
+          - ${{ secrets.STG_IMAGE }}
+          - ${{ secrets.PRD_IMAGE }}
           # LOCATION-docker.pkg.dev/PROJECT-ID/REPOSITORY/IMAGE
           # {owner}/{repo}/.github/workflows/{filename}@{ref}
     uses: bcnmy/bundler/.github/workflows/container_img_build_push_gar.yaml@fix-reusable-workflows
     with:
       image: ${{ matrix.image }}
       dockerfile: Dockerfile.helm
-      # GCP project where the identity provider is
-      # gcloud projects describe prj-workload-identity-001
-      gcp_project_number: '766873424314'
+      # GCP project where the identity provider
+      gcp_project_number: ${{ secrets.GCP_PROJECT_NUMBER }}
       gcp_pool_id: 'pool-id-github-actions'
       # gcp_provider_id: 'ga-GITHUB_REPO_NAME'
       gcp_provider_id: 'ga-bundler'
       # LOCATION-docker.pkg.dev/PROJECT-ID/REPOSITORY/IMAGE
-      gcp_registry: 'us-docker.pkg.dev/biconomy-prod/bundler/trustwallet'
-      gcp_service_account: 'sa-bundler@prj-workload-identity-001.iam.gserviceaccount.com'
+      gcp_registry: ${{ secrets.GCP_REGISTRY }}
+      gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
       #
