@@ -44,8 +44,8 @@ jobs:
     strategy:
       matrix:
         image:
-          - ${{ secrets.STG_IMAGE }}
-          - ${{ secrets.PRD_IMAGE }}
+          - ${{ env.STG_IMAGE }}
+          - ${{ env.PRD_IMAGE }}
           # LOCATION-docker.pkg.dev/PROJECT-ID/REPOSITORY/IMAGE
           # {owner}/{repo}/.github/workflows/{filename}@{ref}
     uses: bcnmy/bundler/.github/workflows/container_img_build_push_gar.yaml@fix-reusable-workflows
@@ -60,4 +60,3 @@ jobs:
       # LOCATION-docker.pkg.dev/PROJECT-ID/REPOSITORY/IMAGE
       gcp_registry: ${{ secrets.GCP_REGISTRY }}
       gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-      #
