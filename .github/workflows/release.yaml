@@ -102,7 +102,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    uses: bcnmy/devops/.github/workflows/deploy_to_gke.yaml@master
+    uses: bcnmy/bundler/.github/workflows/deploy_to_gke.yaml@master
     with:
       environment: 'tw-prod'
       # GCP project where the identity provider is
