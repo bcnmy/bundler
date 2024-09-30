@@ -84,9 +84,9 @@ export class BundlerSimulationServiceV07 {
       );
 
       // for userOp completeness
-      userOp.callGasLimit = BigInt(5000000);
-      userOp.verificationGasLimit = BigInt(5000000);
-      userOp.preVerificationGas = BigInt(5000000);
+      // userOp.callGasLimit = BigInt(5000000);
+      // userOp.verificationGasLimit = BigInt(5000000);
+      // userOp.preVerificationGas = BigInt(5000000);
 
       log.info(
         `userOp to be used for estimation: ${customJSONStringify(
