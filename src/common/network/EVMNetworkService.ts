@@ -150,14 +150,12 @@ export class EVMNetworkService
     // Using viem's estimateFeesPerGas instead of raw RPC call as Ankr sometimes
     // gives unexpected errors
     if (this.chainId === BLOCKCHAINS.GNOSIS_MAINNET) {
-      const {
-        maxFeePerGas,
-        maxPriorityFeePerGas
-      } = await this.provider.estimateFeesPerGas();
+      const { maxFeePerGas, maxPriorityFeePerGas } =
+        await this.provider.estimateFeesPerGas();
 
       return {
         maxFeePerGas: maxFeePerGas as bigint,
-        maxPriorityFeePerGas: maxPriorityFeePerGas as bigint
+        maxPriorityFeePerGas: maxPriorityFeePerGas as bigint,
       };
     }
     const maxFeePerGasPromise = this.getLegacyGasPrice();

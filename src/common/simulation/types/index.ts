@@ -3,7 +3,7 @@ import {
   EntryPointV07ContractType,
   StateOverrideSetType,
   UserOperationType,
-  UserOperationStruct
+  UserOperationStruct,
 } from "../../types";
 
 // data response type that external simulation serivcereturns
@@ -30,7 +30,6 @@ export type AASimulationDataType = {
   entryPointContract: EntryPointContractType;
   chainId: number;
 };
-
 
 export type BundlerSimulationDataType = {
   userOp: UserOperationType;
@@ -84,6 +83,19 @@ export type EstimateUserOperationGasReturnType = {
   };
 };
 
+export type EstimateUserOperationGasReturnTypeV07 = {
+  code: number;
+  message: string;
+  data: {
+    preVerificationGas: bigint;
+    verificationGasLimit: bigint;
+    callGasLimit: bigint;
+    paymasterVerificationGasLimit: bigint;
+    paymasterPostOpGasLimit: bigint;
+    userOpHash?: string;
+  };
+};
+
 export type EstimateUserOpGasFieldsType = {
   code: number;
   message: string;
@@ -118,7 +130,6 @@ export type SimulationDataV07 = {
   entryPointContract: EntryPointV07ContractType;
   chainId: number;
 };
-
 
 export type ValidationData = {
   userOp: UserOperationType;

@@ -7,17 +7,11 @@ import {
   toHex,
 } from "viem";
 import {
-  createArbitrumGasEstimator,
   createGasEstimator,
-  createMantleGasEstimator,
-  createMorphGasEstimator,
   createOptimismGasEstimator,
-  createScrollGasEstimator,
-  createSeiGasEstimator,
   EstimateUserOperationGas,
   IGasEstimator,
-} from "entry-point-gas-estimations";
-import nodeconfig from "config";
+} from "entry-point-gas-estimations/dist/gas-estimator/entry-point-v7";
 import { config } from "../../config";
 import { IEVMAccount } from "../../relayer/account";
 import {
@@ -34,11 +28,10 @@ import {
 import RpcError from "../utils/rpc-error";
 import {
   EstimateUserOperationGasDataTypeV07,
-  EstimateUserOperationGasReturnType,
+  EstimateUserOperationGasReturnTypeV07,
   SimulationDataV07,
   ValidationDataV07,
 } from "./types";
-import { BLOCKCHAINS } from "../constants";
 import { IGasPriceService } from "../gas-price";
 import { ENTRY_POINT_V07_ABI } from "../entrypoint-v7/abiv7";
 import { getUserOpHash, packUserOperation } from "../entrypoint-v7/PackedUserOperation";
@@ -63,47 +56,20 @@ export class BundlerSimulationServiceV07 {
     this.gasPriceService = gasPriceService;
     this.gasEstimator = createGasEstimator({
       rpcUrl: this.networkService.rpcUrl,
+      chainId: this.networkService.chainId
     });
 
     if (config.optimismNetworks.includes(this.networkService.chainId)) {
       this.gasEstimator = createOptimismGasEstimator({
         rpcUrl: this.networkService.rpcUrl,
-      });
-    }
-
-    if (config.arbitrumNetworks.includes(this.networkService.chainId))
-      this.gasEstimator = createArbitrumGasEstimator({
-        rpcUrl: this.networkService.rpcUrl,
-      });
-
-    if (config.mantleNetworks.includes(this.networkService.chainId)) {
-      this.gasEstimator = createMantleGasEstimator({
-        rpcUrl: this.networkService.rpcUrl,
-      });
-    }
-
-    if (config.scrollNetworks.includes(this.networkService.chainId)) {
-      this.gasEstimator = createScrollGasEstimator({
-        rpcUrl: this.networkService.rpcUrl,
-      });
-    }
-
-    if (config.morphNetworks.includes(this.networkService.chainId)) {
-      this.gasEstimator = createMorphGasEstimator({
-        rpcUrl: this.networkService.rpcUrl,
-      });
-    }
-
-    if (config.seiNetworks.includes(this.networkService.chainId)) {
-      this.gasEstimator = createSeiGasEstimator({
-        rpcUrl: this.networkService.rpcUrl,
+        chainId: this.networkService.chainId
       });
     }
   }
 
   async estimateUserOperationGas(
     estimateUserOperationGasData: EstimateUserOperationGasDataTypeV07,
-  ): Promise<EstimateUserOperationGasReturnType> {
+  ): Promise<EstimateUserOperationGasReturnTypeV07> {
     try {
       const { userOp, entryPointContract, chainId, stateOverrideSet } =
         estimateUserOperationGasData;
@@ -116,18 +82,6 @@ export class BundlerSimulationServiceV07 {
           userOp,
         )} on chainId: ${chainId}`,
       );
-
-      // // for userOp completeness
-      // if (!userOp.paymasterAndData) {
-      //   userOp.paymasterAndData = "0x";
-      // }
-
-      // for userOp completeness
-      if (!userOp.signature) {
-        // signature not present, using default ECDSA
-        userOp.signature =
-          "0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b";
-      }
 
       // for userOp completeness
       if (
@@ -152,10 +106,12 @@ export class BundlerSimulationServiceV07 {
         }
       }
 
-      // // for userOp completeness
-      // userOp.callGasLimit = BigInt(58000);
-      // userOp.verificationGasLimit = BigInt(58000);
-      // userOp.preVerificationGas = BigInt(58000);
+      // for userOp completeness
+      userOp.callGasLimit = BigInt(5000000);
+      userOp.verificationGasLimit = BigInt(5000000);
+      userOp.preVerificationGas = BigInt(5000000);
+      userOp.maxPriorityFeePerGas = BigInt(userOp.maxPriorityFeePerGas);
+      userOp.maxFeePerGas = BigInt(userOp.maxFeePerGas);
 
       // for userOp completeness
       if (
@@ -198,39 +154,13 @@ export class BundlerSimulationServiceV07 {
         supportsEthCallByteCodeOverride = false;
       }
 
-      if (userOp.initCode !== "0x") {
-        supportsEthCallByteCodeOverride = false;
-      }
-      // For testing/debugging purposes you can override the AA gas limits in the config file
-      // and avoid calling the gas estimation package
-      if (nodeconfig.has(`hardcodedGasLimits.${chainId}`)) {
-        const { verificationGasLimit, callGasLimit, preVerificationGas } =
-          nodeconfig.get<any>(`hardcodedGasLimits.${chainId}`);
 
-        const validAfter = Date.now();
-        const validUntil = Date.now() + 10000000000;
-        return {
-          code: STATUSES.SUCCESS,
-          message: `Gas successfully estimated for userOp: ${customJSONStringify(
-            userOp,
-          )} on chainId: ${chainId}`,
-          data: {
-            preVerificationGas,
-            verificationGasLimit,
-            callGasLimit,
-            validAfter,
-            validUntil,
-          },
-        };
-      }
-
-      // Otherwise get the gas limits from the gas estimation package
       let response: EstimateUserOperationGas;
       const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
 
       try {
         response = await this.gasEstimator.estimateUserOperationGas({
-          userOperation: {...userOp,initCode: "0x", paymasterAndData:"0x"}, // TODO fix me
+          userOperation: userOp,
           stateOverrideSet,
           supportsEthCallByteCodeOverride,
           supportsEthCallStateOverride,
@@ -253,45 +183,21 @@ export class BundlerSimulationServiceV07 {
         verificationGasLimit,
         callGasLimit,
         preVerificationGas,
-        validAfter,
-        validUntil,
+        paymasterPostOpGasLimit,
+        paymasterVerificationGasLimit
       } = response;
 
-      if (
-        config.networksNotSupportingEthCallStateOverrides.includes(chainId) ||
-        config.networksNotSupportingEthCallBytecodeStateOverrides.includes(
-          chainId,
-        )
-      ) {
-        callGasLimit += BigInt(Math.ceil(Number(callGasLimit) * 0.2));
-        verificationGasLimit += BigInt(
-          Math.ceil(Number(verificationGasLimit) * 0.2),
-        );
-        if (
-          chainId === BLOCKCHAINS.CHILIZ_MAINNET ||
-          chainId === BLOCKCHAINS.CHILIZ_TESTNET
-        ) {
-          verificationGasLimit += BigInt(
-            Math.ceil(Number(verificationGasLimit) * 0.2),
-          );
-        }
-      } else {
-        callGasLimit += BigInt(Math.ceil(Number(callGasLimit) * 0.1));
-        verificationGasLimit += BigInt(
-          Math.ceil(Number(verificationGasLimit) * 0.1),
-        );
-      }
 
-      if (chainId === BLOCKCHAINS.BLAST_MAINNET) {
-        callGasLimit += BigInt(Math.ceil(Number(callGasLimit) * 0.5));
-      }
-
-      if (chainId === BLOCKCHAINS.MANTLE_MAINNET) {
-        preVerificationGas += preVerificationGas;
-      }
+      callGasLimit += BigInt(Math.ceil(Number(callGasLimit) * 0.1));
+      verificationGasLimit += BigInt(
+        Math.ceil(Number(verificationGasLimit) * 0.1),
+      );
+      paymasterPostOpGasLimit += BigInt(Math.ceil(Number(paymasterPostOpGasLimit) * 0.1));
+      paymasterVerificationGasLimit += BigInt(Math.ceil(Number(paymasterVerificationGasLimit) * 0.1));
+      
 
       const verificationGasLimitMultiplier =
-        userOp.paymasterAndData === "0x" ? 1 : 3;
+        userOp.paymaster === "0x" ? 1 : 3;
       const totalGas =
         callGasLimit +
         BigInt(verificationGasLimitMultiplier) * verificationGasLimit +
@@ -315,11 +221,11 @@ export class BundlerSimulationServiceV07 {
         preVerificationGas,
         verificationGasLimit,
         callGasLimit,
-        validAfter,
-        validUntil,
+        paymasterPostOpGasLimit,
+        paymasterVerificationGasLimit
       };
       log.info(
-        `estimateUserOperationGas result: ${JSON.stringify(data, null, 2)}`,
+        `estimateUserOperationGas result: ${customJSONStringify(data)}`,
         { chainId },
       );
 
@@ -328,13 +234,7 @@ export class BundlerSimulationServiceV07 {
         message: `Gas successfully estimated for userOp: ${customJSONStringify(
           userOp,
         )} on chainId: ${chainId}`,
-        data: {
-          preVerificationGas,
-          verificationGasLimit,
-          callGasLimit,
-          validAfter,
-          validUntil,
-        },
+        data,
       };
     } catch (error: any) {
       log.error(
@@ -347,8 +247,8 @@ export class BundlerSimulationServiceV07 {
           preVerificationGas: BigInt(0),
           verificationGasLimit: BigInt(0),
           callGasLimit: BigInt(0),
-          validAfter: 0,
-          validUntil: 0,
+          paymasterPostOpGasLimit: BigInt(0),
+          paymasterVerificationGasLimit: BigInt(0)
         },
       };
     }
@@ -606,7 +506,7 @@ export class BundlerSimulationServiceV07 {
 
     const { preVerificationGas: networkPreVerificationGas } =
       await this.gasEstimator.calculatePreVerificationGas({
-        userOperation: {...userOp, initCode:"0x", paymasterAndData: "0x"}, // TODO fix me, use new UserOp in gas estimation
+        userOperation: userOp,
         baseFeePerGas,
       });
     log.info(`networkPreVerificationGas: ${networkPreVerificationGas}`);

@@ -1,6 +1,5 @@
 /* eslint-disable import/no-import-module-exports */
 import { Request, Response } from "express";
-import { toHex } from "viem";
 import { STATUSES } from "../../shared/middleware";
 import { logger } from "../../../../common/logger";
 import {
@@ -87,8 +86,8 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
       callGasLimit,
       verificationGasLimit,
       preVerificationGas,
-      validUntil,
-      validAfter,
+      paymasterPostOpGasLimit,
+      paymasterVerificationGasLimit
     } = data;
     const gasPriceService = gasPriceServiceMap[parseInt(chainId, 10)];
     if (!gasPriceService) {
@@ -120,8 +119,8 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
       callGasLimit: Number(callGasLimit),
       verificationGasLimit: Number(verificationGasLimit),
       preVerificationGas: Number(preVerificationGas),
-      validUntil: toHex(validUntil),
-      validAfter: toHex(validAfter),
+      paymasterPostOpGasLimit: Number(paymasterPostOpGasLimit),
+      paymasterVerificationGasLimit: Number(paymasterVerificationGasLimit),
       maxPriorityFeePerGas: Number(maxPriorityFeePerGas),
       maxFeePerGas: Number(maxFeePerGas),
     });

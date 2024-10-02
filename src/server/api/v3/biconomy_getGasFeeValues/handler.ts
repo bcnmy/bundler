@@ -51,18 +51,24 @@ export const getGasFeeValues = async (req: Request, res: Response) => {
         jsonrpc: "2.0",
         id: id || 1,
         result: {
-          slow:{
-            maxPriorityFeePerGas: toHex(gasPrice?.maxPriorityFeePerGas)?.toString(),
+          slow: {
+            maxPriorityFeePerGas: toHex(
+              gasPrice?.maxPriorityFeePerGas,
+            )?.toString(),
             maxFeePerGas: toHex(gasPrice?.maxFeePerGas)?.toString(),
           },
-          standard:{
-            maxPriorityFeePerGas: toHex(gasPrice?.maxPriorityFeePerGas)?.toString(),
+          standard: {
+            maxPriorityFeePerGas: toHex(
+              gasPrice?.maxPriorityFeePerGas,
+            )?.toString(),
             maxFeePerGas: toHex(gasPrice?.maxFeePerGas)?.toString(),
           },
-          fast:{
-            maxPriorityFeePerGas: toHex(gasPrice?.maxPriorityFeePerGas)?.toString(),
+          fast: {
+            maxPriorityFeePerGas: toHex(
+              gasPrice?.maxPriorityFeePerGas,
+            )?.toString(),
             maxFeePerGas: toHex(gasPrice?.maxFeePerGas)?.toString(),
-          },        
+          },
         },
       });
     }

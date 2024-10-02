@@ -20,7 +20,9 @@ import { RPCErrorResponse } from "./shared/response";
 import { ChainIdNotSupportedError } from "./shared/errors";
 
 const isChainIdSupported = (chainId: number): boolean => {
-  const supportedNetworksV07 = config.get<Array<number>>("supportedNetworksV07");
+  const supportedNetworksV07 = config.get<Array<number>>(
+    "supportedNetworksV07",
+  );
   return supportedNetworksV07.includes(chainId);
 };
 

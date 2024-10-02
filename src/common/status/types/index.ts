@@ -4,7 +4,10 @@ import { ICacheService } from "../../cache";
 import { IDBService } from "../../db";
 import { GasPriceService } from "../../gas-price";
 import { EVMNetworkService } from "../../network";
-import { BundlerSimulationService, BundlerSimulationServiceV07 } from "../../simulation";
+import {
+  BundlerSimulationService,
+  BundlerSimulationServiceV07,
+} from "../../simulation";
 import { EVMRawTransactionType } from "../../types";
 
 export type StatusServiceParamsType = {
