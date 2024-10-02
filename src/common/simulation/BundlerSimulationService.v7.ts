@@ -84,9 +84,57 @@ export class BundlerSimulationServiceV07 {
       );
 
       // for userOp completeness
-      // userOp.callGasLimit = BigInt(5000000);
-      // userOp.verificationGasLimit = BigInt(5000000);
-      // userOp.preVerificationGas = BigInt(5000000);
+      if (
+        !userOp.maxFeePerGas ||
+        userOp.maxFeePerGas === BigInt(0) ||
+        (userOp.maxFeePerGas as unknown as string) === "0x" ||
+        (userOp.maxFeePerGas as unknown as string) === "0"
+      ) {
+        // setting a non zero value as division with maxFeePerGas will happen
+        userOp.maxFeePerGas = BigInt(1);
+        if (
+          config.optimismNetworks.includes(chainId) ||
+          config.mantleNetworks.includes(chainId)
+        ) {
+          const gasPrice = await this.gasPriceService.getGasPrice();
+          if (typeof gasPrice === "bigint") {
+            userOp.maxFeePerGas = gasPrice;
+          } else {
+            const { maxFeePerGas } = gasPrice;
+            userOp.maxFeePerGas = maxFeePerGas;
+          }
+        }
+      }
+
+      // for userOp completeness
+      userOp.callGasLimit = BigInt(5000000);
+      userOp.verificationGasLimit = BigInt(5000000);
+      userOp.preVerificationGas = BigInt(5000000);
+      userOp.maxPriorityFeePerGas = BigInt(userOp.maxPriorityFeePerGas);
+      userOp.maxFeePerGas = BigInt(userOp.maxFeePerGas);
+
+      // for userOp completeness
+      if (
+        !userOp.maxPriorityFeePerGas ||
+        userOp.maxPriorityFeePerGas === BigInt(0) ||
+        (userOp.maxPriorityFeePerGas as unknown as string) === "0x" ||
+        (userOp.maxPriorityFeePerGas as unknown as string) === "0"
+      ) {
+        // setting a non zero value as division with maxPriorityFeePerGas will happen
+        userOp.maxPriorityFeePerGas = BigInt(1);
+        if (
+          config.optimismNetworks.includes(chainId) ||
+          config.mantleNetworks.includes(chainId)
+        ) {
+          const gasPrice = await this.gasPriceService.getGasPrice();
+          if (typeof gasPrice === "bigint") {
+            userOp.maxPriorityFeePerGas = gasPrice;
+          } else {
+            const { maxPriorityFeePerGas } = gasPrice;
+            userOp.maxPriorityFeePerGas = maxPriorityFeePerGas;
+          }
+        }
+      }
 
       log.info(
         `userOp to be used for estimation: ${customJSONStringify(
@@ -140,12 +188,12 @@ export class BundlerSimulationServiceV07 {
       } = response;
 
 
-        callGasLimit += BigInt(Math.ceil(Number(callGasLimit) * 0.1));
-        verificationGasLimit += BigInt(
-          Math.ceil(Number(verificationGasLimit) * 0.1),
-        );
-        paymasterPostOpGasLimit += BigInt(Math.ceil(Number(paymasterPostOpGasLimit) * 0.1));
-        paymasterVerificationGasLimit += BigInt(Math.ceil(Number(paymasterVerificationGasLimit) * 0.1));
+      callGasLimit += BigInt(Math.ceil(Number(callGasLimit) * 0.1));
+      verificationGasLimit += BigInt(
+        Math.ceil(Number(verificationGasLimit) * 0.1),
+      );
+      paymasterPostOpGasLimit += BigInt(Math.ceil(Number(paymasterPostOpGasLimit) * 0.1));
+      paymasterVerificationGasLimit += BigInt(Math.ceil(Number(paymasterVerificationGasLimit) * 0.1));
       
 
       const verificationGasLimitMultiplier =
@@ -177,7 +225,7 @@ export class BundlerSimulationServiceV07 {
         paymasterVerificationGasLimit
       };
       log.info(
-        `estimateUserOperationGas result: ${JSON.stringify(data, null, 2)}`,
+        `estimateUserOperationGas result: ${customJSONStringify(data)}`,
         { chainId },
       );
 
