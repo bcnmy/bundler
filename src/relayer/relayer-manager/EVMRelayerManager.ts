@@ -376,9 +376,7 @@ export class EVMRelayerManager
         const ethPubkey = privateToPublic(ethNodePath.privateKey);
 
         const ethAddr = publicToAddress(ethPubkey).toString("hex");
-        log.info(
-          `🔑🔑🔑🔑🔑🔑🔑🔑 address=${ethAddr}, privateKey=${privateKey}`,
-        );
+
         const ethAddress = toChecksumAddress(`0x${ethAddr}`);
         const address = ethAddress.toLowerCase();
         const relayer = new EVMAccount(
