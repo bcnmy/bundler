@@ -4,7 +4,7 @@ index: 0
 relayer:
   environment: "staging"
   name: "relayer-server"
-  image: "gcr.io/biconomy-prod/sdk/relayer-node-service@sha256:bdbe43f367e73f803838198b082d925dbcb28de0dc3936165afa0d92219c83e2"
+  image: "gcr.io/biconomy-staging/sdk/relayer-node-service:latest"
   port: "3000"
   replicaCount: 1
   # Increase also the value for NODE_OPTIONS --max_old_space_size
