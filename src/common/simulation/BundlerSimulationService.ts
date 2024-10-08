@@ -543,7 +543,10 @@ export class BundlerSimulationService {
     );
     log.info(`Checking if maxPriorityFeePerGas is within acceptable limits`);
 
-    if (minimumAcceptableMaxPriorityFeePerGas > Number(maxPriorityFeePerGas)) {
+    if (
+      !config.disableFeeValidation.includes(this.networkService.chainId) &&
+      minimumAcceptableMaxPriorityFeePerGas > Number(maxPriorityFeePerGas)
+    ) {
       log.info(
         `maxPriorityFeePerGas in userOp: ${maxPriorityFeePerGas} is lower than expected maxPriorityFeePerGas: ${minimumAcceptableMaxPriorityFeePerGas}`,
       );
@@ -555,7 +558,10 @@ export class BundlerSimulationService {
     log.info(`maxPriorityFeePerGas is within acceptable limits`);
     log.info(`Checking if maxFeePerGas is within acceptable limits`);
 
-    if (minimumAcceptableMaxFeePerGas > Number(maxFeePerGas)) {
+    if (
+      !config.disableFeeValidation.includes(this.networkService.chainId) &&
+      minimumAcceptableMaxFeePerGas > Number(maxFeePerGas)
+    ) {
       log.info(
         `maxFeePerGas in userOp: ${maxFeePerGas} is lower than expected maxFeePerGas: ${minimumAcceptableMaxFeePerGas}`,
       );
