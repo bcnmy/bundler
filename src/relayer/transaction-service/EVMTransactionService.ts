@@ -127,7 +127,7 @@ export class EVMTransactionService
 
     const maxRetryCount = 5;
 
-    // TODO: Here is where we can add the logic to cancel the transaction
+    // TODO: Here is where we can add the logic to cancel the transaction automatically sometimes
 
     if (retryTransactionCount > maxRetryCount) {
       try {
@@ -731,6 +731,12 @@ export class EVMTransactionService
     return response;
   }
 
+  /**
+   * cancelTransaction cancels the pending transaction for the given account & nonce
+   * @param account IEVMAccount
+   * @param nonce number
+   * @returns Receipt or error
+   */
   async cancelTransaction(
     account: IEVMAccount,
     nonce: number,
@@ -800,6 +806,8 @@ export class EVMTransactionService
         cancelTransactionResponse as string,
         "ADMIN_CANCEL",
       );
+
+      release();
 
       return receipt;
     } catch (err: any) {

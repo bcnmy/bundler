@@ -1,3 +1,4 @@
+import { Hex } from "viem";
 import { TransactionType } from "../../common/types";
 
 enum RpcProviderType {
@@ -178,6 +179,8 @@ export type ConfigType = {
   >;
   // disable maxFeePerGas & maxPriorityFeePerGas validation for specific chain ids
   disableFeeValidation: Array<number>;
+  // a list of addresses that are allowed to access the admin endpoints (based on signature)
+  adminAddresses: Array<Hex>;
 };
 
 export interface IConfig {
