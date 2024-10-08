@@ -12,7 +12,10 @@ import { IStatusService } from "./interface/IStatusService";
 import { logger } from "../logger";
 import { StatusServiceParamsType } from "./types";
 import { GasPriceService } from "../gas-price";
-import { BundlerSimulationService } from "../simulation";
+import {
+  BundlerSimulationService,
+  BundlerSimulationServiceV07,
+} from "../simulation";
 import { formatHrtimeSeconds } from "../utils/formatting";
 
 const filenameLogger = logger.child({
@@ -66,6 +69,10 @@ export class StatusService implements IStatusService {
     [chainId: number]: BundlerSimulationService;
   };
 
+  bundlerSimulationServiceMapV07: {
+    [chainId: number]: BundlerSimulationServiceV07;
+  };
+
   constructor(params: StatusServiceParamsType) {
     const {
       cacheService,
@@ -74,6 +81,7 @@ export class StatusService implements IStatusService {
       dbInstance,
       gasPriceServiceMap,
       bundlerSimulationServiceMap,
+      bundlerSimulationServiceMapV07,
     } = params;
     this.cacheService = cacheService;
     this.networkServiceMap = networkServiceMap;
@@ -81,6 +89,7 @@ export class StatusService implements IStatusService {
     this.dbInstance = dbInstance;
     this.gasPriceServiceMap = gasPriceServiceMap;
     this.bundlerSimulationServiceMap = bundlerSimulationServiceMap;
+    this.bundlerSimulationServiceMapV07 = bundlerSimulationServiceMapV07;
   }
 
   async checkAllChains(): Promise<ChainStatus[]> {
