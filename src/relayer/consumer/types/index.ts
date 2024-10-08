@@ -3,6 +3,7 @@ import { IQueue } from "../../../common/queue";
 import {
   BundlerTransactionMessageType,
   EntryPointMapType,
+  EntryPointV07MapType,
   EVMRawTransactionType,
 } from "../../../common/types";
 import { IEVMAccount } from "../../account";
@@ -17,5 +18,6 @@ export type BundlerConsumerParamsType = {
   options: {
     chainId: number;
     entryPointMap: EntryPointMapType;
+    entryPointMapV07: EntryPointV07MapType;
   };
 };

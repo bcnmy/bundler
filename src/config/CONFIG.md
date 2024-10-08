@@ -14,9 +14,9 @@ The following setup is for Polygon Mumbai that you can use for local development
    1. Change the seed, address & private key in all relay managers
    2. (Optional) If you want to actually relay transactions to the network, you have to send some tokens the relayer address you specified in the previous step, so the bundler can pay for gas. You have to do this for every network you want to use, in this example we are using Mumbai only, so we need some Mumbai MATIC.
 2. Create the `.env` file using the template [.env-example](../../.env-example) in the root directory:
-   1. Change the `CONFIG_PASSPHRASE` value, you can use any string you want. The only thing that's important is that you use the same passphrase when you are encrypting the config (in the next step).
-3. Encrypt the config file you created in step (1) using the CONFIG_PASSPHRASE you specified in step (2):
-   1. Set the CONFIG_PASSPHRASE in your local terminal environment before running the encryption script: `export CONFIG_PASSPHRASE=<YOUR_PASSPHRASE>`
+   1. Change the `BUNDLER_CONFIG_PASSPHRASE` value, you can use any string you want. The only thing that's important is that you use the same passphrase when you are encrypting the config (in the next step).
+3. Encrypt the config file you created in step (1) using the BUNDLER_CONFIG_PASSPHRASE you specified in step (2):
+   1. Set the BUNDLER_CONFIG_PASSPHRASE in your local terminal environment before running the encryption script: `export BUNDLER_CONFIG_PASSPHRASE=<YOUR_PASSPHRASE>`
    2. Run the encryption script: `cd src && ts-node encrypt-config.ts`
    3. It should say `completed` without logging any errors.
 4. Create the `config/development.json` file using the template `config/development.template.json`:
@@ -81,6 +81,7 @@ Also you could take a look at [config/default.json](../../config/default.json) a
 ## Configuring Redis
 
 There are two supported Redis setups:
+
 - **Redis Cluster:** used on production, configured through the `redisCluster` config object
 - **Single Redis instance:** used locally, configured through `dataSources.redisUrl`
 
