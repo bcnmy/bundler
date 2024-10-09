@@ -6,7 +6,6 @@ import {
   ITransactionDAO,
   IUserOperationDAO,
   IUserOperationStateDAO,
-  IUserOperationV07DAO,
 } from "../../common/db";
 import { IQueue } from "../../common/interface";
 import { logger } from "../../common/logger";
@@ -15,7 +14,6 @@ import { RetryTransactionQueueData } from "../../common/queue/types";
 import {
   EntryPointContractType,
   EntryPointMapType,
-  EntryPointV07MapType,
   EVMRawTransactionType,
   TransactionStatus,
   TransactionType,
@@ -58,13 +56,9 @@ export class EVMTransactionListener
 
   userOperationDao: IUserOperationDAO;
 
-  userOperationDaoV07: IUserOperationV07DAO;
-
   userOperationStateDao: IUserOperationStateDAO;
 
   entryPointMap: EntryPointMapType;
-
-  entryPointV07Map: EntryPointV07MapType;
 
   cacheService: ICacheService;
 
@@ -75,18 +69,15 @@ export class EVMTransactionListener
       retryTransactionQueue,
       transactionDao,
       userOperationDao,
-      userOperationDaoV07,
       userOperationStateDao,
       cacheService,
     } = evmTransactionListenerParams;
     this.chainId = options.chainId;
     this.entryPointMap = options.entryPointMap;
-    this.entryPointV07Map = options.entryPointMapV07;
     this.networkService = networkService;
     this.retryTransactionQueue = retryTransactionQueue;
     this.transactionDao = transactionDao;
     this.userOperationDao = userOperationDao;
-    this.userOperationDaoV07 = userOperationDaoV07;
     this.userOperationStateDao = userOperationStateDao;
     this.cacheService = cacheService;
   }
@@ -289,123 +280,6 @@ export class EVMTransactionListener
             log.info(
               `No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`,
             );
-          } else {
-            for (
-              let userOpIndex = 0;
-              userOpIndex < userOps.length;
-              userOpIndex += 1
-            ) {
-              const { userOpHash, entryPoint } = userOps[userOpIndex];
-
-              const entryPointContracts = this.entryPointMap[this.chainId];
-
-              const entryPointContract = entryPointContracts.find(
-                (contract) =>
-                  contract.address.toLowerCase() === entryPoint.toLowerCase(),
-              )?.entryPointContract;
-
-              if (entryPointContract) {
-                const userOpReceipt =
-                  await getUserOperationReceiptForSuccessfulTransaction(
-                    this.chainId,
-                    userOpHash,
-                    transactionReceipt,
-                    entryPointContract,
-                  );
-                log.info(
-                  `userOpReceipt: ${customJSONStringify(
-                    userOpReceipt,
-                  )} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${
-                    this.chainId
-                  }`,
-                );
-                if (!userOpReceipt) {
-                  log.info(
-                    `userOpReceipt not fetched for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-                  );
-                  return;
-                }
-                const { success, actualGasCost, actualGasUsed, reason, logs } =
-                  userOpReceipt;
-
-                log.info(
-                  `Updating userOp data: ${customJSONStringify(
-                    convertBigIntToString({
-                      transactionHash,
-                      receipt: convertBigIntToString(transactionReceipt),
-                      blockNumber: Number(transactionReceipt.blockNumber),
-                      blockHash: transactionReceipt.blockHash,
-                      status: TransactionStatus.SUCCESS,
-                      success: success.toString(),
-                      actualGasCost,
-                      actualGasUsed,
-                      reason,
-                      logs: convertBigIntToString(logs),
-                    }),
-                  )} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${
-                    this.chainId
-                  }`,
-                );
-                await this.userOperationDao.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
-                  this.chainId,
-                  transactionId,
-                  userOpHash,
-                  convertBigIntToString({
-                    transactionHash,
-                    receipt: convertBigIntToString(transactionReceipt),
-                    blockNumber: Number(transactionReceipt.blockNumber),
-                    blockHash: transactionReceipt.blockHash,
-                    status: TransactionStatus.SUCCESS,
-                    success: success.toString(),
-                    actualGasCost,
-                    actualGasUsed,
-                    reason,
-                    logs: convertBigIntToString(logs),
-                  }),
-                );
-                log.info(
-                  `userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-                );
-
-                if (transactionType === TransactionType.BUNDLER) {
-                  log.info(
-                    `updating state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-                  );
-                  await this.userOperationStateDao.updateState(this.chainId, {
-                    transactionId,
-                    message: "Transaction confirmed",
-                    state: UserOperationStateEnum.CONFIRMED,
-                  });
-                  log.info(
-                    `updated state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-                  );
-                }
-              } else {
-                log.info(
-                  `entryPoint: ${entryPoint} not found in entry point map for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-                );
-              }
-            }
-          }
-        }
-        if (transactionType === TransactionType.BUNDLER) {
-          log.info(
-            `Getting userOps for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-          );
-          const userOps =
-            await this.userOperationDaoV07.getUserOpsByTransactionId(
-              this.chainId,
-              transactionId,
-            );
-          log.info(
-            `userOps: ${customJSONStringify(
-              userOps,
-            )} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-          );
-          if (!userOps.length) {
-            log.info(
-              `No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-            );
             return;
           }
           for (
@@ -415,7 +289,7 @@ export class EVMTransactionListener
           ) {
             const { userOpHash, entryPoint } = userOps[userOpIndex];
 
-            const entryPointContracts = this.entryPointV07Map[this.chainId];
+            const entryPointContracts = this.entryPointMap[this.chainId];
 
             const entryPointContract = entryPointContracts.find(
               (contract) =>
@@ -464,7 +338,7 @@ export class EVMTransactionListener
                   this.chainId
                 }`,
               );
-              await this.userOperationDaoV07.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
+              await this.userOperationDao.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
                 this.chainId,
                 transactionId,
                 userOpHash,

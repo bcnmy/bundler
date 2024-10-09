@@ -81,7 +81,6 @@ Also you could take a look at [config/default.json](../../config/default.json) a
 ## Configuring Redis
 
 There are two supported Redis setups:
-
 - **Redis Cluster:** used on production, configured through the `redisCluster` config object
 - **Single Redis instance:** used locally, configured through `dataSources.redisUrl`
 

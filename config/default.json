@@ -7,7 +7,6 @@
     5003, 100, 10200, 195, 196, 2810, 997, 713715, 3799, 167009, 80084, 5845,
     167000, 1328, 1329, 995, 28882, 288, 1802203764, 1740, 1750, 4202, 1135
   ],
-  "supportedNetworksV07": [84532],
   "EIP1559SupportedNetworks": [
     1, 137, 42161, 10, 43114, 43113, 8453, 59140, 59144, 204, 5611, 421614,
     11155111, 84532, 168587773, 80085, 81457, 42170, 169, 56400, 11155420,
@@ -129,12 +128,6 @@
         {
           "url": "https://rpc.ankr.com/blast_testnet_sepolia/0f2ac70eb2e86d935951e9d3874deeb44525123a1ce2a7cf609cf1f0a098d2d6",
           "type": "private"
-        }
-      ],
-      "84532": [
-        {
-          "url": "https://sepolia.base.org",
-          "type": "public"
         }
       ]
     },
@@ -1006,14 +999,6 @@
     },
     "0x00000061fefce24a79343c27127435286bb7a4e1": {
       "supportedChainIds": [88888, 88882]
-    },
-    "0x0000000071727De22E5E9d8BAf0edAc6f37da032": {
-      "supportedChainIds": [84532]
-    }
-  },
-  "entryPointV07Data": {
-    "0x0000000071727De22E5E9d8BAf0edAc6f37da032": {
-      "supportedChainIds": [84532]
     }
   },
   "zeroAddress": "0x0000000000000000000000000000000000000000",
@@ -1111,12 +1096,5 @@
     }
   },
   "disableFeeValidation": [],
-  "hardcodedGasLimits": {
-    "84532": {
-      "verificationGasLimit": 2000000,
-      "callGasLimit": 2000000,
-      "preVerificationGas": 45000000
-    }
-  },
   "adminAddresses": []
 }

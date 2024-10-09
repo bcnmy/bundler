@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/return-await */
 import { ConsumeMessage } from "amqplib";
 import { encodeFunctionData } from "viem";
-import { ENTRY_POINT_ABI } from "entry-point-gas-estimations/dist/gas-estimator/entry-point-v6";
+import { ENTRY_POINT_ABI } from "entry-point-gas-estimations";
 import { ICacheService } from "../../common/cache";
 import { logger } from "../../common/logger";
 import { IQueue } from "../../common/queue";
@@ -24,11 +24,6 @@ import { ITransactionService } from "../transaction-service";
 import { ITransactionConsumer } from "./interface/ITransactionConsumer";
 import { BundlerConsumerParamsType } from "./types";
 import { STATUSES } from "../../server/api/shared/middleware";
-import { ENTRY_POINT_V07_ABI } from "../../common/entrypoint-v7/abiv7";
-import {
-  isUserOpV06,
-  packUserOperation,
-} from "../../common/entrypoint-v7/PackedUserOperation";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -101,23 +96,11 @@ export class BundlerConsumer
             } on chainId: ${this.chainId}`,
           );
 
-          const isV06 = isUserOpV06(userOp);
-          let data;
-          if (isV06) {
-            data = encodeFunctionData({
-              abi: ENTRY_POINT_ABI,
-              functionName: "handleOps",
-              args: [[userOp], activeRelayer.getPublicKey() as `0x${string}`],
-            });
-          } else {
-            const packed = packUserOperation(userOp);
-
-            data = encodeFunctionData({
-              abi: ENTRY_POINT_V07_ABI,
-              functionName: "handleOps",
-              args: [[packed], activeRelayer.getPublicKey() as `0x${string}`],
-            });
-          }
+          const data = encodeFunctionData({
+            abi: ENTRY_POINT_ABI,
+            functionName: "handleOps",
+            args: [[userOp], activeRelayer.getPublicKey() as `0x${string}`],
+          });
           transactionDataReceivedFromQueue.data = data;
 
           await this.cacheService.set(

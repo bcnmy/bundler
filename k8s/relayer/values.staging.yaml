@@ -25,11 +25,6 @@ affinity_tolerations:
   key: "app"
   values: "relayer-server"
 
-# make sure pods are deployed in different nodes
-affinity:
-  antiAffinity:
-    topologyKey: "kubernetes.io/hostname"
-
 secret_encrypted:
   projectID: biconomy-staging
   key: sdk-staging-relayer-node-service
