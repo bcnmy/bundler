@@ -19,7 +19,7 @@ import {
   createScrollGasEstimator,
   createSeiGasEstimator,
   IGasEstimator,
-} from "entry-point-gas-estimations/dist/gas-estimator/entry-point-v6";
+} from "entry-point-gas-estimations";
 import { config } from "../../config";
 import { IEVMAccount } from "../../relayer/account";
 import {

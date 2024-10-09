@@ -22,9 +22,7 @@ describe("BundlerSimulationService", () => {
       bundlerSimulationService.gasEstimator = {
         calculatePreVerificationGas: jest.fn().mockResolvedValue(50000n),
       } as unknown as GasEstimator;
-      bundlerSimulationService.gasPriceService = {
-        getBaseFeePerGas: jest.fn().mockResolvedValue(50000n),
-      } as unknown as GasPriceService;
+
       const networkMaxFeePerGas = 10n;
       const networkMaxPriorityFeePerGas = 10n;
 
