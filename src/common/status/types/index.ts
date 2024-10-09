@@ -4,10 +4,7 @@ import { ICacheService } from "../../cache";
 import { IDBService } from "../../db";
 import { GasPriceService } from "../../gas-price";
 import { EVMNetworkService } from "../../network";
-import {
-  BundlerSimulationService,
-  BundlerSimulationServiceV07,
-} from "../../simulation";
+import { BundlerSimulationService } from "../../simulation";
 import { EVMRawTransactionType } from "../../types";
 
 export type StatusServiceParamsType = {
@@ -24,9 +21,6 @@ export type StatusServiceParamsType = {
   };
   bundlerSimulationServiceMap: {
     [chainId: number]: BundlerSimulationService;
-  };
-  bundlerSimulationServiceMapV07: {
-    [chainId: number]: BundlerSimulationServiceV07;
   };
 };
 

@@ -2,7 +2,7 @@
 /* eslint-disable no-await-in-loop */
 import { getContract, parseEther } from "viem";
 import { chain } from "lodash";
-import { ENTRY_POINT_ABI } from "entry-point-gas-estimations/dist/gas-estimator/entry-point-v6";
+import { ENTRY_POINT_ABI } from "entry-point-gas-estimations";
 import { config } from "../../config";
 import { EVMAccount, IEVMAccount } from "../../relayer/account";
 import { BundlerConsumer } from "../../relayer/consumer";
@@ -18,7 +18,6 @@ import { EVMTransactionService } from "../../relayer/transaction-service";
 import { RedisCacheService } from "../cache";
 import { Mongo, TransactionDAO } from "../db";
 import { UserOperationDAO } from "../db/dao/UserOperationDAO";
-import { UserOperationV07DAO } from "../db/dao/UserOperationV07DAO";
 import { IQueue } from "../interface";
 import { logger } from "../logger";
 import { relayerManagerTransactionTypeNameMap } from "../maps";
@@ -30,15 +29,11 @@ import {
   RetryTransactionHandlerQueue,
 } from "../queue";
 import { BundlerRelayService } from "../relay-service";
-import {
-  BundlerSimulationService,
-  BundlerSimulationServiceV07,
-} from "../simulation";
+import { BundlerSimulationService } from "../simulation";
 import { IStatusService, StatusService } from "../status";
 import {
   BundlerTransactionMessageType,
   EntryPointMapType,
-  EntryPointV07MapType,
   EVMRawTransactionType,
   TransactionType,
 } from "../types";
@@ -46,7 +41,6 @@ import { UserOperationStateDAO } from "../db/dao/UserOperationStateDAO";
 import { customJSONStringify, parseError } from "../utils";
 import { GasPriceService } from "../gas-price";
 import { CacheFeesJob } from "../gas-price/jobs/CacheFees";
-import { ENTRY_POINT_V07_ABI } from "../entrypoint-v7/abiv7";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -66,12 +60,7 @@ const bundlerSimulationServiceMap: {
   [chainId: number]: BundlerSimulationService;
 } = {};
 
-const bundlerSimulationServiceMapV07: {
-  [chainId: number]: BundlerSimulationServiceV07;
-} = {};
-
 const entryPointMap: EntryPointMapType = {};
-const entryPointMapV07: EntryPointV07MapType = {};
 
 const dbInstance = Mongo.getInstance();
 const cacheService = RedisCacheService.getInstance();
@@ -86,8 +75,6 @@ const EVMRelayerManagerMap: {
 
 const transactionDao = new TransactionDAO();
 const userOperationDao = new UserOperationDAO();
-const userOperationV07Dao = new UserOperationV07DAO();
-
 const userOperationStateDao = new UserOperationStateDAO();
 
 const retryTransactionServiceMap: Record<number, EVMRetryTransactionService> =
@@ -123,7 +110,6 @@ let statusService: IStatusService;
     log.info(`Setup of services started for chainId: ${chainId}`);
     routeTransactionToRelayerMap[chainId] = {};
     entryPointMap[chainId] = [];
-    entryPointMapV07[chainId] = [];
 
     if (!config.chains.providers || !config.chains.providers[chainId]) {
       throw new Error(`No providers in config for chainId: ${chainId}`);
@@ -201,12 +187,10 @@ let statusService: IStatusService;
       retryTransactionQueue,
       transactionDao,
       userOperationDao,
-      userOperationDaoV07: userOperationV07Dao,
       userOperationStateDao,
       options: {
         chainId,
         entryPointMap,
-        entryPointMapV07,
       },
     });
     transactionListenerMap[chainId] = transactionListener;
@@ -235,7 +219,6 @@ let statusService: IStatusService;
       if (!EVMRelayerManagerMap[relayerManager.name]) {
         EVMRelayerManagerMap[relayerManager.name] = {};
       }
-
       const relayerMangerInstance = new EVMRelayerManager({
         networkService,
         gasPriceService,
@@ -311,11 +294,7 @@ let statusService: IStatusService;
       gasPriceService,
     );
 
-    bundlerSimulationServiceMapV07[chainId] = new BundlerSimulationServiceV07(
-      networkService,
-      gasPriceService,
-    );
-    const { entryPointData, entryPointV07Data } = config;
+    const { entryPointData } = config;
 
     for (const [
       entryPointAddress,
@@ -328,26 +307,6 @@ let statusService: IStatusService;
           address: entryPointAddress,
           entryPointContract: getContract({
             abi: ENTRY_POINT_ABI,
-            address: entryPointAddress as `0x${string}`,
-            client: {
-              public: networkService.provider,
-            },
-          }),
-        });
-      }
-    }
-
-    for (const [
-      entryPointAddress,
-      entryPointSupportedChainIdsAndAbi,
-    ] of Object.entries(entryPointV07Data)) {
-      if (
-        entryPointSupportedChainIdsAndAbi.supportedChainIds.includes(chainId)
-      ) {
-        entryPointMapV07[chainId].push({
-          address: entryPointAddress,
-          entryPointContract: getContract({
-            abi: ENTRY_POINT_V07_ABI,
             address: entryPointAddress as `0x${string}`,
             client: {
               public: networkService.provider,
@@ -391,7 +350,6 @@ let statusService: IStatusService;
           options: {
             chainId,
             entryPointMap,
-            entryPointMapV07,
           },
         });
         // start listening for transaction
@@ -406,7 +364,6 @@ let statusService: IStatusService;
       }
     }
   }
-
   // eslint-disable-next-line no-new
   statusService = new StatusService({
     cacheService,
@@ -415,7 +372,6 @@ let statusService: IStatusService;
     dbInstance,
     gasPriceServiceMap,
     bundlerSimulationServiceMap,
-    bundlerSimulationServiceMapV07,
   });
   log.info("<=== Config setup completed ===>");
 })();
@@ -423,15 +379,12 @@ let statusService: IStatusService;
 export {
   routeTransactionToRelayerMap,
   bundlerSimulationServiceMap,
-  bundlerSimulationServiceMapV07,
   entryPointMap,
-  entryPointMapV07,
   EVMRelayerManagerMap,
   transactionServiceMap,
   transactionDao,
   userOperationDao,
   userOperationStateDao,
-  userOperationV07Dao,
   statusService,
   networkServiceMap,
   gasPriceServiceMap,
