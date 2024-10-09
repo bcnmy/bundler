@@ -30,8 +30,19 @@ spec:
       {{- end }}
         releaseTime: {{ dateInZone "2006-01-02 15:04:05Z" (now) "UTC"| quote }} 
     spec:
-    {{- if .Values.affinity_tolerations.enable }}
       affinity:
+        {{- if .Values.affinity.antiAffinity }}
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - {{ .Values.name }}
+            topologyKey:  {{ .Values.affinity.antiAffinity.topologyKey }}
+        {{- end }} 
+    {{- if .Values.affinity_tolerations.enable }}
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
@@ -83,7 +94,9 @@ spec:
             cpu: {{ .Values.relayer.resource.requests.cpu }}
           limits:
             memory: {{ .Values.relayer.resource.limits.memory }}
+            {{- if .Values.relayer.resource.limits.cpu }}
             cpu: {{ .Values.relayer.resource.limits.cpu }}
+            {{- end }} 
         # allow in to total failureThreshold(30) * periodSeconds(10) = 300 seconds
         startupProbe:
           httpGet:

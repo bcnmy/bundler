@@ -1,0 +1,108 @@
+#  This is a reusable workflow
+#  https://docs.github.com/en/actions/using-workflows/reusing-workflows
+#
+---
+# yamllint disable rule:line-length
+name: Container_Img_Build_Push_GAR
+# yamllint disable-line rule:truthy
+on:
+  workflow_call:
+    inputs:
+
+      image:
+        required: true
+        type: string
+
+      dockerfile:
+        required: true
+        type: string
+
+      docker_context:
+        required: false
+        type: string
+
+      gcp_project_number:
+        required: true
+        type: string
+
+      gcp_pool_id:
+        required: true
+        type: string
+
+      gcp_provider_id:
+        required: true
+        type: string
+     
+      gcp_service_account:
+        required: true
+        type: string
+
+      gcp_registry:
+        required: true
+        type: string
+
+jobs:
+  # To avoid packing and passing artifacts from one job to another, we will
+  # build and test in the same github job.
+  container_image_build_push:
+    runs-on: ubuntu-latest
+    # Allow the job to fetch a GitHub ID token
+    # !!! IMPORTANT set "permissions:" section in the calling workflow job
+    # same like lines below
+    # permissions:
+    #   id-token: write
+    #   contents: read
+    # https://github.com/marketplace/actions/build-and-push-docker-images
+    # Checks out the repository source code with ref/SHA commit that trigger the workflow as HEAD.
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # https://cloud.google.com/iam/docs/workload-identity-federation-with-deployment-pipelines#authenticate
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v2'
+        with:
+          token_format: access_token
+          workload_identity_provider: "projects/${{inputs.gcp_project_number}}/locations/global/workloadIdentityPools/${{inputs.gcp_pool_id}}/providers/${{inputs.gcp_provider_id}}"
+          service_account: ${{ inputs.gcp_service_account }}
+
+      - name: 'Login to Google Artifact Registry'
+        uses: docker/login-action@v3
+        with:
+          # registry: <location>-docker.pkg.dev
+          registry: ${{ inputs.gcp_registry }}
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
+      # Allow to extract the metadata information of the events and reference.
+      # In this step we configure the tags and labels for Docker image build and push 
+      - name: 'Docker metadata'
+        id: 'metadata'
+        uses: docker/metadata-action@v5.0.0
+        with:
+          images: ${{ inputs.image }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern=v{{version}}
+            type=raw,value=latest,enable=${{ github.ref_type != 'tag' }}
+            type=raw,value={{sha}},enable=${{ github.ref_type != 'tag' }}
+            # type=raw,value=foo
+
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v5.0.0
+        with:
+          # context: .
+          context: ${{ inputs.docker_context == ''  && '.' || inputs.docker_context }}
+          # push: ${{ github.event.base_ref == 'refs/heads/main' && github.ref_type == 'tag' && !startsWith(github.ref, 'refs/tags/v0.')}}
+          file: ${{ inputs.dockerfile }}
+          push: true
+          tags: ${{ steps.metadata.outputs.tags }}
+          labels: ${{ steps.metadata.outputs.labels }}
+
+  all:
+    # This job ensures that all jobs above are successful.
+    needs: [container_image_build_push]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo Success

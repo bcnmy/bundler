@@ -51,7 +51,7 @@ jobs:
           - us-docker.pkg.dev/prj-biconomy-prod-001/bundler/bundler
           # LOCATION-docker.pkg.dev/PROJECT-ID/REPOSITORY/IMAGE
           # {owner}/{repo}/.github/workflows/{filename}@{ref}
-    uses: bcnmy/devops/.github/workflows/container_img_build_push_gar.yaml@master
+    uses: bcnmy/bundler/.github/workflows/container_img_build_push_gar.yaml@master
     with:
       image: ${{ matrix.image }}
       dockerfile: Dockerfile.helm
@@ -72,7 +72,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    uses: bcnmy/devops/.github/workflows/deploy_to_gke.yaml@master
+    uses: bcnmy/bundler/.github/workflows/deploy_to_gke.yaml@master
     with:
       # GCP project where the identity provider is
       # gcloud projects describe prj-workload-identity-001
@@ -81,7 +81,6 @@ jobs:
       gcp_bastion: 'bastion02'
       gcp_bastion_zone: 'us-east1-b'
       gcp_pool_id: 'pool-id-github-actions'
-      # created by devops/gcp/github-actions/configure_workload_identity_federation_with_github_actions_pipelines.sh
       # gcp_provider_id: 'ga-GITHUB_REPO_NAME'
       gcp_provider_id: 'ga-bundler'
       # SERVICE_ACCOUNT_EMAIL="${SERVICE_ACCOUNT}@${PROJECT}.iam.gserviceaccount.com"
@@ -102,7 +101,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    uses: bcnmy/devops/.github/workflows/deploy_to_gke.yaml@master
+    uses: bcnmy/bundler/.github/workflows/deploy_to_gke.yaml@master
     with:
       environment: 'tw-prod'
       # GCP project where the identity provider is
@@ -113,7 +112,6 @@ jobs:
       gcp_bastion: 'bastion02'
       gcp_bastion_zone: 'us-central1-a'
       gcp_pool_id: 'pool-id-github-actions'
-      # created by devops/gcp/github-actions/configure_workload_identity_federation_with_github_actions_pipelines.sh
       # gcp_provider_id: 'ga-GITHUB_REPO_NAME'
       gcp_provider_id: 'ga-bundler'
       # SERVICE_ACCOUNT_EMAIL="${SERVICE_ACCOUNT}@${PROJECT}.iam.gserviceaccount.com"

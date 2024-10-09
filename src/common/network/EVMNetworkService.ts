@@ -5,12 +5,14 @@
 // eslint-disable-next-line max-classes-per-file
 import axios from "axios";
 import {
+  Hex,
   PublicClient,
   Transaction,
   TransactionReceipt,
   createPublicClient,
   fallback,
   http,
+  verifyMessage,
 } from "viem";
 import { IEVMAccount } from "../../relayer/account";
 import {
@@ -26,6 +28,7 @@ import {
 import { logger } from "../logger";
 import { customJSONStringify, parseError } from "../utils";
 import { config } from "../../config";
+import { BLOCKCHAINS } from "../constants";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -146,6 +149,19 @@ export class EVMNetworkService
   }
 
   async getEIP1559FeesPerGas(): Promise<Type2TransactionGasPriceType> {
+    // Using viem's estimateFeesPerGas instead of raw RPC call as Ankr sometimes
+    // gives unexpected errors
+    if (this.chainId === BLOCKCHAINS.GNOSIS_MAINNET) {
+      const {
+        maxFeePerGas,
+        maxPriorityFeePerGas
+      } = await this.provider.estimateFeesPerGas();
+
+      return {
+        maxFeePerGas: maxFeePerGas as bigint,
+        maxPriorityFeePerGas: maxPriorityFeePerGas as bigint
+      };
+    }
     const maxFeePerGasPromise = this.getLegacyGasPrice();
     const maxPriorityFeePerGasPromise = this.sendRpcCall(
       EthMethodType.MAX_PRIORITY_FEE_PER_GAS,
@@ -333,5 +349,22 @@ export class EVMNetworkService
 
   async runAlchemySimulation(params: any): Promise<any> {
     return await this.sendRpcCall(AlchemyMethodType.SIMULATE_EXECUTION, params);
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  async verifySignature(
+    address: string,
+    message: string,
+    signature: string,
+  ): Promise<boolean> {
+    log.info(
+      `Verifying signature for address: ${address}, message: ${message}, signature: ${signature}`,
+    );
+
+    return verifyMessage({
+      address: address as Hex,
+      message,
+      signature: signature as Hex,
+    });
   }
 }

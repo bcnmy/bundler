@@ -49,7 +49,7 @@ jobs:
           - us-docker.pkg.dev/prj-biconomy-prod-001/bundler/bundler
           # LOCATION-docker.pkg.dev/PROJECT-ID/REPOSITORY/IMAGE
           # {owner}/{repo}/.github/workflows/{filename}@{ref}
-    uses: bcnmy/devops/.github/workflows/container_img_build_push_gar.yaml@master
+    uses: bcnmy/bundler/.github/workflows/container_img_build_push_gar.yaml@master
     with:
       image: ${{ matrix.image }}
       dockerfile: Dockerfile.helm

@@ -1,13 +1,19 @@
 import pino from "pino";
 
-const logger = pino({
-  // level: 'info', // Set the log level
-  transport: {
-    target: "pino-pretty",
-    options: {
-      colorize: true,
+const destination = pino.destination({ sync: false });
+
+// Create the logger using the asynchronous destination
+const logger = pino(
+  {
+    transport: {
+      target: "pino-pretty",
+      options: {
+        colorize: true,
+        destination: 1
+      },
     },
-  }, // ... other options
-});
+  },
+  destination
+);
 
 export { logger };

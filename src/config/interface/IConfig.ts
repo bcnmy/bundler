@@ -1,3 +1,4 @@
+import { Hex } from "viem";
 import { TransactionType } from "../../common/types";
 
 enum RpcProviderType {
@@ -129,6 +130,10 @@ export type ConfigType = {
   optimismNetworks: Array<number>;
   // array of chain Ids for networks that are part of the Optimism ecosystem - they have a different gas price oracle than Optimism
   morphNetworks: Array<number>;
+  // array of chain Ids for networks that are part of the Esi ecosystem - they have different gas limits than other networks
+  seiNetworks: Array<number>;
+  // array of chain Ids for networks that are part of the Kakarot ecosystem - they have a 7m gas limit
+  kakarotNetworks: Array<number>;
   paymasterDashboardBackendConfig: PaymasterDashboardBackendConfigType;
   // array of chain Ids for networks that are part of the Polygon zkEVM ecosystem
   polygonZKEvmNetworks: Array<number>;
@@ -153,6 +158,18 @@ export type ConfigType = {
   // Transaction error messages
   transaction: TransactionConfigType;
   zeroAddress: `0x${string}`;
+  // hardcode override some gas values for a specific chain
+  gasOverrides: Record<
+    number,
+    {
+      baseFeePerGas: number;
+      preVerificationGas: number;
+    }
+  >;
+  // disable maxFeePerGas & maxPriorityFeePerGas validation for specific chain ids
+  disableFeeValidation: Array<number>;
+  // a list of addresses that are allowed to access the admin endpoints (based on signature)
+  adminAddresses: Array<Hex>;
 };
 
 export interface IConfig {
