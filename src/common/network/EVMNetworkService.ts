@@ -5,12 +5,14 @@
 // eslint-disable-next-line max-classes-per-file
 import axios from "axios";
 import {
+  Hex,
   PublicClient,
   Transaction,
   TransactionReceipt,
   createPublicClient,
   fallback,
   http,
+  verifyMessage,
 } from "viem";
 import { IEVMAccount } from "../../relayer/account";
 import {
@@ -347,5 +349,22 @@ export class EVMNetworkService
 
   async runAlchemySimulation(params: any): Promise<any> {
     return await this.sendRpcCall(AlchemyMethodType.SIMULATE_EXECUTION, params);
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  async verifySignature(
+    address: string,
+    message: string,
+    signature: string,
+  ): Promise<boolean> {
+    log.info(
+      `Verifying signature for address: ${address}, message: ${message}, signature: ${signature}`,
+    );
+
+    return verifyMessage({
+      address: address as Hex,
+      message,
+      signature: signature as Hex,
+    });
   }
 }

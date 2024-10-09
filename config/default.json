@@ -1095,5 +1095,6 @@
       "preVerificationGas": 2172916
     }
   },
-  "disableFeeValidation": []
+  "disableFeeValidation": [],
+  "adminAddresses": []
 }
