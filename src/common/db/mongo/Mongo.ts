@@ -11,6 +11,8 @@ import {
   UserOperationsMapType,
   UserOperationsStateMap,
   UserOperationsStateMapType,
+  UserOperationsV07Map,
+  UserOperationsV07MapType,
 } from "./models";
 
 const log = logger.child({
@@ -147,7 +149,6 @@ export class Mongo implements IDBService {
           dbName: "relayer-node-service",
         });
       }
-      log.info("Connected to db");
     } catch (error) {
       log.error("error while connecting to mongo db");
       log.error(error);
@@ -184,6 +185,21 @@ export class Mongo implements IDBService {
     if (!supportedNetworks.includes(networkId))
       throw new Error(`Network Id ${networkId} is not supported`);
     return UserOperationsMap[networkId];
+  }
+
+  /**
+   * Method returns user operation model for a given chain id
+   * @param networkId
+   * @returns user operation model for a given chain id
+   */
+  getUserOperationV07(networkId: number): UserOperationsV07MapType[number] {
+    if (!this.client) {
+      throw new Error("Not connected to db");
+    }
+    const supportedNetworksV07: number[] = config.supportedNetworksV07 || [];
+    if (!supportedNetworksV07.includes(networkId))
+      throw new Error(`Network Id ${networkId} is not supported`);
+    return UserOperationsV07Map[networkId];
   }
 
   /**
