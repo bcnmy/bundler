@@ -80,6 +80,12 @@ type EntryPointDataConfigType = {
   };
 };
 
+type EntryPointV07DataConfigType = {
+  [address: `0x${string}`]: {
+    supportedChainIds: Array<number>;
+  };
+};
+
 type PaymasterDashboardBackendConfigType = {
   dappDataUrl: string;
 };
@@ -112,6 +118,8 @@ export type ConfigType = {
   EIP1559SupportedNetworks: Array<number>;
   // map of entrypoint addresses -> supported chain Ids
   entryPointData: EntryPointDataConfigType;
+  // map of entrypoint addresses -> supported chain Ids
+  entryPointV07Data: EntryPointV07DataConfigType;
   // array of chain Ids for supported L2 networks
   l2Networks: Array<number>;
   // array of chain Ids for networks that are part of the Linea ecosystem
@@ -153,6 +161,9 @@ export type ConfigType = {
   // array of chain Ids for networks that are supported by the Bundler
   supportedNetworks: Array<number>;
   supportedTransactionType: ChainIdSupportedTransactionType;
+  // array of chain Ids for networks that are supported by the Bundler with EPv7
+  supportedNetworksV07: Array<number>;
+  supportedTransactionTypeV07: ChainIdSupportedTransactionType;
   // array of chain Ids for networks that are TEST networks
   testnetNetworks: Array<number>;
   // Transaction error messages
