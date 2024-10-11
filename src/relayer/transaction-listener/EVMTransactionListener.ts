@@ -15,6 +15,7 @@ import { RetryTransactionQueueData } from "../../common/queue/types";
 import {
   EntryPointContractType,
   EntryPointMapType,
+  EntryPointV07ContractType,
   EntryPointV07MapType,
   EVMRawTransactionType,
   TransactionStatus,
@@ -267,6 +268,7 @@ export class EVMTransactionListener
       return;
     }
 
+    let tryForV07 = false;
     if (transactionHash) {
       try {
         log.info(
@@ -289,6 +291,7 @@ export class EVMTransactionListener
             log.info(
               `No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`,
             );
+            tryForV07 = true;
           } else {
             for (
               let userOpIndex = 0;
@@ -388,7 +391,7 @@ export class EVMTransactionListener
             }
           }
         }
-        if (transactionType === TransactionType.BUNDLER) {
+        if (transactionType === TransactionType.BUNDLER && tryForV07) {
           log.info(
             `Getting userOps for transactionId: ${transactionId} on chainId: ${this.chainId}`,
           );
@@ -584,6 +587,7 @@ export class EVMTransactionListener
       return;
     }
 
+    let tryForV07 = false;
     if (transactionHash) {
       try {
         log.info(
@@ -607,7 +611,7 @@ export class EVMTransactionListener
             log.info(
               `No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`,
             );
-            return;
+            tryForV07 = true;
           }
           for (
             let userOpIndex = 0;
@@ -756,6 +760,284 @@ export class EVMTransactionListener
               );
 
               await this.userOperationDao.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
+                this.chainId,
+                transactionId,
+                userOpHash,
+                convertBigIntToString({
+                  receipt: convertBigIntToString(frontRunnedTransactionReceipt),
+                  transactionHash: (
+                    frontRunnedTransactionReceipt as TransactionReceipt
+                  ).transactionHash,
+                  blockNumber: Number(
+                    (frontRunnedTransactionReceipt as TransactionReceipt)
+                      .blockNumber,
+                  ),
+                  blockHash: (
+                    frontRunnedTransactionReceipt as TransactionReceipt
+                  ).blockHash,
+                  status: TransactionStatus.SUCCESS,
+                  success,
+                  actualGasCost,
+                  actualGasUsed,
+                  reason,
+                  logs: convertBigIntToString(logs),
+                }),
+              );
+
+              log.info(
+                `userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+              );
+              let frontRunnedTransactionFee = 0;
+              let frontRunnedTransactionFeeInUSD = 0;
+              let frontRunnedTransactionFeeCurrency = "";
+              if (
+                !frontRunnedTransactionReceipt.gasUsed &&
+                !frontRunnedTransactionReceipt.effectiveGasPrice
+              ) {
+                log.info(
+                  `gasUsed or effectiveGasPrice field not found in ${customJSONStringify(
+                    frontRunnedTransactionReceipt,
+                  )}`,
+                );
+              } else {
+                frontRunnedTransactionFee = 0;
+                try {
+                  frontRunnedTransactionFee = Number(
+                    frontRunnedTransactionReceipt.gasUsed *
+                      frontRunnedTransactionReceipt.effectiveGasPrice,
+                  );
+                } catch (err) {
+                  log.error(
+                    `Error in calculating front ran transaction fee, defaulting to ${frontRunnedTransactionFee}`,
+                    {
+                      transactionId,
+                      chainId: this.chainId,
+                      gasUsed: frontRunnedTransactionReceipt.gasUsed,
+                      effectiveGasPrice:
+                        frontRunnedTransactionReceipt.effectiveGasPrice,
+                    },
+                  );
+                }
+
+                frontRunnedTransactionFeeCurrency =
+                  config.chains.currency[this.chainId];
+                const coinsRateObj =
+                  await this.cacheService.get(getTokenPriceKey());
+                if (!coinsRateObj) {
+                  log.info("Coins Rate Obj not fetched from cache");
+                } else {
+                  frontRunnedTransactionFeeInUSD =
+                    JSON.parse(coinsRateObj)[this.chainId];
+                }
+              }
+
+              await this.transactionDao.updateByTransactionIdAndTransactionHashForFrontRunnedTransaction(
+                this.chainId,
+                transactionId,
+                transactionHash,
+                {
+                  frontRunnedTransactionHash:
+                    frontRunnedTransactionReceipt.hash,
+                  frontRunnedReceipt: convertBigIntToString(
+                    frontRunnedTransactionReceipt,
+                  ),
+                  frontRunnedTransactionFee,
+                  frontRunnedTransactionFeeInUSD,
+                  frontRunnedTransactionFeeCurrency,
+                  status: TransactionStatus.FAILED,
+                  updationTime: Date.now(),
+                },
+              );
+
+              if (transactionType === TransactionType.BUNDLER) {
+                log.info(
+                  `updating state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId} for a front runned transaction`,
+                );
+                await this.userOperationStateDao.updateState(this.chainId, {
+                  transactionId,
+                  transactionHash: frontRunnedTransactionReceipt.hash,
+                  message:
+                    "Transaction was front runned, check new transaction hash in receipt",
+                  state: UserOperationStateEnum.CONFIRMED,
+                });
+                log.info(
+                  `updated state state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId} for a front runned transaction`,
+                );
+              }
+            } else {
+              log.info(
+                `entryPoint: ${entryPoint} not found in entry point map for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+              );
+            }
+          }
+        }
+        if (transactionType === TransactionType.BUNDLER && tryForV07) {
+          log.info(
+            `Getting userOps for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+          );
+
+          const userOps = await this.userOperationDaoV07.getUserOpsByTransactionId(
+            this.chainId,
+            transactionId,
+          );
+          log.info(
+            `userOps: ${customJSONStringify(
+              userOps,
+            )} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+          );
+          if (!userOps.length) {
+            log.info(
+              `No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+            );
+            return;
+          }
+          for (
+            let userOpIndex = 0;
+            userOpIndex < userOps.length;
+            userOpIndex += 1
+          ) {
+            const { userOpHash, entryPoint } = userOps[userOpIndex];
+
+            const entryPointContracts = this.entryPointV07Map[this.chainId];
+
+            const entryPointContract = entryPointContracts.find(
+              (contract) =>
+                contract.address.toLowerCase() === entryPoint.toLowerCase(),
+            )?.entryPointContract;
+
+            if (entryPointContract) {
+              const latestBlock =
+                await this.networkService.getLatesBlockNumber();
+              log.info(
+                `latestBlock: ${latestBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+              );
+              let fromBlock = latestBlock - BigInt(1000);
+              if (config.astarNetworks.includes(this.chainId)) {
+                fromBlock += BigInt(501);
+              }
+              log.info(
+                `fromBlock: ${fromBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+              );
+              const userOpReceipt =
+                await getUserOperationReceiptForFailedTransaction(
+                  this.chainId,
+                  userOpHash,
+                  transactionReceipt,
+                  entryPointContract,
+                  fromBlock,
+                  this.networkService.provider,
+                );
+              log.info(
+                `userOpReceipt: ${customJSONStringify(
+                  userOpReceipt,
+                )} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${
+                  this.chainId
+                }`,
+              );
+
+              if (!userOpReceipt) {
+                log.info(
+                  `userOpReceipt not fetched for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+                );
+                log.info(
+                  `Updating userOp data: ${customJSONStringify(
+                    convertBigIntToString({
+                      transactionHash,
+                      receipt: convertBigIntToString(transactionReceipt),
+                      blockNumber: Number(transactionReceipt.blockNumber),
+                      blockHash: transactionReceipt.blockHash,
+                      status: TransactionStatus.FAILED,
+                      success: "false",
+                      actualGasCost: 0,
+                      actualGasUsed: 0,
+                      reason: null,
+                      logs: null,
+                    }),
+                  )} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${
+                    this.chainId
+                  }`,
+                );
+
+                await this.userOperationDaoV07.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
+                  this.chainId,
+                  transactionId,
+                  userOpHash,
+                  convertBigIntToString({
+                    transactionHash,
+                    receipt: convertBigIntToString(transactionReceipt),
+                    blockNumber: Number(transactionReceipt.blockNumber),
+                    blockHash: transactionReceipt.blockHash,
+                    status: TransactionStatus.FAILED,
+                    success: "false",
+                    actualGasCost: 0,
+                    actualGasUsed: 0,
+                    reason: "null",
+                    logs: null,
+                  }),
+                );
+                log.info(
+                  `userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+                );
+
+                if (transactionType === TransactionType.BUNDLER) {
+                  log.info(
+                    `updating state to: ${UserOperationStateEnum.FAILED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+                  );
+                  await this.userOperationStateDao.updateState(this.chainId, {
+                    transactionId,
+                    state: UserOperationStateEnum.FAILED,
+                    message: await this.getTransactionFailureMessage(
+                      transactionReceipt,
+                      entryPointContract,
+                    ),
+                  });
+                  log.info(
+                    `updated state to: ${UserOperationStateEnum.FAILED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+                  );
+                }
+                return;
+              }
+              const {
+                success,
+                actualGasCost,
+                actualGasUsed,
+                reason,
+                logs,
+                frontRunnedTransactionReceipt,
+              } = userOpReceipt;
+
+              log.info(
+                `Updating transaction data for a front runned transaction for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+              );
+              log.info(
+                `Updating userOp data: ${customJSONStringify(
+                  convertBigIntToString({
+                    receipt: convertBigIntToString(
+                      frontRunnedTransactionReceipt,
+                    ),
+                    transactionHash: (
+                      frontRunnedTransactionReceipt as TransactionReceipt
+                    ).transactionHash,
+                    blockNumber: Number(
+                      (frontRunnedTransactionReceipt as TransactionReceipt)
+                        .blockNumber,
+                    ),
+                    blockHash: (
+                      frontRunnedTransactionReceipt as TransactionReceipt
+                    ).blockHash,
+                    status: TransactionStatus.SUCCESS,
+                    success,
+                    actualGasCost,
+                    actualGasUsed,
+                    reason,
+                    logs: convertBigIntToString(logs),
+                  }),
+                )} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${
+                  this.chainId
+                }`,
+              );
+
+              await this.userOperationDaoV07.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
                 this.chainId,
                 transactionId,
                 userOpHash,
@@ -1067,7 +1349,7 @@ export class EVMTransactionListener
 
   async getTransactionFailureMessage(
     receipt: TransactionReceipt,
-    entryPointContract: EntryPointContractType,
+    entryPointContract: EntryPointContractType | EntryPointV07ContractType,
   ): Promise<string> {
     try {
       const getTransactionResponse = await this.networkService.getTransaction(

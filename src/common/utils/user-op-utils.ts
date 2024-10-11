@@ -80,7 +80,7 @@ const filterLogs = (
  * @param {number} chainId
  * @param {string} userOpHash
  * @param {TransactionReceipt} receipt
- * @param {EntryPointContractType} entryPointContract
+ * @param {EntryPointContractType | EntryPointV07ContractType} entryPointContract
  * @param {bigint} fromBlock
  * @param {PublicClient} provider
  */
@@ -88,7 +88,7 @@ export const getUserOperationReceiptForFailedTransaction = async (
   chainId: number,
   userOpHash: string,
   receipt: TransactionReceipt,
-  entryPointContract: EntryPointContractType,
+  entryPointContract: EntryPointContractType | EntryPointV07ContractType,
   fromBlock: bigint,
   provider: PublicClient,
 ): Promise<any> => {
