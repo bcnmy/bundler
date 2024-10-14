@@ -105,7 +105,7 @@ export class Mongo implements IDBService {
       .map(([key, value]) => `${key}_${value}`)
       .join("_");
 
-    log.info(`Compund index key name ${compoundIndexKeyTwo}`);
+    log.info(`Compound index key name ${compoundIndexKeyTwo}`);
     const compoundIndexExistsTwo = indexes.some(
       (index: any) => index.name === compoundIndexKeyTwo,
     );

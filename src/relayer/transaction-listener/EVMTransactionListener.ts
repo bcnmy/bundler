@@ -282,11 +282,6 @@ export class EVMTransactionListener
             this.chainId,
             transactionId,
           );
-          log.info(
-            `userOps: ${customJSONStringify(
-              userOps,
-            )} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-          );
           if (!userOps.length) {
             log.info(
               `No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`,
@@ -400,11 +395,6 @@ export class EVMTransactionListener
               this.chainId,
               transactionId,
             );
-          log.info(
-            `userOps: ${customJSONStringify(
-              userOps,
-            )} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-          );
           if (!userOps.length) {
             log.info(
               `No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`,
@@ -601,11 +591,6 @@ export class EVMTransactionListener
           const userOps = await this.userOperationDao.getUserOpsByTransactionId(
             this.chainId,
             transactionId,
-          );
-          log.info(
-            `userOps: ${customJSONStringify(
-              userOps,
-            )} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
           );
           if (!userOps.length) {
             log.info(
@@ -879,11 +864,6 @@ export class EVMTransactionListener
           const userOps = await this.userOperationDaoV07.getUserOpsByTransactionId(
             this.chainId,
             transactionId,
-          );
-          log.info(
-            `userOps: ${customJSONStringify(
-              userOps,
-            )} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
           );
           if (!userOps.length) {
             log.info(
