@@ -310,13 +310,7 @@ export class EVMTransactionListener
                     transactionReceipt,
                     entryPointContract,
                   );
-                log.info(
-                  `userOpReceipt: ${customJSONStringify(
-                    userOpReceipt,
-                  )} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${
-                    this.chainId
-                  }`,
-                );
+
                 if (!userOpReceipt) {
                   log.info(
                     `userOpReceipt not fetched for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
@@ -423,13 +417,6 @@ export class EVMTransactionListener
                   transactionReceipt,
                   entryPointContract,
                 );
-              log.info(
-                `userOpReceipt: ${customJSONStringify(
-                  userOpReceipt,
-                )} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${
-                  this.chainId
-                }`,
-              );
               if (!userOpReceipt) {
                 log.info(
                   `userOpReceipt not fetched for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
@@ -634,13 +621,6 @@ export class EVMTransactionListener
                   fromBlock,
                   this.networkService.provider,
                 );
-              log.info(
-                `userOpReceipt: ${customJSONStringify(
-                  userOpReceipt,
-                )} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${
-                  this.chainId
-                }`,
-              );
 
               if (!userOpReceipt) {
                 log.info(
@@ -907,13 +887,6 @@ export class EVMTransactionListener
                   fromBlock,
                   this.networkService.provider,
                 );
-              log.info(
-                `userOpReceipt: ${customJSONStringify(
-                  userOpReceipt,
-                )} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${
-                  this.chainId
-                }`,
-              );
 
               if (!userOpReceipt) {
                 log.info(
@@ -988,33 +961,6 @@ export class EVMTransactionListener
 
               log.info(
                 `Updating transaction data for a front runned transaction for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-              );
-              log.info(
-                `Updating userOp data: ${customJSONStringify(
-                  convertBigIntToString({
-                    receipt: convertBigIntToString(
-                      frontRunnedTransactionReceipt,
-                    ),
-                    transactionHash: (
-                      frontRunnedTransactionReceipt as TransactionReceipt
-                    ).transactionHash,
-                    blockNumber: Number(
-                      (frontRunnedTransactionReceipt as TransactionReceipt)
-                        .blockNumber,
-                    ),
-                    blockHash: (
-                      frontRunnedTransactionReceipt as TransactionReceipt
-                    ).blockHash,
-                    status: TransactionStatus.SUCCESS,
-                    success,
-                    actualGasCost,
-                    actualGasUsed,
-                    reason,
-                    logs: convertBigIntToString(logs),
-                  }),
-                )} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${
-                  this.chainId
-                }`,
               );
 
               await this.userOperationDaoV07.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
