@@ -382,7 +382,7 @@ export class EVMTransactionListener
         }
         if (transactionType === TransactionType.BUNDLER && tryForV07) {
           log.info(
-            `Getting userOps for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+            `V0.7 Getting userOps for transactionId: ${transactionId} on chainId: ${this.chainId}`,
           );
           const userOps =
             await this.userOperationDaoV07.getUserOpsByTransactionId(
@@ -391,7 +391,7 @@ export class EVMTransactionListener
             );
           if (!userOps.length) {
             log.info(
-              `No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+              `V0.7 No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`,
             );
             return;
           }
@@ -419,7 +419,7 @@ export class EVMTransactionListener
                 );
               if (!userOpReceipt) {
                 log.info(
-                  `userOpReceipt not fetched for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+                  `V0.7 userOpReceipt not fetched for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
                 );
                 return;
               }
@@ -427,7 +427,7 @@ export class EVMTransactionListener
                 userOpReceipt;
 
               log.info(
-                `Updating userOp data: ${customJSONStringify(
+                `v0.7 Updating userOp data: ${customJSONStringify(
                   convertBigIntToString({
                     transactionHash,
                     receipt: convertBigIntToString(transactionReceipt),
@@ -462,12 +462,12 @@ export class EVMTransactionListener
                 }),
               );
               log.info(
-                `userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+                `v0.7 userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
               );
 
               if (transactionType === TransactionType.BUNDLER) {
                 log.info(
-                  `updating state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+                  `v0.7 updating state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
                 );
                 await this.userOperationStateDao.updateState(this.chainId, {
                   transactionId,
@@ -475,12 +475,12 @@ export class EVMTransactionListener
                   state: UserOperationStateEnum.CONFIRMED,
                 });
                 log.info(
-                  `updated state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+                  `v0.7 updated state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
                 );
               }
             } else {
               log.info(
-                `entryPoint: ${entryPoint} not found in entry point map for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+                `v0.7 entryPoint: ${entryPoint} not found in entry point map for transactionId: ${transactionId} on chainId: ${this.chainId}`,
               );
             }
           }
@@ -838,7 +838,7 @@ export class EVMTransactionListener
         }
         if (transactionType === TransactionType.BUNDLER && tryForV07) {
           log.info(
-            `Getting userOps for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+            `V0.7 Getting userOps for transactionId: ${transactionId} on chainId: ${this.chainId}`,
           );
 
           const userOps = await this.userOperationDaoV07.getUserOpsByTransactionId(
@@ -847,7 +847,7 @@ export class EVMTransactionListener
           );
           if (!userOps.length) {
             log.info(
-              `No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+              `V0.7 No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`,
             );
             return;
           }
@@ -869,14 +869,14 @@ export class EVMTransactionListener
               const latestBlock =
                 await this.networkService.getLatesBlockNumber();
               log.info(
-                `latestBlock: ${latestBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+                `v0.7 latestBlock: ${latestBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
               );
               let fromBlock = latestBlock - BigInt(1000);
               if (config.astarNetworks.includes(this.chainId)) {
                 fromBlock += BigInt(501);
               }
               log.info(
-                `fromBlock: ${fromBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+                `v0.7 fromBlock: ${fromBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
               );
               const userOpReceipt =
                 await getUserOperationReceiptForFailedTransaction(
@@ -890,10 +890,10 @@ export class EVMTransactionListener
 
               if (!userOpReceipt) {
                 log.info(
-                  `userOpReceipt not fetched for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+                  `v0.7 userOpReceipt not fetched for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
                 );
                 log.info(
-                  `Updating userOp data: ${customJSONStringify(
+                  `v0.7 Updating userOp data: ${customJSONStringify(
                     convertBigIntToString({
                       transactionHash,
                       receipt: convertBigIntToString(transactionReceipt),
@@ -929,12 +929,12 @@ export class EVMTransactionListener
                   }),
                 );
                 log.info(
-                  `userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+                  `v0.7 userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
                 );
 
                 if (transactionType === TransactionType.BUNDLER) {
                   log.info(
-                    `updating state to: ${UserOperationStateEnum.FAILED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+                    `v0.7 updating state to: ${UserOperationStateEnum.FAILED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
                   );
                   await this.userOperationStateDao.updateState(this.chainId, {
                     transactionId,
@@ -945,7 +945,7 @@ export class EVMTransactionListener
                     ),
                   });
                   log.info(
-                    `updated state to: ${UserOperationStateEnum.FAILED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+                    `v0.7 updated state to: ${UserOperationStateEnum.FAILED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
                   );
                 }
                 return;
