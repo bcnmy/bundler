@@ -25,22 +25,19 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
   const { id } = req.body;
   const { chainId, apiKey } = req.params;
 
-  // create a child logger so all important tracing info is logged with each call
-  let log = filenameLogger.child({
+   // create a child logger so all important tracing info is logged with each call
+   let log = filenameLogger.child({
     chainId,
     requestId: id,
-    apiKey,
+    apiKey: apiKey,
   });
-
+  
   log.info(
     `EP v7 estimateUserOperationGas called, entryPointAddress: ${req.body.params[1]}`,
   );
-  // return res.status(500).json({ error: "Not implemented" });
 
   try {
     const [userOp, entryPointAddress, stateOverrideSet] = req.body.params;
-
-    log = log.child({ entryPointAddress });
 
     // Check if given entrypoint is supported by our bundler
     const entryPointContracts = entryPointMapV07[parseInt(chainId, 10)];
