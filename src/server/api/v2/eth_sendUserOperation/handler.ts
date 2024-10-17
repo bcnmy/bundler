@@ -21,7 +21,7 @@ import {
 import { BUNDLER_ERROR_CODES, STATUSES } from "../../shared/middleware";
 // import { updateRequest } from '../../auth/UpdateRequest';
 
-let log = logger.child({
+const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
 });
 
@@ -39,16 +39,6 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
     if (chainIdInNum === 5000) {
       gasLimitFromSimulation += 5000000000;
     }
-
-    log = log.child({
-      chainId,
-      requestId: id,
-      apiKey: dappAPIKey,
-      userOp,
-      entryPointAddress,
-      gasLimitFromSimulation,
-      userOpHash,
-    });
 
     const transactionId = generateTransactionId(Date.now().toString());
     log.info(

@@ -163,7 +163,6 @@ export type ConfigType = {
   supportedTransactionType: ChainIdSupportedTransactionType;
   // array of chain Ids for networks that are supported by the Bundler with EPv7
   supportedNetworksV07: Array<number>;
-  supportedTransactionTypeV07: ChainIdSupportedTransactionType;
   // array of chain Ids for networks that are TEST networks
   testnetNetworks: Array<number>;
   // Transaction error messages
