@@ -8,14 +8,14 @@ relayer:
   name: "relayer-server"
   image: "gcr.io/biconomy-prod/sdk/relayer-node-service:latest"
   port: "3000"
-  replicaCount: 1 
+  replicaCount: 1
   resource:
     requests:
       memory: "6000Mi"
-      cpu: "4000m"
+      cpu: "2000m"
     limits:
       memory: "6000Mi"
-      cpu: "4000m"
+      # cpu: "4000m" # don't need to set limit Ref: https://home.robusta.dev/blog/stop-using-cpu-limits
 
 secret_encrypted:
   projectID: biconomy-prod
@@ -33,12 +33,17 @@ secret_plain:
 ingress:
   host: sdk-relayer.prod.biconomy.io
 
-# datadog configs
+# deploy to dedicated k8s node with taint
 affinity_tolerations:
   enable: true 
   key: "app"
-  values: "monitoring"
+  values: "relayer-server"
 
+# make sure pods are deployed in different nodes
+affinity: 
+  antiAffinity:
+    topologyKey: "kubernetes.io/hostname"
+    
 # wait for 120 * 10s to fail
 startupProbe:
   failureThreshold: 120

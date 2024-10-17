@@ -1,7 +1,9 @@
 import {
   EntryPointContractType,
+  EntryPointV07ContractType,
   StateOverrideSetType,
   UserOperationType,
+  UserOperationStruct,
 } from "../../types";
 
 // data response type that external simulation serivcereturns
@@ -35,9 +37,22 @@ export type BundlerSimulationDataType = {
   chainId: number;
 };
 
+export type BundlerSimulationDataTypeV07 = {
+  userOp: UserOperationStruct;
+  entryPointContract: EntryPointV07ContractType;
+  chainId: number;
+};
+
 export type EstimateUserOperationGasDataType = {
   userOp: UserOperationType;
   entryPointContract: EntryPointContractType;
+  chainId: number;
+  stateOverrideSet?: StateOverrideSetType;
+};
+
+export type EstimateUserOperationGasDataTypeV07 = {
+  userOp: UserOperationStruct;
+  entryPointContract: EntryPointV07ContractType;
   chainId: number;
   stateOverrideSet?: StateOverrideSetType;
 };
@@ -64,6 +79,19 @@ export type EstimateUserOperationGasReturnType = {
     callGasLimit: bigint;
     validAfter: number;
     validUntil: number;
+    userOpHash?: string;
+  };
+};
+
+export type EstimateUserOperationGasReturnTypeV07 = {
+  code: number;
+  message: string;
+  data: {
+    preVerificationGas: bigint;
+    verificationGasLimit: bigint;
+    callGasLimit: bigint;
+    paymasterVerificationGasLimit: bigint;
+    paymasterPostOpGasLimit: bigint;
     userOpHash?: string;
   };
 };
@@ -97,8 +125,20 @@ export type SimulationData = {
   chainId: number;
 };
 
+export type SimulationDataV07 = {
+  userOp: UserOperationStruct;
+  entryPointContract: EntryPointV07ContractType;
+  chainId: number;
+};
+
 export type ValidationData = {
   userOp: UserOperationType;
+  networkMaxPriorityFeePerGas: bigint;
+  networkMaxFeePerGas: bigint;
+};
+
+export type ValidationDataV07 = {
+  userOp: UserOperationStruct;
   networkMaxPriorityFeePerGas: bigint;
   networkMaxFeePerGas: bigint;
 };

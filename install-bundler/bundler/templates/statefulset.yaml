@@ -129,9 +129,10 @@ spec:
 
         startupProbe:
           httpGet:
-            path: /health
+            path: /admin/startup
             port: {{ .Values.port }}
-          failureThreshold: 40
+          failureThreshold: 120
+          successThreshold: 1
           periodSeconds: 10
 
         livenessProbe:
