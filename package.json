@@ -56,7 +56,7 @@
     "rest-api-errors": "^1.2.5",
     "serialize-error": "8.1.0",
     "typescript": "^5.3.3",
-    "viem": "^2.7.8"
+    "viem": "^2.21.28"
   },
   "devDependencies": {
     "@types/amqplib": "^0.8.2",
