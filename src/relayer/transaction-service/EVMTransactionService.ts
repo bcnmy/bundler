@@ -1,7 +1,9 @@
 /* eslint-disable import/no-import-module-exports */
 /* eslint-disable no-else-return */
 import { Mutex } from "async-mutex";
-import { toHex } from "viem";
+import { Hex, TransactionReceipt, decodeFunctionData, toHex } from "viem";
+import { estimateGas } from "viem/linea";
+import { ENTRY_POINT_ABI } from "entry-point-gas-estimations/dist/gas-estimator/entry-point-v6";
 import { ICacheService } from "../../common/cache";
 import { IGasPriceService } from "../../common/gas-price";
 import { logger } from "../../common/logger";
@@ -42,6 +44,8 @@ import {
   TransactionDataType,
 } from "./types";
 import { IUserOperationStateDAO } from "../../common/db";
+import { GasPriceType } from "../../common/gas-price/types";
+import { BLOCKCHAINS } from "../../common/constants";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -125,6 +129,8 @@ export class EVMTransactionService
     );
 
     const maxRetryCount = 5;
+
+    // TODO: Here is where we can add the logic to cancel the transaction automatically sometimes
 
     if (retryTransactionCount > maxRetryCount) {
       try {
@@ -487,6 +493,11 @@ export class EVMTransactionService
     log.info(
       `Nonce for relayerAddress ${relayerAddress} is ${nonce} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
     );
+
+    log.info(
+      `Nonce for relayerAddress ${relayerAddress} is ${nonce} for transactionId: ${transactionId}`,
+      this.chainId,
+    );
     const response = {
       from,
       to,
@@ -496,6 +507,17 @@ export class EVMTransactionService
       chainId: this.chainId,
       nonce,
     };
+
+    const isLinea = [
+      BLOCKCHAINS.LINEA_MAINNET,
+      BLOCKCHAINS.LINEA_TESTNET,
+    ].includes(this.chainId);
+
+    // Create a 'special' transaction for linea, see method docstring
+    if (isLinea) {
+      return this.createLineaTransaction(from, data, to, response);
+    }
+
     const gasPrice = await this.gasPriceService.getGasPrice(speed);
     if (typeof gasPrice !== "bigint") {
       log.info(
@@ -503,6 +525,7 @@ export class EVMTransactionService
           gasPrice,
         )} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
       );
+
       const { maxPriorityFeePerGas, maxFeePerGas } = gasPrice;
       return {
         ...response,
@@ -515,6 +538,63 @@ export class EVMTransactionService
       `Gas price being used to send transaction by relayer: ${relayerAddress} is: ${gasPrice} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
     );
     return { ...response, type: "legacy", gasPrice: BigInt(gasPrice) };
+  }
+
+  // Linea has a custom linea_estimateGas RPC endpoint that we need to call for every transaction
+  // and we can't rely on our cached values and standard EVM logic. See: https://docs.linea.build/developers/reference/api/linea-estimategas
+  private async createLineaTransaction(
+    from: string,
+    data: `0x${string}`,
+    to: string,
+    response: {
+      from: string;
+      to: `0x${string}`;
+      value: bigint;
+      gasLimit: `0x${string}`;
+      data: `0x${string}`;
+      chainId: number;
+      nonce: number;
+    },
+  ) {
+    // Note that this estimateGas is imported from viem/linea, it's not standard
+    const estimateGasResponse = await estimateGas(
+      this.networkService.provider,
+      {
+        account: from as Hex,
+        data: data as Hex,
+        to: to as Hex,
+      },
+    );
+
+    // fixed overhead to cover edge cases, EP uses only 5000 but I added 10x for Linea based on my tests
+    let gasLimitOverhead = 50000n;
+
+    // Now we need the verificationGasLimit and callGasLimit from the user op.
+    const decodedData = decodeFunctionData({ abi: ENTRY_POINT_ABI, data });
+    const firstArg = decodedData.args[0];
+
+    if (Array.isArray(firstArg) && firstArg.length > 0) {
+      const userOp = firstArg[0];
+
+      // This is how the EP contract checks if there's enough gas:
+      // gasleft() < userOp.callGasLimit + userOp.verificationGasLimit + 5000
+      gasLimitOverhead +=
+        BigInt(userOp.verificationGasLimit) + BigInt(userOp.callGasLimit);
+    }
+
+    const newGasLimit = estimateGasResponse.gasLimit + gasLimitOverhead;
+    response.gasLimit = `0x${newGasLimit.toString(16)}`;
+
+    return {
+      ...response,
+      type: "eip1559",
+      maxFeePerGas:
+        BigInt(estimateGasResponse.baseFeePerGas) +
+        BigInt(estimateGasResponse.priorityFeePerGas),
+      maxPriorityFeePerGas: BigInt(
+        (estimateGasResponse.priorityFeePerGas * 3n) / 2n,
+      ),
+    };
   }
 
   async executeTransaction(
@@ -726,6 +806,91 @@ export class EVMTransactionService
 
     const response = await retryExecuteTransaction(executeTransactionParams);
     return response;
+  }
+
+  /**
+   * cancelTransaction cancels the pending transaction for the given account & nonce
+   * @param account IEVMAccount
+   * @param nonce number
+   * @returns Receipt or error
+   */
+  async cancelTransaction(
+    account: IEVMAccount,
+    nonce: number,
+  ): Promise<TransactionReceipt> {
+    const relayerAddress = account.getPublicKey();
+    log.info(
+      `Cancel transaction request received for relayerAddress: ${relayerAddress} for nonce=${nonce} on chainId: ${this.chainId}`,
+    );
+
+    const addressMutex = this.getMutex(account.getPublicKey());
+    log.info(
+      `Taking lock on address: ${account.getPublicKey()} to cancel transaction for relayerAddress: ${relayerAddress} for nonce: ${nonce} on chainId: ${
+        this.chainId
+      }`,
+    );
+    const release = await addressMutex.acquire();
+
+    try {
+      const gasPrice = await this.gasPriceService.getGasPrice(
+        GasPriceType.FAST,
+      );
+      let gasParams:
+        | { type: "legacy"; gasPrice: bigint }
+        | {
+            type: "eip1559";
+            maxFeePerGas: bigint;
+            maxPriorityFeePerGas: bigint;
+          };
+      if (typeof gasPrice !== "bigint") {
+        log.info(
+          `Gas price being used to cancel transaction by relayer: ${relayerAddress} for nonce: ${nonce} is: ${customJSONStringify(
+            gasPrice,
+          )} on chainId: ${this.chainId}`,
+        );
+        const { maxPriorityFeePerGas, maxFeePerGas } = gasPrice;
+        gasParams = {
+          type: "eip1559",
+          maxFeePerGas: BigInt(maxFeePerGas),
+          maxPriorityFeePerGas: BigInt(maxPriorityFeePerGas),
+        };
+      } else {
+        gasParams = { type: "legacy", gasPrice: BigInt(gasPrice) };
+      }
+
+      const rawCancelTransaction: EVMRawTransactionType = {
+        from: relayerAddress,
+        to: relayerAddress as `0x${string}`,
+        value: BigInt(0),
+        data: "0x",
+        nonce,
+        gasLimit: toHex(21000),
+        chainId: this.chainId,
+        ...gasParams,
+      };
+
+      const cancelTransactionResponse =
+        await this.networkService.sendTransaction(
+          rawCancelTransaction,
+          account,
+        );
+
+      log.info(
+        `Cancel transaction txHash: ${cancelTransactionResponse} for relayerAddress=${relayerAddress} and nonce: ${nonce} on chainId: ${this.chainId}`,
+      );
+
+      const receipt = await this.networkService.waitForTransaction(
+        cancelTransactionResponse as string,
+        "ADMIN_CANCEL",
+      );
+
+      release();
+
+      return receipt;
+    } catch (err: any) {
+      release();
+      throw err;
+    }
   }
 
   private async handleNonceTooLow(rawTransaction: EVMRawTransactionType) {

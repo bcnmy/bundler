@@ -1,6 +1,5 @@
 /* eslint-disable import/no-import-module-exports */
 import nodeconfig from "config";
-import { parseEther } from "viem/utils";
 import { IEVMAccount } from "../../relayer/account";
 import { IRelayerManager } from "../../relayer/relayer-manager";
 import { ICacheService } from "../cache";
@@ -12,7 +11,10 @@ import { IStatusService } from "./interface/IStatusService";
 import { logger } from "../logger";
 import { StatusServiceParamsType } from "./types";
 import { GasPriceService } from "../gas-price";
-import { BundlerSimulationService } from "../simulation";
+import {
+  BundlerSimulationService,
+  BundlerSimulationServiceV07,
+} from "../simulation";
 import { formatHrtimeSeconds } from "../utils/formatting";
 
 const filenameLogger = logger.child({
@@ -66,6 +68,10 @@ export class StatusService implements IStatusService {
     [chainId: number]: BundlerSimulationService;
   };
 
+  bundlerSimulationServiceMapV07: {
+    [chainId: number]: BundlerSimulationServiceV07;
+  };
+
   constructor(params: StatusServiceParamsType) {
     const {
       cacheService,
@@ -74,6 +80,7 @@ export class StatusService implements IStatusService {
       dbInstance,
       gasPriceServiceMap,
       bundlerSimulationServiceMap,
+      bundlerSimulationServiceMapV07,
     } = params;
     this.cacheService = cacheService;
     this.networkServiceMap = networkServiceMap;
@@ -81,6 +88,7 @@ export class StatusService implements IStatusService {
     this.dbInstance = dbInstance;
     this.gasPriceServiceMap = gasPriceServiceMap;
     this.bundlerSimulationServiceMap = bundlerSimulationServiceMap;
+    this.bundlerSimulationServiceMapV07 = bundlerSimulationServiceMapV07;
   }
 
   async checkAllChains(): Promise<ChainStatus[]> {
@@ -267,17 +275,11 @@ export class StatusService implements IStatusService {
           relayerManager.relayerQueue.get(address) ||
           relayerManager.transactionProcessingRelayerMap[address];
 
-        // this value is in ETH and we need to convert it to wei.
-        // This is confusing because the fundingBalanceThreshold is already parsed to wei
-        const fundingRelayerAmount = parseEther(
-          relayerManager.fundingRelayerAmount.toString(),
-        );
-
-        if (
-          relayer.balance < relayerManager.fundingBalanceThreshold &&
-          masterAccountBalance < fundingRelayerAmount
-        ) {
-          throw new Error(`Relayers for chainId: ${chainId} have low balance`);
+        const epsilonWei = 10; // a tiny amount greater than zero
+        if (relayer.balance < epsilonWei) {
+          throw new Error(
+            `Relayer with address: ${relayer.address} for chainId: ${chainId} is not funded`,
+          );
         }
       }
     });
