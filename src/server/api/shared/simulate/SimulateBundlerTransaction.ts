@@ -9,7 +9,6 @@ import {
 } from "../../../../common/service-manager";
 import { parseError } from "../../../../common/utils";
 import { logger } from "../../../../common/logger";
-import { config } from "../../../../config";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -24,16 +23,6 @@ export const validateBundlerTransaction = async (req: Request) => {
     const simulationTypeData = req.body.params[2];
     log.info(`chainId from request params: ${chainId}`);
     log.info(`dappAPIKey from request params: ${dappAPIKey}`);
-
-    if (dappAPIKey === "nJPK7B3ru.dd7f7861-190d-41bd-af80-6877f74b8f44") {
-      if (!config.testnetNetworks.includes(parseInt(chainId, 10))) {
-        return {
-          code: -32400,
-          message:
-            "Request to mainnet not allowed. Please reach out and request a mainnet Bundler URL",
-        };
-      }
-    }
 
     const entryPointContracts = entryPointMap[parseInt(chainId, 10)];
 
@@ -141,16 +130,6 @@ export const validateBundlerV3Transaction = async (req: Request) => {
     const simulationTypeData = req.body.params[2];
     log.info(`chainId from request params: ${chainId}`);
     log.info(`apiKey from request params: ${apiKey}`);
-
-    if (apiKey === "nJPK7B3ru.dd7f7861-190d-41bd-af80-6877f74b8f44") {
-      if (!config.testnetNetworks.includes(parseInt(chainId, 10))) {
-        return {
-          code: -32400,
-          message:
-            "Request to mainnet not allowed. Please reach out and request a mainnet Bundler URL",
-        };
-      }
-    }
 
     const entryPointContracts = entryPointMapV07[parseInt(chainId, 10)];
 
