@@ -1,4 +1,4 @@
-/* eslint-disable max-classes-per-file */
+ 
 
 import { BUNDLER_ERROR_CODES } from "../../shared/middleware";
 import { RPCError } from "../shared/errors";

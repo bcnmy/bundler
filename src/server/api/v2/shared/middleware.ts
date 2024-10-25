@@ -1,4 +1,3 @@
-/* eslint-disable import/no-import-module-exports */
 /* eslint-disable no-case-declarations */
 import { NextFunction, Request, Response } from "express";
 import config from "config";
@@ -49,7 +48,7 @@ export const validateChainId =
             ),
           );
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       log.error(`Error in validateChainId: ${parseError(err)}`);
       return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
         jsonrpc: "2.0",
@@ -154,7 +153,7 @@ export const validateBundlerRequest =
           message,
         },
       });
-    } catch (e: any) {
+    } catch (e: unknown) {
       const { id } = req.body;
       log.error(e);
       return res.status(STATUSES.INTERNAL_SERVER_ERROR).send({

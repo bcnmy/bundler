@@ -40,7 +40,7 @@ export interface PackedUserOperation {
 //  * @returns A Hex string that represents the packed integers.
 //  */
 export function packUint(high128: bigint, low128: bigint): Hex {
-  // eslint-disable-next-line no-bitwise
+   
   const packed = (BigInt(high128) << BigInt(128)) + BigInt(low128);
   return pad(toHex(packed), { size: 32 });
 }
@@ -55,9 +55,9 @@ export function packUint(high128: bigint, low128: bigint): Hex {
 //  */
 export function unpackUint(packed: Hex): [high128: bigint, low128: bigint] {
   const packedNumber = BigInt(fromHex(packed, "bigint"));
-  // eslint-disable-next-line no-bitwise
+   
   const high128 = packedNumber >> BigInt(128);
-  // eslint-disable-next-line no-bitwise
+   
   const low128 = packedNumber & ((BigInt(1) << BigInt(128)) - BigInt(1));
   return [high128, low128];
 }

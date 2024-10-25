@@ -1,4 +1,3 @@
-/* eslint-disable import/no-import-module-exports */
 import { Mutex } from "async-mutex";
 import { IRelayerQueue } from "./interface/IRelayerQueue";
 // import { SortEVMRelayerByBalance } from './strategy';

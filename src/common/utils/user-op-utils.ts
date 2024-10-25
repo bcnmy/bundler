@@ -1,6 +1,4 @@
-/* eslint-disable import/no-import-module-exports */
-/* eslint-disable no-continue */
-/* eslint-disable no-await-in-loop */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Log,
   PublicClient,
@@ -218,7 +216,6 @@ export const getUserOperationReceiptForSuccessfulTransaction = async (
   userOpHash: string,
   receipt: TransactionReceipt,
   entryPointContract: EntryPointContractType | EntryPointV07ContractType,
-  // eslint-disable-next-line consistent-return
 ): Promise<{
   actualGasCost: number;
   actualGasUsed: number;

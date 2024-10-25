@@ -1,5 +1,3 @@
-/* eslint-disable import/no-import-module-exports */
-/* eslint-disable no-await-in-loop */
 import { getContract, parseEther } from "viem";
 import { chain } from "lodash";
 import { ENTRY_POINT_ABI } from "entry-point-gas-estimations/dist/gas-estimator/entry-point-v6";
@@ -99,7 +97,6 @@ const retryTransactionQueueMap: {
 } = {};
 const networkServiceMap: Record<number, EVMNetworkService> = {};
 
-// eslint-disable-next-line import/no-mutable-exports
 let statusService: IStatusService;
 
 (async () => {
@@ -305,7 +302,6 @@ let statusService: IStatusService;
     );
     log.info(`Retry transaction service setup for chainId: ${chainId}`);
 
-    // eslint-disable-next-line max-len
     bundlerSimulationServiceMap[chainId] = new BundlerSimulationService(
       networkService,
       gasPriceService,
@@ -407,7 +403,6 @@ let statusService: IStatusService;
     }
   }
 
-  // eslint-disable-next-line no-new
   statusService = new StatusService({
     cacheService,
     networkServiceMap,

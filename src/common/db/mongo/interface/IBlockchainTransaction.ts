@@ -38,6 +38,7 @@ export interface IBlockchainTransaction {
   relayerDestinationContractName: string;
   relayerAddress: string;
   walletAddress: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metaData: any;
   resubmitted: boolean;
   creationTime: number;

@@ -1,4 +1,3 @@
-/* eslint-disable import/no-import-module-exports */
 import { Request } from "express";
 import { BUNDLER_ERROR_CODES, STATUSES } from "../middleware";
 import {
@@ -14,7 +13,6 @@ const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
 });
 
-// eslint-disable-next-line consistent-return
 export const validateBundlerTransaction = async (req: Request) => {
   try {
     const userOp = req.body.params[0];

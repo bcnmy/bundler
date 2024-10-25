@@ -1,4 +1,3 @@
-/* eslint-disable import/no-import-module-exports */
 import { Request, Response } from "express";
 import { BUNDLER_ERROR_CODES, STATUSES } from "../../shared/middleware";
 import { logger } from "../../../../common/logger";
@@ -19,7 +18,7 @@ const getUserOperationStateData = async (
   userOpHash: string,
 ): Promise<{
   error: boolean;
-  result: any;
+  result: unknown;
 }> => {
   log.info(
     `Getting userOp state for userOpHash: ${userOpHash} on chainId: ${chainId}`,

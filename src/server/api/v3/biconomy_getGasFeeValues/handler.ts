@@ -1,4 +1,3 @@
-/* eslint-disable import/no-import-module-exports */
 import { Request, Response } from "express";
 import { toHex } from "viem";
 import { BUNDLER_ERROR_CODES, STATUSES } from "../../shared/middleware";

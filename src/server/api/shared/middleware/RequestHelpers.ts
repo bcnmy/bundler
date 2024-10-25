@@ -1,6 +1,3 @@
-import { curry } from "lodash";
-import { NotFoundError } from "rest-api-errors";
-
 export const STATUSES = {
   SUCCESS: 200,
   CREATED: 201,
@@ -63,46 +60,4 @@ export const BUNDLER_ERROR_CODES = {
 
 export const DB_ERRORS = {
   DUPLICATE_ENTRY: 11000,
-};
-
-export const sendResponse = (
-  res: any,
-  data: {} | null,
-  status = STATUSES.SUCCESS,
-) => {
-  res.status(status).json(data).end();
-};
-
-export const sendOne = curry((res: any, entity: any) => {
-  if (!entity) {
-    throw new NotFoundError();
-  }
-  return sendResponse(res, entity);
-});
-
-export const createResponseBody = (
-  message: string,
-  code: number,
-  data?: string | undefined,
-) => {
-  const response: any = {};
-  response.log = message;
-  response.flag = code;
-  response.message = data || "";
-  return response;
-};
-
-export const sendUnsupportedAPIVersonResponse = (
-  res: any,
-  unsupportedVersion: any,
-  newSupportedVersion: any,
-) => {
-  sendResponse(
-    res,
-    createResponseBody(
-      `Version ${unsupportedVersion} is not supported. Please switch to version ${newSupportedVersion}`,
-      STATUSES.MOVED_PERMANENTLY,
-    ),
-    STATUSES.MOVED_PERMANENTLY,
-  );
 };

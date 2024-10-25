@@ -1,4 +1,4 @@
-/* eslint-disable max-classes-per-file */
+ 
 import { RPCError } from "./errors";
 
 export abstract class RPCResponse {

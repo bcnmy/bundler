@@ -1,5 +1,4 @@
-/* eslint-disable no-await-in-loop */
-/* eslint-disable import/no-import-module-exports */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import mongoose, { Mongoose } from "mongoose";
 import { config } from "../../../config";
 import { logger } from "../../logger";
@@ -69,7 +68,6 @@ export class Mongo implements IDBService {
     }
   }
 
-  // eslint-disable-next-line class-methods-use-this
   async createIndexes(
     collectionObject: any,
     compoundIndexOne: object,

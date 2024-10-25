@@ -24,3 +24,9 @@ Other useful commands:
 - `docker compose up -d`: runs the containers in the background without blocking the current terminal sessions.
 - 💡 `docker compose build server`: run this whenever you add a new package to `package.json` or it won't be reflected in the container.
 - `docker compose build --no-cache <service_name>`: build without cache if you suspect caching problems.
+
+## Troubleshooting
+
+### ESLint is not working in VS Code
+- Make sure your Microsoft ESLint extension is the latest version
+- In your VS Code settings make sure `ESLint: Use Flat Config` is enabled

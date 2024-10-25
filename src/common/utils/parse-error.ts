@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { serializeError } from "serialize-error";
 import { customJSONStringify } from "./custom-json-stringifier";
 
@@ -7,14 +8,14 @@ export const parseError = (error: any): string => {
     try {
       errorMessage =
         serializeError(error)?.message || customJSONStringify(error);
-    } catch (err) {
+    } catch {
       // ignore
       errorMessage = customJSONStringify(error);
     }
   } else {
     try {
       errorMessage = customJSONStringify(error);
-    } catch (err) {
+    } catch {
       // ignore
       errorMessage = error;
     }
@@ -24,7 +25,7 @@ export const parseError = (error: any): string => {
     return errorMessage
       .toString()
       .replace(/\b(https?):\/\/[-\w+&@#/%?=~|!:,.;]*[-\w+&@#/%=~|]/g, "URL");
-  } catch (err2) {
+  } catch {
     // ignore
     errorMessage = error;
   }

@@ -1,4 +1,3 @@
-/* eslint-disable import/no-import-module-exports */
 import { Request, Response } from "express";
 import { toHex } from "viem";
 import { STATUSES } from "../../shared/middleware";
@@ -65,6 +64,7 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
     // Estimate gas for the user operation using the simulator
     const estimatedUserOpGas = await simulator.estimateUserOperationGas({
       userOp,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       entryPointContract: entryPointContract as any,
       chainId: parseInt(chainId, 10),
       stateOverrideSet,

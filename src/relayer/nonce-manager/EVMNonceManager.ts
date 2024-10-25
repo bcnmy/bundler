@@ -1,4 +1,3 @@
-/* eslint-disable import/no-import-module-exports */
 import NodeCache from "node-cache";
 import { ICacheService } from "../../common/cache";
 import { logger } from "../../common/logger";

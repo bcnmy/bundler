@@ -1,4 +1,3 @@
-/* eslint-disable import/no-import-module-exports */
 import Redlock, { Lock } from "redlock";
 import Redis from "ioredis";
 import nodeconfig from "config";
@@ -123,7 +122,7 @@ export class RedisCacheService implements ICacheService {
         log.error(error);
       }
     });
-    this.redisClient.on("error", (err: any) => {
+    this.redisClient.on("error", (err: unknown) => {
       log.error(`Redis redisClient Error ${err}`);
     });
   }

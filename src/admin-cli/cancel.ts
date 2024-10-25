@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { Command } from "commander";
 import { config } from "dotenv";
 import { privateKeyToAccount } from "viem/accounts";
@@ -86,7 +85,7 @@ async function main() {
     const jsonBody = JSON.parse(responseBody);
     console.log("Parsed JSON response:");
     console.log(JSON.stringify(jsonBody, null, 2));
-  } catch (error) {
+  } catch {
     // If parsing fails, it's not JSON, so we've already logged it as text
     console.log("Response is not JSON");
   }

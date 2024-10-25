@@ -1,5 +1,3 @@
-/* eslint-disable prefer-const */
-/* eslint-disable import/no-import-module-exports */
 import { formatUnits, toHex } from "viem";
 import { IEVMAccount } from "../../relayer/account";
 import { ICacheService } from "../cache";

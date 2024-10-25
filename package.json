@@ -2,8 +2,6 @@
   "scripts": {
     "commit": "cz",
     "changelog": "npx generate-changelog",
-    "lint": "eslint . --ext .ts",
-    "format": "eslint 'src' --ext .ts --fix",
     "prepare": "husky install",
     "dev": "nodemon",
     "build": "tsc -p .",

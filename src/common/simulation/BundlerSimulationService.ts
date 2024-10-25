@@ -1,5 +1,4 @@
-/* eslint-disable import/no-extraneous-dependencies */
-/* eslint-disable import/no-import-module-exports */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable prefer-const */
 import {
   decodeErrorResult,
@@ -609,7 +608,6 @@ export class BundlerSimulationService {
     return true;
   }
 
-  // eslint-disable-next-line class-methods-use-this
   removeSpecialCharacters(input: string): string {
     const match = input.match(/AA(\d+)\s(.+)/);
 
@@ -654,7 +652,7 @@ export class BundlerSimulationService {
       if (paymaster === config.zeroAddress) {
         paymaster = undefined;
       }
-      // eslint-disable-next-line
+
       const msg: string =
         simulateHandleOpResult.errorArgs?.reason ??
         simulateHandleOpResult.toString();
@@ -702,7 +700,6 @@ export class BundlerSimulationService {
     };
   }
 
-  // eslint-disable-next-line class-methods-use-this
   getUserOpHash(
     entryPointAddress: `0x${string}`,
     userOp: UserOperationType,

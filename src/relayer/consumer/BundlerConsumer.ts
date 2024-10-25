@@ -1,5 +1,3 @@
-/* eslint-disable import/no-import-module-exports */
-/* eslint-disable @typescript-eslint/return-await */
 import { ConsumeMessage } from "amqplib";
 import { encodeFunctionData } from "viem";
 import { ENTRY_POINT_ABI } from "entry-point-gas-estimations/dist/gas-estimator/entry-point-v6";
@@ -61,10 +59,7 @@ export class BundlerConsumer
     this.cacheService = cacheService;
   }
 
-  onMessageReceived = async (
-    msg?: ConsumeMessage,
-    // eslint-disable-next-line consistent-return
-  ): Promise<void> => {
+  onMessageReceived = async (msg?: ConsumeMessage): Promise<void> => {
     if (msg) {
       const transactionDataReceivedFromQueue = JSON.parse(
         msg.content.toString(),
@@ -78,7 +73,6 @@ export class BundlerConsumer
       );
       this.queue.ack(msg);
 
-      // eslint-disable-next-line consistent-return
       const sendTransactionWithRetry = async (): Promise<void> => {
         // get active relayer
         const activeRelayer = await this.relayerManager.getActiveRelayer();
@@ -207,7 +201,7 @@ export class BundlerConsumer
                 this.chainId,
               ),
             );
-          } catch (error: any) {
+          } catch (error: unknown) {
             log.error(
               `Error in transaction service for transactionId: ${
                 transactionDataReceivedFromQueue.transactionId

@@ -1,4 +1,3 @@
-/* eslint-disable import/no-import-module-exports */
 import { Request, Response } from "express";
 import { logger } from "../../../../common/logger";
 import {
@@ -60,7 +59,6 @@ export const cancelTransaction = async (req: Request, res: Response) => {
       });
     }
 
-    // eslint-disable-next-line @typescript-eslint/dot-notation
     const relayerManager = EVMRelayerManagerMap["RM1"][chainId];
 
     const relayer = relayerManager.getRelayer(relayerAddress);

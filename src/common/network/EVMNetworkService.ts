@@ -1,8 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-async-promise-executor */
-/* eslint-disable import/no-import-module-exports */
-/* eslint-disable @typescript-eslint/return-await */
-/* eslint-disable new-cap */
-// eslint-disable-next-line max-classes-per-file
+
 import axios from "axios";
 import {
   Hex,
@@ -215,7 +213,6 @@ export class EVMNetworkService
     return await this.sendRpcCall(EthMethodType.GET_TRANSACTION_COUNT, params);
   }
 
-  // eslint-disable-next-line class-methods-use-this
   async sendTransaction(
     rawTransactionData: EVMRawTransactionType,
     account: IEVMAccount,
@@ -333,6 +330,7 @@ export class EVMNetworkService
       return await this.provider.getTransaction({
         hash: transactionHash as `0x${string}`,
       });
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       return null;
     }
@@ -349,7 +347,6 @@ export class EVMNetworkService
     return await this.sendRpcCall(AlchemyMethodType.SIMULATE_EXECUTION, params);
   }
 
-  // eslint-disable-next-line class-methods-use-this
   async verifySignature(
     address: string,
     message: string,

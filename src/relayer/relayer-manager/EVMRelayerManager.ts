@@ -1,5 +1,4 @@
-/* eslint-disable import/no-import-module-exports */
-/* eslint-disable no-await-in-loop */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Mutex } from "async-mutex";
 import {
   privateToPublic,

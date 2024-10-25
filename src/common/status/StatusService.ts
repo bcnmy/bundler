@@ -1,4 +1,4 @@
-/* eslint-disable import/no-import-module-exports */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import nodeconfig from "config";
 import { IEVMAccount } from "../../relayer/account";
 import { IRelayerManager } from "../../relayer/relayer-manager";
@@ -251,7 +251,6 @@ export class StatusService implements IStatusService {
   // checkRelayers (tries to) check if the relayers can actually relay transactions
   async checkRelayers(chainId: number): Promise<StatusCheckResult> {
     return statusCheck(async () => {
-      // eslint-disable-next-line @typescript-eslint/dot-notation
       const relayerManager = this.evmRelayerManagerMap["RM1"][chainId];
       if (!relayerManager) {
         throw new Error(
@@ -327,7 +326,6 @@ export class StatusService implements IStatusService {
   async info(): Promise<StatusInfo> {
     const statusInfo: StatusInfo = {};
 
-    // eslint-disable-next-line @typescript-eslint/dot-notation
     const relayerManagers = this.evmRelayerManagerMap["RM1"];
     if (!relayerManagers) {
       throw new Error(`Relayers are temporarily unavailable`);

@@ -1,5 +1,3 @@
-/* eslint-disable import/no-import-module-exports */
-/* eslint-disable no-await-in-loop */
 import { TransactionReceipt, decodeErrorResult, toHex } from "viem";
 import { ICacheService } from "../../common/cache";
 import {
@@ -775,6 +773,7 @@ export class EVMTransactionListener
                   log.error(
                     `Error in calculating front ran transaction fee, defaulting to ${frontRunnedTransactionFee}`,
                     {
+                      err,
                       transactionId,
                       chainId: this.chainId,
                       gasUsed: frontRunnedTransactionReceipt.gasUsed,
@@ -841,10 +840,11 @@ export class EVMTransactionListener
             `V0.7 Getting userOps for transactionId: ${transactionId} on chainId: ${this.chainId}`,
           );
 
-          const userOps = await this.userOperationDaoV07.getUserOpsByTransactionId(
-            this.chainId,
-            transactionId,
-          );
+          const userOps =
+            await this.userOperationDaoV07.getUserOpsByTransactionId(
+              this.chainId,
+              transactionId,
+            );
           if (!userOps.length) {
             log.info(
               `V0.7 No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`,
@@ -1014,6 +1014,7 @@ export class EVMTransactionListener
                   log.error(
                     `Error in calculating front ran transaction fee, defaulting to ${frontRunnedTransactionFee}`,
                     {
+                      err,
                       transactionId,
                       chainId: this.chainId,
                       gasUsed: frontRunnedTransactionReceipt.gasUsed,
@@ -1318,6 +1319,7 @@ export class EVMTransactionListener
       }
       return "Unable to parse transaction failure reason, please check transaction hash on explorer";
     } catch (error) {
+      log.error(error);
       return "Unable to parse transaction failure reason, please check transaction hash on explorer";
     }
   }

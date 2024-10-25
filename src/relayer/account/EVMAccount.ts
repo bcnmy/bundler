@@ -1,5 +1,3 @@
-/* eslint-disable no-param-reassign */
-/* eslint-disable @typescript-eslint/return-await */
 import { PrivateKeyAccount, privateKeyToAccount } from "viem/accounts";
 import { createWalletClient, WalletClient, http } from "viem";
 import { EVMRawTransactionType } from "../../common/types";
@@ -34,6 +32,7 @@ export class EVMAccount implements IEVMAccount {
   }
 
   signTransaction(rawTransaction: EVMRawTransactionType): Promise<string> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return this.account.signTransaction(rawTransaction as any);
   }
 

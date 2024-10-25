@@ -13,7 +13,7 @@ export type ExternalSimulationResponseType = {
   data: {
     refundAmount: number;
     refundAmountInUSD: number;
-    gasLimitFromSimulation: number | BigInt;
+    gasLimitFromSimulation: number | bigint;
   };
 };
 
@@ -64,7 +64,7 @@ export type SimulationResponseType = {
     refundAmount?: number;
     refundAmountInUSD?: number;
     userOpHash?: string;
-    gasLimitFromSimulation: number | BigInt;
+    gasLimitFromSimulation: number | bigint;
   };
   message: string;
   code?: number;

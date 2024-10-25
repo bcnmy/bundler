@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { EVMNetworkService } from "../network";
 import { NetworkBasedGasPriceType } from "../types";
 import { StatusService } from "./StatusService";

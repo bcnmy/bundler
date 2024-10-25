@@ -1,4 +1,3 @@
-/* eslint-disable import/no-import-module-exports */
 import amqp, { Channel, ConsumeMessage, Replies } from "amqplib";
 import { config } from "../../config";
 import { logger } from "../logger";

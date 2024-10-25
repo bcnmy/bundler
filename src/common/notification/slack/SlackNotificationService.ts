@@ -1,4 +1,3 @@
-/* eslint-disable import/no-import-module-exports */
 import { WebClient } from "@slack/web-api";
 import { logger } from "../../logger";
 import { ISlackNotificationService } from "../interface";
