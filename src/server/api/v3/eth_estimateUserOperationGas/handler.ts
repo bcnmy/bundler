@@ -26,10 +26,10 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
   const { chainId, apiKey } = req.params;
 
    // create a child logger so all important tracing info is logged with each call
-   let log = filenameLogger.child({
+   const log = filenameLogger.child({
     chainId,
     requestId: id,
-    apiKey: apiKey,
+    apiKey,
   });
   
   log.info(

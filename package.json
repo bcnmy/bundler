@@ -1,5 +1,7 @@
 {
   "scripts": {
+    "commit": "cz",
+    "changelog": "npx generate-changelog",
     "lint": "eslint . --ext .ts",
     "format": "eslint 'src' --ext .ts --fix",
     "prepare": "husky install",
@@ -73,6 +75,8 @@
     "@typescript-eslint/eslint-plugin": "^5.40.0",
     "@typescript-eslint/parser": "^5.40.0",
     "babel-jest": "^29.1.2",
+    "commitizen": "^4.3.1",
+    "cz-conventional-changelog": "^3.3.0",
     "eslint": "^8.25.0",
     "eslint-config-airbnb-typescript": "^17.0.0",
     "eslint-config-prettier": "^9.1.0",
@@ -83,5 +87,15 @@
     "prettier": "^3.1.1",
     "ts-jest": "^29.0.3",
     "ts-node": "^10.9.1"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "husky": {
+    "hooks": {
+      "prepare-commit-msg": "exec < /dev/tty && npx cz --hook || true"
+    }
   }
 }

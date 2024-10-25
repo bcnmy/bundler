@@ -21,6 +21,7 @@ async function saveUserOperation(
   userOperationData: InitialUserOperationDataType,
 ): Promise<void> {
   // console.log(`Nonce: ${otherNumber}`);
+  // eslint-disable-next-line no-console
   console.log(JSON.stringify(userOperationData, null, 2));
   userOperationDaoSaveMock(chainIdd, userOperationData);
 }
