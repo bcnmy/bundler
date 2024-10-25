@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import crypto from "crypto-js";
 import fs, { existsSync } from "fs";
 
