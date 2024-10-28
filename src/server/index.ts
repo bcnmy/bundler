@@ -1,12 +1,11 @@
-/* eslint-disable import/no-import-module-exports */
-/* eslint-disable import/first */
-require("dotenv").config({ path: `${__dirname}/../../.env` });
+import dotenv from "dotenv";
+
+dotenv.config({ path: `${__dirname}/../../.env` });
 
 import tracer from "dd-trace";
 import { logger } from "../common/logger";
 import { configInstance } from "../config";
 
-// eslint-disable-next-line func-names
 tracer.init({ logInjection: false });
 
 const log = logger.child({

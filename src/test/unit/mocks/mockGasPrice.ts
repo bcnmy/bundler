@@ -1,6 +1,6 @@
 // /* eslint-disable max-len */
 // /* eslint-disable class-methods-use-this */
-// /* eslint-disable @typescript-eslint/no-unused-vars */
+//
 // import { extend } from 'lodash';
 // import { ICacheService } from '../../../common/cache';
 // import { IGasPriceService } from '../../../common/gas-price';

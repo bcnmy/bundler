@@ -1,4 +1,4 @@
-/* eslint-disable max-classes-per-file */
+ 
 import { parseError } from "../../../../common/utils";
 import { BUNDLER_ERROR_CODES } from "../../shared/middleware";
 

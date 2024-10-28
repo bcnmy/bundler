@@ -1,4 +1,3 @@
-/* eslint-disable import/no-import-module-exports */
 import { Request, Response } from "express";
 import { Hex } from "viem";
 import { STATUSES } from "../../shared/middleware";

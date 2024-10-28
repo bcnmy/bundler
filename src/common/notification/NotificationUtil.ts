@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { IEVMAccount } from "../../relayer/account";
 import { TransactionType } from "../types";
 import { parseError } from "../utils";

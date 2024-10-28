@@ -1,4 +1,3 @@
-/* eslint-disable import/no-import-module-exports */
 import { ConsumeMessage } from "amqplib";
 import { logger } from "../../common/logger";
 import { INetworkService } from "../../common/network";

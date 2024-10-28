@@ -1,4 +1,3 @@
-/* eslint-disable import/no-import-module-exports */
 import { CronJob } from "cron";
 import { GasPriceService } from "../GasPrice";
 import { logger } from "../../logger";

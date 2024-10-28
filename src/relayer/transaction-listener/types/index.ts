@@ -41,6 +41,7 @@ export type NotifyTransactionListenerParamsType = {
   previousTransactionHash?: string;
   rawTransaction: EVMRawTransactionType;
   walletAddress: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metaData?: any;
   relayerManagerName: string;
   error?: string;

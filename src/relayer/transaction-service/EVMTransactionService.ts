@@ -1,5 +1,3 @@
-/* eslint-disable import/no-import-module-exports */
-/* eslint-disable no-else-return */
 import { Mutex } from "async-mutex";
 import { Hex, TransactionReceipt, decodeFunctionData, toHex } from "viem";
 import { estimateGas } from "viem/linea";
@@ -278,6 +276,7 @@ export class EVMTransactionService
           transactionId,
         };
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       log.info(
         `Releasing lock on address: ${account.getPublicKey()} for transactionId: ${transactionId} on chainId: ${
@@ -654,7 +653,7 @@ export class EVMTransactionService
           ...rawTransaction,
           hash: sendTransactionResponse,
         };
-      } catch (error: any) {
+      } catch (error: unknown) {
         await this.cacheService.increment(
           getFailedTransactionRetryCountKey(transactionId, this.chainId),
           1,
@@ -887,7 +886,7 @@ export class EVMTransactionService
       release();
 
       return receipt;
-    } catch (err: any) {
+    } catch (err: unknown) {
       release();
       throw err;
     }
@@ -917,7 +916,6 @@ export class EVMTransactionService
     return bumpedUpGasPrice;
   }
 
-  // eslint-disable-next-line class-methods-use-this
   private async handleGasTooLow(rawTransaction: EVMRawTransactionType) {
     return toHex(Number(rawTransaction.gasLimit) * 2);
   }

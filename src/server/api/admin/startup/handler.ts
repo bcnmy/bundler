@@ -1,4 +1,3 @@
-/* eslint-disable import/no-import-module-exports */
 import { Request, Response } from "express";
 import { logger } from "../../../../common/logger";
 import { STATUSES } from "../../shared/middleware";
@@ -17,6 +16,7 @@ export const startupProbe = async (req: Request, res: Response) => {
     if (!statusService) {
       return res.status(503).json({ ok: false, errors: [] });
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     log.error(`Error in startupProbe handler ${customJSONStringify(error)}`);
     res

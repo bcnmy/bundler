@@ -6,7 +6,7 @@ jest.mock("../../../../common/service-manager", () => ({
 }));
 
 // This has to happen after jest.mock or the import won't be mocked
-// eslint-disable-next-line import/first
+
 import { startupProbe } from "./handler";
 
 describe("/startup", () => {

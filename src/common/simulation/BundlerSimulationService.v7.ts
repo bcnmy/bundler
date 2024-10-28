@@ -1,11 +1,6 @@
-/* eslint-disable import/no-extraneous-dependencies */
-/* eslint-disable import/no-import-module-exports */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable prefer-const */
-import {
-  decodeErrorResult,
-  encodeFunctionData,
-  toHex,
-} from "viem";
+import { decodeErrorResult, encodeFunctionData, toHex } from "viem";
 import {
   createGasEstimator,
   createOptimismGasEstimator,
@@ -21,10 +16,7 @@ import {
 import { logger } from "../logger";
 import { INetworkService } from "../network";
 import { EVMRawTransactionType, UserOperationType } from "../types";
-import {
-  customJSONStringify,
-  parseError,
-} from "../utils";
+import { customJSONStringify, parseError } from "../utils";
 import RpcError from "../utils/rpc-error";
 import {
   EstimateUserOperationGasDataTypeV07,
@@ -34,7 +26,10 @@ import {
 } from "./types";
 import { IGasPriceService } from "../gas-price";
 import { ENTRY_POINT_V07_ABI } from "../entrypoint-v7/abiv7";
-import { getUserOpHash, packUserOperation } from "../entrypoint-v7/PackedUserOperation";
+import {
+  getUserOpHash,
+  packUserOperation,
+} from "../entrypoint-v7/PackedUserOperation";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -56,13 +51,13 @@ export class BundlerSimulationServiceV07 {
     this.gasPriceService = gasPriceService;
     this.gasEstimator = createGasEstimator({
       rpcUrl: this.networkService.rpcUrl,
-      chainId: this.networkService.chainId
+      chainId: this.networkService.chainId,
     });
 
     if (config.optimismNetworks.includes(this.networkService.chainId)) {
       this.gasEstimator = createOptimismGasEstimator({
         rpcUrl: this.networkService.rpcUrl,
-        chainId: this.networkService.chainId
+        chainId: this.networkService.chainId,
       });
     }
   }
@@ -154,7 +149,6 @@ export class BundlerSimulationServiceV07 {
         supportsEthCallByteCodeOverride = false;
       }
 
-
       let response: EstimateUserOperationGas;
       const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
 
@@ -184,20 +178,21 @@ export class BundlerSimulationServiceV07 {
         callGasLimit,
         preVerificationGas,
         paymasterPostOpGasLimit,
-        paymasterVerificationGasLimit
+        paymasterVerificationGasLimit,
       } = response;
-
 
       callGasLimit += BigInt(Math.ceil(Number(callGasLimit) * 0.1));
       verificationGasLimit += BigInt(
         Math.ceil(Number(verificationGasLimit) * 0.1),
       );
-      paymasterPostOpGasLimit += BigInt(Math.ceil(Number(paymasterPostOpGasLimit) * 0.1));
-      paymasterVerificationGasLimit += BigInt(Math.ceil(Number(paymasterVerificationGasLimit) * 0.1));
-      
+      paymasterPostOpGasLimit += BigInt(
+        Math.ceil(Number(paymasterPostOpGasLimit) * 0.1),
+      );
+      paymasterVerificationGasLimit += BigInt(
+        Math.ceil(Number(paymasterVerificationGasLimit) * 0.1),
+      );
 
-      const verificationGasLimitMultiplier =
-        userOp.paymaster === "0x" ? 1 : 3;
+      const verificationGasLimitMultiplier = userOp.paymaster === "0x" ? 1 : 3;
       const totalGas =
         callGasLimit +
         BigInt(verificationGasLimitMultiplier) * verificationGasLimit +
@@ -222,7 +217,7 @@ export class BundlerSimulationServiceV07 {
         verificationGasLimit,
         callGasLimit,
         paymasterPostOpGasLimit,
-        paymasterVerificationGasLimit
+        paymasterVerificationGasLimit,
       };
       log.info(
         `estimateUserOperationGas result: ${customJSONStringify(data)}`,
@@ -248,7 +243,7 @@ export class BundlerSimulationServiceV07 {
           verificationGasLimit: BigInt(0),
           callGasLimit: BigInt(0),
           paymasterPostOpGasLimit: BigInt(0),
-          paymasterVerificationGasLimit: BigInt(0)
+          paymasterVerificationGasLimit: BigInt(0),
         },
       };
     }
@@ -530,7 +525,6 @@ export class BundlerSimulationServiceV07 {
     return true;
   }
 
-  // eslint-disable-next-line class-methods-use-this
   removeSpecialCharacters(input: string): string {
     const match = input.match(/AA(\d+)\s(.+)/);
 
@@ -575,7 +569,7 @@ export class BundlerSimulationServiceV07 {
       if (paymaster === config.zeroAddress) {
         paymaster = undefined;
       }
-      // eslint-disable-next-line
+
       const msg: string =
         simulateHandleOpResult.errorArgs?.reason ??
         simulateHandleOpResult.toString();

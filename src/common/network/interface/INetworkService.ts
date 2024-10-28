@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { PublicClient, Transaction, TransactionReceipt } from "viem";
 import {
   Type0TransactionGasPriceType,

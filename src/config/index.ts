@@ -1,4 +1,3 @@
-/* eslint-disable import/no-import-module-exports */
 import crypto from "crypto-js";
 import fs, { existsSync } from "fs";
 import _, { isNumber } from "lodash";
@@ -45,7 +44,6 @@ export function mergeWithDecryptedConfig(
 export class Config implements IConfig {
   config: ConfigType;
 
-  // eslint-disable-next-line class-methods-use-this
   decryptConfig(): string {
     const encryptedEnvPath =
       process.env.BUNDLER_CONFIG_PATH || "./config.json.enc";

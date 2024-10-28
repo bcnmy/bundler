@@ -1,4 +1,3 @@
-/* eslint-disable import/no-import-module-exports */
 import { Request, Response } from "express";
 import { logger } from "../../../../common/logger";
 import { customJSONStringify } from "../../../../common/utils";
@@ -41,6 +40,7 @@ export const health = async (req: Request, res: Response) => {
     return res
       .status(chainStatuses.every((cs) => cs.healthy) ? 200 : 500)
       .json(chainStatuses);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
     log.error(`Error in /health/:chainId handler: ${customJSONStringify(err)}`);
     return res.status(500).json({

@@ -1,4 +1,3 @@
-/* eslint-disable import/no-import-module-exports */
 import { Request, Response } from "express";
 import { logger } from "../../../../common/logger";
 import { statusService } from "../../../../common/service-manager";
@@ -23,7 +22,7 @@ export const info = async (req: Request, res: Response) => {
     const statusInfo = await statusService.info();
 
     return res.status(200).json(statusInfo);
-  } catch (err: any) {
+  } catch (err: unknown) {
     log.error(`Error in /info handler: ${customJSONStringify(err)}`);
     return res.status(500).send(customJSONStringify(err));
   }

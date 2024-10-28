@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 import mongoose from "mongoose";
 import { config } from "../../../../../config";
 import { IUserOperation, IUserOperationV07 } from "../../interface";

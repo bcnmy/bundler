@@ -1,4 +1,4 @@
-/* eslint-disable import/no-import-module-exports */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-case-declarations */
 import { NextFunction, Request, Response } from "express";
 import {

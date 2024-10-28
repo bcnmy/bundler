@@ -1,4 +1,3 @@
-/* eslint-disable import/no-import-module-exports */
 import { Request, Response } from "express";
 import { STATUSES } from "../../shared/middleware";
 import { logger } from "../../../../common/logger";
@@ -25,13 +24,13 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
   const { id } = req.body;
   const { chainId, apiKey } = req.params;
 
-   // create a child logger so all important tracing info is logged with each call
-   const log = filenameLogger.child({
+  // create a child logger so all important tracing info is logged with each call
+  const log = filenameLogger.child({
     chainId,
     requestId: id,
     apiKey,
   });
-  
+
   log.info(
     `EP v7 estimateUserOperationGas called, entryPointAddress: ${req.body.params[1]}`,
   );
@@ -67,6 +66,7 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
     // Estimate gas for the user operation using the simulator
     const estimatedUserOpGas = await simulator.estimateUserOperationGas({
       userOp,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       entryPointContract: entryPointContract as any,
       chainId: parseInt(chainId, 10),
       stateOverrideSet,
@@ -84,7 +84,7 @@ export const estimateUserOperationGas = async (req: Request, res: Response) => {
       verificationGasLimit,
       preVerificationGas,
       paymasterPostOpGasLimit,
-      paymasterVerificationGasLimit
+      paymasterVerificationGasLimit,
     } = data;
     const gasPriceService = gasPriceServiceMap[parseInt(chainId, 10)];
     if (!gasPriceService) {

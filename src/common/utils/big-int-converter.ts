@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export const convertBigIntToString = (args: any): any => {
   if (typeof args === "bigint") {
     return args.toString();
