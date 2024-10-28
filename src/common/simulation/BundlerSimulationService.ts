@@ -582,24 +582,27 @@ export class BundlerSimulationService {
       );
     }
 
-    const { preVerificationGas: networkPreVerificationGas } =
-      await this.gasEstimator.calculatePreVerificationGas({
-        userOperation: userOp,
-        baseFeePerGas,
-      });
-    log.info(`networkPreVerificationGas: ${networkPreVerificationGas}`);
+    if (!config.disableFeeValidation.includes(this.networkService.chainId)) {
+      const { preVerificationGas: networkPreVerificationGas } =
+        await this.gasEstimator.calculatePreVerificationGas({
+          userOperation: userOp,
+          baseFeePerGas,
+        });
+      log.info(`networkPreVerificationGas: ${networkPreVerificationGas}`);
 
-    const minimumAcceptablePreVerificationGas =
-      Number(networkPreVerificationGas) * preVerificationGasThresholdPercentage;
+      const minimumAcceptablePreVerificationGas =
+        Number(networkPreVerificationGas) *
+        preVerificationGasThresholdPercentage;
 
-    if (minimumAcceptablePreVerificationGas > Number(preVerificationGas)) {
-      log.info(
-        `preVerificationGas in userOp: ${preVerificationGas} is lower than minimumAcceptablePreVerificationGas: ${minimumAcceptablePreVerificationGas}`,
-      );
-      throw new RpcError(
-        `preVerificationGas in userOp: ${preVerificationGas} is lower than minimumAcceptablePreVerificationGas: ${minimumAcceptablePreVerificationGas}`,
-        BUNDLER_ERROR_CODES.PRE_VERIFICATION_GAS_TOO_LOW,
-      );
+      if (minimumAcceptablePreVerificationGas > Number(preVerificationGas)) {
+        log.info(
+          `preVerificationGas in userOp: ${preVerificationGas} is lower than minimumAcceptablePreVerificationGas: ${minimumAcceptablePreVerificationGas}`,
+        );
+        throw new RpcError(
+          `preVerificationGas in userOp: ${preVerificationGas} is lower than minimumAcceptablePreVerificationGas: ${minimumAcceptablePreVerificationGas}`,
+          BUNDLER_ERROR_CODES.PRE_VERIFICATION_GAS_TOO_LOW,
+        );
+      }
     }
 
     log.info(
