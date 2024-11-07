@@ -15,6 +15,7 @@ refundAddresses.ts
 !static-config.json
 !config-example.json
 !centrifugo_config.json
+!openrpc.json
 
 # If index.ts is not a .json file, you don't need to explicitly exclude it.
 # However, if it's actually index.json, include it like so:

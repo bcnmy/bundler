@@ -1,0 +1,867 @@
+{
+  "openrpc": "1.2.4",
+  "info": {
+    "title": "Biconomy Bundler",
+    "version": "V3 (Entrypoint v0.7.0)",
+    "description": "A scalable, hosted [ERC-4337](https://eips.ethereum.org/EIPS/eip-4337) compatible Bundler make by [Biconomy](https://biconomy.io)."
+  },
+  "servers": [
+    {
+      "name": "Production",
+      "url": "https://bundler.biconomy.io/api/v3/<chainId>/<apiKey>"
+    }
+  ],
+  "methods": [
+    {
+      "name": "eth_chainId",
+      "description": "Returns a chain id, a value used in replay-protected transaction signing as introduced by EIP-155, if supported by the bundler. Error otherwise. See the full list at https://docs.biconomy.io/supportedNetworks",
+      "summary": "Return a chain ID, if supported",
+      "params": [
+        {
+          "name": "id",
+          "description": "Chain ID in decimal",
+          "summary": "chain ID",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "result": {
+        "name": "chainId",
+        "description": "hex format integer of the current chain id",
+        "schema": {
+          "title": "chainId",
+          "type": "string",
+          "pattern": "^0x[a-fA-F\\d]+$"
+        }
+      },
+      "examples": [
+        {
+          "name": "Base Mainnet",
+          "params": [],
+          "result": {
+            "name": "Base Mainnet chain ID in hex",
+            "value": "0x2105"
+          }
+        }
+      ]
+    },
+    {
+      "name": "eth_estimateUserOperationGas",
+      "summary": "Estimate the gas values for a UserOperation",
+      "description": "Given UserOperation with default gas limits and gas prices, return the estimated needed gas limits required to submit the User Operation to the EntryPoint contract.",
+      "params": [
+        {
+          "name": "PartialUserOperation",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/PartialUserOperation"
+          }
+        },
+        {
+          "name": "EntryPointAddress",
+          "required": true,
+          "summary": "EPv0.7.0: 0x0000000071727De22E5E9d8BAf0edAc6f37da032",
+          "schema": {
+            "$ref": "#/components/schemas/Address"
+          }
+        },
+        {
+          "name": "State Override Set",
+          "schema": {
+            "$ref": "#/components/schemas/StateOverrideSet"
+          }
+        }
+      ],
+      "result": {
+        "name": "Entrypoint Gas Estimates",
+        "description": "Estimated gas values to submit a UserOp to the Entrypoint contract",
+        "schema": {
+          "$ref": "#/components/schemas/GasEstimates"
+        }
+      },
+      "examples": [
+        {
+          "name": "Basic Example",
+          "params": [
+            {
+              "name": "Partial User Op",
+              "value": {
+                "sender": "0x0a972b2e3A1B3C2EEf8d49F33051668D35CEC345",
+                "maxFeePerGas": "100000",
+                "maxPriorityFeePerGas": "1000000",
+                "callData": "0xe9ae5c53000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000034d8da6bf26964af9d7eed9e03e53415d37aa960450000000000000000000000000000000000000000000000000000000000000001000000000000000000000000",
+                "factory": "0x00000bb19a3579F4D779215dEf97AFbd0e30DB55",
+                "factoryData": "0x0d51f0b700000000000000000000000029c3e9456c0eca5beb1f78763204bac6c68240770000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                "nonce": "97069576985704150461231402382789097232549411334249332225275362800021683568640",
+                "signature": "0x"
+              }
+            },
+            {
+              "name": "Entrypoint Contract Address",
+              "value": "0x0000000071727De22E5E9d8BAf0edAc6f37da032"
+            }
+          ],
+          "result": {
+            "name": "User Operation",
+            "value": {
+              "callGasLimit": 563623,
+              "verificationGasLimit": 290241,
+              "preVerificationGas": 287109,
+              "paymasterPostOpGasLimit": 290241,
+              "paymasterVerificationGasLimit": 290241,
+              "maxPriorityFeePerGas": 1000000,
+              "maxFeePerGas": 1001592
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "eth_sendUserOperation",
+      "description": "Submit a User Operation object to the User Operation pool of the bundler. The result userOpHash is returned if and only if the request passed simulation and was accepted in the client’s User Operation pool. If the validation, simulation, or User Operation pool inclusion fails, a failure reason is returned",
+      "summary": "Submit a User Operation object to the User Operation pool of the bundler",
+      "params": [
+        {
+          "name": "UserOperation",
+          "description": "A full user-operation struct. All fields MUST be set as hex values. Empty bytes block (e.g. empty callData) MUST be set to 0x",
+          "summary": "A full user-operation struct",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/UserOperation"
+          }
+        }
+      ],
+      "result": {
+        "name": "userOpHash",
+        "description": "The hash of the User Operation",
+        "schema": {
+          "$ref": "#/components/schemas/UserOpHash"
+        }
+      }
+    },
+    {
+      "name": "eth_getUserOperationByHash",
+      "summary": "Return a UserOperation based on a userOpHash",
+      "description": "Return a UserOperation based on a hash (userOpHash) returned by eth_sendUserOperation",
+      "params": [
+        {
+          "name": "userOpHash",
+          "summary": "The hash of the User Operation",
+          "description": "The hash of the User Operation returned by eth_sendUserOperation",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/UserOpHash"
+          }
+        }
+      ],
+      "result": {
+        "name": "UserOperation",
+        "summary": "A full user-operation struct with the additional transaction data",
+        "description": "A full user-operation struct or null if not found. The transaction / blockchain data is added to the UserOperation struct",
+        "schema": {
+          "$ref": "#/components/schemas/ExtendedUserOperation"
+        }
+      },
+      "examples": [
+        {
+          "name": "Basic Example",
+          "params": [
+            {
+              "name": "userOpHash",
+              "value": "0x0aab0b0761674f905f8e37d6422ea4c13a35b56be9c421fa2334100d2d230113"
+            }
+          ],
+          "result": {
+            "name": "UserOperation",
+            "value": {
+              "sender": "0x529B0890B2111b1b0917B4d0dA49b44373437309",
+              "nonce": 3.438483848528158e76,
+              "callData": "0xe9ae5c53000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000034d8da6bf26964af9d7eed9e03e53415d37aa960450000000000000000000000000000000000000000000000000000000000000001000000000000000000000000",
+              "callGasLimit": 563623,
+              "preVerificationGas": 290448,
+              "verificationGasLimit": 290441,
+              "paymaster": "",
+              "maxFeePerGas": 4420112,
+              "maxPriorityFeePerGas": 1000000,
+              "signature": "0x57199b18e8c2457d942cee4c18766e4d0231a1a465645e48ca471c91945293cc1d65e7bc053a90e187f297e2a90e2c51f53b309d55d90fcf9943c431fe159b571c",
+              "entryPoint": "0x0000000071727De22E5E9d8BAf0edAc6f37da032",
+              "transactionHash": "0xbfff838a782effa9f03e3c1d16dec3393183a17429f50651efc968d1328179e9",
+              "blockNumber": 21439698,
+              "blockHash": "0x71d8b8d601cebdc7d0ece0ce92b61a64fbf2b76859efb9cbaa23561ca78121a9"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "eth_getUserOperationReceipt",
+      "description": "Return a UserOperation receipt based on userOpHash returned by eth_sendUserOperation",
+      "summary": "Return a UserOperation receipt based on userOpHash",
+      "params": [
+        {
+          "name": "userOpHash",
+          "summary": "The hash of the User Operation",
+          "description": "The hash of the User Operation returned by eth_sendUserOperation",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/UserOpHash"
+          }
+        }
+      ],
+      "result": {
+        "name": "UserOperation with receipt",
+        "summary": "A full user-operation struct with the additional receipt data",
+        "description": "A full user-operation struct or null if not found. The receipt is added to the UserOperation struct",
+        "schema": {
+          "$ref": "#/components/schemas/UserOperationReceipt"
+        }
+      },
+      "examples": [
+        {
+          "name": "Basic Example",
+          "description": "Return a UserOperation receipt based on userOpHash",
+          "params": [
+            {
+              "name": "userOpHash",
+              "value": "0x0aab0b0761674f905f8e37d6422ea4c13a35b56be9c421fa2334100d2d230113"
+            }
+          ],
+          "result": {
+            "name": "UserOperation Receipt",
+            "value": {
+              "userOpHash": "0x0aab0b0761674f905f8e37d6422ea4c13a35b56be9c421fa2334100d2d230113",
+              "entryPoint": "0x0000000071727De22E5E9d8BAf0edAc6f37da032",
+              "sender": "0x529B0890B2111b1b0917B4d0dA49b44373437309",
+              "nonce": 3.438483848528158e76,
+              "success": "true",
+              "paymaster": "",
+              "actualGasCost": 2772846760400,
+              "actualGasUsed": 627325,
+              "reason": "",
+              "logs": [
+                {
+                  "address": "0x0000000071727de22e5e9d8baf0edac6f37da032",
+                  "topics": [
+                    "0x49628fd1471006c1482da88028e9ce4dbb080b815c9b0344d39e5a8e6ec1419f",
+                    "0x0aab0b0761674f905f8e37d6422ea4c13a35b56be9c421fa2334100d2d230113",
+                    "0x000000000000000000000000529b0890b2111b1b0917b4d0da49b44373437309",
+                    "0x0000000000000000000000000000000000000000000000000000000000000000"
+                  ],
+                  "data": "0x4c05210000000004171351c442b202678c48d8ab5b321e8f00000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000002859a8bd1d0000000000000000000000000000000000000000000000000000000000009927d",
+                  "blockNumber": "0x14724d2",
+                  "transactionHash": "0xbfff838a782effa9f03e3c1d16dec3393183a17429f50651efc968d1328179e9",
+                  "transactionIndex": "0x69",
+                  "blockHash": "0x71d8b8d601cebdc7d0ece0ce92b61a64fbf2b76859efb9cbaa23561ca78121a9",
+                  "logIndex": "0x17f",
+                  "removed": false
+                }
+              ],
+              "receipt": {
+                "blockHash": "0x71d8b8d601cebdc7d0ece0ce92b61a64fbf2b76859efb9cbaa23561ca78121a9",
+                "blockNumber": "0x14724d2",
+                "contractAddress": null,
+                "cumulativeGasUsed": "0x1d47dfe",
+                "effectiveGasPrice": "0x437210",
+                "from": "0x55421cc973a96e86213db967aef2a6028dfb80e9",
+                "gasUsed": "0x503b9",
+                "l1BaseFeeScalar": "0x8dd",
+                "l1BlobBaseFee": "0x1",
+                "l1BlobBaseFeeScalar": "0x101c12",
+                "l1Fee": "0x12a3f03f01",
+                "l1GasPrice": "0x171a6d937",
+                "l1GasUsed": "0x1639",
+                "logs": [
+                  {
+                    "address": "0x529b0890b2111b1b0917b4d0da49b44373437309",
+                    "topics": [
+                      "0xf98c8404c5b1bfef2e6ba9233c6e88845aedfd36eea8b192725d8c199571cf32",
+                      "0x0000000000000000000000000000000000000000000000000000000000000000"
+                    ],
+                    "data": "0x",
+                    "blockNumber": "0x14724d2",
+                    "transactionHash": "0xbfff838a782effa9f03e3c1d16dec3393183a17429f50651efc968d1328179e9",
+                    "transactionIndex": "0x69",
+                    "blockHash": "0x71d8b8d601cebdc7d0ece0ce92b61a64fbf2b76859efb9cbaa23561ca78121a9",
+                    "logIndex": "0x17a",
+                    "removed": false
+                  },
+                  {
+                    "address": "0x00000bb19a3579f4d779215def97afbd0e30db55",
+                    "topics": [
+                      "0x33310a89c32d8cc00057ad6ef6274d2f8fe22389a992cf89983e09fc84f6cfff",
+                      "0x000000000000000000000000529b0890b2111b1b0917b4d0da49b44373437309",
+                      "0x000000000000000000000000a0ca4264fa7a4cbce7f494c7dd86f30fd53f98b7",
+                      "0x0000000000000000000000000000000000000000000000000000000000000000"
+                    ],
+                    "data": "0x",
+                    "blockNumber": "0x14724d2",
+                    "transactionHash": "0xbfff838a782effa9f03e3c1d16dec3393183a17429f50651efc968d1328179e9",
+                    "transactionIndex": "0x69",
+                    "blockHash": "0x71d8b8d601cebdc7d0ece0ce92b61a64fbf2b76859efb9cbaa23561ca78121a9",
+                    "logIndex": "0x17b",
+                    "removed": false
+                  },
+                  {
+                    "address": "0x0000000071727de22e5e9d8baf0edac6f37da032",
+                    "topics": [
+                      "0xd51a9c61267aa6196961883ecf5ff2da6619c37dac0fa92122513fb32c032d2d",
+                      "0x0aab0b0761674f905f8e37d6422ea4c13a35b56be9c421fa2334100d2d230113",
+                      "0x000000000000000000000000529b0890b2111b1b0917b4d0da49b44373437309"
+                    ],
+                    "data": "0x00000000000000000000000000000bb19a3579f4d779215def97afbd0e30db550000000000000000000000000000000000000000000000000000000000000000",
+                    "blockNumber": "0x14724d2",
+                    "transactionHash": "0xbfff838a782effa9f03e3c1d16dec3393183a17429f50651efc968d1328179e9",
+                    "transactionIndex": "0x69",
+                    "blockHash": "0x71d8b8d601cebdc7d0ece0ce92b61a64fbf2b76859efb9cbaa23561ca78121a9",
+                    "logIndex": "0x17c",
+                    "removed": false
+                  },
+                  {
+                    "address": "0x0000000071727de22e5e9d8baf0edac6f37da032",
+                    "topics": [
+                      "0x2da466a7b24304f47e87fa2e1e5a81b9831ce54fec19055ce277ca2f39ba42c4",
+                      "0x000000000000000000000000529b0890b2111b1b0917b4d0da49b44373437309"
+                    ],
+                    "data": "0x00000000000000000000000000000000000000000000000000000499dc38ec00",
+                    "blockNumber": "0x14724d2",
+                    "transactionHash": "0xbfff838a782effa9f03e3c1d16dec3393183a17429f50651efc968d1328179e9",
+                    "transactionIndex": "0x69",
+                    "blockHash": "0x71d8b8d601cebdc7d0ece0ce92b61a64fbf2b76859efb9cbaa23561ca78121a9",
+                    "logIndex": "0x17d",
+                    "removed": false
+                  },
+                  {
+                    "address": "0x0000000071727de22e5e9d8baf0edac6f37da032",
+                    "topics": [
+                      "0xbb47ee3e183a558b1a2ff0874b079f3fc5478b7454eacf2bfc5af2ff5878f972"
+                    ],
+                    "data": "0x",
+                    "blockNumber": "0x14724d2",
+                    "transactionHash": "0xbfff838a782effa9f03e3c1d16dec3393183a17429f50651efc968d1328179e9",
+                    "transactionIndex": "0x69",
+                    "blockHash": "0x71d8b8d601cebdc7d0ece0ce92b61a64fbf2b76859efb9cbaa23561ca78121a9",
+                    "logIndex": "0x17e",
+                    "removed": false
+                  },
+                  {
+                    "address": "0x0000000071727de22e5e9d8baf0edac6f37da032",
+                    "topics": [
+                      "0x49628fd1471006c1482da88028e9ce4dbb080b815c9b0344d39e5a8e6ec1419f",
+                      "0x0aab0b0761674f905f8e37d6422ea4c13a35b56be9c421fa2334100d2d230113",
+                      "0x000000000000000000000000529b0890b2111b1b0917b4d0da49b44373437309",
+                      "0x0000000000000000000000000000000000000000000000000000000000000000"
+                    ],
+                    "data": "0x4c05210000000004171351c442b202678c48d8ab5b321e8f00000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000002859a8bd1d0000000000000000000000000000000000000000000000000000000000009927d",
+                    "blockNumber": "0x14724d2",
+                    "transactionHash": "0xbfff838a782effa9f03e3c1d16dec3393183a17429f50651efc968d1328179e9",
+                    "transactionIndex": "0x69",
+                    "blockHash": "0x71d8b8d601cebdc7d0ece0ce92b61a64fbf2b76859efb9cbaa23561ca78121a9",
+                    "logIndex": "0x17f",
+                    "removed": false
+                  }
+                ],
+                "logsBloom": "0x00000400000000000000000000001010000000001000000000000000000000000008000000000000080020010000000010000000000000000000020000000000000000000000000000000000000000000040040100000000000000000000200000000000020800000000000000000800000000000000000010000000000200000000000000000002000000000000000000000220000400000000000000000000000000000000000002400000000000000000000002000040000002000000000000000000000000600111200000000000000000000000000040000000000020000040000800010000000000000000000000000000000000000000000000000000",
+                "status": "0x1",
+                "to": "0x0000000071727de22e5e9d8baf0edac6f37da032",
+                "transactionHash": "0xbfff838a782effa9f03e3c1d16dec3393183a17429f50651efc968d1328179e9",
+                "transactionIndex": "0x69",
+                "type": "0x2"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "eth_supportedEntryPoints",
+      "description": "Returns an array of the entryPoint addresses supported by the bundler",
+      "summary": "Returns an array of the entryPoint addresses supported by the bundler",
+      "params": [],
+      "result": {
+        "name": "Supported EntryPoint contracts",
+        "description": "An array of the entryPoint addresses",
+        "schema": {
+          "title": "entryPoint addresses",
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/Address"
+          }
+        }
+      }
+    },
+    {
+      "name": "biconomy_getGasFeeValues",
+      "description": "Return EIP-1559 gas limits estimated by the bundler",
+      "summary": "Return EIP-1559 gas limits estimated by the bundler",
+      "params": [],
+      "result": {
+        "name": "Gas Limits",
+        "description": "EIP-1559 gas limits estimated by the bundler",
+        "schema": {
+          "title": "Gas Limits",
+          "type": "object",
+          "properties": {
+            "maxPriorityFeePerGas": {
+              "type": "string"
+            },
+            "maxFeePerGas": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "components": {
+    "schemas": {
+      "GasEstimates": {
+        "title": "GasEstimates",
+        "description": "Estimated gas values to submit a UserOp to the Entrypoint contract",
+        "type": "object",
+        "properties": {
+          "callGasLimit": {
+            "type": "number"
+          },
+          "verificationGasLimit": {
+            "type": "number"
+          },
+          "preVerificationGas": {
+            "type": "number"
+          },
+          "paymasterPostOpGasLimit": {
+            "type": "number"
+          },
+          "paymasterVerificationGasLimit": {
+            "type": "number"
+          },
+          "maxPriorityFeePerGas": {
+            "type": "number"
+          },
+          "maxFeePerGas": {
+            "type": "number"
+          }
+        }
+      },
+      "PartialUserOperation": {
+        "title": "PartialUserOperation",
+        "description": "Partial User Operation sent to the Bundler to estimate AA gas limits",
+        "type": "object",
+        "required": ["sender", "nonce", "callData"],
+        "properties": {
+          "sender": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "nonce": {
+            "$ref": "#/components/schemas/Nonce"
+          },
+          "callData": {
+            "$ref": "#/components/schemas/CallData"
+          },
+          "factory": {
+            "$ref": "#/components/schemas/Factory"
+          },
+          "factoryData": {
+            "$ref": "#/components/schemas/FactoryData"
+          },
+          "callGasLimit": {
+            "$ref": "#/components/schemas/CallGasLimit"
+          },
+          "verificationGasLimit": {
+            "$ref": "#/components/schemas/VerificationGasLimit"
+          },
+          "preVerificationGas": {
+            "$ref": "#/components/schemas/PreVerificationGas"
+          },
+          "maxFeePerGas": {
+            "$ref": "#/components/schemas/MaxFeePerGas"
+          },
+          "maxPriorityFeePerGas": {
+            "$ref": "#/components/schemas/MaxPriorityFeePerGas"
+          },
+          "paymaster": {
+            "$ref": "#/components/schemas/Paymaster"
+          },
+          "paymasterData": {
+            "$ref": "#/components/schemas/PaymasterData"
+          },
+          "paymasterVerificationGasLimit": {
+            "$ref": "#/components/schemas/PaymasterVerificationGasLimit"
+          },
+          "paymasterPostOpGasLimit": {
+            "$ref": "#/components/schemas/PaymasterPostOpGasLimit"
+          },
+          "signature": {
+            "$ref": "#/components/schemas/Signature"
+          }
+        }
+      },
+      "UserOperation": {
+        "title": "UserOperation",
+        "description": "Full User Operation sent to the Bundler to submit to the User Operation pool",
+        "type": "object",
+        "required": [
+          "sender",
+          "nonce",
+          "callData",
+          "factory",
+          "factoryData",
+          "callGasLimit",
+          "verificationGasLimit",
+          "preVerificationGas",
+          "maxFeePerGas",
+          "maxPriorityFeePerGas",
+          "signature"
+        ],
+        "properties": {
+          "sender": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "nonce": {
+            "$ref": "#/components/schemas/Nonce"
+          },
+          "callData": {
+            "$ref": "#/components/schemas/CallData"
+          },
+          "factory": {
+            "$ref": "#/components/schemas/Factory"
+          },
+          "factoryData": {
+            "$ref": "#/components/schemas/FactoryData"
+          },
+          "callGasLimit": {
+            "$ref": "#/components/schemas/CallGasLimit"
+          },
+          "verificationGasLimit": {
+            "$ref": "#/components/schemas/VerificationGasLimit"
+          },
+          "preVerificationGas": {
+            "$ref": "#/components/schemas/PreVerificationGas"
+          },
+          "maxFeePerGas": {
+            "$ref": "#/components/schemas/MaxFeePerGas"
+          },
+          "maxPriorityFeePerGas": {
+            "$ref": "#/components/schemas/MaxPriorityFeePerGas"
+          },
+          "paymaster": {
+            "$ref": "#/components/schemas/Paymaster"
+          },
+          "paymasterData": {
+            "$ref": "#/components/schemas/PaymasterData"
+          },
+          "paymasterVerificationGasLimit": {
+            "$ref": "#/components/schemas/PaymasterVerificationGasLimit"
+          },
+          "paymasterPostOpGasLimit": {
+            "$ref": "#/components/schemas/PaymasterPostOpGasLimit"
+          },
+          "signature": {
+            "$ref": "#/components/schemas/Signature"
+          }
+        }
+      },
+      "ExtendedUserOperation": {
+        "title": "ExtendedUserOperation",
+        "description": "Full User Operation sent to the Bundler to submit to the User Operation pool + additional transaction data",
+        "type": "object",
+        "properties": {
+          "sender": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "nonce": {
+            "$ref": "#/components/schemas/Nonce"
+          },
+          "callData": {
+            "$ref": "#/components/schemas/CallData"
+          },
+          "factory": {
+            "$ref": "#/components/schemas/Factory"
+          },
+          "factoryData": {
+            "$ref": "#/components/schemas/FactoryData"
+          },
+          "callGasLimit": {
+            "$ref": "#/components/schemas/CallGasLimit"
+          },
+          "verificationGasLimit": {
+            "$ref": "#/components/schemas/VerificationGasLimit"
+          },
+          "preVerificationGas": {
+            "$ref": "#/components/schemas/PreVerificationGas"
+          },
+          "maxFeePerGas": {
+            "$ref": "#/components/schemas/MaxFeePerGas"
+          },
+          "maxPriorityFeePerGas": {
+            "$ref": "#/components/schemas/MaxPriorityFeePerGas"
+          },
+          "paymaster": {
+            "$ref": "#/components/schemas/Paymaster"
+          },
+          "signature": {
+            "$ref": "#/components/schemas/Signature"
+          },
+          "entrypoint": {
+            "$ref": "#/components/schemas/Address"
+          }
+        }
+      },
+      "UserOperationReceipt": {
+        "title": "ExtendedUserOperation",
+        "description": "Full User Operation sent to the Bundler to submit to the User Operation pool + additional transaction data. Otherwise null if not found",
+        "type": "object",
+        "properties": {
+          "userOpHash": {
+            "$ref": "#/components/schemas/UserOpHash"
+          },
+          "entrypoint": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "sender": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "nonce": {
+            "$ref": "#/components/schemas/Nonce"
+          },
+          "success": {
+            "description": "true if the UserOp was successful, false otherwise",
+            "type": "string"
+          },
+          "paymaster": {
+            "$ref": "#/components/schemas/Paymaster"
+          },
+          "actualGasCost": {
+            "description": "The actual gas cost of the UserOp",
+            "type": "number"
+          },
+          "actualGasUsed": {
+            "description": "The actual gas used by the UserOp",
+            "type": "number"
+          },
+          "reason": {
+            "description": "The reason for the UserOp failure, empty if successfull",
+            "type": "string"
+          },
+          "logs": {
+            "description": "The logs of the UserOp",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Log"
+            }
+          },
+          "receipt": {
+            "description": "The transaction receipt of the UserOp",
+            "$ref": "#/components/schemas/TransactionReceipt"
+          }
+        }
+      },
+      "UserOpHash": {
+        "title": "userOpHash",
+        "description": "The hash of the User Operation",
+        "type": "string",
+        "pattern": "^0x[a-fA-F\\d]+$"
+      },
+      "Address": {
+        "title": "Address",
+        "description": "40 byte address starting with 0x",
+        "type": "string",
+        "pattern": "^0x[a-fA-F0-9]{40}$"
+      },
+      "Nonce": {
+        "title": "nonce",
+        "description": "A number only to be used once",
+        "type": "string"
+      },
+      "Factory": {
+        "title": "factory",
+        "description": "Smart Account Factory address",
+        "type": "string"
+      },
+      "FactoryData": {
+        "title": "factory",
+        "description": "Smart Account init code passed to the Smart Account Factory contract",
+        "type": "string"
+      },
+      "CallData": {
+        "title": "callData",
+        "description": "target contract execution callData",
+        "type": "string"
+      },
+      "CallGasLimit": {
+        "title": "callGasLimit",
+        "description": "",
+        "type": "string"
+      },
+      "VerificationGasLimit": {
+        "title": "verificationGasLimit",
+        "description": "",
+        "type": "string"
+      },
+      "PreVerificationGas": {
+        "title": "preVerificationGas",
+        "description": "",
+        "type": "string"
+      },
+      "MaxFeePerGas": {
+        "title": "maxFeePerGas",
+        "description": "",
+        "type": "string"
+      },
+      "MaxPriorityFeePerGas": {
+        "title": "maxPriorityFeePerGas",
+        "description": "",
+        "type": "string"
+      },
+      "Paymaster": {
+        "title": "paymaster",
+        "description": "",
+        "type": "string"
+      },
+      "PaymasterData": {
+        "title": "paymasterData",
+        "description": "",
+        "type": "string"
+      },
+      "PaymasterVerificationGasLimit": {
+        "title": "PaymasterVerificationGasLimit",
+        "description": "",
+        "type": "string"
+      },
+      "PaymasterPostOpGasLimit": {
+        "title": "paymasterPostOpGasLimit",
+        "description": "",
+        "type": "string"
+      },
+      "Signature": {
+        "title": "signature",
+        "description": "Signature over the user operation",
+        "type": "string"
+      },
+      "StateOverrideSet": {
+        "title": "stateOverrideSet",
+        "type": "object",
+        "properties": {
+          "balance": {
+            "type": "string"
+          },
+          "nonce": {
+            "$ref": "#/components/schemas/Nonce"
+          },
+          "state": {
+            "type": "string"
+          },
+          "stateDiff": {
+            "type": "string"
+          }
+        }
+      },
+      "TransactionReceipt": {
+        "title": "TransactionReceipt",
+        "type": "object",
+        "properties": {
+          "blockHash": {
+            "type": "string"
+          },
+          "blockNumber": {
+            "type": "string"
+          },
+          "contractAddress": {
+            "type": "string"
+          },
+          "cumulativeGasUsed": {
+            "type": "string"
+          },
+          "effectiveGasPrice": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string"
+          },
+          "gasUsed": {
+            "type": "string"
+          },
+          "l1BaseFeeScalar": {
+            "type": "string"
+          },
+          "l1BlobBaseFee": {
+            "type": "string"
+          },
+          "l1BlobBaseFeeScalar": {
+            "type": "string"
+          },
+          "l1Fee": {
+            "type": "string"
+          },
+          "l1GasPrice": {
+            "type": "string"
+          },
+          "l1GasUsed": {
+            "type": "string"
+          },
+          "logs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Log"
+            }
+          },
+          "logsBloom": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "transactionHash": {
+            "type": "string"
+          },
+          "transactionIndex": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        }
+      },
+      "Log": {
+        "title": "Log",
+        "type": "object",
+        "properties": {
+          "address": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "topics": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "data": {
+            "type": "string"
+          },
+          "blockNumber": {
+            "type": "string"
+          },
+          "transactionHash": {
+            "type": "string"
+          },
+          "transactionIndex": {
+            "type": "string"
+          },
+          "blockHash": {
+            "type": "string"
+          },
+          "logIndex": {
+            "type": "string"
+          },
+          "removed": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}
