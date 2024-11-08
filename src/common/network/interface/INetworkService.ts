@@ -8,6 +8,7 @@ import {
 export interface INetworkService<AccountType, RawTransactionType> {
   chainId: number;
   rpcUrl: string;
+  mevProtectedRpcUrl?: string;
   provider: PublicClient;
 
   sendRpcCall(method: string, params: Array<any>): Promise<any>;

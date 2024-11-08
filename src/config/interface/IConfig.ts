@@ -4,6 +4,7 @@ import { TransactionType } from "../../common/types";
 enum RpcProviderType {
   PUBLIC = "public",
   PRIVATE = "private",
+  MEV_PROTECTED = "mev-protected",
 }
 
 interface RpcProvider {

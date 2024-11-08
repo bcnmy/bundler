@@ -4,6 +4,8 @@ import { EVMRawTransactionType } from "../../common/types";
 import { IEVMAccount } from "./interface/IEVMAccount";
 
 export class EVMAccount implements IEVMAccount {
+  public rpcUrl: string;
+
   private account: PrivateKeyAccount;
 
   private publicKey: string;
@@ -14,10 +16,12 @@ export class EVMAccount implements IEVMAccount {
     accountPublicKey: string,
     accountPrivateKey: string,
     rpcUrl: string,
+    mevProtectedRpcUrl?: string,
   ) {
+    this.rpcUrl = mevProtectedRpcUrl || rpcUrl;
     this.account = privateKeyToAccount(`0x${accountPrivateKey}`);
     this.walletClient = createWalletClient({
-      transport: http(rpcUrl),
+      transport: http(this.rpcUrl),
       account: privateKeyToAccount(`0x${accountPrivateKey}`),
     });
     this.publicKey = accountPublicKey;
