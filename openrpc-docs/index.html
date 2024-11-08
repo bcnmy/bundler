@@ -1,0 +1,190 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Bundler OpenRPC docs</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
+    />
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
+    <script>
+      const fetchData = async () => {
+        const bundlerUrls = { v070: "http://localhost:3000/api/v3/schema" };
+        console.log(`Starting to fetch schema from ${bundlerUrls.v070}`);
+
+        const res = await fetch(bundlerUrls.v070);
+        if (!res.ok) {
+          throw new Error(`${res.status}: ${await res.text()}`);
+        }
+
+        console.log(`Done fetching schema from ${bundlerUrls.v070}`);
+        return res.json();
+      };
+    </script>
+  </head>
+  <body>
+    <div x-data="{ schema: {}}" x-init="schema = await fetchData()">
+      <template x-if="Object.keys(schema).length > 0">
+        <main class="container" x-data>
+          <nav>
+            <ul>
+              <li><strong x-text="schema.info.title"></strong></li>
+            </ul>
+            <ul>
+              <li><a href="#">About</a></li>
+              <li><a href="#">Services</a></li>
+              <li><kbd x-text="schema.info.version"></kbd></li>
+            </ul>
+          </nav>
+
+          <article>
+            <blockquote x-text="schema.info.description"></blockquote>
+          </article>
+
+          <h1>Methods</h1>
+          <template x-for="method in schema.methods" :key="method.name">
+            <article>
+              <h4>
+                <kbd x-text="method.name"></kbd>
+              </h4>
+              <p x-text="method.description"></p>
+
+              <details>
+                <summary role="button" class="outline contrast">Params</summary>
+                <div class="overflow-auto">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Summary</th>
+                        <th scope="col">Description</th>
+                        <th scope="col">Schema</th>
+                        <th scope="col">Required</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <template
+                        x-for="param in method.params"
+                        :key="param.name"
+                      >
+                        <tr>
+                          <td x-text="param.name"></td>
+                          <td x-text="param.summary"></td>
+                          <td x-text="param.description"></td>
+                          <td
+                            x-text="param.schema.$ref || param.schema.type"
+                          ></td>
+                          <td x-text="param.required || false"></td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+              </details>
+
+              <details>
+                <summary role="button" class="outline contrast">Result</summary>
+
+                <div class="overflow-auto">
+                  <table>
+                    <thead>
+                      <th scope="col">Name</th>
+                      <th scope="col">Description</th>
+                      <th scope="col">Schema</th>
+                    </thead>
+                    <tbody>
+                      <td x-text="method.result.name"></td>
+                      <td x-text="method.result.description"></td>
+                      <td
+                        x-text="method.result.schema.$ref || method.result.schema.type"
+                      ></td>
+                    </tbody>
+                    <tfoot></tfoot>
+                  </table>
+                </div>
+              </details>
+
+              <details>
+                <summary role="button" class="outline contrast">
+                  Examples
+                </summary>
+
+                <template x-for="example in method.examples">
+                  <div>
+                    <h5 x-text="example.name"></h5>
+                    <div class="grid">
+                      <article>
+                        <header>Example request body</header>
+                        <pre>{
+    "id": <span x-text="Date.now()"></span>,
+    "jsonrpc": "2.0",
+    "method": "<span x-text="method.name"></span>",
+    "params": <span x-text="JSON.stringify(example.params.map(p => p.value), null, 2)"></span>
+  }</pre>
+                      </article>
+
+                      <article>
+                        <header>Example result</header>
+                        <pre>{
+    "id": <span x-text="Date.now()"></span>,
+    "jsonrpc": "2.0",
+    "result": <span x-text="JSON.stringify(example.result.value, null, 2)"></span>
+  }</pre>
+                      </article>
+                    </div>
+                  </div>
+                </template>
+              </details>
+
+              <details>
+                <summary role="button">Try it now!</summary>
+                <div>
+                  <div class="grid">
+                    <article
+                      x-data="{ request: {
+                        id: Date.now(),
+                        jsonrpc: '2.0',
+                        method: method.name,
+                        params: []
+                      } }"
+                    >
+                      <header>Request</header>
+                      <textarea
+                        name="request"
+                        x-text="JSON.stringify(request, null, 2)"
+                        rows="5"
+                      ></textarea>
+                    </article>
+
+                    <article>
+                      <header>Result</header>
+                    </article>
+                  </div>
+                </div>
+              </details>
+            </article>
+          </template>
+
+          <h2>Components</h2>
+          <template
+            x-for="(schema, name) in schema.components.schemas"
+            :key="name"
+          >
+            <article>
+              <header x-text="name"></header>
+              <pre x-text="JSON.stringify(schema, null, 2)"></pre>
+            </article>
+          </template>
+        </main>
+      </template>
+      <footer>
+        <p>Built using Alpine.js & Pico CSS</p>
+      </footer>
+    </div>
+  </body>
+</html>

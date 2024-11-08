@@ -3,7 +3,7 @@
   "info": {
     "title": "Biconomy Bundler",
     "version": "V3 (Entrypoint v0.7.0)",
-    "description": "A scalable, hosted [ERC-4337](https://eips.ethereum.org/EIPS/eip-4337) compatible Bundler make by [Biconomy](https://biconomy.io)."
+    "description": "A scalable, hosted [ERC-4337](https://eips.ethereum.org/EIPS/eip-4337) compatible Bundler made by [Biconomy](https://biconomy.io)."
   },
   "servers": [
     {
