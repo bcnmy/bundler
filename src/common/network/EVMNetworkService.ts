@@ -66,30 +66,51 @@ export class EVMNetworkService
 
   rpcUrl: string;
 
+  mevProtectedRpcUrl: string | undefined;
+
   provider: PublicClient;
+
+  mevProtectedProvider: PublicClient | null;
 
   constructor(options: { chainId: number; rpcUrl: string }) {
     this.chainId = options.chainId;
     this.rpcUrl = options.rpcUrl;
 
-    const providers = config.chains.providers[this.chainId];
-    if (!providers) {
+    const regularProviders = config.chains.providers[this.chainId];
+    if (!regularProviders) {
       throw new Error(
-        `No providers found for chainId: ${this.chainId} in the config`,
+        `No RPC providers found for chainId: ${this.chainId} in the config`,
       );
     }
 
-    if (providers.length > 1) {
+    if (regularProviders.length > 1) {
       this.provider = createPublicClient({
         transport: fallback(
-          config.chains.providers[this.chainId].map((p) => http(p.url)),
+          config.chains.providers[this.chainId]
+            .filter((p) => p.type !== "mev-protected")
+            .map((p) => http(p.url)),
           LOAD_BALANCER_DEFAULT,
         ),
       });
     } else {
       this.provider = createPublicClient({
-        transport: http(providers[0].url),
+        transport: http(regularProviders[0].url),
       });
+    }
+
+    const mevProtectedProviders = config.chains.providers[this.chainId].filter(
+      (p) => p.type === "mev-protected",
+    );
+    if (mevProtectedProviders.length > 1) {
+      this.mevProtectedRpcUrl = mevProtectedProviders[0].url;
+      this.mevProtectedProvider = createPublicClient({
+        transport: fallback(
+          mevProtectedProviders.map((p) => http(p.url)),
+          LOAD_BALANCER_DEFAULT,
+        ),
+      });
+    } else {
+      this.mevProtectedProvider = null;
     }
   }
 

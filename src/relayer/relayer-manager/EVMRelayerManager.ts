@@ -382,6 +382,7 @@ export class EVMRelayerManager
           address,
           privateKey,
           this.networkService.rpcUrl,
+          this.networkService.mevProtectedRpcUrl,
         );
         this.relayerMap[address] = relayer;
         relayers.push(relayer);
