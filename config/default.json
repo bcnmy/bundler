@@ -138,6 +138,18 @@
           "url": "https://sepolia.base.org",
           "type": "public"
         }
+      ],
+      "920637907288165": [
+        {
+          "url": "https://sepolia-rpc.kakarot.org/",
+          "type": "public"
+        }
+      ],
+      "11155420": [
+        {
+          "url": "https://sepolia.optimism.io/",
+          "type": "public"
+        }
       ]
     },
     "currency": {
