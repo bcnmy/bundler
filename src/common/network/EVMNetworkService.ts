@@ -10,6 +10,8 @@ import {
   createPublicClient,
   fallback,
   http,
+  keccak256,
+  toHex,
   verifyMessage,
 } from "viem";
 import { IEVMAccount } from "../../relayer/account";
@@ -182,6 +184,59 @@ export class EVMNetworkService
     return data.result;
   }
 
+  /**
+   * Getting the nonce on flasbots requires a signature from the account
+   * See https://docs.flashbots.net/flashbots-protect/nonce-management
+   * @param account account to get the nonce for
+   * @param pending include the nonce of the pending transaction (default: true)
+   * @returns nonce of the account
+   */
+  async getFlashbotsNonce(
+    account: IEVMAccount,
+    pending = true,
+  ): Promise<number> {
+    if (!this.mevProtectedRpcUrl) {
+      throw new Error(
+        `Can't fetch Flashbots nonce if Flashbots RPC URL not set for chainId: ${this.chainId}!`,
+      );
+    }
+    logger.info(`Getting Flashbots nonce for address: ${account.address}`);
+
+    const body = JSON.stringify({
+      jsonrpc: "2.0",
+      method: "eth_getTransactionCount",
+      params: pending ? [account.address, "pending"] : [account.address],
+      id: Date.now(),
+    });
+
+    const signature =
+      account.address +
+      ":" +
+      (await account.signMessage(keccak256(toHex(body))));
+
+    const response = await axios.post(this.mevProtectedRpcUrl, body, {
+      headers: {
+        "Content-Type": "application/json",
+        "X-Flashbots-Signature": signature,
+      },
+    });
+
+    const data = response.data;
+
+    logger.info(`Flashbots nonce response: ${customJSONStringify(data)}`);
+
+    if (!isFlashbotsNonceResponse(data)) {
+      throw new Error(
+        `Invalid Flashbots nonce response: ${customJSONStringify(data)}`,
+      );
+    }
+
+    const nonce = parseInt(data.result, 16);
+    logger.info({ address: account.address }, `Flashbots nonce: ${nonce}`);
+
+    return nonce;
+  }
+
   async getBaseFeePerGas(): Promise<bigint> {
     const block = await this.provider.getBlock({
       blockTag: "latest",
@@ -258,13 +313,17 @@ export class EVMNetworkService
   /**
    * Get the nonce of the user
    * @param address address
-   * @param pendingNonce include the nonce of the pending transaction
+   * @param pending include the nonce of the pending transaction
    * @returns by default returns the next nonce of the address
    * if pendingNonce is set to false, returns the nonce of the mined transaction
    */
-  async getNonce(address: string, pendingNonce = true): Promise<number> {
-    const params = pendingNonce ? [address, "pending"] : [address];
-    return await this.sendRpcCall(EthMethodType.GET_TRANSACTION_COUNT, params);
+  async getNonce(account: IEVMAccount, pending = true): Promise<number> {
+    if (this.mevProtectedRpcUrl) {
+      return this.getFlashbotsNonce(account, pending);
+    }
+
+    const params = pending ? [account.address, "pending"] : [account.address];
+    return this.sendRpcCall(EthMethodType.GET_TRANSACTION_COUNT, params);
   }
 
   async sendTransaction(
@@ -471,3 +530,21 @@ const getCheckReceiptTimeoutMs = (chainId: number) => {
     ? nodeconfig.get<number>(`chains.checkReceiptTimeout.${chainId}`)
     : defaultTimeout;
 };
+
+interface FlashbotsNonceResponse {
+  id: number;
+  result: Hex;
+  jsonrpc: "2.0";
+}
+
+function isFlashbotsNonceResponse(
+  response: any,
+): response is FlashbotsNonceResponse {
+  return (
+    response &&
+    response.id &&
+    response.result &&
+    response.jsonrpc === "2.0" &&
+    typeof response.result === "string"
+  );
+}

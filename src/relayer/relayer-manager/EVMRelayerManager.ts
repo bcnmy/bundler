@@ -399,7 +399,7 @@ export class EVMRelayerManager
           const balance = Number(
             toHex(await this.networkService.getBalance(relayerAddress)),
           );
-          const nonce = await this.nonceManager.getNonce(relayerAddress);
+          const nonce = await this.nonceManager.getNonce(relayer);
           log.info(
             `Balance of relayer ${relayerAddress} is ${balance} and nonce is ${nonce} on chainId: ${this.chainId} with threshold ${this.fundingBalanceThreshold}`,
           );

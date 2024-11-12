@@ -1,5 +1,5 @@
 import { PrivateKeyAccount, privateKeyToAccount } from "viem/accounts";
-import { createWalletClient, WalletClient, http, Hex } from "viem";
+import { createWalletClient, WalletClient, http, Hex, Address } from "viem";
 import { EVMRawTransactionType } from "../../common/types";
 import { IEVMAccount } from "./interface/IEVMAccount";
 import { logger } from "../../common/logger";
@@ -7,6 +7,8 @@ import { hideRpcUrlApiKey } from "../../common/network/utils";
 
 export class EVMAccount implements IEVMAccount {
   public rpcUrl: string;
+
+  public address: Address;
 
   private account: PrivateKeyAccount;
 
@@ -26,6 +28,7 @@ export class EVMAccount implements IEVMAccount {
       account: privateKeyToAccount(`0x${accountPrivateKey}`),
     });
     this.publicKey = accountPublicKey;
+    this.address = this.account.address;
   }
 
   getPublicKey(): string {

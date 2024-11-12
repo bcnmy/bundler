@@ -488,7 +488,7 @@ export class EVMTransactionService
       createTransactionParams;
     const relayerAddress = account.getPublicKey();
 
-    const nonce = await this.nonceManager.getNonce(relayerAddress);
+    const nonce = await this.nonceManager.getNonce(account);
     log.info(
       `Nonce for relayerAddress ${relayerAddress} is ${nonce} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
     );
@@ -678,7 +678,8 @@ export class EVMTransactionService
           log.info(
             `Nonce too low error for for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
           );
-          const correctNonce = await this.handleNonceTooLow(rawTransaction);
+
+          const correctNonce = await this.handleNonceTooLow(account);
           log.info(
             `Correct nonce to be used: ${correctNonce} for for bundler address: ${rawTransaction.from} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
           );
@@ -892,9 +893,9 @@ export class EVMTransactionService
     }
   }
 
-  private async handleNonceTooLow(rawTransaction: EVMRawTransactionType) {
+  private async handleNonceTooLow(account: IEVMAccount) {
     const correctNonce = await this.nonceManager.getAndSetNonceFromNetwork(
-      rawTransaction.from,
+      account,
       true,
     );
     return correctNonce;
