@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-async-promise-executor */
 
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import {
   Hex,
   PublicClient,
@@ -25,24 +25,13 @@ import {
 } from "./types";
 import { logger } from "../logger";
 import { customJSONStringify, parseError } from "../utils";
-import { config } from "../../config";
 import { BLOCKCHAINS } from "../constants";
+import nodeconfig from "config";
+import { hideRpcUrlApiKey } from "./utils";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
 });
-
-const LOAD_BALANCER_DEFAULT = {
-  rank: {
-    interval: 60_000,
-    sampleCount: 5,
-    timeout: 500,
-    weights: {
-      latency: 0.3,
-      stability: 0.7,
-    },
-  },
-};
 
 class ErrorCheckingTransactionReceipt extends Error {
   constructor(
@@ -59,59 +48,96 @@ class ErrorCheckingTransactionReceipt extends Error {
   }
 }
 
+interface IEVMNetworkServiceOptions {
+  chainId: number;
+  rpcUrls?: string[];
+  mevProtectedRpcUrl?: string;
+  checkForReceiptIntervalMs?: number;
+  checkForReceiptTimeoutMs?: number;
+}
+
 export class EVMNetworkService
   implements INetworkService<IEVMAccount, EVMRawTransactionType>
 {
-  chainId: number;
+  readonly chainId: number;
 
-  rpcUrl: string;
-
-  mevProtectedRpcUrl: string | undefined;
-
+  // These are regular RPC URL providers we use for most calls
+  rpcUrls: string[];
   provider: PublicClient;
 
-  mevProtectedProvider: PublicClient | null;
+  // This is an optional MEV-protected RPC URL if the chain has a private mempool solution like Flashbots
+  mevProtectedRpcUrl: string | undefined;
 
-  constructor(options: { chainId: number; rpcUrl: string }) {
-    this.chainId = options.chainId;
-    this.rpcUrl = options.rpcUrl;
+  // Interval in milliseconds to check for transaction receipt
+  private checkForReceiptIntervalMs: number;
 
-    const regularProviders = config.chains.providers[this.chainId];
-    if (!regularProviders) {
+  // Stop checking for receipt after this timeout
+  private checkForReceiptTimeoutMs: number;
+
+  constructor({
+    chainId,
+    rpcUrls = getRpcUrls(chainId),
+    mevProtectedRpcUrl = getDefaultMevProtectedRpcUrl(chainId),
+    checkForReceiptIntervalMs = getCheckForReceiptIntervalMs(chainId),
+    checkForReceiptTimeoutMs = getCheckReceiptTimeoutMs(chainId),
+  }: IEVMNetworkServiceOptions) {
+    this.chainId = chainId;
+
+    // Sanity check if the rpcUrls are not passed as an argument and missing from the default config
+    this.rpcUrls = rpcUrls;
+    if (this.rpcUrls.length === 0) {
       throw new Error(
-        `No RPC providers found for chainId: ${this.chainId} in the config`,
+        `No RPC URLs set for chainId: ${this.chainId} in the config`,
       );
     }
 
-    if (regularProviders.length > 1) {
+    // If we have only one RPC URL, we create just an ordinary 'http' transport
+    // otherwise we use the 'fallback' transport for improved reliability in case of RPC provider issues
+    if (this.rpcUrls.length === 1) {
       this.provider = createPublicClient({
-        transport: fallback(
-          config.chains.providers[this.chainId]
-            .filter((p) => p.type !== "mev-protected")
-            .map((p) => http(p.url)),
-          LOAD_BALANCER_DEFAULT,
-        ),
+        transport: http(this.rpcUrls[0]),
       });
     } else {
       this.provider = createPublicClient({
-        transport: http(regularProviders[0].url),
+        transport: fallback(
+          this.rpcUrls.map((url) => http(url)),
+          nodeconfig.get("networkService.viemFallbackTransport.rank"),
+        ),
       });
     }
 
-    const mevProtectedProviders = config.chains.providers[this.chainId].filter(
-      (p) => p.type === "mev-protected",
-    );
-    if (mevProtectedProviders.length > 1) {
-      this.mevProtectedRpcUrl = mevProtectedProviders[0].url;
-      this.mevProtectedProvider = createPublicClient({
-        transport: fallback(
-          mevProtectedProviders.map((p) => http(p.url)),
-          LOAD_BALANCER_DEFAULT,
-        ),
-      });
-    } else {
-      this.mevProtectedProvider = null;
-    }
+    // If provided a MEV-protected RPC URL we use it for sending tx's to a private mempool to avoid frontrunning
+    this.mevProtectedRpcUrl = mevProtectedRpcUrl;
+
+    // Check for the transaction receipt every `checkForReceiptIntervalMs` milliseconds
+    this.checkForReceiptIntervalMs = checkForReceiptIntervalMs;
+
+    // Stop checking for receipt after this timeout
+    this.checkForReceiptTimeoutMs = checkForReceiptTimeoutMs;
+  }
+
+  /**
+   * Getter for an rpcUrl, used for backwards compatibility when we supported only 1 per network
+   * @returns the first RPC URL from the list
+   */
+  public get rpcUrl(): string {
+    return this.rpcUrls[0];
+  }
+
+  /**
+   * Used for pretty printing the network service configuration
+   * @returns JSON stringified object with API keys removed
+   */
+  toJSON(): IEVMNetworkServiceOptions {
+    return {
+      chainId: this.chainId,
+      rpcUrls: this.rpcUrls.map((rpcUrl) => hideRpcUrlApiKey(rpcUrl)),
+      mevProtectedRpcUrl: this.mevProtectedRpcUrl
+        ? hideRpcUrlApiKey(this.mevProtectedRpcUrl)
+        : undefined,
+      checkForReceiptIntervalMs: this.checkForReceiptIntervalMs,
+      checkForReceiptTimeoutMs: this.checkForReceiptTimeoutMs,
+    };
   }
 
   async sendRpcCall(method: string, params: Array<any>): Promise<any> {
@@ -121,7 +147,14 @@ export class EVMNetworkService
       jsonrpc: "2.0",
       id: Date.now(),
     };
-    const response = await axios.post(this.rpcUrl, requestData);
+
+    let response: AxiosResponse<any, any>;
+    try {
+      response = await axios.post(this.rpcUrl, requestData);
+    } catch (error) {
+      logger.error(`raw RPC call failed with error: ${JSON.stringify(error)}`);
+      throw error;
+    }
     const { data } = response;
     log.info(
       `data from RPC call: ${customJSONStringify(
@@ -269,7 +302,10 @@ export class EVMNetworkService
 
     const response: TransactionReceipt | null = await new Promise(
       async (resolve, reject) => {
-        // Set interval to check every 1 second (adjust the interval as needed)
+        // how often we check for the receipt
+        const checkForReceiptIntervalMs = getCheckForReceiptIntervalMs(
+          this.chainId,
+        );
         const intervalId = setInterval(async () => {
           try {
             log.info(
@@ -311,22 +347,22 @@ export class EVMNetworkService
             clearInterval(intervalId);
             reject(wrappedError);
           }
-        }, 1000);
+        }, checkForReceiptIntervalMs);
 
         // Uncomment the line below to stop the interval after a certain number of iterations (optional)
-        setTimeout(
-          () => {
-            clearInterval(intervalId);
-            reject(
-              new Error(
-                "Timeout: The transaction is taking too long to confirm.",
-              ),
-            );
-          },
-          1 * 60 * 1000,
-        );
+        const stopCheckingAfterMs = getCheckReceiptTimeoutMs(this.chainId);
+
+        setTimeout(() => {
+          clearInterval(intervalId);
+          reject(
+            new Error(
+              "Timeout: The transaction is taking too long to confirm.",
+            ),
+          );
+        }, stopCheckingAfterMs);
       },
     );
+
     log.info(
       `waitForTransactionReceipt from provider response: ${customJSONStringify(
         response,
@@ -334,11 +370,13 @@ export class EVMNetworkService
         this.chainId
       }`,
     );
+
     if (response === null) {
       throw new Error(
         `Error in fetching transactionReceipt for transactionHash: ${transactionHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
       );
     }
+
     return response;
   }
 
@@ -384,3 +422,52 @@ export class EVMNetworkService
     });
   }
 }
+
+/**
+ * Get the RPC URLs for the chain from the config
+ * @param chainId Chain Id
+ * @returns A list of RPC URLs for the chain (excluding MEV-protected URLs)
+ */
+export const getRpcUrls = (chainId: number) => {
+  return nodeconfig
+    .get<Array<{ url: string; type: string }>>(`chains.providers.${chainId}`)
+    .filter((p) => p.type !== "mev-protected")
+    .map((p) => p.url);
+};
+
+/**
+ * Get the MEV-protected RPC URL for the chain from the config
+ * @param chainId Chain Id
+ * @returns MEV-protected RPC URL for the chain (usually Flashbots)
+ */
+export const getDefaultMevProtectedRpcUrl = (chainId: number) => {
+  return nodeconfig
+    .get<Array<{ url: string; type: string }>>(`chains.providers.${chainId}`)
+    .find((p) => p.type === "mev-protected")?.url;
+};
+
+/**
+ * Try get the interval to check for transaction receipt from the config or fallback to default
+ * @param chainId Chain Id
+ * @returns Interval in milliseconds to check for transaction receipt
+ */
+const getCheckForReceiptIntervalMs = (chainId: number) => {
+  const defaultInterval = 1000; // 1 second
+
+  return nodeconfig.has(`chains.checkForReceiptInterval.${chainId}`)
+    ? nodeconfig.get<number>(`chains.checkForReceiptInterval.${chainId}`)
+    : defaultInterval;
+};
+
+/**
+ * Try get the timeout to stop checking for transaction receipt from the config or fallback to default
+ * @param chainId Chain Id
+ * @returns Timeout in milliseconds to stop checking for transaction receipt
+ */
+const getCheckReceiptTimeoutMs = (chainId: number) => {
+  const defaultTimeout = 60_000; // 60 seconds
+
+  return nodeconfig.has(`chains.checkReceiptTimeout.${chainId}`)
+    ? nodeconfig.get<number>(`chains.checkReceiptTimeout.${chainId}`)
+    : defaultTimeout;
+};

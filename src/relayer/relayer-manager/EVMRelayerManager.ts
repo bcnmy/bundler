@@ -378,11 +378,11 @@ export class EVMRelayerManager
 
         const ethAddress = toChecksumAddress(`0x${ethAddr}`);
         const address = ethAddress.toLowerCase();
+
         const relayer = new EVMAccount(
           address,
           privateKey,
-          this.networkService.rpcUrl,
-          this.networkService.mevProtectedRpcUrl,
+          this.networkService.mevProtectedRpcUrl || this.networkService.rpcUrl,
         );
         this.relayerMap[address] = relayer;
         relayers.push(relayer);

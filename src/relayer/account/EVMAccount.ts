@@ -1,7 +1,9 @@
 import { PrivateKeyAccount, privateKeyToAccount } from "viem/accounts";
-import { createWalletClient, WalletClient, http } from "viem";
+import { createWalletClient, WalletClient, http, Hex } from "viem";
 import { EVMRawTransactionType } from "../../common/types";
 import { IEVMAccount } from "./interface/IEVMAccount";
+import { logger } from "../../common/logger";
+import { hideRpcUrlApiKey } from "../../common/network/utils";
 
 export class EVMAccount implements IEVMAccount {
   public rpcUrl: string;
@@ -16,9 +18,8 @@ export class EVMAccount implements IEVMAccount {
     accountPublicKey: string,
     accountPrivateKey: string,
     rpcUrl: string,
-    mevProtectedRpcUrl?: string,
   ) {
-    this.rpcUrl = mevProtectedRpcUrl || rpcUrl;
+    this.rpcUrl = rpcUrl;
     this.account = privateKeyToAccount(`0x${accountPrivateKey}`);
     this.walletClient = createWalletClient({
       transport: http(this.rpcUrl),
@@ -43,41 +44,72 @@ export class EVMAccount implements IEVMAccount {
   async sendTransaction(
     rawTransaction: EVMRawTransactionType,
   ): Promise<string> {
-    let sendTransactionParameters;
+    const sendTransactionParameters =
+      this.createSendTransactionParams(rawTransaction);
+
+    const txHash = await this.walletClient.sendTransaction(
+      sendTransactionParameters,
+    );
+
+    logger.info(
+      { txHash, rpcUrl: hideRpcUrlApiKey(this.rpcUrl) },
+      `Transaction sent.`,
+    );
+
+    return txHash;
+  }
+
+  private createSendTransactionParams(
+    rawTransaction: EVMRawTransactionType,
+  ): SendEip1559TransactionParameters | SendLegacyTransactionParameters {
+    const baseParams: BaseSendTransactionParameters = {
+      account: this.account,
+      to: rawTransaction.to as Hex,
+      value: BigInt(rawTransaction.value),
+      data: rawTransaction.data as Hex,
+      nonce: Number(rawTransaction.nonce),
+      chain: null,
+      gas: BigInt(rawTransaction.gasLimit),
+    };
+
     if (rawTransaction.type === "eip1559") {
-      const transactionType = "eip1559";
-      sendTransactionParameters = {
-        account: this.account,
-        to: rawTransaction.to as `0x${string}`,
-        value: BigInt(rawTransaction.value),
-        data: rawTransaction.data as `0x${string}`,
-        nonce: Number(rawTransaction.nonce),
-        chain: null,
-        type: transactionType as unknown as "eip1559",
-        gas: BigInt(rawTransaction.gasLimit),
-        maxFeePerGas: BigInt(
-          rawTransaction.maxFeePerGas ? rawTransaction.maxFeePerGas : 0,
-        ),
-        maxPriorityFeePerGas: BigInt(
-          rawTransaction.maxPriorityFeePerGas
-            ? rawTransaction.maxPriorityFeePerGas
-            : 0,
-        ),
+      return {
+        ...baseParams,
+        type: "eip1559",
+        maxFeePerGas: BigInt(rawTransaction.maxFeePerGas || 0),
+        maxPriorityFeePerGas: BigInt(rawTransaction.maxPriorityFeePerGas || 0),
       };
     } else {
-      const transactionType = "legacy";
-      sendTransactionParameters = {
-        account: this.account,
-        to: rawTransaction.to as `0x${string}`,
-        value: BigInt(rawTransaction.value),
-        data: rawTransaction.data as `0x${string}`,
-        nonce: Number(rawTransaction.nonce),
-        chain: null,
-        type: transactionType as unknown as "legacy",
+      return {
+        ...baseParams,
+        type: "legacy",
         gas: BigInt(rawTransaction.gasLimit),
         gasPrice: BigInt(rawTransaction.gasPrice ? rawTransaction.gasPrice : 0),
       };
     }
-    return await this.walletClient.sendTransaction(sendTransactionParameters);
   }
+}
+
+interface BaseSendTransactionParameters {
+  account: PrivateKeyAccount;
+  to: Hex;
+  value: bigint;
+  data: Hex;
+  nonce: number;
+  chain: null;
+  gas: bigint;
+}
+
+interface SendEip1559TransactionParameters
+  extends BaseSendTransactionParameters {
+  type: "eip1559";
+  gas: bigint;
+  maxFeePerGas: bigint;
+  maxPriorityFeePerGas: bigint;
+}
+
+interface SendLegacyTransactionParameters
+  extends BaseSendTransactionParameters {
+  type: "legacy";
+  gasPrice: bigint;
 }
