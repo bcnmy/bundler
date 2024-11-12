@@ -8,17 +8,7 @@ import {
   parseAbiParameters,
   toHex,
 } from "viem";
-import {
-  createArbitrumGasEstimator,
-  createGasEstimator,
-  createKakarotGasEstimator,
-  createMantleGasEstimator,
-  createMorphGasEstimator,
-  createOptimismGasEstimator,
-  createScrollGasEstimator,
-  createSeiGasEstimator,
-  IGasEstimator,
-} from "entry-point-gas-estimations/dist/gas-estimator/entry-point-v6";
+import { IGasEstimator } from "entry-point-gas-estimations/dist/gas-estimator/entry-point-v6";
 import { config } from "../../config";
 import { IEVMAccount } from "../../relayer/account";
 import {
@@ -42,68 +32,59 @@ import {
 } from "./types";
 import { BLOCKCHAINS } from "../constants";
 import { IGasPriceService } from "../gas-price";
+import { GasEstimationsAdapter } from "./GasEstimationsWrapper";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
 });
 
+/**
+ * Options for the BundlerSimulationService constructor
+ * @member {SimulationNetworkService} networkService - The network service that will be used to call `eth_estimateGas`
+ * @member {IGasPriceService} gasPriceService - The gas price service used to fetch both legacy and EIP-1559 gas prices
+ * @member {SimulationGasEstimator} gasEstimator - The estimator used for eth_estimateUserOperationGas.
+ * You can pass your own gas estimator or the default one will be used
+ */
+interface IBundlerSimulationServiceOptions {
+  networkService: SimulationNetworkService;
+  gasPriceService: IGasPriceService;
+  gasEstimator?: SimulationGasEstimator;
+}
+
+/**
+ * BundlerSimulationService is responsible for estimating the gas limits & values for user operations
+ * and validating the user operation before sending it to the network.
+ */
 export class BundlerSimulationService {
-  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
+  networkService: SimulationNetworkService;
 
   gasPriceService: IGasPriceService;
 
-  gasEstimator: IGasEstimator;
+  gasEstimator: SimulationGasEstimator;
 
-  constructor(
-    networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
-    gasPriceService: IGasPriceService,
-  ) {
+  constructor({
+    networkService,
+    gasPriceService,
+    gasEstimator = new GasEstimationsAdapter({
+      chainId: networkService.chainId,
+      rpcUrl: networkService.rpcUrl,
+    }),
+  }: IBundlerSimulationServiceOptions) {
     this.networkService = networkService;
     this.gasPriceService = gasPriceService;
-    this.gasEstimator = createGasEstimator({
-      rpcUrl: this.networkService.rpcUrl,
-    });
+    this.gasEstimator = gasEstimator;
+  }
 
-    if (config.optimismNetworks.includes(this.networkService.chainId)) {
-      this.gasEstimator = createOptimismGasEstimator({
-        rpcUrl: this.networkService.rpcUrl,
-      });
-    }
-
-    if (config.arbitrumNetworks.includes(this.networkService.chainId))
-      this.gasEstimator = createArbitrumGasEstimator({
-        rpcUrl: this.networkService.rpcUrl,
-      });
-
-    if (config.mantleNetworks.includes(this.networkService.chainId)) {
-      this.gasEstimator = createMantleGasEstimator({
-        rpcUrl: this.networkService.rpcUrl,
-      });
-    }
-
-    if (config.scrollNetworks.includes(this.networkService.chainId)) {
-      this.gasEstimator = createScrollGasEstimator({
-        rpcUrl: this.networkService.rpcUrl,
-      });
-    }
-
-    if (config.morphNetworks.includes(this.networkService.chainId)) {
-      this.gasEstimator = createMorphGasEstimator({
-        rpcUrl: this.networkService.rpcUrl,
-      });
-    }
-
-    if (config.seiNetworks.includes(this.networkService.chainId)) {
-      this.gasEstimator = createSeiGasEstimator({
-        rpcUrl: this.networkService.rpcUrl,
-      });
-    }
-
-    if (config.kakarotNetworks.includes(this.networkService.chainId)) {
-      this.gasEstimator = createKakarotGasEstimator({
-        rpcUrl: this.networkService.rpcUrl,
-      });
-    }
+  /**
+   * Used for pretty printing the service configuration
+   * @returns JSON stringified object with API keys removed
+   */
+  toJSON(): Omit<IBundlerSimulationServiceOptions, "gasPriceService"> {
+    return {
+      networkService: this.networkService,
+      gasEstimator: this.gasEstimator,
+      // TODO: add the gasPriceService after you write it's toJSON method
+    };
   }
 
   async estimateUserOperationGas(
@@ -716,3 +697,19 @@ export class BundlerSimulationService {
     return keccak256(enc);
   }
 }
+
+// The following are the dependencies of the BundlerSimulationService class
+
+// 💡 TIP: Always pick only the required fields from the interface
+// so we don't depend on properties we don't use (easier to refactor)
+export type SimulationNetworkService = Pick<
+  INetworkService<IEVMAccount, EVMRawTransactionType>,
+  "chainId" | "rpcUrl" | "estimateGas"
+>;
+
+export type SimulationGasEstimator = Pick<
+  IGasEstimator,
+  | "estimateUserOperationGas"
+  | "setEntryPointAddress"
+  | "calculatePreVerificationGas"
+>;

@@ -1,15 +1,16 @@
 import { ICacheService } from "../../../common/cache";
 import { INetworkService } from "../../../common/network";
+import { IEVMAccount } from "../../account";
 
 export interface INonceManager<AccountType, RawTransactionType> {
   chainId: number;
   networkService: INetworkService<AccountType, RawTransactionType>;
   cacheService: ICacheService;
 
-  getNonce(address: string, pendingCount?: boolean): Promise<number>;
+  getNonce(relayer: IEVMAccount, pendingCount?: boolean): Promise<number>;
   getAndSetNonceFromNetwork(
-    address: string,
-    pendingCount: boolean,
+    account: IEVMAccount,
+    pending: boolean,
   ): Promise<number>;
   markUsed(address: string, nonce: number): Promise<void>;
   incrementNonce(address: string): Promise<boolean>;

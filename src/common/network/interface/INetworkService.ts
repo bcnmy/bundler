@@ -4,9 +4,11 @@ import {
   Type0TransactionGasPriceType,
   Type2TransactionGasPriceType,
 } from "../types";
+import { IEVMAccount } from "../../../relayer/account";
 
 export interface INetworkService<AccountType, RawTransactionType> {
   chainId: number;
+  rpcUrls: string[];
   rpcUrl: string;
   mevProtectedRpcUrl?: string;
   provider: PublicClient;
@@ -16,7 +18,8 @@ export interface INetworkService<AccountType, RawTransactionType> {
   getLegacyGasPrice(): Promise<Type0TransactionGasPriceType>;
   getEIP1559FeesPerGas(): Promise<Type2TransactionGasPriceType>;
   getBalance(address: string): Promise<bigint>;
-  getNonce(address: string, pendingNonce?: boolean): Promise<number>;
+  getNonce(account: IEVMAccount, pendingNonce?: boolean): Promise<number>;
+  getFlashbotsNonce(account: IEVMAccount): Promise<number>;
   estimateGas(params: any): Promise<any>;
   sendTransaction(
     rawTransactionData: RawTransactionType,

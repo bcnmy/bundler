@@ -25,6 +25,16 @@
           "url": "https://thislinkdoesnotexist.rs",
           "type": "private"
         }
+      ],
+      "11155111": [
+        {
+          "url": "https://thislinkdoesnotexist.rs",
+          "type": "private"
+        },
+        {
+          "url": "https://thislinkdoesnotexist.rs",
+          "type": "mev-protected"
+        }
       ]
     }
   },
