@@ -19,7 +19,8 @@ export interface INetworkService<AccountType, RawTransactionType> {
   getEIP1559FeesPerGas(): Promise<Type2TransactionGasPriceType>;
   getBalance(address: string): Promise<bigint>;
   getNonce(account: IEVMAccount, pendingNonce?: boolean): Promise<number>;
-  getFlashbotsNonce(account: IEVMAccount): Promise<number>;
+  getNetworkNonce(account: IEVMAccount, pending?: boolean): Promise<number>;
+  getFlashbotsNonce(account: IEVMAccount, pending?: boolean): Promise<number>;
   estimateGas(params: any): Promise<any>;
   sendTransaction(
     rawTransactionData: RawTransactionType,

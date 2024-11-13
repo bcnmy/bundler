@@ -1,14 +1,25 @@
 import { PrivateKeyAccount, privateKeyToAccount } from "viem/accounts";
-import { createWalletClient, WalletClient, http, Hex, Address } from "viem";
+import {
+  createWalletClient,
+  WalletClient,
+  http,
+  Hex,
+  Address,
+  formatEther,
+} from "viem";
 import { EVMRawTransactionType } from "../../common/types";
 import { IEVMAccount } from "./interface/IEVMAccount";
 import { logger } from "../../common/logger";
 import { hideRpcUrlApiKey } from "../../common/network/utils";
+import { INetworkService } from "../../common/network";
+import { INonceManager } from "../nonce-manager";
 
 export class EVMAccount implements IEVMAccount {
   public rpcUrl: string;
 
   public address: Address;
+
+  public chainId: number;
 
   private account: PrivateKeyAccount;
 
@@ -16,10 +27,17 @@ export class EVMAccount implements IEVMAccount {
 
   private walletClient: WalletClient;
 
+  private nonceManager: INonceManager<IEVMAccount, EVMRawTransactionType>;
+
+  private networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
+
   constructor(
     accountPublicKey: string,
     accountPrivateKey: string,
     rpcUrl: string,
+    chainId: number,
+    nonceManager: INonceManager<IEVMAccount, EVMRawTransactionType>,
+    networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
   ) {
     this.rpcUrl = rpcUrl;
     this.account = privateKeyToAccount(`0x${accountPrivateKey}`);
@@ -29,6 +47,46 @@ export class EVMAccount implements IEVMAccount {
     });
     this.publicKey = accountPublicKey;
     this.address = this.account.address;
+    this.chainId = chainId;
+    this.nonceManager = nonceManager;
+    this.networkService = networkService;
+  }
+
+  public async getNonces(): Promise<Nonces> {
+    const promises = [
+      this.nonceManager.getNonce(this),
+      this.networkService.getNetworkNonce(this),
+    ];
+
+    if (this.networkService.mevProtectedRpcUrl) {
+      promises.push(this.networkService.getFlashbotsNonce(this));
+    }
+
+    const results = await Promise.all(promises);
+
+    const chain =
+      typeof results[1] === "string" ? parseInt(results[1], 16) : results[1];
+
+    return {
+      nonceManager: results[0],
+      chain,
+      flashbots: results.length > 2 ? results[2] : undefined,
+    };
+  }
+
+  public async getInfo(): Promise<EVMAccountInfo> {
+    const [balanceWei, nonces] = await Promise.all([
+      this.networkService.getBalance(this.address),
+      this.getNonces(),
+    ]);
+
+    return {
+      chainId: this.chainId,
+      address: this.address,
+      rpcUrl: hideRpcUrlApiKey(this.rpcUrl),
+      balanceEth: formatEther(balanceWei),
+      nonces,
+    };
   }
 
   getPublicKey(): string {
@@ -91,6 +149,20 @@ export class EVMAccount implements IEVMAccount {
       };
     }
   }
+}
+
+interface Nonces {
+  nonceManager: number;
+  chain: number;
+  flashbots?: number;
+}
+
+export interface EVMAccountInfo {
+  chainId: number;
+  address: string;
+  rpcUrl: string;
+  balanceEth: string; // in ether
+  nonces: Nonces;
 }
 
 interface BaseSendTransactionParameters {

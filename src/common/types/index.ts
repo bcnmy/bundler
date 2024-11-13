@@ -2,6 +2,7 @@
 import { ENTRY_POINT_ABI } from "entry-point-gas-estimations/dist/gas-estimator/entry-point-v6";
 import { GetContractReturnType, Hex } from "viem";
 import { ENTRY_POINT_V07_ABI } from "../entrypoint-v7/abiv7";
+import { EVMAccountInfo } from "../../relayer/account";
 
 export enum TransactionType {
   FUNDING = "FUNDING",
@@ -259,8 +260,10 @@ export type EVMRelayerMetaDataType = {
   nonce: number;
   pendingCount: number;
   balance: number;
+  chainNonce?: number;
+  flashbotsNonce?: number;
 };
 
 export type StatusInfo = {
-  [chainId: number]: { relayers: Array<EVMRelayerMetaDataType> };
+  [chainId: number]: { relayers: Array<EVMAccountInfo> };
 };

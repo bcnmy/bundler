@@ -326,6 +326,11 @@ export class EVMNetworkService
     return this.sendRpcCall(EthMethodType.GET_TRANSACTION_COUNT, params);
   }
 
+  async getNetworkNonce(account: IEVMAccount, pending = true): Promise<number> {
+    const params = pending ? [account.address, "pending"] : [account.address];
+    return this.sendRpcCall(EthMethodType.GET_TRANSACTION_COUNT, params);
+  }
+
   async sendTransaction(
     rawTransactionData: EVMRawTransactionType,
     account: IEVMAccount,

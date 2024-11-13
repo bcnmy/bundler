@@ -11,5 +11,5 @@ export const adminApiRouter = Router();
 adminApiRouter.get("/", settings);
 adminApiRouter.get("/startup", startupProbe);
 adminApiRouter.get("/health/:chainId?", validateChainId(), health);
-adminApiRouter.get("/info", info);
+adminApiRouter.get("/info/:chainId", info);
 adminApiRouter.post("/cancel", cancelTransaction);
