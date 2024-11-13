@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-async-promise-executor */
 
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import axiosRetry from "axios-retry";
 import {
   Hex,
