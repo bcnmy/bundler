@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-async-promise-executor */
 
-import axios, { AxiosResponse } from "axios";
+import axios from "axios";
+import axiosRetry from "axios-retry";
 import {
   Hex,
   PublicClient,
@@ -76,6 +77,9 @@ export class EVMNetworkService
   // Stop checking for receipt after this timeout
   private checkForReceiptTimeoutMs: number;
 
+  // A private axios client with retry mechanism to handle flaky requests
+  private axiosClient = axios.create();
+
   constructor({
     chainId,
     rpcUrls = getRpcUrls(chainId),
@@ -116,6 +120,12 @@ export class EVMNetworkService
 
     // Stop checking for receipt after this timeout
     this.checkForReceiptTimeoutMs = checkForReceiptTimeoutMs;
+
+    // Add a retry plugin to the axios client to handle flaky requests with exponential backoff
+    axiosRetry(this.axiosClient, {
+      retries: 3,
+      retryDelay: axiosRetry.exponentialDelay,
+    });
   }
 
   /**
@@ -214,12 +224,16 @@ export class EVMNetworkService
       ":" +
       (await account.signMessage(keccak256(toHex(body))));
 
-    const response = await axios.post(this.mevProtectedRpcUrl, body, {
-      headers: {
-        "Content-Type": "application/json",
-        "X-Flashbots-Signature": signature,
+    const response = await this.axiosClient.post(
+      this.mevProtectedRpcUrl,
+      body,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "X-Flashbots-Signature": signature,
+        },
       },
-    });
+    );
 
     const data = response.data;
 

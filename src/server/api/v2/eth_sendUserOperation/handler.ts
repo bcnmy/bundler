@@ -24,7 +24,7 @@ const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
 });
 
-export const bundleUserOperation = async (req: Request, res: Response) => {
+export const eth_sendUserOperation = async (req: Request, res: Response) => {
   try {
     const start = performance.now();
     const { id } = req.body;
