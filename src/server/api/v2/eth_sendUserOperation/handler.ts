@@ -7,9 +7,10 @@ import {
   userOperationStateDao,
 } from "../../../../common/service-manager";
 import {
-  generateTransactionId,
   getPaymasterFromPaymasterAndData,
   parseError,
+  uniqueRequestId,
+  uniqueTransactonId,
 } from "../../../../common/utils";
 import {
   isError,
@@ -18,142 +19,124 @@ import {
   UserOperationStateEnum,
 } from "../../../../common/types";
 import { BUNDLER_ERROR_CODES, STATUSES } from "../../shared/middleware";
-// import { updateRequest } from '../../auth/UpdateRequest';
+import { logMeasureTime } from "../../../../common/utils/timing";
+import { Address } from "viem";
+import pino from "pino";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
 });
 
+/**
+ * Sends the user operation to the entrypoint contract as per the ERC-4337 spec
+ * @param req - The request object
+ * @param res - The response object
+ * @returns The response object
+ */
 export const eth_sendUserOperation = async (req: Request, res: Response) => {
+  const requestId = req.body.id || uniqueRequestId();
+  const { chainId, dappAPIKey } = req.params;
+  const chainIdNumber = parseInt(chainId, 10);
+  const transactionId = uniqueTransactonId();
+  const [userOp, entryPointAddress, gasLimitFromSimulation, userOpHash] =
+    req.body.params;
+
+  const _log = log.child({
+    chainId: chainIdNumber,
+    dappAPIKey,
+    requestId,
+    transactionId,
+    entryPointAddress,
+  });
+
   try {
-    const start = performance.now();
-    const { id } = req.body;
-    const userOp = req.body.params[0];
-    const entryPointAddress = req.body.params[1];
-    let gasLimitFromSimulation = req.body.params[2] + 500000;
-    const userOpHash = req.body.params[3];
-    const { chainId, dappAPIKey } = req.params;
+    _log.info(`eth_sendUserOperation: received userOpHash: ${userOpHash}`);
 
-    const chainIdInNum = parseInt(chainId, 10);
-    if (chainIdInNum === 5000) {
-      gasLimitFromSimulation += 5000000000;
-    }
+    logMeasureTime(_log, "eth_sendUserOperation", async () => {
+      const walletAddress = userOp.sender.toLowerCase();
 
-    const transactionId = generateTransactionId(Date.now().toString());
-    log.info(
-      `transactionId: ${transactionId} for userOpHash: ${userOpHash} on chainId: ${chainIdInNum} for apiKey: ${dappAPIKey}`,
-    );
-    const walletAddress = userOp.sender.toLowerCase();
+      await saveInitialTransaction(
+        _log,
+        chainIdNumber,
+        transactionId,
+        walletAddress,
+      );
 
-    transactionDao.save(chainIdInNum, {
-      transactionId,
-      transactionType: TransactionType.BUNDLER,
-      status: TransactionStatus.PENDING,
-      chainId: chainIdInNum,
-      walletAddress,
-      resubmitted: false,
-      creationTime: Date.now(),
-    });
+      await saveInitialUserOperationState(
+        _log,
+        chainIdNumber,
+        transactionId,
+        userOpHash,
+      );
 
-    log.info(
-      `Saving userOp state: ${UserOperationStateEnum.BUNDLER_MEMPOOL} for transactionId: ${transactionId} on chainId: ${chainIdInNum}`,
-    );
-    userOperationStateDao.save(chainIdInNum, {
-      transactionId,
-      userOpHash,
-      state: UserOperationStateEnum.BUNDLER_MEMPOOL,
-    });
+      await saveInitialUserOperation(
+        _log,
+        transactionId,
+        dappAPIKey,
+        entryPointAddress,
+        userOpHash,
+        chainIdNumber,
+        userOp,
+      );
 
-    const {
-      sender,
-      nonce,
-      initCode,
-      callData,
-      callGasLimit,
-      verificationGasLimit,
-      preVerificationGas,
-      maxFeePerGas,
-      maxPriorityFeePerGas,
-      paymasterAndData,
-      signature,
-    } = userOp;
+      const relayService =
+        routeTransactionToRelayerMap[chainIdNumber][TransactionType.BUNDLER];
 
-    const paymaster = getPaymasterFromPaymasterAndData(paymasterAndData);
+      if (!relayService) {
+        return res.status(STATUSES.BAD_REQUEST).json({
+          jsonrpc: "2.0",
+          id: requestId,
+          error: {
+            code: BUNDLER_ERROR_CODES.BAD_REQUEST,
+            message: `${TransactionType.BUNDLER} method not supported for chainId: ${chainId}`,
+          },
+        });
+      }
 
-    userOperationDao.save(chainIdInNum, {
-      transactionId,
-      dappAPIKey,
-      status: TransactionStatus.PENDING,
-      entryPoint: entryPointAddress,
-      sender,
-      nonce,
-      initCode,
-      callData,
-      callGasLimit,
-      verificationGasLimit,
-      preVerificationGas,
-      maxFeePerGas,
-      maxPriorityFeePerGas,
-      paymasterAndData,
-      signature,
-      userOpHash,
-      chainId: chainIdInNum,
-      paymaster,
-      creationTime: Date.now(),
-    });
+      let gasLimit = gasLimitFromSimulation;
 
-    if (!routeTransactionToRelayerMap[chainIdInNum][TransactionType.BUNDLER]) {
-      const end = performance.now();
-      log.info(`bundleUserOperation took: ${end - start} milliseconds`);
-      return res.status(STATUSES.BAD_REQUEST).json({
-        jsonrpc: "2.0",
-        id: id || 1,
-        error: {
-          code: BUNDLER_ERROR_CODES.BAD_REQUEST,
-          message: `${TransactionType.BUNDLER} method not supported for chainId: ${chainId}`,
-        },
+      // Add 5 Gwei to the gasLimit for MANTLE_MAINNET (for some reason?)
+      if (chainIdNumber === 5000) {
+        gasLimit += 5e9;
+      }
+
+      const response = routeTransactionToRelayerMap[chainIdNumber][
+        TransactionType.BUNDLER
+      ].sendTransactionToRelayer({
+        type: TransactionType.BUNDLER,
+        to: entryPointAddress,
+        data: "0x0",
+        gasLimit: `0x${Number(gasLimit).toString(16)}`,
+        chainId: chainIdNumber,
+        value: "0x0",
+        userOp,
+        transactionId,
+        walletAddress,
       });
-    }
-    const response = routeTransactionToRelayerMap[chainIdInNum][
-      TransactionType.BUNDLER
-    ].sendTransactionToRelayer({
-      type: TransactionType.BUNDLER,
-      to: entryPointAddress,
-      data: "0x0",
-      gasLimit: `0x${Number(gasLimitFromSimulation).toString(16)}`,
-      chainId: chainIdInNum,
-      value: "0x0",
-      userOp,
-      transactionId,
-      walletAddress,
-    });
 
-    if (isError(response)) {
-      const end = performance.now();
-      log.info(`bundleUserOperation took: ${end - start} milliseconds`);
-      return res.status(STATUSES.BAD_REQUEST).json({
+      if (isError(response)) {
+        return res.status(STATUSES.BAD_REQUEST).json({
+          jsonrpc: "2.0",
+          id: requestId,
+          error: {
+            code: BUNDLER_ERROR_CODES.BAD_REQUEST,
+            message: response.error,
+          },
+        });
+      }
+
+      return res.status(STATUSES.SUCCESS).json({
         jsonrpc: "2.0",
-        id: id || 1,
-        error: {
-          code: BUNDLER_ERROR_CODES.BAD_REQUEST,
-          message: response.error,
-        },
+        id: requestId,
+        result: userOpHash,
       });
-    }
-
-    const end = performance.now();
-    log.info(`bundleUserOperation took: ${end - start} milliseconds`);
-    return res.status(STATUSES.SUCCESS).json({
-      jsonrpc: "2.0",
-      id: id || 1,
-      result: userOpHash,
     });
   } catch (error) {
-    const { id } = req.body;
-    log.error(`Error in bundle user op ${parseError(error)}`);
+    _log.error(`eth_sendUserOperation: Unexpected error: ${parseError(error)}`);
+
     return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
       jsonrpc: "2.0",
-      id: id || 1,
+      id: requestId,
       error: {
         code: BUNDLER_ERROR_CODES.INTERNAL_SERVER_ERROR,
         message: `Internal Server error: ${parseError(error)}`,
@@ -161,3 +144,96 @@ export const eth_sendUserOperation = async (req: Request, res: Response) => {
     });
   }
 };
+
+/**
+ * Saves the initial user operation state in the database
+ * @param _log Child logger with request specific data
+ * @param chainIdNumber Chain id number
+ * @param transactionId Unique transaction id
+ * @param userOpHash Hash of the user operation
+ */
+async function saveInitialUserOperationState(
+  _log: pino.Logger,
+  chainIdNumber: number,
+  transactionId: string,
+  userOpHash: string,
+) {
+  _log.info(
+    `Saving userOp state: ${UserOperationStateEnum.BUNDLER_MEMPOOL} for transactionId: ${transactionId}`,
+  );
+
+  return userOperationStateDao.save(chainIdNumber, {
+    transactionId,
+    userOpHash,
+    state: UserOperationStateEnum.BUNDLER_MEMPOOL,
+  });
+}
+
+/**
+ * Saves the initial transaction in the database
+ * @param _log Child logger with request specific data
+ * @param chainIdNumber Chain id number
+ * @param transactionId Unique transaction id
+ * @param walletAddress Wallet address
+ */
+async function saveInitialTransaction(
+  _log: pino.Logger,
+  chainIdNumber: number,
+  transactionId: string,
+  walletAddress: Address,
+) {
+  const data = {
+    transactionId,
+    transactionType: TransactionType.BUNDLER,
+    status: TransactionStatus.PENDING,
+    chainId: chainIdNumber,
+    walletAddress,
+    resubmitted: false,
+    creationTime: Date.now(),
+  };
+
+  _log.info(`Saving pending transaction: ${JSON.stringify(data)}`);
+
+  return transactionDao.save(chainIdNumber, data);
+}
+
+/**
+ *
+ * @param _log Child logger with request specific data
+ * @param transactionId Unique transaction id
+ * @param dappAPIKey Dapp API key
+ * @param entryPointAddress Address of the entry point
+ * @param userOpHash Hash of the user operation
+ * @param chainId Chain id
+ * @param userOperation User operation object
+ */
+async function saveInitialUserOperation(
+  _log: pino.Logger,
+  transactionId: string,
+  dappAPIKey: string,
+  entryPointAddress: Address,
+  userOpHash: string,
+  chainId: number,
+  // TODO: Add interface type
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  userOperation: any,
+) {
+  const { paymasterAndData } = userOperation;
+  const paymaster = getPaymasterFromPaymasterAndData(paymasterAndData);
+
+  _log.info(
+    `Saving initial userOperation with userOpHash: ${userOpHash} and paymaster: ${paymaster}`,
+  );
+
+  userOperationDao.save(chainId, {
+    transactionId,
+    dappAPIKey,
+    status: TransactionStatus.PENDING,
+    entryPoint: entryPointAddress,
+    userOpHash,
+    chainId,
+    paymaster,
+    creationTime: Date.now(),
+    ...userOperation,
+  });
+}
