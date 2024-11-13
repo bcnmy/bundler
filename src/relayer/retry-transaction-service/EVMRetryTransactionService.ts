@@ -1,6 +1,6 @@
 import { ConsumeMessage } from "amqplib";
 import { logger } from "../../common/logger";
-import { INetworkService } from "../../common/network";
+import { FlashbotsTxStatus, INetworkService } from "../../common/network";
 import { IQueue } from "../../common/queue";
 import { RetryTransactionQueueData } from "../../common/queue/types";
 import { EVMRawTransactionType, TransactionType } from "../../common/types";
@@ -17,7 +17,6 @@ import {
   parseError,
 } from "../../common/utils";
 import { ICacheService } from "../../common/cache";
-import axios from "axios";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -131,31 +130,32 @@ export class EVMRetryTransactionService
           `Transaction receipt receivied for transactionHash: ${transactionHash} and transactionId: ${transactionId} on chainId: ${this.chainId}. Hence not retrying the transaction.`,
         );
       } else {
-        if (this.networkService.mevProtectedRpcUrl) {
-          try {
-            const txStatus = await axios.get(
-              `https://protect.flashbots.net/tx/${transactionHash}`,
-            );
-            if (
-              txStatus.data.status === "FAILED" &&
-              txStatus.data.simError === "NonceTooHigh"
-            ) {
-              log.warn(
-                `Transaction failed on Flashbots for transactionHash: ${transactionHash} and transactionId: ${transactionId} on chainId: ${this.chainId}. Hence not retrying the transaction.`,
-              );
-              return;
-            }
-          } catch (error) {
-            log.error(
-              `Error in fetching Flashbots tx status for chainId: ${this.chainId} with error: ${error}`,
-            );
-            return;
-          }
-        }
-
         log.info(
           `Transaction receipt not receivied for transactionHash: ${transactionHash} and transactionId: ${transactionId} on chainId: ${this.chainId}. Hence retrying the transaction.`,
         );
+
+        if (this.networkService.mevProtectedRpcUrl) {
+          try {
+            const flashbotsStatus =
+              await this.networkService.waitForFlashbotsTransaction(
+                transactionHash,
+              );
+
+            if (flashbotsStatus.status === FlashbotsTxStatus.FAILED) {
+              log.error(
+                `Flashbots transaction failed for transactionHash: ${transactionHash} with transactionId: ${transactionId} on chainId: ${this.chainId}`,
+              );
+            }
+          } catch (error) {
+            log.error(
+              `Error in fetching flashbots status for transactionHash: ${transactionHash} with transactionId: ${transactionId} on chainId: ${
+                this.chainId
+              } is ${parseError(error)}`,
+            );
+
+            return;
+          }
+        }
 
         if (!account) {
           log.error(

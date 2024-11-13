@@ -8,7 +8,7 @@ import {
 } from "../../common/db";
 import { IQueue } from "../../common/interface";
 import { logger } from "../../common/logger";
-import { INetworkService } from "../../common/network";
+import { FlashbotsTxStatus, INetworkService } from "../../common/network";
 import { RetryTransactionQueueData } from "../../common/queue/types";
 import {
   EntryPointContractType,
@@ -1202,6 +1202,12 @@ export class EVMTransactionListener
     );
 
     try {
+      if (this.networkService.mevProtectedRpcUrl) {
+        return this.waifForFlashbotsTransaction(
+          notifyTransactionListenerParams,
+        );
+      }
+
       const transactionReceipt = await this.networkService.waitForTransaction(
         transactionHash,
         transactionId,
@@ -1270,6 +1276,73 @@ export class EVMTransactionListener
         )} on hash: ${transactionHash} for transactionId: ${transactionId} on chainId ${
           this.chainId
         }`,
+      );
+    }
+  }
+
+  async waifForFlashbotsTransaction(
+    notifyTransactionListenerParams: NotifyTransactionListenerParamsType,
+  ) {
+    const { transactionHash, transactionId, relayerAddress } =
+      notifyTransactionListenerParams;
+    if (!transactionHash) {
+      return;
+    }
+
+    try {
+      const response =
+        await this.networkService.waitForFlashbotsTransaction(transactionHash);
+
+      log.info(
+        { transactionHash, transactionId, chainId: this.chainId },
+        `Flashbots response: ${customJSONStringify(response)}`,
+      );
+
+      await this.cacheService.delete(
+        getRetryTransactionCountKey(transactionId, this.chainId),
+      );
+
+      await this.cacheService.set(getTransactionMinedKey(transactionId), "1");
+
+      if (response.status === FlashbotsTxStatus.INCLUDED) {
+        log.info(
+          { chainId: this.chainId, transactionHash, transactionId },
+          `Transaction included`,
+        );
+
+        // get the recept and call onTransactionSuccess
+        const transactionReceipt =
+          await this.networkService.getTransactionReceipt(transactionHash);
+
+        if (transactionReceipt) {
+          notifyTransactionListenerParams.transactionReceipt =
+            transactionReceipt;
+        }
+
+        await this.onTransactionSuccess(notifyTransactionListenerParams);
+      } else {
+        log.info(
+          { chainId: this.chainId, transactionHash, transactionId },
+          `Transaction not included`,
+        );
+
+        const transactionReceipt =
+          await this.networkService.getTransactionReceipt(transactionHash);
+
+        if (transactionReceipt) {
+          notifyTransactionListenerParams.transactionReceipt =
+            transactionReceipt;
+        }
+
+        await this.onTransactionFailure(notifyTransactionListenerParams);
+      }
+    } catch (error) {
+      logger.error(
+        {
+          transactionId,
+          relayerAddress,
+        },
+        `Error in waifForFlashbotsTransaction: ${customJSONStringify(error)}`,
       );
     }
   }

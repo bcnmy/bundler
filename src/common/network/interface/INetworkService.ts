@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { PublicClient, Transaction, TransactionReceipt } from "viem";
+import { Hex, PublicClient, Transaction, TransactionReceipt } from "viem";
 import {
   Type0TransactionGasPriceType,
   Type2TransactionGasPriceType,
 } from "../types";
 import { IEVMAccount } from "../../../relayer/account";
+import { FlashbotsTransactionStatus } from "../EVMNetworkService";
 
 export interface INetworkService<AccountType, RawTransactionType> {
   chainId: number;
@@ -12,7 +13,16 @@ export interface INetworkService<AccountType, RawTransactionType> {
   rpcUrl: string;
   mevProtectedRpcUrl?: string;
   provider: PublicClient;
+  supportsBlockNative: boolean;
 
+  sendPrivateTransaction(signedRawTransaction: Hex): Promise<string>;
+  waitForFlashbotsTransaction(
+    transactionHash: string,
+  ): Promise<FlashbotsTransactionStatus>;
+  getBlockNativeFeesPerGas(confidenceLevel?: number): Promise<{
+    maxFeePerGas: bigint;
+    maxPriorityFeePerGas: bigint;
+  }>;
   sendRpcCall(method: string, params: Array<any>): Promise<any>;
   getBaseFeePerGas(): Promise<bigint>;
   getLegacyGasPrice(): Promise<Type0TransactionGasPriceType>;

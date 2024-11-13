@@ -360,7 +360,7 @@ export class EVMTransactionService
         };
       }
       // Make it general and EIP 1559 specific and get bump up from config
-      const bumpedUpGasPrice = this.gasPriceService.getBumpedUpGasPrice(
+      const bumpedUpGasPrice = await this.gasPriceService.getBumpedUpGasPrice(
         pastGasPrice,
         50,
       );
@@ -910,7 +910,7 @@ export class EVMTransactionService
           maxFeePerGas: rawTransaction.maxFeePerGas,
           maxPriorityFeePerGas: rawTransaction.maxPriorityFeePerGas,
         };
-    const bumpedUpGasPrice = this.gasPriceService.getBumpedUpGasPrice(
+    const bumpedUpGasPrice = await this.gasPriceService.getBumpedUpGasPrice(
       pastGasPrice as NetworkBasedGasPriceType,
       50,
     );
