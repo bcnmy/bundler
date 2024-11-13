@@ -59,7 +59,7 @@ jest.mock("../../../../common/service-manager", () => ({
 }));
 
 // Now we can import after we have mocked the dependencies
-import { bundleUserOperation } from "./handler";
+import { eth_sendUserOperation } from "./handler";
 import { InitialUserOperationDataType } from "../../../../common/db";
 
 describe("/eth_sendUserOperation", () => {
@@ -105,7 +105,7 @@ describe("/eth_sendUserOperation", () => {
     // Send the request
     const request = httpMocks.createRequest(requestOptions);
     const response = httpMocks.createResponse();
-    await bundleUserOperation(request, response);
+    await eth_sendUserOperation(request, response);
 
     // console.log(response._getJSONData());
     // console.log(sendTransactionToRelayerMock.mock.calls[0]);

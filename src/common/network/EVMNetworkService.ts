@@ -2,6 +2,7 @@
 /* eslint-disable no-async-promise-executor */
 
 import axios, { AxiosResponse } from "axios";
+import axiosRetry from "axios-retry";
 import {
   Hex,
   PublicClient,
@@ -11,6 +12,7 @@ import {
   fallback,
   http,
   keccak256,
+  parseGwei,
   toHex,
   verifyMessage,
 } from "viem";
@@ -76,6 +78,11 @@ export class EVMNetworkService
   // Stop checking for receipt after this timeout
   private checkForReceiptTimeoutMs: number;
 
+  // A private axios client with retry mechanism to handle flaky requests
+  private axiosClient = axios.create();
+
+  private flashbotsMaxBlocks = 10n;
+
   constructor({
     chainId,
     rpcUrls = getRpcUrls(chainId),
@@ -116,6 +123,12 @@ export class EVMNetworkService
 
     // Stop checking for receipt after this timeout
     this.checkForReceiptTimeoutMs = checkForReceiptTimeoutMs;
+
+    // Add a retry plugin to the axios client to handle flaky requests with exponential backoff
+    axiosRetry(this.axiosClient, {
+      retries: 3,
+      retryDelay: axiosRetry.exponentialDelay,
+    });
   }
 
   /**
@@ -214,12 +227,16 @@ export class EVMNetworkService
       ":" +
       (await account.signMessage(keccak256(toHex(body))));
 
-    const response = await axios.post(this.mevProtectedRpcUrl, body, {
-      headers: {
-        "Content-Type": "application/json",
-        "X-Flashbots-Signature": signature,
+    const response = await this.axiosClient.post(
+      this.mevProtectedRpcUrl,
+      body,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "X-Flashbots-Signature": signature,
+        },
       },
-    });
+    );
 
     const data = response.data;
 
@@ -283,6 +300,46 @@ export class EVMNetworkService
     };
   }
 
+  async getBlockNativeFeesPerGas(confidenceLevel?: number) {
+    if (!this.supportsBlockNative) {
+      throw new Error(`Blocknative not supported for chainId: ${this.chainId}`);
+    }
+
+    if (!nodeconfig.has("blocknative.apiKey")) {
+      throw new Error("Blocknative API key not set in the config");
+    }
+
+    confidenceLevel =
+      confidenceLevel || nodeconfig.get("blocknative.confidenceLevel");
+
+    const blockNativeGasFees = await this.axiosClient.get<BlockNativeResponse>(
+      `https://api.blocknative.com/gasprices/blockprices?chainId=${this.chainId}&confidenceLevels=${confidenceLevel}`,
+      {
+        headers: {
+          Authorization: nodeconfig.get("blocknative.apiKey"),
+        },
+      },
+    );
+    logger.info(
+      { blockNativeGasFees: blockNativeGasFees.data },
+      `Blocknative gas fees received`,
+    );
+
+    const { maxFeePerGas, maxPriorityFeePerGas } =
+      blockNativeGasFees.data.blockPrices[0].estimatedPrices[0];
+
+    return {
+      maxFeePerGas: parseGwei(maxFeePerGas.toString()),
+      maxPriorityFeePerGas: parseGwei(maxPriorityFeePerGas.toString()),
+    };
+  }
+
+  public get supportsBlockNative() {
+    return nodeconfig
+      .get<number[]>("blocknative.supportedNetworks")
+      .includes(this.chainId);
+  }
+
   async getBalance(address: string): Promise<bigint> {
     const balance = await this.sendRpcCall(EthMethodType.GET_BALANCE, [
       address,
@@ -326,6 +383,52 @@ export class EVMNetworkService
     return this.sendRpcCall(EthMethodType.GET_TRANSACTION_COUNT, params);
   }
 
+  async sendPrivateTransaction(signedRawTransaction: Hex): Promise<string> {
+    if (!this.mevProtectedRpcUrl) {
+      throw new Error(
+        `Can't send private transaction if Flashbots RPC URL not set for chainId: ${this.chainId}!`,
+      );
+    }
+
+    const currentBlockNumber = await this.getLatesBlockNumber();
+    const maxBlockNumber = currentBlockNumber + this.flashbotsMaxBlocks;
+
+    const requestData = {
+      jsonrpc: "2.0",
+      method: "eth_sendPrivateTransaction",
+      params: [
+        {
+          tx: signedRawTransaction,
+          maxBlockNumber: "0x" + maxBlockNumber.toString(16),
+          preferences: {
+            fast: true,
+          },
+        },
+      ],
+      id: Date.now(),
+    };
+
+    try {
+      const response =
+        await this.axiosClient.post<FlashbotsSendTransactionResponse>(
+          this.mevProtectedRpcUrl,
+          requestData,
+        );
+
+      logger.info(
+        `eth_sendPrivateTransaction response: ${customJSONStringify(response.data)}`,
+      );
+
+      return response.data.result;
+    } catch (error) {
+      log.error(
+        { chainId: this.chainId, signedRawTransaction },
+        `Error sending private transaction: ${error} on chainId: ${this.chainId}`,
+      );
+      throw error;
+    }
+  }
+
   async getNetworkNonce(account: IEVMAccount, pending = true): Promise<number> {
     const params = pending ? [account.address, "pending"] : [account.address];
     return this.sendRpcCall(EthMethodType.GET_TRANSACTION_COUNT, params);
@@ -348,6 +451,46 @@ export class EVMNetworkService
       [transactionHash],
     );
     return response;
+  }
+
+  async waitForFlashbotsTransaction(
+    transactionHash: string,
+  ): Promise<FlashbotsTransactionStatus> {
+    if (!this.mevProtectedRpcUrl) {
+      throw new Error(
+        `Can't wait for Flashbots transaction if Flashbots RPC URL not set for chainId: ${this.chainId}!`,
+      );
+    }
+
+    const delaySeconds = 3;
+    let currentBlock = Number(await this.getLatesBlockNumber());
+    const latestBlock = currentBlock + 25;
+
+    while (currentBlock < latestBlock + 3) {
+      try {
+        const response = await this.axiosClient.get<FlashbotsTransactionStatus>(
+          `https://protect.flashbots.net/tx/${transactionHash}`,
+        );
+
+        if (
+          response.data.status === FlashbotsTxStatus.INCLUDED ||
+          response.data.status === FlashbotsTxStatus.FAILED
+        ) {
+          return response.data;
+        }
+
+        await new Promise((resolve) =>
+          setTimeout(resolve, delaySeconds * 1000),
+        );
+        currentBlock = Number(await this.getLatesBlockNumber());
+      } catch (error) {
+        log.error(`waitForFlashbotsTransaction failed with error: ${error}`);
+      }
+    }
+
+    throw new Error(
+      "Flashbots Timeout: The transaction is taking too long to confirm.",
+    );
   }
 
   /**
@@ -542,6 +685,8 @@ interface FlashbotsNonceResponse {
   jsonrpc: "2.0";
 }
 
+type FlashbotsSendTransactionResponse = FlashbotsNonceResponse;
+
 function isFlashbotsNonceResponse(
   response: any,
 ): response is FlashbotsNonceResponse {
@@ -552,4 +697,56 @@ function isFlashbotsNonceResponse(
     response.jsonrpc === "2.0" &&
     typeof response.result === "string"
   );
+}
+
+export interface BlockNativeResponse {
+  system: string;
+  network: string;
+  unit: string;
+  maxPrice: number;
+  currentBlockNumber: number;
+  msSinceLastBlock: number;
+  blockPrices: BlockPrice[];
+}
+
+export interface BlockPrice {
+  blockNumber: number;
+  estimatedTransactionCount: number;
+  baseFeePerGas: number;
+  blobBaseFeePerGas: number;
+  estimatedPrices: EstimatedPrice[];
+}
+
+export interface EstimatedPrice {
+  confidence: number;
+  price: number;
+  maxPriorityFeePerGas: number;
+  maxFeePerGas: number;
+}
+
+export enum FlashbotsTxStatus {
+  PENDING = "PENDING",
+  INCLUDED = "INCLUDED",
+  FAILED = "FAILED",
+  CANCELLED = "CANCELLED",
+  UNKNOWN = "UNKNOWN",
+}
+
+export interface FlashbotsTransactionStatus {
+  status: FlashbotsTxStatus;
+  hash: string;
+  maxBlockNumber: number;
+  transaction: FlashbotsTransaction;
+  fastMode: boolean;
+  seenInMempool: boolean;
+}
+
+export interface FlashbotsTransaction {
+  from: string;
+  to: string;
+  gasLimit: string;
+  maxFeePerGas: string;
+  maxPriorityFeePerGas: string;
+  nonce: string;
+  value: string;
 }

@@ -15,7 +15,7 @@ import {
   BundlerSimulationService,
   BundlerSimulationServiceV07,
 } from "../simulation";
-import { formatHrtimeSeconds } from "../utils/formatting";
+import { formatHrtimeSeconds } from "../utils/timing";
 
 const filenameLogger = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),

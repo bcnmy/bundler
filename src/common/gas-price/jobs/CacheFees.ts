@@ -2,7 +2,7 @@ import { CronJob } from "cron";
 import { GasPriceService } from "../GasPrice";
 import { logger } from "../../logger";
 import { parseError } from "../../utils";
-import { formatHrtimeSeconds } from "../../utils/formatting";
+import { formatHrtimeSeconds } from "../../utils/timing";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
