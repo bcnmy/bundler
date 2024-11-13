@@ -383,6 +383,9 @@ export class EVMRelayerManager
           address,
           privateKey,
           this.networkService.mevProtectedRpcUrl || this.networkService.rpcUrl,
+          this.chainId,
+          this.nonceManager,
+          this.networkService,
         );
         this.relayerMap[address] = relayer;
         relayers.push(relayer);

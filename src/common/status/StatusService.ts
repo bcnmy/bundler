@@ -323,7 +323,7 @@ export class StatusService implements IStatusService {
   // - relayer queues sizes
   // - bundler version information (we need to fetch this from git somehow)
   // - RPC provider information (without leaking keys, basically just the provider name)
-  async info(): Promise<StatusInfo> {
+  async info(chainId: number): Promise<StatusInfo> {
     const statusInfo: StatusInfo = {};
 
     const relayerManagers = this.evmRelayerManagerMap["RM1"];
@@ -331,20 +331,12 @@ export class StatusService implements IStatusService {
       throw new Error(`Relayers are temporarily unavailable`);
     }
 
-    for (const [chainId, relayerManager] of Object.entries(relayerManagers)) {
-      const chainIdInt = parseInt(chainId, 10);
-      statusInfo[chainIdInt] = {
-        relayers: [],
-      };
+    const relayerManager = relayerManagers[chainId];
+    const relayers = Object.values(relayerManager.relayerMap);
 
-      for (const address of Object.keys(relayerManager.relayerMap)) {
-        const relayer =
-          relayerManager.relayerQueue.get(address) ||
-          relayerManager.transactionProcessingRelayerMap[address];
-
-        statusInfo[chainIdInt].relayers.push(relayer);
-      }
-    }
+    statusInfo[chainId] = {
+      relayers: await Promise.all(relayers.map((relayer) => relayer.getInfo())),
+    };
 
     return statusInfo;
   }
