@@ -45,6 +45,7 @@ export type NotifyTransactionListenerParamsType = {
   metaData?: any;
   relayerManagerName: string;
   error?: string;
+  timestamp?: number;
 };
 
 export type OnTransactionSuccessParamsType =

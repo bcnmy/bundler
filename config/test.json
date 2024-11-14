@@ -6,6 +6,10 @@
   "dataSources": {
     "redisUrl": "test"
   },
+  "clearStaleMessages": {
+    "supportedNetworks": [1],
+    "ttlSeconds": 1
+  },
   "chains": {
     "providers": {
       "1": [

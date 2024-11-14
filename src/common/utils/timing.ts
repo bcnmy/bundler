@@ -36,6 +36,6 @@ export const logMeasureTime = async <T>(
   fn: () => Promise<T>,
 ): Promise<[T, number]> => {
   const [result, time] = await measureTime(fn);
-  log.info(`${message} took: ${time} seconds`);
+  log.info({ durationSeconds: time }, message);
   return [result, time];
 };

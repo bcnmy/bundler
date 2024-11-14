@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Hex, PublicClient, Transaction, TransactionReceipt } from "viem";
+import { PublicClient, Transaction, TransactionReceipt } from "viem";
 import {
   Type0TransactionGasPriceType,
   Type2TransactionGasPriceType,
 } from "../types";
 import { IEVMAccount } from "../../../relayer/account";
-import { FlashbotsTransactionStatus } from "../EVMNetworkService";
+import { FlashbotsClient } from "../FlashbotsClient";
 
 export interface INetworkService<AccountType, RawTransactionType> {
   chainId: number;
@@ -15,10 +15,9 @@ export interface INetworkService<AccountType, RawTransactionType> {
   provider: PublicClient;
   supportsBlockNative: boolean;
 
-  sendPrivateTransaction(signedRawTransaction: Hex): Promise<string>;
-  waitForFlashbotsTransaction(
-    transactionHash: string,
-  ): Promise<FlashbotsTransactionStatus>;
+  flashbots?: FlashbotsClient;
+  supportsFlashbots: boolean;
+
   getBlockNativeFeesPerGas(confidenceLevel?: number): Promise<{
     maxFeePerGas: bigint;
     maxPriorityFeePerGas: bigint;
@@ -30,7 +29,6 @@ export interface INetworkService<AccountType, RawTransactionType> {
   getBalance(address: string): Promise<bigint>;
   getNonce(account: IEVMAccount, pendingNonce?: boolean): Promise<number>;
   getNetworkNonce(account: IEVMAccount, pending?: boolean): Promise<number>;
-  getFlashbotsNonce(account: IEVMAccount, pending?: boolean): Promise<number>;
   estimateGas(params: any): Promise<any>;
   sendTransaction(
     rawTransactionData: RawTransactionType,
@@ -45,8 +43,7 @@ export interface INetworkService<AccountType, RawTransactionType> {
     confirmations?: number,
     timeout?: number,
   ): Promise<TransactionReceipt>;
-  getLatesBlockNumber(): Promise<bigint>;
+  getLatestBlockNumber(): Promise<bigint>;
   getTransaction(transactionHash: string): Promise<Transaction | null>;
-  runAlchemySimulation(params: any): Promise<any>;
   ethCall(params: any): Promise<any>;
 }

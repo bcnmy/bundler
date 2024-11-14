@@ -1,22 +1,16 @@
 import { STATUSES } from "../../server/api/shared/middleware";
 import { IQueue } from "../interface";
 import { logger } from "../logger";
-import {
-  BundlerTransactionMessageType,
-  RelayServiceResponseType,
-} from "../types";
-import { parseError } from "../utils";
+import { SendUserOperation, RelayServiceResponseType } from "../types";
+import { customJSONStringify } from "../utils";
 import { IRelayService } from "./interface/IRelayService";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
 });
-export class BundlerRelayService
-  implements IRelayService<BundlerTransactionMessageType>
-{
-  queue: IQueue<BundlerTransactionMessageType>;
 
-  constructor(queue: IQueue<BundlerTransactionMessageType>) {
+export class BundlerRelayService implements IRelayService<SendUserOperation> {
+  constructor(private queue: Pick<IQueue<SendUserOperation>, "publish">) {
     this.queue = queue;
   }
 
@@ -25,12 +19,15 @@ export class BundlerRelayService
    * @param data raw transaction data received in the request
    * @returns transaction id
    */
-  async sendTransactionToRelayer(
-    data: BundlerTransactionMessageType,
+  async sendUserOperation(
+    data: SendUserOperation,
   ): Promise<RelayServiceResponseType> {
-    log.info(
-      `Sending transaction to Bundler transaction queue with transactionId: ${data.transactionId}`,
-    );
+    const _log = log.child({
+      sendUserOperation: data,
+    });
+
+    _log.info(`Sending user operation to Bundler mempool`);
+
     let response: RelayServiceResponseType;
     try {
       await this.queue.publish(data);
@@ -38,11 +35,14 @@ export class BundlerRelayService
         code: STATUSES.SUCCESS,
         transactionId: data.transactionId,
       };
-    } catch (error) {
-      log.error(parseError(error));
+    } catch (err) {
+      _log.error(
+        { err },
+        `Error while sending user operation to Bundler mempool`,
+      );
       response = {
         code: STATUSES.INTERNAL_SERVER_ERROR,
-        error: `Internal server error: ${error}`,
+        error: `Internal server error: ${customJSONStringify(err)}`,
       };
     }
     return response;

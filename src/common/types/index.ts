@@ -84,7 +84,7 @@ export type EVMRawTransactionType = {
   type: string;
 };
 
-export type BundlerTransactionMessageType = {
+export type SendUserOperation = {
   type: string;
   to: string;
   data: string;
@@ -94,6 +94,7 @@ export type BundlerTransactionMessageType = {
   transactionId: string;
   userOp?: UserOperationType | UserOperationStruct;
   walletAddress?: string;
+  timestamp?: number;
 };
 
 type ResponseType = {

@@ -42,6 +42,7 @@ export type TransactionDataType = {
   metaData?: {
     dappAPIKey: string;
   };
+  timestamp?: number;
 };
 
 export type ErrorTransactionResponseType = {

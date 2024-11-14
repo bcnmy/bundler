@@ -1,36 +1,39 @@
-import amqp, { Channel, ConsumeMessage, Replies } from "amqplib";
-import { config } from "../../config";
+import amqp, { Channel, ConsumeMessage } from "amqplib";
+import nodeconfig from "config";
 import { logger } from "../logger";
-import { BundlerTransactionMessageType, TransactionType } from "../types";
+import { SendUserOperation, TransactionType } from "../types";
 import { IQueue } from "./interface/IQueue";
-import { customJSONStringify, parseError } from "../utils";
+import { customJSONStringify } from "../utils";
+import { shouldDiscardStaleMessage } from "./queueUtils";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
 });
 
-const queueUrl = process.env.BUNDLER_QUEUE_URL || config.queueUrl;
+const queueUrl =
+  process.env.BUNDLER_QUEUE_URL || nodeconfig.get<string>("queueUrl");
 
-export class BundlerTransactionQueue
-  implements IQueue<BundlerTransactionMessageType>
-{
+export class BundlerTransactionQueue implements IQueue<SendUserOperation> {
+  readonly chainId: number;
+
   private channel!: Channel;
 
-  transactionType: TransactionType = TransactionType.BUNDLER;
+  private transactionType: TransactionType = TransactionType.BUNDLER;
 
   private exchangeName = `relayer_queue_exchange_${this.transactionType}`;
 
   private exchangeType = "direct";
 
-  chainId: number;
+  private prefetch = 1;
 
-  queueName: string;
+  private exchangeKey: string;
 
-  msg!: ConsumeMessage | null;
+  private queueName: string;
 
   constructor(options: { chainId: number }) {
     this.chainId = options.chainId;
-    this.queueName = `relayer_queue_${this.transactionType}_${this.chainId}`;
+    this.exchangeKey = `chainid.${this.chainId}.type.${this.transactionType}`;
+    this.queueName = `relayer_queue_${this.chainId}_type_${this.transactionType}`;
   }
 
   async connect() {
@@ -43,11 +46,21 @@ export class BundlerTransactionQueue
     }
   }
 
-  async publish(data: BundlerTransactionMessageType) {
-    const key = `chainid.${this.chainId}.type.${this.transactionType}`;
-    log.info(
-      `Publishing data to retry queue on chainId: ${this.chainId} and key ${key}`,
-    );
+  async publish(data: SendUserOperation) {
+    const key = this.exchangeKey;
+    const _log = log.child({
+      data,
+      key,
+      transactionId: data.transactionId,
+    });
+
+    _log.info(`Publishing data to retry queue`);
+
+    if (shouldDiscardStaleMessage(this.chainId, data, Date.now())) {
+      _log.warn(`Discarding message because it's stale`);
+      return true;
+    }
+
     this.channel.publish(
       this.exchangeName,
       key,
@@ -60,25 +73,28 @@ export class BundlerTransactionQueue
   }
 
   async consume(onMessageReceived: () => void) {
-    log.info(
-      `[x] Setting up consumer for queue with chainId: ${this.chainId} for transaction type ${this.transactionType}`,
-    );
-    this.channel.prefetch(1);
+    this.channel.prefetch(this.prefetch);
+
+    const _log = log.child({
+      chainId: this.chainId,
+      transactionType: this.transactionType,
+      queueName: this.queueName,
+      exchangeKey: this.exchangeKey,
+    });
+
+    _log.info(`Setting up consumer for queue`);
     try {
       // setup a consumer
-      const queue: Replies.AssertQueue = await this.channel.assertQueue(
-        `relayer_queue_${this.chainId}_type_${this.transactionType}`,
-      );
-      const key = `chainid.${this.chainId}.type.${this.transactionType}`;
-      log.info(
-        `[*] Waiting for transactions on chainId: ${this.chainId} for transaction type ${this.transactionType}`,
-      );
-      this.channel.bindQueue(queue.queue, this.exchangeName, key);
+      const queue = await this.channel.assertQueue(this.queueName);
+
+      this.channel.bindQueue(queue.queue, this.exchangeName, this.exchangeKey);
+
+      _log.info(`Waiting for transactions...`);
       await this.channel.consume(queue.queue, onMessageReceived);
 
       return true;
-    } catch (error) {
-      log.error(parseError(error));
+    } catch (err) {
+      _log.error({ err }, `Error while consuming queue`);
       return false;
     }
   }

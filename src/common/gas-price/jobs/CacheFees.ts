@@ -1,8 +1,7 @@
 import { CronJob } from "cron";
 import { GasPriceService } from "../GasPrice";
 import { logger } from "../../logger";
-import { parseError } from "../../utils";
-import { formatHrtimeSeconds } from "../../utils/timing";
+import { logMeasureTime } from "../../utils/timing";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -22,20 +21,17 @@ export class CacheFeesJob extends CronJob {
     private gasPriceService: GasPriceService,
   ) {
     super(schedule, async () => {
-      log.info(`Start ${this.pretty}`);
+      const { chainId } = this.gasPriceService;
+      const _log = log.child({ chainId, schedule });
+      _log.info(`Start CacheFeesJob`);
+
       try {
-        const start = process.hrtime();
-        await gasPriceService.setup();
-        const end = process.hrtime(start);
-        log.info(`Finish ${this.pretty} after=${formatHrtimeSeconds(end)}s`);
+        logMeasureTime(_log, `Finish CacheFeesJob`, async () => {
+          await gasPriceService.setup();
+        });
       } catch (err) {
-        log.error(`Error running ${this.pretty}: ${parseError(err)} `);
+        _log.error({ err }, `Error running CacheFees job`);
       }
     });
-  }
-
-  // Get pretty name for logging
-  public get pretty(): string {
-    return `CacheFeesJob(chainID: ${this.gasPriceService.chainId}, schedule: '${this.schedule}')`;
   }
 }
