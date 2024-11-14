@@ -102,7 +102,7 @@ export const eth_sendUserOperation = async (req: Request, res: Response) => {
 
       const response = routeTransactionToRelayerMap[chainIdNumber][
         TransactionType.BUNDLER
-      ].sendTransactionToRelayer({
+      ].sendUserOperation({
         type: TransactionType.BUNDLER,
         to: entryPointAddress,
         data: "0x0",
@@ -112,6 +112,7 @@ export const eth_sendUserOperation = async (req: Request, res: Response) => {
         userOp,
         transactionId,
         walletAddress,
+        timestamp: Date.now(),
       });
 
       if (isError(response)) {
@@ -131,15 +132,15 @@ export const eth_sendUserOperation = async (req: Request, res: Response) => {
         result: userOpHash,
       });
     });
-  } catch (error) {
-    _log.error(`eth_sendUserOperation: Unexpected error: ${parseError(error)}`);
+  } catch (err) {
+    _log.error({ err }, `eth_sendUserOperation: Unexpected error`);
 
     return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
       jsonrpc: "2.0",
       id: requestId,
       error: {
         code: BUNDLER_ERROR_CODES.INTERNAL_SERVER_ERROR,
-        message: `Internal Server error: ${parseError(error)}`,
+        message: `Internal Server error: ${parseError(err)}`,
       },
     });
   }

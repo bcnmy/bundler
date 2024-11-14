@@ -1,3 +1,4 @@
+import nodeconfig from "config";
 import { getContract, parseEther } from "viem";
 import { chain } from "lodash";
 import { ENTRY_POINT_ABI } from "entry-point-gas-estimations/dist/gas-estimator/entry-point-v6";
@@ -34,7 +35,7 @@ import {
 } from "../simulation";
 import { IStatusService, StatusService } from "../status";
 import {
-  BundlerTransactionMessageType,
+  SendUserOperation,
   EntryPointMapType,
   EntryPointV07MapType,
   EVMRawTransactionType,
@@ -45,6 +46,7 @@ import { customJSONStringify, parseError } from "../utils";
 import { GasPriceService } from "../gas-price";
 import { CacheFeesJob } from "../gas-price/jobs/CacheFees";
 import { ENTRY_POINT_V07_ABI } from "../entrypoint-v7/abiv7";
+import { FlashbotsClient } from "../network/FlashbotsClient";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -385,7 +387,7 @@ async function setupNetwork(
         throw new Error(`Relayer manager not found for ${type}`);
       }
       log.info(`Setting up Bundler transaction queue for chainId: ${chainId}`);
-      const bundlerQueue: IQueue<BundlerTransactionMessageType> =
+      const bundlerQueue: IQueue<SendUserOperation> =
         new BundlerTransactionQueue({
           chainId,
         });
@@ -427,9 +429,21 @@ async function setupNetwork(
 function setupEVMNetworkService(chainId: number) {
   log.info({ chainId }, `Setting up the EVMNetworkService...`);
 
-  const networkService = new EVMNetworkService({
-    chainId,
-  });
+  let networkService: EVMNetworkService;
+  if (
+    nodeconfig.get<number[]>("flashbots.supportedNetworks").includes(chainId)
+  ) {
+    networkService = new EVMNetworkService(
+      {
+        chainId,
+      },
+      new FlashbotsClient(),
+    );
+  } else {
+    networkService = new EVMNetworkService({
+      chainId,
+    });
+  }
   networkServiceMap[chainId] = networkService;
 
   log.info(

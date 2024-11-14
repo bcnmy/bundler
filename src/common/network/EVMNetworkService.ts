@@ -11,46 +11,26 @@ import {
   createPublicClient,
   fallback,
   http,
-  keccak256,
   parseGwei,
-  toHex,
   verifyMessage,
 } from "viem";
 import { IEVMAccount } from "../../relayer/account";
-import {
-  AlchemyMethodType,
-  EVMRawTransactionType,
-  EthMethodType,
-} from "../types";
+import { EVMRawTransactionType, EthMethodType } from "../types";
 import { INetworkService } from "./interface";
 import {
   Type0TransactionGasPriceType,
   Type2TransactionGasPriceType,
 } from "./types";
 import { logger } from "../logger";
-import { customJSONStringify, parseError } from "../utils";
+import { parseError } from "../utils";
 import { BLOCKCHAINS } from "../constants";
 import nodeconfig from "config";
 import { hideRpcUrlApiKey } from "./utils";
+import { FlashbotsClient, FlashbotsOptions } from "./FlashbotsClient";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
 });
-
-class ErrorCheckingTransactionReceipt extends Error {
-  constructor(
-    error: any,
-    transactionHash: string,
-    transactionId: string,
-    chainId: number,
-  ) {
-    super(
-      `Error checking transaction receipt: ${parseError(
-        error,
-      )} for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${chainId}`,
-    );
-  }
-}
 
 interface IEVMNetworkServiceOptions {
   chainId: number;
@@ -58,6 +38,7 @@ interface IEVMNetworkServiceOptions {
   mevProtectedRpcUrl?: string;
   checkForReceiptIntervalMs?: number;
   checkForReceiptTimeoutMs?: number;
+  flashbots?: FlashbotsOptions;
 }
 
 export class EVMNetworkService
@@ -78,18 +59,19 @@ export class EVMNetworkService
   // Stop checking for receipt after this timeout
   private checkForReceiptTimeoutMs: number;
 
-  // A private axios client with retry mechanism to handle flaky requests
-  private axiosClient = axios.create();
-
-  private flashbotsMaxBlocks = 10n;
-
-  constructor({
-    chainId,
-    rpcUrls = getRpcUrls(chainId),
-    mevProtectedRpcUrl = getDefaultMevProtectedRpcUrl(chainId),
-    checkForReceiptIntervalMs = getCheckForReceiptIntervalMs(chainId),
-    checkForReceiptTimeoutMs = getCheckReceiptTimeoutMs(chainId),
-  }: IEVMNetworkServiceOptions) {
+  constructor(
+    {
+      chainId,
+      rpcUrls = getRpcUrls(chainId),
+      mevProtectedRpcUrl = getDefaultMevProtectedRpcUrl(chainId),
+      checkForReceiptIntervalMs = getCheckForReceiptIntervalMs(chainId),
+      checkForReceiptTimeoutMs = getCheckReceiptTimeoutMs(chainId),
+    }: IEVMNetworkServiceOptions,
+    // A Flashbots client for sending transactions to a private mempool
+    public flashbots?: FlashbotsClient,
+    // A private axios client with retry mechanism to handle flaky requests
+    private axiosClient = axios.create(),
+  ) {
     this.chainId = chainId;
 
     // Sanity check if the rpcUrls are not passed as an argument and missing from the default config
@@ -129,6 +111,9 @@ export class EVMNetworkService
       retries: 3,
       retryDelay: axiosRetry.exponentialDelay,
     });
+
+    // Flashbots configuration for sending transactions to a private mempool
+    this.flashbots = flashbots;
   }
 
   /**
@@ -163,95 +148,45 @@ export class EVMNetworkService
       id: Date.now(),
     };
 
+    const _log = log.child({
+      rpcUrl: hideRpcUrlApiKey(this.rpcUrl),
+      requestData,
+      chainId: this.chainId,
+    });
+
     let response: AxiosResponse<any, any>;
     try {
-      response = await axios.post(this.rpcUrl, requestData);
-    } catch (error) {
-      logger.error(`raw RPC call failed with error: ${JSON.stringify(error)}`);
-      throw error;
+      response = await axios.post<AxiosResponse>(this.rpcUrl, requestData);
+    } catch (err) {
+      _log.error({ err }, `Error in EVMNetworkService.sendRpcCall`);
+      throw err;
     }
     const { data } = response;
-    log.info(
-      `data from RPC call: ${customJSONStringify(
-        data,
-      )} received on JSON RPC Method: ${method} with params: ${customJSONStringify(
-        params,
-      )} on chainId: ${this.chainId}`,
-    );
+    _log.info({ result: data.result }, `RPC response received`);
     if (!data) {
-      log.error(`RPC Call failed without data on chainId: ${this.chainId}`);
+      _log.error(`RPC Call returned no data`);
       return null;
     }
     if (data.error) {
-      log.error(
-        `RPC called returned error on chainId: ${this.chainId} with code: ${data.error.code} and message: ${data.error.message}`,
+      const { code, message } = data.error;
+      _log.error(
+        {
+          code,
+          message,
+        },
+        `RPC Call returned an error`,
       );
+
       if (
         method === EthMethodType.ETH_CALL ||
         method === EthMethodType.ESTIMATE_GAS
       ) {
         return data;
       }
+
       throw new Error(data.error.message);
     }
     return data.result;
-  }
-
-  /**
-   * Getting the nonce on flasbots requires a signature from the account
-   * See https://docs.flashbots.net/flashbots-protect/nonce-management
-   * @param account account to get the nonce for
-   * @param pending include the nonce of the pending transaction (default: true)
-   * @returns nonce of the account
-   */
-  async getFlashbotsNonce(
-    account: IEVMAccount,
-    pending = true,
-  ): Promise<number> {
-    if (!this.mevProtectedRpcUrl) {
-      throw new Error(
-        `Can't fetch Flashbots nonce if Flashbots RPC URL not set for chainId: ${this.chainId}!`,
-      );
-    }
-    logger.info(`Getting Flashbots nonce for address: ${account.address}`);
-
-    const body = JSON.stringify({
-      jsonrpc: "2.0",
-      method: "eth_getTransactionCount",
-      params: pending ? [account.address, "pending"] : [account.address],
-      id: Date.now(),
-    });
-
-    const signature =
-      account.address +
-      ":" +
-      (await account.signMessage(keccak256(toHex(body))));
-
-    const response = await this.axiosClient.post(
-      this.mevProtectedRpcUrl,
-      body,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "X-Flashbots-Signature": signature,
-        },
-      },
-    );
-
-    const data = response.data;
-
-    logger.info(`Flashbots nonce response: ${customJSONStringify(data)}`);
-
-    if (!isFlashbotsNonceResponse(data)) {
-      throw new Error(
-        `Invalid Flashbots nonce response: ${customJSONStringify(data)}`,
-      );
-    }
-
-    const nonce = parseInt(data.result, 16);
-    logger.info({ address: account.address }, `Flashbots nonce: ${nonce}`);
-
-    return nonce;
   }
 
   async getBaseFeePerGas(): Promise<bigint> {
@@ -375,58 +310,11 @@ export class EVMNetworkService
    * if pendingNonce is set to false, returns the nonce of the mined transaction
    */
   async getNonce(account: IEVMAccount, pending = true): Promise<number> {
-    if (this.mevProtectedRpcUrl) {
-      return this.getFlashbotsNonce(account, pending);
+    if (this.supportsFlashbots && this.flashbots != null) {
+      return this.flashbots.getNonce(account, pending);
     }
 
-    const params = pending ? [account.address, "pending"] : [account.address];
-    return this.sendRpcCall(EthMethodType.GET_TRANSACTION_COUNT, params);
-  }
-
-  async sendPrivateTransaction(signedRawTransaction: Hex): Promise<string> {
-    if (!this.mevProtectedRpcUrl) {
-      throw new Error(
-        `Can't send private transaction if Flashbots RPC URL not set for chainId: ${this.chainId}!`,
-      );
-    }
-
-    const currentBlockNumber = await this.getLatesBlockNumber();
-    const maxBlockNumber = currentBlockNumber + this.flashbotsMaxBlocks;
-
-    const requestData = {
-      jsonrpc: "2.0",
-      method: "eth_sendPrivateTransaction",
-      params: [
-        {
-          tx: signedRawTransaction,
-          maxBlockNumber: "0x" + maxBlockNumber.toString(16),
-          preferences: {
-            fast: true,
-          },
-        },
-      ],
-      id: Date.now(),
-    };
-
-    try {
-      const response =
-        await this.axiosClient.post<FlashbotsSendTransactionResponse>(
-          this.mevProtectedRpcUrl,
-          requestData,
-        );
-
-      logger.info(
-        `eth_sendPrivateTransaction response: ${customJSONStringify(response.data)}`,
-      );
-
-      return response.data.result;
-    } catch (error) {
-      log.error(
-        { chainId: this.chainId, signedRawTransaction },
-        `Error sending private transaction: ${error} on chainId: ${this.chainId}`,
-      );
-      throw error;
-    }
+    return this.getNetworkNonce(account, pending);
   }
 
   async getNetworkNonce(account: IEVMAccount, pending = true): Promise<number> {
@@ -453,43 +341,11 @@ export class EVMNetworkService
     return response;
   }
 
-  async waitForFlashbotsTransaction(
-    transactionHash: string,
-  ): Promise<FlashbotsTransactionStatus> {
-    if (!this.mevProtectedRpcUrl) {
-      throw new Error(
-        `Can't wait for Flashbots transaction if Flashbots RPC URL not set for chainId: ${this.chainId}!`,
-      );
-    }
-
-    const delaySeconds = 3;
-    let currentBlock = Number(await this.getLatesBlockNumber());
-    const latestBlock = currentBlock + 25;
-
-    while (currentBlock < latestBlock + 3) {
-      try {
-        const response = await this.axiosClient.get<FlashbotsTransactionStatus>(
-          `https://protect.flashbots.net/tx/${transactionHash}`,
-        );
-
-        if (
-          response.data.status === FlashbotsTxStatus.INCLUDED ||
-          response.data.status === FlashbotsTxStatus.FAILED
-        ) {
-          return response.data;
-        }
-
-        await new Promise((resolve) =>
-          setTimeout(resolve, delaySeconds * 1000),
-        );
-        currentBlock = Number(await this.getLatesBlockNumber());
-      } catch (error) {
-        log.error(`waitForFlashbotsTransaction failed with error: ${error}`);
-      }
-    }
-
-    throw new Error(
-      "Flashbots Timeout: The transaction is taking too long to confirm.",
+  // TODO: Use this instead of checking for MEV protected RPC URL
+  public get supportsFlashbots(): boolean {
+    return (
+      this.flashbots != null &&
+      this.flashbots.options.supportedNetworks.includes(this.chainId)
     );
   }
 
@@ -503,9 +359,13 @@ export class EVMNetworkService
     // confirmations?: number,
     // timeout?: number,
   ): Promise<TransactionReceipt> {
-    log.info(
-      `Starting waitFortransaction polling on transactionHash: ${transactionHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-    );
+    const _log = log.child({
+      transactionHash,
+      transactionId,
+      chainId: this.chainId,
+    });
+
+    _log.info(`Start EVMNetworkService.waitForTransaction`);
 
     const response: TransactionReceipt | null = await new Promise(
       async (resolve, reject) => {
@@ -515,9 +375,7 @@ export class EVMNetworkService
         );
         const intervalId = setInterval(async () => {
           try {
-            log.info(
-              `Polling started to fetch receipt for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${this.chainId}`,
-            );
+            _log.info(`Polling for receipt started`);
             const transactionReceipt =
               await this.getTransactionReceipt(transactionHash);
 
@@ -528,20 +386,12 @@ export class EVMNetworkService
 
             if (isTransactionMined) {
               // Transaction resolved successfully
-              log.info(
-                `Transaction receipt: ${customJSONStringify(
-                  transactionReceipt,
-                )} fetched for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${
-                  this.chainId
-                }`,
-              );
+              _log.info({ transactionReceipt }, "Received transaction receipt");
               clearInterval(intervalId);
               resolve(transactionReceipt);
             } else {
               // Transaction is still pending
-              log.info(
-                `Transaction is still pending for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${this.chainId}`,
-              );
+              _log.info(`Transaction is still pending`);
             }
           } catch (error) {
             const wrappedError = new ErrorCheckingTransactionReceipt(
@@ -570,12 +420,11 @@ export class EVMNetworkService
       },
     );
 
-    log.info(
-      `waitForTransactionReceipt from provider response: ${customJSONStringify(
+    _log.info(
+      {
         response,
-      )} for transactionHash: ${transactionHash} for transactionId: ${transactionId} on chainId: ${
-        this.chainId
-      }`,
+      },
+      `EVMNetworkService.waitForTransaction response received`,
     );
 
     if (response === null) {
@@ -602,17 +451,14 @@ export class EVMNetworkService
     }
   }
 
-  async getLatesBlockNumber(): Promise<bigint> {
+  async getLatestBlockNumber(): Promise<bigint> {
     const block = await this.provider.getBlock({
       blockTag: "latest",
     });
     return block.number;
   }
 
-  async runAlchemySimulation(params: any): Promise<any> {
-    return await this.sendRpcCall(AlchemyMethodType.SIMULATE_EXECUTION, params);
-  }
-
+  // TODO: Move this to EVMAccount
   async verifySignature(
     address: string,
     message: string,
@@ -679,26 +525,6 @@ const getCheckReceiptTimeoutMs = (chainId: number) => {
     : defaultTimeout;
 };
 
-interface FlashbotsNonceResponse {
-  id: number;
-  result: Hex;
-  jsonrpc: "2.0";
-}
-
-type FlashbotsSendTransactionResponse = FlashbotsNonceResponse;
-
-function isFlashbotsNonceResponse(
-  response: any,
-): response is FlashbotsNonceResponse {
-  return (
-    response &&
-    response.id &&
-    response.result &&
-    response.jsonrpc === "2.0" &&
-    typeof response.result === "string"
-  );
-}
-
 export interface BlockNativeResponse {
   system: string;
   network: string;
@@ -724,29 +550,17 @@ export interface EstimatedPrice {
   maxFeePerGas: number;
 }
 
-export enum FlashbotsTxStatus {
-  PENDING = "PENDING",
-  INCLUDED = "INCLUDED",
-  FAILED = "FAILED",
-  CANCELLED = "CANCELLED",
-  UNKNOWN = "UNKNOWN",
-}
-
-export interface FlashbotsTransactionStatus {
-  status: FlashbotsTxStatus;
-  hash: string;
-  maxBlockNumber: number;
-  transaction: FlashbotsTransaction;
-  fastMode: boolean;
-  seenInMempool: boolean;
-}
-
-export interface FlashbotsTransaction {
-  from: string;
-  to: string;
-  gasLimit: string;
-  maxFeePerGas: string;
-  maxPriorityFeePerGas: string;
-  nonce: string;
-  value: string;
+class ErrorCheckingTransactionReceipt extends Error {
+  constructor(
+    error: any,
+    transactionHash: string,
+    transactionId: string,
+    chainId: number,
+  ) {
+    super(
+      `Error checking transaction receipt: ${parseError(
+        error,
+      )} for transactionHash: ${transactionHash} on transactionId: ${transactionId} on chainId: ${chainId}`,
+    );
+  }
 }

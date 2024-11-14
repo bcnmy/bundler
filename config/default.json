@@ -319,7 +319,7 @@
     },
     "retryTransactionInterval": {
       "137": 30000,
-      "1": 150000,
+      "1": 375000,
       "97": 30000,
       "56": 30000,
       "1101": 30000,
@@ -1136,6 +1136,17 @@
   },
   "aaDashboardBackend": {
     "url": "https://paymaster-dashboard-backend-v2.staging.biconomy.io/api/v2/bundlers/auth"
+  },
+  "flashbots": {
+    "rpcUrl": "https://rpc.flashbots.net/fast",
+    "statusUrl": "https://protect.flashbots.net/tx",
+    "getStatusIntervalDelay": 5000,
+    "maxBlockWait": 26,
+    "supportedNetworks": [1]
+  },
+  "clearStaleMessages": {
+    "supportedNetworks": [1, 11155111],
+    "ttlSeconds": 3600
   },
   "isTWSetup": false,
   "redisCluster": {

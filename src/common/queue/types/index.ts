@@ -13,4 +13,5 @@ export type RetryTransactionQueueData = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metaData: any;
   relayerManagerName: string;
+  timestamp?: number;
 };

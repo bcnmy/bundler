@@ -1,6 +1,6 @@
 import { ConsumeMessage } from "amqplib";
 import { logger } from "../../common/logger";
-import { FlashbotsTxStatus, INetworkService } from "../../common/network";
+import { INetworkService } from "../../common/network";
 import { IQueue } from "../../common/queue";
 import { RetryTransactionQueueData } from "../../common/queue/types";
 import { EVMRawTransactionType, TransactionType } from "../../common/types";
@@ -17,6 +17,7 @@ import {
   parseError,
 } from "../../common/utils";
 import { ICacheService } from "../../common/cache";
+import { FlashbotsTxStatus } from "../../common/network/FlashbotsClient";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -64,15 +65,16 @@ export class EVMRetryTransactionService
 
   onMessageReceived = async (msg?: ConsumeMessage) => {
     if (msg) {
-      log.info(
-        `Message received from retry transaction queue on chainId: ${
-          this.chainId
-        }: ${customJSONStringify(msg.content.toString())}`,
-      );
-      this.queue.ack(msg);
       const transactionDataReceivedFromRetryQueue = JSON.parse(
         msg.content.toString(),
       );
+
+      log.info(
+        { chainId: this.chainId, msg: transactionDataReceivedFromRetryQueue },
+        "Message received from retry transaction queue",
+      );
+
+      this.queue.ack(msg);
 
       const {
         transactionHash,
@@ -134,10 +136,13 @@ export class EVMRetryTransactionService
           `Transaction receipt not receivied for transactionHash: ${transactionHash} and transactionId: ${transactionId} on chainId: ${this.chainId}. Hence retrying the transaction.`,
         );
 
-        if (this.networkService.mevProtectedRpcUrl) {
+        if (
+          this.networkService.supportsFlashbots &&
+          this.networkService.flashbots != null
+        ) {
           try {
             const flashbotsStatus =
-              await this.networkService.waitForFlashbotsTransaction(
+              await this.networkService.flashbots?.waitForTransaction(
                 transactionHash,
               );
 

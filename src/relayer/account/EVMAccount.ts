@@ -59,7 +59,7 @@ export class EVMAccount implements IEVMAccount {
     ];
 
     if (this.networkService.mevProtectedRpcUrl) {
-      promises.push(this.networkService.getFlashbotsNonce(this));
+      promises.push(this.networkService.getNonce(this));
     }
 
     const results = await Promise.all(promises);
