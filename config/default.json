@@ -1165,6 +1165,9 @@
   },
   "disableFeeValidation": [],
   "adminAddresses": [],
+  "callGasLimitMarkup": {
+    "100": 20000
+  },
   "hardcodedGasLimits": {
     "84532": {
       "verificationGasLimit": 2000000,

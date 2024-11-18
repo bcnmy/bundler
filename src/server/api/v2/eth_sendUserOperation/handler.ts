@@ -6,6 +6,7 @@ import {
   userOperationDao,
   userOperationStateDao,
 } from "../../../../common/service-manager";
+import config from "config";
 import {
   getPaymasterFromPaymasterAndData,
   parseError,
@@ -34,7 +35,7 @@ const log = logger.child({
  * @returns The response object
  */
 export const eth_sendUserOperation = async (req: Request, res: Response) => {
-  const requestId = req.body.id || uniqueRequestId();
+  const requestId = req.body.id != null ? req.body.id : uniqueRequestId();
   const { chainId, dappAPIKey } = req.params;
   const chainIdNumber = parseInt(chainId, 10);
   const transactionId = uniqueTransactonId();
@@ -98,6 +99,15 @@ export const eth_sendUserOperation = async (req: Request, res: Response) => {
       // Add 5 Gwei to the gasLimit for MANTLE_MAINNET (for some reason?)
       if (chainIdNumber === 5000) {
         gasLimit += 5e9;
+      }
+
+      // Add a markup to the gas limit if specified in the config
+      const configKey = `callGasLimitMarkup.${chainId}`;
+      if (config.has(configKey)) {
+        _log.info(
+          `Adding gas limit markup of ${config.get<number>(configKey)}`,
+        );
+        gasLimit += config.get<number>(configKey);
       }
 
       const response = routeTransactionToRelayerMap[chainIdNumber][
