@@ -1,5 +1,4 @@
-/* eslint-disable import/no-import-module-exports */
-/* eslint-disable no-await-in-loop */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Mutex } from "async-mutex";
 import {
   privateToPublic,
@@ -372,15 +371,21 @@ export class EVMRelayerManager
         const nodePath = `${nodePathRoot + nodePathIndex}/`;
         const ethNodePath: any = ethRoot.derive(nodePath + relayerIndex);
         const privateKey = ethNodePath._privateKey.toString("hex");
+
         const ethPubkey = privateToPublic(ethNodePath.privateKey);
 
         const ethAddr = publicToAddress(ethPubkey).toString("hex");
+
         const ethAddress = toChecksumAddress(`0x${ethAddr}`);
         const address = ethAddress.toLowerCase();
+
         const relayer = new EVMAccount(
           address,
           privateKey,
-          this.networkService.rpcUrl,
+          this.networkService.mevProtectedRpcUrl || this.networkService.rpcUrl,
+          this.chainId,
+          this.nonceManager,
+          this.networkService,
         );
         this.relayerMap[address] = relayer;
         relayers.push(relayer);
@@ -397,7 +402,7 @@ export class EVMRelayerManager
           const balance = Number(
             toHex(await this.networkService.getBalance(relayerAddress)),
           );
-          const nonce = await this.nonceManager.getNonce(relayerAddress);
+          const nonce = await this.nonceManager.getNonce(relayer);
           log.info(
             `Balance of relayer ${relayerAddress} is ${balance} and nonce is ${nonce} on chainId: ${this.chainId} with threshold ${this.fundingBalanceThreshold}`,
           );
@@ -522,6 +527,7 @@ export class EVMRelayerManager
               ...rawTx,
               transactionId,
               walletAddress: "",
+              timestamp: Date.now(),
             },
             this.ownerAccountDetails,
             TransactionType.FUNDING,

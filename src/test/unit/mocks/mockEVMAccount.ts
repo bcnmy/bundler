@@ -1,4 +1,4 @@
-// /* eslint-disable @typescript-eslint/no-unused-vars */
+//
 // import { EVMRawTransactionType } from "../../../common/types";
 // import { IEVMAccount } from "../../../relayer/account";
 

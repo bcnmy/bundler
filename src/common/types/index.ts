@@ -1,5 +1,8 @@
-import { ENTRY_POINT_ABI } from "entry-point-gas-estimations";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { ENTRY_POINT_ABI } from "entry-point-gas-estimations/dist/gas-estimator/entry-point-v6";
 import { GetContractReturnType, Hex } from "viem";
+import { ENTRY_POINT_V07_ABI } from "../entrypoint-v7/abiv7";
+import { EVMAccountInfo } from "../../relayer/account";
 
 export enum TransactionType {
   FUNDING = "FUNDING",
@@ -81,7 +84,7 @@ export type EVMRawTransactionType = {
   type: string;
 };
 
-export type BundlerTransactionMessageType = {
+export type SendUserOperation = {
   type: string;
   to: string;
   data: string;
@@ -89,8 +92,9 @@ export type BundlerTransactionMessageType = {
   chainId: number;
   value: string;
   transactionId: string;
-  userOp?: UserOperationType;
+  userOp?: UserOperationType | UserOperationStruct;
   walletAddress?: string;
+  timestamp?: number;
 };
 
 type ResponseType = {
@@ -123,6 +127,24 @@ export type UserOperationType = {
   signature: `0x${string}`;
 };
 
+export type UserOperationStruct = {
+  sender: Hex;
+  nonce: bigint;
+  factory: Hex;
+  factoryData: Hex;
+  callData: Hex;
+  callGasLimit: bigint;
+  verificationGasLimit: bigint;
+  preVerificationGas: bigint;
+  maxFeePerGas: bigint;
+  maxPriorityFeePerGas: bigint;
+  paymaster: Hex;
+  paymasterVerificationGasLimit: bigint;
+  paymasterPostOpGasLimit: bigint;
+  paymasterData: Hex;
+  signature: Hex;
+};
+
 export type SymbolMapByChainIdType = {
   [key: number]: {
     [key: string]: string;
@@ -133,6 +155,13 @@ export type EntryPointMapType = {
   [chainId: number]: Array<{
     address: string;
     entryPointContract: EntryPointContractType;
+  }>;
+};
+
+export type EntryPointV07MapType = {
+  [chainId: number]: Array<{
+    address: string;
+    entryPointContract: EntryPointV07ContractType;
   }>;
 };
 
@@ -206,6 +235,10 @@ export type EntryPointContractType = GetContractReturnType<
   typeof ENTRY_POINT_ABI
 >;
 
+export type EntryPointV07ContractType = GetContractReturnType<
+  typeof ENTRY_POINT_V07_ABI
+>;
+
 export type StateOverrideSetType = {
   [key: string]: {
     balance?: Hex;
@@ -228,8 +261,10 @@ export type EVMRelayerMetaDataType = {
   nonce: number;
   pendingCount: number;
   balance: number;
+  chainNonce?: number;
+  flashbotsNonce?: number;
 };
 
 export type StatusInfo = {
-  [chainId: number]: { relayers: Array<EVMRelayerMetaDataType> };
+  [chainId: number]: { relayers: Array<EVMAccountInfo> };
 };

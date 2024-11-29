@@ -24,7 +24,7 @@ export interface IGasPriceService {
   getBumpedUpGasPrice(
     pastGasPrice: NetworkBasedGasPriceType,
     bumpingPercentage: number,
-  ): NetworkBasedGasPriceType;
+  ): Promise<NetworkBasedGasPriceType>;
 
   setBaseFeePerGas(baseFeePerGas: string): Promise<void>;
   getBaseFeePerGas(): Promise<bigint>;

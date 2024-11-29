@@ -2,7 +2,7 @@ describe("broken test", () => {
   it.todo("should be fixed");
 });
 
-// /* eslint-disable import/no-import-module-exports */
+//
 // /* eslint-disable no-await-in-loop */
 // import { BigNumber, ethers } from 'ethers';
 // import { config } from '../../../config';

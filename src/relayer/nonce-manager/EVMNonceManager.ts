@@ -1,4 +1,3 @@
-/* eslint-disable import/no-import-module-exports */
 import NodeCache from "node-cache";
 import { ICacheService } from "../../common/cache";
 import { logger } from "../../common/logger";
@@ -37,35 +36,37 @@ export class EVMNonceManager
     this.usedNonceTracker = new NodeCache();
   }
 
-  async getNonce(address: string): Promise<number> {
+  async getNonce(relayer: IEVMAccount): Promise<number> {
     let nonce: number | undefined;
     try {
-      nonce = this.pendingNonceTracker.get(address.toLowerCase());
+      nonce = this.pendingNonceTracker.get(relayer.address.toLowerCase());
       log.info(
-        `Nonce from pendingNonceTracker for account: ${address} on chainId: ${this.chainId} is ${nonce}`,
+        `Nonce from pendingNonceTracker for account: ${relayer.address} on chainId: ${this.chainId} is ${nonce}`,
       );
 
       if (typeof nonce === "number") {
-        if (nonce === this.usedNonceTracker.get(address.toLowerCase())) {
+        if (
+          nonce === this.usedNonceTracker.get(relayer.address.toLowerCase())
+        ) {
           log.info(
-            `Nonce ${nonce} for address ${address} is already used on chainId: ${this.chainId}. So clearing nonce and getting nonce from network`,
+            `Nonce ${nonce} for address ${relayer.address} is already used on chainId: ${this.chainId}. So clearing nonce and getting nonce from network`,
           );
-          nonce = await this.getAndSetNonceFromNetwork(address);
+          nonce = await this.getAndSetNonceFromNetwork(relayer);
         }
       } else {
-        nonce = await this.getAndSetNonceFromNetwork(address);
+        nonce = await this.getAndSetNonceFromNetwork(relayer);
       }
       return nonce;
     } catch (error) {
       log.error(
-        `Error in getting nonce for address: ${address} on chainId: ${
+        `Error in getting nonce for address: ${relayer} on chainId: ${
           this.chainId
         } with error: ${parseError(error)}`,
       );
       log.info(
-        `Fetching nonce from network for address: ${address} on chainId: ${this.chainId}`,
+        `Fetching nonce from network for address: ${relayer.address} on chainId: ${this.chainId}`,
       );
-      return await this.getAndSetNonceFromNetwork(address);
+      return await this.getAndSetNonceFromNetwork(relayer);
     }
   }
 
@@ -81,12 +82,22 @@ export class EVMNonceManager
     return true;
   }
 
-  async getAndSetNonceFromNetwork(address: string): Promise<number> {
-    const nonceFromNetwork = await this.networkService.getNonce(address);
-    log.info(
-      `Nonce from network for account: ${address} on chainId: ${this.chainId} is ${nonceFromNetwork}`,
+  async getAndSetNonceFromNetwork(
+    account: IEVMAccount,
+    pending?: boolean,
+  ): Promise<number> {
+    const nonceFromNetwork = await this.networkService.getNonce(
+      account,
+      pending,
     );
-    this.pendingNonceTracker.set(address.toLowerCase(), nonceFromNetwork);
+
+    log.info(
+      `Nonce from network for account: ${account.address} on chainId: ${this.chainId} is ${nonceFromNetwork}`,
+    );
+    this.pendingNonceTracker.set(
+      account.address.toLowerCase(),
+      nonceFromNetwork,
+    );
     return nonceFromNetwork;
   }
 }

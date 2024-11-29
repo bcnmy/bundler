@@ -1,16 +1,14 @@
-/* eslint-disable import/no-import-module-exports */
 import amqp, { Channel, ConsumeMessage, Replies } from "amqplib";
-import { config } from "../../config";
+import nodeconfig from "config";
 import { logger } from "../logger";
 import { IQueue } from "./interface/IQueue";
 import { RetryTransactionQueueData } from "./types";
-import { customJSONStringify, parseError } from "../utils";
+import { customJSONStringify } from "../utils";
+import { shouldDiscardStaleMessage } from "./queueUtils";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
 });
-
-const { queueUrl } = config;
 
 export class RetryTransactionHandlerQueue
   implements IQueue<RetryTransactionQueueData>
@@ -29,15 +27,29 @@ export class RetryTransactionHandlerQueue
 
   msg!: ConsumeMessage | null;
 
-  constructor(options: { chainId: number; nodePathIndex: number }) {
+  private queueUrl: string;
+
+  private retryTransactionInterval: number;
+
+  constructor(options: {
+    chainId: number;
+    nodePathIndex: number;
+    queueUrl?: string;
+  }) {
     this.chainId = options.chainId;
     this.nodePathIndex = options.nodePathIndex;
     this.exchangeName = `retry_transaction_queue_exchange_${this.nodePathIndex}`;
     this.queueName = `retry_transaction_queue_${this.nodePathIndex}`;
+    this.queueUrl = nodeconfig.get<string>("queueUrl");
+    this.retryTransactionInterval = nodeconfig.has(
+      `chains.retryTransactionInterval.${this.chainId}`,
+    )
+      ? nodeconfig.get(`chains.retryTransactionInterval.${this.chainId}`)
+      : 30_000;
   }
 
   async connect() {
-    const connection = await amqp.connect(queueUrl);
+    const connection = await amqp.connect(this.queueUrl);
     if (!this.channel) {
       this.channel = await connection.createChannel();
       this.channel.assertExchange(this.exchangeName, this.exchangeType, {
@@ -51,13 +63,19 @@ export class RetryTransactionHandlerQueue
 
   async publish(data: RetryTransactionQueueData) {
     const key = `retry_chainid.${this.chainId}_${this.nodePathIndex}`;
-    log.info(
-      `Publishing data to retry queue on chainId: ${
-        this.chainId
-      } with interval ${
-        config.chains.retryTransactionInterval[this.chainId]
-      } and key ${key}`,
-    );
+    const _log = log.child({
+      key,
+      retryTransactionInterval: this.retryTransactionInterval,
+      transactionId: data.transactionId,
+    });
+
+    _log.info({ data }, `Publishing data to retry queue`);
+
+    if (shouldDiscardStaleMessage(this.chainId, data, Date.now())) {
+      _log.warn(`Discarding message because it's stale`);
+      return true;
+    }
+
     if (this.channel) {
       this.channel.publish(
         this.exchangeName,
@@ -66,7 +84,7 @@ export class RetryTransactionHandlerQueue
         {
           persistent: true,
           headers: {
-            "x-delay": config.chains.retryTransactionInterval[this.chainId],
+            "x-delay": this.retryTransactionInterval,
           },
         },
       );
@@ -76,9 +94,14 @@ export class RetryTransactionHandlerQueue
   }
 
   async consume(onMessageReceived: () => void) {
-    log.info(
-      `[x] Setting up consumer for queue with chainId: ${this.chainId} for retry transaction queue`,
-    );
+    const _log = log.child({
+      chainId: this.chainId,
+      queueName: this.queueName,
+      exchangeName: this.exchangeName,
+      nodePathIndex: this.nodePathIndex,
+    });
+
+    _log.info(`Setting up consumer for retry transaction queue`);
     this.channel.prefetch(1);
     try {
       // setup a consumer
@@ -86,9 +109,7 @@ export class RetryTransactionHandlerQueue
         await this.channel.assertQueue(`${this.queueName}_${this.chainId}`);
       const key = `retry_chainid.${this.chainId}_${this.nodePathIndex}`;
 
-      log.info(
-        `[*] Waiting for retry transactions on chainId: ${this.chainId}`,
-      );
+      _log.info(`Waiting for retry transactions`);
 
       this.channel.bindQueue(
         retryTransactionQueue.queue,
@@ -101,8 +122,8 @@ export class RetryTransactionHandlerQueue
       );
 
       return true;
-    } catch (error) {
-      log.error(parseError(error));
+    } catch (err) {
+      log.error({ err }, `Error while consuming retry transaction queue`);
       return false;
     }
   }

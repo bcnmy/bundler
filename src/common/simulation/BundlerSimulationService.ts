@@ -1,23 +1,18 @@
-/* eslint-disable import/no-extraneous-dependencies */
-/* eslint-disable import/no-import-module-exports */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable prefer-const */
 import {
+  Address,
   decodeErrorResult,
   encodeAbiParameters,
   encodeFunctionData,
+  Hex,
   keccak256,
   parseAbiParameters,
   toHex,
+  zeroAddress,
 } from "viem";
-import {
-  createArbitrumGasEstimator,
-  createGasEstimator,
-  createMantleGasEstimator,
-  createMorphGasEstimator,
-  createOptimismGasEstimator,
-  createScrollGasEstimator,
-  IGasEstimator,
-} from "entry-point-gas-estimations";
+import nodeconfig from "config";
+import { IGasEstimator } from "entry-point-gas-estimations/dist/gas-estimator/entry-point-v6";
 import { config } from "../../config";
 import { IEVMAccount } from "../../relayer/account";
 import {
@@ -26,7 +21,11 @@ import {
 } from "../../server/api/shared/middleware";
 import { logger } from "../logger";
 import { INetworkService } from "../network";
-import { EVMRawTransactionType, UserOperationType } from "../types";
+import {
+  EntryPointContractType,
+  EVMRawTransactionType,
+  UserOperationType,
+} from "../types";
 import {
   customJSONStringify,
   packUserOpForUserOpHash,
@@ -41,56 +40,59 @@ import {
 } from "./types";
 import { BLOCKCHAINS } from "../constants";
 import { IGasPriceService } from "../gas-price";
+import { GasEstimationsAdapter } from "./GasEstimationsWrapper";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
 });
 
+/**
+ * Options for the BundlerSimulationService constructor
+ * @member {SimulationNetworkService} networkService - The network service that will be used to call `eth_estimateGas`
+ * @member {IGasPriceService} gasPriceService - The gas price service used to fetch both legacy and EIP-1559 gas prices
+ * @member {SimulationGasEstimator} gasEstimator - The estimator used for eth_estimateUserOperationGas.
+ * You can pass your own gas estimator or the default one will be used
+ */
+interface IBundlerSimulationServiceOptions {
+  networkService: SimulationNetworkService;
+  gasPriceService: IGasPriceService;
+  gasEstimator?: SimulationGasEstimator;
+}
+
+/**
+ * BundlerSimulationService is responsible for estimating the gas limits & values for user operations
+ * and validating the user operation before sending it to the network.
+ */
 export class BundlerSimulationService {
-  networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
+  networkService: SimulationNetworkService;
 
   gasPriceService: IGasPriceService;
 
-  gasEstimator: IGasEstimator;
+  gasEstimator: SimulationGasEstimator;
 
-  constructor(
-    networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
-    gasPriceService: IGasPriceService,
-  ) {
+  constructor({
+    networkService,
+    gasPriceService,
+    gasEstimator = new GasEstimationsAdapter({
+      chainId: networkService.chainId,
+      rpcUrl: networkService.rpcUrl,
+    }),
+  }: IBundlerSimulationServiceOptions) {
     this.networkService = networkService;
     this.gasPriceService = gasPriceService;
-    this.gasEstimator = createGasEstimator({
-      rpcUrl: this.networkService.rpcUrl,
-    });
+    this.gasEstimator = gasEstimator;
+  }
 
-    if (config.optimismNetworks.includes(this.networkService.chainId)) {
-      this.gasEstimator = createOptimismGasEstimator({
-        rpcUrl: this.networkService.rpcUrl,
-      });
-    }
-
-    if (config.arbitrumNetworks.includes(this.networkService.chainId))
-      this.gasEstimator = createArbitrumGasEstimator({
-        rpcUrl: this.networkService.rpcUrl,
-      });
-
-    if (config.mantleNetworks.includes(this.networkService.chainId)) {
-      this.gasEstimator = createMantleGasEstimator({
-        rpcUrl: this.networkService.rpcUrl,
-      });
-    }
-
-    if (config.scrollNetworks.includes(this.networkService.chainId)) {
-      this.gasEstimator = createScrollGasEstimator({
-        rpcUrl: this.networkService.rpcUrl,
-      });
-    }
-
-    if (config.morphNetworks.includes(this.networkService.chainId)) {
-      this.gasEstimator = createMorphGasEstimator({
-        rpcUrl: this.networkService.rpcUrl,
-      });
-    }
+  /**
+   * Used for pretty printing the service configuration
+   * @returns JSON stringified object with API keys removed
+   */
+  toJSON(): Omit<IBundlerSimulationServiceOptions, "gasPriceService"> {
+    return {
+      networkService: this.networkService,
+      gasEstimator: this.gasEstimator,
+      // TODO: add the gasPriceService after you write it's toJSON method
+    };
   }
 
   async estimateUserOperationGas(
@@ -194,7 +196,12 @@ export class BundlerSimulationService {
         supportsEthCallByteCodeOverride = false;
       }
 
-      const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
+      let baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
+      if (chainId === BLOCKCHAINS.OP_BNB_MAINNET && baseFeePerGas === 0n) {
+        baseFeePerGas = BigInt(
+          config.gasOverrides[BLOCKCHAINS.OP_BNB_MAINNET].baseFeePerGas,
+        );
+      }
 
       const response = await this.gasEstimator.estimateUserOperationGas({
         userOperation: userOp,
@@ -266,6 +273,12 @@ export class BundlerSimulationService {
       const end = performance.now();
       log.info(`Estimating the userOp took: ${end - start} milliseconds`);
 
+      if (chainId === BLOCKCHAINS.OP_BNB_MAINNET && baseFeePerGas === 0n) {
+        preVerificationGas = BigInt(
+          config.gasOverrides[BLOCKCHAINS.OP_BNB_MAINNET].preVerificationGas,
+        );
+      }
+
       return {
         code: STATUSES.SUCCESS,
         message: `Gas successfully estimated for userOp: ${customJSONStringify(
@@ -312,11 +325,14 @@ export class BundlerSimulationService {
         await this.gasPriceService.get1559GasPrice();
       let gasPrice = Math.ceil(Number(maxFeePerGas) * 2).toString(16);
 
-      await this.checkUserOperationForRejection({
-        userOp,
-        networkMaxPriorityFeePerGas: maxPriorityFeePerGas,
-        networkMaxFeePerGas: maxFeePerGas,
-      });
+      await this.checkUserOperationForRejection(
+        {
+          userOp,
+          networkMaxPriorityFeePerGas: maxPriorityFeePerGas,
+          networkMaxFeePerGas: maxFeePerGas,
+        },
+        entryPointContract,
+      );
 
       const data = encodeFunctionData({
         abi: entryPointContract.abi,
@@ -489,6 +505,7 @@ export class BundlerSimulationService {
    */
   async checkUserOperationForRejection(
     validationData: ValidationData,
+    entryPointContract: EntryPointContractType,
   ): Promise<boolean> {
     const { userOp, networkMaxFeePerGas, networkMaxPriorityFeePerGas } =
       validationData;
@@ -518,7 +535,10 @@ export class BundlerSimulationService {
     );
     log.info(`Checking if maxPriorityFeePerGas is within acceptable limits`);
 
-    if (minimumAcceptableMaxPriorityFeePerGas > Number(maxPriorityFeePerGas)) {
+    if (
+      !config.disableFeeValidation.includes(this.networkService.chainId) &&
+      minimumAcceptableMaxPriorityFeePerGas > Number(maxPriorityFeePerGas)
+    ) {
       log.info(
         `maxPriorityFeePerGas in userOp: ${maxPriorityFeePerGas} is lower than expected maxPriorityFeePerGas: ${minimumAcceptableMaxPriorityFeePerGas}`,
       );
@@ -530,7 +550,10 @@ export class BundlerSimulationService {
     log.info(`maxPriorityFeePerGas is within acceptable limits`);
     log.info(`Checking if maxFeePerGas is within acceptable limits`);
 
-    if (minimumAcceptableMaxFeePerGas > Number(maxFeePerGas)) {
+    if (
+      !config.disableFeeValidation.includes(this.networkService.chainId) &&
+      minimumAcceptableMaxFeePerGas > Number(maxFeePerGas)
+    ) {
       log.info(
         `maxFeePerGas in userOp: ${maxFeePerGas} is lower than expected maxFeePerGas: ${minimumAcceptableMaxFeePerGas}`,
       );
@@ -542,26 +565,47 @@ export class BundlerSimulationService {
     log.info(`maxFeePerGas is within acceptable limits`);
     log.info(`Checking if preVerificationGas is within acceptable limits`);
 
-    const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
-
-    const { preVerificationGas: networkPreVerificationGas } =
-      await this.gasEstimator.calculatePreVerificationGas({
-        userOperation: userOp,
-        baseFeePerGas,
-      });
-    log.info(`networkPreVerificationGas: ${networkPreVerificationGas}`);
-
-    const minimumAcceptablePreVerificationGas =
-      Number(networkPreVerificationGas) * preVerificationGasThresholdPercentage;
-
-    if (minimumAcceptablePreVerificationGas > Number(preVerificationGas)) {
-      log.info(
-        `preVerificationGas in userOp: ${preVerificationGas} is lower than minimumAcceptablePreVerificationGas: ${minimumAcceptablePreVerificationGas}`,
+    let baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
+    if (
+      this.networkService.chainId === BLOCKCHAINS.OP_BNB_MAINNET &&
+      baseFeePerGas === 0n
+    ) {
+      baseFeePerGas = BigInt(
+        config.gasOverrides[BLOCKCHAINS.OP_BNB_MAINNET].baseFeePerGas,
       );
-      throw new RpcError(
-        `preVerificationGas in userOp: ${preVerificationGas} is lower than minimumAcceptablePreVerificationGas: ${minimumAcceptablePreVerificationGas}`,
-        BUNDLER_ERROR_CODES.PRE_VERIFICATION_GAS_TOO_LOW,
-      );
+    }
+
+    // Check the user operation for validation and execution errors (if debug_traceCall is supported)
+    if (
+      nodeconfig.has("supportsDebugTraceCall") &&
+      nodeconfig
+        .get<number[]>("supportsDebugTraceCall")
+        .includes(this.networkService.chainId)
+    ) {
+      await this.validateUserOperation(entryPointContract, userOp);
+    }
+
+    if (!config.disableFeeValidation.includes(this.networkService.chainId)) {
+      const { preVerificationGas: networkPreVerificationGas } =
+        await this.gasEstimator.calculatePreVerificationGas({
+          userOperation: userOp,
+          baseFeePerGas,
+        });
+      log.info(`networkPreVerificationGas: ${networkPreVerificationGas}`);
+
+      const minimumAcceptablePreVerificationGas =
+        Number(networkPreVerificationGas) *
+        preVerificationGasThresholdPercentage;
+
+      if (minimumAcceptablePreVerificationGas > Number(preVerificationGas)) {
+        log.info(
+          `preVerificationGas in userOp: ${preVerificationGas} is lower than minimumAcceptablePreVerificationGas: ${minimumAcceptablePreVerificationGas}`,
+        );
+        throw new RpcError(
+          `preVerificationGas in userOp: ${preVerificationGas} is lower than minimumAcceptablePreVerificationGas: ${minimumAcceptablePreVerificationGas}`,
+          BUNDLER_ERROR_CODES.PRE_VERIFICATION_GAS_TOO_LOW,
+        );
+      }
     }
 
     log.info(
@@ -570,7 +614,95 @@ export class BundlerSimulationService {
     return true;
   }
 
-  // eslint-disable-next-line class-methods-use-this
+  /**
+   * Simulation checks for validation and execution errors when submitting a user operation to the EntryPoint contract
+   * @param entryPointContract EntryPoint contract to simulate against
+   * @param userOp User operation to simulate
+   */
+  private async validateUserOperation(
+    entryPointContract: EntryPointContractType,
+    userOp: UserOperationType,
+  ) {
+    try {
+      // We call debug_traceCall to simulation stack trace
+      const traceResult = await this.debugTraceCall(entryPointContract, userOp);
+
+      // simulateValidationShould always return a revert, otherwise something is terribly wrong 😱
+      if (!isReverted(traceResult)) {
+        logger.error(
+          `simulateValidation: didn't revert, traceResult: ${customJSONStringify(traceResult)}`,
+        );
+        throw new RpcError(
+          "Simulation failed",
+          BUNDLER_ERROR_CODES.INTERNAL_SERVER_ERROR,
+        );
+      }
+
+      // we try to decode the error message against the EP contract ABI
+      const { errorName, args } = decodeErrorResult({
+        abi: entryPointContract.abi,
+        data: traceResult.output,
+      });
+
+      // When simulation is successfull it returns {errorName: ValidationResult, args: [...]},
+      // and (for example) this is what a signature error looks like: { errorName: FailedOp, args: [0,AA23 reverted (or OOG)] }
+      if (errorName !== "ValidationResult") {
+        logger.warn(
+          `simulateValidation: errorName: ${errorName}, args: ${customJSONStringify(args)}`,
+        );
+        throw new RpcError(
+          `${errorName}: ${args[1]}`,
+          BUNDLER_ERROR_CODES.WALLET_TRANSACTION_REVERTED,
+        );
+      }
+    } catch (error: any) {
+      // this is a sanity check, in case debug_traceCall fails for whatever reason
+      logger.error(
+        { error: customJSONStringify(error) },
+        `simulateUserOp failed`,
+      );
+      throw new Error(error);
+    }
+  }
+
+  /**
+   * Calls the debug_traceCall RPC method to simulate the validation of a user operation.
+   * See the following links for more information:
+   * - https://geth.ethereum.org/docs/interacting-with-geth/rpc/ns-debug#javascript-based-tracing
+   * - https://docs.chainstack.com/reference/ethereum-tracecall
+   * @param entryPointContract The entry point contract
+   * @param userOp The user operation to be traced
+   * @returns CallTracerResult
+   */
+  private async debugTraceCall(
+    entryPointContract: EntryPointContractType,
+    userOp: UserOperationType,
+  ): Promise<CallTracerResult> {
+    return this.networkService.provider.request({
+      method: "debug_traceCall" as any, // coalesce so viem doesn't complain
+      params: [
+        {
+          from: zeroAddress, // so we don't get balance errors
+          to: entryPointContract.address,
+          data: encodeFunctionData({
+            abi: entryPointContract.abi,
+            functionName: "simulateValidation",
+            args: [userOp] as any,
+          }),
+        },
+        "latest",
+        {
+          tracer: "callTracer",
+          tracerConfig: {
+            onlyTopCall: true, // don't need deep traces
+            disableStack: false, // but we want the stack
+            enableReturnData: true, // and the return data so we can decode the error
+          },
+        },
+      ],
+    });
+  }
+
   removeSpecialCharacters(input: string): string {
     const match = input.match(/AA(\d+)\s(.+)/);
 
@@ -590,80 +722,6 @@ export class BundlerSimulationService {
     return input;
   }
 
-  static parseSimulateHandleOpResult(
-    userOp: UserOperationType,
-    simulateHandleOpResult: any,
-  ) {
-    if (!simulateHandleOpResult?.errorName?.startsWith("ExecutionResult")) {
-      log.info(
-        `Inside ${!simulateHandleOpResult?.errorName?.startsWith(
-          "ExecutionResult",
-        )}`,
-      );
-      // parse it as FailedOp
-      // if its FailedOp, then we have the paymaster param... otherwise its an Error(string)
-      log.info(
-        `simulateHandleOpResult.errorArgs: ${simulateHandleOpResult.errorArgs}`,
-      );
-      if (!simulateHandleOpResult.errorArgs) {
-        throw new RpcError(
-          `Error: ${customJSONStringify(simulateHandleOpResult)}`,
-          BUNDLER_ERROR_CODES.WALLET_TRANSACTION_REVERTED,
-        );
-      }
-      let { paymaster } = simulateHandleOpResult.errorArgs;
-      if (paymaster === config.zeroAddress) {
-        paymaster = undefined;
-      }
-      // eslint-disable-next-line
-      const msg: string =
-        simulateHandleOpResult.errorArgs?.reason ??
-        simulateHandleOpResult.toString();
-
-      if (paymaster == null) {
-        log.info(
-          `account validation failed: ${msg} for userOp: ${customJSONStringify(
-            userOp,
-          )}`,
-        );
-        throw new RpcError(msg, BUNDLER_ERROR_CODES.SIMULATE_VALIDATION_FAILED);
-      } else {
-        log.info(
-          `paymaster validation failed: ${msg} for userOp: ${customJSONStringify(
-            userOp,
-          )}`,
-        );
-        throw new RpcError(
-          msg,
-          BUNDLER_ERROR_CODES.SIMULATE_PAYMASTER_VALIDATION_FAILED,
-        );
-      }
-    }
-
-    const preOpGas = simulateHandleOpResult.errorArgs[0];
-    log.info(`preOpGas: ${preOpGas}`);
-    const paid = simulateHandleOpResult.errorArgs[1];
-    log.info(`paid: ${paid}`);
-    const validAfter = simulateHandleOpResult.errorArgs[2];
-    log.info(`validAfter: ${validAfter}`);
-    const validUntil = simulateHandleOpResult.errorArgs[3];
-    log.info(`validUntil: ${validUntil}`);
-    const targetSuccess = simulateHandleOpResult.errorArgs[4];
-    log.info(`targetSuccess: ${targetSuccess}`);
-    const targetResult = simulateHandleOpResult.errorArgs[5];
-    log.info(`targetResult: ${targetResult}`);
-
-    return {
-      preOpGas,
-      paid,
-      validAfter,
-      validUntil,
-      targetSuccess,
-      targetResult,
-    };
-  }
-
-  // eslint-disable-next-line class-methods-use-this
   getUserOpHash(
     entryPointAddress: `0x${string}`,
     userOp: UserOperationType,
@@ -676,4 +734,41 @@ export class BundlerSimulationService {
     );
     return keccak256(enc);
   }
+}
+
+/**
+ * Checks if the trace result is reverted
+ * @param traceResult The result of the trace call
+ * @returns true if the trace result is reverted
+ */
+function isReverted(traceResult: CallTracerResult) {
+  return traceResult.error.toLowerCase().includes("reverted");
+}
+
+// The following are the dependencies of the BundlerSimulationService class
+
+// 💡 TIP: Always pick only the required fields from the interface
+// so we don't depend on properties we don't use (easier to refactor)
+export type SimulationNetworkService = Pick<
+  INetworkService<IEVMAccount, EVMRawTransactionType>,
+  "chainId" | "rpcUrl" | "estimateGas" | "sendRpcCall" | "provider"
+>;
+
+export type SimulationGasEstimator = Pick<
+  IGasEstimator,
+  | "estimateUserOperationGas"
+  | "setEntryPointAddress"
+  | "calculatePreVerificationGas"
+>;
+
+interface CallTracerResult {
+  from: Address;
+  gas: Hex;
+  gasUsed: Hex;
+  to: Address;
+  input: Hex;
+  output: Hex;
+  value: Hex;
+  type: string;
+  error: string;
 }

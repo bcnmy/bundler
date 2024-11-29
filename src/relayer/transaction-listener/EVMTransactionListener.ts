@@ -1,11 +1,10 @@
-/* eslint-disable import/no-import-module-exports */
-/* eslint-disable no-await-in-loop */
 import { TransactionReceipt, decodeErrorResult, toHex } from "viem";
 import { ICacheService } from "../../common/cache";
 import {
   ITransactionDAO,
   IUserOperationDAO,
   IUserOperationStateDAO,
+  IUserOperationV07DAO,
 } from "../../common/db";
 import { IQueue } from "../../common/interface";
 import { logger } from "../../common/logger";
@@ -14,6 +13,8 @@ import { RetryTransactionQueueData } from "../../common/queue/types";
 import {
   EntryPointContractType,
   EntryPointMapType,
+  EntryPointV07ContractType,
+  EntryPointV07MapType,
   EVMRawTransactionType,
   TransactionStatus,
   TransactionType,
@@ -38,6 +39,8 @@ import {
   OnTransactionSuccessParamsType,
 } from "./types";
 import { config } from "../../config";
+import { FlashbotsTxStatus } from "../../common/network/FlashbotsClient";
+import pino from "pino";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -56,9 +59,13 @@ export class EVMTransactionListener
 
   userOperationDao: IUserOperationDAO;
 
+  userOperationDaoV07: IUserOperationV07DAO;
+
   userOperationStateDao: IUserOperationStateDAO;
 
   entryPointMap: EntryPointMapType;
+
+  entryPointV07Map: EntryPointV07MapType;
 
   cacheService: ICacheService;
 
@@ -69,15 +76,18 @@ export class EVMTransactionListener
       retryTransactionQueue,
       transactionDao,
       userOperationDao,
+      userOperationDaoV07,
       userOperationStateDao,
       cacheService,
     } = evmTransactionListenerParams;
     this.chainId = options.chainId;
     this.entryPointMap = options.entryPointMap;
+    this.entryPointV07Map = options.entryPointMapV07;
     this.networkService = networkService;
     this.retryTransactionQueue = retryTransactionQueue;
     this.transactionDao = transactionDao;
     this.userOperationDao = userOperationDao;
+    this.userOperationDaoV07 = userOperationDaoV07;
     this.userOperationStateDao = userOperationStateDao;
     this.cacheService = cacheService;
   }
@@ -95,106 +105,58 @@ export class EVMTransactionListener
       metaData,
       relayerManagerName,
       previousTransactionHash,
+      timestamp,
     } = notifyTransactionListenerParams;
 
-    // if no transactionExecutionResponse then it means transactions was not published onc hain
-    // update transaction and user op collection
-    if (!transactionHash) {
-      log.error(`transactionExecutionResponse is null for transactionId: ${transactionId} for bundler: ${relayerAddress} hence
-      updating transaction and userOp data`);
-      try {
-        if (transactionType === TransactionType.BUNDLER) {
-          await this.transactionDao.updateByTransactionIdAndTransactionHash(
-            this.chainId,
-            transactionId,
-            "null",
-            {
-              resubmitted: true,
-              status: TransactionStatus.DROPPED,
-              updationTime: Date.now(),
-            },
-          );
-          this.updateUserOpDataForFailureInTransactionExecution(transactionId);
-        }
-      } catch (dataSavingError) {
-        log.error(
-          `Error in updating transaction and userOp data for transactionId: ${transactionId} with error: ${parseError(
-            dataSavingError,
-          )}`,
-        );
-      }
+    const _log = log.child({
+      transactionId,
+      transactionHash,
+      relayerAddress,
+      transactionType,
+      walletAddress,
+      relayerManagerName,
+      previousTransactionHash,
+    });
 
-      log.error(
-        `transactionExecutionResponse is null for transactionId: ${transactionId} for bundler: ${relayerAddress}`,
+    // if no transaction hash, means transaction was not published on chain e.g it was dropped
+    if (!transactionHash) {
+      await this.handleTransactionDropped(
+        _log,
+        transactionId,
+        relayerAddress,
+        transactionType,
       );
+
       return false;
     }
 
+    // if no previous transaction hash, means transaction is still pending
     if (!previousTransactionHash) {
-      log.info(
-        `Not a replacement transaction, updating data for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-      );
-
-      await this.transactionDao.updateByTransactionId(
-        this.chainId,
+      await this.handleTransactionPending(
+        _log,
         transactionId,
-        {
-          transactionHash,
-          rawTransaction: convertBigIntToString(rawTransaction),
-          relayerAddress,
-          gasPrice: rawTransaction.gasPrice?.toString(),
-          status: TransactionStatus.PENDING,
-          updationTime: Date.now(),
-        },
-      );
-      log.info(
-        `Data updated for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+        transactionHash,
+        rawTransaction,
+        relayerAddress,
       );
     } else {
-      log.info(
-        `A replacement transaction, updating data for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-      );
-      await this.transactionDao.updateByTransactionIdAndTransactionHash(
-        this.chainId,
+      // otherwise it means it was replaced by a transaction with a higher fee
+      await this.handleReplacementTransaction(
+        _log,
         transactionId,
         transactionHash,
-        {
-          resubmitted: true,
-          status: TransactionStatus.DROPPED,
-          updationTime: Date.now(),
-        },
-      );
-      log.info(
-        `Replacement transaction data updated for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-      );
-      log.info(
-        `A replacement transaction encountered, saving new transaction data for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-      );
-      await this.transactionDao.save(this.chainId, {
-        transactionId,
         transactionType,
-        transactionHash,
         previousTransactionHash,
-        status: TransactionStatus.PENDING,
-        rawTransaction: convertBigIntToString(rawTransaction),
-        chainId: this.chainId,
-        gasPrice: rawTransaction.gasPrice?.toString(),
+        rawTransaction,
         relayerAddress,
         walletAddress,
         metaData,
-        resubmitted: false,
-        creationTime: Date.now(),
-        updationTime: Date.now(),
-      });
-      log.info(
-        `Saved new data for the replaced transaction with transactionId: ${transactionId} on chainId: ${this.chainId} with new transactionHash: ${transactionHash}`,
       );
     }
 
     // retry txn service will check for receipt
-    log.info(
-      `Publishing transaction data of transactionId: ${transactionId} to retry transaction queue on chainId ${this.chainId}`,
-    );
+    _log.info(`Publishing transaction data to retry transaction queue`);
+
     try {
       await this.publishToRetryTransactionQueue({
         relayerAddress,
@@ -205,14 +167,12 @@ export class EVMTransactionListener
         walletAddress,
         metaData,
         relayerManagerName,
+        timestamp,
       });
     } catch (publishToRetryTransactionQueueError) {
-      log.error(
-        `publishToRetryTransactionQueueError: ${parseError(
-          publishToRetryTransactionQueueError,
-        )} while publishing to retry transaction queue for transactionId: ${transactionId} on chainId: ${
-          this.chainId
-        }`,
+      _log.error(
+        { publishToRetryTransactionQueueError },
+        `Error while publishing to retry transaction queue`,
       );
     }
 
@@ -222,17 +182,136 @@ export class EVMTransactionListener
     } catch (waitForTransactionError) {
       // timeout error
       // do nothing for now just log
-      log.error(
-        `Error in waitForTransaction: ${parseError(
-          waitForTransactionError,
-        )} on hash: ${transactionHash} for transactionId: ${transactionId} on chainId ${
-          this.chainId
-        }`,
+      _log.error(
+        { waitForTransactionError },
+        `Error while waiting for transaction`,
       );
       return false;
     }
 
     return true;
+  }
+
+  private async handleReplacementTransaction(
+    _log: pino.Logger,
+    transactionId: string,
+    transactionHash: string,
+    transactionType: TransactionType,
+    previousTransactionHash: string | undefined,
+    rawTransaction: EVMRawTransactionType,
+    relayerAddress: string,
+    walletAddress: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    metaData: any,
+  ) {
+    _log.info(
+      `A replacement transaction encountered, updating previous transaction to ${TransactionStatus.DROPPED}`,
+    );
+
+    await this.transactionDao.updateByTransactionIdAndTransactionHash(
+      this.chainId,
+      transactionId,
+      transactionHash,
+      {
+        resubmitted: true,
+        status: TransactionStatus.DROPPED,
+        updationTime: Date.now(),
+      },
+    );
+
+    _log.info(`Previous transaction updated to ${TransactionStatus.DROPPED}`);
+
+    _log.info(`Saving new (replacement) transaction data`);
+
+    await this.transactionDao.save(this.chainId, {
+      transactionId,
+      transactionType,
+      transactionHash,
+      previousTransactionHash,
+      status: TransactionStatus.PENDING,
+      rawTransaction: convertBigIntToString(rawTransaction),
+      chainId: this.chainId,
+      gasPrice: rawTransaction.gasPrice?.toString(),
+      relayerAddress,
+      walletAddress,
+      metaData,
+      resubmitted: false,
+      creationTime: Date.now(),
+      updationTime: Date.now(),
+    });
+
+    _log.info(
+      `Saved new replacement transaction new transactionHash: ${transactionHash}`,
+    );
+  }
+
+  private async handleTransactionPending(
+    _log: pino.Logger,
+    transactionId: string,
+    transactionHash: string | undefined,
+    rawTransaction: EVMRawTransactionType,
+    relayerAddress: string,
+  ) {
+    _log.info(
+      `Not a replacement transaction, updating transaction data to ${TransactionStatus.PENDING}`,
+    );
+
+    await this.transactionDao.updateByTransactionId(
+      this.chainId,
+      transactionId,
+      {
+        transactionHash,
+        rawTransaction: convertBigIntToString(rawTransaction),
+        relayerAddress,
+        gasPrice: rawTransaction.gasPrice?.toString(),
+        status: TransactionStatus.PENDING,
+        updationTime: Date.now(),
+      },
+    );
+
+    _log.info(`Transaction data updated`);
+  }
+
+  private async handleTransactionDropped(
+    _log: pino.Logger,
+    transactionId: string,
+    relayerAddress: string,
+    transactionType: TransactionType,
+  ) {
+    _log.error(
+      { transactionId, relayerAddress },
+      `transactionExecutionResponse is null hence updating transaction and userOp data`,
+    );
+
+    try {
+      if (transactionType === TransactionType.BUNDLER) {
+        _log.warn(
+          `Updating Transaction status to ${TransactionStatus.DROPPED}`,
+        );
+
+        await this.transactionDao.updateByTransactionIdAndTransactionHash(
+          this.chainId,
+          transactionId,
+          "null",
+          {
+            resubmitted: true,
+            status: TransactionStatus.DROPPED,
+            updationTime: Date.now(),
+          },
+        );
+
+        await this.updateUserOpDataForFailureInTransactionExecution(
+          transactionId,
+        );
+
+        _log.info(`transactionExecutionResponse is null`);
+      }
+    } catch (dataSavingError) {
+      _log.error(
+        { dataSavingError },
+        `Error in updating transaction and userOp data`,
+      );
+    }
   }
 
   async publishToRetryTransactionQueue(
@@ -242,6 +321,7 @@ export class EVMTransactionListener
     return true;
   }
 
+  // TODO: Refactor this
   private async onTransactionSuccess(
     onTransactionSuccessParams: OnTransactionSuccessParamsType,
   ) {
@@ -251,45 +331,132 @@ export class EVMTransactionListener
       transactionId,
       transactionType,
     } = onTransactionSuccessParams;
+
+    const _log = log.child({
+      transactionId,
+      transactionHash,
+    });
+
     if (!transactionReceipt) {
-      log.error(
-        `Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`,
-      );
+      _log.error(`Transaction receipt not found `);
       return;
     }
 
+    let tryForV07 = false;
+
     if (transactionHash) {
       try {
-        log.info(
-          `transactionType: ${transactionType} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-        );
         if (transactionType === TransactionType.BUNDLER) {
-          log.info(
-            `Getting userOps for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-          );
+          _log.info(`Getting userOps for transactionId: ${transactionId}`);
+
           const userOps = await this.userOperationDao.getUserOpsByTransactionId(
             this.chainId,
             transactionId,
           );
-          log.info(
-            `userOps: ${customJSONStringify(
-              userOps,
-            )} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-          );
+
           if (!userOps.length) {
             log.info(
               `No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`,
             );
+            tryForV07 = true;
+          } else {
+            for (let i = 0; i < userOps.length; i += 1) {
+              const { userOpHash, entryPoint } = userOps[i];
+
+              const entryPointContracts = this.entryPointMap[this.chainId];
+
+              const entryPointContract = entryPointContracts.find(
+                (contract) =>
+                  contract.address.toLowerCase() === entryPoint.toLowerCase(),
+              )?.entryPointContract;
+
+              if (entryPointContract) {
+                const userOpReceipt =
+                  await getUserOperationReceiptForSuccessfulTransaction(
+                    this.chainId,
+                    userOpHash,
+                    transactionReceipt,
+                    entryPointContract,
+                  );
+
+                if (!userOpReceipt) {
+                  _log.info(
+                    `userOpReceipt not found for userOpHash: ${userOpHash}`,
+                  );
+                  return;
+                }
+
+                const { success, actualGasCost, actualGasUsed, reason, logs } =
+                  userOpReceipt;
+
+                const newUserOpData = convertBigIntToString({
+                  transactionHash,
+                  receipt: convertBigIntToString(transactionReceipt),
+                  blockNumber: Number(transactionReceipt.blockNumber),
+                  blockHash: transactionReceipt.blockHash,
+                  status: TransactionStatus.SUCCESS,
+                  success: success.toString(),
+                  actualGasCost,
+                  actualGasUsed,
+                  reason,
+                  logs: convertBigIntToString(logs),
+                });
+
+                _log.info({ newUserOpData }, `Updating userOp data`);
+
+                await this.userOperationDao.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
+                  this.chainId,
+                  transactionId,
+                  userOpHash,
+                  newUserOpData,
+                );
+
+                _log.info(`userOp data updated`);
+
+                if (transactionType === TransactionType.BUNDLER) {
+                  _log.info(
+                    `Updating UserOperation state to: ${UserOperationStateEnum.CONFIRMED}`,
+                  );
+
+                  await this.userOperationStateDao.updateState(this.chainId, {
+                    transactionId,
+                    message: "Transaction confirmed",
+                    state: UserOperationStateEnum.CONFIRMED,
+                  });
+
+                  log.info(
+                    `Updated UserOperation state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+                  );
+                }
+              } else {
+                _log.error(
+                  `entryPoint: ${entryPoint} not found in entry point map`,
+                );
+              }
+            }
+          }
+        }
+
+        if (transactionType === TransactionType.BUNDLER && tryForV07) {
+          _log.info(`V0.7 Getting userOps for transactionId: ${transactionId}`);
+
+          const userOps =
+            await this.userOperationDaoV07.getUserOpsByTransactionId(
+              this.chainId,
+              transactionId,
+            );
+
+          if (!userOps.length) {
+            _log.info(
+              `V0.7 No user op found for transactionId: ${transactionId}`,
+            );
             return;
           }
-          for (
-            let userOpIndex = 0;
-            userOpIndex < userOps.length;
-            userOpIndex += 1
-          ) {
-            const { userOpHash, entryPoint } = userOps[userOpIndex];
 
-            const entryPointContracts = this.entryPointMap[this.chainId];
+          for (let i = 0; i < userOps.length; i += 1) {
+            const { userOpHash, entryPoint } = userOps[i];
+
+            const entryPointContracts = this.entryPointV07Map[this.chainId];
 
             const entryPointContract = entryPointContracts.find(
               (contract) =>
@@ -304,93 +471,70 @@ export class EVMTransactionListener
                   transactionReceipt,
                   entryPointContract,
                 );
-              log.info(
-                `userOpReceipt: ${customJSONStringify(
-                  userOpReceipt,
-                )} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${
-                  this.chainId
-                }`,
-              );
               if (!userOpReceipt) {
-                log.info(
-                  `userOpReceipt not fetched for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-                );
+                _log.info(`V0.7 userOpReceipt not found`);
                 return;
               }
+
               const { success, actualGasCost, actualGasUsed, reason, logs } =
                 userOpReceipt;
 
-              log.info(
-                `Updating userOp data: ${customJSONStringify(
-                  convertBigIntToString({
-                    transactionHash,
-                    receipt: convertBigIntToString(transactionReceipt),
-                    blockNumber: Number(transactionReceipt.blockNumber),
-                    blockHash: transactionReceipt.blockHash,
-                    status: TransactionStatus.SUCCESS,
-                    success: success.toString(),
-                    actualGasCost,
-                    actualGasUsed,
-                    reason,
-                    logs: convertBigIntToString(logs),
-                  }),
-                )} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${
-                  this.chainId
-                }`,
-              );
-              await this.userOperationDao.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
+              const newData = convertBigIntToString({
+                transactionHash,
+                receipt: convertBigIntToString(transactionReceipt),
+                blockNumber: Number(transactionReceipt.blockNumber),
+                blockHash: transactionReceipt.blockHash,
+                status: TransactionStatus.SUCCESS,
+                success: success.toString(),
+                actualGasCost,
+                actualGasUsed,
+                reason,
+                logs: convertBigIntToString(logs),
+              });
+
+              _log.info({ newData }, `Updating userOp data`);
+
+              await this.userOperationDaoV07.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
                 this.chainId,
                 transactionId,
                 userOpHash,
-                convertBigIntToString({
-                  transactionHash,
-                  receipt: convertBigIntToString(transactionReceipt),
-                  blockNumber: Number(transactionReceipt.blockNumber),
-                  blockHash: transactionReceipt.blockHash,
-                  status: TransactionStatus.SUCCESS,
-                  success: success.toString(),
-                  actualGasCost,
-                  actualGasUsed,
-                  reason,
-                  logs: convertBigIntToString(logs),
-                }),
+                newData,
               );
-              log.info(
-                `userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+
+              _log.info(
+                `v0.7 userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
               );
 
               if (transactionType === TransactionType.BUNDLER) {
-                log.info(
-                  `updating state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+                _log.info(
+                  `v0.7 updating state to: ${UserOperationStateEnum.CONFIRMED}`,
                 );
+
                 await this.userOperationStateDao.updateState(this.chainId, {
                   transactionId,
                   message: "Transaction confirmed",
                   state: UserOperationStateEnum.CONFIRMED,
                 });
-                log.info(
-                  `updated state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+
+                _log.info(
+                  `v0.7 updated state to: ${UserOperationStateEnum.CONFIRMED}`,
                 );
               }
             } else {
-              log.info(
-                `entryPoint: ${entryPoint} not found in entry point map for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+              _log.info(
+                `v0.7 entryPoint: ${entryPoint} not found in entry point map`,
               );
             }
           }
         }
       } catch (error) {
-        log.error(
-          `Error in saving userOp data in database for transactionId: ${transactionId} on chainId ${
-            this.chainId
-          } with error: ${parseError(error)}`,
-        );
+        _log.error({ error }, `Error while saving userOp data to database`);
       }
 
+      // Save transaction data to DB
       try {
-        log.info(
-          `Saving transaction data in database for transactionId: ${transactionId} on chainId ${this.chainId}`,
-        );
+        _log.info(`Saving transaction data to database`);
+
         let transactionFee = 0;
         let transactionFeeInUSD = 0;
         let transactionFeeCurrency = "";
@@ -398,10 +542,8 @@ export class EVMTransactionListener
           !transactionReceipt.gasUsed &&
           !transactionReceipt.effectiveGasPrice
         ) {
-          log.info(
-            `gasUsed or effectiveGasPrice field not found in ${customJSONStringify(
-              transactionReceipt,
-            )}`,
+          _log.warn(
+            `gasUsed or effectiveGasPrice field not found in transaction receipt`,
           );
         } else {
           transactionFee = Number(
@@ -410,11 +552,12 @@ export class EVMTransactionListener
           transactionFeeCurrency = config.chains.currency[this.chainId];
           const coinsRateObj = await this.cacheService.get(getTokenPriceKey());
           if (!coinsRateObj) {
-            log.info("Coins Rate Obj not fetched from cache");
+            _log.info("Coins Rate Obj not fetched from cache");
           } else {
             transactionFeeInUSD = JSON.parse(coinsRateObj)[this.chainId] || 0;
           }
         }
+
         await this.transactionDao.updateByTransactionIdAndTransactionHash(
           this.chainId,
           transactionId,
@@ -428,17 +571,11 @@ export class EVMTransactionListener
             updationTime: Date.now(),
           },
         );
-      } catch (error) {
-        log.error(
-          `Error in saving transaction data in database for transactionId: ${transactionId} on chainId ${
-            this.chainId
-          } with error: ${parseError(error)}`,
-        );
+      } catch (err) {
+        _log.error({ err }, `Error while saving transaction data to database`);
       }
     } else {
-      log.error(
-        `No transactionExecutionResponse found for transactionId: ${transactionId} on chainId ${this.chainId}`,
-      );
+      _log.error(`No transactionExecutionResponse found`);
     }
   }
 
@@ -451,20 +588,24 @@ export class EVMTransactionListener
       transactionReceipt,
       transactionType,
     } = onTransactionFailureParams;
+
+    const _log = log.child({
+      transactionId,
+      transactionHash,
+    });
+
     if (!transactionReceipt) {
-      log.error(
+      _log.error(
         `Transaction receipt not found for transactionId: ${transactionId} on chainId ${this.chainId}`,
       );
       return;
     }
 
+    let tryForV07 = false;
     if (transactionHash) {
       try {
-        log.info(
-          `transactionType: ${transactionType} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-        );
         if (transactionType === TransactionType.BUNDLER) {
-          log.info(
+          _log.info(
             `Getting userOps for transactionId: ${transactionId} on chainId: ${this.chainId}`,
           );
 
@@ -472,23 +613,13 @@ export class EVMTransactionListener
             this.chainId,
             transactionId,
           );
-          log.info(
-            `userOps: ${customJSONStringify(
-              userOps,
-            )} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-          );
+
           if (!userOps.length) {
-            log.info(
-              `No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-            );
-            return;
+            _log.info(`No user ops found`);
+            tryForV07 = true;
           }
-          for (
-            let userOpIndex = 0;
-            userOpIndex < userOps.length;
-            userOpIndex += 1
-          ) {
-            const { userOpHash, entryPoint } = userOps[userOpIndex];
+          for (let i = 0; i < userOps.length; i += 1) {
+            const { userOpHash, entryPoint } = userOps[i];
 
             const entryPointContracts = this.entryPointMap[this.chainId];
 
@@ -499,17 +630,19 @@ export class EVMTransactionListener
 
             if (entryPointContract) {
               const latestBlock =
-                await this.networkService.getLatesBlockNumber();
-              log.info(
-                `latestBlock: ${latestBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-              );
+                await this.networkService.getLatestBlockNumber();
+
+              _log.info({ latestBlock }, `Fetched latest block`);
+
               let fromBlock = latestBlock - BigInt(1000);
               if (config.astarNetworks.includes(this.chainId)) {
                 fromBlock += BigInt(501);
               }
+
               log.info(
                 `fromBlock: ${fromBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
               );
+
               const userOpReceipt =
                 await getUserOperationReceiptForFailedTransaction(
                   this.chainId,
@@ -519,13 +652,6 @@ export class EVMTransactionListener
                   fromBlock,
                   this.networkService.provider,
                 );
-              log.info(
-                `userOpReceipt: ${customJSONStringify(
-                  userOpReceipt,
-                )} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${
-                  this.chainId
-                }`,
-              );
 
               if (!userOpReceipt) {
                 log.info(
@@ -680,6 +806,248 @@ export class EVMTransactionListener
                   log.error(
                     `Error in calculating front ran transaction fee, defaulting to ${frontRunnedTransactionFee}`,
                     {
+                      err,
+                      transactionId,
+                      chainId: this.chainId,
+                      gasUsed: frontRunnedTransactionReceipt.gasUsed,
+                      effectiveGasPrice:
+                        frontRunnedTransactionReceipt.effectiveGasPrice,
+                    },
+                  );
+                }
+
+                frontRunnedTransactionFeeCurrency =
+                  config.chains.currency[this.chainId];
+                const coinsRateObj =
+                  await this.cacheService.get(getTokenPriceKey());
+                if (!coinsRateObj) {
+                  log.info("Coins Rate Obj not fetched from cache");
+                } else {
+                  frontRunnedTransactionFeeInUSD =
+                    JSON.parse(coinsRateObj)[this.chainId];
+                }
+              }
+
+              await this.transactionDao.updateByTransactionIdAndTransactionHashForFrontRunnedTransaction(
+                this.chainId,
+                transactionId,
+                transactionHash,
+                {
+                  frontRunnedTransactionHash:
+                    frontRunnedTransactionReceipt.hash,
+                  frontRunnedReceipt: convertBigIntToString(
+                    frontRunnedTransactionReceipt,
+                  ),
+                  frontRunnedTransactionFee,
+                  frontRunnedTransactionFeeInUSD,
+                  frontRunnedTransactionFeeCurrency,
+                  status: TransactionStatus.FAILED,
+                  updationTime: Date.now(),
+                },
+              );
+
+              if (transactionType === TransactionType.BUNDLER) {
+                log.info(
+                  `updating state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId} for a front runned transaction`,
+                );
+                await this.userOperationStateDao.updateState(this.chainId, {
+                  transactionId,
+                  transactionHash: frontRunnedTransactionReceipt.hash,
+                  message:
+                    "Transaction was front runned, check new transaction hash in receipt",
+                  state: UserOperationStateEnum.CONFIRMED,
+                });
+                log.info(
+                  `updated state state to: ${UserOperationStateEnum.CONFIRMED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId} for a front runned transaction`,
+                );
+              }
+            } else {
+              log.info(
+                `entryPoint: ${entryPoint} not found in entry point map for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+              );
+            }
+          }
+        }
+        if (transactionType === TransactionType.BUNDLER && tryForV07) {
+          log.info(
+            `V0.7 Getting userOps for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+          );
+
+          const userOps =
+            await this.userOperationDaoV07.getUserOpsByTransactionId(
+              this.chainId,
+              transactionId,
+            );
+          if (!userOps.length) {
+            log.info(
+              `V0.7 No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+            );
+            return;
+          }
+          for (
+            let userOpIndex = 0;
+            userOpIndex < userOps.length;
+            userOpIndex += 1
+          ) {
+            const { userOpHash, entryPoint } = userOps[userOpIndex];
+
+            const entryPointContracts = this.entryPointV07Map[this.chainId];
+
+            const entryPointContract = entryPointContracts.find(
+              (contract) =>
+                contract.address.toLowerCase() === entryPoint.toLowerCase(),
+            )?.entryPointContract;
+
+            if (entryPointContract) {
+              const latestBlock =
+                await this.networkService.getLatestBlockNumber();
+              log.info(
+                `v0.7 latestBlock: ${latestBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+              );
+              let fromBlock = latestBlock - BigInt(1000);
+              if (config.astarNetworks.includes(this.chainId)) {
+                fromBlock += BigInt(501);
+              }
+              log.info(
+                `v0.7 fromBlock: ${fromBlock} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+              );
+              const userOpReceipt =
+                await getUserOperationReceiptForFailedTransaction(
+                  this.chainId,
+                  userOpHash,
+                  transactionReceipt,
+                  entryPointContract,
+                  fromBlock,
+                  this.networkService.provider,
+                );
+
+              if (!userOpReceipt) {
+                log.info(
+                  `v0.7 userOpReceipt not fetched for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+                );
+                log.info(
+                  `v0.7 Updating userOp data: ${customJSONStringify(
+                    convertBigIntToString({
+                      transactionHash,
+                      receipt: convertBigIntToString(transactionReceipt),
+                      blockNumber: Number(transactionReceipt.blockNumber),
+                      blockHash: transactionReceipt.blockHash,
+                      status: TransactionStatus.FAILED,
+                      success: "false",
+                      actualGasCost: 0,
+                      actualGasUsed: 0,
+                      reason: null,
+                      logs: null,
+                    }),
+                  )} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${
+                    this.chainId
+                  }`,
+                );
+
+                await this.userOperationDaoV07.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
+                  this.chainId,
+                  transactionId,
+                  userOpHash,
+                  convertBigIntToString({
+                    transactionHash,
+                    receipt: convertBigIntToString(transactionReceipt),
+                    blockNumber: Number(transactionReceipt.blockNumber),
+                    blockHash: transactionReceipt.blockHash,
+                    status: TransactionStatus.FAILED,
+                    success: "false",
+                    actualGasCost: 0,
+                    actualGasUsed: 0,
+                    reason: "null",
+                    logs: null,
+                  }),
+                );
+                log.info(
+                  `v0.7 userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+                );
+
+                if (transactionType === TransactionType.BUNDLER) {
+                  log.info(
+                    `v0.7 updating state to: ${UserOperationStateEnum.FAILED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+                  );
+                  await this.userOperationStateDao.updateState(this.chainId, {
+                    transactionId,
+                    state: UserOperationStateEnum.FAILED,
+                    message: await this.getTransactionFailureMessage(
+                      transactionReceipt,
+                      entryPointContract,
+                    ),
+                  });
+                  log.info(
+                    `v0.7 updated state to: ${UserOperationStateEnum.FAILED} for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+                  );
+                }
+                return;
+              }
+              const {
+                success,
+                actualGasCost,
+                actualGasUsed,
+                reason,
+                logs,
+                frontRunnedTransactionReceipt,
+              } = userOpReceipt;
+
+              log.info(
+                `Updating transaction data for a front runned transaction for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+              );
+
+              await this.userOperationDaoV07.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
+                this.chainId,
+                transactionId,
+                userOpHash,
+                convertBigIntToString({
+                  receipt: convertBigIntToString(frontRunnedTransactionReceipt),
+                  transactionHash: (
+                    frontRunnedTransactionReceipt as TransactionReceipt
+                  ).transactionHash,
+                  blockNumber: Number(
+                    (frontRunnedTransactionReceipt as TransactionReceipt)
+                      .blockNumber,
+                  ),
+                  blockHash: (
+                    frontRunnedTransactionReceipt as TransactionReceipt
+                  ).blockHash,
+                  status: TransactionStatus.SUCCESS,
+                  success,
+                  actualGasCost,
+                  actualGasUsed,
+                  reason,
+                  logs: convertBigIntToString(logs),
+                }),
+              );
+
+              log.info(
+                `userOp data updated for userOpHash: ${userOpHash} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
+              );
+              let frontRunnedTransactionFee = 0;
+              let frontRunnedTransactionFeeInUSD = 0;
+              let frontRunnedTransactionFeeCurrency = "";
+              if (
+                !frontRunnedTransactionReceipt.gasUsed &&
+                !frontRunnedTransactionReceipt.effectiveGasPrice
+              ) {
+                log.info(
+                  `gasUsed or effectiveGasPrice field not found in ${customJSONStringify(
+                    frontRunnedTransactionReceipt,
+                  )}`,
+                );
+              } else {
+                frontRunnedTransactionFee = 0;
+                try {
+                  frontRunnedTransactionFee = Number(
+                    frontRunnedTransactionReceipt.gasUsed *
+                      frontRunnedTransactionReceipt.effectiveGasPrice,
+                  );
+                } catch (err) {
+                  log.error(
+                    `Error in calculating front ran transaction fee, defaulting to ${frontRunnedTransactionFee}`,
+                    {
+                      err,
                       transactionId,
                       chainId: this.chainId,
                       gasUsed: frontRunnedTransactionReceipt.gasUsed,
@@ -807,24 +1175,26 @@ export class EVMTransactionListener
   private async updateUserOpDataForFailureInTransactionExecution(
     transactionId: string,
   ): Promise<void> {
+    const _log = log.child({
+      transactionId,
+      chainId: this.chainId,
+    });
+
     const userOps = await this.userOperationDao.getUserOpsByTransactionId(
       this.chainId,
       transactionId,
     );
-    log.info(
-      `userOps: ${customJSONStringify(
-        userOps,
-      )} for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-    );
-    if (!userOps.length) {
-      log.info(
-        `No user op found for transactionId: ${transactionId} on chainId: ${this.chainId}`,
-      );
+
+    if (userOps.length === 0) {
+      _log.info(`No user op found for transactionId: ${transactionId}`);
       return;
     }
 
-    for (let userOpIndex = 0; userOpIndex < userOps.length; userOpIndex += 1) {
-      const { userOpHash } = userOps[userOpIndex];
+    _log.info({ numUserOps: userOps.length }, "Got user ops by transaction ID");
+
+    for (let i = 0; i < userOps.length; i++) {
+      const { userOpHash } = userOps[i];
+
       await this.userOperationDao.updateUserOpDataToDatabaseByTransactionIdAndUserOpHash(
         this.chainId,
         transactionId,
@@ -841,6 +1211,11 @@ export class EVMTransactionListener
           reason: "null",
           logs: null,
         },
+      );
+
+      _log.info(
+        { userOpHash },
+        `Updated user op status to ${TransactionStatus.DROPPED}`,
       );
     }
   }
@@ -867,6 +1242,12 @@ export class EVMTransactionListener
     );
 
     try {
+      if (this.networkService.mevProtectedRpcUrl) {
+        return this.waitForFlashbotsTransaction(
+          notifyTransactionListenerParams,
+        );
+      }
+
       const transactionReceipt = await this.networkService.waitForTransaction(
         transactionHash,
         transactionId,
@@ -939,9 +1320,94 @@ export class EVMTransactionListener
     }
   }
 
+  async waitForFlashbotsTransaction(
+    notifyTransactionListenerParams: NotifyTransactionListenerParamsType,
+  ) {
+    if (
+      !this.networkService.supportsFlashbots ||
+      !this.networkService.flashbots
+    ) {
+      throw new Error(
+        `Flashbots service not available for chainId: ${this.networkService.chainId}`,
+      );
+    }
+
+    const { transactionHash, transactionId, relayerAddress } =
+      notifyTransactionListenerParams;
+
+    const _log = log.child({
+      chainId: this.chainId,
+      transactionHash,
+      transactionId,
+      relayerAddress,
+    });
+
+    if (!transactionHash) {
+      return;
+    }
+
+    try {
+      _log.info(`Start waiting for flashbots transaction`);
+
+      const response =
+        await this.networkService.flashbots.waitForTransaction(transactionHash);
+
+      _log.info(
+        { transactionHash, transactionId, chainId: this.chainId },
+        `Flashbots response: ${customJSONStringify(response)}`,
+      );
+
+      await this.cacheService.delete(
+        getRetryTransactionCountKey(transactionId, this.chainId),
+      );
+
+      await this.cacheService.set(getTransactionMinedKey(transactionId), "1");
+
+      if (response.status === FlashbotsTxStatus.INCLUDED) {
+        _log.info(
+          { chainId: this.chainId, transactionHash, transactionId },
+          `Transaction included`,
+        );
+
+        // get the recept and call onTransactionSuccess
+        const transactionReceipt =
+          await this.networkService.getTransactionReceipt(transactionHash);
+
+        if (transactionReceipt) {
+          notifyTransactionListenerParams.transactionReceipt =
+            transactionReceipt;
+        }
+
+        await this.onTransactionSuccess(notifyTransactionListenerParams);
+      } else {
+        _log.info(
+          { chainId: this.chainId, transactionHash, transactionId },
+          `Transaction not included`,
+        );
+
+        const transactionReceipt =
+          await this.networkService.getTransactionReceipt(transactionHash);
+
+        if (transactionReceipt) {
+          notifyTransactionListenerParams.transactionReceipt =
+            transactionReceipt;
+        }
+
+        await this.onTransactionFailure(notifyTransactionListenerParams);
+      }
+    } catch (error) {
+      _log.error(
+        {
+          err: error,
+        },
+        `Error in waitForFlashbotsTransaction`,
+      );
+    }
+  }
+
   async getTransactionFailureMessage(
     receipt: TransactionReceipt,
-    entryPointContract: EntryPointContractType,
+    entryPointContract: EntryPointContractType | EntryPointV07ContractType,
   ): Promise<string> {
     try {
       const getTransactionResponse = await this.networkService.getTransaction(
@@ -984,6 +1450,7 @@ export class EVMTransactionListener
       }
       return "Unable to parse transaction failure reason, please check transaction hash on explorer";
     } catch (error) {
+      log.error(error);
       return "Unable to parse transaction failure reason, please check transaction hash on explorer";
     }
   }

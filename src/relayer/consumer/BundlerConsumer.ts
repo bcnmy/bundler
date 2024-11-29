@@ -1,22 +1,18 @@
-/* eslint-disable import/no-import-module-exports */
-/* eslint-disable @typescript-eslint/return-await */
 import { ConsumeMessage } from "amqplib";
 import { encodeFunctionData } from "viem";
-import { ENTRY_POINT_ABI } from "entry-point-gas-estimations";
+import { ENTRY_POINT_ABI } from "entry-point-gas-estimations/dist/gas-estimator/entry-point-v6";
 import { ICacheService } from "../../common/cache";
 import { logger } from "../../common/logger";
 import { IQueue } from "../../common/queue";
 import {
-  BundlerTransactionMessageType,
+  SendUserOperation,
   EntryPointMapType,
   EVMRawTransactionType,
   TransactionType,
 } from "../../common/types";
 import {
-  customJSONStringify,
   getFailedTransactionRetryCountKey,
   getRetryTransactionCountKey,
-  parseError,
 } from "../../common/utils";
 import { IEVMAccount } from "../account";
 import { IRelayerManager } from "../relayer-manager";
@@ -24,6 +20,11 @@ import { ITransactionService } from "../transaction-service";
 import { ITransactionConsumer } from "./interface/ITransactionConsumer";
 import { BundlerConsumerParamsType } from "./types";
 import { STATUSES } from "../../server/api/shared/middleware";
+import { ENTRY_POINT_V07_ABI } from "../../common/entrypoint-v7/abiv7";
+import {
+  isUserOpV06,
+  packUserOperation,
+} from "../../common/entrypoint-v7/PackedUserOperation";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -33,7 +34,7 @@ export class BundlerConsumer
 {
   private transactionType: TransactionType = TransactionType.BUNDLER;
 
-  private queue: IQueue<BundlerTransactionMessageType>;
+  private queue: IQueue<SendUserOperation>;
 
   chainId: number;
 
@@ -56,51 +57,50 @@ export class BundlerConsumer
     this.cacheService = cacheService;
   }
 
-  onMessageReceived = async (
-    msg?: ConsumeMessage,
-    // eslint-disable-next-line consistent-return
-  ): Promise<void> => {
+  onMessageReceived = async (msg?: ConsumeMessage): Promise<void> => {
     if (msg) {
       const transactionDataReceivedFromQueue = JSON.parse(
         msg.content.toString(),
       );
-      log.info(
-        `onMessage received in ${this.transactionType}: ${customJSONStringify(
-          transactionDataReceivedFromQueue,
-        )} for transactionId: ${
-          transactionDataReceivedFromQueue.transactionId
-        } on chainId: ${this.chainId}`,
-      );
+
+      const topLog = log.child({
+        msg: transactionDataReceivedFromQueue,
+        chainId: this.chainId,
+      });
+
+      topLog.info(`BundlerConsumer.onMessageReceived`);
       this.queue.ack(msg);
 
-      // eslint-disable-next-line consistent-return
       const sendTransactionWithRetry = async (): Promise<void> => {
         // get active relayer
         const activeRelayer = await this.relayerManager.getActiveRelayer();
-        log.info(
-          `Active relayer for ${
-            this.transactionType
-          } is ${activeRelayer?.getPublicKey()} for transactionId: ${
-            transactionDataReceivedFromQueue.transactionId
-          } on chainId: ${this.chainId}`,
-        );
 
         if (activeRelayer) {
           const { userOp } = transactionDataReceivedFromQueue;
 
-          log.info(
-            `Setting active relayer: ${activeRelayer?.getPublicKey()} as beneficiary for userOp: ${customJSONStringify(
-              userOp,
-            )} for transactionId: ${
-              transactionDataReceivedFromQueue.transactionId
-            } on chainId: ${this.chainId}`,
-          );
-
-          const data = encodeFunctionData({
-            abi: ENTRY_POINT_ABI,
-            functionName: "handleOps",
-            args: [[userOp], activeRelayer.getPublicKey() as `0x${string}`],
+          const _log = topLog.child({
+            activeRelayer: activeRelayer.address,
           });
+
+          _log.info("Aquired active relayer for UserOperation");
+
+          const isV06 = isUserOpV06(userOp);
+          let data;
+          if (isV06) {
+            data = encodeFunctionData({
+              abi: ENTRY_POINT_ABI,
+              functionName: "handleOps",
+              args: [[userOp], activeRelayer.getPublicKey() as `0x${string}`],
+            });
+          } else {
+            const packed = packUserOperation(userOp);
+
+            data = encodeFunctionData({
+              abi: ENTRY_POINT_V07_ABI,
+              functionName: "handleOps",
+              args: [[packed], activeRelayer.getPublicKey() as `0x${string}`],
+            });
+          }
           transactionDataReceivedFromQueue.data = data;
 
           await this.cacheService.set(
@@ -121,9 +121,8 @@ export class BundlerConsumer
 
           try {
             // call transaction service
-            log.info(
-              `Calling transactionService to sendTransaction for transactionId: ${transactionDataReceivedFromQueue.transactionId} on chainId: ${this.chainId}`,
-            );
+            _log.info(`Calling transactionService.sendTransaction`);
+
             const transactionServiceResponse =
               await this.transactionService.sendTransaction(
                 transactionDataReceivedFromQueue,
@@ -131,88 +130,65 @@ export class BundlerConsumer
                 this.transactionType,
                 this.relayerManager.name,
               );
-            log.info(
-              `Response from transaction service for transactionId: ${
-                transactionDataReceivedFromQueue.transactionId
-              } for ${
-                this.transactionType
-              } after sending transaction on chainId: ${
-                this.chainId
-              }: ${customJSONStringify(transactionServiceResponse)}`,
+
+            _log.info(
+              {
+                response: transactionServiceResponse,
+              },
+              `transactionService responded`,
             );
-            if (
+
+            const isBundlerLowOnFunds =
               transactionServiceResponse.state === "failed" &&
-              transactionServiceResponse.code === STATUSES.FUND_BUNDLER
-            ) {
+              transactionServiceResponse.code === STATUSES.FUND_BUNDLER;
+
+            if (isBundlerLowOnFunds) {
               log.info(
-                `Bundler: ${activeRelayer.getPublicKey()} could not execute transaction due to low fund for transactionId: ${
-                  transactionDataReceivedFromQueue.transactionId
-                } on chainId: ${this.chainId}. Sending bundler for funding`,
+                `Relayer could not execute transaction due to low funds. Sending bundler for funding`,
               );
               this.relayerManager.fundAndAddRelayerToActiveQueue(
                 activeRelayer.getPublicKey(),
               );
               return await sendTransactionWithRetry();
             }
-            log.info(
-              `Adding relayer: ${activeRelayer.getPublicKey()} back to active relayer queue for transactionId: ${
-                transactionDataReceivedFromQueue.transactionId
-              } for transactionType: ${this.transactionType} on chainId: ${
-                this.chainId
-              }`,
-            );
+
+            _log.info(`Adding relayer back to active relayer queue`);
+
             await this.relayerManager.addActiveRelayer(
               activeRelayer.getPublicKey(),
             );
-            log.info(
-              `Added relayer: ${activeRelayer.getPublicKey()} back to active relayer queue for transactionId: ${
-                transactionDataReceivedFromQueue.transactionId
-              } for transactionType: ${this.transactionType} on chainId: ${
-                this.chainId
-              }`,
-            );
+
+            _log.info(`Added relayer back to active relayer queue`);
+
             if (transactionServiceResponse.state === "success") {
-              log.info(
-                `Transaction sent successfully for transactionId: ${transactionDataReceivedFromQueue.transactionId} for ${this.transactionType} on chain ${this.chainId}`,
-              );
+              _log.info(`Transaction sent successfully`);
             } else {
-              log.error(
-                `Transaction failed with error: ${
-                  transactionServiceResponse?.error || "unknown error"
-                } for transactionId: ${
-                  transactionDataReceivedFromQueue.transactionId
-                } for ${this.transactionType} on chain ${this.chainId}`,
+              _log.error(
+                { err: transactionServiceResponse?.error || "unknown error" },
+                `Transaction failed`,
               );
             }
+
             await this.cacheService.delete(
               getFailedTransactionRetryCountKey(
                 transactionDataReceivedFromQueue.transactionId,
                 this.chainId,
               ),
             );
-          } catch (error: any) {
-            log.error(
-              `Error in transaction service for transactionId: ${
-                transactionDataReceivedFromQueue.transactionId
-              } for transactionType: ${this.transactionType} on chainId: ${
-                this.chainId
-              } with error: ${customJSONStringify(parseError(error))}`,
+          } catch (err: unknown) {
+            _log.error(
+              { err },
+              `Error in BundlerConsumer.sendTransactionWithRetry`,
             );
-            log.info(
-              `Adding relayer: ${activeRelayer.getPublicKey()} back to active relayer queue for transactionId: ${
-                transactionDataReceivedFromQueue.transactionId
-              } for transactionType: ${this.transactionType} on chainId: ${
-                this.chainId
-              }`,
+
+            _log.info(`Adding relayer back to active relayer queue`);
+
+            await this.relayerManager.addActiveRelayer(
+              activeRelayer.getPublicKey(),
             );
-            this.relayerManager.addActiveRelayer(activeRelayer.getPublicKey());
-            log.info(
-              `Added relayer: ${activeRelayer.getPublicKey()} back to active relayer queue for transactionId: ${
-                transactionDataReceivedFromQueue.transactionId
-              } for transactionType: ${this.transactionType} on chainId: ${
-                this.chainId
-              }`,
-            );
+
+            _log.info(`Added relayer back to active relayer queue`);
+
             await this.cacheService.delete(
               getFailedTransactionRetryCountKey(
                 transactionDataReceivedFromQueue.transactionId,
@@ -222,15 +198,11 @@ export class BundlerConsumer
           }
         } else {
           this.queue.publish(JSON.parse(msg.content.toString()));
-          log.info(
-            `No active relayer for transactionId: ${transactionDataReceivedFromQueue.transactionId} for transactionType: ${this.transactionType} on chainId: ${this.chainId}`,
-          );
+          topLog.info(`No active relayer for user operation`);
         }
       };
       await sendTransactionWithRetry();
     }
-    log.info(
-      `No msg received from queue for transactionType: ${this.transactionType} on chainId: ${this.chainId}`,
-    );
+    log.info({ chainId: this.chainId }, `Empty msg received from queue`);
   };
 }

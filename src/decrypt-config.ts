@@ -7,7 +7,7 @@ const AES_PADDING = crypto.pad.Pkcs7;
 const AES_MODE = crypto.mode.CBC;
 
 function decryptConfig(): string {
-  // const encryptedEnvPath = './config.json.enc';
+  // const encryptedEnvPaPth = './config.json.enc';
   const encryptedEnvPath = process.argv[2]; // Taking the second command line argument as configName
   const passphrase = process.env.BUNDLER_CONFIG_PASSPHRASE;
   if (!passphrase) {
@@ -45,6 +45,7 @@ function decryptConfig(): string {
     });
     plaintext = encryptedBytes.toString(crypto.enc.Utf8);
   } catch (e) {
+    console.error(e);
     console.log("Incorrect password for decryption");
     process.exit();
   }

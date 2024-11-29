@@ -1,4 +1,3 @@
-/* eslint-disable import/no-import-module-exports */
 import { Request } from "express";
 import { logger } from "../../../../common/logger";
 import {

@@ -7,7 +7,7 @@ import {
 } from "../../../common/types";
 import { BUNDLER_ERROR_CODES, STATUSES } from "../shared/middleware";
 import {
-  bundleUserOperation,
+  eth_sendUserOperation,
   getChainId,
   estimateUserOperationGas,
   getUserOperationByHash,
@@ -39,7 +39,7 @@ export const handleV2Request = async (req: Request, res: Response) => {
   switch (method) {
     case TransactionMethodType.BUNDLER:
       // here ideally it should add to mempool but would be bundling one user op per bundle
-      response = await bundleUserOperation(req, res);
+      response = await eth_sendUserOperation(req, res);
       break;
     case EthMethodType.ESTIMATE_USER_OPERATION_GAS:
       response = await estimateUserOperationGas(req, res);

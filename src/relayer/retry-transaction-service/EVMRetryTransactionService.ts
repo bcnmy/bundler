@@ -1,4 +1,3 @@
-/* eslint-disable import/no-import-module-exports */
 import { ConsumeMessage } from "amqplib";
 import { logger } from "../../common/logger";
 import { INetworkService } from "../../common/network";
@@ -18,6 +17,7 @@ import {
   parseError,
 } from "../../common/utils";
 import { ICacheService } from "../../common/cache";
+import { FlashbotsTxStatus } from "../../common/network/FlashbotsClient";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -65,15 +65,16 @@ export class EVMRetryTransactionService
 
   onMessageReceived = async (msg?: ConsumeMessage) => {
     if (msg) {
-      log.info(
-        `Message received from retry transaction queue on chainId: ${
-          this.chainId
-        }: ${customJSONStringify(msg.content.toString())}`,
-      );
-      this.queue.ack(msg);
       const transactionDataReceivedFromRetryQueue = JSON.parse(
         msg.content.toString(),
       );
+
+      log.info(
+        { chainId: this.chainId, msg: transactionDataReceivedFromRetryQueue },
+        "Message received from retry transaction queue",
+      );
+
+      this.queue.ack(msg);
 
       const {
         transactionHash,
@@ -134,6 +135,32 @@ export class EVMRetryTransactionService
         log.info(
           `Transaction receipt not receivied for transactionHash: ${transactionHash} and transactionId: ${transactionId} on chainId: ${this.chainId}. Hence retrying the transaction.`,
         );
+
+        if (
+          this.networkService.supportsFlashbots &&
+          this.networkService.flashbots != null
+        ) {
+          try {
+            const flashbotsStatus =
+              await this.networkService.flashbots?.waitForTransaction(
+                transactionHash,
+              );
+
+            if (flashbotsStatus.status === FlashbotsTxStatus.FAILED) {
+              log.error(
+                `Flashbots transaction failed for transactionHash: ${transactionHash} with transactionId: ${transactionId} on chainId: ${this.chainId}`,
+              );
+            }
+          } catch (error) {
+            log.error(
+              `Error in fetching flashbots status for transactionHash: ${transactionHash} with transactionId: ${transactionId} on chainId: ${
+                this.chainId
+              } is ${parseError(error)}`,
+            );
+
+            return;
+          }
+        }
 
         if (!account) {
           log.error(

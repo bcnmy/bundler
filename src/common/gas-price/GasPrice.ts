@@ -1,6 +1,4 @@
-/* eslint-disable prefer-const */
-/* eslint-disable import/no-import-module-exports */
-import { formatUnits, toHex } from "viem";
+import { formatGwei, formatUnits, toHex } from "viem";
 import { IEVMAccount } from "../../relayer/account";
 import { ICacheService } from "../cache";
 import { logger } from "../logger";
@@ -9,12 +7,15 @@ import { EVMRawTransactionType, NetworkBasedGasPriceType } from "../types";
 import { GasPriceType } from "./types";
 import { customJSONStringify } from "../utils";
 import { IGasPriceService } from "./interface/IGasPriceService";
+import pino from "pino";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
 });
+
+// TODO: This must be refactored
 export class GasPriceService implements IGasPriceService {
-  chainId: number;
+  readonly chainId: number;
 
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
 
@@ -71,7 +72,12 @@ export class GasPriceService implements IGasPriceService {
    * @param price the gas price
    */
   async setGasPrice(gasType: GasPriceType, price: string) {
-    await this.cacheService.set(this.getGasFeeKey(gasType), price.toString());
+    const key = this.getGasFeeKey(gasType);
+    logger.info(
+      { chainId: this.chainId, price, key },
+      `GasPriceService.setGasPrice`,
+    );
+    await this.cacheService.set(key, price.toString());
   }
 
   /**
@@ -82,27 +88,54 @@ export class GasPriceService implements IGasPriceService {
   async getGasPrice(
     gasType = GasPriceType.DEFAULT,
   ): Promise<NetworkBasedGasPriceType> {
+    const _log = logger.child({ chainId: this.chainId });
     let gasPrice: NetworkBasedGasPriceType;
     if (this.EIP1559SupportedNetworks.includes(this.chainId)) {
       const maxFeePerGas = BigInt(await this.getMaxFeeGasPrice(gasType));
-      log.info(
-        `maxFeePerGas: ${maxFeePerGas} from cache on chainId: ${this.chainId}`,
-      );
 
       const maxPriorityFeePerGas = BigInt(
         await this.getMaxPriorityFeeGasPrice(gasType),
       );
-      log.info(
-        `maxPriorityFeePerGas: ${maxPriorityFeePerGas} from cache on chainId: ${this.chainId}`,
-      );
+      _log.info({ maxPriorityFeePerGas }, `Cache read maxPriorityFeePerGas`);
 
       if (!maxFeePerGas || !maxPriorityFeePerGas) {
+        // get from network
         gasPrice = await this.networkService.getEIP1559FeesPerGas();
-        log.info(
-          `gasPrice: ${customJSONStringify(
-            gasPrice,
-          )} from network on chainId: ${this.chainId}`,
-        );
+
+        _log.info({ gasPrice }, `Network gasPrice`);
+
+        // get from blocknative
+        if (this.networkService.supportsBlockNative) {
+          const blockNativeFeesPerGas =
+            await this.networkService.getBlockNativeFeesPerGas();
+
+          if (
+            blockNativeFeesPerGas.maxPriorityFeePerGas >
+            gasPrice.maxPriorityFeePerGas
+          ) {
+            const maxPriorityFeePerGasDiff =
+              blockNativeFeesPerGas.maxPriorityFeePerGas -
+              gasPrice.maxPriorityFeePerGas;
+
+            logger.info(
+              `Blocknative returned higher maxPriorityFeePerGas, diff is: ${formatGwei(maxPriorityFeePerGasDiff)} gwei`,
+            );
+
+            gasPrice.maxPriorityFeePerGas =
+              blockNativeFeesPerGas.maxPriorityFeePerGas;
+          }
+
+          if (blockNativeFeesPerGas.maxFeePerGas > gasPrice.maxFeePerGas) {
+            const maxFeePerGasDiff =
+              blockNativeFeesPerGas.maxFeePerGas - gasPrice.maxFeePerGas;
+
+            logger.info(
+              `Blocknative returned higher maxFeePerGas, diff is: ${formatGwei(maxFeePerGasDiff)} gwei`,
+            );
+
+            gasPrice.maxFeePerGas = blockNativeFeesPerGas.maxFeePerGas;
+          }
+        }
       } else {
         gasPrice = {
           maxFeePerGas,
@@ -153,10 +186,14 @@ export class GasPriceService implements IGasPriceService {
    * @param bumpingPercentage how much to bump by
    * @returns new bumped up transaction
    */
-  getBumpedUpGasPrice(
+  async getBumpedUpGasPrice(
     pastGasPrice: NetworkBasedGasPriceType,
     bumpingPercentage: number,
-  ): NetworkBasedGasPriceType {
+  ): Promise<NetworkBasedGasPriceType> {
+    if (this.networkService.supportsBlockNative) {
+      pastGasPrice = await this.networkService.getBlockNativeFeesPerGas(99);
+    }
+
     let result;
     log.info(`Bumping up gas price by ${bumpingPercentage}%`);
     log.info(
@@ -256,10 +293,13 @@ export class GasPriceService implements IGasPriceService {
    * @returns price of max fee gas
    */
   async getMaxFeeGasPrice(gasType: GasPriceType): Promise<string> {
-    const result = await this.cacheService.get(
-      this.getMaxFeePerGasKey(gasType),
+    const key = this.getMaxFeePerGasKey(gasType);
+    const maxFeePerGas = await this.cacheService.get(key);
+    logger.info(
+      { chainId: this.chainId, maxFeePerGas, key },
+      `GasPriceService.getMaxFeeGasPrice`,
     );
-    return result;
+    return maxFeePerGas;
   }
 
   /**
@@ -268,10 +308,13 @@ export class GasPriceService implements IGasPriceService {
    * @returns price of max priority fee gas
    */
   async getMaxPriorityFeeGasPrice(gasType: GasPriceType): Promise<string> {
-    const result = await this.cacheService.get(
-      this.getMaxPriorityFeePerGasKey(gasType),
+    const key = this.getMaxPriorityFeePerGasKey(gasType);
+    const maxPriorityFeePerGas = await this.cacheService.get(key);
+    logger.info(
+      { chainId: this.chainId, maxPriorityFeePerGas, key },
+      `GasPriceService.getMaxPriorityFeeGasPrice`,
     );
-    return result;
+    return maxPriorityFeePerGas;
   }
 
   /**
@@ -291,19 +334,24 @@ export class GasPriceService implements IGasPriceService {
    * @param baseFeePerGas
    */
   async setBaseFeePerGas(baseFeePerGas: string): Promise<void> {
-    await this.cacheService.set(
-      this.getBaseFeePerGasKey(),
-      baseFeePerGas.toString(),
+    const key = this.getBaseFeePerGasKey();
+    logger.info(
+      { baseFeePerGas, chainId: this.chainId, key },
+      `GasPriceService.setBaseFeePerGas`,
     );
+    await this.cacheService.set(key, baseFeePerGas.toString());
   }
 
   /**
    * Method returns EIP 1559 base fee per gas
    */
   async getBaseFeePerGas(): Promise<bigint> {
-    const baseFeePerGas = await this.cacheService.get(
-      this.getBaseFeePerGasKey(),
+    const key = this.getBaseFeePerGasKey();
+    logger.info(
+      { chainId: this.chainId, key },
+      `GasPriceService.getBaseFeePerGas`,
     );
+    const baseFeePerGas = await this.cacheService.get(key);
     return BigInt(baseFeePerGas);
   }
 
@@ -332,16 +380,26 @@ export class GasPriceService implements IGasPriceService {
    * Method sets up gas price manager
    */
   async setup() {
+    const _log = logger.child({ chainId: this.chainId });
     try {
       // check if the network supports EIP 1559
       if (this.EIP1559SupportedNetworks.includes(this.chainId)) {
         let { maxFeePerGas, maxPriorityFeePerGas } =
           await this.networkService.getEIP1559FeesPerGas();
+
+        // get from blocknative
+        if (this.networkService.supportsBlockNative) {
+          ({ maxPriorityFeePerGas, maxFeePerGas } =
+            await this.overrideWithBlocknative(
+              _log,
+              maxPriorityFeePerGas,
+              maxFeePerGas,
+            ));
+        }
+
         log.info(
-          `setup maxFeePerGas: ${maxFeePerGas} from network on chainId: ${this.chainId}`,
-        );
-        log.info(
-          `setup maxPriorityFeePerGas: ${maxPriorityFeePerGas} from network on chainId: ${this.chainId}`,
+          { maxFeePerGas, maxPriorityFeePerGas },
+          `GasPriceService.setup(): EIP-1559 fees per gas`,
         );
 
         if (
@@ -380,24 +438,61 @@ export class GasPriceService implements IGasPriceService {
         }
 
         const baseFeePerGas = await this.networkService.getBaseFeePerGas();
-        log.info(
-          `setup baseFeePerGas: ${baseFeePerGas} from network on chainId: ${this.chainId}`,
-        );
 
         await this.setBaseFeePerGas(formatUnits(baseFeePerGas, 0));
       } else {
         const gasPrice = await this.networkService.getLegacyGasPrice();
-        log.info(
-          `setup legacy gasPrice: ${customJSONStringify(
-            gasPrice,
-          )} from network on chainId: ${this.chainId}`,
-        );
         await this.setGasPrice(GasPriceType.DEFAULT, formatUnits(gasPrice, 0));
       }
-    } catch (error) {
-      log.error(
-        `Error in setting gas price for network id ${this.chainId} - ${error}`,
-      );
+    } catch (err) {
+      _log.error({ err }, `Error in setting up gas price`);
     }
+  }
+
+  /**
+   * Override network values with blocknative values if they are higher
+   * @param _log Pino logger
+   * @param maxPriorityFeePerGas maxPriorityFeePerGas returned by network
+   * @param maxFeePerGas maxFeePerGas returned by network
+   * @returns Network or blocknative values, whichever is higher
+   */
+  private async overrideWithBlocknative(
+    _log: pino.Logger,
+    maxPriorityFeePerGas: bigint,
+    maxFeePerGas: bigint,
+  ) {
+    const blockNative = await this.networkService.getBlockNativeFeesPerGas();
+
+    if (blockNative.maxPriorityFeePerGas > maxPriorityFeePerGas) {
+      const maxPriorityFeePerGasDiff =
+        blockNative.maxPriorityFeePerGas - maxPriorityFeePerGas;
+
+      _log.info(
+        {
+          network: maxPriorityFeePerGas,
+          blocknative: blockNative.maxPriorityFeePerGas,
+          diffGwei: formatGwei(maxPriorityFeePerGasDiff),
+        },
+        `Blocknative returned higher maxPriorityFeePerGas`,
+      );
+
+      maxPriorityFeePerGas = blockNative.maxPriorityFeePerGas;
+    }
+
+    if (blockNative.maxFeePerGas > maxFeePerGas) {
+      const maxFeePerGasDiff = blockNative.maxFeePerGas - maxFeePerGas;
+
+      _log.info(
+        {
+          network: maxFeePerGas,
+          blocknative: blockNative.maxFeePerGas,
+          diffGwei: formatGwei(maxFeePerGasDiff),
+        },
+        `Blocknative returned higher maxFeePerGas`,
+      );
+
+      maxFeePerGas = blockNative.maxFeePerGas;
+    }
+    return { maxPriorityFeePerGas, maxFeePerGas };
   }
 }

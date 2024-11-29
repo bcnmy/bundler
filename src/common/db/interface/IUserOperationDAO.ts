@@ -5,20 +5,20 @@ export type InitialUserOperationDataType = {
   dappAPIKey?: string;
   entryPoint: string;
   sender: string;
-  nonce: number;
   initCode: string;
+  nonce: number;
   callData: string;
   callGasLimit: number;
   verificationGasLimit: number;
   preVerificationGas: number;
   maxFeePerGas: number;
   maxPriorityFeePerGas: number;
-  paymasterAndData: string;
   signature: string;
   userOpHash: string;
   chainId: number;
   status: string;
   paymaster: string;
+  paymasterAndData: string;
   creationTime: number;
   metaData?: object;
 };
@@ -33,6 +33,7 @@ export type FinalUserOperationDataType = {
   actualGasCost: number;
   actualGasUsed: number;
   reason: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   logs: any;
 };
 

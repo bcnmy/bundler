@@ -1,4 +1,3 @@
-/* eslint-disable import/no-import-module-exports */
 import { UpdateRequestDataType } from "../../../../common/types";
 import {
   axiosPatchCall,

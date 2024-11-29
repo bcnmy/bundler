@@ -8,7 +8,6 @@ jest.mock("../../../../common/service-manager", () => ({
   },
 }));
 
-// eslint-disable-next-line import/first
 import { health } from "./handler";
 
 // The tests for this endpoint are quite minimal and simple.

@@ -4,12 +4,14 @@ import {
   ITransactionDAO,
   IUserOperationDAO,
   IUserOperationStateDAO,
+  IUserOperationV07DAO,
 } from "../../../common/db";
 import { IQueue } from "../../../common/interface";
 import { INetworkService } from "../../../common/network";
 import { RetryTransactionQueueData } from "../../../common/queue/types";
 import {
   EntryPointMapType,
+  EntryPointV07MapType,
   EVMRawTransactionType,
   TransactionType,
 } from "../../../common/types";
@@ -20,11 +22,13 @@ export type EVMTransactionListenerParamsType = {
   retryTransactionQueue: IQueue<RetryTransactionQueueData>;
   transactionDao: ITransactionDAO;
   userOperationDao: IUserOperationDAO;
+  userOperationDaoV07: IUserOperationV07DAO;
   userOperationStateDao: IUserOperationStateDAO;
   cacheService: ICacheService;
   options: {
     chainId: number;
     entryPointMap: EntryPointMapType;
+    entryPointMapV07: EntryPointV07MapType;
   };
 };
 
@@ -37,9 +41,11 @@ export type NotifyTransactionListenerParamsType = {
   previousTransactionHash?: string;
   rawTransaction: EVMRawTransactionType;
   walletAddress: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metaData?: any;
   relayerManagerName: string;
   error?: string;
+  timestamp?: number;
 };
 
 export type OnTransactionSuccessParamsType =

@@ -79,6 +79,7 @@ export class TransactionDAO implements ITransactionDAO {
   async updateMetaDataAndRelayerDestinationContractDataByTransactionId(
     chainId: number,
     id: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     metaData: any,
     relayerDestinationContractAddress: string,
     relayerDestinationContractName: string,

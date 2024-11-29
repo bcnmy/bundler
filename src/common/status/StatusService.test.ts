@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { EVMNetworkService } from "../network";
 import { NetworkBasedGasPriceType } from "../types";
 import { StatusService } from "./StatusService";
@@ -9,6 +10,7 @@ describe("StatusService", () => {
     it("should return no errors if RPC returns the correct chain ID", async () => {
       const statusService = new StatusService({
         // we mock the network service because it's used in this test
+        bundlerSimulationServiceMapV07: {} as any,
         networkServiceMap: {
           137: {
             getChainId: (): Promise<number> => Promise.resolve(chainId),
@@ -44,6 +46,7 @@ describe("StatusService", () => {
         dbInstance: {} as any,
         gasPriceServiceMap: {} as any,
         bundlerSimulationServiceMap: {} as any,
+        bundlerSimulationServiceMapV07: {} as any,
       });
 
       const { durationSeconds, errors } = await statusService.checkRPC(chainId);
@@ -68,6 +71,7 @@ describe("StatusService", () => {
         dbInstance: {} as any,
         networkServiceMap: {} as any,
         bundlerSimulationServiceMap: {} as any,
+        bundlerSimulationServiceMapV07: {} as any,
       });
 
       const { durationSeconds, errors } =
@@ -94,6 +98,7 @@ describe("StatusService", () => {
         dbInstance: {} as any,
         networkServiceMap: {} as any,
         bundlerSimulationServiceMap: {} as any,
+        bundlerSimulationServiceMapV07: {} as any,
       });
 
       const { durationSeconds, errors } =
@@ -128,6 +133,7 @@ describe("StatusService", () => {
         dbInstance: {} as any,
         bundlerSimulationServiceMap: {} as any,
         gasPriceServiceMap: {} as any,
+        bundlerSimulationServiceMapV07: {} as any,
       });
 
       const { durationSeconds, errors } =
@@ -160,6 +166,7 @@ describe("StatusService", () => {
         dbInstance: {} as any,
         bundlerSimulationServiceMap: {} as any,
         gasPriceServiceMap: {} as any,
+        bundlerSimulationServiceMapV07: {} as any,
       });
 
       const { durationSeconds, errors } =
@@ -183,6 +190,7 @@ describe("StatusService", () => {
         networkServiceMap: {} as any,
         gasPriceServiceMap: {} as any,
         bundlerSimulationServiceMap: {} as any,
+        bundlerSimulationServiceMapV07: {} as any,
       });
 
       const { durationSeconds, errors } = await statusService.checkRedis();
@@ -204,6 +212,7 @@ describe("StatusService", () => {
         networkServiceMap: {} as any,
         gasPriceServiceMap: {} as any,
         bundlerSimulationServiceMap: {} as any,
+        bundlerSimulationServiceMapV07: {} as any,
       });
 
       const { durationSeconds, errors } = await statusService.checkRedis();
@@ -225,6 +234,7 @@ describe("StatusService", () => {
         networkServiceMap: {} as any,
         gasPriceServiceMap: {} as any,
         bundlerSimulationServiceMap: {} as any,
+        bundlerSimulationServiceMapV07: {} as any,
       });
 
       const { durationSeconds, errors } = await statusService.checkMongo();
@@ -244,6 +254,7 @@ describe("StatusService", () => {
         networkServiceMap: {} as any,
         gasPriceServiceMap: {} as any,
         bundlerSimulationServiceMap: {} as any,
+        bundlerSimulationServiceMapV07: {} as any,
       });
 
       const { durationSeconds, errors } = await statusService.checkMongo();

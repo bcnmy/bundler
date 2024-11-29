@@ -1,6 +1,5 @@
-/* eslint-disable import/no-import-module-exports */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import nodeconfig from "config";
-import { parseEther } from "viem/utils";
 import { IEVMAccount } from "../../relayer/account";
 import { IRelayerManager } from "../../relayer/relayer-manager";
 import { ICacheService } from "../cache";
@@ -12,8 +11,11 @@ import { IStatusService } from "./interface/IStatusService";
 import { logger } from "../logger";
 import { StatusServiceParamsType } from "./types";
 import { GasPriceService } from "../gas-price";
-import { BundlerSimulationService } from "../simulation";
-import { formatHrtimeSeconds } from "../utils/formatting";
+import {
+  BundlerSimulationService,
+  BundlerSimulationServiceV07,
+} from "../simulation";
+import { formatHrtimeSeconds } from "../utils/timing";
 
 const filenameLogger = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -66,6 +68,10 @@ export class StatusService implements IStatusService {
     [chainId: number]: BundlerSimulationService;
   };
 
+  bundlerSimulationServiceMapV07: {
+    [chainId: number]: BundlerSimulationServiceV07;
+  };
+
   constructor(params: StatusServiceParamsType) {
     const {
       cacheService,
@@ -74,6 +80,7 @@ export class StatusService implements IStatusService {
       dbInstance,
       gasPriceServiceMap,
       bundlerSimulationServiceMap,
+      bundlerSimulationServiceMapV07,
     } = params;
     this.cacheService = cacheService;
     this.networkServiceMap = networkServiceMap;
@@ -81,6 +88,7 @@ export class StatusService implements IStatusService {
     this.dbInstance = dbInstance;
     this.gasPriceServiceMap = gasPriceServiceMap;
     this.bundlerSimulationServiceMap = bundlerSimulationServiceMap;
+    this.bundlerSimulationServiceMapV07 = bundlerSimulationServiceMapV07;
   }
 
   async checkAllChains(): Promise<ChainStatus[]> {
@@ -243,7 +251,6 @@ export class StatusService implements IStatusService {
   // checkRelayers (tries to) check if the relayers can actually relay transactions
   async checkRelayers(chainId: number): Promise<StatusCheckResult> {
     return statusCheck(async () => {
-      // eslint-disable-next-line @typescript-eslint/dot-notation
       const relayerManager = this.evmRelayerManagerMap["RM1"][chainId];
       if (!relayerManager) {
         throw new Error(
@@ -267,17 +274,11 @@ export class StatusService implements IStatusService {
           relayerManager.relayerQueue.get(address) ||
           relayerManager.transactionProcessingRelayerMap[address];
 
-        // this value is in ETH and we need to convert it to wei.
-        // This is confusing because the fundingBalanceThreshold is already parsed to wei
-        const fundingRelayerAmount = parseEther(
-          relayerManager.fundingRelayerAmount.toString(),
-        );
-
-        if (
-          relayer.balance < relayerManager.fundingBalanceThreshold &&
-          masterAccountBalance < fundingRelayerAmount
-        ) {
-          throw new Error(`Relayers for chainId: ${chainId} have low balance`);
+        const epsilonWei = 10; // a tiny amount greater than zero
+        if (relayer.balance < epsilonWei) {
+          throw new Error(
+            `Relayer with address: ${relayer.address} for chainId: ${chainId} is not funded`,
+          );
         }
       }
     });
@@ -322,29 +323,20 @@ export class StatusService implements IStatusService {
   // - relayer queues sizes
   // - bundler version information (we need to fetch this from git somehow)
   // - RPC provider information (without leaking keys, basically just the provider name)
-  async info(): Promise<StatusInfo> {
+  async info(chainId: number): Promise<StatusInfo> {
     const statusInfo: StatusInfo = {};
 
-    // eslint-disable-next-line @typescript-eslint/dot-notation
     const relayerManagers = this.evmRelayerManagerMap["RM1"];
     if (!relayerManagers) {
       throw new Error(`Relayers are temporarily unavailable`);
     }
 
-    for (const [chainId, relayerManager] of Object.entries(relayerManagers)) {
-      const chainIdInt = parseInt(chainId, 10);
-      statusInfo[chainIdInt] = {
-        relayers: [],
-      };
+    const relayerManager = relayerManagers[chainId];
+    const relayers = Object.values(relayerManager.relayerMap);
 
-      for (const address of Object.keys(relayerManager.relayerMap)) {
-        const relayer =
-          relayerManager.relayerQueue.get(address) ||
-          relayerManager.transactionProcessingRelayerMap[address];
-
-        statusInfo[chainIdInt].relayers.push(relayer);
-      }
-    }
+    statusInfo[chainId] = {
+      relayers: await Promise.all(relayers.map((relayer) => relayer.getInfo())),
+    };
 
     return statusInfo;
   }

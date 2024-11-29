@@ -1,6 +1,4 @@
-/* eslint-disable import/no-import-module-exports */
-/* eslint-disable no-continue */
-/* eslint-disable no-await-in-loop */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Log,
   PublicClient,
@@ -13,7 +11,12 @@ import {
   toHex,
 } from "viem";
 import { logger } from "../logger";
-import { EntryPointContractType, StakeInfo, UserOperationType } from "../types";
+import {
+  EntryPointContractType,
+  EntryPointV07ContractType,
+  StakeInfo,
+  UserOperationType,
+} from "../types";
 import { parseError } from "./parse-error";
 import { customJSONStringify } from "./custom-json-stringifier";
 
@@ -24,6 +27,19 @@ const log = logger.child({
 export const getPaymasterFromPaymasterAndData = (
   paymasterAndData: string,
 ): string => {
+  const paymasterAddress = `${paymasterAndData.substring(0, 42)}`;
+  log.info(
+    `paymasterAddress: ${paymasterAddress} for paymasterAndData: ${paymasterAndData}`,
+  );
+  return paymasterAddress;
+};
+
+export const getPaymasterFromPaymasterAndDataV7 = (
+  paymasterAndData: string,
+): string => {
+  if (!paymasterAndData) {
+    return "";
+  }
   const paymasterAddress = `${paymasterAndData.substring(0, 42)}`;
   log.info(
     `paymasterAddress: ${paymasterAddress} for paymasterAndData: ${paymasterAndData}`,
@@ -62,7 +78,7 @@ const filterLogs = (
  * @param {number} chainId
  * @param {string} userOpHash
  * @param {TransactionReceipt} receipt
- * @param {EntryPointContractType} entryPointContract
+ * @param {EntryPointContractType | EntryPointV07ContractType} entryPointContract
  * @param {bigint} fromBlock
  * @param {PublicClient} provider
  */
@@ -70,7 +86,7 @@ export const getUserOperationReceiptForFailedTransaction = async (
   chainId: number,
   userOpHash: string,
   receipt: TransactionReceipt,
-  entryPointContract: EntryPointContractType,
+  entryPointContract: EntryPointContractType | EntryPointV07ContractType,
   fromBlock: bigint,
   provider: PublicClient,
 ): Promise<any> => {
@@ -199,8 +215,7 @@ export const getUserOperationReceiptForSuccessfulTransaction = async (
   chainId: number,
   userOpHash: string,
   receipt: TransactionReceipt,
-  entryPointContract: EntryPointContractType,
-  // eslint-disable-next-line consistent-return
+  entryPointContract: EntryPointContractType | EntryPointV07ContractType,
 ): Promise<{
   actualGasCost: number;
   actualGasUsed: number;

@@ -1,7 +1,7 @@
 describe("broken test suite", () => {
   it("should be fixed", () => {});
 });
-// /* eslint-disable @typescript-eslint/no-unused-vars */
+//
 // /* eslint-disable max-len */
 // import { ethers } from 'ethers';
 // import axios from 'axios';

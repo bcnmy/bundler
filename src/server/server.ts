@@ -1,9 +1,8 @@
-/* eslint-disable import/no-import-module-exports */
 import http from "http";
 import { logger } from "../common/logger";
 import app from "./app";
 
-let server: any;
+let server: http.Server;
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -30,6 +29,7 @@ const port = normalizePort(process.env.PORT || "3000");
  * Event listener for HTTP server "error" event.
  */
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function onError(error: any) {
   if (error.syscall !== "listen") {
     throw error;
@@ -56,7 +56,7 @@ function onError(error: any) {
 
 function onListening() {
   const addr = server.address();
-  const bind = typeof addr === "string" ? `pipe ${addr}` : `port ${addr.port}`;
+  const bind = typeof addr === "string" ? `pipe ${addr}` : `port ${addr?.port}`;
   log.info(`App listening on ${bind}`);
 }
 

@@ -17,13 +17,13 @@
 #   [maxReplica]=6
 # )
 
-declare -A chain_polygon=(
-  [name]='chain-137'
-  [chainId]="137"
-  [autoScalingThreshholdHTTPRequestsPerMingute]=1000
-  [autoScalingThreshholdCPU]=800m
-  [minReplica]=6
-  [maxReplica]=6)
+# declare -A chain_polygon=(
+#   [name]='chain-137'
+#   [chainId]="137"
+#   [autoScalingThreshholdHTTPRequestsPerMingute]=1000
+#   [autoScalingThreshholdCPU]=800m
+#   [minReplica]=6
+#   [maxReplica]=6)
 
 
 # declare -A chain_arbitrum=(
@@ -45,14 +45,14 @@ declare -A chain_polygon=(
 #   [maxReplica]=3
 # )
 
-# declare -A chain_opBNB=(
-#   [name]='chain-204'
-#   [chainId]="204"
-#   [autoScalingThreshholdHTTPRequestsPerMinute]=1000
-#   [autoScalingThreshholdCPU]=900m
-#   [minReplica]=3
-#   [maxReplica]=3
-# )
+declare -A chain_opBNB=(
+  [name]='chain-204'
+  [chainId]="204"
+  [autoScalingThreshholdHTTPRequestsPerMinute]=1000
+  [autoScalingThreshholdCPU]=900m
+  [minReplica]=3
+  [maxReplica]=3
+)
 
 # declare -A chain_base=(
 #   [name]='chain-8453'

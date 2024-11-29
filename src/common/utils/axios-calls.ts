@@ -1,4 +1,4 @@
-/* eslint-disable import/no-import-module-exports */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "axios";
 import { logger } from "../logger";
 import { customJSONStringify } from "./custom-json-stringifier";
@@ -6,11 +6,6 @@ import { customJSONStringify } from "./custom-json-stringifier";
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
 });
-
-export const axiosGetCall = async (url: string, _data?: any) => {
-  const { data } = await axios.get(url, _data);
-  return data;
-};
 
 export const axiosPostCall = async (url: string, _data?: any) => {
   try {

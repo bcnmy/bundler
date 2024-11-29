@@ -1,5 +1,3 @@
-/* eslint-disable import/no-import-module-exports */
-/* eslint-disable no-console */
 import crypto from "crypto-js";
 import { promises, existsSync } from "fs";
 

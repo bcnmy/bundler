@@ -1,11 +1,6 @@
 import rTracer from "cls-rtracer";
 import cors from "cors";
-import express, {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  NextFunction,
-  Request,
-  Response,
-} from "express";
+import express, { NextFunction, Request, Response } from "express";
 import cons from "consolidate";
 import logger from "pino-http";
 import { randomUUID } from "node:crypto";
@@ -14,6 +9,7 @@ import { routes } from "./api/router";
 const app = express();
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       userId: string;
@@ -45,6 +41,7 @@ app.set("view engine", "hbs");
 app.use(
   (
     req: Request,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     res: { setHeader: (arg0: string, arg1: any) => void },
     next: NextFunction,
   ) => {
@@ -89,6 +86,7 @@ app.route("/:chainId/health").get((req, res) => {
 // error handler
 app.use(
   (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     err: any,
     req: Request,
     res: Response,
