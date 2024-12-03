@@ -90,10 +90,10 @@ describe("EstimateUserOperationGas", () => {
         callGasLimit: 1000,
         verificationGasLimit: 1001,
         preVerificationGas: 1002,
-        validUntil: "0x3eb",
-        validAfter: "0x3ec",
-        maxPriorityFeePerGas: "1005",
-        maxFeePerGas: "1005",
+        maxPriorityFeePerGas: 1005,
+        maxFeePerGas: 1005,
+        paymasterPostOpGasLimit: null,
+        paymasterVerificationGasLimit: null,
       },
     });
 
@@ -157,10 +157,10 @@ describe("EstimateUserOperationGas", () => {
         callGasLimit: 1000,
         verificationGasLimit: 1001,
         preVerificationGas: 1002,
-        validUntil: "0x3eb",
-        validAfter: "0x3ec",
-        maxPriorityFeePerGas: "1005",
-        maxFeePerGas: "1006",
+        maxPriorityFeePerGas: 1005,
+        maxFeePerGas: 1006,
+        paymasterPostOpGasLimit: null,
+        paymasterVerificationGasLimit: null,
       },
     });
 

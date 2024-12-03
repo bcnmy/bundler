@@ -19,9 +19,6 @@ async function saveUserOperation(
   chainIdd: number,
   userOperationData: InitialUserOperationDataType,
 ): Promise<void> {
-  // console.log(`Nonce: ${otherNumber}`);
-
-  console.log(JSON.stringify(userOperationData, null, 2));
   userOperationDaoSaveMock(chainIdd, userOperationData);
 }
 
@@ -52,7 +49,7 @@ jest.mock("../../../../common/service-manager", () => ({
   routeTransactionToRelayerMap: {
     1: {
       BUNDLER: {
-        sendTransactionToRelayer: sendTransactionToRelayerMock,
+        sendUserOperation: sendTransactionToRelayerMock,
       },
     },
   },
