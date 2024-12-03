@@ -5,7 +5,7 @@ import {
 } from "../types";
 
 export interface ISlackNotificationService {
-  web: WebClient;
+  web: WebClient | undefined;
   slackToken: string;
   slackChannel: string;
 

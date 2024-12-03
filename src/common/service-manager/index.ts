@@ -310,6 +310,7 @@ async function setupNetwork(
         relayerManager.minRelayerCount,
       )} for relayerManager: ${relayerManager.name}`,
     );
+    // TODO: Add a config property to disable relayer funding
     await relayerMangerInstance.fundRelayers(addressList);
     log.info(
       `Relayer manager setup complete for chainId: ${chainId} for relayerManager: ${relayerManager.name}`,

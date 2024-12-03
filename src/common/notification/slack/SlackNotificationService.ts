@@ -11,7 +11,7 @@ const log = logger.child({
 });
 
 export class SlackNotificationService implements ISlackNotificationService {
-  web: WebClient;
+  web: WebClient | undefined;
 
   slackToken: string;
 
@@ -22,15 +22,11 @@ export class SlackNotificationService implements ISlackNotificationService {
     this.slackChannel = slackChannel;
     if (this.slackChannel && this.slackToken) {
       this.web = new WebClient(this.slackToken);
-      if (!this.web) {
-        throw new Error(
-          "Slack web client is not initialized. Check if slack configurations are present",
-        );
-      }
-    } else {
-      throw new Error(
-        "Slack token or channel name for relayer node is not present in slack configuration",
-      );
+      // if (!this.web) {
+      //   throw new Error(
+      //     "Slack web client is not initialized. Check if slack configurations are present",
+      //   );
+      // }
     }
   }
 
@@ -64,11 +60,13 @@ export class SlackNotificationService implements ISlackNotificationService {
   async postMessage(
     postSlackMessageParams: PostSlackMessageParamsType,
   ): Promise<void> {
-    const result = await this.web.chat.postMessage(postSlackMessageParams);
-    log.info(result);
-    log.info(
-      `Successfully sent message ${postSlackMessageParams.text} to Slack channel with id ${postSlackMessageParams.channel}`,
-    );
+    if (this.web) {
+      const result = await this.web.chat.postMessage(postSlackMessageParams);
+      log.info(result);
+      log.info(
+        `Successfully sent message ${postSlackMessageParams.text} to Slack channel with id ${postSlackMessageParams.channel}`,
+      );
+    }
   }
 
   /**

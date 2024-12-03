@@ -178,6 +178,7 @@ export class StatusService implements IStatusService {
         }),
       );
 
+      // TODO: Add a config flag to disable checking relayers
       promises.push(
         new Promise((resolve, reject) => {
           this.checkRelayers(chainId)

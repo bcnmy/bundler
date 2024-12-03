@@ -15,7 +15,7 @@
     "@types/config": "^3.3.3",
     "@types/crypto-js": "^4.1.1",
     "@types/express-prometheus-middleware": "^1.2.1",
-    "@types/pino": "^7.0.5",
+    "@types/node": "^22.10.1",
     "amqplib": "^0.10.3",
     "async-mutex": "^0.4.0",
     "axios": "^1.1.2",
@@ -88,6 +88,7 @@
     "prettier": "^3.3.3",
     "ts-jest": "^29.0.3",
     "ts-node": "^10.9.1",
+    "tsx": "^4.19.2",
     "typescript-eslint": "^8.11.0"
   },
   "config": {
