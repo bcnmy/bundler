@@ -178,6 +178,18 @@ export class StatusService implements IStatusService {
         }),
       );
 
+      promises.push(
+        new Promise((resolve, reject) => {
+          this.checkMasterAccount(chainId)
+            .then((res) => {
+              errors = errors.concat(res.errors);
+              latencies.masterAccount = res.durationSeconds;
+              resolve(res);
+            })
+            .catch((err) => reject(err));
+        }),
+      );
+
       if (nodeconfig.get<boolean>("health.checkRelayers")) {
         promises.push(
           new Promise((resolve, reject) => {
@@ -250,6 +262,26 @@ export class StatusService implements IStatusService {
     });
   }
 
+  async checkMasterAccount(chainId: number): Promise<StatusCheckResult> {
+    return statusCheck(async () => {
+      const relayerManager = this.evmRelayerManagerMap["RM1"][chainId];
+      if (!relayerManager) {
+        throw new Error(
+          `Relayers are temporarily unavailable for chainId: ${chainId}`,
+        );
+      }
+      // A basic sanity check: this will be 0 if and only if it was never funded.
+      // Even if it was funded and then drained, the balance will be non-zero.
+      const masterAccount = relayerManager.ownerAccountDetails.getPublicKey();
+      const masterAccountBalance =
+        await this.networkServiceMap[chainId].getBalance(masterAccount);
+
+      if (masterAccountBalance === 0n) {
+        throw new Error(`Master account for chainId: ${chainId} is not funded`);
+      }
+    });
+  }
+
   // checkRelayers (tries to) check if the relayers can actually relay transactions
   async checkRelayers(chainId: number): Promise<StatusCheckResult> {
     return statusCheck(async () => {
@@ -258,16 +290,6 @@ export class StatusService implements IStatusService {
         throw new Error(
           `Relayers are temporarily unavailable for chainId: ${chainId}`,
         );
-      }
-
-      // A basic sanity check: this will be 0 if and only if it was never funded.
-      // Even if it was funded and then drained, the balance will be non-zero.
-      const masterAccount = relayerManager.ownerAccountDetails.getPublicKey();
-      const masterAccountBalance =
-        await this.networkServiceMap[chainId].getBalance(masterAccount);
-
-      if (masterAccountBalance === 0n) {
-        throw new Error(`Relayer for chainId: ${chainId} is not funded`);
       }
 
       // The following checks if the relayers are low on balance and returns an error only if the master account is also low on balance

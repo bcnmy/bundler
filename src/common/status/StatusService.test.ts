@@ -142,7 +142,9 @@ describe("StatusService", () => {
       expect(errors).toEqual([]);
       expect(durationSeconds).toBeGreaterThan(0);
     });
+  });
 
+  describe("checkMasterAccount", () => {
     it("should return an error if the master account was never funded", async () => {
       // we mock only the services that are used
       const statusService = new StatusService({
@@ -170,9 +172,11 @@ describe("StatusService", () => {
       });
 
       const { durationSeconds, errors } =
-        await statusService.checkRelayers(chainId);
+        await statusService.checkMasterAccount(chainId);
 
-      expect(errors).toEqual([`Relayer for chainId: ${chainId} is not funded`]);
+      expect(errors).toEqual([
+        `Master account for chainId: ${chainId} is not funded`,
+      ]);
       expect(durationSeconds).toBeGreaterThan(0);
     });
   });

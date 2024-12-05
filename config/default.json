@@ -3,7 +3,7 @@
     "fundRelayers": true
   },
   "health": {
-    "checkRelayers": true
+    "checkRelayers": false
   },
   "config": {
     "validate": true
@@ -1045,7 +1045,7 @@
   "networksNotSupportingEthCallStateOverrides": [
     1101, 81, 592, 169, 1715, 7116, 9980, 88882, 88888, 81457, 666666666, 2442,
     8101902, 7001, 196, 195, 167009, 713715, 167000, 1328, 1329, 997, 995,
-    28882, 288, 920637907288165, 4202, 1135
+    28882, 288, 920637907288165
   ],
   "trustWalletSupportedNetworks": [137, 56, 204, 42161, 10, 8453],
   "networksNotSupportingEthCallBytecodeStateOverrides": [
