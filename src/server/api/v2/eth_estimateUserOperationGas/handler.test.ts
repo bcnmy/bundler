@@ -78,8 +78,6 @@ describe("EstimateUserOperationGas", () => {
     const response = httpMocks.createResponse();
     await estimateUserOperationGas(request, response);
 
-    // console.log(response._getJSONData());
-
     // Check the returned values
     expect(response.statusCode).toBe(200);
 

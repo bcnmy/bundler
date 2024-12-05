@@ -37,6 +37,8 @@ describe("EVMNetworkService", () => {
         chainId,
         rpcUrls: ["eth-sepolia.g.alchemy.com"],
         mevProtectedRpcUrl: "rpc-sepolia.flashbots.net",
+        checkForReceiptIntervalMs: 1000,
+        checkForReceiptTimeoutMs: 60000,
       });
     });
   });

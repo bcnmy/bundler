@@ -120,7 +120,9 @@ export class Config implements IConfig {
         this.config.supportedNetworks = [chainId];
       }
 
-      this.validate();
+      if (nodeconfig.get<boolean>("config.validate")) {
+        this.validate();
+      }
 
       log.info("Config loaded successfully");
     } catch (error) {

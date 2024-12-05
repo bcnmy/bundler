@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 node:21.6-bookworm as builder
+FROM --platform=linux/amd64 node:21.6-bookworm AS builder
 
 # Install dependencies
 
@@ -15,7 +15,7 @@ COPY package.json yarn.lock  ./
 RUN yarn install
 
 # Copy the rest of the files
-COPY . .
+# COPY . .
 
 # Second stage
 FROM --platform=linux/amd64 node:21.6-bookworm
@@ -24,8 +24,8 @@ FROM --platform=linux/amd64 node:21.6-bookworm
 # NOTE: See https://github.com/hexops/dockerfile#is-tini-still-required-in-2020-i-thought-docker-added-it-natively
 
 RUN apt-get update && apt-get install -y \
-    tini \
-    && rm -rf /var/lib/apt/lists/*
+  tini \
+  && rm -rf /var/lib/apt/lists/*
 
 
 # Expose the port

@@ -310,7 +310,17 @@ async function setupNetwork(
         relayerManager.minRelayerCount,
       )} for relayerManager: ${relayerManager.name}`,
     );
-    await relayerMangerInstance.fundRelayers(addressList);
+
+    /*
+      UNSAFE: Disable funding relayers for testing purposes or local devenv.
+      This is enabled by default but you can set it to false if you want to run smoke tests for example
+    */
+    if (nodeconfig.get<boolean>("boot.fundRelayers")) {
+      await relayerMangerInstance.fundRelayers(addressList);
+    } else {
+      log.warn(`Relayer funding is disabled for chainId: ${chainId}`);
+    }
+
     log.info(
       `Relayer manager setup complete for chainId: ${chainId} for relayerManager: ${relayerManager.name}`,
     );

@@ -178,17 +178,19 @@ export class StatusService implements IStatusService {
         }),
       );
 
-      promises.push(
-        new Promise((resolve, reject) => {
-          this.checkRelayers(chainId)
-            .then((res) => {
-              errors = errors.concat(res.errors);
-              latencies.relayers = res.durationSeconds;
-              resolve(res);
-            })
-            .catch((err) => reject(err));
-        }),
-      );
+      if (nodeconfig.get<boolean>("health.checkRelayers")) {
+        promises.push(
+          new Promise((resolve, reject) => {
+            this.checkRelayers(chainId)
+              .then((res) => {
+                errors = errors.concat(res.errors);
+                latencies.relayers = res.durationSeconds;
+                resolve(res);
+              })
+              .catch((err) => reject(err));
+          }),
+        );
+      }
 
       await Promise.all(promises);
     } catch (err: any) {

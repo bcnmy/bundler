@@ -22,8 +22,6 @@ describe("eth_chainId", () => {
     const response = httpMocks.createResponse();
     await getChainId(request, response);
 
-    // console.log(response._getJSONData());
-
     // Check the returned values
     expect(response.statusCode).toBe(200);
     expect(response._getJSONData()).toEqual({
