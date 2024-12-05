@@ -1,4 +1,13 @@
 {
+  "boot": {
+    "fundRelayers": true
+  },
+  "health": {
+    "checkRelayers": true
+  },
+  "config": {
+    "validate": true
+  },
   "supportedNetworks": [
     1, 137, 97, 56, 1101, 42161, 42170, 10, 43113, 43114, 8453, 59144, 5000,
     204, 5611, 88888, 592, 88882, 81, 1115, 1116, 169, 1715, 9980, 421614,
