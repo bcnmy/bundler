@@ -7,7 +7,9 @@
     "build": "tsc -p .",
     "start": "node --max_old_space_size=6000 dist/server/index.js",
     "start:production": "NODE_ENV=production node --max_old_space_size=6000 dist/server/index.js",
-    "test": "jest --testPathIgnorePatterns smoke --setupFiles dotenv/config --verbose"
+    "test": "jest --testPathIgnorePatterns='/smoke|e2e/' --setupFiles dotenv/config --verbose",
+    "test:smoke": "jest -t smoke --setupFiles dotenv/config --verbose",
+    "test:e2e": "jest --testPathIgnorePatterns='smoke' -t e2e --setupFiles dotenv/config --verbose"
   },
   "dependencies": {
     "@arbitrum/sdk": "^3.1.3",
@@ -60,6 +62,7 @@
     "viem": "^2.21.28"
   },
   "devDependencies": {
+    "@biconomy/account": "^4.5.7",
     "@eslint/js": "^9.13.0",
     "@types/amqplib": "^0.8.2",
     "@types/big.js": "^6.1.5",

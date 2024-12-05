@@ -1,50 +1,12 @@
 {
-  "supportedNetworks": [1],
+  "config": {
+    "validate": false
+  },
   "relayer": {
     "nodePathIndex": 0
-  },
-  "dataSources": {
-    "redisUrl": "test"
   },
   "clearStaleMessages": {
     "supportedNetworks": [1],
     "ttlSeconds": 1
-  },
-  "chains": {
-    "providers": {
-      "1": [
-        {
-          "url": "https://thislinkdoesnotexist.rs",
-          "type": "private"
-        }
-      ],
-      "10": [
-        {
-          "url": "https://thislinkdoesnotexist.rs",
-          "type": "private"
-        }
-      ],
-      "137": [
-        {
-          "url": "https://thislinkdoesnotexist.rs",
-          "type": "private"
-        }
-      ],
-      "11155111": [
-        {
-          "url": "https://thislinkdoesnotexist.rs",
-          "type": "private"
-        },
-        {
-          "url": "https://thislinkdoesnotexist.rs",
-          "type": "mev-protected"
-        }
-      ]
-    }
-  },
-  "EVMNetworkService": {
-    "waitForTransaction": {
-      "timeoutMs": 2000
-    }
   }
 }
