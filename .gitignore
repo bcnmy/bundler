@@ -25,3 +25,6 @@ dist/
 *.code-workspace
 config/development.json
 config/production.json
+
+# Random scripts that we shouldn't commit
+dont-commit/
