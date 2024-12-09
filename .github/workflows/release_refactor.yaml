@@ -7,7 +7,7 @@ name: Version_Release
 on:
   push:
     tags:
-      - V0.**
+      - v1.**
 jobs:
   js_build_test:
     runs-on: ubuntu-latest
