@@ -62,29 +62,29 @@ jobs:
       gcp_registry: 'us-west1-docker.pkg.dev/artifact-registry-1191/bundler/bundler'
       gcp_service_account: 'sa-bundler@workload-identity-e697.iam.gserviceaccount.com'
 
-  # deploy_staging:
-  #   needs: [container_img_build_push_gar]
-  #   # Allow the job to fetch a GitHub ID token
-  #   # runs-on: ubuntu-latest
-  #   permissions:
-  #     id-token: write
-  #     contents: read
-  #   uses: bcnmy/bundler/.github/workflows/deploy_to_gke.yaml@master
-  #   with:
-  #     # GCP project where the identity provider is
-  #     # gcloud projects describe prj-workload-identity-001
-  #     gcp_project_number: '334188102066'
-  #     gcp_project_id: 'biconomy-staging'
-  #     gcp_bastion: 'bastion02'
-  #     gcp_bastion_zone: 'us-east1-b'
-  #     gcp_pool_id: 'github-pool'
-  #     gcp_provider_id: 'github-actions-wif-provider'
-  #     # SERVICE_ACCOUNT_EMAIL="${SERVICE_ACCOUNT}@${PROJECT}.iam.gserviceaccount.com"
-  #     gcp_service_account: 'sa-bundler@workload-identity-e697.iam.gserviceaccount.com'
-  #     gcp_cluster_name: 'biconomy-staging'
-  #     gcp_cluster_location: 'us-east1-b'
-  #     use_internal_ip: true
-  #     deploy_command: './k8s/deploy.sh 1 refactor refactor-bundler sdk-staging'
+  deploy_staging:
+    needs: [container_img_build_push_gar]
+    # Allow the job to fetch a GitHub ID token
+    # runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    uses: bcnmy/bundler/.github/workflows/deploy_to_gke.yaml@master
+    with:
+      # GCP project where the identity provider is
+      # gcloud projects describe prj-workload-identity-001
+      gcp_project_number: '334188102066'
+      gcp_project_id: 'biconomy-staging'
+      gcp_bastion: 'bastion02'
+      gcp_bastion_zone: 'us-east1-b'
+      gcp_pool_id: 'github-pool'
+      gcp_provider_id: 'github-actions-wif-provider'
+      # SERVICE_ACCOUNT_EMAIL="${SERVICE_ACCOUNT}@${PROJECT}.iam.gserviceaccount.com"
+      gcp_service_account: 'sa-bundler@workload-identity-e697.iam.gserviceaccount.com'
+      gcp_cluster_name: 'biconomy-staging'
+      gcp_cluster_location: 'us-east1-b'
+      use_internal_ip: true
+      deploy_command: './k8s/deploy.sh 1 refactor refactor-bundler sdk-staging'
 
       
 
