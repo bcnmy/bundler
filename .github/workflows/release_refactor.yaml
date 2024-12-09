@@ -75,15 +75,15 @@ jobs:
       # gcloud projects describe prj-workload-identity-001
       gcp_project_number: '334188102066'
       gcp_project_id: 'biconomy-staging'
-      gcp_bastion: 'bastion02'
-      gcp_bastion_zone: 'us-east1-b'
+      gcp_bastion: ''
+      gcp_bastion_zone: ''
       gcp_pool_id: 'github-pool'
       gcp_provider_id: 'github-actions-wif-provider'
       # SERVICE_ACCOUNT_EMAIL="${SERVICE_ACCOUNT}@${PROJECT}.iam.gserviceaccount.com"
       gcp_service_account: 'sa-bundler@workload-identity-e697.iam.gserviceaccount.com'
       gcp_cluster_name: 'biconomy-staging'
       gcp_cluster_location: 'us-east1-b'
-      use_internal_ip: true
+      use_internal_ip: false
       deploy_command: './k8s/deploy.sh 1 refactor refactor-bundler sdk-staging'
 
       
