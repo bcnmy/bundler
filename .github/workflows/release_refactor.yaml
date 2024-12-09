@@ -84,7 +84,7 @@ jobs:
       gcp_cluster_name: 'biconomy-staging'
       gcp_cluster_location: 'us-east1-b'
       use_internal_ip: false
-      deploy_command: './k8s/deploy.sh 1 refactor refactor-bundler sdk-staging'
+      deploy_command: './k8s/deploy.sh 1 test refactor-bundler sdk-staging'
 
       
 
