@@ -53,7 +53,7 @@ jobs:
     uses: bcnmy/bundler/.github/workflows/container_img_build_push_gar.yaml@master
     with:
       image: ${{ matrix.image }}
-      dockerfile: Dockerfile.helm
+      dockerfile: Dockerfile
       # GCP project where the identity provider is
       gcp_project_number: '334188102066'
       gcp_pool_id: 'github-pool'
