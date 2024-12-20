@@ -198,6 +198,7 @@ describe("e2e", () => {
 
         const receipt = await nexusClient.waitForTransactionReceipt({ hash });
 
+        console.log(`${base.name} EPv0.7.0 txHash: ${receipt.transactionHash}`);
         console.log(receipt);
 
         expect(receipt.status).toBe("success");
@@ -337,7 +338,9 @@ describe("e2e", () => {
         });
 
         const receipt = await nexusClient.waitForTransactionReceipt({ hash });
-        console.log(receipt);
+        console.log(
+          `${optimism.name} EPv0.7.0 txHash: ${receipt.transactionHash}`,
+        );
         expect(receipt.status).toBe("success");
       });
     });
@@ -575,7 +578,8 @@ describe("e2e", () => {
         });
 
         const receipt = await nexusClient.waitForTransactionReceipt({ hash });
-        console.log(receipt);
+        console.log(`${bsc.name} EPv0.7.0 txHash: ${receipt.transactionHash}`);
+        // console.log(receipt);
         expect(receipt.status).toBe("success");
       });
     });
@@ -709,7 +713,10 @@ describe("e2e", () => {
         });
 
         const receipt = await nexusClient.waitForTransactionReceipt({ hash });
-        console.log(receipt);
+        console.log(
+          `${arbitrum.name} EPv0.7.0 txHash: ${receipt.transactionHash}`,
+        );
+        // console.log(receipt);
         expect(receipt.status).toBe("success");
       });
     });
@@ -843,13 +850,16 @@ describe("e2e", () => {
         });
 
         const receipt = await nexusClient.waitForTransactionReceipt({ hash });
+        console.log(
+          `${polygon.name} EPv0.7.0 txHash: ${receipt.transactionHash}`,
+        );
         console.log(receipt);
         expect(receipt.status).toBe("success");
       });
     });
   });
 
-  describe.only("gnosis-mainnet", () => {
+  describe("gnosis-mainnet", () => {
     const account = privateKeyToAccount(`0x${privateKey}`);
 
     describe("EntryPoint v0.6.0", () => {
@@ -951,7 +961,7 @@ describe("e2e", () => {
       }
     });
 
-    describe.skip("EntryPoint v0.7.0", () => {
+    describe("EntryPoint v0.7.0", () => {
       const bundlerUrl = `${bundlerHostname}/api/v3/${gnosis.id}/test`;
 
       logConfig(gnosis.id, bundlerUrl, account, "");
@@ -977,6 +987,9 @@ describe("e2e", () => {
         });
 
         const receipt = await nexusClient.waitForTransactionReceipt({ hash });
+        console.log(
+          `${gnosis.name} EPv0.7.0 txHash: ${receipt.transactionHash}`,
+        );
         console.log(receipt);
         expect(receipt.status).toBe("success");
       });
