@@ -1,7 +1,6 @@
 import { Mutex } from "async-mutex";
 import { Hex, TransactionReceipt, decodeFunctionData, toHex } from "viem";
 import { estimateGas } from "viem/linea";
-import { ENTRY_POINT_ABI } from "entry-point-gas-estimations/dist/gas-estimator/entry-point-v6";
 import { ICacheService } from "../../common/cache";
 import { IGasPriceService } from "../../common/gas-price";
 import { logger } from "../../common/logger";
@@ -45,6 +44,7 @@ import { IUserOperationStateDAO } from "../../common/db";
 import { GasPriceType } from "../../common/gas-price/types";
 import { BLOCKCHAINS } from "../../common/constants";
 import pino from "pino";
+import { ENTRYPOINT_V6_ABI } from "@biconomy/gas-estimations";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -573,7 +573,7 @@ export class EVMTransactionService
     let gasLimitOverhead = 50000n;
 
     // Now we need the verificationGasLimit and callGasLimit from the user op.
-    const decodedData = decodeFunctionData({ abi: ENTRY_POINT_ABI, data });
+    const decodedData = decodeFunctionData({ abi: ENTRYPOINT_V6_ABI, data });
     const firstArg = decodedData.args[0];
 
     if (Array.isArray(firstArg) && firstArg.length > 0) {

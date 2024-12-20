@@ -1,12 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable prefer-const */
-import { decodeErrorResult, encodeFunctionData, toHex } from "viem";
 import {
-  createGasEstimator,
-  createOptimismGasEstimator,
-  EstimateUserOperationGas,
-  IGasEstimator,
-} from "entry-point-gas-estimations/dist/gas-estimator/entry-point-v7";
+  decodeErrorResult,
+  encodeFunctionData,
+  toHex,
+  zeroAddress,
+} from "viem";
 import { config } from "../../config";
 import { IEVMAccount } from "../../relayer/account";
 import {
@@ -15,7 +14,11 @@ import {
 } from "../../server/api/shared/middleware";
 import { logger } from "../logger";
 import { INetworkService } from "../network";
-import { EVMRawTransactionType, UserOperationType } from "../types";
+import {
+  EntryPointV07ContractType,
+  EVMRawTransactionType,
+  UserOperationType,
+} from "../types";
 import { customJSONStringify, parseError } from "../utils";
 import RpcError from "../utils/rpc-error";
 import {
@@ -30,6 +33,16 @@ import {
   getUserOpHash,
   packUserOperation,
 } from "../entrypoint-v7/PackedUserOperation";
+import { GasEstimator } from "@biconomy/gas-estimations";
+import { createGasEstimator } from "@biconomy/gas-estimations";
+import {
+  EstimateUserOperationGasResult,
+  isEstimateUserOperationGasResultV7,
+} from "@biconomy/gas-estimations";
+import nodeconfig from "config";
+import { CallTracerResult, findErrorsInTrace } from "./trace";
+import { toPackedUserOperation } from "@biconomy/gas-estimations";
+import { ZodError } from "zod";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -41,7 +54,7 @@ export class BundlerSimulationServiceV07 {
 
   gasPriceService: IGasPriceService;
 
-  gasEstimator: IGasEstimator;
+  gasEstimator: GasEstimator;
 
   constructor(
     networkService: INetworkService<IEVMAccount, EVMRawTransactionType>,
@@ -50,16 +63,9 @@ export class BundlerSimulationServiceV07 {
     this.networkService = networkService;
     this.gasPriceService = gasPriceService;
     this.gasEstimator = createGasEstimator({
-      rpcUrl: this.networkService.rpcUrl,
-      chainId: this.networkService.chainId,
+      chainId: networkService.chainId,
+      rpc: networkService.provider,
     });
-
-    if (config.optimismNetworks.includes(this.networkService.chainId)) {
-      this.gasEstimator = createOptimismGasEstimator({
-        rpcUrl: this.networkService.rpcUrl,
-        chainId: this.networkService.chainId,
-      });
-    }
   }
 
   async estimateUserOperationGas(
@@ -69,8 +75,6 @@ export class BundlerSimulationServiceV07 {
       const { userOp, entryPointContract, chainId, stateOverrideSet } =
         estimateUserOperationGasData;
 
-      this.gasEstimator.setEntryPointAddress(entryPointContract.address);
-
       const start = performance.now();
       log.info(
         `userOp received: ${customJSONStringify(
@@ -78,58 +82,23 @@ export class BundlerSimulationServiceV07 {
         )} on chainId: ${chainId}`,
       );
 
-      // for userOp completeness
-      if (
-        !userOp.maxFeePerGas ||
-        userOp.maxFeePerGas === BigInt(0) ||
-        (userOp.maxFeePerGas as unknown as string) === "0x" ||
-        (userOp.maxFeePerGas as unknown as string) === "0"
-      ) {
-        // setting a non zero value as division with maxFeePerGas will happen
-        userOp.maxFeePerGas = BigInt(1);
-        if (
-          config.optimismNetworks.includes(chainId) ||
-          config.mantleNetworks.includes(chainId)
-        ) {
-          const gasPrice = await this.gasPriceService.getGasPrice();
-          if (typeof gasPrice === "bigint") {
-            userOp.maxFeePerGas = gasPrice;
-          } else {
-            const { maxFeePerGas } = gasPrice;
-            userOp.maxFeePerGas = maxFeePerGas;
-          }
-        }
+      const gasPrice = await this.gasPriceService.getGasPrice();
+      if (typeof gasPrice === "bigint") {
+        userOp.maxFeePerGas = gasPrice;
+        userOp.maxPriorityFeePerGas = gasPrice;
+      } else {
+        const { maxFeePerGas } = gasPrice;
+        userOp.maxFeePerGas = maxFeePerGas;
+        userOp.maxPriorityFeePerGas = maxFeePerGas;
       }
 
       // for userOp completeness
       userOp.callGasLimit = BigInt(5000000);
       userOp.verificationGasLimit = BigInt(5000000);
       userOp.preVerificationGas = BigInt(5000000);
-      userOp.maxPriorityFeePerGas = BigInt(userOp.maxPriorityFeePerGas);
-      userOp.maxFeePerGas = BigInt(userOp.maxFeePerGas);
 
-      // for userOp completeness
-      if (
-        !userOp.maxPriorityFeePerGas ||
-        userOp.maxPriorityFeePerGas === BigInt(0) ||
-        (userOp.maxPriorityFeePerGas as unknown as string) === "0x" ||
-        (userOp.maxPriorityFeePerGas as unknown as string) === "0"
-      ) {
-        // setting a non zero value as division with maxPriorityFeePerGas will happen
-        userOp.maxPriorityFeePerGas = BigInt(1);
-        if (
-          config.optimismNetworks.includes(chainId) ||
-          config.mantleNetworks.includes(chainId)
-        ) {
-          const gasPrice = await this.gasPriceService.getGasPrice();
-          if (typeof gasPrice === "bigint") {
-            userOp.maxPriorityFeePerGas = gasPrice;
-          } else {
-            const { maxPriorityFeePerGas } = gasPrice;
-            userOp.maxPriorityFeePerGas = maxPriorityFeePerGas;
-          }
-        }
-      }
+      userOp.factory = userOp.factory ?? "0x";
+      userOp.factoryData = userOp.factoryData ?? "0x";
 
       log.info(
         `userOp to be used for estimation: ${customJSONStringify(
@@ -137,40 +106,32 @@ export class BundlerSimulationServiceV07 {
         )} on chainId: ${chainId}`,
       );
 
-      let supportsEthCallStateOverride = true;
-      let supportsEthCallByteCodeOverride = true;
-      if (config.networksNotSupportingEthCallStateOverrides.includes(chainId)) {
-        supportsEthCallStateOverride = false;
-      } else if (
-        config.networksNotSupportingEthCallBytecodeStateOverrides.includes(
-          chainId,
-        )
-      ) {
-        supportsEthCallByteCodeOverride = false;
-      }
-
-      let response: EstimateUserOperationGas;
       const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
 
+      let response: EstimateUserOperationGasResult;
       try {
         response = await this.gasEstimator.estimateUserOperationGas({
-          userOperation: userOp,
-          stateOverrideSet,
-          supportsEthCallByteCodeOverride,
-          supportsEthCallStateOverride,
+          unEstimatedUserOperation: userOp,
           baseFeePerGas,
+          stateOverrides: stateOverrideSet,
+          partialOptions: {
+            entryPointAddress: entryPointContract.address,
+          },
         });
-
-        log.info(
-          `estimation response from gas estimation package: ${customJSONStringify(
-            response,
-          )} on chainId: ${chainId}`,
-        );
       } catch (error: any) {
+        let errorMessage: string = error.message;
+
         log.error(
-          `[entry-point-gas-estimations] package threw an error: ${error.message}`,
+          { chainId },
+          `[@biconomy/gas-estimations] package threw an error: ${errorMessage}`,
         );
-        throw error;
+        throw errorMessage;
+      }
+
+      if (!isEstimateUserOperationGasResultV7(response)) {
+        throw new Error(
+          "Invalid response from the gas estimator. Expected a V7 response.",
+        );
       }
 
       let {
@@ -180,6 +141,11 @@ export class BundlerSimulationServiceV07 {
         paymasterPostOpGasLimit,
         paymasterVerificationGasLimit,
       } = response;
+
+      log.info(
+        { chainId },
+        `estimateUserOperationGas: ${customJSONStringify(response)}`,
+      );
 
       callGasLimit += BigInt(Math.ceil(Number(callGasLimit) * 0.1));
       verificationGasLimit += BigInt(
@@ -192,17 +158,20 @@ export class BundlerSimulationServiceV07 {
         Math.ceil(Number(paymasterVerificationGasLimit) * 0.1),
       );
 
-      const verificationGasLimitMultiplier = userOp.paymaster === "0x" ? 1 : 3;
-      const totalGas =
+      const requiredGas =
+        verificationGasLimit +
         callGasLimit +
-        BigInt(verificationGasLimitMultiplier) * verificationGasLimit +
+        preVerificationGas +
+        paymasterVerificationGasLimit +
+        paymasterPostOpGasLimit +
         preVerificationGas;
-      log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
+
+      log.info({ chainId }, `requiredGas: ${requiredGas}`);
 
       const pvgMarkUp = config.pvgMarkUp[chainId] || 0.1; // setting default pvgMarkUp to 10% incase the value for a given chainId is not set
 
       preVerificationGas += BigInt(
-        Math.ceil(Number(toHex(totalGas)) * pvgMarkUp),
+        Math.ceil(Number(toHex(requiredGas)) * pvgMarkUp),
       );
 
       log.info(
@@ -254,6 +223,10 @@ export class BundlerSimulationServiceV07 {
     try {
       const { userOp, entryPointContract, chainId } = simulateValidationData;
 
+      // for userOp completeness
+      userOp.factory = userOp.factory ?? "0x";
+      userOp.factoryData = userOp.factoryData ?? "0x";
+
       log.info(
         `userOp received: ${customJSONStringify(
           userOp,
@@ -264,11 +237,14 @@ export class BundlerSimulationServiceV07 {
         await this.gasPriceService.get1559GasPrice();
       let gasPrice = Math.ceil(Number(maxFeePerGas) * 2).toString(16);
 
-      await this.checkUserOperationForRejection({
-        userOp,
-        networkMaxPriorityFeePerGas: maxPriorityFeePerGas,
-        networkMaxFeePerGas: maxFeePerGas,
-      });
+      await this.checkUserOperationForRejection(
+        {
+          userOp,
+          networkMaxPriorityFeePerGas: maxPriorityFeePerGas,
+          networkMaxFeePerGas: maxFeePerGas,
+        },
+        entryPointContract,
+      );
 
       const packed = packUserOperation(userOp);
       const data = encodeFunctionData({
@@ -444,7 +420,10 @@ export class BundlerSimulationServiceV07 {
    */
   async checkUserOperationForRejection(
     validationData: ValidationDataV07,
+    entryPointContract: EntryPointV07ContractType,
   ): Promise<boolean> {
+    // TODO: Check if balance >= required prefund if wallet deployment because we can't simulate deployment tx's
+
     const { userOp, networkMaxFeePerGas, networkMaxPriorityFeePerGas } =
       validationData;
 
@@ -499,11 +478,11 @@ export class BundlerSimulationServiceV07 {
 
     const baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
 
-    const { preVerificationGas: networkPreVerificationGas } =
-      await this.gasEstimator.calculatePreVerificationGas({
-        userOperation: userOp,
-        baseFeePerGas,
-      });
+    const networkPreVerificationGas =
+      await this.gasEstimator.estimatePreVerificationGas(
+        userOp,
+        BigInt(baseFeePerGas),
+      );
     log.info(`networkPreVerificationGas: ${networkPreVerificationGas}`);
 
     const minimumAcceptablePreVerificationGas =
@@ -517,6 +496,64 @@ export class BundlerSimulationServiceV07 {
         `preVerificationGas in userOp: ${preVerificationGas} is lower than minimumAcceptablePreVerificationGas: ${minimumAcceptablePreVerificationGas}`,
         BUNDLER_ERROR_CODES.PRE_VERIFICATION_GAS_TOO_LOW,
       );
+    }
+
+    // Check the user operation for validation and execution errors (if debug_traceCall is supported)
+    if (
+      // we can't simulate deployment transactions, they will fail because of insufficient entrypoint deposit
+      userOp.factory === "0x" &&
+      userOp.factoryData === "0x" &&
+      nodeconfig.has("supportsDebugTraceCall") &&
+      nodeconfig
+        .get<number[]>("supportsDebugTraceCall")
+        .includes(this.networkService.chainId)
+    ) {
+      const traceStart = performance.now();
+
+      const packedUserOperation = toPackedUserOperation(userOp);
+
+      log.info(
+        { chainId: this.networkService.chainId },
+        `packedUserOperation: ${customJSONStringify(packedUserOperation)}`,
+      );
+      const traceResult: CallTracerResult =
+        await this.networkService.provider.request({
+          method: "debug_traceCall" as any, // coalesce so viem doesn't complain
+          params: [
+            {
+              from: zeroAddress, // so we don't get balance errors
+              to: entryPointContract.address,
+              data: encodeFunctionData({
+                abi: entryPointContract.abi,
+                functionName: "handleOps",
+                args: [
+                  [packedUserOperation],
+                  "0xc75Bb3956c596efc6DB663cd3e2f64929d6AB0fc",
+                ],
+              }),
+            },
+            "latest",
+            {
+              tracer: "callTracer",
+              tracerConfig: {
+                onlyTopCall: false, // we need deep traces
+                disableStack: false, // and we want the stack
+                enableReturnData: true, // and the return data so we can decode the error
+              },
+            },
+          ],
+        });
+      const traceEnd = performance.now();
+
+      log.info(`debug_traceCall took ${traceEnd - traceStart} milliseconds`);
+
+      const errors = findErrorsInTrace(traceResult, []);
+
+      if (errors.length > 0) {
+        log.info(`Errors found in trace: ${customJSONStringify(errors)}`);
+        log.info(customJSONStringify(traceResult));
+        throw new Error(errors.join(", "));
+      }
     }
 
     log.info(

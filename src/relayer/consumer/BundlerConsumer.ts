@@ -1,6 +1,5 @@
 import { ConsumeMessage } from "amqplib";
 import { encodeFunctionData } from "viem";
-import { ENTRY_POINT_ABI } from "entry-point-gas-estimations/dist/gas-estimator/entry-point-v6";
 import { ICacheService } from "../../common/cache";
 import { logger } from "../../common/logger";
 import { IQueue } from "../../common/queue";
@@ -25,6 +24,7 @@ import {
   isUserOpV06,
   packUserOperation,
 } from "../../common/entrypoint-v7/PackedUserOperation";
+import { ENTRYPOINT_V6_ABI } from "@biconomy/gas-estimations";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -88,7 +88,7 @@ export class BundlerConsumer
           let data;
           if (isV06) {
             data = encodeFunctionData({
-              abi: ENTRY_POINT_ABI,
+              abi: ENTRYPOINT_V6_ABI,
               functionName: "handleOps",
               args: [[userOp], activeRelayer.getPublicKey() as `0x${string}`],
             });

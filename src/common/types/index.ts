@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ENTRY_POINT_ABI } from "entry-point-gas-estimations/dist/gas-estimator/entry-point-v6";
 import { GetContractReturnType, Hex } from "viem";
 import { ENTRY_POINT_V07_ABI } from "../entrypoint-v7/abiv7";
 import { EVMAccountInfo } from "../../relayer/account";
+import { ENTRYPOINT_V6_ABI } from "@biconomy/gas-estimations";
 
 export enum TransactionType {
   FUNDING = "FUNDING",
@@ -232,7 +232,7 @@ export type UpdateRequestDataType = {
 };
 
 export type EntryPointContractType = GetContractReturnType<
-  typeof ENTRY_POINT_ABI
+  typeof ENTRYPOINT_V6_ABI
 >;
 
 export type EntryPointV07ContractType = GetContractReturnType<

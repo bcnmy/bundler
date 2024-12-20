@@ -1,7 +1,6 @@
 import nodeconfig from "config";
 import { getContract, parseEther } from "viem";
 import { chain } from "lodash";
-import { ENTRY_POINT_ABI } from "entry-point-gas-estimations/dist/gas-estimator/entry-point-v6";
 import { config } from "../../config";
 import { EVMAccount, IEVMAccount } from "../../relayer/account";
 import { BundlerConsumer } from "../../relayer/consumer";
@@ -45,8 +44,9 @@ import { UserOperationStateDAO } from "../db/dao/UserOperationStateDAO";
 import { customJSONStringify, parseError } from "../utils";
 import { GasPriceService } from "../gas-price";
 import { CacheFeesJob } from "../gas-price/jobs/CacheFees";
-import { ENTRY_POINT_V07_ABI } from "../entrypoint-v7/abiv7";
 import { FlashbotsClient } from "../network/FlashbotsClient";
+import { ENTRYPOINT_V6_ABI } from "@biconomy/gas-estimations";
+import { ENTRYPOINT_V7_ABI } from "@biconomy/gas-estimations";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -358,7 +358,7 @@ async function setupNetwork(
       entryPointMap[chainId].push({
         address: entryPointAddress,
         entryPointContract: getContract({
-          abi: ENTRY_POINT_ABI,
+          abi: ENTRYPOINT_V6_ABI,
           address: entryPointAddress as `0x${string}`,
           client: {
             public: networkService.provider,
@@ -376,7 +376,7 @@ async function setupNetwork(
       entryPointMapV07[chainId].push({
         address: entryPointAddress,
         entryPointContract: getContract({
-          abi: ENTRY_POINT_V07_ABI,
+          abi: ENTRYPOINT_V7_ABI,
           address: entryPointAddress as `0x${string}`,
           client: {
             public: networkService.provider,

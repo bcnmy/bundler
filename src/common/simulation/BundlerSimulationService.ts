@@ -1,18 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable prefer-const */
 import {
-  Address,
   decodeErrorResult,
   encodeAbiParameters,
   encodeFunctionData,
-  Hex,
   keccak256,
   parseAbiParameters,
   toHex,
   zeroAddress,
 } from "viem";
 import nodeconfig from "config";
-import { IGasEstimator } from "entry-point-gas-estimations/dist/gas-estimator/entry-point-v6";
 import { config } from "../../config";
 import { IEVMAccount } from "../../relayer/account";
 import {
@@ -40,7 +37,11 @@ import {
 } from "./types";
 import { BLOCKCHAINS } from "../constants";
 import { IGasPriceService } from "../gas-price";
-import { GasEstimationsAdapter } from "./GasEstimationsWrapper";
+import { UserOperationV6 } from "@biconomy/gas-estimations";
+import { GasEstimator } from "@biconomy/gas-estimations";
+import { createGasEstimator } from "@biconomy/gas-estimations";
+import { isEstimateUserOperationGasResultV6 } from "@biconomy/gas-estimations";
+import { CallTracerResult, findErrorsInTrace } from "./trace";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -73,9 +74,9 @@ export class BundlerSimulationService {
   constructor({
     networkService,
     gasPriceService,
-    gasEstimator = new GasEstimationsAdapter({
+    gasEstimator = createGasEstimator({
       chainId: networkService.chainId,
-      rpcUrl: networkService.rpcUrl,
+      rpc: networkService.provider,
     }),
   }: IBundlerSimulationServiceOptions) {
     this.networkService = networkService;
@@ -87,22 +88,23 @@ export class BundlerSimulationService {
    * Used for pretty printing the service configuration
    * @returns JSON stringified object with API keys removed
    */
-  toJSON(): Omit<IBundlerSimulationServiceOptions, "gasPriceService"> {
+  toJSON(): Omit<
+    IBundlerSimulationServiceOptions,
+    "gasPriceService" | "newGasEstimator"
+  > {
     return {
       networkService: this.networkService,
       gasEstimator: this.gasEstimator,
-      // TODO: add the gasPriceService after you write it's toJSON method
     };
   }
 
+  // TODO: Add option to pass an entrypoint address to the new gas estimator
   async estimateUserOperationGas(
     estimateUserOperationGasData: EstimateUserOperationGasDataType,
   ): Promise<EstimateUserOperationGasReturnType> {
     try {
       const { userOp, entryPointContract, chainId, stateOverrideSet } =
         estimateUserOperationGasData;
-
-      this.gasEstimator.setEntryPointAddress(entryPointContract.address);
 
       const start = performance.now();
       log.info(
@@ -123,55 +125,14 @@ export class BundlerSimulationService {
           "0x73c3ac716c487ca34bb858247b5ccf1dc354fbaabdd089af3b2ac8e78ba85a4959a2d76250325bd67c11771c31fccda87c33ceec17cc0de912690521bb95ffcb1b";
       }
 
-      // for userOp completeness
-      if (
-        !userOp.maxFeePerGas ||
-        userOp.maxFeePerGas === BigInt(0) ||
-        (userOp.maxFeePerGas as unknown as string) === "0x" ||
-        (userOp.maxFeePerGas as unknown as string) === "0"
-      ) {
-        // setting a non zero value as division with maxFeePerGas will happen
-        userOp.maxFeePerGas = BigInt(1);
-        if (
-          config.optimismNetworks.includes(chainId) ||
-          config.mantleNetworks.includes(chainId)
-        ) {
-          const gasPrice = await this.gasPriceService.getGasPrice();
-          if (typeof gasPrice === "bigint") {
-            userOp.maxFeePerGas = gasPrice;
-          } else {
-            const { maxFeePerGas } = gasPrice;
-            userOp.maxFeePerGas = maxFeePerGas;
-          }
-        }
-      }
-
-      // for userOp completeness
-      userOp.callGasLimit = BigInt(20000000);
-      userOp.verificationGasLimit = BigInt(10000000);
-      userOp.preVerificationGas = BigInt(100000);
-
-      // for userOp completeness
-      if (
-        !userOp.maxPriorityFeePerGas ||
-        userOp.maxPriorityFeePerGas === BigInt(0) ||
-        (userOp.maxPriorityFeePerGas as unknown as string) === "0x" ||
-        (userOp.maxPriorityFeePerGas as unknown as string) === "0"
-      ) {
-        // setting a non zero value as division with maxPriorityFeePerGas will happen
-        userOp.maxPriorityFeePerGas = BigInt(1);
-        if (
-          config.optimismNetworks.includes(chainId) ||
-          config.mantleNetworks.includes(chainId)
-        ) {
-          const gasPrice = await this.gasPriceService.getGasPrice();
-          if (typeof gasPrice === "bigint") {
-            userOp.maxPriorityFeePerGas = gasPrice;
-          } else {
-            const { maxPriorityFeePerGas } = gasPrice;
-            userOp.maxPriorityFeePerGas = maxPriorityFeePerGas;
-          }
-        }
+      const gasPrice = await this.gasPriceService.getGasPrice();
+      if (typeof gasPrice === "bigint") {
+        userOp.maxFeePerGas = gasPrice;
+        userOp.maxPriorityFeePerGas = gasPrice;
+      } else {
+        const { maxFeePerGas } = gasPrice;
+        userOp.maxFeePerGas = maxFeePerGas;
+        userOp.maxPriorityFeePerGas = maxFeePerGas;
       }
 
       log.info(
@@ -179,22 +140,6 @@ export class BundlerSimulationService {
           userOp,
         )} on chainId: ${chainId}`,
       );
-
-      let supportsEthCallStateOverride = true;
-      let supportsEthCallByteCodeOverride = true;
-      if (config.networksNotSupportingEthCallStateOverrides.includes(chainId)) {
-        supportsEthCallStateOverride = false;
-      } else if (
-        config.networksNotSupportingEthCallBytecodeStateOverrides.includes(
-          chainId,
-        )
-      ) {
-        supportsEthCallByteCodeOverride = false;
-      }
-
-      if (userOp.initCode !== "0x") {
-        supportsEthCallByteCodeOverride = false;
-      }
 
       let baseFeePerGas = await this.gasPriceService.getBaseFeePerGas();
       if (chainId === BLOCKCHAINS.OP_BNB_MAINNET && baseFeePerGas === 0n) {
@@ -204,17 +149,24 @@ export class BundlerSimulationService {
       }
 
       const response = await this.gasEstimator.estimateUserOperationGas({
-        userOperation: userOp,
-        stateOverrideSet,
-        supportsEthCallByteCodeOverride,
-        supportsEthCallStateOverride,
+        unEstimatedUserOperation: userOp,
         baseFeePerGas,
+        stateOverrides: stateOverrideSet,
+        partialOptions: {
+          entryPointAddress: entryPointContract.address,
+        },
       });
+
       log.info(
-        `estimation respone from gas estimation package: ${customJSONStringify(
-          response,
-        )} on chainId: ${chainId}`,
+        { chainId },
+        `estimateUserOperationGas: ${customJSONStringify(response)}`,
       );
+
+      if (!isEstimateUserOperationGasResultV6(response)) {
+        throw new Error(
+          "Invalid response from the gas estimator. Expected a V6 response.",
+        );
+      }
 
       const { validAfter, validUntil } = response;
       let { verificationGasLimit, callGasLimit, preVerificationGas } = response;
@@ -258,6 +210,7 @@ export class BundlerSimulationService {
         callGasLimit +
         BigInt(verificationGasLimitMultiplier) * verificationGasLimit +
         preVerificationGas;
+
       log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
 
       const pvgMarkUp = config.pvgMarkUp[chainId] || 0.1; // setting default pvgMarkUp to 10% incase the value for a given chainId is not set
@@ -507,6 +460,8 @@ export class BundlerSimulationService {
     validationData: ValidationData,
     entryPointContract: EntryPointContractType,
   ): Promise<boolean> {
+    // TODO: Check if balance >= required prefund if wallet deployment because we can't simulate deployment tx's
+
     const { userOp, networkMaxFeePerGas, networkMaxPriorityFeePerGas } =
       validationData;
 
@@ -575,22 +530,27 @@ export class BundlerSimulationService {
       );
     }
 
-    // Check the user operation for validation and execution errors (if debug_traceCall is supported)
-    if (
-      nodeconfig.has("supportsDebugTraceCall") &&
-      nodeconfig
-        .get<number[]>("supportsDebugTraceCall")
-        .includes(this.networkService.chainId)
-    ) {
-      await this.validateUserOperation(entryPointContract, userOp);
-    }
-
     if (!config.disableFeeValidation.includes(this.networkService.chainId)) {
-      const { preVerificationGas: networkPreVerificationGas } =
-        await this.gasEstimator.calculatePreVerificationGas({
-          userOperation: userOp,
-          baseFeePerGas,
-        });
+      const userOperation: UserOperationV6 = {
+        sender: userOp.sender,
+        nonce: userOp.nonce,
+        initCode: userOp.initCode,
+        paymasterAndData: userOp.paymasterAndData,
+        signature: userOp.signature,
+        maxFeePerGas: BigInt(maxFeePerGas),
+        maxPriorityFeePerGas: BigInt(maxPriorityFeePerGas),
+        callData: userOp.callData,
+        callGasLimit: BigInt(userOp.callGasLimit),
+        verificationGasLimit: BigInt(userOp.verificationGasLimit),
+        preVerificationGas: BigInt(preVerificationGas),
+      };
+
+      const networkPreVerificationGas =
+        await this.gasEstimator.estimatePreVerificationGas(
+          userOperation,
+          BigInt(baseFeePerGas),
+        );
+
       log.info(`networkPreVerificationGas: ${networkPreVerificationGas}`);
 
       const minimumAcceptablePreVerificationGas =
@@ -608,99 +568,58 @@ export class BundlerSimulationService {
       }
     }
 
+    // Check the user operation for validation and execution errors (if debug_traceCall is supported)
+    if (
+      // we can't simulate deployment transactions, they will fail because of insufficient entrypoint deposit
+      userOp.initCode === "0x" &&
+      nodeconfig.has("supportsDebugTraceCall") &&
+      nodeconfig
+        .get<number[]>("supportsDebugTraceCall")
+        .includes(this.networkService.chainId)
+    ) {
+      const traceStart = performance.now();
+
+      const traceResult: CallTracerResult =
+        await this.networkService.provider.request({
+          method: "debug_traceCall" as any, // coalesce so viem doesn't complain
+          params: [
+            {
+              from: zeroAddress, // so we don't get balance errors
+              to: entryPointContract.address,
+              data: encodeFunctionData({
+                abi: entryPointContract.abi,
+                functionName: "handleOps",
+                args: [[userOp], "0xc75Bb3956c596efc6DB663cd3e2f64929d6AB0fc"],
+              }),
+            },
+            "latest",
+            {
+              tracer: "callTracer",
+              tracerConfig: {
+                onlyTopCall: false, // we need deep traces
+                disableStack: false, // and we want the stack
+                enableReturnData: true, // and the return data so we can decode the error
+              },
+            },
+          ],
+        });
+      const traceEnd = performance.now();
+
+      log.info(`debug_traceCall took ${traceEnd - traceStart} milliseconds`);
+
+      const errors = findErrorsInTrace(traceResult, []);
+
+      if (errors.length > 0) {
+        log.info(`Errors found in trace: ${customJSONStringify(errors)}`);
+        log.info(customJSONStringify(traceResult));
+        throw new Error(errors.join(", "));
+      }
+    }
+
     log.info(
       `maxFeePerGas, maxPriorityFeePerGas and preVerification are within acceptable limits`,
     );
     return true;
-  }
-
-  /**
-   * Simulation checks for validation and execution errors when submitting a user operation to the EntryPoint contract
-   * @param entryPointContract EntryPoint contract to simulate against
-   * @param userOp User operation to simulate
-   */
-  private async validateUserOperation(
-    entryPointContract: EntryPointContractType,
-    userOp: UserOperationType,
-  ) {
-    try {
-      // We call debug_traceCall to simulation stack trace
-      const traceResult = await this.debugTraceCall(entryPointContract, userOp);
-
-      // simulateValidationShould always return a revert, otherwise something is terribly wrong 😱
-      if (!isReverted(traceResult)) {
-        logger.error(
-          `simulateValidation: didn't revert, traceResult: ${customJSONStringify(traceResult)}`,
-        );
-        throw new RpcError(
-          "Simulation failed",
-          BUNDLER_ERROR_CODES.INTERNAL_SERVER_ERROR,
-        );
-      }
-
-      // we try to decode the error message against the EP contract ABI
-      const { errorName, args } = decodeErrorResult({
-        abi: entryPointContract.abi,
-        data: traceResult.output,
-      });
-
-      // When simulation is successfull it returns {errorName: ValidationResult, args: [...]},
-      // and (for example) this is what a signature error looks like: { errorName: FailedOp, args: [0,AA23 reverted (or OOG)] }
-      if (errorName !== "ValidationResult") {
-        logger.warn(
-          `simulateValidation: errorName: ${errorName}, args: ${customJSONStringify(args)}`,
-        );
-        throw new RpcError(
-          `${errorName}: ${args[1]}`,
-          BUNDLER_ERROR_CODES.WALLET_TRANSACTION_REVERTED,
-        );
-      }
-    } catch (error: any) {
-      // this is a sanity check, in case debug_traceCall fails for whatever reason
-      logger.error(
-        { error: customJSONStringify(error) },
-        `simulateUserOp failed`,
-      );
-      throw new Error(error);
-    }
-  }
-
-  /**
-   * Calls the debug_traceCall RPC method to simulate the validation of a user operation.
-   * See the following links for more information:
-   * - https://geth.ethereum.org/docs/interacting-with-geth/rpc/ns-debug#javascript-based-tracing
-   * - https://docs.chainstack.com/reference/ethereum-tracecall
-   * @param entryPointContract The entry point contract
-   * @param userOp The user operation to be traced
-   * @returns CallTracerResult
-   */
-  private async debugTraceCall(
-    entryPointContract: EntryPointContractType,
-    userOp: UserOperationType,
-  ): Promise<CallTracerResult> {
-    return this.networkService.provider.request({
-      method: "debug_traceCall" as any, // coalesce so viem doesn't complain
-      params: [
-        {
-          from: zeroAddress, // so we don't get balance errors
-          to: entryPointContract.address,
-          data: encodeFunctionData({
-            abi: entryPointContract.abi,
-            functionName: "simulateValidation",
-            args: [userOp] as any,
-          }),
-        },
-        "latest",
-        {
-          tracer: "callTracer",
-          tracerConfig: {
-            onlyTopCall: true, // don't need deep traces
-            disableStack: false, // but we want the stack
-            enableReturnData: true, // and the return data so we can decode the error
-          },
-        },
-      ],
-    });
   }
 
   removeSpecialCharacters(input: string): string {
@@ -736,15 +655,6 @@ export class BundlerSimulationService {
   }
 }
 
-/**
- * Checks if the trace result is reverted
- * @param traceResult The result of the trace call
- * @returns true if the trace result is reverted
- */
-function isReverted(traceResult: CallTracerResult) {
-  return traceResult.error.toLowerCase().includes("reverted");
-}
-
 // The following are the dependencies of the BundlerSimulationService class
 
 // 💡 TIP: Always pick only the required fields from the interface
@@ -755,20 +665,6 @@ export type SimulationNetworkService = Pick<
 >;
 
 export type SimulationGasEstimator = Pick<
-  IGasEstimator,
-  | "estimateUserOperationGas"
-  | "setEntryPointAddress"
-  | "calculatePreVerificationGas"
+  GasEstimator,
+  "estimateUserOperationGas" | "estimatePreVerificationGas"
 >;
-
-interface CallTracerResult {
-  from: Address;
-  gas: Hex;
-  gasUsed: Hex;
-  to: Address;
-  input: Hex;
-  output: Hex;
-  value: Hex;
-  type: string;
-  error: string;
-}
