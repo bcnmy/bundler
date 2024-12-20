@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@arbitrum/sdk": "^3.1.3",
+    "@biconomy/gas-estimations": "0.2.51",
     "@slack/web-api": "^6.8.0",
     "@types/config": "^3.3.3",
     "@types/crypto-js": "^4.1.1",
@@ -33,7 +34,6 @@
     "crypto-js": "^4.1.1",
     "dd-trace": "^4.17.0",
     "dotenv": "^16.0.3",
-    "entry-point-gas-estimations": "1.0.2",
     "ethereumjs-util": "^7.1.5",
     "express": "^4.18.2",
     "express-handlebars": "^6.0.6",
@@ -59,11 +59,13 @@
     "rest-api-errors": "^1.2.5",
     "serialize-error": "8.1.0",
     "typescript": "^5.3.3",
-    "viem": "^2.21.28"
+    "viem": "^2.21.49"
   },
   "devDependencies": {
     "@biconomy/account": "^4.5.7",
+    "@biconomy/sdk": "^0.0.19",
     "@eslint/js": "^9.13.0",
+    "@rhinestone/module-sdk": "^0.1.32",
     "@types/amqplib": "^0.8.2",
     "@types/big.js": "^6.1.5",
     "@types/consolidate": "^0.14.1",
