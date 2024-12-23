@@ -31,7 +31,7 @@
     713715, 3799, 167009, 80084, 5845, 1328, 28882, 920637907288165, 1740, 4202
   ],
   "blocknative": {
-    "supportedNetworks": [1, 11155111],
+    "supportedNetworks": [],
     "confidenceLevel": 99
   },
   "supportsDebugTraceCall": [],
@@ -1113,7 +1113,7 @@
     "statusUrl": "https://protect.flashbots.net/tx",
     "getStatusIntervalDelay": 5000,
     "maxBlockWait": 26,
-    "supportedNetworks": [1]
+    "supportedNetworks": []
   },
   "clearStaleMessages": {
     "supportedNetworks": [1, 11155111],
