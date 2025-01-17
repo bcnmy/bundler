@@ -76,7 +76,7 @@ export class BundlerSimulationService {
     gasPriceService,
     gasEstimator = createGasEstimator({
       chainId: networkService.chainId,
-      rpc: networkService.provider,
+      rpc: config.chains.providers[networkService.chainId][0].url,
     }),
   }: IBundlerSimulationServiceOptions) {
     this.networkService = networkService;
@@ -152,7 +152,7 @@ export class BundlerSimulationService {
         unEstimatedUserOperation: userOp,
         baseFeePerGas,
         stateOverrides: stateOverrideSet,
-        partialOptions: {
+        options: {
           entryPointAddress: entryPointContract.address,
         },
       });
