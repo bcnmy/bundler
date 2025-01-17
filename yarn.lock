@@ -796,10 +796,10 @@
     zod "^3.24.1"
     zod-validation-error "^3.4.0"
 
-"@biconomy/sdk@^0.0.28":
-  version "0.0.28"
-  resolved "https://registry.yarnpkg.com/@biconomy/sdk/-/sdk-0.0.28.tgz#9cf51ac2e0ed650a7b3428026f014ca2e2422813"
-  integrity sha512-CZ9r3VA1UdDDanjzsNsZ/NrQj102Gb1OwyxcVtMmwgy0VBgMMogElOV6Saibm4xOYnVefvGTMvheYfYgBazH5g==
+"@biconomy/sdk@^0.0.29":
+  version "0.0.29"
+  resolved "https://registry.yarnpkg.com/@biconomy/sdk/-/sdk-0.0.29.tgz#5cc9dd718ea3e9aeb5e654ea64c9cf8721fdd8c4"
+  integrity sha512-MKCSHGeLUbVJ51vSK/oj4E1ieYOz9XnefYm78Nfnz6t5Y+iv3XecBl+vv96ZwOMr2MNHcPCL2xg8NkxVgjWtBQ==
 
 "@commitlint/config-validator@^19.5.0":
   version "19.5.0"
