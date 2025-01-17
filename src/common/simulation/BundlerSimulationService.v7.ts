@@ -33,16 +33,16 @@ import {
   getUserOpHash,
   packUserOperation,
 } from "../entrypoint-v7/PackedUserOperation";
-import { GasEstimator } from "@biconomy/gas-estimations";
-import { createGasEstimator } from "@biconomy/gas-estimations";
-import {
-  EstimateUserOperationGasResult,
-  isEstimateUserOperationGasResultV7,
-} from "@biconomy/gas-estimations";
 import nodeconfig from "config";
 import { CallTracerResult, findErrorsInTrace } from "./trace";
-import { toPackedUserOperation } from "@biconomy/gas-estimations";
-import { ZodError } from "zod";
+import {
+  GasEstimator,
+  createGasEstimator,
+  isEstimateUserOperationGasResultV7,
+  EstimateUserOperationGasResult,
+  toPackedUserOperation,
+  bumpBigIntPercent,
+} from "@biconomy/gas-estimations";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -64,7 +64,7 @@ export class BundlerSimulationServiceV07 {
     this.gasPriceService = gasPriceService;
     this.gasEstimator = createGasEstimator({
       chainId: networkService.chainId,
-      rpc: networkService.provider,
+      rpc: config.chains.providers[networkService.chainId][0].url,
     });
   }
 
@@ -114,7 +114,7 @@ export class BundlerSimulationServiceV07 {
           unEstimatedUserOperation: userOp,
           baseFeePerGas,
           stateOverrides: stateOverrideSet,
-          partialOptions: {
+          options: {
             entryPointAddress: entryPointContract.address,
           },
         });
@@ -148,9 +148,7 @@ export class BundlerSimulationServiceV07 {
       );
 
       callGasLimit += BigInt(Math.ceil(Number(callGasLimit) * 0.1));
-      verificationGasLimit += BigInt(
-        Math.ceil(Number(verificationGasLimit) * 0.1),
-      );
+      verificationGasLimit = bumpBigIntPercent(verificationGasLimit, 20);
       paymasterPostOpGasLimit += BigInt(
         Math.ceil(Number(paymasterPostOpGasLimit) * 0.1),
       );
@@ -362,7 +360,6 @@ export class BundlerSimulationServiceV07 {
         }
       } else if (typeof ethEstimateGasResponse === "string") {
         totalGas = Number(ethEstimateGasResponse);
-        log.info(`totalGas: ${totalGas} on chainId: ${chainId}`);
       } else {
         return {
           code: STATUSES.INTERNAL_SERVER_ERROR,
