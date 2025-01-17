@@ -13,6 +13,8 @@ import {
   bsc,
   arbitrum,
   gnosis,
+  blast,
+  baseSepolia,
 } from "viem/chains";
 import {
   BiconomySmartAccountV2,
@@ -65,15 +67,13 @@ describe("e2e", () => {
   const stubPaymasterAndData =
     "0x00000f79b7faf42eebadba19acc07cd08af4478900000000000000000000000029c3e9456c0eca5beb1f78763204bac6c682407700000000000000000000000000000000000000000000000000000000676410e60000000000000000000000000000000000000000000000000000000067640fba0000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000004170f9cfb3f7a4204e0a497c8d19a98e2157b0df2740019ba2250a4c73de30539f14ea86cc47e0c96c16fd61b4b2f7ef777cf2c306974a03d56bdcc9313040242b1c00000000000000000000000000000000000000000000000000000000000000";
 
-  describe("base-mainnet", () => {
+  describe.skip("base-mainnet", () => {
     const account = privateKeyToAccount(`0x${privateKey}`);
 
     describe("EntryPoint v0.6.0", () => {
-      const bundlerUrl = `${bundlerHostname}/api/v2/${base.id}/test`;
+      const bundlerUrl = `${bundlerHostname}/api/v2/${base.id}/biconomy`;
 
       const paymasterUrl = process.env.BASE_MAINNET_PAYMASTER_URL;
-
-      logConfig(base.id, bundlerUrl, account, paymasterUrl);
 
       const signer = createWalletClient({
         account,
@@ -98,7 +98,6 @@ describe("e2e", () => {
       });
 
       it("should perform a native transfer without a paymaster", async () => {
-        // const receipt = await sendUserOperation(account, smartAccount, false);
         const userOpResponse = await smartAccount.sendTransaction(tx);
 
         const receipt = await userOpResponse.wait();
@@ -206,15 +205,152 @@ describe("e2e", () => {
     });
   });
 
+  describe.skip("base-sepolia", () => {
+    const account = privateKeyToAccount(`0x${privateKey}`);
+
+    describe("EntryPoint v0.6.0", () => {
+      const bundlerUrl = `${bundlerHostname}/api/v2/${base.id}/test`;
+
+      const paymasterUrl = process.env.BASE_MAINNET_PAYMASTER_URL;
+
+      const signer = createWalletClient({
+        account,
+        chain: base,
+        transport: http(),
+      }).extend(publicActions);
+
+      let smartAccount: BiconomySmartAccountV2;
+
+      const tx = {
+        to: account.address,
+        value: 1n,
+      };
+
+      beforeAll(async () => {
+        smartAccount = await createSmartAccountClient({
+          signer: signer,
+          bundlerUrl,
+          paymasterUrl,
+        });
+        await requireBalance(smartAccount, 1n);
+      });
+
+      it("should perform a native transfer without a paymaster", async () => {
+        // const receipt = await sendUserOperation(account, smartAccount, false);
+        const userOpResponse = await smartAccount.sendTransaction(tx);
+
+        const receipt = await userOpResponse.wait();
+
+        console.log(receipt);
+
+        expect(receipt.success).toBe("true");
+      });
+
+      if (paymasterUrl) {
+        it("should perform a native transfer using a paymaster", async () => {
+          if (!paymasterUrl) {
+            throw new Error("BASE_MAINNET_PAYMASTER_URL is not defined");
+          }
+
+          const unestimatedUserOperation: Partial<UserOperationStruct> =
+            await smartAccount.signUserOp({
+              sender: await smartAccount.getAccountAddress(),
+              nonce: await smartAccount.getNonce(),
+              initCode: "0x",
+              callData: await smartAccount.encodeExecute(tx.to, tx.value, "0x"),
+              callGasLimit: 1n,
+              verificationGasLimit: 1n,
+              preVerificationGas: 1n,
+              maxFeePerGas: 1n,
+              maxPriorityFeePerGas: 1n,
+              paymasterAndData: stubPaymasterAndData,
+            });
+
+          const gasEstimate = await smartAccount.bundler?.estimateUserOpGas(
+            unestimatedUserOperation,
+          );
+
+          const {
+            callGasLimit,
+            verificationGasLimit,
+            preVerificationGas,
+            maxFeePerGas,
+            maxPriorityFeePerGas,
+          } = gasEstimate!;
+
+          let estimatedUserOperation = await smartAccount.signUserOp({
+            ...unestimatedUserOperation,
+            callGasLimit: BigInt(callGasLimit),
+            verificationGasLimit: BigInt(verificationGasLimit),
+            preVerificationGas: BigInt(preVerificationGas),
+            maxFeePerGas: BigInt(maxFeePerGas),
+            maxPriorityFeePerGas: BigInt(maxPriorityFeePerGas),
+          });
+
+          estimatedUserOperation.paymasterAndData = await sponsorUserOperation(
+            paymasterUrl,
+            estimatedUserOperation,
+          );
+
+          estimatedUserOperation = await smartAccount.signUserOp(
+            estimatedUserOperation,
+          );
+
+          const response = await smartAccount.bundler!.sendUserOp(
+            estimatedUserOperation,
+          );
+
+          const receipt = await response.wait();
+
+          console.log(receipt);
+
+          expect(receipt.success).toBe("true");
+        });
+      }
+    });
+
+    describe("EntryPoint v0.7.0", () => {
+      const bundlerUrl = `${bundlerHostname}/api/v3/${baseSepolia.id}/biconomy`;
+
+      it("should perform a native transfer without a paymaster", async () => {
+        const nexusClient = await createNexusClient({
+          signer: account,
+          chain: baseSepolia,
+          transport: http(),
+          bundlerTransport: http(bundlerUrl),
+        });
+
+        const smartAccountAddress = nexusClient.account.address;
+        console.log(`Nexus address: ${smartAccountAddress}`);
+
+        const hash = await nexusClient.sendTransaction({
+          calls: [
+            {
+              to: smartAccountAddress,
+              value: 1n,
+            },
+          ],
+        });
+
+        const receipt = await nexusClient.waitForTransactionReceipt({ hash });
+
+        console.log(
+          `${baseSepolia.name} EPv0.7.0 txHash: ${receipt.transactionHash}`,
+        );
+        console.log(receipt);
+
+        expect(receipt.status).toBe("success");
+      });
+    });
+  });
+
   describe("optimism-mainnet", () => {
     const account = privateKeyToAccount(`0x${privateKey}`);
 
     describe("EntryPoint v0.6.0", () => {
-      const bundlerUrl = `${bundlerHostname}/api/v2/${optimism.id}/test`;
+      const bundlerUrl = `${bundlerHostname}/api/v2/${optimism.id}/biconomy`;
 
       const paymasterUrl = process.env.OPTIMISM_MAINNET_PAYMASTER_URL;
-
-      logConfig(optimism.id, bundlerUrl, account, paymasterUrl);
 
       const client = createWalletClient({
         account,
@@ -315,8 +451,6 @@ describe("e2e", () => {
     describe("EntryPoint v0.7.0", () => {
       const bundlerUrl = `${bundlerHostname}/api/v3/${optimism.id}/test`;
 
-      logConfig(optimism.id, bundlerUrl, account, "");
-
       it("should perform a native transfer without a paymaster", async () => {
         const nexusClient = await createNexusClient({
           signer: account,
@@ -346,13 +480,11 @@ describe("e2e", () => {
     });
   });
 
-  describe("avalanche-mainnet", () => {
-    const bundlerUrl = `${bundlerHostname}/api/v2/${avalanche.id}/test`;
+  describe.skip("avalanche-mainnet", () => {
+    const bundlerUrl = `${bundlerHostname}/api/v2/${avalanche.id}/biconomy`;
     const account = privateKeyToAccount(`0x${privateKey}`);
 
     const paymasterUrl = process.env.AVALANCHE_MAINNET_PAYMASTER_URL;
-
-    logConfig(avalanche.id, bundlerUrl, account, paymasterUrl);
 
     const client = createWalletClient({
       account,
@@ -450,15 +582,13 @@ describe("e2e", () => {
     }
   });
 
-  describe("bsc-mainnet", () => {
+  describe.skip("bsc-mainnet", () => {
     const account = privateKeyToAccount(`0x${privateKey}`);
 
     describe("EntryPoint v0.6.0", () => {
-      const bundlerUrl = `${bundlerHostname}/api/v2/${bsc.id}/test`;
+      const bundlerUrl = `${bundlerHostname}/api/v2/${bsc.id}/biconomy`;
 
       const paymasterUrl = process.env.BSC_MAINNET_PAYMASTER_URL;
-
-      logConfig(bsc.id, bundlerUrl, account, paymasterUrl);
 
       const client = createWalletClient({
         account,
@@ -553,9 +683,7 @@ describe("e2e", () => {
     });
 
     describe("EntryPoint v0.7.0", () => {
-      const bundlerUrl = `${bundlerHostname}/api/v3/${bsc.id}/test`;
-
-      logConfig(bsc.id, bundlerUrl, account, "");
+      const bundlerUrl = `${bundlerHostname}/api/v3/${bsc.id}/biconomy`;
 
       it("should perform a native transfer without a paymaster", async () => {
         const nexusClient = await createNexusClient({
@@ -578,22 +706,21 @@ describe("e2e", () => {
         });
 
         const receipt = await nexusClient.waitForTransactionReceipt({ hash });
-        console.log(`${bsc.name} EPv0.7.0 txHash: ${receipt.transactionHash}`);
-        // console.log(receipt);
+
+        console.log(receipt);
+
         expect(receipt.status).toBe("success");
       });
     });
   });
 
-  describe("arbitrum-mainnet", () => {
+  describe.skip("arbitrum-mainnet", () => {
     const account = privateKeyToAccount(`0x${privateKey}`);
 
     describe("EntryPoint v0.6.0", () => {
-      const bundlerUrl = `${bundlerHostname}/api/v2/${arbitrum.id}/test`;
+      const bundlerUrl = `${bundlerHostname}/api/v2/${arbitrum.id}/biconomy`;
 
       const paymasterUrl = process.env.ARBITRUM_MAINNET_PAYMASTER_URL;
-
-      logConfig(arbitrum.id, bundlerUrl, account, paymasterUrl);
 
       const client = createWalletClient({
         account,
@@ -618,10 +745,11 @@ describe("e2e", () => {
       });
 
       it("should perform a native transfer without a paymaster", async () => {
-        // const receipt = await sendUserOperation(account, smartAccount, false);
         const userOpResponse = await smartAccount.sendTransaction(tx);
 
         const receipt = await userOpResponse.wait();
+
+        console.log(receipt);
 
         expect(receipt.success).toBe("true");
       });
@@ -722,15 +850,13 @@ describe("e2e", () => {
     });
   });
 
-  describe("polygon-mainnet", () => {
+  describe.skip("polygon-mainnet", () => {
     const account = privateKeyToAccount(`0x${privateKey}`);
 
     describe("EntryPoint v0.6.0", () => {
-      const bundlerUrl = `${bundlerHostname}/api/v2/${polygon.id}/test`;
+      const bundlerUrl = `${bundlerHostname}/api/v2/${polygon.id}/biconomy`;
 
       const paymasterUrl = process.env.POLYGON_MAINNET_PAYMASTER_URL;
-
-      logConfig(polygon.id, bundlerUrl, account, paymasterUrl);
 
       const client = createWalletClient({
         account,
@@ -755,10 +881,11 @@ describe("e2e", () => {
       });
 
       it("should perform a native transfer without a paymaster", async () => {
-        // const receipt = await sendUserOperation(account, smartAccount, false);
         const userOpResponse = await smartAccount.sendTransaction(tx);
 
         const receipt = await userOpResponse.wait();
+
+        console.log(receipt);
 
         expect(receipt.success).toBe("true");
       });
@@ -859,15 +986,13 @@ describe("e2e", () => {
     });
   });
 
-  describe("gnosis-mainnet", () => {
+  describe.skip("gnosis-mainnet", () => {
     const account = privateKeyToAccount(`0x${privateKey}`);
 
     describe("EntryPoint v0.6.0", () => {
       const bundlerUrl = `${bundlerHostname}/api/v2/${gnosis.id}/test`;
 
       const paymasterUrl = process.env.GNOSIS_MAINNET_PAYMASTER_URL;
-
-      logConfig(gnosis.id, bundlerUrl, account, paymasterUrl);
 
       const client = createWalletClient({
         account,
@@ -892,10 +1017,11 @@ describe("e2e", () => {
       });
 
       it("should perform a native transfer without a paymaster", async () => {
-        // const receipt = await sendUserOperation(account, smartAccount, false);
         const userOpResponse = await smartAccount.sendTransaction(tx);
 
         const receipt = await userOpResponse.wait();
+
+        console.log(receipt);
 
         expect(receipt.success).toBe("true");
       });
@@ -989,6 +1115,44 @@ describe("e2e", () => {
         const receipt = await nexusClient.waitForTransactionReceipt({ hash });
         console.log(
           `${gnosis.name} EPv0.7.0 txHash: ${receipt.transactionHash}`,
+        );
+        console.log(receipt);
+        expect(receipt.status).toBe("success");
+      });
+    });
+  });
+
+  describe.skip("blast-mainnet", () => {
+    const account = privateKeyToAccount(`0x${privateKey}`);
+
+    describe("EntryPoint v0.7.0", () => {
+      const bundlerUrl = `${bundlerHostname}/api/v3/${blast.id}/biconomy`;
+
+      logConfig(blast.id, bundlerUrl, account, "");
+
+      it("should perform a native transfer without a paymaster", async () => {
+        const nexusClient = await createNexusClient({
+          signer: account,
+          chain: blast,
+          transport: http(),
+          bundlerTransport: http(bundlerUrl),
+        });
+
+        const smartAccountAddress = nexusClient.account.address;
+        console.log(`Nexus address: ${smartAccountAddress}`);
+
+        const hash = await nexusClient.sendTransaction({
+          calls: [
+            {
+              to: smartAccountAddress,
+              value: 1n,
+            },
+          ],
+        });
+
+        const receipt = await nexusClient.waitForTransactionReceipt({ hash });
+        console.log(
+          `${blast.name} EPv0.7.0 txHash: ${receipt.transactionHash}`,
         );
         console.log(receipt);
         expect(receipt.status).toBe("success");

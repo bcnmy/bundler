@@ -40,7 +40,6 @@ import {
   createGasEstimator,
   isEstimateUserOperationGasResultV7,
   EstimateUserOperationGasResult,
-  supportedChains,
   toPackedUserOperation,
   bumpBigIntPercent,
 } from "@biconomy/gas-estimations";
