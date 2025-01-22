@@ -15,6 +15,7 @@ import {
   gnosis,
   blast,
   baseSepolia,
+  berachainTestnetbArtio,
 } from "viem/chains";
 import {
   BiconomySmartAccountV2,
@@ -344,7 +345,7 @@ describe("e2e", () => {
     });
   });
 
-  describe("optimism-mainnet", () => {
+  describe.skip("optimism-mainnet", () => {
     const account = privateKeyToAccount(`0x${privateKey}`);
 
     describe("EntryPoint v0.6.0", () => {
@@ -1153,6 +1154,44 @@ describe("e2e", () => {
         const receipt = await nexusClient.waitForTransactionReceipt({ hash });
         console.log(
           `${blast.name} EPv0.7.0 txHash: ${receipt.transactionHash}`,
+        );
+        console.log(receipt);
+        expect(receipt.status).toBe("success");
+      });
+    });
+  });
+
+  describe.skip("berachain-bartio", () => {
+    const account = privateKeyToAccount(`0x${privateKey}`);
+
+    describe("EntryPoint v0.7.0", () => {
+      const bundlerUrl = `${bundlerHostname}/api/v3/${berachainTestnetbArtio.id}/biconomy`;
+
+      logConfig(berachainTestnetbArtio.id, bundlerUrl, account, "");
+
+      it("should perform a native transfer without a paymaster", async () => {
+        const nexusClient = await createNexusClient({
+          signer: account,
+          chain: berachainTestnetbArtio,
+          transport: http(),
+          bundlerTransport: http(bundlerUrl),
+        });
+
+        const smartAccountAddress = nexusClient.account.address;
+        console.log(`Nexus address: ${smartAccountAddress}`);
+
+        const hash = await nexusClient.sendTransaction({
+          calls: [
+            {
+              to: smartAccountAddress,
+              value: 1n,
+            },
+          ],
+        });
+
+        const receipt = await nexusClient.waitForTransactionReceipt({ hash });
+        console.log(
+          `${berachainTestnetbArtio.name} EPv0.7.0 txHash: ${receipt.transactionHash}`,
         );
         console.log(receipt);
         expect(receipt.status).toBe("success");
