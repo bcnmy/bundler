@@ -18,19 +18,12 @@ import {
   UserOperationStateEnum,
 } from "../../../../common/types";
 import { BUNDLER_ERROR_CODES, STATUSES } from "../../shared/middleware";
-// import { updateRequest } from '../../auth/UpdateRequest';
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
 });
 
 export const bundleUserOperation = async (req: Request, res: Response) => {
-  // const bundlerRequestId = req.body.params[6];
-
-  log.info(
-    `💰💰💰 EP v7 bundleUserOperation called, entryPointAddress: ${req.body.params[1]}`,
-  );
-
   try {
     const start = performance.now();
     const { id } = req.body;
@@ -141,21 +134,6 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
     });
 
     if (isError(response)) {
-      // updateRequest({
-      //   chainId: parseInt(chainId, 10),
-      //   apiKey,
-      //   bundlerRequestId,
-      //   transactionId,
-      //   rawResponse: {
-      //     jsonrpc: '2.0',
-      //     id: id || 1,
-      //     error: {
-      //       code: BUNDLER_ERROR_CODES.BAD_REQUEST,
-      //       message: response.error,
-      //     },
-      //   },
-      //   httpResponseCode: STATUSES.BAD_REQUEST,
-      // });
       const end = performance.now();
       log.info(`bundleUserOperation took: ${end - start} milliseconds`);
       return res.status(STATUSES.BAD_REQUEST).json({
@@ -168,18 +146,6 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
       });
     }
 
-    // updateRequest({
-    //   chainId: parseInt(chainId, 10),
-    //   apiKey,
-    //   bundlerRequestId,
-    //   transactionId,
-    //   rawResponse: {
-    //     jsonrpc: '2.0',
-    //     id: id || 1,
-    //     result: userOpHash,
-    //   },
-    //   httpResponseCode: STATUSES.SUCCESS,
-    // });
     const end = performance.now();
     log.info(`bundleUserOperation took: ${end - start} milliseconds`);
     return res.status(STATUSES.SUCCESS).json({
