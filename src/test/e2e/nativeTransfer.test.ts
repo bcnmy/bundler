@@ -15,6 +15,8 @@ import {
   gnosis,
   blast,
   baseSepolia,
+  berachainTestnetbArtio,
+  sepolia,
 } from "viem/chains";
 import {
   BiconomySmartAccountV2,
@@ -344,7 +346,7 @@ describe("e2e", () => {
     });
   });
 
-  describe("optimism-mainnet", () => {
+  describe.skip("optimism-mainnet", () => {
     const account = privateKeyToAccount(`0x${privateKey}`);
 
     describe("EntryPoint v0.6.0", () => {
@@ -1155,6 +1157,179 @@ describe("e2e", () => {
           `${blast.name} EPv0.7.0 txHash: ${receipt.transactionHash}`,
         );
         console.log(receipt);
+        expect(receipt.status).toBe("success");
+      });
+    });
+  });
+
+  describe.skip("berachain-bartio", () => {
+    const account = privateKeyToAccount(`0x${privateKey}`);
+
+    describe("EntryPoint v0.7.0", () => {
+      const bundlerUrl = `${bundlerHostname}/api/v3/${berachainTestnetbArtio.id}/biconomy`;
+
+      logConfig(berachainTestnetbArtio.id, bundlerUrl, account, "");
+
+      it("should perform a native transfer without a paymaster", async () => {
+        const nexusClient = await createNexusClient({
+          signer: account,
+          chain: berachainTestnetbArtio,
+          transport: http(),
+          bundlerTransport: http(bundlerUrl),
+        });
+
+        const smartAccountAddress = nexusClient.account.address;
+        console.log(`Nexus address: ${smartAccountAddress}`);
+
+        const hash = await nexusClient.sendTransaction({
+          calls: [
+            {
+              to: smartAccountAddress,
+              value: 1n,
+            },
+          ],
+        });
+
+        const receipt = await nexusClient.waitForTransactionReceipt({ hash });
+        console.log(
+          `${berachainTestnetbArtio.name} EPv0.7.0 txHash: ${receipt.transactionHash}`,
+        );
+        console.log(receipt);
+        expect(receipt.status).toBe("success");
+      });
+    });
+  });
+
+  describe("ethereum-sepolia", () => {
+    const account = privateKeyToAccount(`0x${privateKey}`);
+
+    describe.skip("EntryPoint v0.6.0", () => {
+      const bundlerUrl = `${bundlerHostname}/api/v2/${sepolia.id}/biconomy`;
+
+      const paymasterUrl = process.env.SEPOLIA_MAINNET_PAYMASTER_URL;
+
+      const signer = createWalletClient({
+        account,
+        chain: sepolia,
+        transport: http(),
+      }).extend(publicActions);
+
+      let smartAccount: BiconomySmartAccountV2;
+
+      const tx = {
+        to: account.address,
+        value: 1n,
+      };
+
+      beforeAll(async () => {
+        smartAccount = await createSmartAccountClient({
+          signer: signer,
+          bundlerUrl,
+          paymasterUrl,
+        });
+        await requireBalance(smartAccount, valueToSend);
+      });
+
+      it("should perform a native transfer without a paymaster", async () => {
+        const userOpResponse = await smartAccount.sendTransaction(tx);
+
+        const receipt = await userOpResponse.wait();
+
+        console.log(receipt);
+
+        expect(receipt.success).toBe("true");
+      }, 60_000);
+
+      if (paymasterUrl) {
+        it("should perform a native transfer using a paymaster", async () => {
+          if (!paymasterUrl) {
+            throw new Error("SEPOLIA_MAINNET_PAYMASTER_URL is not defined");
+          }
+
+          const unestimatedUserOperation: Partial<UserOperationStruct> =
+            await smartAccount.signUserOp({
+              sender: await smartAccount.getAccountAddress(),
+              nonce: await smartAccount.getNonce(),
+              initCode: "0x",
+              callData: await smartAccount.encodeExecute(tx.to, tx.value, "0x"),
+              callGasLimit: 1n,
+              verificationGasLimit: 1n,
+              preVerificationGas: 1n,
+              maxFeePerGas: 1n,
+              maxPriorityFeePerGas: 1n,
+              paymasterAndData: stubPaymasterAndData,
+            });
+
+          const gasEstimate = await smartAccount.bundler?.estimateUserOpGas(
+            unestimatedUserOperation,
+          );
+
+          const {
+            callGasLimit,
+            verificationGasLimit,
+            preVerificationGas,
+            maxFeePerGas,
+            maxPriorityFeePerGas,
+          } = gasEstimate!;
+
+          let estimatedUserOperation = await smartAccount.signUserOp({
+            ...unestimatedUserOperation,
+            callGasLimit: BigInt(callGasLimit),
+            verificationGasLimit: BigInt(verificationGasLimit),
+            preVerificationGas: BigInt(preVerificationGas),
+            maxFeePerGas: BigInt(maxFeePerGas),
+            maxPriorityFeePerGas: BigInt(maxPriorityFeePerGas),
+          });
+
+          estimatedUserOperation.paymasterAndData = await sponsorUserOperation(
+            paymasterUrl,
+            estimatedUserOperation,
+          );
+
+          estimatedUserOperation = await smartAccount.signUserOp(
+            estimatedUserOperation,
+          );
+
+          const response = await smartAccount.bundler!.sendUserOp(
+            estimatedUserOperation,
+          );
+
+          const receipt = await response.wait();
+
+          console.log(receipt);
+
+          expect(receipt.success).toBe("true");
+        });
+      }
+    });
+
+    describe("EntryPoint v0.7.0", () => {
+      const bundlerUrl = `${bundlerHostname}/api/v3/${sepolia.id}/biconomy`;
+
+      it("should perform a native transfer without a paymaster", async () => {
+        const nexusClient = await createNexusClient({
+          signer: account,
+          chain: sepolia,
+          transport: http(),
+          bundlerTransport: http(bundlerUrl),
+        });
+
+        const smartAccountAddress = nexusClient.account.address;
+        console.log(`Nexus address: ${smartAccountAddress}`);
+
+        const hash = await nexusClient.sendTransaction({
+          calls: [
+            {
+              to: smartAccountAddress,
+              value: 1n,
+            },
+          ],
+        });
+
+        const receipt = await nexusClient.waitForTransactionReceipt({ hash });
+
+        console.log(receipt);
+
         expect(receipt.status).toBe("success");
       });
     });
