@@ -1,4 +1,4 @@
-import amqp, { Channel, ConsumeMessage, Replies } from "amqplib";
+import { Channel, ConsumeMessage, Replies, Connection } from "amqplib";
 import nodeconfig from "config";
 import { logger } from "../logger";
 import { IQueue } from "./interface/IQueue";
@@ -48,7 +48,7 @@ export class RetryTransactionHandlerQueue
       : 30_000;
   }
 
-  async connect() {
+  async connect(connection: Connection) {
     const _log = log.child({
       chainId: this.chainId,
       queueName: this.queueName,
@@ -57,7 +57,6 @@ export class RetryTransactionHandlerQueue
     });
 
     try {
-      const connection = await amqp.connect(this.queueUrl);
       if (!this.channel) {
         this.channel = await connection.createChannel();
         this.channel.assertExchange(this.exchangeName, this.exchangeType, {
@@ -89,7 +88,7 @@ export class RetryTransactionHandlerQueue
         _log.warn(`RetryTransactionHandlerQueue:: Discarding message because it's stale`);
         return true;
       }
-  
+
       if (this.channel) {
         this.channel.publish(
           this.exchangeName,

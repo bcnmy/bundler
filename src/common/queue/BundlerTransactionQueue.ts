@@ -1,5 +1,4 @@
-import amqp, { Channel, ConsumeMessage } from "amqplib";
-import nodeconfig from "config";
+import { Channel, ConsumeMessage, Connection} from "amqplib";
 import { logger } from "../logger";
 import { SendUserOperation, TransactionType } from "../types";
 import { IQueue } from "./interface/IQueue";
@@ -10,8 +9,7 @@ const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
 });
 
-const queueUrl =
-  process.env.BUNDLER_QUEUE_URL || nodeconfig.get<string>("queueUrl");
+
 
 export class BundlerTransactionQueue implements IQueue<SendUserOperation> {
   readonly chainId: number;
@@ -36,22 +34,21 @@ export class BundlerTransactionQueue implements IQueue<SendUserOperation> {
     this.queueName = `relayer_queue_${this.chainId}_type_${this.transactionType}`;
   }
 
-  async connect() {
+  async connect(connection: Connection) {
     const _log = log.child({
       chainId: this.chainId,
       transactionType: this.transactionType,
       queueName: this.queueName,
       exchangeKey: this.exchangeKey,
     });
-    
+
     try {
-      const connection = await amqp.connect(queueUrl);
       if (!this.channel) {
         this.channel = await connection.createChannel();
         this.channel.assertExchange(this.exchangeName, this.exchangeType, {
           durable: true,
         }).catch((err) => {
-          _log.error({ err }, `BundlerTransactionQueue:: assertExchange() failed`);    
+          _log.error({ err }, `BundlerTransactionQueue:: assertExchange() failed`);
         });
       }
     } catch (err) {
@@ -74,7 +71,7 @@ export class BundlerTransactionQueue implements IQueue<SendUserOperation> {
         _log.warn(`BundlerTransactionQueue:: Discarding message because it's stale`);
         return true;
       }
-  
+
       this.channel.publish(
         this.exchangeName,
         key,
