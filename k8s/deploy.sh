@@ -74,7 +74,7 @@ helm upgrade "${HELM_NAME}" ./k8s/common/    \
 
 echo "Deployed $HELM_NAME to $NAMESPACE"
 
-x=0
+x=1
 while [ "${x}" -lt  "${REPLICAS}" ]; do
   HELM_NAME="$NAME-$x";
   printf "\nDeploying %s to %s\n" "${HELM_NAME}" "${NAMESPACE}"
