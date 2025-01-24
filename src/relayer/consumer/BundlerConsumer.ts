@@ -71,7 +71,7 @@ export class BundlerConsumer
       topLog.info(`BundlerConsumer.onMessageReceived`);
 
       try {
-        this.queue.ack(msg);
+        await this.queue.ack(msg);
       } catch (err) {
         topLog.error({ err }, `BundlerConsumer.onMessageReceived:: Error while acknowledging message`);
       }

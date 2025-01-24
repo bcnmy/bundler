@@ -75,7 +75,7 @@ export class EVMRetryTransactionService
       );
 
       try {
-        this.queue.ack(msg);
+        await this.queue.ack(msg);
       } catch (err) {
         log.error({ err }, `EVMRetryTransactionService.onMessageReceived:: Error while acknowledging message`);
       }
