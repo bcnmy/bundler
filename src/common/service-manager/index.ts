@@ -46,8 +46,7 @@ import { customJSONStringify, parseError } from "../utils";
 import { GasPriceService } from "../gas-price";
 import { CacheFeesJob } from "../gas-price/jobs/CacheFees";
 import { FlashbotsClient } from "../network/FlashbotsClient";
-import { ENTRYPOINT_V6_ABI } from "@biconomy/gas-estimations";
-import { ENTRYPOINT_V7_ABI } from "@biconomy/gas-estimations";
+import { ENTRYPOINT_V6_ABI, ENTRYPOINT_V7_ABI } from "@biconomy/gas-estimations"
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -109,7 +108,10 @@ let statusService: IStatusService;
   const queueUrl =
   process.env.BUNDLER_QUEUE_URL || nodeconfig.get<string>("queueUrl");
 
-  const rabbitMqConnection = await amqp.connect(queueUrl);
+  // disable heartbeat to avoid connection timeout
+  const rabbitMqConnection = await amqp.connect(queueUrl, {
+    heartbeat: 0,
+  });
 
 
   const slackNotificationService = new SlackNotificationService(
