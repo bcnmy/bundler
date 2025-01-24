@@ -1,6 +1,7 @@
 import nodeconfig from "config";
 import { getContract, parseEther } from "viem";
 import { chain } from "lodash";
+import amqp from "amqplib";
 import { config } from "../../config";
 import { EVMAccount, IEVMAccount } from "../../relayer/account";
 import { BundlerConsumer } from "../../relayer/consumer";
@@ -105,6 +106,12 @@ let statusService: IStatusService;
   await dbInstance.connect();
   await cacheService.connect();
 
+  const queueUrl =
+  process.env.BUNDLER_QUEUE_URL || nodeconfig.get<string>("queueUrl");
+
+  const rabbitMqConnection = await amqp.connect(queueUrl);
+
+
   const slackNotificationService = new SlackNotificationService(
     process.env.BUNDLER_SLACK_TOKEN || config.slack.token,
     process.env.BUNDLER_SLACK_CHANNEL || config.slack.channel,
@@ -121,7 +128,7 @@ let statusService: IStatusService;
 
   const networkSetupPromises: Promise<void>[] = [];
   for (const chainId of supportedNetworks) {
-    networkSetupPromises.push(setupNetwork(chainId, notificationManager));
+    networkSetupPromises.push(setupNetwork(chainId, notificationManager, rabbitMqConnection));
   }
 
   await Promise.all(networkSetupPromises);
@@ -161,6 +168,7 @@ export {
 async function setupNetwork(
   chainId: number,
   notificationManager: NotificationManager,
+  rabbitMqConnection: amqp.Connection,
 ) {
   log.info({ chainId }, `Start network setup`);
 
@@ -210,7 +218,7 @@ async function setupNetwork(
     nodePathIndex: config.relayer.nodePathIndex,
   });
   retryTransactionQueueMap[chainId] = retryTransactionQueue;
-  await retryTransactionQueueMap[chainId].connect();
+  await retryTransactionQueueMap[chainId].connect(rabbitMqConnection);
   log.info(`Retry transaction queue setup complete for chainId: ${chainId}`);
 
   log.info(`Setting up nonce manager for chainId: ${chainId}`);
@@ -402,7 +410,7 @@ async function setupNetwork(
           chainId,
         });
 
-      await bundlerQueue.connect();
+      await bundlerQueue.connect(rabbitMqConnection);
       log.info(
         `Bundler transaction queue setup complete for chainId: ${chainId}`,
       );

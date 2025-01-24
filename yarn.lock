@@ -2478,12 +2478,11 @@
   resolved "https://registry.yarnpkg.com/@tsconfig/node16/-/node16-1.0.4.tgz#0b92dcc0cc1c81f6f306a381f28e31b1a56536e9"
   integrity sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==
 
-"@types/amqplib@^0.8.2":
-  version "0.8.2"
-  resolved "https://registry.yarnpkg.com/@types/amqplib/-/amqplib-0.8.2.tgz#9c46f2c7fac381e4f81bcb612c00d54549697d22"
-  integrity sha512-p+TFLzo52f8UanB+Nq6gyUi65yecAcRY3nYowU6MPGFtaJvEDxcnFWrxssSTkF+ts1W3zyQDvgVICLQem5WxRA==
+"@types/amqplib@^0.10.6":
+  version "0.10.6"
+  resolved "https://registry.yarnpkg.com/@types/amqplib/-/amqplib-0.10.6.tgz#f22e03a86f628d4b59751c3fd805f27b810f0cb3"
+  integrity sha512-vQLVypBS1JQcfTXhl1Td1EEeLdtb+vuulOb4TrzYiLyP2aYLMAEzB3pNmEA0jBm0xIXu946Y7Xwl19Eidl32SQ==
   dependencies:
-    "@types/bluebird" "*"
     "@types/node" "*"
 
 "@types/babel__core@^7.1.14":
@@ -2978,7 +2977,7 @@ ajv@^8.11.0:
     json-schema-traverse "^1.0.0"
     require-from-string "^2.0.2"
 
-amqplib@^0.10.3:
+amqplib@^0.10.5:
   version "0.10.5"
   resolved "https://registry.yarnpkg.com/amqplib/-/amqplib-0.10.5.tgz#2b217a3c56f2935ee2e36206bfd7e25ee866491f"
   integrity sha512-Dx5zmy0Ur+Q7LPPdhz+jx5IzmJBoHd15tOeAfQ8SuvEtyPJ20hBemhOBA4b1WeORCRa0ENM/kHCzmem1w/zHvQ==
