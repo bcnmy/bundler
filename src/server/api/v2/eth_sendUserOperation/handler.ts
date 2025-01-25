@@ -122,7 +122,6 @@ export const eth_sendUserOperation = async (req: Request, res: Response) => {
         userOp,
         transactionId,
         walletAddress,
-        timestamp: Date.now(),
       });
 
       if (isError(response)) {

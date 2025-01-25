@@ -1116,10 +1116,6 @@
     "maxBlockWait": 26,
     "supportedNetworks": []
   },
-  "clearStaleMessages": {
-    "supportedNetworks": [1, 11155111],
-    "ttlSeconds": 3600
-  },
   "isTWSetup": false,
   "redisCluster": {
     "port": 6379,

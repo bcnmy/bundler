@@ -94,7 +94,6 @@ export type SendUserOperation = {
   transactionId: string;
   userOp?: UserOperationType | UserOperationStruct;
   walletAddress?: string;
-  timestamp?: number;
 };
 
 type ResponseType = {

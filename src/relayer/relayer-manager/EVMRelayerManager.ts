@@ -527,7 +527,6 @@ export class EVMRelayerManager
               ...rawTx,
               transactionId,
               walletAddress: "",
-              timestamp: Date.now(),
             },
             this.ownerAccountDetails,
             TransactionType.FUNDING,

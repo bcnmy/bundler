@@ -118,7 +118,6 @@ export class EVMTransactionService
       transactionId,
       walletAddress,
       metaData,
-      timestamp,
     } = transactionData;
 
     const retryTransactionCount = parseInt(
@@ -234,7 +233,6 @@ export class EVMTransactionService
           walletAddress,
           metaData,
           relayerManagerName,
-          timestamp,
         });
 
       if (transactionType === TransactionType.FUNDING) {
@@ -344,7 +342,6 @@ export class EVMTransactionService
       walletAddress,
       metaData,
       relayerManagerName,
-      timestamp,
     } = retryTransactionData;
 
     const _log = log.child({
@@ -424,7 +421,6 @@ export class EVMTransactionService
           walletAddress,
           metaData,
           relayerManagerName,
-          timestamp,
         });
 
       _log.info(
