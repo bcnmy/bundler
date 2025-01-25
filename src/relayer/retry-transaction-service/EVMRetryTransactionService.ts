@@ -74,7 +74,11 @@ export class EVMRetryTransactionService
         "Message received from retry transaction queue",
       );
 
-      this.queue.ack(msg);
+      try {
+        await this.queue.ack(msg);
+      } catch (err) {
+        log.error({ err }, `EVMRetryTransactionService.onMessageReceived:: Error while acknowledging message`);
+      }
 
       const {
         transactionHash,

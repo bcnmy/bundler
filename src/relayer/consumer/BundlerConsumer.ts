@@ -69,7 +69,12 @@ export class BundlerConsumer
       });
 
       topLog.info(`BundlerConsumer.onMessageReceived`);
-      this.queue.ack(msg);
+
+      try {
+        await this.queue.ack(msg);
+      } catch (err) {
+        topLog.error({ err }, `BundlerConsumer.onMessageReceived:: Error while acknowledging message`);
+      }
 
       const sendTransactionWithRetry = async (): Promise<void> => {
         // get active relayer

@@ -105,7 +105,6 @@ export class EVMTransactionListener
       metaData,
       relayerManagerName,
       previousTransactionHash,
-      timestamp,
     } = notifyTransactionListenerParams;
 
     const _log = log.child({
@@ -167,7 +166,6 @@ export class EVMTransactionListener
         walletAddress,
         metaData,
         relayerManagerName,
-        timestamp,
       });
     } catch (publishToRetryTransactionQueueError) {
       _log.error(

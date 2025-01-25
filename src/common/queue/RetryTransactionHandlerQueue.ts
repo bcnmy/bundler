@@ -4,7 +4,6 @@ import { logger } from "../logger";
 import { IQueue } from "./interface/IQueue";
 import { RetryTransactionQueueData } from "./types";
 import { customJSONStringify } from "../utils";
-import { shouldDiscardStaleMessage } from "./queueUtils";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -84,11 +83,6 @@ export class RetryTransactionHandlerQueue
     _log.info({ data }, `RetryTransactionHandlerQueue:: Publishing data to retry queue`);
 
     try {
-      if (shouldDiscardStaleMessage(this.chainId, data, Date.now())) {
-        _log.warn(`RetryTransactionHandlerQueue:: Discarding message because it's stale`);
-        return true;
-      }
-
       if (this.channel) {
         this.channel.publish(
           this.exchangeName,

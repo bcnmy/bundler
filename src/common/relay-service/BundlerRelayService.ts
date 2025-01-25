@@ -22,10 +22,6 @@ export class BundlerRelayService implements IRelayService<SendUserOperation> {
   async sendUserOperation(
     data: SendUserOperation,
   ): Promise<RelayServiceResponseType> {
-    if (!data.timestamp) {
-      data.timestamp = Date.now();
-    }
-
     const _log = log.child({
       sendUserOperation: data,
     });

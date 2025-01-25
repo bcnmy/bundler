@@ -3,7 +3,6 @@ import { logger } from "../logger";
 import { SendUserOperation, TransactionType } from "../types";
 import { IQueue } from "./interface/IQueue";
 import { customJSONStringify } from "../utils";
-import { shouldDiscardStaleMessage } from "./queueUtils";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -67,11 +66,6 @@ export class BundlerTransactionQueue implements IQueue<SendUserOperation> {
     _log.info(`BundlerTransactionQueue:: Publishing data to retry queue`);
 
     try {
-      if (shouldDiscardStaleMessage(this.chainId, data, Date.now())) {
-        _log.warn(`BundlerTransactionQueue:: Discarding message because it's stale`);
-        return true;
-      }
-
       this.channel.publish(
         this.exchangeName,
         key,
