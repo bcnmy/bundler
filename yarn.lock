@@ -787,12 +787,11 @@
   dependencies:
     merkletreejs "^0.4.0"
 
-"@biconomy/gas-estimations@0.2.55":
-  version "0.2.55"
-  resolved "https://registry.yarnpkg.com/@biconomy/gas-estimations/-/gas-estimations-0.2.55.tgz#fd1db0f27145b8a4d17df7b015bac36bbd80316c"
-  integrity sha512-goc9q15f433LkNOtJ9Kndp3QbZ+IFWeCaBht7s65f4Q/G/dVU4emx6eRBR3NNdNJqtWvRi9fq3g9066EVdwXwg==
+"@biconomy/gas-estimations@^0.2.65":
+  version "0.2.65"
+  resolved "https://registry.yarnpkg.com/@biconomy/gas-estimations/-/gas-estimations-0.2.65.tgz#c3c43f9615fd181ac60e8190f9397d80aa9c13d5"
+  integrity sha512-45ErezjqITOtkey5M7opWkci7SZvEijy6yjBBj8YhTDbMRdJ43sjr70ODsewmvcZEbDNXd3ZYf0to8LEP56mxw==
   dependencies:
-    viem "^2.22.8"
     zod "^3.24.1"
     zod-validation-error "^3.4.0"
 
@@ -6998,19 +6997,6 @@ ox@0.1.2:
     abitype "^1.0.6"
     eventemitter3 "5.0.1"
 
-ox@0.6.5:
-  version "0.6.5"
-  resolved "https://registry.yarnpkg.com/ox/-/ox-0.6.5.tgz#e6506a589bd6af9b5fecfcb2c641b63c9882edb6"
-  integrity sha512-vmnH8KvMDwFZDbNY1mq2CBRBWIgSliZB/dFV0xKp+DfF/dJkTENt6nmA+DzHSSAgL/GO2ydjkXWvlndJgSY4KQ==
-  dependencies:
-    "@adraffy/ens-normalize" "^1.10.1"
-    "@noble/curves" "^1.6.0"
-    "@noble/hashes" "^1.5.0"
-    "@scure/bip32" "^1.5.0"
-    "@scure/bip39" "^1.4.0"
-    abitype "^1.0.6"
-    eventemitter3 "5.0.1"
-
 p-finally@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/p-finally/-/p-finally-1.0.0.tgz#3fbcfb15b899a44123b34b6dcc18b724336a2cae"
@@ -8488,20 +8474,6 @@ viem@^2.21.49:
     isows "1.0.6"
     ox "0.1.2"
     webauthn-p256 "0.0.10"
-    ws "8.18.0"
-
-viem@^2.22.8:
-  version "2.22.9"
-  resolved "https://registry.yarnpkg.com/viem/-/viem-2.22.9.tgz#14ddb7f1ccf900784e347e1aa157e8e58043b0c2"
-  integrity sha512-2yy46qYhcdo8GZggQ3Zoq9QCahI0goddzpVI/vSnTpcClQBSDxYRCuAqRzzLqjvJ7hS0UYgplC7eRkM2sYgflw==
-  dependencies:
-    "@noble/curves" "1.7.0"
-    "@noble/hashes" "1.6.1"
-    "@scure/bip32" "1.6.0"
-    "@scure/bip39" "1.5.0"
-    abitype "1.0.7"
-    isows "1.0.6"
-    ox "0.6.5"
     ws "8.18.0"
 
 walker@^1.0.8:

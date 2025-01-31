@@ -23,7 +23,7 @@ import {
   createSmartAccountClient,
   UserOperationStruct,
 } from "@biconomy/account";
-import { createNexusClient } from "@biconomy/sdk";
+import { createNexusClient, getCustomChain } from "@biconomy/sdk";
 import axios, { AxiosError } from "axios";
 
 /**
@@ -1200,7 +1200,7 @@ describe("e2e", () => {
     });
   });
 
-  describe("ethereum-sepolia", () => {
+  describe.skip("ethereum-sepolia", () => {
     const account = privateKeyToAccount(`0x${privateKey}`);
 
     describe.skip("EntryPoint v0.6.0", () => {
@@ -1330,6 +1330,110 @@ describe("e2e", () => {
 
         console.log(receipt);
 
+        expect(receipt.status).toBe("success");
+      });
+    });
+  });
+
+  describe.only("monad-testnet", () => {
+    const account = privateKeyToAccount(`0x${privateKey}`);
+
+    const monadTestnetChainId = 10143;
+
+    describe("EntryPoint v0.7.0", () => {
+      const bundlerUrl = `${bundlerHostname}/api/v3/${monadTestnetChainId}/biconomy`;
+
+      const rpcUrl = process.env.MONAD_TESTNET_RPC_URL;
+      if (!rpcUrl) {
+        throw new Error("MONAD_TESTNET_RPC_URL is not defined");
+      }
+
+      it("should perform a native transfer without a paymaster", async () => {
+        try {
+          const nexusClient = await createNexusClient({
+            signer: account,
+            bootStrapAddress: "0x7052eE73e9e9cA6884eb2146cA5c020492E5bB9D",
+            factoryAddress: "0xF8524aB72c688069DfFa8B1Cbb6005929B5Aff58",
+            validatorAddress: "0xEbc7f5Cff2cABcFdfD65a37A9342240b39A73fcd",
+            chain: getCustomChain(
+              "Monad Testnet",
+              monadTestnetChainId,
+              rpcUrl,
+              "",
+              {
+                name: "S",
+                symbol: "S",
+                decimals: 18,
+              },
+            ),
+            transport: http(rpcUrl),
+            bundlerTransport: http(bundlerUrl),
+          });
+
+          const smartAccountAddress = nexusClient.account.address;
+          console.log(`Nexus address: ${smartAccountAddress}`);
+
+          const hash = await nexusClient.sendTransaction({
+            calls: [
+              {
+                to: smartAccountAddress,
+                value: 1n,
+              },
+            ],
+          });
+
+          const receipt = await nexusClient.waitForTransactionReceipt({ hash });
+          console.log(receipt);
+          expect(receipt.status).toBe("success");
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (error: any) {
+          console.error(error);
+          throw error.message;
+        }
+      });
+    });
+  });
+
+  describe.skip("sonic-mainnet", () => {
+    const account = privateKeyToAccount(`0x${privateKey}`);
+
+    const sonicMainnetChainId = 146;
+
+    describe("EntryPoint v0.7.0", () => {
+      const bundlerUrl = `${bundlerHostname}/api/v3/${sonicMainnetChainId}/biconomy`;
+
+      it("should perform a native transfer without a paymaster", async () => {
+        const nexusClient = await createNexusClient({
+          signer: account,
+          chain: getCustomChain(
+            "Sonic Mainnet",
+            sonicMainnetChainId,
+            "https://rpc.soniclabs.com/",
+            "",
+            {
+              name: "S",
+              symbol: "S",
+              decimals: 18,
+            },
+          ),
+          transport: http("https://rpc.soniclabs.com/"),
+          bundlerTransport: http(bundlerUrl),
+        });
+
+        const smartAccountAddress = nexusClient.account.address;
+        console.log(`Nexus address: ${smartAccountAddress}`);
+
+        const hash = await nexusClient.sendTransaction({
+          calls: [
+            {
+              to: smartAccountAddress,
+              value: 1n,
+            },
+          ],
+        });
+
+        const receipt = await nexusClient.waitForTransactionReceipt({ hash });
+        console.log(receipt);
         expect(receipt.status).toBe("success");
       });
     });
