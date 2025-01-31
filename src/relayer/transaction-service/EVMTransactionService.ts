@@ -6,12 +6,6 @@ import { IGasPriceService } from "../../common/gas-price";
 import { logger } from "../../common/logger";
 import { INetworkService } from "../../common/network";
 import {
-  getMaxRetryCountNotificationMessage,
-  getTransactionErrorNotificationMessage,
-  getRelayerFundingNotificationMessage,
-} from "../../common/notification";
-import { INotificationManager } from "../../common/notification/interface";
-import {
   EVMRawTransactionType,
   NetworkBasedGasPriceType,
   TransactionType,
@@ -43,7 +37,6 @@ import {
 import { IUserOperationStateDAO } from "../../common/db";
 import { GasPriceType } from "../../common/gas-price/types";
 import { BLOCKCHAINS } from "../../common/constants";
-import pino from "pino";
 import { ENTRYPOINT_V6_ABI } from "@biconomy/gas-estimations";
 
 const log = logger.child({
@@ -65,8 +58,6 @@ export class EVMTransactionService
 
   cacheService: ICacheService;
 
-  notificationManager: INotificationManager;
-
   userOperationStateDao: IUserOperationStateDAO;
 
   addressMutex: {
@@ -81,7 +72,6 @@ export class EVMTransactionService
       nonceManager,
       gasPriceService,
       cacheService,
-      notificationManager,
       userOperationStateDao,
     } = evmTransactionServiceParams;
     this.chainId = options.chainId;
@@ -90,7 +80,6 @@ export class EVMTransactionService
     this.nonceManager = nonceManager;
     this.gasPriceService = gasPriceService;
     this.cacheService = cacheService;
-    this.notificationManager = notificationManager;
     this.userOperationStateDao = userOperationStateDao;
   }
 
@@ -138,13 +127,6 @@ export class EVMTransactionService
     });
 
     if (retryTransactionCount > maxRetryCount) {
-      await this.trySendSlackNotification(
-        transactionData,
-        account,
-        transactionType,
-        _log,
-      );
-
       return {
         state: "failed",
         code: STATUSES.NOT_FOUND,
@@ -220,7 +202,7 @@ export class EVMTransactionService
       release();
       _log.info(`Lock released on relayer`);
 
-      _log.info(`Calling transactionListener.notify`);
+      _log.info(`Calling transactionListener.--y`);
 
       const transactionListenerNotifyResponse =
         await this.transactionListener.notify({
@@ -237,11 +219,6 @@ export class EVMTransactionService
 
       if (transactionType === TransactionType.FUNDING) {
         _log.info(`Funding relayer`);
-        await this.sendRelayerFundingSlackNotification(
-          relayerAddress,
-          this.chainId,
-          executeTransactionResponse.hash,
-        );
       }
 
       if (transactionListenerNotifyResponse) {
@@ -291,11 +268,6 @@ export class EVMTransactionService
       }
 
       _log.info({ err: error }, `Error while sending transaction`);
-      await this.sendTransactionFailedSlackNotification(
-        transactionId,
-        this.chainId,
-        parseError(error),
-      );
       return {
         state: "failed",
         code: STATUSES.INTERNAL_SERVER_ERROR,
@@ -306,24 +278,6 @@ export class EVMTransactionService
           transactionExecutionResponse: null,
         },
       };
-    }
-  }
-
-  private async trySendSlackNotification(
-    transactionData: TransactionDataType,
-    account: IEVMAccount,
-    transactionType: TransactionType,
-    log: pino.Logger,
-  ) {
-    try {
-      await this.sendMaxRetryCountExceededSlackNotification(
-        transactionData.transactionId,
-        account,
-        transactionType,
-        this.chainId,
-      );
-    } catch (err) {
-      log.error({ err }, `Error in sending slack notification`);
     }
   }
 
@@ -428,14 +382,6 @@ export class EVMTransactionService
         `Transaction listener responded`,
       );
 
-      if (transactionType === TransactionType.FUNDING) {
-        await this.sendRelayerFundingSlackNotification(
-          account.getPublicKey(),
-          this.chainId,
-          transactionHash as string,
-        );
-      }
-
       if (transactionListenerNotifyResponse) {
         return {
           state: "success",
@@ -460,12 +406,6 @@ export class EVMTransactionService
         transactionId,
         state: UserOperationStateEnum.DROPPED_FROM_BUNDLER_MEMPOOL,
       });
-
-      await this.sendTransactionFailedSlackNotification(
-        transactionId,
-        this.chainId,
-        parseError(error),
-      );
 
       return {
         state: "failed",
@@ -915,68 +855,8 @@ export class EVMTransactionService
   private async handleGasTooLow(rawTransaction: EVMRawTransactionType) {
     return toHex(Number(rawTransaction.gasLimit) * 2);
   }
-
-  private async sendMaxRetryCountExceededSlackNotification(
-    transactionId: string,
-    account: IEVMAccount,
-    transactionType: TransactionType,
-    chainId: number,
-  ) {
-    const maxRetryCountNotificationMessage =
-      getMaxRetryCountNotificationMessage(
-        transactionId,
-        account,
-        transactionType,
-        chainId,
-      );
-    const slackNotifyObject = this.notificationManager.getSlackNotifyObject(
-      maxRetryCountNotificationMessage,
-    );
-    await this.notificationManager.sendSlackNotification(slackNotifyObject);
-  }
-
-  private async sendTransactionFailedSlackNotification(
-    transactionId: string,
-    chainId: number,
-    error: string,
-  ) {
-    try {
-      const message = getTransactionErrorNotificationMessage(
-        transactionId,
-        chainId,
-        error,
-      );
-      const slackNotifyObject =
-        this.notificationManager.getSlackNotifyObject(message);
-      await this.notificationManager.sendSlackNotification(slackNotifyObject);
-    } catch (errorInSlack) {
-      log.error(
-        `Error in sending slack notification: ${parseError(errorInSlack)}`,
-      );
-    }
-  }
-
-  private async sendRelayerFundingSlackNotification(
-    relayerAddress: string,
-    chainId: number,
-    transactionHash: string,
-  ) {
-    try {
-      const message = getRelayerFundingNotificationMessage(
-        relayerAddress,
-        chainId,
-        transactionHash,
-      );
-      const slackNotifyObject =
-        this.notificationManager.getSlackNotifyObject(message);
-      await this.notificationManager.sendSlackNotification(slackNotifyObject);
-    } catch (errorInSlack) {
-      log.error(
-        `Error in sending slack notification: ${parseError(errorInSlack)}`,
-      );
-    }
-  }
 }
+
 function isMaxFeeBelowBlockBaseFee(errorString: string) {
   return MAX_FEE_PER_GAS_LESS_THAN_BLOCK_BASE_FEE.some(
     (str) => errorString.indexOf(str) > -1,

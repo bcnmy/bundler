@@ -6,13 +6,11 @@ import {
   toChecksumAddress,
 } from "ethereumjs-util";
 import hdkey from "hdkey";
-import { parseEther, toHex } from "viem";
+import { formatEther, parseEther, toHex } from "viem";
 import { ICacheService } from "../../common/cache";
 import { IGasPriceService } from "../../common/gas-price";
 import { logger } from "../../common/logger";
 import { INetworkService } from "../../common/network";
-import { getPendingTransactionIncreasingMessage } from "../../common/notification";
-import { INotificationManager } from "../../common/notification/interface";
 import {
   EVMRawTransactionType,
   EVMRelayerMetaDataType,
@@ -95,8 +93,6 @@ export class EVMRelayerManager
 
   gasPriceService: IGasPriceService;
 
-  notificationManager: INotificationManager;
-
   constructor(
     evmRelayerManagerServiceParams: EVMRelayerManagerServiceParamsType,
   ) {
@@ -108,7 +104,6 @@ export class EVMRelayerManager
       nonceManager,
       relayerQueue,
       transactionService,
-      notificationManager,
     } = evmRelayerManagerServiceParams;
     this.chainId = options.chainId;
     this.name = options.name;
@@ -129,23 +124,6 @@ export class EVMRelayerManager
     this.transactionService = transactionService;
     this.nonceManager = nonceManager;
     this.cacheService = cacheService;
-    this.notificationManager = notificationManager;
-  }
-
-  private async sendPendingTransactionIncreasingSlackNotification(
-    relayerAddress: string,
-    pendingCount: number,
-  ) {
-    const pendingTransactionIncreasingMessage =
-      getPendingTransactionIncreasingMessage(
-        relayerAddress,
-        this.chainId,
-        pendingCount,
-      );
-    const slackNotifyObject = this.notificationManager.getSlackNotifyObject(
-      pendingTransactionIncreasingMessage,
-    );
-    await this.notificationManager.sendSlackNotification(slackNotifyObject);
   }
 
   /**
@@ -350,9 +328,14 @@ export class EVMRelayerManager
   async createRelayers(
     numberOfRelayers: number = this.minRelayerCount,
   ): Promise<`0x${string}`[]> {
-    log.info(`Waiting for lock to create relayers on chainId: ${this.chainId}`);
+    const _log = log.child({
+      chainId: this.chainId,
+    });
+
+    _log.debug(`Waiting for lock to create relayers...`);
     const release = await createRelayerMutex.acquire();
-    log.info(`Received lock to create relayers on chainId ${this.chainId}`);
+    _log.debug(`Received lock to create relayers!`);
+
     const relayersMasterSeed = this.relayerSeed;
     const relayers: IEVMAccount[] = [];
     const relayersAddressList: `0x${string}`[] = [];
@@ -396,16 +379,18 @@ export class EVMRelayerManager
           .getPublicKey()
           .toLowerCase() as `0x${string}`;
         try {
-          log.info(
-            `Creating relayer ${relayerAddress} on chainId: ${this.chainId}`,
-          );
+          _log.info(`Creating relayer with address=${relayerAddress}`);
+
           const balance = Number(
             toHex(await this.networkService.getBalance(relayerAddress)),
           );
+
           const nonce = await this.nonceManager.getNonce(relayer);
-          log.info(
-            `Balance of relayer ${relayerAddress} is ${balance} and nonce is ${nonce} on chainId: ${this.chainId} with threshold ${this.fundingBalanceThreshold}`,
+
+          _log.info(
+            `Balance of relayer with address=${relayerAddress} is ${formatEther(BigInt(balance))} and nonce is ${BigInt(nonce)}`,
           );
+
           this.relayerQueue.push({
             address: relayer.getPublicKey().toLowerCase(),
             pendingCount: 0,
@@ -414,24 +399,17 @@ export class EVMRelayerManager
           });
           relayersAddressList.push(relayerAddress);
         } catch (error) {
-          log.error(parseError(error));
-          log.info(
-            `Error while getting balance and nonce for relayer ${relayerAddress} on chainId: ${this.chainId}`,
+          _log.error(
+            `Error while getting balance and nonce for relayer with address=${relayerAddress}: ${parseError(error)}`,
           );
         }
       }
     } catch (error) {
-      log.error(
-        `failed to create relayers ${customJSONStringify(error)} on chainId: ${
-          this.chainId
-        }`,
-      );
+      _log.error(`failed to create relayers: ${customJSONStringify(error)}`);
     }
 
     release();
-    log.info(
-      `Lock released after creating relayers on chainId: ${this.chainId}`,
-    );
+    _log.debug(`Lock released after creating relayers`);
     return relayersAddressList;
   }
 
@@ -442,24 +420,26 @@ export class EVMRelayerManager
    */
   hasBalanceBelowThreshold(relayerAddress: string): boolean {
     const address = relayerAddress.toLowerCase();
+    const _log = log.child({
+      relayerAddress,
+      chainId: this.chainId,
+    });
+
     const relayerData = this.relayerQueue
       .list()
       .find((relayer) => relayer.address === address);
+
     if (relayerData) {
       const relayerBalance = BigInt(relayerData.balance);
-      log.info(
-        `Relayer ${address} balance is ${relayerBalance} on chainId: ${this.chainId}`,
-      );
+      _log.info(`Relayer ${address} balance is ${formatEther(relayerBalance)}`);
       if (relayerBalance <= this.fundingBalanceThreshold) {
-        log.info(
-          `Relayer ${address} balance ${relayerBalance} is below threshold of ${this.fundingBalanceThreshold} on chainId: ${this.chainId}`,
+        _log.info(
+          `Relayer balance ${formatEther(relayerBalance)} is below threshold of ${formatEther(this.fundingBalanceThreshold)}`,
         );
         return true;
       }
     } else {
-      log.error(
-        `Relayer ${address} not found in relayer queue on chainId: ${this.chainId}`,
-      );
+      _log.error(`Relayer ${address} not found in relayer queue`);
     }
     return false;
   }

@@ -37,10 +37,15 @@ export class EVMNonceManager
   }
 
   async getNonce(relayer: IEVMAccount): Promise<number> {
+    const _log = log.child({
+      relayerAddress: relayer.address,
+      chainId: this.chainId,
+    });
+
     let nonce: number | undefined;
     try {
       nonce = this.pendingNonceTracker.get(relayer.address.toLowerCase());
-      log.info(
+      _log.debug(
         `Nonce from pendingNonceTracker for account: ${relayer.address} on chainId: ${this.chainId} is ${nonce}`,
       );
 
@@ -48,8 +53,8 @@ export class EVMNonceManager
         if (
           nonce === this.usedNonceTracker.get(relayer.address.toLowerCase())
         ) {
-          log.info(
-            `Nonce ${nonce} for address ${relayer.address} is already used on chainId: ${this.chainId}. So clearing nonce and getting nonce from network`,
+          _log.warn(
+            `Nonce ${nonce} for address ${relayer.address} is already used. So clearing nonce and getting nonce from network`,
           );
           nonce = await this.getAndSetNonceFromNetwork(relayer);
         }
@@ -58,14 +63,10 @@ export class EVMNonceManager
       }
       return nonce;
     } catch (error) {
-      log.error(
-        `Error in getting nonce for address: ${relayer} on chainId: ${
-          this.chainId
-        } with error: ${parseError(error)}`,
+      _log.error(
+        `Error in getting nonce for address: ${relayer} with error: ${parseError(error)}`,
       );
-      log.info(
-        `Fetching nonce from network for address: ${relayer.address} on chainId: ${this.chainId}`,
-      );
+      _log.info(`Fetching nonce from network for address: ${relayer.address}`);
       return await this.getAndSetNonceFromNetwork(relayer);
     }
   }
@@ -86,13 +87,18 @@ export class EVMNonceManager
     account: IEVMAccount,
     pending?: boolean,
   ): Promise<number> {
+    const _log = log.child({
+      address: account.address,
+      chainId: this.chainId,
+    });
+
     const nonceFromNetwork = await this.networkService.getNonce(
       account,
       pending,
     );
 
-    log.info(
-      `Nonce from network for account: ${account.address} on chainId: ${this.chainId} is ${nonceFromNetwork}`,
+    _log.debug(
+      `Nonce from network for account: ${account.address} is ${nonceFromNetwork}`,
     );
     this.pendingNonceTracker.set(
       account.address.toLowerCase(),

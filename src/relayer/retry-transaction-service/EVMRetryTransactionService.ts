@@ -9,8 +9,6 @@ import { IRelayerManager } from "../relayer-manager";
 import { ITransactionService } from "../transaction-service/interface/ITransactionService";
 import { IRetryTransactionService } from "./interface/IRetryTransactionService";
 import { EVMRetryTransactionServiceParamsType } from "./types";
-import { INotificationManager } from "../../common/notification/interface";
-import { getAccountUndefinedNotificationMessage } from "../../common/notification";
 import {
   customJSONStringify,
   getTransactionMinedKey,
@@ -33,8 +31,6 @@ export class EVMRetryTransactionService
 
   queue: IQueue<RetryTransactionQueueData>;
 
-  notificationManager: INotificationManager;
-
   cacheService: ICacheService;
 
   EVMRelayerManagerMap: {
@@ -51,14 +47,12 @@ export class EVMRetryTransactionService
       transactionService,
       networkService,
       retryTransactionQueue,
-      notificationManager,
       cacheService,
     } = evmRetryTransactionServiceParams;
     this.chainId = options.chainId;
     this.EVMRelayerManagerMap = options.EVMRelayerManagerMap;
     this.transactionService = transactionService;
     this.networkService = networkService;
-    this.notificationManager = notificationManager;
     this.cacheService = cacheService;
     this.queue = retryTransactionQueue;
   }
@@ -77,7 +71,10 @@ export class EVMRetryTransactionService
       try {
         await this.queue.ack(msg);
       } catch (err) {
-        log.error({ err }, `EVMRetryTransactionService.onMessageReceived:: Error while acknowledging message`);
+        log.error(
+          { err },
+          `EVMRetryTransactionService.onMessageReceived:: Error while acknowledging message`,
+        );
       }
 
       const {
@@ -169,18 +166,6 @@ export class EVMRetryTransactionService
         if (!account) {
           log.error(
             `Account not found for transactionHash: ${transactionHash} and transactionId: ${transactionId} on chainId: ${this.chainId}`,
-          );
-          // TODO: send slack notification
-          const message = getAccountUndefinedNotificationMessage(
-            transactionId,
-            relayerAddress,
-            transactionType,
-            relayerManagerName,
-          );
-          const slackNotifyObject =
-            this.notificationManager.getSlackNotifyObject(message);
-          await this.notificationManager.sendSlackNotification(
-            slackNotifyObject,
           );
         } else {
           await this.transactionService.retryTransaction(

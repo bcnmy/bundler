@@ -162,7 +162,7 @@ export class EVMNetworkService
       throw err;
     }
     const { data } = response;
-    _log.info({ result: data.result }, `RPC response received`);
+    _log.debug({ result: data.result }, `RPC response received`);
     if (!data) {
       _log.error(`RPC Call returned no data`);
       return null;

@@ -1,4 +1,4 @@
-import { Channel, ConsumeMessage, Connection} from "amqplib";
+import { Channel, ConsumeMessage, Connection } from "amqplib";
 import { logger } from "../logger";
 import { SendUserOperation, TransactionType } from "../types";
 import { IQueue } from "./interface/IQueue";
@@ -7,8 +7,6 @@ import { customJSONStringify } from "../utils";
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
 });
-
-
 
 export class BundlerTransactionQueue implements IQueue<SendUserOperation> {
   readonly chainId: number;
@@ -44,14 +42,16 @@ export class BundlerTransactionQueue implements IQueue<SendUserOperation> {
     try {
       if (!this.channel) {
         this.channel = await connection.createChannel();
-        this.channel.assertExchange(this.exchangeName, this.exchangeType, {
-          durable: true,
-        }).catch((err) => {
-          _log.error({ err }, `BundlerTransactionQueue:: assertExchange() failed`);
-        });
+        this.channel
+          .assertExchange(this.exchangeName, this.exchangeType, {
+            durable: true,
+          })
+          .catch((err) => {
+            _log.error({ err }, `assertExchange() failed`);
+          });
       }
     } catch (err) {
-      _log.error({ err }, `BundlerTransactionQueue:: Error while connecting to the queue`);
+      _log.error({ err }, `Error while connecting to the queue`);
     }
   }
 
@@ -63,7 +63,7 @@ export class BundlerTransactionQueue implements IQueue<SendUserOperation> {
       transactionId: data.transactionId,
     });
 
-    _log.info(`BundlerTransactionQueue:: Publishing data to retry queue`);
+    _log.info(`Publishing data to retry queue`);
 
     try {
       this.channel.publish(
@@ -76,7 +76,7 @@ export class BundlerTransactionQueue implements IQueue<SendUserOperation> {
       );
       return true;
     } catch (err) {
-      _log.error({ err }, `BundlerTransactionQueue:: Error while publishing the data to the queue`);
+      _log.error({ err }, `Error while publishing the data to the queue`);
       return false;
     }
   }
@@ -90,24 +90,26 @@ export class BundlerTransactionQueue implements IQueue<SendUserOperation> {
     });
 
     this.channel.prefetch(this.prefetch).catch((err) => {
-      _log.error({ err }, `BundlerTransactionQueue:: Error while prefetching`);
+      _log.error({ err }, `Error while prefetching`);
     });
 
-    _log.info(`BundlerTransactionQueue:: Setting up consumer for queue`);
+    _log.info(`Setting up consumer for queue`);
     try {
       // setup a consumer
       const queue = await this.channel.assertQueue(this.queueName);
 
-      this.channel.bindQueue(queue.queue, this.exchangeName, this.exchangeKey).catch((err) => {
-        _log.error({ err }, `BundlerTransactionQueue:: Error while binding queue`);
-      });
+      this.channel
+        .bindQueue(queue.queue, this.exchangeName, this.exchangeKey)
+        .catch((err) => {
+          _log.error({ err }, `Error while binding queue`);
+        });
 
-      _log.info(`BundlerTransactionQueue:: Waiting for transactions...`);
+      _log.info(`Waiting for transactions...`);
       await this.channel.consume(queue.queue, onMessageReceived);
 
       return true;
     } catch (err) {
-      _log.error({ err }, `BundlerTransactionQueue:: Error while consuming queue`);
+      _log.error({ err }, `Error while consuming queue`);
       return false;
     }
   }
@@ -123,7 +125,7 @@ export class BundlerTransactionQueue implements IQueue<SendUserOperation> {
     try {
       this.channel.ack(data);
     } catch (err) {
-      _log.error({ err }, `BundlerTransactionQueue:: Error while acknowledging `);
+      _log.error({ err }, `Error while acknowledging `);
     }
   }
 }

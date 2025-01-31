@@ -335,7 +335,7 @@ export class GasPriceService implements IGasPriceService {
    */
   async setBaseFeePerGas(baseFeePerGas: string): Promise<void> {
     const key = this.getBaseFeePerGasKey();
-    logger.info(
+    logger.debug(
       { baseFeePerGas, chainId: this.chainId, key },
       `GasPriceService.setBaseFeePerGas`,
     );
@@ -397,7 +397,7 @@ export class GasPriceService implements IGasPriceService {
             ));
         }
 
-        log.info(
+        _log.info(
           { maxFeePerGas, maxPriorityFeePerGas },
           `GasPriceService.setup(): EIP-1559 fees per gas`,
         );

@@ -61,10 +61,7 @@ export class EVMRelayerQueue implements IRelayerQueue<EVMRelayerMetaDataType> {
   async push(item: EVMRelayerMetaDataType): Promise<void> {
     await pushMutex.runExclusive(() => {
       this.items.push(item);
-      // this.items = SortEVMRelayerByBalance.performAlgorithm(
-      //   this.items,
-      // );
-      log.info(`Relayer queue after push: ${customJSONStringify(this.items)}`);
+      log.debug(`Relayer queue after push: ${customJSONStringify(this.items)}`);
     });
   }
 

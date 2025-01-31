@@ -258,7 +258,7 @@ export class RedisCacheService implements ICacheService {
       ? log.child({ key })
       : log.child({ key, value });
 
-    _log.info(`RedisCacheService.set`);
+    _log.debug(`RedisCacheService.set`);
     try {
       await this.redisClient.set(key, value);
       return true;

@@ -1,7 +1,6 @@
 import { ICacheService } from "../../../common/cache";
 import { IGasPriceService } from "../../../common/gas-price";
 import { INetworkService } from "../../../common/network";
-import { INotificationManager } from "../../../common/notification/interface";
 import {
   EVMRawTransactionType,
   EVMRelayerMetaDataType,
@@ -18,7 +17,6 @@ export type EVMRelayerManagerServiceParamsType = {
   transactionService: ITransactionService<IEVMAccount, EVMRawTransactionType>;
   nonceManager: INonceManager<IEVMAccount, EVMRawTransactionType>;
   relayerQueue: IRelayerQueue<EVMRelayerMetaDataType>;
-  notificationManager: INotificationManager;
   options: {
     name: string;
     chainId: number;
