@@ -305,10 +305,10 @@
   dependencies:
     merkletreejs "^0.4.0"
 
-"@biconomy/gas-estimations@^0.2.64":
-  version "0.2.65"
-  resolved "https://registry.yarnpkg.com/@biconomy/gas-estimations/-/gas-estimations-0.2.65.tgz#c3c43f9615fd181ac60e8190f9397d80aa9c13d5"
-  integrity sha512-45ErezjqITOtkey5M7opWkci7SZvEijy6yjBBj8YhTDbMRdJ43sjr70ODsewmvcZEbDNXd3ZYf0to8LEP56mxw==
+"@biconomy/gas-estimations@^0.2.66":
+  version "0.2.66"
+  resolved "https://registry.yarnpkg.com/@biconomy/gas-estimations/-/gas-estimations-0.2.66.tgz#b60bf53ecc6429e6d130055683c7d96ca2c91c02"
+  integrity sha512-uWV5SKmVy3ql6WHNBBrl9an9cot8bvr6uXVsk2bnsPZvB9NdKr6i5rXbxz/Y6CoexIskbR/uHftJvp818mvRNA==
   dependencies:
     zod "^3.24.1"
     zod-validation-error "^3.4.0"
