@@ -32,7 +32,7 @@ export class Mongo implements IDBService {
    * for all collections in the database, if it doesn't already exist.
    */
   async createTransactionIdIndexes(): Promise<void> {
-    if (!this.client) {
+    if (!this.client || !this.client.connection.db) {
       throw new Error("Not connected to db");
     }
 

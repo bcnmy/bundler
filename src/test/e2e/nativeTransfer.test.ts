@@ -207,17 +207,17 @@ describe("e2e", () => {
     });
   });
 
-  describe.skip("base-sepolia", () => {
+  describe.only("base-sepolia", () => {
     const account = privateKeyToAccount(`0x${privateKey}`);
 
     describe("EntryPoint v0.6.0", () => {
-      const bundlerUrl = `${bundlerHostname}/api/v2/${base.id}/test`;
+      const bundlerUrl = `${bundlerHostname}/api/v2/${baseSepolia.id}/test`;
 
-      const paymasterUrl = process.env.BASE_MAINNET_PAYMASTER_URL;
+      const paymasterUrl = process.env.BASE_SEPOLIA_PAYMASTER_URL;
 
       const signer = createWalletClient({
         account,
-        chain: base,
+        chain: baseSepolia,
         transport: http(),
       }).extend(publicActions);
 
@@ -1335,7 +1335,7 @@ describe("e2e", () => {
     });
   });
 
-  describe.only("monad-testnet", () => {
+  describe.skip("monad-testnet", () => {
     const account = privateKeyToAccount(`0x${privateKey}`);
 
     const monadTestnetChainId = 10143;

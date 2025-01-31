@@ -28,3 +28,6 @@ config/production.json
 
 # Random scripts that we shouldn't commit
 dont-commit/
+
+# Cursor rules
+.cursorrules
