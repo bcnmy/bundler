@@ -18,7 +18,7 @@ import {
   customJSONStringify,
 } from "../../common/utils";
 import { config } from "../../config";
-import { STATUSES } from "../../server/api/shared/middleware";
+import { STATUSES } from "../../server/api/shared/statuses";
 import { IEVMAccount } from "../account";
 import { INonceManager } from "../nonce-manager";
 import { ITransactionListener } from "../transaction-listener";

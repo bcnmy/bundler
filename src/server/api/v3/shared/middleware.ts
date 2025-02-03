@@ -3,28 +3,23 @@ import { NextFunction, Request, Response } from "express";
 import config from "config";
 import { logger } from "../../../../common/logger";
 import {
-  EthMethodType,
-  BiconomyMethodType,
-  TransactionMethodType,
-} from "../../../../common/types";
-import {
   bundlerChainIdRequestSchema,
   bundlerEstimateUserOpGasRequestSchema,
   bundlerGetUserOpByHashRequestSchema,
   bundlerGetUserOpReceiptRequestSchema,
   bundlerSendUserOpRequestSchema,
   bundlerSupportedEntryPointsRequestSchema,
-  gasAndGasPricesRequestSchema,
   getGasFeeValuesRequestSchema,
   getUserOperationStatusSchema,
 } from "../schema";
-import {
-  BUNDLER_ERROR_CODES,
-  STATUSES,
-} from "../../shared/middleware/RequestHelpers";
 import { parseError } from "../../../../common/utils";
 import { RPCErrorResponse } from "./response";
 import { ChainIdNotSupportedError } from "./errors";
+import { STATUSES } from "../../shared/statuses";
+import { BundlerMethods } from "../../methods/bundler";
+import { EthMethods } from "../../methods/eth";
+import { BiconomyMethods } from "../../methods/biconomy";
+import { BUNDLER_ERROR_CODES } from "../../shared/errors/codes";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -70,40 +65,37 @@ export const validateBundlerRequest =
       let validationResponse;
       log.info(`Received method: ${method}`);
       switch (method) {
-        case TransactionMethodType.BUNDLER:
+        case BundlerMethods.eth_sendUserOperation:
           validationResponse = bundlerSendUserOpRequestSchema.validate(
             req.body,
           );
           break;
-        case EthMethodType.ESTIMATE_USER_OPERATION_GAS:
+        case BundlerMethods.eth_estimateUserOperationGas:
           validationResponse = bundlerEstimateUserOpGasRequestSchema.validate(
             req.body,
           );
           break;
-        case EthMethodType.GET_USER_OPERATION_BY_HASH:
+        case BundlerMethods.eth_getUserOperationByHash:
           validationResponse = bundlerGetUserOpByHashRequestSchema.validate(
             req.body,
           );
           break;
-        case EthMethodType.GET_USER_OPERATION_RECEIPT:
+        case BundlerMethods.eth_getUserOperationReceipt:
           validationResponse = bundlerGetUserOpReceiptRequestSchema.validate(
             req.body,
           );
           break;
-        case EthMethodType.SUPPORTED_ENTRY_POINTS:
+        case BundlerMethods.eth_supportedEntryPoints:
           validationResponse =
             bundlerSupportedEntryPointsRequestSchema.validate(req.body);
           break;
-        case EthMethodType.CHAIN_ID:
+        case EthMethods.eth_chainId:
           validationResponse = bundlerChainIdRequestSchema.validate(req.body);
           break;
-        case EthMethodType.GAS_AND_GAS_PRICES:
-          validationResponse = gasAndGasPricesRequestSchema.validate(req.body);
-          break;
-        case BiconomyMethodType.GET_GAS_FEE_VALUES:
+        case BiconomyMethods.biconomy_getGasFeeValues:
           validationResponse = getGasFeeValuesRequestSchema.validate(req.body);
           break;
-        case BiconomyMethodType.GET_USER_OPERATION_STATUS:
+        case BiconomyMethods.biconomy_getUserOperationStatus:
           validationResponse = getUserOperationStatusSchema.validate(req.body);
           break;
         default:

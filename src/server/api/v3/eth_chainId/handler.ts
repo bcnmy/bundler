@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
 import { Hex } from "viem";
-import { STATUSES } from "../../shared/middleware";
 import { logger } from "../../../../common/logger";
 import { customJSONStringify } from "../../../../common/utils";
 import { InternalServerError } from "../shared/errors";
 import { ChainIdResponse } from "./response";
 import { RPCErrorResponse } from "../shared/response";
+import { STATUSES } from "../../shared/statuses";
 
 const filenameLogger = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),

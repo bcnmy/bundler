@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
-import { BUNDLER_ERROR_CODES, STATUSES } from "../../shared/middleware";
 import { logger } from "../../../../common/logger";
 import { gasPriceServiceMap } from "../../../../common/service-manager";
 import { customJSONStringify, parseError } from "../../../../common/utils";
+import { STATUSES } from "../../shared/statuses";
+import { BUNDLER_ERROR_CODES } from "../../shared/errors/codes";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),

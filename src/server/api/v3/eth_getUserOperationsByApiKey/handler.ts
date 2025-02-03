@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { STATUSES } from "../../shared/middleware";
 import { logger } from "../../../../common/logger";
 import { userOperationV07Dao } from "../../../../common/service-manager";
 import { parseError } from "../../../../common/utils";
+import { STATUSES } from "../../shared/statuses";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),

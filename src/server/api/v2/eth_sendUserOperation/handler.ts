@@ -19,7 +19,8 @@ import {
   TransactionType,
   UserOperationStateEnum,
 } from "../../../../common/types";
-import { BUNDLER_ERROR_CODES, STATUSES } from "../../shared/middleware";
+import { BUNDLER_ERROR_CODES } from "../../shared/errors/codes";
+import { STATUSES } from "../../shared/statuses";
 import { logMeasureTime } from "../../../../common/utils/timing";
 import { Address } from "viem";
 import pino from "pino";

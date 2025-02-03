@@ -39,7 +39,7 @@ import {
   TransactionType,
 } from "../types";
 import { UserOperationStateDAO } from "../db/dao/UserOperationStateDAO";
-import { customJSONStringify, parseError } from "../utils";
+import { parseError } from "../utils";
 import { GasPriceService } from "../gas-price";
 import { CacheFeesJob } from "../gas-price/jobs/CacheFees";
 import { FlashbotsClient } from "../network/FlashbotsClient";

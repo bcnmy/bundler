@@ -1,6 +1,5 @@
- 
 import { parseError } from "../../../../common/utils";
-import { BUNDLER_ERROR_CODES } from "../../shared/middleware";
+import { BUNDLER_ERROR_CODES } from "../../shared/errors/codes";
 
 export class RPCError {
   constructor(

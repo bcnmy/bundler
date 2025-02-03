@@ -1,12 +1,6 @@
 import { Request, Response } from "express";
 import config from "config";
 import {
-  BiconomyMethodType,
-  EthMethodType,
-  TransactionMethodType,
-} from "../../../common/types";
-import { BUNDLER_ERROR_CODES, STATUSES } from "../shared/middleware";
-import {
   bundleUserOperation,
   getChainId,
   estimateUserOperationGas,
@@ -18,6 +12,11 @@ import {
 } from ".";
 import { RPCErrorResponse } from "./shared/response";
 import { ChainIdNotSupportedError } from "./shared/errors";
+import { STATUSES } from "../shared/statuses";
+import { BundlerMethods } from "../methods/bundler";
+import { EthMethods } from "../methods/eth";
+import { BiconomyMethods } from "../methods/biconomy";
+import { BUNDLER_ERROR_CODES } from "../shared/errors/codes";
 
 const isChainIdSupported = (chainId: number): boolean => {
   const supportedNetworksV07 = config.get<Array<number>>(
@@ -38,29 +37,29 @@ export const handleV3Request = async (req: Request, res: Response) => {
 
   let response;
   switch (method) {
-    case TransactionMethodType.BUNDLER:
+    case BundlerMethods.eth_sendUserOperation:
       // here ideally it should add to mempool but would be bundling one user op per bundle
       response = await bundleUserOperation(req, res);
       break;
-    case EthMethodType.ESTIMATE_USER_OPERATION_GAS:
+    case BundlerMethods.eth_estimateUserOperationGas:
       response = await estimateUserOperationGas(req, res);
       break;
-    case EthMethodType.GET_USER_OPERATION_BY_HASH:
+    case BundlerMethods.eth_getUserOperationByHash:
       response = await getUserOperationByHash(req, res);
       break;
-    case EthMethodType.GET_USER_OPERATION_RECEIPT:
+    case BundlerMethods.eth_getUserOperationReceipt:
       response = await getUserOperationReceipt(req, res);
       break;
-    case EthMethodType.SUPPORTED_ENTRY_POINTS:
+    case BundlerMethods.eth_supportedEntryPoints:
       response = await getSupportedEntryPoints(req, res);
       break;
-    case EthMethodType.CHAIN_ID:
+    case EthMethods.eth_chainId:
       response = await getChainId(req, res);
       break;
-    case BiconomyMethodType.GET_GAS_FEE_VALUES:
+    case BiconomyMethods.biconomy_getGasFeeValues:
       response = await getGasFeeValues(req, res);
       break;
-    case BiconomyMethodType.GET_USER_OPERATION_STATUS:
+    case BiconomyMethods.biconomy_getUserOperationStatus:
       response = await getUserOperationStatus(req, res);
       break;
     default:

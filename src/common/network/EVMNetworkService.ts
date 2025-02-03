@@ -15,7 +15,7 @@ import {
   verifyMessage,
 } from "viem";
 import { IEVMAccount } from "../../relayer/account";
-import { EVMRawTransactionType, EthMethodType } from "../types";
+import { EVMRawTransactionType } from "../types";
 import { INetworkService } from "./interface";
 import {
   Type0TransactionGasPriceType,
@@ -27,6 +27,7 @@ import { BLOCKCHAINS } from "../constants";
 import nodeconfig from "config";
 import { hideRpcUrlApiKey } from "./utils";
 import { FlashbotsClient, FlashbotsOptions } from "./FlashbotsClient";
+import { EthMethods } from "../../server/api/methods/eth";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -178,8 +179,8 @@ export class EVMNetworkService
       );
 
       if (
-        method === EthMethodType.ETH_CALL ||
-        method === EthMethodType.ESTIMATE_GAS
+        method === EthMethods.eth_call ||
+        method === EthMethods.eth_estimateGas
       ) {
         return data;
       }
@@ -204,7 +205,7 @@ export class EVMNetworkService
   }
 
   async getLegacyGasPrice(): Promise<Type0TransactionGasPriceType> {
-    return BigInt(await this.sendRpcCall(EthMethodType.GAS_PRICE, []));
+    return BigInt(await this.sendRpcCall(EthMethods.eth_gasPrice, []));
   }
 
   async getEIP1559FeesPerGas(): Promise<Type2TransactionGasPriceType> {
@@ -221,7 +222,7 @@ export class EVMNetworkService
     }
     const maxFeePerGasPromise = this.getLegacyGasPrice();
     const maxPriorityFeePerGasPromise = this.sendRpcCall(
-      EthMethodType.MAX_PRIORITY_FEE_PER_GAS,
+      EthMethods.eth_maxPriorityFeePerGas,
       [],
     );
     const [maxFeePerGas, maxPriorityFeePerGas] = await Promise.all([
@@ -276,7 +277,7 @@ export class EVMNetworkService
   }
 
   async getBalance(address: string): Promise<bigint> {
-    const balance = await this.sendRpcCall(EthMethodType.GET_BALANCE, [
+    const balance = await this.sendRpcCall(EthMethods.eth_getBalance, [
       address,
       "latest",
     ]);
@@ -295,11 +296,11 @@ export class EVMNetworkService
   async estimateGas(
     params: any, // TODO type define params
   ): Promise<any> {
-    return await this.sendRpcCall(EthMethodType.ESTIMATE_GAS, params);
+    return await this.sendRpcCall(EthMethods.eth_estimateGas, params);
   }
 
   async ethCall(params: any): Promise<any> {
-    return await this.sendRpcCall(EthMethodType.ETH_CALL, params);
+    return await this.sendRpcCall(EthMethods.eth_call, params);
   }
 
   /**
@@ -319,7 +320,7 @@ export class EVMNetworkService
 
   async getNetworkNonce(account: IEVMAccount, pending = true): Promise<number> {
     const params = pending ? [account.address, "pending"] : [account.address];
-    return this.sendRpcCall(EthMethodType.GET_TRANSACTION_COUNT, params);
+    return this.sendRpcCall(EthMethods.eth_getTransactionCount, params);
   }
 
   async sendTransaction(
@@ -335,7 +336,7 @@ export class EVMNetworkService
     transactionHash: string,
   ): Promise<TransactionReceipt | null> {
     const response = await this.sendRpcCall(
-      EthMethodType.GET_TRANSACTION_RECEIPT,
+      EthMethods.eth_getTransactionReceipt,
       [transactionHash],
     );
     return response;
