@@ -168,7 +168,7 @@ export class RedisCacheService implements ICacheService {
   async delete(key: string): Promise<boolean> {
     const _log = log.child({ key });
     try {
-      _log.info(`RedisCacheService.delete()`);
+      _log.debug(`RedisCacheService.delete()`);
       const result = await this.redisClient.del(key);
       if (result) return true;
       return false;
@@ -205,7 +205,7 @@ export class RedisCacheService implements ICacheService {
   async get(key: string): Promise<string> {
     const _log = log.child({ key });
     try {
-      _log.info(`RedisCacheService.get()`);
+      _log.debug(`RedisCacheService.get()`);
       const result = (await this.redisClient.get(key)) || "";
       return result;
     } catch (err) {

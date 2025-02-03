@@ -295,7 +295,7 @@ export class GasPriceService implements IGasPriceService {
   async getMaxFeeGasPrice(gasType: GasPriceType): Promise<string> {
     const key = this.getMaxFeePerGasKey(gasType);
     const maxFeePerGas = await this.cacheService.get(key);
-    logger.info(
+    logger.debug(
       { chainId: this.chainId, maxFeePerGas, key },
       `GasPriceService.getMaxFeeGasPrice`,
     );
