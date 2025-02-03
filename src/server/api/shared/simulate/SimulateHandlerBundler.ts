@@ -2,17 +2,15 @@
 /* eslint-disable no-case-declarations */
 import { NextFunction, Request, Response } from "express";
 import {
-  BiconomyMethodType,
-  EthMethodType,
-  TransactionMethodType,
-} from "../../../../common/types";
-import { STATUSES } from "../middleware";
-import {
   validateBundlerTransaction,
   validateBundlerV3Transaction,
 } from "./SimulateBundlerTransaction";
 import { parseError } from "../../../../common/utils";
 import { logger } from "../../../../common/logger";
+import { STATUSES } from "../statuses";
+import { BundlerMethods } from "../../methods/bundler";
+import { EthMethods } from "../../methods/eth";
+import { BiconomyMethods } from "../../methods/biconomy";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -25,52 +23,46 @@ export const simulateBundlerTransaction =
       const { method, id } = req.body;
       let response = null;
       switch (method) {
-        case TransactionMethodType.BUNDLER:
+        case BundlerMethods.eth_sendUserOperation:
           response = await validateBundlerTransaction(req);
           break;
-        case EthMethodType.ESTIMATE_USER_OPERATION_GAS:
+        case BundlerMethods.eth_estimateUserOperationGas:
           response = {
             code: STATUSES.SUCCESS,
             message: `Method: ${method} does not require simulation`,
           };
           break;
-        case EthMethodType.GET_USER_OPERATION_BY_HASH:
+        case BundlerMethods.eth_getUserOperationByHash:
           response = {
             code: STATUSES.SUCCESS,
             message: `Method: ${method} does not require simulation`,
           };
           break;
-        case EthMethodType.GET_USER_OPERATION_RECEIPT:
+        case BundlerMethods.eth_getUserOperationReceipt:
           response = {
             code: STATUSES.SUCCESS,
             message: `Method: ${method} does not require simulation`,
           };
           break;
-        case EthMethodType.SUPPORTED_ENTRY_POINTS:
+        case BundlerMethods.eth_supportedEntryPoints:
           response = {
             code: STATUSES.SUCCESS,
             message: `Method: ${method} does not require simulation`,
           };
           break;
-        case EthMethodType.CHAIN_ID:
+        case EthMethods.eth_chainId:
           response = {
             code: STATUSES.SUCCESS,
             message: `Method: ${method} does not require simulation`,
           };
           break;
-        case EthMethodType.GAS_AND_GAS_PRICES:
+        case BiconomyMethods.biconomy_getGasFeeValues:
           response = {
             code: STATUSES.SUCCESS,
             message: `Method: ${method} does not require simulation`,
           };
           break;
-        case BiconomyMethodType.GET_GAS_FEE_VALUES:
-          response = {
-            code: STATUSES.SUCCESS,
-            message: `Method: ${method} does not require simulation`,
-          };
-          break;
-        case BiconomyMethodType.GET_USER_OPERATION_STATUS:
+        case BiconomyMethods.biconomy_getUserOperationStatus:
           response = {
             code: STATUSES.SUCCESS,
             message: `Method: ${method} does not require simulation`,
@@ -153,52 +145,46 @@ export const simulateBundlerV3Transaction =
       const { method, id } = req.body;
       let response = null;
       switch (method) {
-        case TransactionMethodType.BUNDLER:
+        case BundlerMethods.eth_sendUserOperation:
           response = await validateBundlerV3Transaction(req);
           break;
-        case EthMethodType.ESTIMATE_USER_OPERATION_GAS:
+        case BundlerMethods.eth_estimateUserOperationGas:
           response = {
             code: STATUSES.SUCCESS,
             message: `Method: ${method} does not require simulation`,
           };
           break;
-        case EthMethodType.GET_USER_OPERATION_BY_HASH:
+        case BundlerMethods.eth_getUserOperationByHash:
           response = {
             code: STATUSES.SUCCESS,
             message: `Method: ${method} does not require simulation`,
           };
           break;
-        case EthMethodType.GET_USER_OPERATION_RECEIPT:
+        case BundlerMethods.eth_getUserOperationReceipt:
           response = {
             code: STATUSES.SUCCESS,
             message: `Method: ${method} does not require simulation`,
           };
           break;
-        case EthMethodType.SUPPORTED_ENTRY_POINTS:
+        case BundlerMethods.eth_supportedEntryPoints:
           response = {
             code: STATUSES.SUCCESS,
             message: `Method: ${method} does not require simulation`,
           };
           break;
-        case EthMethodType.CHAIN_ID:
+        case EthMethods.eth_chainId:
           response = {
             code: STATUSES.SUCCESS,
             message: `Method: ${method} does not require simulation`,
           };
           break;
-        case EthMethodType.GAS_AND_GAS_PRICES:
+        case BiconomyMethods.biconomy_getGasFeeValues:
           response = {
             code: STATUSES.SUCCESS,
             message: `Method: ${method} does not require simulation`,
           };
           break;
-        case BiconomyMethodType.GET_GAS_FEE_VALUES:
-          response = {
-            code: STATUSES.SUCCESS,
-            message: `Method: ${method} does not require simulation`,
-          };
-          break;
-        case BiconomyMethodType.GET_USER_OPERATION_STATUS:
+        case BiconomyMethods.biconomy_getUserOperationStatus:
           response = {
             code: STATUSES.SUCCESS,
             message: `Method: ${method} does not require simulation`,

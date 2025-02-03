@@ -1,5 +1,5 @@
 import { Request } from "express";
-import { BUNDLER_ERROR_CODES, STATUSES } from "../middleware";
+import { BUNDLER_ERROR_CODES } from "../errors/codes";
 import {
   entryPointMap,
   entryPointMapV07,
@@ -8,6 +8,7 @@ import {
 } from "../../../../common/service-manager";
 import { parseError } from "../../../../common/utils";
 import { logger } from "../../../../common/logger";
+import { STATUSES } from "../statuses";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),

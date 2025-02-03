@@ -9,38 +9,6 @@ export enum TransactionType {
   BUNDLER = "BUNDLER",
 }
 
-export enum TransactionMethodType {
-  BUNDLER = "eth_sendUserOperation",
-}
-
-export enum EthMethodType {
-  ESTIMATE_USER_OPERATION_GAS = "eth_estimateUserOperationGas",
-  GET_USER_OPERATION_BY_HASH = "eth_getUserOperationByHash",
-  GET_USER_OPERATION_RECEIPT = "eth_getUserOperationReceipt",
-  SUPPORTED_ENTRY_POINTS = "eth_supportedEntryPoints",
-  CHAIN_ID = "eth_chainId",
-  GAS_AND_GAS_PRICES = "eth_getUserOpGasFields",
-  GET_USER_OPERATIONS_BY_API_KEY = "eth_getUserOperationsByApiKey",
-  GET_TRANSACTION_COUNT = "eth_getTransactionCount",
-  GET_BALANCE = "eth_getBalance",
-  GAS_PRICE = "eth_gasPrice",
-  FEE_HISTORY = "eth_feeHistory",
-  MAX_PRIORITY_FEE_PER_GAS = "eth_maxPriorityFeePerGas",
-  ESTIMATE_GAS = "eth_estimateGas",
-  ETH_CALL = "eth_call",
-  GET_TRANSACTION_RECEIPT = "eth_getTransactionReceipt",
-  SEND_RAW_TRANSACTION = "eth_sendRawTransaction",
-}
-
-export enum AlchemyMethodType {
-  SIMULATE_EXECUTION = "alchemy_simulateExecution",
-}
-
-export enum BiconomyMethodType {
-  GET_GAS_FEE_VALUES = "biconomy_getGasFeeValues",
-  GET_USER_OPERATION_STATUS = "biconomy_getUserOperationStatus",
-}
-
 export enum UserOperationStateEnum {
   BUNDLER_MEMPOOL = "BUNDLER_MEMPOOL",
   SUBMITTED = "SUBMITTED",

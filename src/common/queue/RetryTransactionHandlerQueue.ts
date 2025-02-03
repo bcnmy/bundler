@@ -58,17 +58,19 @@ export class RetryTransactionHandlerQueue
     try {
       if (!this.channel) {
         this.channel = await connection.createChannel();
-        this.channel.assertExchange(this.exchangeName, this.exchangeType, {
-          durable: true,
-          arguments: {
-            "x-delayed-type": "direct",
-          },
-        }).catch((err) => {
-          _log.error({ err }, `RetryTransactionHandlerQueue:: Error while calling assertExchange()`);
-        });
+        this.channel
+          .assertExchange(this.exchangeName, this.exchangeType, {
+            durable: true,
+            arguments: {
+              "x-delayed-type": "direct",
+            },
+          })
+          .catch((err) => {
+            _log.error({ err }, `Error while calling assertExchange()`);
+          });
       }
     } catch (err) {
-      _log.error({ err }, `RetryTransactionHandlerQueue:: Error while connecting to the queue`);
+      _log.error({ err }, `Error while connecting to the queue`);
     }
   }
 
@@ -80,7 +82,7 @@ export class RetryTransactionHandlerQueue
       transactionId: data.transactionId,
     });
 
-    _log.info({ data }, `RetryTransactionHandlerQueue:: Publishing data to retry queue`);
+    _log.info({ data }, `Publishing data to retry queue`);
 
     try {
       if (this.channel) {
@@ -99,7 +101,7 @@ export class RetryTransactionHandlerQueue
       }
       return false;
     } catch (err) {
-      _log.error({ err }, `RetryTransactionHandlerQueue:: Error while publishing the data to the queue`);
+      _log.error({ err }, `Error while publishing the data to the queue`);
       return false;
     }
   }
@@ -112,9 +114,9 @@ export class RetryTransactionHandlerQueue
       nodePathIndex: this.nodePathIndex,
     });
 
-    _log.info(`RetryTransactionHandlerQueue:: Setting up consumer for retry transaction queue`);
+    _log.info(`Setting up consumer for retry transaction queue`);
     this.channel.prefetch(1).catch((err) => {
-      _log.error({ err }, `RetryTransactionHandlerQueue:: Error while prefetching`);
+      _log.error({ err }, `Error while prefetching`);
     });
     try {
       // setup a consumer
@@ -122,15 +124,13 @@ export class RetryTransactionHandlerQueue
         await this.channel.assertQueue(`${this.queueName}_${this.chainId}`);
       const key = `retry_chainid.${this.chainId}_${this.nodePathIndex}`;
 
-      _log.info(`RetryTransactionHandlerQueue:: Waiting for retry transactions`);
+      _log.info(`Waiting for retry transactions`);
 
-      this.channel.bindQueue(
-        retryTransactionQueue.queue,
-        this.exchangeName,
-        key,
-      ).catch((err) => {
-        _log.error({ err }, `RetryTransactionHandlerQueue:: Error while binging queue`);
-      });
+      this.channel
+        .bindQueue(retryTransactionQueue.queue, this.exchangeName, key)
+        .catch((err) => {
+          _log.error({ err }, `Error while binging queue`);
+        });
       await this.channel.consume(
         retryTransactionQueue.queue,
         onMessageReceived,
@@ -138,7 +138,7 @@ export class RetryTransactionHandlerQueue
 
       return true;
     } catch (err) {
-      _log.error({ err }, `RetryTransactionHandlerQueue:: Error while consuming retry transaction queue`);
+      _log.error({ err }, `Error while consuming retry transaction queue`);
       return false;
     }
   }
@@ -154,7 +154,7 @@ export class RetryTransactionHandlerQueue
     try {
       this.channel.ack(data);
     } catch (err) {
-      _log.error({ err }, `RetryTransactionHandlerQueue:: Error while acknowledging message`);
+      _log.error({ err }, `Error while acknowledging message`);
     }
   }
 }

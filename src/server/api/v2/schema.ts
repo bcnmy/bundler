@@ -46,7 +46,7 @@ const simulationTypeObj = object.keys({
   simulation_type: string.valid("validation", "validation_and_execution"),
 });
 
-export const bundlerSendUserOpRequestSchema = object.keys({
+export const eth_sendUserOperationSchema = object.keys({
   method: string.regex(/eth_sendUserOperation/),
   params: array.items(
     alternatives.try(userOpForSendUserOp, entryPointAddress, simulationTypeObj),
@@ -100,7 +100,7 @@ const stateOverrideSet = object.pattern(
   }),
 );
 
-export const bundlerEstimateUserOpGasRequestSchema = object.keys({
+export const eth_estimateUserOperationGasSchema = object.keys({
   method: string.regex(/eth_estimateUserOperationGas/),
   params: array.items(
     alternatives.try(
@@ -116,54 +116,43 @@ export const bundlerEstimateUserOpGasRequestSchema = object.keys({
 // eth_getUserOperationByHash
 const userOpHash = string.required().error(new Error("userOpHash is required"));
 
-export const bundlerGetUserOpByHashRequestSchema = object.keys({
+export const eth_getUserOperationByHashSchema = object.keys({
   method: string.regex(/eth_getUserOperationByHash/),
   params: array.items(alternatives.try(userOpHash)),
   jsonrpc: string.required().error(new Error("jsonrpc is required")),
   id: number.required().error(new Error("id is required")),
 });
 
-// eth_getUserOperationReceipt
-export const bundlerGetUserOpReceiptRequestSchema = object.keys({
+export const eth_getUserOperationReceiptSchema = object.keys({
   method: string.regex(/eth_getUserOperationReceipt/),
   params: array.items(alternatives.try(userOpHash)),
   jsonrpc: string.required().error(new Error("jsonrpc is required")),
   id: number.required().error(new Error("id is required")),
 });
 
-// biconomy_getUserOperationStatus
-export const getUserOperationStatusSchema = object.keys({
+export const biconomy_getUserOperationStatusRequestSchema = object.keys({
   method: string.regex(/biconomy_getUserOperationStatus/),
   params: array.items(alternatives.try(userOpHash)),
   jsonrpc: string.required().error(new Error("jsonrpc is required")),
   id: number.required().error(new Error("id is required")),
 });
 
-// eth_supportedEntryPoints
-export const bundlerSupportedEntryPointsRequestSchema = object.keys({
+export const eth_supportedEntryPointsSchema = object.keys({
   method: string.regex(/eth_supportedEntryPoints/),
   params: array,
   jsonrpc: string.required().error(new Error("jsonrpc is required")),
   id: number.required().error(new Error("id is required")),
 });
 
-// eth_chainId
-export const bundlerChainIdRequestSchema = object.keys({
+export const eth_chainIdRequestSchema = object.keys({
   method: string.regex(/eth_chainId/),
   params: array,
   jsonrpc: string.required().error(new Error("jsonrpc is required")),
   id: number.required().error(new Error("id is required")),
 });
 
-export const getGasFeeValuesRequestSchema = object.keys({
+export const biconomy_getGasFeeValuesRequestSchema = object.keys({
   method: string.regex(/biconomy_getGasFeeValues/),
-  params: array,
-  jsonrpc: string.required().error(new Error("jsonrpc is required")),
-  id: number.required().error(new Error("id is required")),
-});
-
-export const gasAndGasPricesRequestSchema = object.keys({
-  method: string.regex(/eth_getUserOpGasFields/),
   params: array,
   jsonrpc: string.required().error(new Error("jsonrpc is required")),
   id: number.required().error(new Error("id is required")),
@@ -175,8 +164,8 @@ const getUserOperationsByApiKeyBody = object.keys({
   limit: number,
   offset: number,
 });
-// eth_getUserOperationsByApiKey
-export const bundlerGetUserOpsByApiKeyRequestSchema = object.keys({
+
+export const biconomy_getUserOperationsByApiKeySchema = object.keys({
   method: string.regex(/eth_getUserOperationsByApiKey/),
   params: array.items(alternatives.try(getUserOperationsByApiKeyBody)),
   jsonrpc: string.required().error(new Error("jsonrpc is required")),

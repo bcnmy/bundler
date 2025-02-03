@@ -9,19 +9,14 @@ import { IRelayerManager } from "../relayer-manager";
 import { ITransactionService } from "../transaction-service/interface/ITransactionService";
 import { IRetryTransactionService } from "./interface/IRetryTransactionService";
 import { EVMRetryTransactionServiceParamsType } from "./types";
-import { INotificationManager } from "../../common/notification/interface";
-import { getAccountUndefinedNotificationMessage } from "../../common/notification";
-import {
-  customJSONStringify,
-  getTransactionMinedKey,
-  parseError,
-} from "../../common/utils";
+import { getTransactionMinedKey } from "../../common/utils";
 import { ICacheService } from "../../common/cache";
 import { FlashbotsTxStatus } from "../../common/network/FlashbotsClient";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
 });
+
 export class EVMRetryTransactionService
   implements IRetryTransactionService<IEVMAccount, EVMRawTransactionType>
 {
@@ -32,8 +27,6 @@ export class EVMRetryTransactionService
   chainId: number;
 
   queue: IQueue<RetryTransactionQueueData>;
-
-  notificationManager: INotificationManager;
 
   cacheService: ICacheService;
 
@@ -51,14 +44,12 @@ export class EVMRetryTransactionService
       transactionService,
       networkService,
       retryTransactionQueue,
-      notificationManager,
       cacheService,
     } = evmRetryTransactionServiceParams;
     this.chainId = options.chainId;
     this.EVMRelayerManagerMap = options.EVMRelayerManagerMap;
     this.transactionService = transactionService;
     this.networkService = networkService;
-    this.notificationManager = notificationManager;
     this.cacheService = cacheService;
     this.queue = retryTransactionQueue;
   }
@@ -71,13 +62,16 @@ export class EVMRetryTransactionService
 
       log.info(
         { chainId: this.chainId, msg: transactionDataReceivedFromRetryQueue },
-        "Message received from retry transaction queue",
+        `Message received from retry transaction queue`,
       );
 
       try {
         await this.queue.ack(msg);
       } catch (err) {
-        log.error({ err }, `EVMRetryTransactionService.onMessageReceived:: Error while acknowledging message`);
+        log.error(
+          { err, chainId: this.chainId },
+          `Error while acknowledging message`,
+        );
       }
 
       const {
@@ -87,6 +81,13 @@ export class EVMRetryTransactionService
         transactionType,
         relayerManagerName,
       } = transactionDataReceivedFromRetryQueue;
+
+      const _log = log.child({
+        chainId: this.chainId,
+        transactionHash,
+        transactionId,
+        relayerAddress,
+      });
 
       let account: IEVMAccount;
       if (transactionType === TransactionType.FUNDING) {
@@ -104,40 +105,31 @@ export class EVMRetryTransactionService
       );
 
       if (isTransactionMined === "1") {
-        log.info(
-          `isTransactionMined: ${isTransactionMined} for transactionHash: ${transactionHash} and transactionId: ${transactionId} on chainId: ${this.chainId} hence not making RPC call to get receipt`,
+        _log.info(
+          `Transaction mined, hence not making RPC call to get receipt`,
         );
         await this.cacheService.delete(getTransactionMinedKey(transactionId));
         return;
       }
 
-      log.info(
-        `Checking transaction status of transactionHash: ${transactionHash} with transactionId: ${transactionId} on chainId: ${this.chainId}`,
-      );
+      _log.info(`Checking transaction status`);
+
       let transactionReceipt = null;
       try {
         transactionReceipt =
           await this.networkService.getTransactionReceipt(transactionHash);
-        log.info(
-          `Transaction receipt for transactionHash: ${transactionHash} with transactionId: ${transactionId} on chainId: ${
-            this.chainId
-          } is ${customJSONStringify(transactionReceipt)}`,
-        );
+        _log.info({ transactionReceipt }, `Transaction receipt received`);
       } catch (error) {
-        log.error(
-          `Error in fetching transaction receipt from network for transactionHash: ${transactionHash} with transactionId: ${transactionId} on chainId: ${
-            this.chainId
-          } is ${parseError(error)}`,
-        );
+        log.error({ error }, `Error in fetching transaction receipt`);
       }
 
       if (transactionReceipt) {
-        log.info(
-          `Transaction receipt receivied for transactionHash: ${transactionHash} and transactionId: ${transactionId} on chainId: ${this.chainId}. Hence not retrying the transaction.`,
+        _log.info(
+          `Transaction receipt receivied. Not retrying the transaction.`,
         );
       } else {
-        log.info(
-          `Transaction receipt not receivied for transactionHash: ${transactionHash} and transactionId: ${transactionId} on chainId: ${this.chainId}. Hence retrying the transaction.`,
+        _log.info(
+          `Transaction receipt not receivied. Retrying the transaction.`,
         );
 
         if (
@@ -151,37 +143,16 @@ export class EVMRetryTransactionService
               );
 
             if (flashbotsStatus.status === FlashbotsTxStatus.FAILED) {
-              log.error(
-                `Flashbots transaction failed for transactionHash: ${transactionHash} with transactionId: ${transactionId} on chainId: ${this.chainId}`,
-              );
+              _log.error(`Flashbots transaction failed`);
             }
           } catch (error) {
-            log.error(
-              `Error in fetching flashbots status for transactionHash: ${transactionHash} with transactionId: ${transactionId} on chainId: ${
-                this.chainId
-              } is ${parseError(error)}`,
-            );
-
+            _log.error({ error }, `Error in fetching flashbots status`);
             return;
           }
         }
 
         if (!account) {
-          log.error(
-            `Account not found for transactionHash: ${transactionHash} and transactionId: ${transactionId} on chainId: ${this.chainId}`,
-          );
-          // TODO: send slack notification
-          const message = getAccountUndefinedNotificationMessage(
-            transactionId,
-            relayerAddress,
-            transactionType,
-            relayerManagerName,
-          );
-          const slackNotifyObject =
-            this.notificationManager.getSlackNotifyObject(message);
-          await this.notificationManager.sendSlackNotification(
-            slackNotifyObject,
-          );
+          _log.error(`Account not found`);
         } else {
           await this.transactionService.retryTransaction(
             transactionDataReceivedFromRetryQueue,
@@ -192,8 +163,9 @@ export class EVMRetryTransactionService
         }
       }
     } else {
-      log.info(
-        `Message not received on retry transaction queue on chainId: ${this.chainId}`,
+      log.warn(
+        { chainId: this.chainId },
+        `Empty message received on retry transaction queue`,
       );
     }
   };

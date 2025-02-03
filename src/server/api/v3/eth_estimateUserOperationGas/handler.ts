@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import { STATUSES } from "../../shared/middleware";
 import { logger } from "../../../../common/logger";
 import {
   bundlerSimulationServiceMapV07,
@@ -15,6 +14,7 @@ import {
 import { EstimateUserOperationGasResponse } from "./response";
 import { InternalServerError, RPCError } from "../shared/errors";
 import { RPCErrorResponse } from "../shared/response";
+import { STATUSES } from "../../shared/statuses";
 
 const filenameLogger = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),

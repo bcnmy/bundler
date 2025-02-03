@@ -17,7 +17,8 @@ import {
   TransactionType,
   UserOperationStateEnum,
 } from "../../../../common/types";
-import { BUNDLER_ERROR_CODES, STATUSES } from "../../shared/middleware";
+import { STATUSES } from "../../shared/statuses";
+import { BUNDLER_ERROR_CODES } from "../../shared/errors/codes";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),

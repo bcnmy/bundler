@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { logger } from "../../../../common/logger";
-import { STATUSES } from "../../shared/middleware";
+import { STATUSES } from "../../shared/statuses";
 import { customJSONStringify } from "../../../../common/utils";
 import { statusService } from "../../../../common/service-manager";
 

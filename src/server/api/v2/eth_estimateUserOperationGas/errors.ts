@@ -1,6 +1,4 @@
- 
-
-import { BUNDLER_ERROR_CODES } from "../../shared/middleware";
+import { BUNDLER_ERROR_CODES } from "../../shared/errors/codes";
 import { RPCError } from "../shared/errors";
 
 export class EntryPointNotSupportedError extends RPCError {

@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
-import { BUNDLER_ERROR_CODES, STATUSES } from "../../shared/middleware";
 import { logger } from "../../../../common/logger";
 import { userOperationDao } from "../../../../common/service-manager";
 import { parseError } from "../../../../common/utils";
-// import { updateRequest } from '../../auth/UpdateRequest';
+import { STATUSES } from "../../shared/statuses";
+import { BUNDLER_ERROR_CODES } from "../../shared/errors/codes";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -23,8 +23,6 @@ const log = logger.child({
   receipt the TransactionReceipt object. Note that the returned TransactionReceipt is for the entire bundle, not only for this UserOperation.
  */
 export const getUserOperationReceipt = async (req: Request, res: Response) => {
-  // const bundlerRequestId = req.body.params[6];
-
   try {
     const { id } = req.body;
     const { chainId /* apiKey */ } = req.params;
@@ -37,17 +35,6 @@ export const getUserOperationReceipt = async (req: Request, res: Response) => {
       );
 
     if (!userOperationData || !userOperationData.receipt) {
-      // updateRequest({
-      //   chainId: parseInt(chainId, 10),
-      //   apiKey,
-      //   bundlerRequestId,
-      //   rawResponse: {
-      //     jsonrpc: '2.0',
-      //     id: id || 1,
-      //     result: null,
-      //   },
-      //   httpResponseCode: STATUSES.SUCCESS,
-      // });
       return res.status(STATUSES.SUCCESS).json({
         jsonrpc: "2.0",
         id: id || 1,
@@ -82,18 +69,6 @@ export const getUserOperationReceipt = async (req: Request, res: Response) => {
       receipt,
     };
 
-    // updateRequest({
-    //   chainId: parseInt(chainId, 10),
-    //   apiKey,
-    //   bundlerRequestId,
-    //   rawResponse: {
-    //     jsonrpc: '2.0',
-    //     id: 1,
-    //     result,
-    //   },
-    //   httpResponseCode: STATUSES.SUCCESS,
-    // });
-
     return res.status(STATUSES.SUCCESS).json({
       jsonrpc: "2.0",
       id: 1,
@@ -102,20 +77,6 @@ export const getUserOperationReceipt = async (req: Request, res: Response) => {
   } catch (error) {
     log.error(`Error in getUserOperationReceipt handler: ${parseError(error)}`);
     const { id } = req.body;
-    // updateRequest({
-    //   chainId: parseInt(chainId, 10),
-    //   apiKey,
-    //   bundlerRequestId,
-    //   rawResponse: {
-    //     jsonrpc: '2.0',
-    //     id: id || 1,
-    //     error: {
-    //       code: BUNDLER_ERROR_CODES.INTERNAL_SERVER_ERROR,
-    //       message: `Internal Server error: ${parseError(error)}`,
-    //     },
-    //   },
-    //   httpResponseCode: STATUSES.INTERNAL_SERVER_ERROR,
-    // });
     return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
       jsonrpc: "2.0",
       id: id || 1,

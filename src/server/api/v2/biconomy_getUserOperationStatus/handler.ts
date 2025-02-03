@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import { BUNDLER_ERROR_CODES, STATUSES } from "../../shared/middleware";
 import { logger } from "../../../../common/logger";
 import { customJSONStringify, parseError } from "../../../../common/utils";
 import {
@@ -7,7 +6,8 @@ import {
   userOperationStateDao,
 } from "../../../../common/service-manager";
 import { UserOperationStateEnum } from "../../../../common/types";
-// import { updateRequest } from '../../auth/UpdateRequest';
+import { BUNDLER_ERROR_CODES } from "../../shared/errors/codes";
+import { STATUSES } from "../../shared/statuses";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -207,20 +207,6 @@ export const getUserOperationStatus = async (req: Request, res: Response) => {
   } catch (error) {
     log.error(`Error in getUserOperationStatus handler: ${parseError(error)}`);
     const { id } = req.body;
-    // updateRequest({
-    //   chainId: parseInt(chainId, 10),
-    //   apiKey,
-    //   bundlerRequestId,
-    //   rawResponse: {
-    //     jsonrpc: '2.0',
-    //     id: id || 1,
-    //     error: {
-    //       code: BUNDLER_ERROR_CODES.INTERNAL_SERVER_ERROR,
-    //       message: `Internal Server error: ${parseError(error)}`,
-    //     },
-    //   },
-    //   httpResponseCode: STATUSES.INTERNAL_SERVER_ERROR,
-    // });
     return res.status(STATUSES.INTERNAL_SERVER_ERROR).json({
       jsonrpc: "2.0",
       id: id || 1,

@@ -8,10 +8,7 @@ import {
 } from "viem";
 import { config } from "../../config";
 import { IEVMAccount } from "../../relayer/account";
-import {
-  BUNDLER_ERROR_CODES,
-  STATUSES,
-} from "../../server/api/shared/middleware";
+
 import { logger } from "../logger";
 import { INetworkService } from "../network";
 import {
@@ -43,6 +40,8 @@ import {
   toPackedUserOperation,
   bumpBigIntPercent,
 } from "@biconomy/gas-estimations";
+import { STATUSES } from "../../server/api/shared/statuses";
+import { BUNDLER_ERROR_CODES } from "../../server/api/shared/errors/codes";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -161,8 +160,7 @@ export class BundlerSimulationServiceV07 {
         callGasLimit +
         preVerificationGas +
         paymasterVerificationGasLimit +
-        paymasterPostOpGasLimit +
-        preVerificationGas;
+        paymasterPostOpGasLimit;
 
       log.info({ chainId }, `requiredGas: ${requiredGas}`);
 

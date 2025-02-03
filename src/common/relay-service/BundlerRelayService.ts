@@ -1,4 +1,4 @@
-import { STATUSES } from "../../server/api/shared/middleware";
+import { STATUSES } from "../../server/api/shared/statuses";
 import { IQueue } from "../interface";
 import { logger } from "../logger";
 import { SendUserOperation, RelayServiceResponseType } from "../types";

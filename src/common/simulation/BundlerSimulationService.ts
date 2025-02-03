@@ -12,10 +12,6 @@ import {
 import nodeconfig from "config";
 import { config } from "../../config";
 import { IEVMAccount } from "../../relayer/account";
-import {
-  BUNDLER_ERROR_CODES,
-  STATUSES,
-} from "../../server/api/shared/middleware";
 import { logger } from "../logger";
 import { INetworkService } from "../network";
 import {
@@ -42,6 +38,8 @@ import { GasEstimator } from "@biconomy/gas-estimations";
 import { createGasEstimator } from "@biconomy/gas-estimations";
 import { isEstimateUserOperationGasResultV6 } from "@biconomy/gas-estimations";
 import { CallTracerResult, findErrorsInTrace } from "./trace";
+import { STATUSES } from "../../server/api/shared/statuses";
+import { BUNDLER_ERROR_CODES } from "../../server/api/shared/errors/codes";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
