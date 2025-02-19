@@ -1335,7 +1335,7 @@ describe("e2e", () => {
     });
   });
 
-  describe.only("monad-testnet", () => {
+  describe.skip("monad-testnet", () => {
     const account = privateKeyToAccount(`0x${privateKey}`);
 
     const monadTestnetChainId = 10143;
@@ -1394,7 +1394,7 @@ describe("e2e", () => {
     });
   });
 
-  describe.skip("sonic-mainnet", () => {
+  describe.only("sonic-mainnet", () => {
     const account = privateKeyToAccount(`0x${privateKey}`);
 
     const sonicMainnetChainId = 146;
