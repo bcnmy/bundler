@@ -12,7 +12,7 @@
     "test:e2e": "jest --testPathIgnorePatterns='smoke' -t e2e --setupFiles dotenv/config --verbose"
   },
   "dependencies": {
-    "@biconomy/gas-estimations": "^0.2.71",
+    "@biconomy/gas-estimations": "^0.2.74",
     "@slack/web-api": "^6.8.0",
     "@types/config": "^3.3.3",
     "@types/crypto-js": "^4.1.1",
