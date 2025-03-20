@@ -207,10 +207,10 @@ describe("e2e", () => {
     });
   });
 
-  describe.skip("base-sepolia", () => {
+  describe("base-sepolia", () => {
     const account = privateKeyToAccount(`0x${privateKey}`);
 
-    describe.skip("EntryPoint v0.6.0", () => {
+    describe("EntryPoint v0.6.0", () => {
       const bundlerUrl = `${bundlerHostname}/api/v2/${baseSepolia.id}/test`;
 
       const paymasterUrl = process.env.BASE_SEPOLIA_PAYMASTER_URL;
@@ -249,7 +249,7 @@ describe("e2e", () => {
       });
 
       if (paymasterUrl) {
-        it.skip("should perform a native transfer using a paymaster", async () => {
+        it("should perform a native transfer using a paymaster", async () => {
           if (!paymasterUrl) {
             throw new Error("BASE_MAINNET_PAYMASTER_URL is not defined");
           }
@@ -311,7 +311,7 @@ describe("e2e", () => {
       }
     });
 
-    describe.skip("EntryPoint v0.7.0", () => {
+    describe("EntryPoint v0.7.0", () => {
       const bundlerUrl = `${bundlerHostname}/api/v3/${baseSepolia.id}/biconomy`;
 
       it("should perform a native transfer without a paymaster", async () => {
@@ -1394,7 +1394,7 @@ describe("e2e", () => {
     });
   });
 
-  describe.only("sonic-mainnet", () => {
+  describe.skip("sonic-mainnet", () => {
     const account = privateKeyToAccount(`0x${privateKey}`);
 
     const sonicMainnetChainId = 146;
