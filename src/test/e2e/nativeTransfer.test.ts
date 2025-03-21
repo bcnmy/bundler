@@ -207,7 +207,7 @@ describe("e2e", () => {
     });
   });
 
-  describe.skip("base-sepolia", () => {
+  describe("base-sepolia", () => {
     const account = privateKeyToAccount(`0x${privateKey}`);
 
     describe("EntryPoint v0.6.0", () => {
