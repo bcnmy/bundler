@@ -57,30 +57,6 @@ export const eth_sendUserOperation = async (req: Request, res: Response) => {
     logMeasureTime(_log, "eth_sendUserOperation", async () => {
       const walletAddress = userOp.sender.toLowerCase();
 
-      await saveInitialTransaction(
-        _log,
-        chainIdNumber,
-        transactionId,
-        walletAddress,
-      );
-
-      await saveInitialUserOperationState(
-        _log,
-        chainIdNumber,
-        transactionId,
-        userOpHash,
-      );
-
-      await saveInitialUserOperation(
-        _log,
-        transactionId,
-        dappAPIKey,
-        entryPointAddress,
-        userOpHash,
-        chainIdNumber,
-        userOp,
-      );
-
       const relayService =
         routeTransactionToRelayerMap[chainIdNumber][TransactionType.BUNDLER];
 
@@ -94,6 +70,31 @@ export const eth_sendUserOperation = async (req: Request, res: Response) => {
           },
         });
       }
+
+      // Independent async calls can be concurrently executed to improve the performance
+      await Promise.all([
+        saveInitialTransaction(
+          _log,
+          chainIdNumber,
+          transactionId,
+          walletAddress,
+        ),
+        saveInitialUserOperationState(
+          _log,
+          chainIdNumber,
+          transactionId,
+          userOpHash,
+        ),
+        saveInitialUserOperation(
+          _log,
+          transactionId,
+          dappAPIKey,
+          entryPointAddress,
+          userOpHash,
+          chainIdNumber,
+          userOp,
+        )
+      ]);
 
       let gasLimit = gasLimitFromSimulation;
 

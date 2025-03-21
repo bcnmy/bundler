@@ -409,8 +409,10 @@ export class GasPriceService implements IGasPriceService {
           maxPriorityFeePerGas = 30000000000n;
         }
 
+        const baseFeePerGas = await this.networkService.getBaseFeePerGas();
+        await this.setBaseFeePerGas(formatUnits(baseFeePerGas, 0));
+
         if (maxPriorityFeePerGas > maxFeePerGas) {
-          const baseFeePerGas = await this.networkService.getBaseFeePerGas();
           maxFeePerGas = BigInt(2) * (baseFeePerGas + maxPriorityFeePerGas);
         }
 
@@ -436,10 +438,6 @@ export class GasPriceService implements IGasPriceService {
             formatUnits(maxPriorityFeePerGas, 0),
           );
         }
-
-        const baseFeePerGas = await this.networkService.getBaseFeePerGas();
-
-        await this.setBaseFeePerGas(formatUnits(baseFeePerGas, 0));
       } else {
         const gasPrice = await this.networkService.getLegacyGasPrice();
         await this.setGasPrice(GasPriceType.DEFAULT, formatUnits(gasPrice, 0));

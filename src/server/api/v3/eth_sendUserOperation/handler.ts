@@ -39,6 +39,19 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
       gasLimitFromSimulation += 5000000000;
     }
 
+    if (!routeTransactionToRelayerMap[chainIdInNum][TransactionType.BUNDLER]) {
+      const end = performance.now();
+      log.info(`bundleUserOperation took: ${end - start} milliseconds`);
+      return res.status(STATUSES.BAD_REQUEST).json({
+        jsonrpc: "2.0",
+        id: id || 1,
+        error: {
+          code: BUNDLER_ERROR_CODES.BAD_REQUEST,
+          message: `${TransactionType.BUNDLER} method not supported for chainId: ${chainId}`,
+        },
+      });
+    }
+
     const transactionId = generateTransactionId(Date.now().toString());
     log.info(
       `transactionId: ${transactionId} for userOpHash: ${userOpHash} on chainId: ${chainIdInNum} for apiKey: ${apiKey}`,
@@ -58,11 +71,13 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
     log.info(
       `Saving userOp state: ${UserOperationStateEnum.BUNDLER_MEMPOOL} for transactionId: ${transactionId} on chainId: ${chainIdInNum}`,
     );
+
     userOperationStateDao.save(chainIdInNum, {
       transactionId,
       userOpHash,
       state: UserOperationStateEnum.BUNDLER_MEMPOOL,
     });
+
     const {
       sender,
       nonce,
@@ -108,18 +123,6 @@ export const bundleUserOperation = async (req: Request, res: Response) => {
       creationTime: Date.now(),
     });
 
-    if (!routeTransactionToRelayerMap[chainIdInNum][TransactionType.BUNDLER]) {
-      const end = performance.now();
-      log.info(`bundleUserOperation took: ${end - start} milliseconds`);
-      return res.status(STATUSES.BAD_REQUEST).json({
-        jsonrpc: "2.0",
-        id: id || 1,
-        error: {
-          code: BUNDLER_ERROR_CODES.BAD_REQUEST,
-          message: `${TransactionType.BUNDLER} method not supported for chainId: ${chainId}`,
-        },
-      });
-    }
     const response = routeTransactionToRelayerMap[chainIdInNum][
       TransactionType.BUNDLER
     ].sendUserOperation({
