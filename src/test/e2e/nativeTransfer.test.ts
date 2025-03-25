@@ -1394,7 +1394,7 @@ describe("e2e", () => {
     });
   });
 
-  describe.skip("sonic-mainnet", () => {
+  describe("sonic-mainnet", () => {
     const account = privateKeyToAccount(`0x${privateKey}`);
 
     const sonicMainnetChainId = 146;
