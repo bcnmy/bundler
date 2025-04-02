@@ -15,7 +15,21 @@ To commit use `yarn commit`.
 
 1. Install Docker, Docker compose and `ts-node` on your local machine
 2. Follow the [First setup instructions](src/config/CONFIG.md#👶🏻-first-setup-instructions) to configure the Bundler before running it.
-3. Run `docker compose up` and the server and all of it's dependencies should run in the current terminal session without throwing any errors.
+3. (optional) Add `docker-compose.override.yaml` for Apple Silicon compatibility:
+    ```yaml
+    services:
+      bundler:
+        platform: linux/arm64/v8
+      redis:
+        platform: linux/arm64/v8
+      mongo:
+        # see: https://www.mongodb.com/docs/manual/tutorial/install-mongodb-community-with-docker/#about-this-task
+        image: mongo:4.4
+        platform: linux/arm64/v8
+      rabbitmq:
+        platform: linux/arm64/v8
+    ```
+4. Run `docker compose up` and the server and all of it's dependencies should run in the current terminal session without throwing any errors.
 
 Other useful commands:
 

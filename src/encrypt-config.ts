@@ -50,5 +50,7 @@ const passphrase = process.env.BUNDLER_CONFIG_PASSPHRASE;
 if (passphrase !== undefined) {
   encryptConfig(passphrase);
 } else {
-  console.error("CONFIG_PASSPHRASE environment variable is not defined");
+  console.error(
+    "BUNDLER_CONFIG_PASSPHRASE environment variable is not defined",
+  );
 }
