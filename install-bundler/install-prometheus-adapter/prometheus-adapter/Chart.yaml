@@ -15,6 +15,6 @@ maintainers:
   name: hectorj2f
 name: prometheus-adapter
 sources:
-- https://github.com/kubernetes/charts
+- https://github.com/helm/charts
 - https://github.com/kubernetes-sigs/prometheus-adapter
 version: 4.5.0
