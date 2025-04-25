@@ -31,3 +31,9 @@ dont-commit/
 
 # Cursor rules
 .cursorrules
+
+# JetBrains IDEs
+/.idea
+
+# Docker
+docker-compose.override.yaml
