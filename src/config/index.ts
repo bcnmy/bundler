@@ -21,8 +21,18 @@ export function mergeWithDecryptedConfig(
 ): ConfigType {
   const merged = nodeconfig.util.toObject();
 
+  log.info(`Decrypted config: ${JSON.stringify(decryptedConfig)}`);
+
   // We always take the relayer secrets from the old, decrypted config
   if (decryptedConfig.relayerManagers) {
+    if (
+      decryptedConfig.relayerManagers.length !== merged.relayerManagers.length
+    ) {
+      throw new Error(
+        `Mismatch in number of relayer managers. Decrypted config has ${decryptedConfig.relayerManagers.length} managers but merged config has ${merged.relayerManagers.length} managers.`,
+      );
+    }
+
     for (let i = 0; i < merged.relayerManagers.length; i += 1) {
       merged.relayerManagers[i].relayerSeed =
         decryptedConfig.relayerManagers[i].relayerSeed;
