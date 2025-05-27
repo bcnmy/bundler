@@ -3,12 +3,12 @@ set -e
 
 echo "The number of arguments is: $#"
 
-if [ $# -ne  4 ]; then
-  echo "Invalid number of args provided. Required: 4. Provided: $#"
-  echo "Usage: ./deploy.sh <number-of-replica> <env> <chart-name-prefix> <namespace>";
+if [ $# -ne  5 ]; then
+  echo "Invalid number of args provided. Required: 5. Provided: $#"
+  echo "Usage: ./deploy.sh <number-of-replica> <env> <chart-name-prefix> <namespace> <image-tag> ";
   printf "Supported vales for env: test, staging, and production\n\n";
 
-  echo "Example: ./deploy.sh 3 prod prod-sdk-relayer sdk-prod";
+  echo "Example: ./deploy.sh 3 prod prod-sdk-relayer sdk-prod v1.0.0";
   exit 1;
 fi
 
