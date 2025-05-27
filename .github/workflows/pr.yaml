@@ -51,7 +51,7 @@ jobs:
     with:
       image: ${{ matrix.image }}
       dockerfile: Dockerfile
-      push: true
+      push: false
       # GCP project where the identity provider is
       gcp_project_number: '334188102066'
       gcp_pool_id: 'github-pool'
