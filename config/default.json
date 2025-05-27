@@ -475,7 +475,7 @@
     }
   },
   "maxPriorityFeePerGasThresholdPercentage": 0.5,
-  "maxFeePerGasThresholdPercentage": 0.5,
+  "maxFeePerGasThresholdPercentage": 0.45,
   "preVerificationGasThresholdPercentage": 0.5,
   "relayerManagers": [
     {
