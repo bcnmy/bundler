@@ -16,6 +16,9 @@ on:
       dockerfile:
         required: true
         type: string
+      push:
+        required: true
+        type: boolean
 
       docker_context:
         required: false
@@ -96,7 +99,7 @@ jobs:
           context: ${{ inputs.docker_context == ''  && '.' || inputs.docker_context }}
           # push: ${{ github.event.base_ref == 'refs/heads/main' && github.ref_type == 'tag' && !startsWith(github.ref, 'refs/tags/v0.')}}
           file: ${{ inputs.dockerfile }}
-          push: true
+          push: ${{ inputs.push }}
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
 
