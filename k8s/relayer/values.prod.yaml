@@ -6,7 +6,7 @@ index: 0
 relayer:
   environment: "production"
   name: "relayer-server"
-  image: "gcr.io/biconomy-prod/sdk/relayer-node-service:latest"
+  image: "us-west1-docker.pkg.dev/artifact-registry-1191/bundler/bundler:latest"
   port: "3000"
   replicaCount: 1
   resource:

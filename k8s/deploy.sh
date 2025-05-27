@@ -16,6 +16,7 @@ REPLICAS=$1
 ENV=$2
 NAME=$3
 NAMESPACE=$4
+IMAGE_TAG=$5
 PODS_NAME="relayer-server"
 
 echo "Number of replicas: $REPLICAS"
@@ -70,6 +71,7 @@ helm upgrade "${HELM_NAME}" ./k8s/common/    \
      --timeout 720s \
      --values ./k8s/common/values."${ENV}".yaml \
      --set-string namespace="${NAMESPACE}" \
+     --set image_tag="${IMAGE_TAG}" \
      --namespace "${NAMESPACE}"
 
 echo "Deployed $HELM_NAME to $NAMESPACE"
@@ -86,6 +88,7 @@ while [ "${x}" -lt  "${REPLICAS}" ]; do
        --values ./k8s/relayer/values."${ENV}".yaml \
        --set-string namespace="${NAMESPACE}" \
        --set index="${x}" \
+       --set image_tag="${IMAGE_TAG}" \
        --namespace "${NAMESPACE}"
   
   echo "Deployed ${HELM_NAME}to ${NAMESPACE}";
