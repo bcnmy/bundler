@@ -152,6 +152,7 @@ export class BundlerSimulationService {
         stateOverrides: stateOverrideSet,
         options: {
           entryPointAddress: entryPointContract.address,
+          useBinarySearch: false
         },
       });
 
