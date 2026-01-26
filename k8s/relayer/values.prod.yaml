@@ -11,10 +11,10 @@ relayer:
   replicaCount: 1
   resource:
     requests:
-      memory: "6000Mi"
+      memory: "8000Mi"
       cpu: "2000m"
     limits:
-      memory: "6000Mi"
+      memory: "8000Mi"
       # cpu: "4000m" # don't need to set limit Ref: https://home.robusta.dev/blog/stop-using-cpu-limits
 
 secret_encrypted:
@@ -45,8 +45,8 @@ affinity:
     topologyKey: "kubernetes.io/hostname"
     
 # wait for 120 * 10s to fail
-startupProbe:
-  failureThreshold: 120
+# startupProbe:
+#   failureThreshold: 120
 
 datadog:
   enable: true
