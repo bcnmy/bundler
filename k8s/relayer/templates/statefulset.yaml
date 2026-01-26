@@ -98,32 +98,32 @@ spec:
             cpu: {{ .Values.relayer.resource.limits.cpu }}
             {{- end }} 
         # allow in to total failureThreshold(30) * periodSeconds(10) = 300 seconds
-        startupProbe:
-          httpGet:
-            path: /admin/startup
-            port: {{ .Values.relayer.port }}
-          failureThreshold: {{ .Values.startupProbe.failureThreshold }}
-          successThreshold: 1
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: {{ .Values.relayer.port }}
-          initialDelaySeconds: 30
-          periodSeconds: 30
-          successThreshold: 1
-          timeoutSeconds: 30
-          failureThreshold: 3
-        # cosider application not healhy after 10 minutes +
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: {{ .Values.relayer.port }}
-          initialDelaySeconds: 120
-          periodSeconds: 60
-          successThreshold: 1
-          timeoutSeconds: 120
-          failureThreshold: 5
+        # startupProbe:
+        #   httpGet:
+        #     path: /admin/startup
+        #     port: {{ .Values.relayer.port }}
+        #   failureThreshold: {{ .Values.startupProbe.failureThreshold }}
+        #   successThreshold: 1
+        #   periodSeconds: 10
+        # readinessProbe:
+        #   httpGet:
+        #     path: /health
+        #     port: {{ .Values.relayer.port }}
+        #   initialDelaySeconds: 30
+        #   periodSeconds: 30
+        #   successThreshold: 1
+        #   timeoutSeconds: 30
+        #   failureThreshold: 3
+        # # cosider application not healhy after 10 minutes +
+        # livenessProbe:
+        #   httpGet:
+        #     path: /health
+        #     port: {{ .Values.relayer.port }}
+        #   initialDelaySeconds: 120
+        #   periodSeconds: 60
+        #   successThreshold: 1
+        #   timeoutSeconds: 120
+        #   failureThreshold: 5
         lifecycle:
         # https://learnk8s.io/graceful-shutdown
         # still server traffic for 15 seconds after k8s issued the SIG term
