@@ -90,7 +90,7 @@ jobs:
       
 
   deploy_prod:
-    # needs: [deploy_staging]
+    needs: [container_img_build_push_gar]
     # Allow the job to fetch a GitHub ID token
     # runs-on: ubuntu-latest
     permissions:
