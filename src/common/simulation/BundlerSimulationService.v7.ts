@@ -115,6 +115,7 @@ export class BundlerSimulationServiceV07 {
           stateOverrides: stateOverrideSet,
           options: {
             entryPointAddress: entryPointContract.address,
+            useBinarySearch: false
           },
         });
       } catch (error: any) {
