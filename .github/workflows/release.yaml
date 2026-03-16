@@ -63,34 +63,34 @@ jobs:
       gcp_registry: 'us-west1-docker.pkg.dev/artifact-registry-1191/bundler/bundler'
       gcp_service_account: 'sa-bundler@workload-identity-e697.iam.gserviceaccount.com'
 
-  deploy_staging:
-    needs: [container_img_build_push_gar]
-    # Allow the job to fetch a GitHub ID token
-    # runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-    uses: bcnmy/bundler/.github/workflows/deploy_to_gke.yaml@master
-    with:
-      # GCP project where the identity provider is
-      # gcloud projects describe prj-workload-identity-001
-      gcp_project_number: '334188102066'
-      gcp_project_id: 'biconomy-staging'
-      gcp_bastion: ''
-      gcp_bastion_zone: ''
-      gcp_pool_id: 'github-pool'
-      gcp_provider_id: 'github-actions-wif-provider'
-      # SERVICE_ACCOUNT_EMAIL="${SERVICE_ACCOUNT}@${PROJECT}.iam.gserviceaccount.com"
-      gcp_service_account: 'sa-bundler@workload-identity-e697.iam.gserviceaccount.com'
-      gcp_cluster_name: 'biconomy-staging'
-      gcp_cluster_location: 'us-east1-b'
-      use_internal_ip: false
-      # deploy_command: 'echo IMG_VERSION is ${GITHUB_REF:10}' # for example extracts v0.0.5 from "refs/tags/v0.0.5"  
-      deploy_command: './k8s/deploy.sh 1 staging staging-sdk-relayer sdk-staging ${GITHUB_REF:10}'
+  # deploy_staging:
+  #   needs: [container_img_build_push_gar]
+  #   # Allow the job to fetch a GitHub ID token
+  #   # runs-on: ubuntu-latest
+  #   permissions:
+  #     id-token: write
+  #     contents: read
+  #   uses: bcnmy/bundler/.github/workflows/deploy_to_gke.yaml@master
+  #   with:
+  #     # GCP project where the identity provider is
+  #     # gcloud projects describe prj-workload-identity-001
+  #     gcp_project_number: '334188102066'
+  #     gcp_project_id: 'biconomy-staging'
+  #     gcp_bastion: ''
+  #     gcp_bastion_zone: ''
+  #     gcp_pool_id: 'github-pool'
+  #     gcp_provider_id: 'github-actions-wif-provider'
+  #     # SERVICE_ACCOUNT_EMAIL="${SERVICE_ACCOUNT}@${PROJECT}.iam.gserviceaccount.com"
+  #     gcp_service_account: 'sa-bundler@workload-identity-e697.iam.gserviceaccount.com'
+  #     gcp_cluster_name: 'biconomy-staging'
+  #     gcp_cluster_location: 'us-east1-b'
+  #     use_internal_ip: false
+  #     # deploy_command: 'echo IMG_VERSION is ${GITHUB_REF:10}' # for example extracts v0.0.5 from "refs/tags/v0.0.5"
+  #     deploy_command: './k8s/deploy.sh 1 staging staging-sdk-relayer sdk-staging ${GITHUB_REF:10}'
       
 
   deploy_prod:
-    needs: [deploy_staging]
+    # needs: [deploy_staging]
     # Allow the job to fetch a GitHub ID token
     # runs-on: ubuntu-latest
     permissions:
