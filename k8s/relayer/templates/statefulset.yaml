@@ -76,7 +76,7 @@ spec:
               name: {{ .Values.name }}-dd-configmap
           {{- end }}
           - secretRef:
-              name: {{ .Values.relayer.name }}-passphrase
+              name: {{ .Values.relayer.name }}-passphrase-secrets
         volumeMounts:
           - mountPath: "/home/nonroot/bundler/config.json.enc"
             name: secret-encrypted
@@ -133,10 +133,10 @@ spec:
       volumes:
       - name: secret-encrypted
         secret:
-          secretName: {{ .Values.name }}{{ .Values.index }}
+          secretName: {{ .Values.name }}-encrypted-secrets{{ .Values.index }}
       - name: secret-plain
         secret:
-          secretName: {{ .Values.name }}-plain
+          secretName: {{ .Values.name }}-plain-secrets
       {{- if .Values.datadog.enable }}
       - hostPath:
           path: /var/run/datadog/
