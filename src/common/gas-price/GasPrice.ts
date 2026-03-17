@@ -1,4 +1,4 @@
-import { formatGwei, formatUnits, toHex } from "viem";
+import { formatGwei, formatUnits } from "viem";
 import { IEVMAccount } from "../../relayer/account";
 import { ICacheService } from "../cache";
 import { logger } from "../logger";
@@ -8,6 +8,7 @@ import { GasPriceType } from "./types";
 import { customJSONStringify } from "../utils";
 import { IGasPriceService } from "./interface/IGasPriceService";
 import pino from "pino";
+import { ActivityTracker } from "./ActivityTracker";
 
 const log = logger.child({
   module: module.filename.split("/").slice(-4).join("/"),
@@ -16,12 +17,11 @@ const log = logger.child({
 // TODO: This must be refactored
 export class GasPriceService implements IGasPriceService {
   readonly chainId: number;
-
+  private activityTracker: ActivityTracker;
   networkService: INetworkService<IEVMAccount, EVMRawTransactionType>;
-
   cacheService: ICacheService;
-
   EIP1559SupportedNetworks: Array<number>;
+  private log: pino.Logger;
 
   constructor(
     cacheService: ICacheService,
@@ -32,9 +32,11 @@ export class GasPriceService implements IGasPriceService {
     },
   ) {
     this.chainId = options.chainId;
-    this.EIP1559SupportedNetworks = options.EIP1559SupportedNetworks;
     this.networkService = networkService;
     this.cacheService = cacheService;
+    this.EIP1559SupportedNetworks = options.EIP1559SupportedNetworks;
+    this.activityTracker = new ActivityTracker(cacheService);
+    this.log = pino();
   }
 
   /**
@@ -43,7 +45,7 @@ export class GasPriceService implements IGasPriceService {
    * @returns cache key
    */
   private getGasFeeKey = (gasType: GasPriceType) =>
-    `GasFee_${this.chainId}_${gasType}`;
+    `GasFee_${this.chainId}_${gasType.toUpperCase()}`;
 
   /**
    * Method returns cache key for getting EIP 1559 max fee per gas from cache
@@ -51,7 +53,7 @@ export class GasPriceService implements IGasPriceService {
    * @returns cache key
    */
   private getMaxFeePerGasKey = (gasType: GasPriceType) =>
-    `MaxFeePerGas_${this.chainId}_${gasType}`;
+    `MaxFeePerGas_${this.chainId}_${gasType.toUpperCase()}`;
 
   /**
    * Method returns cache key for getting EIP 1559 max priority fee per gas from cache
@@ -59,7 +61,7 @@ export class GasPriceService implements IGasPriceService {
    * @returns cache key
    */
   private getMaxPriorityFeePerGasKey = (gasType: GasPriceType) =>
-    `MaxPriorityFeePerGas_${this.chainId}_${gasType}`;
+    `MaxPriorityFeePerGas_${this.chainId}_${gasType.toUpperCase()}`;
 
   /**
    * Method returns cache key for EIP 1559 Base Fee Per Gas
@@ -88,6 +90,9 @@ export class GasPriceService implements IGasPriceService {
   async getGasPrice(
     gasType = GasPriceType.DEFAULT,
   ): Promise<NetworkBasedGasPriceType> {
+    // Record activity when gas price is requested
+    this.activityTracker.recordActivity(this.chainId);
+
     const _log = logger.child({ chainId: this.chainId });
     let gasPrice: NetworkBasedGasPriceType;
     if (this.EIP1559SupportedNetworks.includes(this.chainId)) {
@@ -190,89 +195,42 @@ export class GasPriceService implements IGasPriceService {
     pastGasPrice: NetworkBasedGasPriceType,
     bumpingPercentage: number,
   ): Promise<NetworkBasedGasPriceType> {
-    if (this.networkService.supportsBlockNative) {
-      pastGasPrice = await this.networkService.getBlockNativeFeesPerGas(99);
-    }
+    try {
+      const log = this.log.child({
+        module: "src/common/gas-price/GasPrice.ts",
+      });
+      log.info(`Bumping up gas price by ${bumpingPercentage}%`);
 
-    let result;
-    log.info(`Bumping up gas price by ${bumpingPercentage}%`);
-    log.info(
-      `Past gas price: ${
-        typeof pastGasPrice === "object"
-          ? customJSONStringify(pastGasPrice)
-          : pastGasPrice
-      }`,
-    );
+      if (typeof pastGasPrice === "object" && pastGasPrice !== null) {
+        // For EIP-1559 gas prices
+        const pastMaxPriorityFeePerGas = pastGasPrice.maxPriorityFeePerGas;
+        const pastMaxFeePerGas = pastGasPrice.maxFeePerGas;
 
-    if (
-      this.EIP1559SupportedNetworks.includes(this.chainId) &&
-      typeof pastGasPrice === "object"
-    ) {
-      try {
-        let resubmitMaxFeePerGas: number;
-        let resubmitMaxPriorityFeePerGas: number;
-        const { maxPriorityFeePerGas, maxFeePerGas } = pastGasPrice;
-        const pastMaxPriorityFeePerGas = maxPriorityFeePerGas;
-        const pastMaxFeePerGas = maxFeePerGas;
-        log.info(`Past Max priority fee per gas: ${maxPriorityFeePerGas}`);
-        log.info(`Past Max fee per gas: ${maxFeePerGas}`);
-        const bumpedUpMaxPriorityFeePerGas = toHex(
-          (BigInt(maxPriorityFeePerGas) * BigInt(bumpingPercentage + 100)) /
-            BigInt(100),
-        );
+        log.info(`Past Max priority fee per gas: ${pastMaxPriorityFeePerGas}`);
+        log.info(`Past Max fee per gas: ${pastMaxFeePerGas}`);
 
-        const bumpedUpMaxFeePerGas = toHex(
-          (BigInt(maxFeePerGas) * BigInt(bumpingPercentage + 100)) /
-            BigInt(100),
-        );
+        const bumpedUpMaxPriorityFeePerGas =
+          (pastMaxPriorityFeePerGas * BigInt(100 + bumpingPercentage)) /
+          BigInt(100);
+        const bumpedUpMaxFeePerGas =
+          (pastMaxFeePerGas * BigInt(100 + bumpingPercentage)) / BigInt(100);
 
-        if (
-          Number(bumpedUpMaxPriorityFeePerGas) <
-          Number(pastMaxPriorityFeePerGas) * 1.11
-        ) {
-          resubmitMaxPriorityFeePerGas =
-            Number(pastMaxPriorityFeePerGas) * 1.11;
-        } else {
-          resubmitMaxPriorityFeePerGas = Number(bumpedUpMaxPriorityFeePerGas);
-        }
-
-        if (Number(bumpedUpMaxFeePerGas) < Number(pastMaxFeePerGas) * 1.11) {
-          resubmitMaxFeePerGas = Number(pastMaxFeePerGas) * 1.11;
-        } else {
-          resubmitMaxFeePerGas = Number(bumpedUpMaxFeePerGas);
-        }
-
-        result = {
-          maxFeePerGas: BigInt(resubmitMaxFeePerGas.toString()),
-          maxPriorityFeePerGas: BigInt(resubmitMaxPriorityFeePerGas.toString()),
-        };
-
-        return result;
-      } catch (error) {
-        log.error(error);
-        // return 20 Gwei as default
-        log.info("Returning default gas price: 20 Gwei");
         return {
-          maxFeePerGas: BigInt("0x4a817c800"),
-          maxPriorityFeePerGas: BigInt("0x3b9aca00"),
+          maxFeePerGas: bumpedUpMaxFeePerGas,
+          maxPriorityFeePerGas: bumpedUpMaxPriorityFeePerGas,
         };
+      } else {
+        // For legacy gas prices
+        const bumpedUpGasPrice =
+          (pastGasPrice * BigInt(100 + bumpingPercentage)) / BigInt(100);
+        return bumpedUpGasPrice;
       }
+    } catch (error) {
+      log.error(error);
+      // return 20 Gwei as default
+      log.info("Returning default gas price: 20 Gwei");
+      return BigInt("20000000000");
     }
-
-    let resubmitGasPrice: number;
-
-    const bumpedUpPrice = toHex(
-      (BigInt(pastGasPrice.toString()) * BigInt(bumpingPercentage + 100)) /
-        BigInt(100),
-    );
-    if (Number(bumpedUpPrice) < 1.1 * Number(pastGasPrice)) {
-      resubmitGasPrice = 1.1 * Number(pastGasPrice);
-    } else {
-      resubmitGasPrice = Number(bumpedUpPrice);
-    }
-
-    result = BigInt(resubmitGasPrice.toString());
-    return result;
   }
 
   /**
