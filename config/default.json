@@ -9,7 +9,8 @@
     "validate": true
   },
   "supportedNetworks": [
-    43113, 43114, 27827, 56400, 88888, 88882
+    43113, 43114, 27827, 56400, 88888, 88882,
+    1, 42161, 8453, 43114, 10, 56
   ],
   "supportedNetworksV07": [],
   "EIP1559SupportedNetworks": [
