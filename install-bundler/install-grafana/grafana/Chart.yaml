@@ -8,7 +8,7 @@ annotations:
 apiVersion: v2
 appVersion: 10.1.1
 description: The leading tool for querying and visualizing time series and metrics.
-home: https://grafana.net
+home: https://grafana.com/
 icon: https://raw.githubusercontent.com/grafana/grafana/master/public/img/logo_transparent_400x.png
 keywords:
 - monitoring
