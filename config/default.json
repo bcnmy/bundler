@@ -1,6 +1,6 @@
 {
   "boot": {
-    "fundRelayers": true
+    "fundRelayers": false
   },
   "health": {
     "checkRelayers": false

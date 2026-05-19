@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Mutex } from "async-mutex";
+import nodeconfig from "config";
 import {
   privateToPublic,
   publicToAddress,
@@ -449,6 +450,12 @@ export class EVMRelayerManager
    * @param addressList List of relayers to fund
    */
   async fundRelayers(addressList: `0x${string}`[]): Promise<any> {
+    if (!nodeconfig.get<boolean>("boot.fundRelayers")) {
+      log.warn(
+        `Skipping fundRelayers on chainId: ${this.chainId} for addresses ${addressList}: boot.fundRelayers is disabled`,
+      );
+      return;
+    }
     log.info(
       `Starting to fund relayers on chainId: ${this.chainId} with addresses: ${addressList}`,
     );

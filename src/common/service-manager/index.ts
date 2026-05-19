@@ -474,8 +474,11 @@ async function setupRelayerManagers(
     );
 
     /*
-      UNSAFE: Disable funding relayers for testing purposes or local devenv.
-      This is enabled by default but you can set it to false if you want to run smoke tests for example
+      UNSAFE: Disable funding relayers for testing, local devenv, or service shutdown drains.
+      When false, this skips the initial boot funding here AND disables runtime auto-funding
+      (the flag is also checked inside EVMRelayerManager.fundRelayers, which is the chokepoint
+      for postTransactionMined low-balance top-ups, on-demand scaling, and the FUND_BUNDLER
+      retry path from BundlerConsumer).
     */
     if (nodeconfig.get<boolean>("boot.fundRelayers")) {
       await relayerMangerInstance.fundRelayers(addressList);
